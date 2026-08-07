@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -13,6 +13,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -31,8 +32,11 @@ export const SupportSettings = ({ subject }: SupportSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const { invokePromise } = useOperationInvoker();
-  const personal = AppSpace.getPersonalSpace(client);
-  const [properties, updateProperties] = useObject(AppSpace.getSettingsSpace(client)?.properties);
+  // Depend on the space list so the flag resolves once the settings space is created or migrated in.
+  const spaces = useSpaces();
+  const personal = useMemo(() => AppSpace.getPersonalSpace(client), [client, spaces]);
+  const settingsProperties = useMemo(() => AppSpace.getSettingsSpace(client)?.properties, [client, spaces]);
+  const [properties, updateProperties] = useObject(settingsProperties);
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const welcomeDismissed = properties
     ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))

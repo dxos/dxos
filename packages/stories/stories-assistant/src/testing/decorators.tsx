@@ -60,6 +60,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Client, Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -208,7 +209,10 @@ const buildPluginManagerOptions = ({
             // resolve a default space. Tags cannot be added retroactively, so the settings space is
             // tagged at creation — the `options` (2nd) argument carries tags, distinct from properties.
             const settingsSpace = yield* Effect.promise(() =>
-              client.spaces.create({ name: 'Settings' }, { tags: [AppSpace.SETTINGS_SPACE_TAG] }),
+              client.spaces.create(
+                { name: 'Settings' },
+                { tags: [AppSpace.SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED },
+              ),
             );
             yield* Effect.promise(() => settingsSpace.waitUntilReady());
             const space = yield* Effect.promise(() => client.spaces.create({ name: 'Personal' }));
@@ -495,7 +499,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capabilities.OperationInvoker;
       const client = yield* ClientCapabilities.Client;
-      const space = client.spaces.get()[0];
+      // Not `spaces.get()[0]`: the settings space is created first, and story content belongs in
+      // the personal space.
+      const space = AppSpace.getPersonalSpace(client) ?? client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 
       // Ensure workspace is set. NOTE: the active workspace that surfaces read via

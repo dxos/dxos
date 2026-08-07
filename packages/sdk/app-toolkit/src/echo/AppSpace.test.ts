@@ -10,31 +10,6 @@ import { Expando } from '@dxos/schema';
 import * as AppAnnotation from './AppAnnotation';
 import * as AppSpace from './AppSpace';
 
-/** Minimal space stand-in: `getPersonalSpace` only reads `tags`, `properties` and `id`. */
-const makeSpace = ({
-  id = 'space',
-  tags = [] as string[],
-  personalSpaceId,
-}: {
-  id?: string;
-  tags?: string[];
-  personalSpaceId?: string;
-}) => {
-  const properties = Obj.make(Expando.Expando, {});
-  if (personalSpaceId) {
-    Obj.update(properties, (properties) => {
-      Annotation.set(properties, AppAnnotation.PersonalSpaceAnnotation, personalSpaceId);
-    });
-  }
-  return { id, tags, properties } as any;
-};
-
-const makeClient = (spaces: any[]) => ({
-  spaces: {
-    get: (id?: string) => (id === undefined ? spaces : spaces.find((space) => space.id === id)),
-  },
-});
-
 describe('tags', () => {
   test('hasTag returns true when tag is present', ({ expect }) => {
     const space = { tags: ['personal', 'pinned'] } as any;
@@ -91,6 +66,17 @@ describe('personal space resolution', () => {
     expect(AppSpace.getPersonalSpace(makeClient([makeSpace({ id: 'plain' })]))).toBeUndefined();
   });
 
+  test('never returns the settings space, even when designated as personal', ({ expect }) => {
+    const settings = makeSpace({ id: 'settings', tags: [AppSpace.SETTINGS_SPACE_TAG], personalSpaceId: 'settings' });
+    expect(AppSpace.getPersonalSpace(makeClient([settings]))).toBeUndefined();
+  });
+
+  test('falls back past a settings-space designation to the legacy space', ({ expect }) => {
+    const legacy = makeSpace({ id: 'legacy', tags: [AppSpace.PERSONAL_SPACE_TAG] });
+    const settings = makeSpace({ id: 'settings', tags: [AppSpace.SETTINGS_SPACE_TAG], personalSpaceId: 'settings' });
+    expect(AppSpace.getPersonalSpace(makeClient([settings, legacy]))?.id).toBe('legacy');
+  });
+
   test('setPersonalSpaceId writes a designation that getPersonalSpace reads back', ({ expect }) => {
     const personal = makeSpace({ id: 'chosen' });
     const settings = makeSpace({ id: 'settings', tags: [AppSpace.SETTINGS_SPACE_TAG] });
@@ -98,4 +84,29 @@ describe('personal space resolution', () => {
     expect(AppSpace.readPersonalSpaceId(settings)).toBe('chosen');
     expect(AppSpace.getPersonalSpace(makeClient([settings, personal]))?.id).toBe('chosen');
   });
+});
+
+/** Minimal space stand-in: `getPersonalSpace` only reads `tags`, `properties` and `id`. */
+const makeSpace = ({
+  id = 'space',
+  tags = [] as string[],
+  personalSpaceId,
+}: {
+  id?: string;
+  tags?: string[];
+  personalSpaceId?: string;
+}) => {
+  const properties = Obj.make(Expando.Expando, {});
+  if (personalSpaceId) {
+    Obj.update(properties, (properties) => {
+      Annotation.set(properties, AppAnnotation.PersonalSpaceAnnotation, personalSpaceId);
+    });
+  }
+  return { id, tags, properties } as any;
+};
+
+const makeClient = (spaces: any[]) => ({
+  spaces: {
+    get: (id?: string) => (id === undefined ? spaces : spaces.find((space) => space.id === id)),
+  },
 });

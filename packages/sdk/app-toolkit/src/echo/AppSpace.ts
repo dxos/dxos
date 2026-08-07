@@ -58,6 +58,12 @@ export const isSettingsSpace = (space: Pick<Space, 'tags'>): boolean => hasTag(s
 export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined =>
   client.spaces.get().find((space) => isSettingsSpace(space));
 
+/** Resolves spaces by id or in bulk; structural so callers can pass a `Client` or a stub. */
+type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefined } };
+
+/** The slice of a HALO credential the legacy `DefaultSpace` lookup reads. */
+type LegacyCredential = { subject?: { assertion?: { spaceId?: unknown } } };
+
 /**
  * Check if a space is the personal space of a profile created before the settings space existed.
  * @deprecated Compare against {@link getPersonalSpace} instead; this only reads legacy markers.
@@ -81,7 +87,7 @@ export const isLegacyPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>)
  */
 export const setLegacyPersonalSpace = (space: Space): void => {
   Obj.update(space.properties, (properties) => {
-    (properties as any)[DEFAULT_SPACE_KEY] = true;
+    (properties as unknown as Record<string, unknown>)[DEFAULT_SPACE_KEY] = true;
   });
 };
 
@@ -95,10 +101,9 @@ export const setLegacyPersonalSpace = (space: Space): void => {
  *
  * @deprecated Migration input only — read {@link getPersonalSpace} at runtime.
  */
-export const resolveLegacyPersonalSpace = (client: {
-  spaces: { get(): Space[]; get(id: any): Space | undefined };
-  halo: { queryCredentials(options: { type: string }): any[] };
-}): { space: Space; fromCredential: boolean } | undefined => {
+export const resolveLegacyPersonalSpace = (
+  client: SpaceResolver & { halo: { queryCredentials(options: { type: string }): LegacyCredential[] } },
+): { space: Space; fromCredential: boolean } | undefined => {
   const found = client.spaces.get().find((space) => isLegacyPersonalSpace(space));
   if (found) {
     return { space: found, fromCredential: false };
@@ -111,15 +116,13 @@ export const resolveLegacyPersonalSpace = (client: {
     return undefined;
   }
 
-  const defaultSpaceId = defaultSpaceCredential?.subject?.assertion?.spaceId;
+  const defaultSpaceId: unknown = defaultSpaceCredential?.subject?.assertion?.spaceId;
   if (typeof defaultSpaceId !== 'string') {
     return undefined;
   }
   const space = client.spaces.get(defaultSpaceId);
   return space ? { space, fromCredential: true } : undefined;
 };
-
-type SpaceResolver = { spaces: { get(): Space[]; get(id: any): Space | undefined } };
 
 /** Read the personal-space designation off the settings space, if one has been made. */
 export const readPersonalSpaceId = (settingsSpace: Pick<Space, 'properties'>): string | undefined => {
@@ -142,7 +145,13 @@ export const getPersonalSpace = (client: SpaceResolver): Space | undefined => {
   const settingsSpace = getSettingsSpace(client);
   const configuredId = settingsSpace && readPersonalSpaceId(settingsSpace);
   const configured = configuredId ? client.spaces.get(configuredId) : undefined;
-  return configured ?? client.spaces.get().find((space) => isLegacyPersonalSpace(space));
+  // The settings space is internal; designating it would hand app configuration out as the default
+  // content target, so a stale or hand-edited designation falls through to the legacy space.
+  if (configured && !isSettingsSpace(configured)) {
+    return configured;
+  }
+
+  return client.spaces.get().find((space) => isLegacyPersonalSpace(space));
 };
 
 /** Designate `spaceId` as the personal space by writing the setting to the settings space. */

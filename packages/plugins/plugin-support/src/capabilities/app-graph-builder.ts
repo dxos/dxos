@@ -175,7 +175,9 @@ export default Capability.makeModule(
           const isDismissed = properties
             ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
             : false;
-          const showActions = !!personalSpace && space.id === personalSpace.id && !isDismissed;
+          // Without settings-space properties "Hide Welcome" would invoke and silently persist
+          // nothing, so the actions stay hidden until the space that stores the flag resolves.
+          const showActions = !!properties && !!personalSpace && space.id === personalSpace.id && !isDismissed;
           if (!showActions) {
             return Effect.succeed([]);
           }

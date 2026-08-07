@@ -52,6 +52,9 @@ export const handler = Effect.fn(function* ({
     ),
   );
   yield* Effect.promise(() => settingsSpace.waitUntilReady());
+  // The settings space carries the personal-space designation and app config, so it has to follow
+  // the identity across devices just like the personal space does.
+  yield* Effect.promise(() => settingsSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
 
   const space = yield* Effect.promise(() =>
     client.spaces.create({ name: 'Personal' }, { membershipPolicy: MembershipPolicy.LOCKED }),

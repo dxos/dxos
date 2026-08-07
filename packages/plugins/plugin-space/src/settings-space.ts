@@ -73,7 +73,10 @@ const readLegacySpacesOrder = Effect.fnUntraced(function* (legacySpace: Space) {
   const [legacyOrder] = yield* Effect.promise(() =>
     legacySpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).run(),
   );
-  return ((legacyOrder as any)?.order as string[] | undefined) ?? [];
+
+  // Expando is untyped by construction, so the persisted shape is validated rather than asserted.
+  const order: unknown = legacyOrder && (legacyOrder as Record<string, unknown>).order;
+  return Array.isArray(order) ? order.filter((id): id is string => typeof id === 'string') : [];
 });
 
 /**

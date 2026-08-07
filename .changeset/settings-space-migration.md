@@ -1,9 +1,6 @@
 ---
 '@dxos/app-toolkit': minor
 '@dxos/plugin-space': minor
-'@dxos/plugin-support': minor
-'@dxos/plugin-client': minor
-'@dxos/plugin-native-filesystem': minor
 ---
 
 App configuration moves out of the personal space and into a dedicated **settings space**, and the personal space becomes an ordinary space.
@@ -16,4 +13,4 @@ A one-time migration runs on `SpacesReady`: it creates the settings space if abs
 
 The space creation dialog gains a **Private space** toggle (default off, ahead of the EDGE replication toggle) which locks membership at genesis. Space sharing UI now keys off `space.membershipPolicy` rather than the personal-space tag, so the Members panel is hidden for any private space, not just the personal one. Renaming, re-iconing and deleting the personal space are no longer blocked, except that the space currently designated as personal still cannot be deleted.
 
-`HelpOperation.HideWelcome` no longer takes a `space` — the flag is app-wide.
+`HelpOperation.HideWelcome` no longer takes a `space` — the flag is app-wide. It is not migrated, so a dismissed welcome carousel reappears once.

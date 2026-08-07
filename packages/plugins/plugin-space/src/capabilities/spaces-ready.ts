@@ -136,12 +136,30 @@ export default Capability.makeModule(
       return false;
     };
 
-    if (!tryStartSettingsSpaceInit()) {
-      const settingsSpaceSub = client.spaces.subscribe(() => {
-        tryStartSettingsSpaceInit();
-      });
-      subscriptions.add(() => settingsSpaceSub.unsubscribe());
-    }
+    // The settings space can be observed before the legacy personal space it should migrate from
+    // (the space list fills incrementally), in which case the init above runs with nothing to
+    // migrate. Re-run the migration when a legacy space turns up while the designation is missing;
+    // `migrateToSettingsSpace` is idempotent, so a fresh profile that will never have one is a no-op.
+    const tryMigrateLateLegacySpace = () => {
+      const settingsSpace = AppSpace.getSettingsSpace(client);
+      if (!settingsSpace || AppSpace.readPersonalSpaceId(settingsSpace)) {
+        return;
+      }
+
+      const legacy = AppSpace.resolveLegacyPersonalSpace(client);
+      if (!legacy) {
+        return;
+      }
+
+      Effect.runFork(migrateToSettingsSpace({ settingsSpace, legacySpace: legacy.space }));
+    };
+
+    tryStartSettingsSpaceInit();
+    const settingsSpaceSub = client.spaces.subscribe(() => {
+      tryStartSettingsSpaceInit();
+      tryMigrateLateLegacySpace();
+    });
+    subscriptions.add(() => settingsSpaceSub.unsubscribe());
 
     //
     // Space subscriptions — set up immediately, do not depend on personal space.
