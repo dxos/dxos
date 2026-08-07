@@ -17,6 +17,8 @@ const styles = formTheme.styles();
 export type FormFieldSetContainerProps = ThemedClassName<
   PropsWithChildren<{
     label?: string;
+    /** Schema description of the group, surfaced as a tooltip on an info affordance beside the label. */
+    description?: string;
     /** JSON path of the group, forwarded to the label as field metadata. */
     path?: string;
     readonly?: boolean;
@@ -37,6 +39,7 @@ export type FormFieldSetContainerProps = ThemedClassName<
 export const FormFieldSetContainer = ({
   classNames,
   label,
+  description,
   path,
   readonly,
   presentation,
@@ -56,6 +59,7 @@ export const FormFieldSetContainer = ({
       {presentation.showLabel && label && (
         <FormFieldHeader
           label={label}
+          description={description}
           path={path}
           readonly={readonly}
           classNames='pl-2'

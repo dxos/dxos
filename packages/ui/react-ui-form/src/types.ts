@@ -54,7 +54,8 @@ export type FormFieldRendererProps<T = any> = {
   label: string;
   /**
    * Human-readable description (from the schema's description annotation). Rendered as visible text
-   * only when the resolved presentation opts in; otherwise it falls back to the input placeholder.
+   * only when the resolved presentation opts in; otherwise it surfaces as a tooltip on an info
+   * affordance beside the label, and falls back to the input placeholder.
    */
   description?: string;
   /**

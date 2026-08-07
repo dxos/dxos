@@ -189,7 +189,7 @@ export const FormField = (props: FormFieldProps) => {
   //
 
   if (SchemaEx.isArrayType(type)) {
-    return <ArrayField fieldProps={fieldState} label={label} {...props} />;
+    return <ArrayField fieldProps={fieldState} label={label} description={description} {...props} />;
   }
 
   //
@@ -286,6 +286,7 @@ export const FormField = (props: FormFieldProps) => {
           readonly={readonly}
           layout={layout}
           label={label}
+          description={description}
           collapsible
           projection={projection}
           fieldMap={fieldMap}

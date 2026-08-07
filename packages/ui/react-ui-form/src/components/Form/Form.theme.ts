@@ -23,7 +23,8 @@ const formStyles = tv({
     sectionDescription: 'text-description',
     fieldSet: '',
     field: '',
-    // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
+    // Columns: label (fills; carries the description affordance when present) → optional `labelEnd`
+    // readout → error icon (or its spacer) → optional trailing `button`.
     fieldLabel: 'min-h-(--dx-control) grid grid-cols-[1fr_auto_auto_auto] items-center select-none',
     fieldLabelText: '',
     fieldDescription: 'text-description',

@@ -44,6 +44,8 @@ const getOrderedId = (item: OrderedItem): string => item[DND_ID];
 
 export type ArrayFieldProps = {
   label: string;
+  /** Schema description of the array, surfaced as a tooltip on an info affordance beside the header label. */
+  description?: string;
   fieldProps: FormFieldStateProps;
 } & FormFieldProps;
 
@@ -51,6 +53,8 @@ export const ArrayField = ({
   type,
   path,
   label,
+  // Consumed by the header; the per-item `FormField`s derive their own from the element type.
+  description,
   readonly,
   layout,
   fieldProps: inputProps,
@@ -192,6 +196,7 @@ export const ArrayField = ({
   const header = (layout !== 'static' || (values && values.length > 0)) && (
     <FormFieldHeader
       label={label}
+      description={description}
       path={SchemaEx.createJsonPath(path ?? [])}
       readonly={readonly}
       add={

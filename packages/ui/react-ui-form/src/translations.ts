@@ -79,6 +79,9 @@ export const translations = [
         'format.url.label': 'URL',
         'format.uuid.label': 'UUID',
 
+        // FormFieldLabel.
+        'field-description.label': 'Description',
+
         // GeoPointField.
         'latitude.label': 'Latitude',
         'longitude.label': 'Longitude',
