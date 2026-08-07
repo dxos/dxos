@@ -239,11 +239,29 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
+      // Focus the reply's body editor (`.dx-expander` distinguishes it from the recipient editors,
+      // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
+      // editor appears, bounded by the same settle window as the scroll re-pinning below;
+      // `preventScroll` keeps the focus from cutting the smooth scroll short.
+      const focusBody = () => {
+        const content = tile.querySelector<HTMLElement>('.dx-expander .cm-content');
+        if (content) {
+          content.focus({ preventScroll: true });
+          focusObserver.disconnect();
+        }
+      };
+      const focusObserver = new MutationObserver(focusBody);
+      focusObserver.observe(tile, { childList: true, subtree: true });
+      focusBody();
       const observer = new ResizeObserver(scrollIntoView);
       observer.observe(tile);
-      const timeout = setTimeout(() => observer.disconnect(), 1_000);
+      const timeout = setTimeout(() => {
+        observer.disconnect();
+        focusObserver.disconnect();
+      }, 1_000);
       return () => {
         observer.disconnect();
+        focusObserver.disconnect();
         clearTimeout(timeout);
       };
     }, [tileItems]);
@@ -593,7 +611,9 @@ type MessageMenuProps = {
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
   <Menu.Root {...(actions ?? {})} attendableId={attendableId} alwaysActive>
-    <Menu.Toolbar classNames='p-1 bg-transparent' />
+    <Menu.Toolbar classNames='p-1 bg-transparent'>
+      <Menu.Items />
+    </Menu.Toolbar>
   </Menu.Root>
 );
 
@@ -805,7 +825,9 @@ const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToo
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 });

@@ -14,7 +14,14 @@ import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
-import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../../credentials';
+import {
+  isAccountErrorType,
+  joinWaitlist,
+  login,
+  probeEmailExists,
+  redeemAccountInvitation,
+  validateInvitationCode,
+} from '../../credentials';
 import { useForceDarkTheme } from '../../hooks';
 import { meta } from '../../meta';
 import { OnboardingOperation } from '../../operations';
@@ -163,6 +170,15 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       }
       pendingRef.current = true;
       try {
+        // Probe before creating anything: redemption rejects a duplicate email, and an
+        // identity created first would be stranded with no account and no way to retry.
+        // An inconclusive probe is not permission to proceed, so it stops here too.
+        const probe = await probeEmailExists({ hubUrl, email });
+        if (probe !== 'available') {
+          setError(probe === 'exists' ? 'account-exists' : 'email-check-unavailable');
+          return;
+        }
+
         const ensureIdentity = async () => {
           if (identity) {
             return identity;
@@ -190,7 +206,9 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       } catch (err) {
         log.catch(err);
-        setError('email');
+        // Another signup can register the email between the probe and redemption, so the
+        // server remains the final duplicate-email check.
+        setError(isAccountErrorType(err, 'email_already_registered') ? 'account-exists' : 'email');
       } finally {
         pendingRef.current = false;
       }

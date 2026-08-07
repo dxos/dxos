@@ -22,28 +22,10 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/test-utils"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/compute/link"
@@ -79,12 +61,6 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-form"
-    },
-    {
       "path": "../../ui/react-ui-list"
     },
     {
@@ -110,9 +86,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

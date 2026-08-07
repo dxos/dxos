@@ -15,9 +15,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -30,9 +27,6 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/operation"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -43,9 +37,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-ui"
@@ -73,9 +64,6 @@
     },
     {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-search"

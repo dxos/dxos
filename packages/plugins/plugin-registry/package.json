@@ -13,7 +13,15 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#capabilities": "./src/capabilities/index.ts",
+    "#capabilities": {
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/capabilities/node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
+    },
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
@@ -76,7 +84,6 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
@@ -87,10 +94,10 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

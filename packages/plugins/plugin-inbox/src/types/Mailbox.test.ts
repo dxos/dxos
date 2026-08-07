@@ -163,7 +163,7 @@ describe('message filters', () => {
 });
 
 describe('subscriptions', () => {
-  const msg = (email: string, name: string, listUnsubscribe?: string) =>
+  const msg = (email: string, name: string | undefined, listUnsubscribe?: string) =>
     Message.make({
       created: '2026-01-01T00:00:00.000Z',
       sender: { email, name },
@@ -190,5 +190,14 @@ describe('subscriptions', () => {
     expect(subs.map((sub) => sub.email)).toEqual(['news@a.io', 'digest@b.io']);
     expect(subs[0]).toMatchObject({ email: 'news@a.io', name: 'A News', count: 2 });
     expect(subs.some((sub) => sub.email === 'alice@x.com')).toBe(false);
+  });
+
+  test('deriveSubscriptions breaks count ties alphabetically', ({ expect }) => {
+    const subs = Mailbox.deriveSubscriptions([
+      msg('zeta@z.io', 'Zeta', '<https://z.io/u>'),
+      msg('alpha@a.io', 'alpha', '<https://a.io/u>'),
+      msg('mid@m.io', undefined, '<https://m.io/u>'),
+    ]);
+    expect(subs.map((sub) => sub.email)).toEqual(['alpha@a.io', 'mid@m.io', 'zeta@z.io']);
   });
 });

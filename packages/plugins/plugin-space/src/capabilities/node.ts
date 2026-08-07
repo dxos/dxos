@@ -4,6 +4,7 @@
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
@@ -13,6 +14,7 @@ import * as SpaceCapability from '../types/SpaceCapability';
 import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',

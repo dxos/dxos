@@ -16,9 +16,11 @@
     "dev": "vite",
     "preview": "vite preview"
   },
-  "devDependencies": {
+  "dependencies": {
     "@dxos/log": "workspace:*",
-    "@dxos/vite-plugin-log": "workspace:*",
+    "rolldown": "catalog:"
+  },
+  "devDependencies": {
     "vite": "catalog:"
   }
 }

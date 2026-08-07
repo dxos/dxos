@@ -153,7 +153,6 @@
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -179,8 +178,8 @@
   "devDependencies": {
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

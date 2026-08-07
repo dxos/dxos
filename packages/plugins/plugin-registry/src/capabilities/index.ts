@@ -14,6 +14,10 @@ export const DevPluginLoader = Capability.lazyModule(
   { requires: [Capabilities.PluginManager, Capabilities.AtomRegistry, RegistryCapabilities.Settings], provides: [] },
   () => import('./dev-plugin-loader'),
 );
+// Empty in the browser: `registry publish` reaches the vite plugin's Node-only build tooling, so only the
+// node barrel loads the command graph. The export still has to exist here — `#capabilities`
+// resolves its types through this file for both variants.
+export const Commands = AppCapability.commands([]);
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],

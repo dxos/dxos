@@ -82,7 +82,9 @@ export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 });

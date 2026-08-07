@@ -233,15 +233,14 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     };
 
     hook.exportProfile = async () => {
-      const { createLevel, createStorageObjects, exportProfileData } = await import('@dxos/client-services');
+      const { createStorageObjects, exportProfileData } = await import('@dxos/client-services');
 
-      const storageConfig = client.config.get('runtime.client.storage', {})!;
+      const storageConfig = client.config.get('runtime.client.storage') ?? {};
 
       const { storage } = createStorageObjects(storageConfig);
-      const level = await createLevel(storageConfig);
 
       log.info('begin profile export', { storageConfig });
-      const archive = await exportProfileData({ storage, level });
+      const archive = await exportProfileData({ storage });
 
       log.info('done profile export', { storageEntries: archive.storage.length });
 
@@ -253,21 +252,19 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       const data = await uploadFile();
 
-      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } =
-        await import('@dxos/client-services');
+      const { createStorageObjects, decodeProfileArchive, importProfileData } = await import('@dxos/client-services');
 
-      const storageConfig = client.config.get('runtime.client.storage', {})!;
+      const storageConfig = client.config.get('runtime.client.storage') ?? {};
 
       // Kill client so it doesn't interfere.
       await client.destroy().catch(() => {});
 
       const { storage } = createStorageObjects(storageConfig);
-      const level = await createLevel(storageConfig);
 
       const archive = decodeProfileArchive(data);
       log.info('begin profile import', { storageConfig, storageEntries: archive.storage.length });
 
-      await importProfileData({ storage, level }, archive);
+      await importProfileData({ storage }, archive);
 
       log.info('done profile import');
 

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { OAUTH_TIMEOUT_MS, openBrowser, startOAuthCallbackServer } from '@dxos/cli-util';
+import { openBrowser } from '@dxos/cli-util';
+import { OAUTH_TIMEOUT_MS, startOAuthCallbackServer } from '@dxos/cli-util/oauth';
 import { ClientService } from '@dxos/client';
 import { Database } from '@dxos/echo';
 import { createEdgeClient } from '@dxos/edge-compute';
