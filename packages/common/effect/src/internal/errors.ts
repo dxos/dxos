@@ -6,10 +6,11 @@ import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as GlobalValue from 'effect/GlobalValue';
 import * as Option from 'effect/Option';
 import * as Runtime from 'effect/Runtime';
 import type * as Tracer from 'effect/Tracer';
+
+import * as GlobalValue from './global-value';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');
 const spanToTrace = GlobalValue.globalValue('effect/Tracer/spanToTrace', () => new WeakMap());

@@ -24,6 +24,9 @@
     "dist",
     "src"
   ],
+  "dependencies": {
+    "@dxos/effect": "workspace:*"
+  },
   "devDependencies": {
     "@solidjs/testing-library": "catalog:",
     "effect": "catalog:",

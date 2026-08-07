@@ -17,11 +17,11 @@ import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { identity } from 'effect/Function';
-import * as GlobalValue from 'effect/GlobalValue';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import { GlobalValue } from '@dxos/effect';
 import { log } from '@dxos/log';
 // @ts-ignore - wa-sqlite example VFS without typed exports.
 import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';

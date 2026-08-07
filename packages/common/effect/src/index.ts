@@ -8,6 +8,7 @@ export * as EffectEx from './EffectEx';
 export { type Configuration as OtelConfiguration, layerOtel } from './otel';
 export * as Performance from './Performance';
 export * as RuntimeProvider from './RuntimeProvider';
+export * as GlobalValue from './internal/global-value';
 export * as SchemaAST from './internal/schema-ast';
 export * as SchemaEx from './SchemaEx';
 
