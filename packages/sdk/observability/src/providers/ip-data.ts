@@ -5,6 +5,7 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 // NOTE: localStorage is not available in web workers.
@@ -16,6 +17,11 @@ import { log } from '@dxos/log';
 import { type DataProvider } from '../observability';
 
 const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
+
+// `api.ipdata.co` is on the common tracker blocklists. Content blockers reject the request
+// outright, but DNS sinkholes and filtering proxies black-hole it instead, so the fetch needs its
+// own deadline rather than the browser's multi-minute connect timeout.
+const IP_DATA_REQUEST_TIMEOUT = Duration.seconds(3);
 
 // ipdata.co v1 response — city/region/latitude/longitude are nullable for some IPs (VPNs, CDNs, etc.),
 // and the country field is named `country_name`, not `country`.
@@ -57,6 +63,7 @@ const getIPData = Effect.fn(function* (config: Config) {
     httpClientNoTrace.execute,
     Effect.flatMap((res) => res.json),
     Effect.flatMap(Schema.decodeUnknown(IPData)),
+    Effect.timeout(IP_DATA_REQUEST_TIMEOUT),
     // On failure fall back to stale cache rather than emitting no tags.
     Effect.catchAll((err) =>
       Effect.sync(() => {

@@ -75,8 +75,20 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     return stubExtension;
   }
 
-  const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
-  const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
+  // `Effect.tryPromise`, not `Effect.promise`: a chunk a content blocker or a stale deploy refuses
+  // to serve would otherwise become a defect and reject the caller's whole initialization.
+  const modules = yield* Effect.tryPromise(() => Promise.all([import('posthog-js'), import('./log-processor')])).pipe(
+    Effect.catchAll((err) =>
+      Effect.sync(() => {
+        log.warn('PostHog is being stubbed because its module failed to load', { err });
+        return undefined;
+      }),
+    ),
+  );
+  if (!modules) {
+    return stubExtension;
+  }
+  const [{ default: posthog }, { logProcessor }] = modules;
   let feedbackSurveyAvailable: boolean | null = null;
   let unregisterPosthogProcessors: (() => void) | undefined;
 

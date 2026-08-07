@@ -52,9 +52,22 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
-  const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
-  const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
-  const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
+  // `Effect.tryPromise`, not `Effect.promise`: a chunk a content blocker or a stale deploy refuses
+  // to serve would otherwise become a defect and reject the caller's whole initialization.
+  const modules = yield* Effect.tryPromise(() =>
+    Promise.all([import('./logs'), import('./metrics'), import('./traces')]),
+  ).pipe(
+    Effect.catchAll((err) =>
+      Effect.sync(() => {
+        log.warn('OTEL is being stubbed because its module failed to load', { err });
+        return undefined;
+      }),
+    ),
+  );
+  if (!modules) {
+    return stubExtension;
+  }
+  const [{ OtelLogs }, { OtelMetrics }, { OtelTraces }] = modules;
 
   const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
   const disabled = cachedDisabled || isObservabilityDisabledSync(serviceName);

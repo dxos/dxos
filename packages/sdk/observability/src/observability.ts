@@ -3,7 +3,10 @@
 //
 
 import * as Array from 'effect/Array';
+import * as Cause from 'effect/Cause';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Function from 'effect/Function';
 
 import { type CleanupFn, SubscriptionList } from '@dxos/async';
@@ -22,6 +25,14 @@ import {
 } from './observability-extension';
 
 export * from './storage';
+
+/**
+ * How long `initialize` waits for data providers before returning without them.
+ * Providers reach the network (IP geolocation, worker RPC) and callers put `initialize` on the
+ * app's boot path, so an unbounded wait lets an ad blocker or DNS sinkhole hold the app at its
+ * loading screen. Stragglers keep running and register their cleanups when they land.
+ */
+const DATA_PROVIDER_BUDGET = Duration.seconds(3);
 
 // TODO(wittjosiah): Figure out how to handle when telemetry is disabled.
 //   In theory the setting should be both persisted and synchronized.
@@ -76,8 +87,18 @@ class ObservabilityImpl implements Observability {
         initializedExtensions.push(extension);
       }
 
-      const cleanups = yield* Effect.all(this._dataProviders.map((provider) => provider(this)));
-      this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
+      // Providers run concurrently and each absorbs its own failure: telemetry is never a reason
+      // to tear the other extensions down (the rollback below), and one stalled endpoint must not
+      // hold back the rest.
+      const fibers = yield* Effect.forEach(this._dataProviders, (provider) =>
+        Effect.forkDaemon(
+          provider(this).pipe(
+            Effect.tap((cleanup) => Effect.sync(() => cleanup && this._subscriptions.add(cleanup))),
+            Effect.catchAllCause((cause) => Effect.sync(() => log.catch(Cause.squash(cause)))),
+          ),
+        ),
+      );
+      yield* Fiber.joinAll(fibers).pipe(Effect.timeout(DATA_PROVIDER_BUDGET), Effect.ignore);
       this._initialized = true;
     }).pipe(
       Effect.catchAll((error) =>
