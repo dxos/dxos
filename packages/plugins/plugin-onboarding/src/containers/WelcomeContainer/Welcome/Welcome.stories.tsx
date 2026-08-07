@@ -12,9 +12,10 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import hero from '../../../../assets/hero.webp?url';
+import { translations } from '../../../translations';
 import { type WelcomeScreenProps, WelcomeState } from './types';
-import { OVERLAY_CLASSES, OVERLAY_STYLE, Welcome } from './Welcome';
+import { Welcome } from './Welcome';
 
 const DefaultStory = ({ state: initialState = WelcomeState.INIT, ...props }: Partial<WelcomeScreenProps>) => {
   const identity = useIdentity();
@@ -22,7 +23,10 @@ const DefaultStory = ({ state: initialState = WelcomeState.INIT, ...props }: Par
 
   return (
     <AlertDialog.Root defaultOpen>
-      <AlertDialog.Overlay classNames={OVERLAY_CLASSES} style={OVERLAY_STYLE}>
+      <AlertDialog.Overlay
+        classNames='dark bg-neutral-950! bg-no-repeat bg-center'
+        style={{ backgroundImage: `url(${hero})` }}
+      >
         <Welcome identity={identity} state={state} onEmailLogin={() => setState(WelcomeState.LOGIN_SENT)} {...props} />
       </AlertDialog.Overlay>
     </AlertDialog.Root>
