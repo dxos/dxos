@@ -59,9 +59,9 @@ export const getTypeURIFromSpecifier = (input: Schema.Top | AnyEntity | URI.URI)
  */
 // TODO(burdon): Can we use `Schema.is`?
 export const isInstanceOf = <S>(
-  schemaOrType: S extends Schema.Top ? S : Schema.Top | AnyEntity,
+  schemaOrType: S extends Schema.Codec<any, any> ? S : Schema.Codec<any, any> | AnyEntity,
   object: any,
-): object is S extends Schema.Top
+): object is S extends Schema.Codec<any, any>
   ? Schema.Schema.Type<S>
   : S extends { readonly [InstancePhantomId]?: infer A }
     ? A

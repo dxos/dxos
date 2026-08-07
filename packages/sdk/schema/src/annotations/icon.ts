@@ -11,7 +11,7 @@ export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnno
 
 export const IconAnnotation = createAnnotationHelper<string>(IconAnnotationId);
 
-export const getIconAnnotation = (schema: Schema.Top): string | undefined =>
+export const getIconAnnotation = (schema: Schema.Codec<any, any>): string | undefined =>
   IconAnnotation.get(schema).pipe(Option.getOrUndefined) as string | undefined;
 
 /**

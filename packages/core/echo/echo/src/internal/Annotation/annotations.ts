@@ -331,12 +331,14 @@ export const getLabelWithSchema = <S extends Schema.Top>(
  * Sets the label for a given object based on {@link LabelAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-export const setLabelWithSchema = <S extends Schema.Top>(schema: S, object: Schema.Schema.Type<S>, label: string) => {
+// `object` is not typed by the schema: the annotation names the property at runtime, and TypeScript
+// cannot index-write a generic type parameter.
+export const setLabelWithSchema = (schema: Schema.Top, object: AnyProperties, label: string) => {
   const annotation = LabelAnnotation.get(schema).pipe(
     Option.map((field) => field[0]),
     Option.getOrElse(() => 'name'),
   );
-  (object as AnyProperties)[annotation] = label;
+  object[annotation] = label;
 };
 
 /**
@@ -377,11 +379,7 @@ export const getDescriptionWithSchema = <S extends Schema.Top>(
  * Sets the description for a given object based on {@link DescriptionAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-export const setDescriptionWithSchema = <S extends Schema.Top>(
-  schema: S,
-  object: Schema.Schema.Type<S>,
-  description: string,
-) => {
+export const setDescriptionWithSchema = (schema: Schema.Top, object: AnyProperties, description: string) => {
   const accessorOpt = DescriptionAnnotation.get(schema);
   if (Option.isNone(accessorOpt)) {
     return;

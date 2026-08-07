@@ -143,7 +143,7 @@ export const getReified = (target: ProxyTarget): any => {
   return target[symbolInternals].getDecoded(fullPath);
 };
 
-export const getSchema = (target: ProxyTarget): Schema.Top | undefined => {
+export const getSchema = (target: ProxyTarget): Schema.Codec<any, any> | undefined => {
   if (target[symbolNamespace] === META_NAMESPACE) {
     return EntityMetaSchema;
   }
@@ -316,7 +316,7 @@ const getSchemaKind = (target: ProxyTarget, receiver: any): EntityKind | undefin
  * Lazily rebuilds the Effect Schema from the entity's `jsonSchema` and caches it on internals.
  * Lets persisted Type entities structurally satisfy `Type<A>` via the proxy `get` trap.
  */
-const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Top | undefined => {
+const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Codec<any, any> | undefined => {
   if (target[symbolInternals].getKind() !== EntityKind.Type) {
     return undefined;
   }
@@ -510,7 +510,7 @@ export class EchoRecord {
     throw new Error('EchoRecord is a behaviour prototype and must not be instantiated.');
   }
 
-  get [SchemaId](): Schema.Top | undefined {
+  get [SchemaId](): Schema.Codec<any, any> | undefined {
     return getSchema(this);
   }
 
@@ -616,7 +616,7 @@ export class EchoRoot extends EchoRecord {
     return getSchemaKind(this, this);
   }
 
-  get [StaticTypeSchemaSlot](): Schema.Top | undefined {
+  get [StaticTypeSchemaSlot](): Schema.Codec<any, any> | undefined {
     return getStaticTypeSchemaSlot(this, this);
   }
 

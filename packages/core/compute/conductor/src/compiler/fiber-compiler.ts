@@ -246,7 +246,7 @@ export class GraphExecutor {
    * Get resolved schema for inputs of the node.
    * The schema will depend on other nodes this node is connected to.
    */
-  getInputSchema(nodeId: string): Schema.Top {
+  getInputSchema(nodeId: string): Schema.Codec<any, any> {
     invariant(this._topology, 'Graph not loaded');
     const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
     return Schema.Struct(Object.fromEntries(node.outputs.map((output) => [output.name, output.schema] as const)));
@@ -256,7 +256,7 @@ export class GraphExecutor {
    * Get resolved schema for outputs of the node.
    * The schema will depend on other nodes this node is connected to.
    */
-  getOutputSchema(nodeId: string): Schema.Top {
+  getOutputSchema(nodeId: string): Schema.Codec<any, any> {
     invariant(this._topology, 'Graph not loaded');
     const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
     return Schema.Struct(Object.fromEntries(node.inputs.map((input) => [input.name, input.schema] as const)));

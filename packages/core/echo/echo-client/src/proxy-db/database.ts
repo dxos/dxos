@@ -401,8 +401,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Top | Type.AnyEntity): Type.AnyEntity {
-    let schema: Schema.Top;
+  private _addPersistentSchema(schemaInput: Schema.Codec<any, any> | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Codec<any, any>;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;

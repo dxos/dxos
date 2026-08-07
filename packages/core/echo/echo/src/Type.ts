@@ -85,7 +85,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
   readonly [internal.SchemaKindId]: internal.EntityKind.Object;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
-  readonly [internal.StaticTypeSchemaSlot]: Schema.Top;
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 
   /**
    * The fields defined in the original struct schema.
@@ -260,7 +260,7 @@ export interface Relation<
   readonly [internal.SchemaKindId]: internal.EntityKind.Relation;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
-  readonly [internal.StaticTypeSchemaSlot]: Schema.Top;
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 
   /**
    * The fields defined in the original struct schema.
@@ -626,7 +626,7 @@ export interface Type<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKin
   readonly [internal.SchemaKindId]: internal.EntityKind.Type;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
-  readonly [internal.StaticTypeSchemaSlot]: Schema.Top;
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 }
 
 /**
@@ -663,7 +663,7 @@ export type InstanceType<T extends AnyEntity> =
  *   read from a hidden slot — these overloads preserve the instance type.
  * - For `Type.Type` entities (the meta-schema kind) the schema is rebuilt from
  *   `type.jsonSchema`; the instance type isn't statically knowable so the wide
- *   `AnyEntity` overload widens to `Schema.Top`.
+ *   `AnyEntity` overload widens to `Schema.Codec<any, any>`.
  *
  * Always call this when you need to interact with the Effect Schema API
  * (e.g. before passing to Effect.Schema functions). For ECHO-side APIs
@@ -674,8 +674,8 @@ export type InstanceType<T extends AnyEntity> =
  */
 export function getSchema<T extends AnyObj>(type: T): Schema.Schema<InstanceType<T>>;
 export function getSchema<T extends AnyRelation>(type: T): Schema.Schema<InstanceType<T>>;
-export function getSchema(type: AnyEntity): Schema.Top;
-export function getSchema(type: AnyEntity): Schema.Top {
+export function getSchema(type: AnyEntity): Schema.Codec<any, any>;
+export function getSchema(type: AnyEntity): Schema.Codec<any, any> {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden
   // slot so we can return it without round-tripping through JsonSchema.
   const staticSchema = internal.getStaticTypeSchema(type);

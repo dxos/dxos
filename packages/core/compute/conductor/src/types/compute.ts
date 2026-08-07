@@ -129,7 +129,7 @@ export type ComputeFunction<Input extends ValueRecord, Output extends ValueRecor
  * @internal
  */
 // TODO(burdon): Reconcile with @effect/ai/Tool and handler.
-export type NodeDef<Input extends Schema.Top, Ouput extends Schema.Top> = {
+export type NodeDef<Input extends Schema.Codec<any, any>, Ouput extends Schema.Codec<any, any>> = {
   input: Input;
   output: Ouput;
   exec?: ComputeFunction<Schema.Schema.Type<Input>, Schema.Schema.Type<Ouput>>;
@@ -150,7 +150,7 @@ export type Executable<Input extends Schema.Top = Schema.Top, Output extends Sch
  * Type-safe constructor for function definition.
  */
 // TODO(burdon): make
-export const defineComputeNode = <Input extends Schema.Top, Output extends Schema.Top>({
+export const defineComputeNode = <Input extends Schema.Codec<any, any>, Output extends Schema.Codec<any, any>>({
   input,
   output,
   exec,

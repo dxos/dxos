@@ -107,7 +107,7 @@ const printFeed = (spec: Trigger.FeedSpec) =>
  * @param defaults - Optional default values to use as initial values and pre-select optional properties
  */
 export const promptForSchemaInput = Effect.fn(function* (
-  schema: Schema.Top | undefined,
+  schema: Schema.Codec<any, any> | undefined,
   defaults?: Record<string, any> | undefined,
 ) {
   if (!schema) {

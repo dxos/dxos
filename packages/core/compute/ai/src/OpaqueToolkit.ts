@@ -180,7 +180,7 @@ export type OpaqueTools<R = never> = Record<
     string,
     {
       readonly parameters: AnyStructSchemaNoContext;
-      readonly success: Schema.Top;
+      readonly success: Schema.Codec<any, any>;
       readonly failure: typeof Schema.Never;
       readonly failureMode: Tool.FailureMode;
     },

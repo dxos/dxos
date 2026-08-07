@@ -1005,7 +1005,7 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   return obj;
 };
 
-const validateSchema = (schema: Schema.Top) => {
+const validateSchema = (schema: Schema.Codec<any, any>) => {
   const dxn = getSchemaURI(schema);
   invariant(dxn, 'Schema must be defined via TypedObject.');
   const entityKind = getEntityKind(schema);
@@ -1013,7 +1013,7 @@ const validateSchema = (schema: Schema.Top) => {
   SchemaValidator.validateSchema(schema);
 };
 
-const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Top | undefined) => {
+const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Codec<any, any> | undefined) => {
   if (schema != null) {
     const uri = getSchemaURI(schema);
     invariant(uri, 'Schema must be defined via TypedObject.');

@@ -13,7 +13,10 @@ import { log } from '@dxos/log';
 interface _Live {}
 type Live<T> = _Live & T;
 
-const live = <S extends Schema.Top>(schema: S, value: Schema.Schema.Type<S>): Live<Schema.Schema.Type<S>> => {
+const live = <S extends Schema.Codec<any, any>>(
+  schema: S,
+  value: Schema.Schema.Type<S>,
+): Live<Schema.Schema.Type<S>> => {
   const proto = createLivePrototype(schema.ast);
 
   const obj = Object.create(proto);
@@ -30,14 +33,14 @@ const live = <S extends Schema.Top>(schema: S, value: Schema.Schema.Type<S>): Li
 const Cell = Symbol('system/Cell');
 
 class MemoryCell implements Cell {
-  #schema!: Schema.Top;
+  #schema!: Schema.Codec<any, any>;
   #value!: unknown;
 
   get #initialized() {
     return this.#schema != null;
   }
 
-  init(schema: Schema.Top, value: unknown): void {
+  init(schema: Schema.Codec<any, any>, value: unknown): void {
     this.#schema = schema;
     this.#value = value;
   }
@@ -54,7 +57,7 @@ class MemoryCell implements Cell {
 }
 
 interface Cell {
-  init(schema: Schema.Top, data: unknown): void;
+  init(schema: Schema.Codec<any, any>, data: unknown): void;
   get(key: keyof any): unknown;
   set(key: keyof any, value: unknown): void;
 }

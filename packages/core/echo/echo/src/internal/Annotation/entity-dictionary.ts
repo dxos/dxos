@@ -71,7 +71,7 @@ export const update = <T>(
       mutator(value);
       // Validate against the annotation's own schema — the dictionary slot is untyped, so the proxy
       // can't. Schema validation checks ref structure only (not targets), so it is cycle-safe.
-      Schema.decodeSync(Schema.toType(annotation.schema))(value);
+      Schema.decodeUnknownSync(Schema.toType(annotation.schema))(value);
     }
   });
 };

@@ -83,7 +83,7 @@ export interface EchoTypeSchema<
   readonly id: EntityId;
 
   /** Source Effect Schema (kept on a hidden slot for `Type.getSchema`). */
-  readonly [StaticTypeSchemaSlot]: Schema.Top;
+  readonly [StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 
   // NOTE: `typename` / `version` are intentionally NOT fields. They live in
   // `EntityMeta` (`key` / `version`); read via `Type.getTypename(self)` /
@@ -114,7 +114,7 @@ export interface EchoTypeSchema<
   } & (K extends EntityKind.Type
       ? {
           readonly [SchemaKindId]: EntityKind.Type;
-          readonly [StaticTypeSchemaSlot]: Schema.Top;
+          readonly [StaticTypeSchemaSlot]: Schema.Codec<any, any>;
         }
       : {});
 }

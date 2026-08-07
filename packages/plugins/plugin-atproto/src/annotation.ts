@@ -125,7 +125,7 @@ const collectFlags = (
 };
 
 /** Enumerate a schema's fields, descending fully into nested structs, with their effective visibility. */
-export const getFieldPublishFlags = (schema: Schema.Top): FieldPublishFlag[] => {
+export const getFieldPublishFlags = (schema: Schema.Codec<any, any>): FieldPublishFlag[] => {
   const flags: FieldPublishFlag[] = [];
   collectFlags(schema.ast, '', 0, 'private', flags);
   return flags;

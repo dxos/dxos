@@ -25,7 +25,7 @@ export const META_TAGS_KEY = '_tags';
  * a schema for editing and drops `id`. Keyed by {@link META_TAGS_KEY} so it never collides with a
  * `tags` field the schema declares itself.
  */
-export const withMetaTags = (schema: Schema.Top) =>
+export const withMetaTags = (schema: Schema.Codec<any, any>) =>
   omitId(
     Schema.Struct({
       [META_TAGS_KEY]: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.annotate({ title: 'Tags' }), Schema.optional),

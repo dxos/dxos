@@ -262,7 +262,7 @@ export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Par
   },
 };
 
-export const getFormatSchema = (format?: Format.TypeFormat): Schema.Top => {
+export const getFormatSchema = (format?: Format.TypeFormat): Schema.Codec<any, any> => {
   if (format === undefined) {
     return formatToSchema[Format.TypeFormat.None];
   }

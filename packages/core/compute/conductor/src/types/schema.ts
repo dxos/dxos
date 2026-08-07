@@ -12,9 +12,11 @@ import { Message } from '@dxos/types';
 // Base types
 //
 
-export const createInputSchema = (schema: Schema.Top): Schema.Top => Schema.Struct({ [DEFAULT_INPUT]: schema });
+export const createInputSchema = (schema: Schema.Codec<any, any>): Schema.Codec<any, any> =>
+  Schema.Struct({ [DEFAULT_INPUT]: schema });
 
-export const createOutputSchema = (schema: Schema.Top): Schema.Top => Schema.Struct({ [DEFAULT_OUTPUT]: schema });
+export const createOutputSchema = (schema: Schema.Codec<any, any>): Schema.Codec<any, any> =>
+  Schema.Struct({ [DEFAULT_OUTPUT]: schema });
 
 export type InputType<INPUT = any> = {
   [DEFAULT_INPUT]: INPUT;

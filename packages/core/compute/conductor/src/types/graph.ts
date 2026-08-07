@@ -60,8 +60,8 @@ export interface ComputeNode extends Schema.Schema.Type<typeof ComputeNode> {}
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeNodeMeta = {
-  input: Schema.Top;
-  output: Schema.Top;
+  input: Schema.Codec<any, any>;
+  output: Schema.Codec<any, any>;
 };
 
 /**

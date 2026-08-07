@@ -12,13 +12,13 @@ const isStream = (value: any): value is Stream.Stream<any> =>
   Predicate.hasProperty(value, Stream.StreamTypeId) && Predicate.isObject(value[Stream.StreamTypeId]);
 
 // "API-type" style borrowed from effect
-export interface StreamSchema<Item extends Schema.Top> extends Schema.Schema<
+export interface StreamSchema<Item extends Schema.Codec<any, any>> extends Schema.Schema<
   Stream.Stream<Schema.Schema.Type<Item>, never, never>,
   Stream.Stream<Schema.Schema.Encoded<Item>, never, never>,
   Schema.Schema.Context<Item>
 > {}
 
-export const StreamSchema = <Item extends Schema.Top>(item: Item): StreamSchema<Item> =>
+export const StreamSchema = <Item extends Schema.Codec<any, any>>(item: Item): StreamSchema<Item> =>
   Schema.declare<
     Stream.Stream<Schema.Schema.Type<Item>, never, never>,
     Stream.Stream<Schema.Schema.Encoded<Item>, never, never>,

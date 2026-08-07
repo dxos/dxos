@@ -57,7 +57,7 @@ export interface InternalObjectProps {
   readonly id: EntityId;
   readonly [SelfURIId]: EID.EID;
   readonly [KindId]: EntityKind;
-  readonly [SchemaId]: Schema.Top;
+  readonly [SchemaId]: Schema.Codec<any, any>;
   readonly [TypeId]: URI.URI;
   readonly [MetaId]?: EntityMeta;
   [ParentId]?: InternalObjectProps;

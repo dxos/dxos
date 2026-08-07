@@ -221,13 +221,13 @@ const withEchoRefinements = (
  * @param root
  * @param definitions
  */
-export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Top => {
+export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Codec<any, any> => {
   const defs = root.$defs ? { ..._defs, ...root.$defs } : (_defs ?? {});
   if ('type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
   }
 
-  let result: Schema.Top = Schema.Unknown;
+  let result: Schema.Codec<any, any> = Schema.Unknown;
   if ('$ref' in root) {
     switch (root.$ref) {
       case '/schemas/echo/ref': {
@@ -328,16 +328,16 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   return result;
 };
 
-const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): Schema.Top => {
+const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): Schema.Codec<any, any> => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
 
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   const isEchoObject =
     echoRefinement != null || ('$id' in root && typeof root.$id === 'string' && root.$id.startsWith('dxn:'));
 
-  let fields: Schema.Struct.Fields = {};
+  let fields: Record<string, Schema.Codec<any, any>> = {};
   const propertyList = Object.entries(root.properties ?? {});
-  let immutableIdField: Schema.Top | undefined;
+  let immutableIdField: Schema.Codec<any, any> | undefined;
   for (const [key, value] of propertyList) {
     if (isEchoObject && key === 'id') {
       immutableIdField = toEffectSchema(value, defs);
@@ -355,9 +355,11 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
 
   // The id field is folded into the struct fields rather than assigned afterwards: `mapFields` is a
   // struct operation, and the record branches below produce schemas that do not carry it.
-  const structFields: Schema.Struct.Fields = immutableIdField ? { id: immutableIdField, ...fields } : fields;
+  const structFields: Record<string, Schema.Codec<any, any>> = immutableIdField
+    ? { id: immutableIdField, ...fields }
+    : fields;
 
-  let schema: Schema.Top;
+  let schema: Schema.Codec<any, any>;
   if (root.patternProperties) {
     invariant(propertyList.length === 0, 'pattern properties mixed with regular properties are not supported');
     invariant(
@@ -382,7 +384,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   return schema.annotate(annotations) as any;
 };
 
-const anyToEffectSchema = (root: JSONSchema.JsonSchema): Schema.Top => {
+const anyToEffectSchema = (root: JSONSchema.JsonSchema): Schema.Codec<any, any> => {
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   // TODO(dmaretskyi): Is this branch still taken?
   if ((echoRefinement as any)?.reference != null) {
@@ -398,7 +400,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema): Schema.Top => {
 };
 
 // TODO(dmaretskyi): Types.
-const refToEffectSchema = (root: any): Schema.Top => {
+const refToEffectSchema = (root: any): Schema.Codec<any, any> => {
   if (!('reference' in root)) {
     // Fallback to generic object ref when no reference info is provided.
     return createEchoReferenceSchema(undefined, ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION);

@@ -551,7 +551,7 @@ export const DevtoolsOverview: Role.Role<Record<string, unknown>> = Role.make('o
  */
 export type FormInputData = {
   prop: string;
-  schema: Schema.Top;
+  schema: Schema.Codec<any, any>;
   fieldPropertyAst?: SchemaAST.AST;
   [key: string]: unknown;
 };
