@@ -326,6 +326,10 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+  // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
+  // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
+  // dependency is not reachable from the emitted chunk.
+  'docs': ['sharp'],
 };
 
 const workspaces: KnipConfig['workspaces'] = {

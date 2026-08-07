@@ -28,6 +28,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/schema": "workspace:*",
     "astro": "catalog:",
+    "sharp": "catalog:",
     "starlight-links-validator": "catalog:"
   },
   "devDependencies": {
