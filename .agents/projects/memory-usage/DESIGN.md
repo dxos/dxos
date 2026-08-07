@@ -366,6 +366,42 @@ renderer 2,279 MB — partition_alloc 411 → 1,041 MB, worker large-object
 space → 319 MB; growth tracks active sync payload churn through the same
 pipeline.
 
+### 2026-08-06 — plugin-tier curve: content plugins are NOT the floor
+
+Three production bundles measured with the same harness (fresh identity,
+headless, 8-min soaks; RSS values carry the CDP-attach inflation, so compare
+relatively):
+
+| Tier                          | Chunks | Disk   | Page heap (used) | Renderer RSS at ready |
+| ----------------------------- | ------ | ------ | ---------------- | --------------------- |
+| Full registry (labs defaults) | 7,231  | 375 MB | 95–155 MB        | ~720–780 MB           |
+| Minimal (11 content plugins)  | 4,028  | 191 MB | 66–105 MB        | ~646–661 MB           |
+| Barebones (core + Markdown)   | 3,591  | 184 MB | 52–91 MB         | ~615 MB               |
+
+- All ~50 content plugins together cost only ~150 MB RSS / ~50 MB heap.
+- **The floor is core**: barebones still compiles 370k code objects on Main
+  (vs 500k full) and reaches 3,591 chunks — client/echo/deck/app-framework
+  and shared deps dominate.
+- User's barebones tab read 861 MB footprint with only ~140 MB live across
+  both heaps: the rest is committed-but-idle memory (V8 headroom 334 vs ~150
+  live, malloc 225 vs 144, PA 164 vs 122 incl. a 99 MB array_buffer partition
+  with ~25 MB live). Resting footprint tracks BOOT PEAK + churn high-water
+  marks, not live data; Chrome decommits lazily.
+- User-set target (agreed): **300–500 MB resting, aim ~300–400** (Figma
+  range; CRDT+wasm apps don't reach Gmail range without a Slack-style tiny
+  client).
+
+Whittle-down ranking (supersedes the earlier "idle-wave scope" framing —
+disabled plugins were never the cost):
+
+1. Reduce boot-executed CORE code (startup-latency continuation) — cuts live
+   code and the commit peak the resting footprint inherits.
+2. Kill idle churn (51 SQL/s, 1 s polling → push) — churn keeps allocator
+   high-water marks pinned.
+3. Perf-timeline gating (ready to implement).
+4. Wasm consolidation: 8 modules in worker + 2 on main even in barebones;
+   single instance, worker-only, terminate-to-reclaim.
+
 **Fix ranking (Phase 3):**
 
 1. Shrink the structural baseline — audit the Idle wave (why do disabled/Labs
