@@ -54,8 +54,13 @@ export const EchoTypeKindSchema: {
 
     // Rebuilt from the extracted fields: `mapFields` is a `Struct` method and `self` is a generic
     // `Schema.Top`, so the id is folded in rather than assigned onto the schema value.
-    const schemaWithId = Schema.Struct({ ...fields, id: Schema.String });
-    const ast = SchemaAST.annotate(schemaWithId.ast, {
+    // The id is prepended to the existing object node rather than rebuilt from `.fields`:
+    // rebuilding drops index signatures, which is how record-shaped types are declared.
+    const schemaWithId = new SchemaAST.TypeLiteral(
+      [new SchemaAST.PropertySignature('id', Schema.String.ast), ...self.ast.propertySignatures],
+      self.ast.indexSignatures,
+    );
+    const ast = SchemaAST.annotate(schemaWithId, {
       ...self.ast.annotations,
       [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
       ...makeTypeJsonSchemaAnnotation({

@@ -136,13 +136,17 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
   ): EchoRelationSchema<Self, RelationEndpointInstance<Source>, RelationEndpointInstance<Target>, Fields> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
-    // Extract fields from the schema if available (Struct schemas have .fields).
+    // Struct schemas expose `.fields`; retained for the schema's public field map.
     const fields = ((self as any).fields ?? {}) as Fields;
 
-    // Rebuilt from the extracted fields: `mapFields` is a `Struct` method and `self` is a generic
-    // `Schema.Top`, so the id is folded in rather than assigned onto the schema value.
-    const schemaWithId = Schema.Struct({ ...fields, id: Schema.String });
-    const ast = SchemaAST.annotate(schemaWithId.ast, {
+    // The id is prepended to the existing object node rather than rebuilt from `.fields`:
+    // rebuilding drops index signatures, which is how `Expando` and other record-shaped types are
+    // declared. (`mapFields` is unavailable here -- it is a `Struct` method and `self` is generic.)
+    const schemaWithId = new SchemaAST.TypeLiteral(
+      [new SchemaAST.PropertySignature('id', Schema.String.ast), ...self.ast.propertySignatures],
+      self.ast.indexSignatures,
+    );
+    const ast = SchemaAST.annotate(schemaWithId, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,
       [TypeAnnotationId]: {
