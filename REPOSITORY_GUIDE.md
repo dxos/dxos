@@ -219,14 +219,16 @@ You can still pull a specific one on demand: `git fetch origin tag composer/nigh
 `--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
 check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
 
-| Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                    |
-| -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ---------------------------------------- |
-| **dev**        | `composer-dev…`          | EDGE nightly | manual → `dev`                    | composer              | prerelease Tauri build; iOS → TestFlight |
-| **nightly**    | `nightly.composer.space` | EDGE prod    | auto, 08:00 UTC daily from `main` | all `nightly`-enabled | dogfood build; no native build           |
-| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                |
-| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release        |
+| Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                             |
+| -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | --------------------------------- |
+| **dev**        | `composer-dev…`          | EDGE nightly | manual → `dev`                    | composer              | desktop + iOS; iOS → TestFlight   |
+| **nightly**    | `nightly.composer.space` | EDGE prod    | auto, 08:00 UTC daily from `main` | all `nightly`-enabled | dogfood build; desktop, no iOS    |
+| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused         |
+| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release |
 
 Local dev talks to EDGE nightly by default; point it at EDGE dev or a local EDGE with `DX_EDGE_BASE_URL`.
+
+Every environment ships a **desktop** Composer on its own CrabNebula channel, so a dogfooder on nightly gets the same daily build the web deploy does. **iOS** builds alongside it everywhere except the scheduled nightly — nothing consumes a daily `.ipa` — and only `dev` uploads to TestFlight, which has a single environment.
 
 **Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop + iOS via `deploy-tauri.yaml`, CrabNebula). This is the only path that advances Composer's version — it is not a Changesets package.
 

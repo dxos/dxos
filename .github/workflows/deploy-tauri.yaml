@@ -1,7 +1,7 @@
 name: Composer Tauri Release
 
-# Reusable workflow — invoked only by deploy-apps.yml (its `tauri` job) on a manual dispatch, alongside
-# the Composer web deploy. Not standalone (no workflow_dispatch): to run it, dispatch
+# Reusable workflow — invoked only by deploy-apps.yml (its `tauri` job), alongside the Composer web
+# deploy, for every environment. Not standalone (no workflow_dispatch): to run it, dispatch
 # Deploy Apps with app=composer. Multi-job/multi-runner (ubuntu draft/publish + macOS desktop + macOS iOS),
 # so it's a reusable workflow, not a composite action. The CrabNebula channel is derived from the
 # `environment` input; the desktop version comes from composer-app's package.json.
@@ -16,6 +16,13 @@ on:
         description: Git ref to build (default the triggering commit).
         type: string
         default: ''
+      ios:
+        # TestFlight has a single environment, so only `dev` uploads there — but staging/production still
+        # build iOS for CrabNebula. The scheduled nightly opts out: a 90-minute macOS build every day for
+        # an artifact nothing consumes is the one case where the cost buys nothing.
+        description: Build the iOS app (desktop always builds).
+        type: boolean
+        default: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ inputs.environment }}
@@ -309,6 +316,8 @@ jobs:
   build_tauri_ios:
     needs: draft_tauri
 
+    if: inputs.ios
+
     runs-on: depot-macos-latest
 
     timeout-minutes: 90
@@ -470,6 +479,10 @@ jobs:
       - draft_tauri
       - build_tauri
       - build_tauri_ios
+
+    # `build_tauri_ios` is skipped when `ios` is false, and a skipped dependency would otherwise skip this
+    # job too — leaving the desktop release drafted but never published.
+    if: ${{ !cancelled() && needs.build_tauri.result == 'success' }}
 
     runs-on: depot-ubuntu-24.04
 

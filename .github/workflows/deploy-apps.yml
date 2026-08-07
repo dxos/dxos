@@ -60,7 +60,8 @@ jobs:
   #   app      — app to deploy, or `all`.
   #   release  — cut a versioned Composer release (production + Composer in the set).
   #   bundle   — build the shared Composer bundle (Composer in the set).
-  #   tauri    — signed native build (bundle + a manual dispatch, i.e. not the nightly schedule).
+  #   tauri    — signed native build (Composer in the set — every environment ships a desktop app).
+  #   ios      — also build iOS (every environment except the scheduled nightly).
   plan:
     if: github.repository == 'dxos/dxos'
     runs-on: ubuntu-latest
@@ -70,6 +71,7 @@ jobs:
       release: ${{ steps.plan.outputs.release }}
       bundle: ${{ steps.plan.outputs.bundle }}
       tauri: ${{ steps.plan.outputs.tauri }}
+      ios: ${{ steps.plan.outputs.ios }}
     steps:
       - id: plan
         env:
@@ -83,13 +85,14 @@ jobs:
 
           # Does Composer participate? (drives release / bundle / tauri).
           composer=false; if [ "$app" = all ] || [ "$app" = composer ]; then composer=true; fi
-          # Manual dispatch vs the nightly schedule (gates the signed native build — one per day is too
-          # costly for a macOS runner, so nightly ships web-only unless dispatched by hand).
+          # Manual dispatch vs the nightly schedule (gates the iOS half of the native build — nothing
+          # consumes a daily .ipa, and it costs 90 minutes of macOS runner).
           dispatched=false; if [ "$EVENT" = workflow_dispatch ]; then dispatched=true; fi
 
           release=false; if [ "$env" = production ] && [ "$composer" = true ]; then release=true; fi
           bundle="$composer"
-          tauri=false;   if [ "$composer" = true ] && [ "$dispatched" = true ]; then tauri=true; fi
+          tauri="$composer"
+          ios=false;     if [ "$composer" = true ] && [ "$dispatched" = true ]; then ios=true; fi
 
           {
             echo "env=$env"
@@ -97,8 +100,9 @@ jobs:
             echo "release=$release"
             echo "bundle=$bundle"
             echo "tauri=$tauri"
+            echo "ios=$ios"
           } >> "$GITHUB_OUTPUT"
-          echo "plan → env=$env app=$app composer=$composer | release=$release bundle=$bundle tauri=$tauri"
+          echo "plan → env=$env app=$app composer=$composer | release=$release bundle=$bundle tauri=$tauri ios=$ios"
 
   # PRODUCTION ONLY — cut a versioned Composer release: bump composer-app/crx, record it on main, tag
   # composer-v<x>. The bumped commit is what the rest of the run builds + deploys (needs.release.outputs.sha).
@@ -359,9 +363,11 @@ jobs:
             '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed\nRun: " + $url)}')
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
-  # Desktop/mobile build for Composer, on manual dispatch only (a signed build per scheduled nightly is too
-  # costly). CrabNebula channel is derived from the environment inside the reusable workflow; iOS → App
-  # Store Connect happens on `dev` only. On production it builds the bumped release commit.
+  # Desktop/mobile build for Composer — every environment ships a desktop app, so dogfooders on the
+  # nightly channel get the same daily build the web deploy does. iOS is skipped on the scheduled nightly
+  # (see the `ios` input). CrabNebula channel is derived from the environment inside the reusable workflow;
+  # iOS → App Store Connect happens on `dev` only, since TestFlight has a single environment. On production
+  # it builds the bumped release commit.
   tauri:
     needs: [plan, release, build-bundle]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' && needs.plan.outputs.tauri == 'true' }}
@@ -369,4 +375,5 @@ jobs:
     with:
       environment: ${{ needs.plan.outputs.env }}
       ref: ${{ needs.release.outputs.sha || github.sha }}
+      ios: ${{ needs.plan.outputs.ios == 'true' }}
     secrets: inherit
