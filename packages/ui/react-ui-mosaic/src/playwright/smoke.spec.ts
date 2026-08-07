@@ -103,7 +103,12 @@ test.describe('Board', () => {
     await expect(col1.items().getByRole('heading', { name: draggedLabel! })).toBeVisible();
   });
 
-  test('drag to end of another column', async () => {
+  // TODO(wittjosiah): Failed on chromium in run 31151115830 — the drag did not land, so column 1 read
+  //   5 items where 6 were expected, having passed on the same commit in 31150524195. That makes
+  //   three of this file's five drag tests deferred for a drag that silently does nothing
+  //   (`rearrange columns` and `rearrange within column` are the others). The pattern points at the
+  //   drag harness rather than at any one test, so fix it there rather than per-test.
+  test.fixme('drag to end of another column', async () => {
     const col0 = board.column(0);
     const col1 = board.column(1);
 
