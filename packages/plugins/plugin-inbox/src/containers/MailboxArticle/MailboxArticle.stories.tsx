@@ -123,11 +123,11 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               if (seedSearchTerm) {
                 // Seed the realistic shared corpus (not the lorem builder) so the `SearchFilter` play
                 // test exercises full-text search over real, topic-coherent message bodies.
-                const mailbox = personalSpace.db.add(Mailbox.make());
+                const mailbox = defaultSpace.db.add(Mailbox.make());
                 const feed = yield* Effect.promise(() => mailbox.feed?.tryLoad());
                 if (feed) {
                   // Synced JMAP mail always carries a `threadId` (server-set, RFC 8621); mirror that here
@@ -162,24 +162,24 @@ const meta = {
                     threadId: 'notification-thread',
                   });
                   yield* Feed.append(feed, [...messages, htmlOnlyMessage]).pipe(
-                    Effect.provide(Database.layer(personalSpace.db)),
+                    Effect.provide(Database.layer(defaultSpace.db)),
                   );
                 }
               } else {
-                const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace.db, count, threads));
+                const mailbox = yield* Effect.promise(() => initializeMailbox(defaultSpace.db, count, threads));
                 if (bound) {
-                  const accessToken = personalSpace.db.add(
+                  const accessToken = defaultSpace.db.add(
                     AccessToken.make({ source: 'imap.example.com', account: 'user@example.com', token: 'story-token' }),
                   );
-                  const connection = personalSpace.db.add(
+                  const connection = defaultSpace.db.add(
                     Connection.make({ name: 'Story Mail', accessToken: Ref.make(accessToken) }),
                   );
-                  personalSpace.db.add(
+                  defaultSpace.db.add(
                     Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }),
                   );
                 }
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
 

@@ -108,7 +108,7 @@ const meta = {
           }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
 
               // Calendar with a backing feed. Events are appended to the feed to simulate the
               // Google Calendar sync (synced events live in the feed, not the db).
