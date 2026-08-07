@@ -5,6 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
+import { useActivationSignal } from '@dxos/app-framework/ui';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Entity, Obj, Type } from '@dxos/echo';
@@ -39,6 +41,12 @@ export const InstructionsEditor = ({
   readonly,
   fields = DEFAULT_FIELDS,
 }: InstructionsEditorProps) => {
+  // Skill definitions are contributed by modules gated on the assistant's start event, so the demand
+  // signal belongs here rather than on each surface that embeds this editor — a `skills` row resolves
+  // its label from that registry and renders blank until the modules load. `ProjectArticle` embedded
+  // it without signalling, which is why the project's Skills rows were empty.
+  useActivationSignal(AppActivationEvents.AssistantStart);
+
   // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
   const db = dbProp ?? Obj.getDatabase(instructions);
 
