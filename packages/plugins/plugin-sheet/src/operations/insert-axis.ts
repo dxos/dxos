@@ -4,9 +4,9 @@ import * as Effect from 'effect/Effect';
 // Copyright 2025 DXOS.org
 //
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
-import { SheetOperation } from '../types';
+import * as SheetOperation from '../types/SheetOperation';
 
 const handler: Operation.WithHandler<typeof SheetOperation.InsertAxis> = SheetOperation.InsertAxis.pipe(
   Operation.withHandler(({ model, axis, index, count }) =>

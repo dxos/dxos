@@ -22,10 +22,13 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -43,10 +46,11 @@ import {
   makeExtractionStage,
   makeSummarizationStage,
 } from '@dxos/pipeline-transcription';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -61,10 +65,10 @@ import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInter
 import { isNonNullable, trim } from '@dxos/util';
 
 import { translations } from '#translations';
-import { TranscriptionCapabilities } from '#types';
 
 import { enableQueryIndexes } from '../testing';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 const SAMPLE_CONTENT = trim`
   # Test
@@ -90,32 +94,36 @@ const StoryGraphPlugin = () =>
       name: 'Transcription Pipeline Story Graph',
     }),
   ).pipe(
-    AppPlugin.addAppGraphModule({
-      activate: Effect.fnUntraced(function* () {
-        const capabilities = yield* Capability.Service;
-        const extensions = yield* GraphBuilder.createExtension({
-          id: 'storyDocs',
-          match: NodeMatcher.whenRoot,
-          connector: (_, get) =>
-            Effect.gen(function* () {
-              // Tolerate the teardown window when stories swap: the Client capability may already be
-              // removed while this reactive connector recomputes once more (use `getAll`, not the
-              // throwing `get`).
-              const [client] = capabilities.getAll(ClientCapabilities.Client);
-              const space = client && AppSpace.getPersonalSpace(client);
-              if (!space) {
-                return [];
-              }
+    Plugin.addModule(
+      Capability.inlineModule(
+        'AppGraphBuilder',
+        { provides: [AppCapabilities.AppGraphBuilder] },
+        Effect.fnUntraced(function* () {
+          const capabilities = yield* Capability.Service;
+          const extensions = yield* GraphBuilder.createExtension({
+            id: 'storyDocs',
+            match: NodeMatcher.whenRoot,
+            connector: (_, get) =>
+              Effect.gen(function* () {
+                // Tolerate the teardown window when stories swap: the Client capability may already be
+                // removed while this reactive connector recomputes once more (use `getAll`, not the
+                // throwing `get`).
+                const [client] = capabilities.getAll(ClientCapabilities.Client);
+                const space = client && AppSpace.getPersonalSpace(client);
+                if (!space) {
+                  return [];
+                }
 
-              const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
-              return docs
-                .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
-                .filter(isNonNullable);
-            }),
-        });
-        return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
-      }),
-    }),
+                const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
+                return docs
+                  .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
+                  .filter(isNonNullable);
+              }),
+          });
+          return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions)];
+        }),
+      ),
+    ),
     Plugin.make,
   )();
 
@@ -304,7 +312,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

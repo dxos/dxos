@@ -16,8 +16,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Model, Scene } from '#types';
 
+import * as Model from '../../types/Model';
+import * as Scene from '../../types/Scene';
 import { SpacetimeArticle } from './SpacetimeArticle';
 
 const DefaultStory = () => {

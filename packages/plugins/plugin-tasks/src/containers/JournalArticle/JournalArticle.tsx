@@ -11,7 +11,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { Journal as JournalComponent, type JournalProps } from '#components';
 import { meta } from '#meta';
-import { type Journal } from '#types';
+
+import type * as Journal from '../../types/Journal';
 
 export type JournalArticleProps = AppSurface.ObjectArticleProps<Journal.Journal>;
 

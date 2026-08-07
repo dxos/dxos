@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -34,12 +34,10 @@
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     }
@@ -80,7 +78,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/rpc": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
@@ -102,11 +99,10 @@
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
     "@effect/platform-browser": "catalog:",
-    "@effect/vitest": "catalog:",
     "@types/platform": "catalog:",
-    "@types/readable-stream": "catalog:",
     "fast-check": "catalog:",
-    "get-port-please": "catalog:"
+    "get-port-please": "catalog:",
+    "random-access-storage": "catalog:"
   },
   "publishConfig": {
     "access": "public"

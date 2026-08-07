@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
-import { Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Selection } from '@dxos/react-ui-attention';
 
-import { AttentionCapabilities } from '../types';
+import * as AttentionCapabilities from '../types/AttentionCapabilities';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Select> = LayoutOperation.Select.pipe(
   Operation.withHandler(

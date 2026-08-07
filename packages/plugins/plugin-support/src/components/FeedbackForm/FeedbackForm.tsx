@@ -10,8 +10,8 @@ import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpd
 
 import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
-import { SupportOperation } from '#types';
 
+import * as SupportOperation from '../../types/SupportOperation';
 import { AreaSelectField } from './AreaSelectField';
 import type { FeedbackPluginOption } from './types';
 

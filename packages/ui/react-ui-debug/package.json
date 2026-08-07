@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-debug",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "In-app @dxos/log viewer (LogPanel).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,13 +39,11 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
-    "@radix-ui/react-slot": "catalog:"
+    "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

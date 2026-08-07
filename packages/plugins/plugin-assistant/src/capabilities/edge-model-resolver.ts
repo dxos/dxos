@@ -8,21 +8,17 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { Header } from '@dxos/compute';
+import * as Header from '@dxos/compute/Header';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { ANTHROPIC_SOURCE } from '../constants';
 
-// Named alias so the module's inferred type stays portable (avoids TS2883 leaking the internal
-// `@dxos/ai/AiModelResolver` Layer type into the emitted declarations).
-export type EdgeModelResolverCapabilities = Capability.Capability<typeof AppCapabilities.AiModelResolver>[];
-
-const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilities>(
+const edgeModelResolver = Capability.makeModule(
   Effect.fnUntraced(function* () {
     const manager = yield* Capability.Service;
 
@@ -60,13 +56,9 @@ const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilitie
     const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://edge.internal' }).pipe(Layer.provide(httpClient));
     const anthropicResolverLayer = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
 
-    const contribution: Capability.Capability<typeof AppCapabilities.AiModelResolver> = Capability.contributes(
-      AppCapabilities.AiModelResolver,
-      anthropicResolverLayer,
-      () => Effect.sync(() => identitySubscription?.unsubscribe()),
-    );
-
-    return [contribution];
+    // A module providing exactly one capability may return the contribution directly.
+    yield* Effect.addFinalizer(() => Effect.sync(() => identitySubscription?.unsubscribe()));
+    return Capability.contribute(AppCapabilities.AiModelResolver, anthropicResolverLayer);
   }),
 );
 

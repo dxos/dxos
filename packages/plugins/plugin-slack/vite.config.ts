@@ -13,7 +13,8 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
+    SlackEvents: 'src/types/SlackEvents.ts',
+    SlackOperation: 'src/types/SlackOperation.ts',
   },
   test: { node: true },
 });

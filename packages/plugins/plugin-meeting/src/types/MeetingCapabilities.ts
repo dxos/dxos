@@ -6,14 +6,15 @@
 
 import { type Atom } from '@effect-atom/atom';
 
-import { Capability } from '@dxos/app-framework';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 
 import { meta } from '#meta';
 
-import { Meeting, type Settings as SettingsType } from './index';
+import * as Meeting from './Meeting';
+import type * as Settings from './Settings';
 
-export const Settings = Capability.make<Atom.Writable<SettingsType.Settings>>(
+export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -28,4 +29,4 @@ export type MeetingStateStore = {
   updateState: (updater: (current: MeetingState) => MeetingState) => void;
 };
 
-export const State = Capability.make<MeetingStateStore>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<MeetingStateStore>()(`${meta.profile.key}.capability.state`);

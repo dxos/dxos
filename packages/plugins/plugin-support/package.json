@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-support",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "In-app support assistant plugin for Composer.",
   "homepage": "https://dxos.org",
@@ -58,11 +58,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -86,9 +81,70 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./HelpCapabilities": {
+      "source": "./src/types/HelpCapabilities.ts",
+      "types": "./dist/types/src/types/HelpCapabilities.d.ts",
+      "import": "./dist/lib/HelpCapabilities.mjs"
+    },
+    "./HelpOperation": {
+      "source": "./src/types/HelpOperation.ts",
+      "types": "./dist/types/src/types/HelpOperation.d.ts",
+      "import": "./dist/lib/HelpOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./Support": {
+      "source": "./src/types/Support.ts",
+      "types": "./dist/types/src/types/Support.d.ts",
+      "import": "./dist/lib/Support.mjs"
+    },
+    "./SupportCapabilities": {
+      "source": "./src/types/SupportCapabilities.ts",
+      "types": "./dist/types/src/types/SupportCapabilities.d.ts",
+      "import": "./dist/lib/SupportCapabilities.mjs"
+    },
+    "./SupportOperation": {
+      "source": "./src/types/SupportOperation.ts",
+      "types": "./dist/types/src/types/SupportOperation.d.ts",
+      "import": "./dist/lib/SupportOperation.mjs"
+    },
+    "./Tour": {
+      "source": "./src/types/Tour.ts",
+      "types": "./dist/types/src/types/Tour.d.ts",
+      "import": "./dist/lib/Tour.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "HelpCapabilities": [
+        "dist/types/src/types/HelpCapabilities.d.ts"
+      ],
+      "HelpOperation": [
+        "dist/types/src/types/HelpOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "Support": [
+        "dist/types/src/types/Support.d.ts"
+      ],
+      "SupportCapabilities": [
+        "dist/types/src/types/SupportCapabilities.d.ts"
+      ],
+      "SupportOperation": [
+        "dist/types/src/types/SupportOperation.d.ts"
+      ],
+      "Tour": [
+        "dist/types/src/types/Tour.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -99,7 +155,6 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/async": "workspace:*",
     "@dxos/brand": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -112,9 +167,6 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/observability": "workspace:*",
-    "@dxos/plugin-assistant": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
@@ -124,8 +176,6 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
-    "@dxos/react-ui-masonry": "workspace:*",
-    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
@@ -135,21 +185,22 @@
     "date-fns": "catalog:",
     "effect": "catalog:",
     "html-to-image": "catalog:",
-    "react-joyride": "catalog:"
+    "react-floater": "catalog:",
+    "react-joyride": "catalog:",
+    "type-fest": "catalog:"
   },
   "devDependencies": {
+    "@dxos/observability": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-floater": "catalog:",
-    "type-fest": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

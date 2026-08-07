@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation, Project } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Database, Filter } from '@dxos/echo';
 
-import { ProjectMcpOperation } from '#types';
+import * as ProjectMcpOperation from '../types/ProjectMcpOperation';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;

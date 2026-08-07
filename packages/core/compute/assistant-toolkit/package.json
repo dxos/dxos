@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-toolkit",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Assistant toolkit, definitions, and utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,7 +30,6 @@
   "dependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -46,20 +45,19 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
-    "@effect/ai-anthropic": "catalog:",
     "@effect/platform": "catalog:",
-    "dfx": "catalog:",
-    "exa-js": "catalog:"
+    "dfx": "catalog:"
   },
   "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",

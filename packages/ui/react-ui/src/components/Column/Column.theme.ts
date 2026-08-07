@@ -7,7 +7,19 @@ import { type ComponentFunction } from '@dxos/ui-types';
 
 import { withColumn } from './withColumn';
 
-export type ColumnStyleProps = {};
+export type ColumnGap = 'sm' | 'md' | 'lg';
+
+/** Row gap between the grid's rows; `sm` matches the Card default (gap-1). */
+export const columnGapClasses: Record<ColumnGap, string> = {
+  sm: 'gap-y-1',
+  md: 'gap-y-2',
+  lg: 'gap-y-3',
+};
+
+export type ColumnStyleProps = {
+  /** Vertical gap applied between all rows of the column grid. */
+  gap?: ColumnGap;
+};
 
 export type ColumnBlockStyleProps = {
   /** Trailing gutter (column 3) instead of the default leading gutter (column 1). */
@@ -17,8 +29,8 @@ export type ColumnBlockStyleProps = {
   square?: boolean;
 };
 
-const root: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('dx-column-root grid', ...etc);
+const root: ComponentFunction<ColumnStyleProps> = ({ gap }, ...etc) => {
+  return mx('dx-column-root grid', gap && columnGapClasses[gap], ...etc);
 };
 
 /**

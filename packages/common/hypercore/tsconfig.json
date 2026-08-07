@@ -41,9 +41,6 @@
       "path": "../random-access-storage"
     },
     {
-      "path": "../tracing"
-    },
-    {
       "path": "../typings"
     },
     {

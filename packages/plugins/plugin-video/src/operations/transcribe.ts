@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
 import { TranscriptionService } from '../operations';
-import { VideoOperation } from '../types';
+import * as VideoOperation from '../types/VideoOperation';
 
 const DEFAULT_LANG = 'en';
 

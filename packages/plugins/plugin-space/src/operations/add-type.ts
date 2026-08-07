@@ -2,12 +2,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { SpaceCapabilities, SpaceEvents } from '../types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceEvents from '../types/SpaceEvents';
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOperation.AddType.pipe(

@@ -4,17 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { ProjectCapabilities } from '@dxos/plugin-projects/types';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
 import { crmPipeline } from '../templates/crm-pipeline';
 import { crmProject } from '../templates/crm-project';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.contributes(ProjectCapabilities.Template, crmProject),
-      Capability.contributes(ProjectCapabilities.Template, crmPipeline),
-    ];
+    return Capability.contributeAll(ProjectCapabilities.Template, [crmProject, crmPipeline]);
   }),
 );

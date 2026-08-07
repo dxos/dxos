@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { ScoreOperation } from '../types';
+import * as ScoreOperation from '../types/ScoreOperation';
 import { formatLeadSheet } from '../util/lead-sheet';
 import { scoreToLeadSheet } from '../util/score-leadsheet';
 

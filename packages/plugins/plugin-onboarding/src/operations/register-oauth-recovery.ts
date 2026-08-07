@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Context as DxContext } from '@dxos/context';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
 import { RegisterOAuthRecovery } from './definitions';

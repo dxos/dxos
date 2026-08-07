@@ -8,10 +8,10 @@ import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
 import React, { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';

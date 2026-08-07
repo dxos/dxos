@@ -29,6 +29,7 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
   '@atproto/lexicon': ^0.7.7
+  '@aws-sdk/client-s3': ^3.995.0
   '@automerge/automerge': 3.3.0-fragments.2
   '@automerge/automerge-repo': 2.6.0-subduction.40
   '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.40
@@ -321,6 +322,7 @@ catalog:
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
+  '@typescript-eslint/parser': ^8.66.0
   '@typescript/native-preview': 7.0.0-dev.20260421.2
   '@typescript/vfs': ^1.6.0
   '@uiw/codemirror-theme-vscode': ^4.25.2
@@ -800,6 +802,7 @@ overrides:
   typescript: 'catalog:'
   undici: '>=7.18.2'
   vite: '>=8.1.4'
+  web-ext: ^10.5.0
   wrangler: '>=4.112.0'
   ws: '>=8.17.1'
 
@@ -832,6 +835,14 @@ peerDependencyRules:
     - '@effect/experimental'
     - '@effect/platform'
     - '@effect/rpc'
+    # planck declares a stage-js peer for its own demos; nothing in the repo renders with it.
+    - stage-js
+    # Storybook's vite builder and workerize-loader both declare a webpack peer they never use;
+    # nothing in the repo bundles with webpack.
+    - webpack
+    # `@antv/layout` pulls in a transferable helper that expects the webpack loader; the layout code
+    # runs on the main thread here.
+    - workerize-loader
 
 strictPeerDependencies: true
 

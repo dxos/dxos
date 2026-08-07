@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-file",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Inline file (image / PDF) storage plugin for DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -60,11 +60,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -73,7 +68,33 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./FileCapabilities": {
+      "source": "./src/types/FileCapabilities.ts",
+      "types": "./dist/types/src/types/FileCapabilities.d.ts",
+      "import": "./dist/lib/FileCapabilities.mjs"
+    },
+    "./FileEvents": {
+      "source": "./src/types/FileEvents.ts",
+      "types": "./dist/types/src/types/FileEvents.d.ts",
+      "import": "./dist/lib/FileEvents.mjs"
+    },
+    "./FileLimits": {
+      "source": "./src/types/FileLimits.ts",
+      "types": "./dist/types/src/types/FileLimits.d.ts",
+      "import": "./dist/lib/FileLimits.mjs"
+    },
+    "./FileOperation": {
+      "source": "./src/types/FileOperation.ts",
+      "types": "./dist/types/src/types/FileOperation.d.ts",
+      "import": "./dist/lib/FileOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -83,14 +104,28 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "FileCapabilities": [
+        "dist/types/src/types/FileCapabilities.d.ts"
+      ],
+      "FileEvents": [
+        "dist/types/src/types/FileEvents.d.ts"
+      ],
+      "FileLimits": [
+        "dist/types/src/types/FileLimits.d.ts"
+      ],
+      "FileOperation": [
+        "dist/types/src/types/FileOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -122,7 +157,6 @@
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

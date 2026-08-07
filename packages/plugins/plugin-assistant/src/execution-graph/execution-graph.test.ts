@@ -7,7 +7,9 @@ import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, RUN_AGAIN_ERROR_CODE, Trace } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { EntityId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
@@ -921,6 +923,32 @@ describe('buildExecutionGraph scenarios', () => {
             outcome: 'failure',
             error: 'Run again',
             errorCode: RUN_AGAIN_ERROR_CODE,
+          });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    const endCommit = commits.find((commit) => commit.id.endsWith('sync:end'));
+    expect(endCommit?.message).toBe('Sync Google Mail - Incomplete');
+    expect(endCommit?.level).toBe(LogLevel.WARN);
+  });
+
+  /**
+   * Legacy events persisted before `errorCode` existed carry only the run-again message. They must
+   * still render as incomplete via the message fallback.
+   */
+  test('legacy run-again failure (message only, no errorCode) renders as incomplete', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'sync', name: 'Sync Google Mail' });
+          yield* Trace.write(Trace.OperationEnd, {
+            key: 'sync',
+            name: 'Sync Google Mail',
+            outcome: 'failure',
+            error: RUN_AGAIN_MESSAGE,
           });
         }),
       ),

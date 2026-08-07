@@ -4,7 +4,7 @@
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import { log } from '@dxos/log';
-import { BookingSearch } from '@dxos/plugin-trip';
+import * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
 
 import { type DuffelOfferRequestBody, type DuffelOffersResponse } from './duffel-mapping';
 import { DUFFEL_SERVICE_ID } from './DuffelBookingService';

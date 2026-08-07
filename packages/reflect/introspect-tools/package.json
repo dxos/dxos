@@ -1,6 +1,6 @@
 {
   "name": "@dxos/introspect-tools",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Tool definitions (Effect Schema inputs + metadata) shared between the introspect-mcp server and downstream consumers (react-ui-introspect, etc.). Browser-safe — no Node-only dependencies.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,13 +27,13 @@
   "dependencies": {
     "@dxos/effect-zod": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:",
-    "zod": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "zod": "catalog:"
   },
   "publishConfig": {
     "access": "public"

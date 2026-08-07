@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import { Settings } from '#types';
 
+import * as Settings from '../../types/Settings';
 import { ExcalidrawSettings } from './ExcalidrawSettings';
 
 type StoryProps = {

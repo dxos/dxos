@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 import { type CapabilityManager } from '@dxos/app-framework';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
 import { PublisherService } from './BloggerCapabilities';
@@ -73,7 +73,7 @@ export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos
     // Offer "Connect <publisher>" (via plugin-connector's `connectorAuth` extension) until a
     // Connection for the registered publisher exists — associating a publisher connection with the
     // Publication, mirroring plugin-studio's Artifact.
-    ConnectorAuthAnnotation.set({ connectorIds: resolvePublicationConnectorIds }),
+    ConnectorAnnotations.ConnectorAuthAnnotation.set({ connectorIds: resolvePublicationConnectorIds }),
   ),
 ) {}
 

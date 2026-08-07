@@ -7,7 +7,7 @@ import { describe, test, vi } from 'vitest';
 import { type Client } from '@dxos/client';
 import { SpaceId } from '@dxos/keys';
 
-import { WnfsCapabilities } from '#types';
+import * as WnfsCapabilities from '../types/WnfsCapabilities';
 
 vi.mock('../helpers', () => ({
   loadWnfs: vi.fn(),

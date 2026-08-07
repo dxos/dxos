@@ -12,12 +12,19 @@ import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 export const RUN_AGAIN_ERROR_CODE = 'RunAgainError';
 
 /**
+ * Message carried by {@link RunAgainError}. Exported for backward compatibility: `operation.end`
+ * events persisted before {@link RUN_AGAIN_ERROR_CODE} existed carry only this message, so trace
+ * consumers fall back to it when `errorCode` is absent.
+ */
+export const RUN_AGAIN_MESSAGE = 'Run again';
+
+/**
  * Raised when a function wants to yield to the scheduler to not exceed platform limits.
  * The scheduler will re-run the function after the yield.
  * It is assumed that the function can be retried with the same input.
  * The function might have produced side-effects on the first run.
  */
-export class RunAgainError extends BaseError.extend(RUN_AGAIN_ERROR_CODE, 'Run again') {}
+export class RunAgainError extends BaseError.extend(RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE) {}
 
 // Errors from @dxos/operation.
 
@@ -73,7 +80,7 @@ export class FunctionsAiUpstreamError extends BaseError.extend(
 
 /**
  * Specialized `FunctionsAiUpstreamError` for the memoization layer: the recorded fixture for a
- * given cache key was not found and `ALLOW_LLM_GENERATION` is unset. The `cacheKey` is exposed
+ * given cache key was not found and `DX_UPDATE_MODEL_FIXTURES` is unset. The `cacheKey` is exposed
  * via `context.cacheKey` to make regeneration straightforward.
  */
 export class FunctionsAiMemoizationMissError extends BaseError.extend(

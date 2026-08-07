@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-panproto",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Declarative, serializable ECHO <-> foreign-record lenses executed by panproto.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

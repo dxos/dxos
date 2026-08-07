@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { RUN_AGAIN_ERROR_CODE, Trace } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj, Ref } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 
@@ -81,6 +82,19 @@ describe('groupIntoRuns', () => {
       timestamp: 2000,
     });
     const runs = groupIntoRuns([start, end], new Set([TRIGGER_ID]));
+    expect(runs[0].status).toBe('incomplete');
+  });
+
+  test('marks run as incomplete for a legacy run-again failure (message only, no errorCode)', ({ expect }) => {
+    const end = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationEnd.key,
+      eventOutcome: 'failure',
+      eventError: RUN_AGAIN_MESSAGE,
+      timestamp: 2000,
+    });
+    const runs = groupIntoRuns([end], new Set([TRIGGER_ID]));
     expect(runs[0].status).toBe('incomplete');
   });
 
@@ -162,13 +176,19 @@ function makeMessage(opts: {
   eventType?: string;
   eventOutcome?: string;
   eventErrorCode?: string;
+  eventError?: string;
   timestamp?: number;
 }): Trace.Message {
   const event = {
     type: opts.eventType ?? Trace.OperationStart.key,
     timestamp: opts.timestamp ?? Date.now(),
     data: opts.eventOutcome
-      ? { key: 'test', outcome: opts.eventOutcome, ...(opts.eventErrorCode && { errorCode: opts.eventErrorCode }) }
+      ? {
+          key: 'test',
+          outcome: opts.eventOutcome,
+          ...(opts.eventErrorCode && { errorCode: opts.eventErrorCode }),
+          ...(opts.eventError && { error: opts.eventError }),
+        }
       : { key: 'test' },
   } as Trace.Event;
   return Obj.make(Trace.Message, {

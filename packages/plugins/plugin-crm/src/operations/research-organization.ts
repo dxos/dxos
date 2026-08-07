@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { Person } from '@dxos/types';
 
-import { CrmOperation } from '../types';
+import * as CrmOperation from '../types/CrmOperation';
 import { organizationProfileContent, upsertProfile } from './research';
 
 const handler: Operation.WithHandler<typeof CrmOperation.ResearchOrganization> = CrmOperation.ResearchOrganization.pipe(

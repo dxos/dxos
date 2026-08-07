@@ -5,14 +5,16 @@
 import * as Schema from 'effect/Schema';
 
 import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';
-import { InboxOperation } from '@dxos/plugin-inbox';
-import { Mailbox } from '@dxos/plugin-inbox';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,

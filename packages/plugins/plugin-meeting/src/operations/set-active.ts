@@ -2,12 +2,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Type } from '@dxos/echo';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 
-import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+import * as Meeting from '../types/Meeting';
+import * as MeetingCapabilities from '../types/MeetingCapabilities';
+import * as MeetingOperation from '../types/MeetingOperation';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.SetActive> = MeetingOperation.SetActive.pipe(
   Operation.withHandler(

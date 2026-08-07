@@ -13,7 +13,8 @@ import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
 import { SampleStatusIndicator } from '#components';
 import { SampleDeckCompanion } from '#containers';
-import { SampleCapabilities } from '#types';
+
+import * as SampleCapabilities from '../types/SampleCapabilities';
 
 /**
  * `useAtomCapability` subscribes to the settings atom reactively so the indicator hides/shows when

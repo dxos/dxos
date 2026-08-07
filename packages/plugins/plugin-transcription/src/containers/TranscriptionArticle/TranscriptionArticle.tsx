@@ -53,7 +53,9 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>

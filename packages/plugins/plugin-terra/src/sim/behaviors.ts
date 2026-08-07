@@ -3,7 +3,7 @@
 //
 
 import { type TerraConfigValues, type Vec3, makeSampler, radiusAt, seaRadius } from '../engine';
-import { type TerraObject } from '../types';
+import * as TerraObject from '../types/TerraObject';
 import { routeLength, walkRouteSeries } from './path';
 
 /** Cruise altitude for planes, as a fraction of sea radius above the surface. */

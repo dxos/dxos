@@ -16,10 +16,9 @@ import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { File } from '@dxos/types';
 import { focusField } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
-
-import { File } from '#types';
 
 const WAIT_UNTIL_LOADER = 1500;
 

@@ -27,7 +27,11 @@ import { isTruthy } from '@dxos/util';
 
 import { BuildOutput, CodeToolbar, FileTree } from '#components';
 import { meta } from '#meta';
-import { CodeCapabilities, CodeOperation, type CodeProject, type SourceFile } from '#types';
+
+import * as CodeCapabilities from '../../types/CodeCapabilities';
+import * as CodeOperation from '../../types/CodeOperation';
+import type * as CodeProject from '../../types/CodeProject';
+import type * as SourceFile from '../../types/SourceFile';
 
 export type CodeArticleProps = AppSurface.ObjectArticleProps<CodeProject.CodeProject>;
 

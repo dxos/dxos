@@ -8,11 +8,14 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { setupPluginManager } from '@dxos/app-framework/testing';
+import { PluginManagerProvider } from '@dxos/app-framework/ui';
+import { fromHost } from '@dxos/client/local';
 import { Text as EchoText, Obj } from '@dxos/echo';
 import { Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { Client, ClientProvider, fromHost } from '@dxos/react-client';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
@@ -67,10 +70,15 @@ describe('editor binding lifecycle', () => {
     await client.destroy();
   });
 
+  // No plugins are registered — the review-render-policy capability stays unregistered, so the
+  // harness drives the default policy.
+  const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
-    <ClientProvider client={client}>
-      <ViewStateProvider>{children}</ViewStateProvider>
-    </ClientProvider>
+    <PluginManagerProvider value={pluginManager}>
+      <ClientProvider client={client}>
+        <ViewStateProvider>{children}</ViewStateProvider>
+      </ClientProvider>
+    </PluginManagerProvider>
   );
 
   const setup = () =>

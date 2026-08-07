@@ -19,7 +19,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CommercePlugin } from '../../plugin';
 import { makeSampleProvider } from '../../testing';
 import { translations } from '../../translations';
-import { Provider } from '../../types';
+import * as Provider from '../../types/Provider';
 import { ProviderArticle } from './ProviderArticle';
 
 const DefaultStory = () => {

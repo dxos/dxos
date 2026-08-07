@@ -276,9 +276,12 @@ const ToggleGroupToolbarItem = ({
   }
 };
 
+/**
+ * Attention-gated toolbar container with no graph items of its own — render {@link ToolbarMenuItems}
+ * among its children, whose JSX order controls where the graph items sit.
+ */
 export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
   ({ __menuScope, children, ...props }, forwardedRef) => {
-    const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
     const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
     const { hasAttention } = useAttention(attendableId);
 
@@ -288,14 +291,24 @@ export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMen
         disabled={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >
-        {items?.map((item: MenuItem) => (
-          <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
-        ))}
         {children}
       </NaturalToolbar.Root>
     );
   },
 );
+
+/** The menu graph's toolbar items, container-free, so JSX order controls their placement. */
+export const ToolbarMenuItems = ({ __menuScope }: MenuScopedProps<{}>) => {
+  const items = useMenuItems(undefined, undefined, 'ToolbarMenuItems', __menuScope);
+
+  return (
+    <>
+      {items?.map((item: MenuItem) => (
+        <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
+      ))}
+    </>
+  );
+};
 
 const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {

@@ -12,7 +12,9 @@ import * as Struct from 'effect/Struct';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, RUN_AGAIN_ERROR_CODE, Trace } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
@@ -334,8 +336,12 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     }
     // A `RunAgainError` (Operation.runAgain) is a scheduler yield, not a hard error: the trace records
     // it as a failure tagged with the run-again error code, but it will be re-invoked. Detect it here
-    // and present it as a distinct warn-level state rather than folding it into failure.
-    const incomplete = event.data.outcome === 'failure' && event.data.errorCode === RUN_AGAIN_ERROR_CODE;
+    // and present it as a distinct warn-level state rather than folding it into failure. Fall back to
+    // the legacy message for events persisted before `errorCode` existed.
+    const incomplete =
+      event.data.outcome === 'failure' &&
+      (event.data.errorCode === RUN_AGAIN_ERROR_CODE ||
+        (event.data.errorCode === undefined && event.data.error === RUN_AGAIN_MESSAGE));
     const presentation =
       event.data.outcome === 'success'
         ? { icon: ICONS.operationEndSuccess.icon, level: ICONS.operationEndSuccess.level, suffix: '' }

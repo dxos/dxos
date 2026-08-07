@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { makeRoutine } from '@dxos/plugin-routine';
-import { type RoutineCapabilities } from '@dxos/plugin-routine/types';
+import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { FeedOperation, Magazine } from '#types';
+import * as FeedOperation from '../types/FeedOperation';
+import * as Magazine from '../types/Magazine';
 
 /** Default cron for a magazine curation routine: daily at 9 AM. The user edits the schedule from the trigger. */
 const DEFAULT_CRON = '0 9 * * *';

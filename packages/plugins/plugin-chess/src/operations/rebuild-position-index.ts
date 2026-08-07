@@ -5,13 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Game, GameVariantMismatchError, loadGame } from '@dxos/plugin-game/types';
+import * as Game from '@dxos/plugin-game/Game';
+import * as GameUtil from '@dxos/plugin-game/GameUtil';
 
 import * as positionIndexInternal from '../internal/position-index';
-import { Chess, ChessOperation, ChessPositionIndex } from '../types';
+import * as Chess from '../types/Chess';
+import * as ChessOperation from '../types/ChessOperation';
+import * as ChessPositionIndex from '../types/ChessPositionIndex';
 
 export default ChessOperation.RebuildPositionIndex.pipe(
   Operation.withHandler(
@@ -39,10 +42,10 @@ export default ChessOperation.RebuildPositionIndex.pipe(
 
         // Skip games whose variant is not chess, but let database/ref failures abort the rebuild
         // rather than silently producing a partial index.
-        const loaded = yield* loadGame(Ref.make(game), Chess.State).pipe(
+        const loaded = yield* GameUtil.loadGame(Ref.make(game), Chess.State).pipe(
           Effect.asSome,
           Effect.catchIf(
-            (error) => error instanceof GameVariantMismatchError,
+            (error) => error instanceof GameUtil.GameVariantMismatchError,
             () => Effect.succeedNone,
           ),
         );

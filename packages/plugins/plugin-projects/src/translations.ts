@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 

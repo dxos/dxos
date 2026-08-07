@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
-import { type CallsCapabilities } from '#types';
+
+import * as CallsCapabilities from '../types/CallsCapabilities';
 
 type CallRoomData = { subject: CallsCapabilities.Call; attendableId: string };
 
@@ -20,7 +22,7 @@ const isCallData = (data: unknown): data is CallRoomData => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'activeCallCompanion',
         filter: Surface.makeFilter(AppSurface.deckCompanion('activeCall')),

@@ -14,7 +14,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
 
-import { type Connection } from '../../types';
+import type * as Connection from '../../types/Connection';
 import { isCursorForConnection } from '../../util';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;

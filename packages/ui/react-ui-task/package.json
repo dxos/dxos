@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-task",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Task list components over the durable Task/TaskSet model.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,7 +24,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -34,7 +33,8 @@
     "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
-    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",

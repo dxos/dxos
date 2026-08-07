@@ -16,7 +16,7 @@ import React, {
   useState,
 } from 'react';
 
-import { NativePasskey } from '@dxos/app-toolkit';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, DropdownMenu, Icon, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -34,6 +34,8 @@ const ATMOSPHERE_PROVIDER = 'atproto';
 
 const errorMessageKeys: Record<WelcomeError, string> = {
   'email': 'email-error.message',
+  'account-exists': 'account-exists-error.message',
+  'email-check-unavailable': 'email-check-unavailable-error.message',
   'oauth': 'oauth-error.message',
   'passkey-dismissed': 'passkey-dismissed-error.message',
   'passkey-rejected': 'passkey-rejected-error.message',
@@ -196,6 +198,18 @@ export const Welcome = ({
       setPending(false);
     }
   }, [code, email, onCreateAccount]);
+
+  // Signup-specific failures report under the signup email field rather than as a
+  // generic delivery error.
+  const signupEmailError =
+    error === 'email' || error === 'account-exists' || error === 'email-check-unavailable'
+      ? t(errorMessageKeys[error])
+      : null;
+
+  const handleSwitchToEmailLogin = useCallback(() => {
+    setTab('login');
+    setLoginPrimary('email');
+  }, []);
 
   const handleJoinWaitlist = useCallback(async () => {
     if (!validEmail(waitlistEmail)) {
@@ -397,8 +411,11 @@ export const Welcome = ({
                       submitLabel={t('continue-button.label')}
                       submitDisabled={!validEmail(email) || pending}
                       onSubmit={handleCreateAccount}
-                      validation={error === 'email' ? t(errorMessageKeys.email) : null}
+                      validation={signupEmailError}
                     />
+                    {error === 'account-exists' && (
+                      <SwapLink onClick={handleSwitchToEmailLogin}>{t('log-in-instead-link.label')}</SwapLink>
+                    )}
                     {onCreateAccountWithOAuth && (
                       <>
                         <OrDivider>{t('or-divider.label')}</OrDivider>

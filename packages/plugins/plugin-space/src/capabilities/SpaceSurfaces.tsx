@@ -9,7 +9,8 @@ import * as Option from 'effect/Option';
 import React, { type Ref } from 'react';
 
 import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppAnnotation, type AppCapabilities } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
@@ -31,8 +32,9 @@ import {
   ViewEditor,
 } from '#containers';
 import { SpaceOperation } from '#operations';
-import { type Settings, SpaceCapabilities } from '#types';
 
+import * as Settings from '../types/Settings';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
 import { tryGetViewForObject } from './try-get-view';
 
 export type SpaceHomeSectionProps = {
@@ -147,7 +149,7 @@ export const SelectedObjectsSurface = ({ companionTo, ref }: SelectedObjectsSurf
     }
 
     if (mergePreview?.typeUri === Type.getURI(companionTo)) {
-      return <MergePreview type={companionTo} spaceId={activeSpace.id} preview={mergePreview} ref={ref} />;
+      return <MergePreview type={companionTo} preview={mergePreview} ref={ref} />;
     }
 
     return (

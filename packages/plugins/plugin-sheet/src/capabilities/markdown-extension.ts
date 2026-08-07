@@ -4,20 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { getSpace } from '@dxos/client/echo';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-
-import { SheetCapabilities } from '#types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
 import { computeGraphFacet } from '../extensions';
+import * as SheetCapabilities from '../types/SheetCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
+    return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc }) => {
         const computeGraphRegistry = capabilities.get(SheetCapabilities.ComputeGraphRegistry);
         const space = getSpace(doc);

@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
-import { ObservabilityCapabilities } from '@dxos/plugin-observability';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 
-import { SupportOperation } from '../types';
+import * as SupportOperation from '../types/SupportOperation';
 
 const handler: Operation.WithHandler<typeof SupportOperation.CaptureUserFeedback> =
   SupportOperation.CaptureUserFeedback.pipe(

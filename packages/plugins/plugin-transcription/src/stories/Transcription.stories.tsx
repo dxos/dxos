@@ -168,6 +168,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    audioUrl: 'https://dxos.network/audio-london.m4a',
+    audioUrl: 'https://media.dxos.network/audio-london.m4a',
   },
 };

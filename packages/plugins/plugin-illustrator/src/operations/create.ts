@@ -4,10 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 
-import { Drawing, DrawingOperation, IllustratorCapabilities } from '../types';
+import * as Drawing from '../types/Drawing';
+import * as DrawingOperation from '../types/DrawingOperation';
+import * as IllustratorCapabilities from '../types/IllustratorCapabilities';
 import { UnknownDrawingVariantError } from '../util/load-drawing';
 
 const handler: Operation.WithHandler<typeof DrawingOperation.Create> = DrawingOperation.Create.pipe(

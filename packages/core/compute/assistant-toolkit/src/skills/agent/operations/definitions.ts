@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
-import { Operation, TriggerEvent } from '@dxos/compute';
 import { AgentService } from '@dxos/compute/AgentService';
+import * as Operation from '@dxos/compute/Operation';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 

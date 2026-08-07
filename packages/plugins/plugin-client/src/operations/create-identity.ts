@@ -4,15 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { ClientEvents } from '../types';
-import { ClientCapabilities } from '../types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
+import * as ClientEvents from '../types/ClientEvents';
 import { CreateIdentity } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pipe(
@@ -21,6 +22,8 @@ const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pip
       const manager = yield* Capability.get(Capabilities.PluginManager);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
+      // Boot-waterfall milestone: the identity exists from here (first-run path).
+      performance.mark('milestone:identity-created');
       const spaceKey = data.spaceKey;
       const spaceId = spaceKey ? yield* Effect.promise(() => createIdFromSpaceKey(spaceKey)) : undefined;
       yield* Effect.promise(() => EffectEx.runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));

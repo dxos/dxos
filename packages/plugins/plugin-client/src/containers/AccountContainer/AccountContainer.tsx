@@ -6,17 +6,17 @@ import { useAtom, useAtomSet } from '@effect-atom/atom-react';
 import React, { type FormEvent, useCallback, useState } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
 import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { ClientCapabilities } from '#types';
 
 import { RESET_DIALOG } from '../../constants';
 import { useHubHttpClient } from '../../hooks';
+import * as ClientCapabilities from '../../types/ClientCapabilities';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
@@ -120,8 +120,10 @@ export const AccountContainer = () => {
             {accountState === 'loading' ? null : accountState === 'missing' ? (
               <>
                 <Message.Root valence='warning'>
-                  <Message.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Message.Title>
-                  <Message.Body>{t('no-edge-access.description')}</Message.Body>
+                  <Message.Content>
+                    <Message.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Message.Title>
+                    <Message.Body>{t('no-edge-access.description')}</Message.Body>
+                  </Message.Content>
                 </Message.Root>
                 <Form.Row label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
@@ -147,8 +149,10 @@ export const AccountContainer = () => {
               </>
             ) : accountState === 'error' && !account ? (
               <Message.Root valence='error'>
-                <Message.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Message.Title>
-                <Message.Body>{t('account-offline.description')}</Message.Body>
+                <Message.Content>
+                  <Message.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Message.Title>
+                  <Message.Body>{t('account-offline.description')}</Message.Body>
+                </Message.Content>
               </Message.Root>
             ) : account ? (
               <>

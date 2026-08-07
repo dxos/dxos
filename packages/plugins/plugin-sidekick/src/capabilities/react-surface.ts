@@ -5,17 +5,18 @@
 import * as Effect from 'effect/Effect';
 import { lazy } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { Sidekick } from '#types';
+import * as Sidekick from '../types/Sidekick';
 
 const SidekickArticle = lazy(() => import('#containers'));
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(
+    Capability.contribute(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'sidekickDashboard',

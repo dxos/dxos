@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Locale } from 'date-fns/locale';
+import { type Locale } from 'date-fns';
 import React, { type ReactNode, Suspense, useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
 
