@@ -49,7 +49,7 @@ export const EchoObjectSchema: {
     const fields = ((self as any).fields ?? {}) as Fields;
 
     const schemaWithId = Schema.extend(self, Schema.Struct({ id: Schema.String }));
-    const ast = SchemaAST.annotations(schemaWithId.ast, {
+    const ast = SchemaAST.annotate(schemaWithId.ast, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,

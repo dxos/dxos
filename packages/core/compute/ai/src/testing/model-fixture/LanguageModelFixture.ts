@@ -785,7 +785,7 @@ const FixtureConversation = Schema.Struct({
   // This is supposed to be Response.AllParts for arbitrary tools.
   // Tool call schema is generated based on the available tools so we can't use a static schema.
   response: Schema.Array(Schema.Unknown),
-}).annotations({ identifier: 'FixtureConversation' });
+}).annotate({ identifier: 'FixtureConversation' });
 type FixtureConversation = Schema.Schema.Type<typeof FixtureConversation>;
 
 /**

@@ -29,7 +29,7 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
     status: PostStatus.pipe(FormInputAnnotation.set(false)),
     outline: Ref.Ref(Text.Text)
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
-      .annotations({ description: 'Post outline and/or instructions.' }),
+      .annotate({ description: 'Post outline and/or instructions.' }),
     content: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
@@ -65,7 +65,7 @@ export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos
     name: Schema.optional(Schema.String),
     instructions: Ref.Ref(Text.Text)
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
-      .annotations({ description: 'Publication instructions.' }),
+      .annotate({ description: 'Publication instructions.' }),
     posts: Schema.Array(Ref.Ref(Post)).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name']),

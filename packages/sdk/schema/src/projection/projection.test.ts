@@ -47,7 +47,7 @@ describe('ProjectionModel', () => {
 
     const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
-        name: Schema.String.annotations({ title: 'Name' }),
+        name: Schema.String.annotate({ title: 'Name' }),
         email: Format.Email,
         salary: Format.Currency({ code: 'usd', decimals: 2 }),
       }),
@@ -139,7 +139,7 @@ describe('ProjectionModel', () => {
     const typename = 'com.example.type.person';
     const schema = Type.makeObject(DXN.make(typename, '0.1.0'))(
       Schema.Struct({
-        name: Schema.String.annotations({ title: 'Name' }),
+        name: Schema.String.annotate({ title: 'Name' }),
         email: Format.Email,
         salary: Format.Currency({ code: 'usd', decimals: 2 }),
         organization: Ref(TestSchema.Organization),
@@ -193,7 +193,7 @@ describe('ProjectionModel', () => {
 
     const schema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
-        name: Schema.String.annotations({ title: 'Name' }),
+        name: Schema.String.annotate({ title: 'Name' }),
         email: Format.Email,
       }),
     );

@@ -24,12 +24,14 @@ import {
 import { type JsonPath, type JsonProp } from './internal/json-path';
 
 const ZipCode = Schema.String.pipe(
-  Schema.pattern(/^\d{5}$/, {
-    typeId: Symbol.for('@example/schema/ZipCode'),
-    identifier: 'ZipCode',
-    title: 'ZIP code',
-    description: 'Simple 5 digit zip code',
-  }),
+  Schema.check(
+    Schema.isPattern(/^\d{5}$/, {
+      typeId: Symbol.for('@example/schema/ZipCode'),
+      identifier: 'ZipCode',
+      title: 'ZIP code',
+      description: 'Simple 5 digit zip code',
+    }),
+  ),
 );
 
 const LatLng = Schema.Struct({
@@ -92,14 +94,14 @@ describe('AST', () => {
   });
 
   test('getProperties preserves annotation on property type after refinements', ({ expect }) => {
-    // When a property is e.g. Format.Text.pipe(nonEmptyString(), maxLength(), Schema.annotations({ title, description })),
+    // When a property is e.g. Format.Text.pipe(nonEmptyString(), maxLength(), Schema.annotate({ title, description })),
     // the form uses getProperties(schema.ast) and then Format.FormatAnnotation.getFromAst(property.type).
-    // Custom title and description from the outer Schema.annotations() must not be lost.
+    // Custom title and description from the outer Schema.annotate() must not be lost.
     const WithRefinements = Schema.Struct({
-      message: Schema.String.annotations({ title: 'Feedback' }).pipe(
-        Schema.minLength(1),
-        Schema.maxLength(4096),
-        Schema.annotations({
+      message: Schema.String.annotate({ title: 'Feedback' }).pipe(
+        Schema.check(Schema.isMinLength(1)),
+        Schema.check(Schema.isMaxLength(4096)),
+        Schema.annotate({
           title: 'Feedback label',
           description: 'Feedback placeholder',
         }),
@@ -110,20 +112,20 @@ describe('AST', () => {
     invariant(messageProp);
     const title = findAnnotation(messageProp.type, SchemaAST.TitleAnnotationId);
     const description = findAnnotation(messageProp.type, SchemaAST.DescriptionAnnotationId);
-    // Outer Schema.annotations() wins so form labels/placeholders are preserved.
+    // Outer Schema.annotate() wins so form labels/placeholders are preserved.
     expect(title).to.eq('Feedback label');
     expect(description).to.eq('Feedback placeholder');
   });
 
   test('findAnnotation', ({ expect }) => {
-    const TestSchema = Schema.NonEmptyString.pipe(Schema.pattern(/^\d{5}$/)).annotations({
+    const TestSchema = Schema.NonEmptyString.pipe(Schema.check(Schema.isPattern(/^\d{5}$/))).annotate({
       title: 'original title',
     });
 
     const ContactSchema = Schema.Struct({
-      p1: TestSchema.annotations({ title: 'new title' }),
-      p2: TestSchema.annotations({ title: 'new title' }).pipe(Schema.optional),
-      p3: Schema.optional(TestSchema.annotations({ title: 'new title' })),
+      p1: TestSchema.annotate({ title: 'new title' }),
+      p2: TestSchema.annotate({ title: 'new title' }).pipe(Schema.optional),
+      p3: Schema.optional(TestSchema.annotate({ title: 'new title' })),
     });
 
     for (const p of ['p1', 'p2', 'p3']) {
@@ -135,7 +137,7 @@ describe('AST', () => {
   });
 
   test('findAnnotation skips defaults', ({ expect }) => {
-    const annotation = findAnnotation(Schema.String.annotations({ title: 'test' }).ast, SchemaAST.TitleAnnotationId);
+    const annotation = findAnnotation(Schema.String.annotate({ title: 'test' }).ast, SchemaAST.TitleAnnotationId);
     expect(annotation).to.eq('test');
 
     const annotationIds = [SchemaAST.TitleAnnotationId, SchemaAST.DescriptionAnnotationId];

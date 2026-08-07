@@ -63,19 +63,19 @@ export const DraftEmail = Operation.make({
     icon: 'ph--pencil--regular',
   },
   input: Schema.Struct({
-    subject: Schema.String.annotations({
+    subject: Schema.String.annotate({
       description: 'The subject of the email.',
     }),
-    to: Schema.String.annotations({
+    to: Schema.String.annotate({
       description: 'The recipient email address.',
     }),
-    body: Schema.String.annotations({
+    body: Schema.String.annotate({
       description: 'The body of the email.',
     }),
-    replyTo: Schema.optional(Ref.Ref(Message.Message)).annotations({
+    replyTo: Schema.optional(Ref.Ref(Message.Message)).annotate({
       description: 'The message to reply to.',
     }),
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox to scope the draft to.',
     }),
   }),
@@ -132,7 +132,7 @@ export const GmailSend = Operation.make({
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
     message: Type.getSchema(Message.Message),
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection to source Gmail credentials from.',
     }),
   }),
@@ -152,12 +152,12 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotate({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
-      Schema.annotations({
+      Schema.annotate({
         description: 'Gmail label to sync emails from. Defaults to inbox.',
       }),
       Schema.optional,
@@ -193,7 +193,7 @@ export const JmapSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotate({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
   }),
@@ -231,7 +231,7 @@ export const JmapSend = Operation.make({
   },
   input: Schema.Struct({
     message: Type.getSchema(Message.Message),
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection to source JMAP credentials from.',
     }),
   }),
@@ -251,7 +251,7 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotate({
       description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
     }),
     googleCalendarId: Schema.optional(Schema.String),
@@ -294,13 +294,13 @@ export const CreateGoogleCalendarEvent = Operation.make({
   },
   input: Schema.Struct({
     event: Type.getSchema(Event.Event),
-    googleCalendarId: Schema.String.annotations({ description: 'Remote Google calendar id.' }),
-    connection: Ref.Ref(Connection.Connection).annotations({
+    googleCalendarId: Schema.String.annotate({ description: 'Remote Google calendar id.' }),
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection to source Google Calendar credentials from.',
     }),
   }),
   output: Schema.Struct({
-    id: Schema.String.annotations({ description: 'Remote Google event id.' }),
+    id: Schema.String.annotate({ description: 'Remote Google event id.' }),
   }),
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
@@ -338,7 +338,7 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotate({
       description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
     }),
     pageSize: Schema.optional(Schema.Number),
@@ -357,17 +357,17 @@ export const ReadEmail = Operation.make({
     icon: 'ph--envelope-open--regular',
   },
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Reference to the mailbox object.',
     }),
     skip: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         description: 'The number of messages to skip.',
       }),
       Schema.optional,
     ),
     limit: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         description: 'The maximum number of messages to read. Do not provide a value unless directly asked.',
       }),
       Schema.optional,
@@ -387,16 +387,16 @@ export const ClassifyEmail = Operation.make({
     icon: 'ph--tag--regular',
   },
   input: Schema.Struct({
-    message: Schema.Any.annotations({
+    message: Schema.Any.annotate({
       description: 'The message object to classify.',
     }),
   }),
   output: Schema.Union(
     Schema.Struct({
-      tagId: Schema.String.annotations({
+      tagId: Schema.String.annotate({
         description: 'The ID of the selected tag.',
       }),
-      tagLabel: Schema.String.annotations({
+      tagLabel: Schema.String.annotate({
         description: 'The label of the selected tag.',
       }),
     }),
@@ -501,14 +501,14 @@ export const ExtractMailbox = Operation.make({
   },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed messages are processed.',
     }),
-    extractorId: Schema.String.annotations({
+    extractorId: Schema.String.annotate({
       description: 'Registered ObjectExtractor id to run on each message.',
     }),
     concurrency: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.positive(), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum number of messages to extract in parallel.',
       }),
     ),
@@ -535,22 +535,22 @@ export const AnalyzeMailbox = Operation.make({
   },
   services: [AiService.AiService, Database.Service, FactStore],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed messages are analyzed.',
     }),
     pageSize: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.positive(), Schema.check(Schema.isInt())).annotate({
         description: 'Number of messages processed per fact-store commit.',
       }),
     ),
     model: Schema.optional(
-      Schema.String.annotations({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
+      Schema.String.annotate({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
     ),
     provider: Schema.optional(
-      Schema.String.annotations({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
+      Schema.String.annotate({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
     ),
     strict: Schema.optional(
-      Schema.Boolean.annotations({ description: 'Strict structured output; set false for weak local models.' }),
+      Schema.Boolean.annotate({ description: 'Strict structured output; set false for weak local models.' }),
     ),
   }),
   output: Schema.Struct({
@@ -568,10 +568,10 @@ export const CreateProjectFromMessage = Operation.make({
   },
   services: [AiService.AiService, Database.Service],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox the message belongs to; the created project is anchored to it.',
     }),
-    message: Type.getSchema(Message.Message).annotations({
+    message: Type.getSchema(Message.Message).annotate({
       description: 'Message whose thread seeds the project.',
     }),
   }),
@@ -589,9 +589,9 @@ export const UnsubscribeSender = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox to add the skip-sender filter to.' }),
-    email: Schema.String.annotations({ description: 'Sender email to unsubscribe from and filter.' }),
-    unsubscribe: Schema.String.annotations({ description: 'The raw List-Unsubscribe header value.' }),
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox to add the skip-sender filter to.' }),
+    email: Schema.String.annotate({ description: 'Sender email to unsubscribe from and filter.' }),
+    unsubscribe: Schema.String.annotate({ description: 'The raw List-Unsubscribe header value.' }),
   }),
   output: Schema.Struct({
     filtered: Schema.Boolean,
@@ -616,10 +616,10 @@ export const GenerateReply = Operation.make({
   },
   services: [AiService.AiService, Database.Service, FactStore],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed holds the thread.',
     }),
-    message: Schema.Any.annotations({
+    message: Schema.Any.annotate({
       description: 'The message to reply to.',
     }),
   }),

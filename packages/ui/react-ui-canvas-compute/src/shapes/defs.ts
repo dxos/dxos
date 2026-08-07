@@ -37,7 +37,7 @@ export const ComputeShape = Schema.extend(
   Polygon,
   Schema.Struct({
     // TODO(burdon): Rename computeNode?
-    node: Schema.optional(Obj.ID.annotations({ description: 'Compute node id' })),
+    node: Schema.optional(Obj.ID.annotate({ description: 'Compute node id' })),
   }).pipe(Schema.mutable),
 );
 

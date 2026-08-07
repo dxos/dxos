@@ -15,7 +15,7 @@ import { TestLayout } from '../../../../../testing';
 import { Form } from '../../../Form';
 
 const schema = Schema.Struct({
-  location: Format.GeoPoint.annotations({ title: 'Location' }),
+  location: Format.GeoPoint.annotate({ title: 'Location' }),
 }).pipe(Schema.mutable);
 
 type Values = Schema.Schema.Type<typeof schema>;

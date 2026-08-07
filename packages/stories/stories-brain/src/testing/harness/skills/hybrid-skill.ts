@@ -29,9 +29,9 @@ export const RetrieveSubject = Operation.make({
   },
   services: [SubjectIndex],
   input: Schema.Struct({
-    subject: Schema.String.annotations({ description: 'Person or organization name, e.g. "Nicole Gudmand".' }),
+    subject: Schema.String.annotate({ description: 'Person or organization name, e.g. "Nicole Gudmand".' }),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.positive(), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum source messages to return (default 10).',
       }),
     ),

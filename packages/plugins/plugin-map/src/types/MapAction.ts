@@ -12,7 +12,7 @@ export const CreateMap = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.pipe(
-    Schema.annotations({ title: 'Select pin type' }),
+    Schema.annotate({ title: 'Select pin type' }),
     SpaceForm.TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],
@@ -20,7 +20,7 @@ export const CreateMap = Schema.Struct({
     Schema.optional,
   ),
   locationFieldName: Schema.String.pipe(
-    Schema.annotations({
+    Schema.annotate({
       [MapCapabilities.LocationAnnotationId]: true,
       title: 'Location property',
     }),

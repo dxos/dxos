@@ -42,7 +42,7 @@ const LegacyStoredDeckState = Schema.Struct({
 }).pipe(Schema.mutable);
 type LegacyStoredDeckState = Schema.Schema.Type<typeof LegacyStoredDeckState>;
 
-const decodeLegacyState = Schema.decodeUnknownEither(LegacyStoredDeckState);
+const decodeLegacyState = Schema.decodeUnknownResult(LegacyStoredDeckState);
 
 /** Whether any field absent from the current deck schema is still present. */
 const hasLegacyFields = (state: LegacyStoredDeckState): boolean =>

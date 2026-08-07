@@ -218,7 +218,7 @@ const fieldToSchema = (field: protobuf.Field, resolveRef: (fq: string) => Schema
 const enumToSchema = (e: protobuf.Enum): Schema.Schema<any> => {
   // proto3 enums are guaranteed to have at least one value (the zero entry).
   const values = Object.values(e.values) as [number, ...number[]];
-  return Schema.Literal(...values).annotations({
+  return Schema.Literal(...values).annotate({
     identifier: stripLeadingDot(e.fullName),
   });
 };

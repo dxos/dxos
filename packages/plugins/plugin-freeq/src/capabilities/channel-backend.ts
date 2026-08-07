@@ -61,13 +61,13 @@ export const makeFreeqChannelBackend = (
   label: 'Freeq',
   icon: 'ph--dog--regular',
   createFields: Schema.Struct({
-    serverUrl: Schema.String.annotations({
+    serverUrl: Schema.String.annotate({
       title: 'Server URL',
       description: 'freeq WebSocket URL, e.g. wss://irc.freeq.at/irc',
     }),
-    channel: Schema.String.annotations({ title: 'Channel', description: 'IRC channel name (e.g. #general).' }),
+    channel: Schema.String.annotate({ title: 'Channel', description: 'IRC channel name (e.g. #general).' }),
     handle: Schema.optional(
-      Schema.String.annotations({ title: 'Handle', description: 'Bluesky handle for authentication (optional).' }),
+      Schema.String.annotate({ title: 'Handle', description: 'Bluesky handle for authentication (optional).' }),
     ),
   }),
   makeConfig: (options) =>

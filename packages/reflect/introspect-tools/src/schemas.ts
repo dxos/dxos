@@ -9,8 +9,8 @@
 // like `react-ui-form` import them directly to render forms.
 //
 // Convention: every field's description goes on the OUTERMOST wrapper.
-//   - Optional fields: `.annotations({ description })` on `Schema.optional(...)`.
-//   - Required fields: `.annotations({ description })` on the primitive itself.
+//   - Optional fields: `.annotate({ description })` on `Schema.optional(...)`.
+//   - Required fields: `.annotate({ description })` on the primitive itself.
 
 import * as Schema from 'effect/Schema';
 
@@ -46,14 +46,18 @@ export const getPicker = (ast: SchemaAST.AST): PickerKind | undefined =>
  */
 export const ListOptionsInput = Schema.Struct({
   limit: Schema.optional(
-    Schema.Number.pipe(Schema.int(), Schema.positive(), Schema.lessThanOrEqualTo(MAX_LIST_LIMIT)),
-  ).annotations({
+    Schema.Number.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.positive(),
+      Schema.check(Schema.isLessThanOrEqualTo(MAX_LIST_LIMIT)),
+    ),
+  ).annotate({
     title: 'Limit',
     description: trim`
       Maximum number of items. Default ${DEFAULT_LIST_LIMIT}; max ${MAX_LIST_LIMIT}.
     `,
   }),
-  compact: Schema.optional(Schema.Boolean).annotations({
+  compact: Schema.optional(Schema.Boolean).annotate({
     title: 'Compact',
     description: trim`
       If true, returns only the most-essential identifying fields for each item — about 1/4 the response size.
@@ -71,15 +75,15 @@ const IncludeEnum = Schema.Literal('source', 'jsdoc');
 //
 
 export const ListPackagesInput = Schema.Struct({
-  name: Schema.optional(Schema.String).annotations({
+  name: Schema.optional(Schema.String).annotate({
     title: 'Name filter',
     description: 'Substring of the package name (case-insensitive).',
     [PickerAnnotationId]: 'package-name' satisfies PickerKind,
   }),
-  pathPrefix: Schema.optional(Schema.String).annotations({
+  pathPrefix: Schema.optional(Schema.String).annotate({
     title: 'Path prefix',
   }),
-  privateOnly: Schema.optional(Schema.Boolean).annotations({
+  privateOnly: Schema.optional(Schema.Boolean).annotate({
     title: 'Private only',
     description: 'If true, only include workspace-private packages.',
   }),
@@ -87,7 +91,7 @@ export const ListPackagesInput = Schema.Struct({
 });
 
 export const GetPackageInput = Schema.Struct({
-  name: Schema.String.annotations({
+  name: Schema.String.annotate({
     title: 'Package name',
     description: 'Exact package name, e.g. "@dxos/echo".',
     [PickerAnnotationId]: 'package-name' satisfies PickerKind,
@@ -99,12 +103,12 @@ export const GetPackageInput = Schema.Struct({
 //
 
 export const ListSymbolsInput = Schema.Struct({
-  package: Schema.String.annotations({
+  package: Schema.String.annotate({
     title: 'Package',
     description: 'Exact package name, e.g. "@dxos/ai".',
     [PickerAnnotationId]: 'package-name' satisfies PickerKind,
   }),
-  kind: Schema.optional(SymbolKindEnum).annotations({
+  kind: Schema.optional(SymbolKindEnum).annotate({
     title: 'Kind',
     description: 'Optional filter on declaration kind.',
   }),
@@ -112,11 +116,11 @@ export const ListSymbolsInput = Schema.Struct({
 });
 
 export const FindSymbolInput = Schema.Struct({
-  query: Schema.String.annotations({
+  query: Schema.String.annotate({
     title: 'Query',
     description: 'Symbol name or partial name (case-insensitive).',
   }),
-  kind: Schema.optional(SymbolKindEnum).annotations({
+  kind: Schema.optional(SymbolKindEnum).annotate({
     title: 'Kind',
     description: 'Optional filter on declaration kind.',
   }),
@@ -124,11 +128,11 @@ export const FindSymbolInput = Schema.Struct({
 });
 
 export const GetSymbolInput = Schema.Struct({
-  ref: Schema.String.annotations({
+  ref: Schema.String.annotate({
     title: 'Symbol ref',
     description: 'Symbol ref in the form "<package>#<name>", e.g. "@dxos/echo#Expando".',
   }),
-  include: Schema.optional(Schema.Array(IncludeEnum)).annotations({
+  include: Schema.optional(Schema.Array(IncludeEnum)).annotate({
     title: 'Include',
     description: 'Optional fields to expand; default returns signature + summary only.',
   }),
@@ -146,7 +150,7 @@ export const ListPluginsInput = Schema.Struct({
   // No picker annotation — this is a free-form substring filter, not an
   // exact-match selector. Picking from the list of known plugin ids would
   // defeat the purpose of `list_plugins`.
-  id: Schema.optional(Schema.String).annotations({
+  id: Schema.optional(Schema.String).annotate({
     title: 'Plugin id',
     description: 'Substring of the plugin id (case-insensitive). Omit to list every plugin.',
   }),
@@ -154,7 +158,7 @@ export const ListPluginsInput = Schema.Struct({
 });
 
 const PluginIdFilter = Schema.Struct({
-  id: Schema.optional(Schema.String).annotations({
+  id: Schema.optional(Schema.String).annotate({
     title: 'Plugin id',
     [PickerAnnotationId]: 'plugin-id' satisfies PickerKind,
   }),
@@ -173,11 +177,11 @@ export const ListSchemasInput = PluginIdFilter;
 const IdiomHostKindEnum = Schema.Literal('story', 'test', 'symbol');
 
 export const ListIdiomsInput = Schema.Struct({
-  slug: Schema.optional(Schema.String).annotations({
+  slug: Schema.optional(Schema.String).annotate({
     title: 'Slug filter',
     description: 'Substring of the idiom slug (case-insensitive). Omit to list every idiom.',
   }),
-  hostKind: Schema.optional(IdiomHostKindEnum).annotations({
+  hostKind: Schema.optional(IdiomHostKindEnum).annotate({
     title: 'Host kind',
     description: 'Filter idioms by their host site: `symbol` (production code), `story`, or `test`.',
   }),

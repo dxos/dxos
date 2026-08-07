@@ -12,8 +12,8 @@ import { Provider } from './Provider';
 /** A single product listing returned by a provider search. */
 export class Result extends Type.makeObject<Result>(DXN.make('org.dxos.type.productSearchResult', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.pipe(Schema.annotations({ title: 'Title' })),
-    url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
+    title: Schema.String.pipe(Schema.annotate({ title: 'Title' })),
+    url: Schema.String.pipe(Schema.annotate({ title: 'URL' })),
     images: Schema.Array(Schema.String),
     price: Schema.optional(Schema.Number),
     currency: Schema.optional(Schema.String),

@@ -20,7 +20,7 @@ export const VerifySpec = Operation.make({
     icon: 'ph--check-circle--regular',
   },
   input: Schema.Struct({
-    spec: Ref.Ref(Spec.Spec).annotations({ description: 'The Spec to verify.' }),
+    spec: Ref.Ref(Spec.Spec).annotate({ description: 'The Spec to verify.' }),
   }),
   output: Schema.Struct({
     ok: Schema.Boolean,
@@ -37,7 +37,7 @@ export const RunBuildAgent = Operation.make({
     icon: 'ph--lightning--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to build.',
     }),
   }),
@@ -60,7 +60,7 @@ export const ListFiles = Operation.make({
     icon: 'ph--list--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to list files in.',
     }),
   }),
@@ -78,10 +78,10 @@ export const ReadFile = Operation.make({
     icon: 'ph--file-text--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject containing the file.',
     }),
-    path: Schema.String.annotations({
+    path: Schema.String.annotate({
       description: 'POSIX-style path of the file to read (e.g. "src/plugin.ts").',
     }),
   }),
@@ -101,13 +101,13 @@ export const WriteFile = Operation.make({
     icon: 'ph--pencil--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to write to.',
     }),
-    path: Schema.String.annotations({
+    path: Schema.String.annotate({
       description: 'POSIX-style path of the file to write.',
     }),
-    content: Schema.String.annotations({
+    content: Schema.String.annotate({
       description: 'New file content.',
     }),
   }),
@@ -126,10 +126,10 @@ export const DeleteFile = Operation.make({
     icon: 'ph--trash--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to remove the file from.',
     }),
-    path: Schema.String.annotations({
+    path: Schema.String.annotate({
       description: 'POSIX-style path of the file to delete.',
     }),
   }),
@@ -148,11 +148,11 @@ export const ScaffoldProject = Operation.make({
     icon: 'ph--folder-plus--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to scaffold into.',
     }),
     name: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Package name to use in the scaffolded files. Defaults to the project name.',
       }),
     ),
@@ -173,7 +173,7 @@ export const HelloWorld = Operation.make({
     icon: 'ph--hand-waving--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to write the file into.',
     }),
   }),
@@ -192,7 +192,7 @@ export const ResetProject = Operation.make({
     icon: 'ph--arrow-counter-clockwise--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to clear.',
     }),
   }),
@@ -226,7 +226,7 @@ export const BuildProject = Operation.make({
     icon: 'ph--lightning--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to build.',
     }),
   }),
@@ -248,7 +248,7 @@ export const RunBuild = Operation.make({
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
-    project: Ref.Ref(CodeProject.CodeProject).annotations({
+    project: Ref.Ref(CodeProject.CodeProject).annotate({
       description: 'The CodeProject to build and run.',
     }),
   }),

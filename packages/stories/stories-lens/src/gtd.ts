@@ -20,17 +20,17 @@ import { Task } from '@dxos/types';
 /** The shape the lensed interface is written against. */
 export class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.demo.GtdTask', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.annotations({ title: 'Title' }),
-    description: Schema.optional(Schema.String.annotations({ title: 'Notes' })),
+    title: Schema.String.annotate({ title: 'Title' }),
+    description: Schema.optional(Schema.String.annotate({ title: 'Notes' })),
 
     /** Lossy on read: `false` cannot say whether the task is `todo` or `in-progress`. */
-    done: Schema.optional(Schema.Boolean.annotations({ title: 'Done' })),
-    stage: Schema.optional(Schema.Literal('todo', 'in-progress', 'done').annotations({ title: 'Stage' })),
-    urgency: Schema.optional(Schema.Number.annotations({ title: 'Urgency (1-5)' })),
+    done: Schema.optional(Schema.Boolean.annotate({ title: 'Done' })),
+    stage: Schema.optional(Schema.Literal('todo', 'in-progress', 'done').annotate({ title: 'Stage' })),
+    urgency: Schema.optional(Schema.Number.annotate({ title: 'Urgency (1-5)' })),
 
     /** Neither exists on `Task`: both persist in the object's annotation dictionary. */
-    context: Schema.optional(Schema.Literal('@home', '@work', '@errands').annotations({ title: 'Context' })),
-    waitingOn: Schema.optional(Schema.String.annotations({ title: 'Waiting on' })),
+    context: Schema.optional(Schema.Literal('@home', '@work', '@errands').annotate({ title: 'Context' })),
+    waitingOn: Schema.optional(Schema.String.annotate({ title: 'Waiting on' })),
   }).pipe(Annotation.LabelAnnotation.set(['title'])),
 ) {}
 

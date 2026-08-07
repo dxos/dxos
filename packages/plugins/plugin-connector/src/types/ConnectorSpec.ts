@@ -100,7 +100,7 @@ export type ConnectorSync = {
   /** Create an empty local root object so a binding can be created eagerly. */
   materializeTarget?: Operation.Definition<MaterializeTargetInput, MaterializeTargetOutput>;
   /** Schema describing per-binding `.options`. */
-  optionsSchema?: Schema.Schema<any, any>;
+  optionsSchema?: Schema.Codec<any, any>;
   /**
    * Sync a binding as soon as it is created, instead of waiting for the user to ask. Defaults to
    * false: the first sync of a freshly authorized account is unbounded (full history, every bound
@@ -180,7 +180,7 @@ export type CredentialFormResult =
  */
 export type CredentialForm<Values = any> = {
   /** Schema rendered by the generic connector-form dialog. */
-  schema: Schema.Schema<Values, any>;
+  schema: Schema.Codec<Values, any>;
   /** Optional defaults pre-filled into the form. */
   defaultValues?: Partial<Values>;
   /**

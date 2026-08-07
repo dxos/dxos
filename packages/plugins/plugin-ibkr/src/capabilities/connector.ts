@@ -14,11 +14,11 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { IBKR_CONNECTOR_ID, IBKR_SOURCE } from '../constants';
 
 const IbkrTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'Flex token',
     description: 'The Flex Web Service token from IBKR Account Management.',
   }),
-  queryId: Schema.String.annotations({
+  queryId: Schema.String.annotate({
     title: 'Flex query ID',
     description:
       'The id of the Activity Flex Query. Use a short period (Last Business Day or Last Month).\n' +

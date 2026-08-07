@@ -19,8 +19,8 @@ const ForexEffect = Operation.make({
     description: 'Returns the exchange rate between two currencies.',
   },
   input: Schema.Struct({
-    from: Schema.String.annotations({ description: 'The source currency' }),
-    to: Schema.String.annotations({ description: 'The target currency' }),
+    from: Schema.String.annotate({ description: 'The source currency' }),
+    to: Schema.String.annotate({ description: 'The target currency' }),
   }),
   output: Schema.Any,
 });

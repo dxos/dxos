@@ -158,8 +158,8 @@ export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
 
 // TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  icon: Schema.optional(Schema.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
-  hue: Schema.optional(Schema.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
-  edgeReplication: Schema.optional(Schema.Boolean.annotations({ title: 'Enable EDGE Replication' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  icon: Schema.optional(Schema.String.annotate({ title: 'Icon', [IconAnnotationId]: true })),
+  hue: Schema.optional(Schema.String.annotate({ title: 'Color', [HueAnnotationId]: true })),
+  edgeReplication: Schema.optional(Schema.Boolean.annotate({ title: 'Enable EDGE Replication' })),
 });

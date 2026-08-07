@@ -17,7 +17,9 @@ export const StageConfig = Schema.Struct({
   /** Optional per-stage model override (an NSID name); resolved by the runtime. */
   model: Schema.optional(DXN.NameSchema),
   /** Optional sliding-window override in blocks. Positive integer; bad values fail validation. */
-  window: Schema.optional(Schema.Struct({ blocks: Schema.Number.pipe(Schema.int(), Schema.positive()) })),
+  window: Schema.optional(
+    Schema.Struct({ blocks: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.positive()) }),
+  ),
 });
 export type StageConfig = Schema.Schema.Type<typeof StageConfig>;
 

@@ -35,7 +35,7 @@ export const Read = Operation.make({
     icon: 'ph--file-arrow-down--regular',
   },
   input: Schema.Struct({
-    file: Ref.Ref(File.File).annotations({
+    file: Ref.Ref(File.File).annotate({
       description: 'The file to read.',
     }),
   }),

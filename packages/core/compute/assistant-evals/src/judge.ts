@@ -16,7 +16,7 @@ const JUDGE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 const JudgeVerdict = Schema.Struct({
   pass: Schema.Boolean,
-  reasoning: Schema.String.annotations({ description: 'One sentence explaining the verdict.' }),
+  reasoning: Schema.String.annotate({ description: 'One sentence explaining the verdict.' }),
 });
 
 export interface JudgeVerdict extends Schema.Schema.Type<typeof JudgeVerdict> {}

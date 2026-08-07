@@ -51,7 +51,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     /** Owned (or adopted synced) task container; membership is the ECHO parent edge. */
     taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
   }).pipe(
-    Schema.annotations({ title: 'Project' }),
+    Schema.annotate({ title: 'Project' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
   ),

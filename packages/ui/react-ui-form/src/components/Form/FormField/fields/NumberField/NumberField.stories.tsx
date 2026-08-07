@@ -14,7 +14,7 @@ import { TestLayout } from '../../../../../testing';
 import { Form } from '../../../Form';
 
 const schema = Schema.Struct({
-  count: Schema.Number.annotations({ title: 'Count' }),
+  count: Schema.Number.annotate({ title: 'Count' }),
 }).pipe(Schema.mutable);
 
 type Values = Schema.Schema.Type<typeof schema>;

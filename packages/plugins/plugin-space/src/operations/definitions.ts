@@ -167,12 +167,12 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      object: Obj.Unknown.annotations({ description: 'The object to add.' }),
-      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotations({
+      object: Obj.Unknown.annotate({ description: 'The object to add.' }),
+      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotate({
         description: 'The database or collection to add to.',
       }),
       targetNodeId: Schema.optional(
-        Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
+        Schema.String.annotate({ description: 'Qualified graph node ID of the target collection.' }),
       ),
     }),
     output: Schema.Struct({
@@ -184,12 +184,12 @@ export namespace SpaceOperation {
 
   // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
   export const RemoveObjectsOutput = Schema.Struct({
-    objects: Schema.Array(Entity.Unknown).annotations({ description: 'The removed entities.' }),
-    parentCollection: Type.getSchema(Collection.Collection).annotations({
+    objects: Schema.Array(Entity.Unknown).annotate({ description: 'The removed entities.' }),
+    parentCollection: Type.getSchema(Collection.Collection).annotate({
       description: 'The collection removed from.',
     }),
-    indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
-    wasActive: Schema.Array(Schema.String).annotations({
+    indices: Schema.Array(Schema.Number).annotate({ description: 'The indices the objects were at.' }),
+    wasActive: Schema.Array(Schema.String).annotate({
       description: 'IDs of objects that were active before removal.',
     }),
   });
@@ -205,8 +205,8 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      objects: Schema.Array(Entity.Unknown).annotations({ description: 'The entities to remove.' }),
-      target: Schema.optional(Type.getSchema(Collection.Collection)).annotations({
+      objects: Schema.Array(Entity.Unknown).annotate({ description: 'The entities to remove.' }),
+      target: Schema.optional(Type.getSchema(Collection.Collection)).annotate({
         description: 'The collection to remove from.',
       }),
     }),
@@ -214,10 +214,10 @@ export namespace SpaceOperation {
   });
 
   export const DeleteFieldOutput = Schema.Struct({
-    field: View.FieldSchema.annotations({ description: 'The deleted field schema.' }),
+    field: View.FieldSchema.annotate({ description: 'The deleted field schema.' }),
     // TODO(wittjosiah): This creates a type error with PropertySchema.
-    props: Schema.Any.annotations({ description: 'The deleted field properties.' }),
-    index: Schema.Number.annotations({ description: 'The index the field was at.' }),
+    props: Schema.Any.annotate({ description: 'The deleted field properties.' }),
+    index: Schema.Number.annotate({ description: 'The index the field was at.' }),
   });
 
   export type DeleteFieldOutput = Schema.Schema.Type<typeof DeleteFieldOutput>;
@@ -231,7 +231,7 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      view: Type.getSchema(View.View).annotations({ description: 'The view to delete the field from.' }),
+      view: Type.getSchema(View.View).annotate({ description: 'The view to delete the field from.' }),
       fieldId: Schema.String,
     }),
     output: DeleteFieldOutput,
@@ -246,7 +246,7 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotations({
+      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotate({
         description: 'The database or collection to create in.',
       }),
       views: Schema.optional(Schema.Boolean),
@@ -254,7 +254,7 @@ export namespace SpaceOperation {
       initialFormValues: Schema.optional(Schema.Any),
       navigable: Schema.optional(Schema.Boolean),
       targetNodeId: Schema.optional(
-        Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
+        Schema.String.annotate({ description: 'Qualified graph node ID of the target collection.' }),
       ),
       // TODO(wittjosiah): This is a function, is there a better way to handle this?
       onCreateObject: Schema.optional(Schema.Any),
@@ -490,11 +490,11 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      view: Type.getSchema(View.View).annotations({ description: 'The view to restore the field to.' }),
-      field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
+      view: Type.getSchema(View.View).annotate({ description: 'The view to restore the field to.' }),
+      field: View.FieldSchema.annotate({ description: 'The field schema to restore.' }),
       // TODO(wittjosiah): This creates a type error with PropertySchema.
-      props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
-      index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),
+      props: Schema.Any.annotate({ description: 'The field properties to restore.' }),
+      index: Schema.Number.annotate({ description: 'The index to restore the field at.' }),
     }),
     output: Schema.Void,
   });
@@ -511,12 +511,12 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      objects: Schema.Array(Entity.Unknown).annotations({ description: 'The entities to restore.' }),
-      parentCollection: Type.getSchema(Collection.Collection).annotations({
+      objects: Schema.Array(Entity.Unknown).annotate({ description: 'The entities to restore.' }),
+      parentCollection: Type.getSchema(Collection.Collection).annotate({
         description: 'The collection to restore to.',
       }),
-      indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
-      wasActive: Schema.Array(Schema.String).annotations({
+      indices: Schema.Array(Schema.Number).annotate({ description: 'The indices to restore at.' }),
+      wasActive: Schema.Array(Schema.String).annotate({
         description: 'IDs of objects that were active before deletion.',
       }),
     }),
@@ -525,8 +525,8 @@ export namespace SpaceOperation {
 
   /** A duplicate tuple, addressed by id so the group crosses the operation boundary. */
   export const DuplicateGroupResult = Schema.Struct({
-    keys: Schema.Array(Schema.String).annotations({ description: 'Identity keys shared by the members.' }),
-    objectIds: Schema.Array(Schema.String).annotations({ description: 'Members, in EntityId order.' }),
+    keys: Schema.Array(Schema.String).annotate({ description: 'Identity keys shared by the members.' }),
+    objectIds: Schema.Array(Schema.String).annotate({ description: 'Members, in EntityId order.' }),
   });
 
   export type DuplicateGroupResult = Schema.Schema.Type<typeof DuplicateGroupResult>;
@@ -545,10 +545,10 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service, Database.Service],
     input: Schema.Struct({
-      typename: Schema.String.annotations({ description: 'ECHO typename to scan.' }),
+      typename: Schema.String.annotate({ description: 'ECHO typename to scan.' }),
     }),
     output: Schema.Struct({
-      groups: Schema.Array(DuplicateGroupResult).annotations({ description: 'Largest group first.' }),
+      groups: Schema.Array(DuplicateGroupResult).annotate({ description: 'Largest group first.' }),
     }),
   });
 
@@ -563,8 +563,8 @@ export namespace SpaceOperation {
     services: [Capability.Service, Database.Service],
     input: Schema.Struct({
       typename: Schema.String,
-      objectIds: Schema.Array(Schema.String).annotations({ description: 'Members of the group to merge.' }),
-      overrides: Schema.optional(Obj.Unknown).annotations({
+      objectIds: Schema.Array(Schema.String).annotate({ description: 'Members of the group to merge.' }),
+      overrides: Schema.optional(Obj.Unknown).annotate({
         description: 'User-edited preview; folded in last so confirmed edits win.',
       }),
     }),

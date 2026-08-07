@@ -25,33 +25,29 @@ import * as Organization from './Organization';
  */
 const PersonSchema = Schema.Struct({
   fullName: Schema.String.pipe(
-    Schema.annotations({ title: 'Full Name' }),
+    Schema.annotate({ title: 'Full Name' }),
     GeneratorAnnotation.set({
       generator: 'person.fullName',
       probability: 1,
     }),
     Schema.optional,
   ),
-  preferredName: Schema.String.pipe(Schema.annotations({ title: 'Preferred Name' }), Schema.optional),
-  nickname: Schema.String.pipe(Schema.annotations({ title: 'Nickname' }), Schema.optional),
+  preferredName: Schema.String.pipe(Schema.annotate({ title: 'Preferred Name' }), Schema.optional),
+  nickname: Schema.String.pipe(Schema.annotate({ title: 'Nickname' }), Schema.optional),
   // TODO(wittjosiah): Format.URL. Support ref?
-  image: Schema.String.pipe(
-    Schema.annotations({ title: 'Image' }),
-    GeneratorAnnotation.set('image.url'),
-    Schema.optional,
-  ),
+  image: Schema.String.pipe(Schema.annotate({ title: 'Image' }), GeneratorAnnotation.set('image.url'), Schema.optional),
   // TODO(burdon): Use reference links.
   organization: Ref.Ref(Organization.Organization).pipe(
     PropertyMeta('referenceProperty', 'name'),
-    Schema.annotations({
+    Schema.annotate({
       title: 'Employer',
       description: 'Current employer',
     }),
     Schema.optional,
   ),
-  jobTitle: Schema.String.pipe(Schema.annotations({ title: 'Job Title' }), Schema.optional),
-  department: Schema.String.pipe(Schema.annotations({ title: 'Department' }), Schema.optional),
-  notes: Schema.String.pipe(Schema.annotations({ title: 'Notes' }), Schema.optional),
+  jobTitle: Schema.String.pipe(Schema.annotate({ title: 'Job Title' }), Schema.optional),
+  department: Schema.String.pipe(Schema.annotate({ title: 'Department' }), Schema.optional),
+  notes: Schema.String.pipe(Schema.annotate({ title: 'Notes' }), Schema.optional),
   emails: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
@@ -73,7 +69,7 @@ const PersonSchema = Schema.Struct({
     }),
   )
     .pipe(Schema.optional)
-    .annotations({ title: 'Phone Numbers' }),
+    .annotate({ title: 'Phone Numbers' }),
   addresses: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
@@ -84,14 +80,14 @@ const PersonSchema = Schema.Struct({
     Schema.Struct({
       label: Schema.optional(Schema.String),
       value: Format.URL.pipe(
-        Schema.annotations({ default: 'https://example.com' }),
+        Schema.annotate({ default: 'https://example.com' }),
         GeneratorAnnotation.set('internet.url'),
       ),
     }),
   ).pipe(Schema.optional),
   // TODO(burdon): Support date or create String type for ISO Date.
   birthday: Schema.String.pipe(
-    Schema.annotations({ title: 'Birthday' }),
+    Schema.annotate({ title: 'Birthday' }),
     GeneratorAnnotation.set('date.iso8601'),
     Schema.optional,
   ),
@@ -109,10 +105,10 @@ const _PersonSchema = PersonSchema.pipe(
   Schema.extend(
     Schema.Struct({
       // TODO(wittjosiah): Reconcile with addresses.
-      location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
+      location: Format.GeoPoint.pipe(Schema.annotate({ title: 'Location' }), Schema.optional),
     }),
   ),
-  Schema.annotations({ title: 'Person' }),
+  Schema.annotate({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'neutral' }),
   CardAnnotation.set(true),
@@ -123,7 +119,7 @@ export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.pers
 export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.make(Person, props);
 
 const _LegacyPersonSchema = PersonSchema.pipe(
-  Schema.annotations({ title: 'Person' }),
+  Schema.annotate({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
 );
 

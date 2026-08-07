@@ -226,11 +226,11 @@ const PullFrame = Schema.Struct({
   total: Schema.optional(Schema.Number),
   error: Schema.optional(Schema.String),
 });
-const decodePullFrame = Schema.decodeUnknownEither(Schema.parseJson(PullFrame));
+const decodePullFrame = Schema.decodeUnknownResult(Schema.parseJson(PullFrame));
 
 /** Error body returned by Ollama on a non-OK response. */
 const ErrorBody = Schema.Struct({ error: Schema.optional(Schema.String) });
-const decodeErrorBody = Schema.decodeUnknownEither(Schema.parseJson(ErrorBody));
+const decodeErrorBody = Schema.decodeUnknownResult(Schema.parseJson(ErrorBody));
 
 const isOk = (status: number): boolean => status >= 200 && status < 300;
 

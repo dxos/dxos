@@ -24,7 +24,7 @@ export interface FormHandlerProps<T extends AnyProperties> {
   /**
    * Effect schema (Type literal).
    */
-  schema?: Schema.Schema<T, any>;
+  schema?: Schema.Codec<T, any>;
 
   /**
    * Source values. Fields the user is not editing reflect this value; in-progress edits (including intermediate

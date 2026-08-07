@@ -13,9 +13,7 @@ export const addFieldsToSchema = (
   fields: Schema.Struct.Fields,
 ): Schema.Schema.AnyNoContext => {
   const schemaExtension = Schema.partial(Schema.Struct(fields));
-  return Schema.extend(schema, schemaExtension).annotations(
-    schema.ast.annotations,
-  ) as any as Schema.Schema.AnyNoContext;
+  return Schema.extend(schema, schemaExtension).annotate(schema.ast.annotations) as any as Schema.Schema.AnyNoContext;
 };
 
 export const updateFieldsInSchema = (
@@ -43,7 +41,7 @@ export const removeFieldsFromSchema = (
   schema: Schema.Schema.AnyNoContext,
   fieldNames: string[],
 ): Schema.Schema.AnyNoContext => {
-  return Schema.make(SchemaAST.omit(schema.ast, fieldNames)).annotations(schema.ast.annotations);
+  return Schema.make(SchemaAST.omit(schema.ast, fieldNames)).annotate(schema.ast.annotations);
 };
 
 export const updateFieldNameInSchema = (

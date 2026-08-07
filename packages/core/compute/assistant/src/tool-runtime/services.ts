@@ -139,7 +139,7 @@ const toolCache = new WeakMap<Operation.Definition.Any, Tool.Any>();
  * produce a valid `{type: "object"}` for the Anthropic API instead of the
  * constEmptyStruct `{anyOf: [{type:"object"},{type:"array"}]}`.
  */
-const EMPTY_PARAMETERS_SCHEMA = Schema.Struct({}).annotations({
+const EMPTY_PARAMETERS_SCHEMA = Schema.Struct({}).annotate({
   [SchemaAST.JSONSchemaAnnotationId]: { type: 'object', properties: {}, required: [], additionalProperties: false },
 });
 
@@ -179,8 +179,8 @@ const makeToolName = (name: string) => {
  * Exported for testing.
  */
 export const createStructFieldsFromSchema = (
-  schema: Schema.Schema<any, any>,
-): Record<string, Schema.Schema<any, any>> => {
+  schema: Schema.Codec<any, any>,
+): Record<string, Schema.Codec<any, any>> => {
   switch (schema.ast._tag) {
     case 'TypeLiteral':
       return Object.fromEntries(
@@ -202,7 +202,7 @@ const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
     const description = ast.annotations.description
       ? ast.annotations.description + '\n' + RefFromLLM.ast.annotations.description
       : (RefFromLLM.ast.annotations.description as string);
-    return RefFromLLM.annotations({ description }).ast;
+    return RefFromLLM.annotate({ description }).ast;
   } else if (SchemaAST.isTupleType(ast)) {
     return new SchemaAST.TupleType(
       ast.elements.map((t) => new SchemaAST.OptionalType(mapSchemaTypeForLLM(t.type), t.isOptional, t.annotations)),

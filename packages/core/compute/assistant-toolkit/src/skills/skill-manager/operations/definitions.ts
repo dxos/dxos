@@ -31,7 +31,7 @@ export const EnableSkills = Operation.make({
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
-    keys: Schema.Array(Schema.String).annotations({
+    keys: Schema.Array(Schema.String).annotate({
       description: 'The keys of the skills to enable.',
       examples: [['org.dxos.skill.memory', 'org.dxos.skill.database']],
     }),

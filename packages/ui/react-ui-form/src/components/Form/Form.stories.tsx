@@ -154,18 +154,18 @@ export const Static: Story<ExcludeId<typeof PersonSchema>> = {
 
 const SettingsSchema = Schema.mutable(
   Schema.Struct({
-    viewMode: Schema.Literal('preview', 'readonly', 'source').annotations({
+    viewMode: Schema.Literal('preview', 'readonly', 'source').annotate({
       title: 'Default view mode',
       description: 'Set whether documents open in editing or read-only mode.',
     }),
     toolbar: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         title: 'Show toolbar',
         description: 'Display a formatting toolbar above the editor.',
       }),
     ),
     fontSize: Schema.optional(
-      Schema.Number.annotations({ title: 'Font size', description: 'Editor font size, in pixels.' }),
+      Schema.Number.annotate({ title: 'Font size', description: 'Editor font size, in pixels.' }),
     ),
   }),
 );
@@ -194,7 +194,7 @@ const InlineMarkdownTextSchema = Schema.mutable(
     instructions: Ref.Ref(Text.Text).pipe(
       Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
       Annotation.FormInlineAnnotation.set(true),
-      Schema.annotations({
+      Schema.annotate({
         title: 'Instructions',
         description: 'Ref to a Text object with both markdown and inline-ref annotations.',
       }),
@@ -247,10 +247,10 @@ const isValidUrl = Schema.is(Format.URL);
 
 // Base struct (no dynamic annotations) — its value type drives the typed `deps`/`values` below.
 const DynamicFieldsBase = Schema.Struct({
-  query: Schema.String.annotations({ title: 'Query', description: 'Type to load the choices below.' }),
+  query: Schema.String.annotate({ title: 'Query', description: 'Type to load the choices below.' }),
   choice: Schema.optional(Schema.String),
   tag: Schema.optional(Schema.String),
-  url: Format.URL.annotations({ title: 'URL', description: 'A valid URL auto-fills the name below.' }),
+  url: Format.URL.annotate({ title: 'URL', description: 'A valid URL auto-fills the name below.' }),
   name: Schema.optional(Schema.String),
 });
 type DynamicFieldsValues = Schema.Schema.Type<typeof DynamicFieldsBase>;
@@ -272,7 +272,7 @@ const DynamicFieldsSchema = Schema.mutable(
             ).pipe(Effect.delay('600 millis')),
           ),
         ),
-        Schema.annotations({ title: 'Choice', description: 'Options load from the query (after a delay).' }),
+        Schema.annotate({ title: 'Choice', description: 'Options load from the query (after a delay).' }),
       ),
     ),
     // Combobox: the field's own value is the query; the typed text is the auto-selected first option.
@@ -287,7 +287,7 @@ const DynamicFieldsSchema = Schema.mutable(
             { combobox: true },
           ),
         ),
-        Schema.annotations({ title: 'Tag', description: 'Combobox: type to filter; your text stays selectable.' }),
+        Schema.annotate({ title: 'Tag', description: 'Combobox: type to filter; your text stays selectable.' }),
       ),
     ),
     name: Schema.optional(
@@ -301,7 +301,7 @@ const DynamicFieldsSchema = Schema.mutable(
               : Effect.succeed(undefined),
           ),
         ),
-        Schema.annotations({ title: 'Name', description: 'Auto-filled from a valid URL (editable).' }),
+        Schema.annotate({ title: 'Name', description: 'Auto-filled from a valid URL (editable).' }),
       ),
     ),
   }),
@@ -327,9 +327,9 @@ const HANDLE_SUGGESTIONS = ['dxos.org', 'alice.bsky.social', 'bob.example.com'];
 
 const StandardSiteCreateBase = Schema.Struct({
   type: Schema.Literal('standard-site'),
-  handle: Schema.String.annotations({ title: 'Handle', description: 'atproto handle, e.g. dxos.org.' }),
+  handle: Schema.String.annotate({ title: 'Handle', description: 'atproto handle, e.g. dxos.org.' }),
   // No `name`: the feed name is taken from the selected publication.
-  publication: Schema.String.annotations({ title: 'Publication', description: 'Choose a publication.' }),
+  publication: Schema.String.annotate({ title: 'Publication', description: 'Choose a publication.' }),
 });
 type StandardSiteValues = Schema.Schema.Type<typeof StandardSiteCreateBase>;
 
@@ -363,8 +363,8 @@ const StandardSiteCreate = Schema.Struct({
 
 const RssCreateBase = Schema.Struct({
   type: Schema.Literal('rss'),
-  url: Format.URL.annotations({ title: 'URL', description: 'RSS feed URL.' }),
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  url: Format.URL.annotate({ title: 'URL', description: 'RSS feed URL.' }),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 });
 type RssValues = Schema.Schema.Type<typeof RssCreateBase>;
 
@@ -379,7 +379,7 @@ const RssCreate = Schema.Struct({
             : Effect.succeed(undefined),
         ),
       ),
-    ).annotations({ title: 'Name' }),
+    ).annotate({ title: 'Name' }),
   ),
 });
 
@@ -401,11 +401,11 @@ export const DiscriminatedUnion: Story<Schema.Schema.Type<typeof CreateFeedSchem
 // stand in for an external mutation.
 const ReactiveSchema = Schema.mutable(
   Schema.Struct({
-    name: Schema.NonEmptyString.annotations({
+    name: Schema.NonEmptyString.annotate({
       title: 'Name',
       description: 'Required — clear it and the form holds the invalid draft instead of snapping back.',
     }),
-    counter: Schema.Number.annotations({
+    counter: Schema.Number.annotate({
       title: 'Counter',
       description: 'Ticks every second from an external source; updates live even while you edit Name.',
     }),

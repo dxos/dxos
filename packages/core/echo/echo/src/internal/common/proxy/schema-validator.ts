@@ -69,14 +69,14 @@ export class SchemaValidator {
         if (propertyType == null) {
           const indexSignatureType = getIndexSignatureValueType(schema.ast);
           if (indexSignatureType != null) {
-            schema = Schema.make(indexSignatureType).annotations(indexSignatureType.annotations);
+            schema = Schema.make(indexSignatureType).annotate(indexSignatureType.annotations);
             continue;
           }
 
           throw new TypeError(`Unknown property: ${formatPropertyPath([...propertyPath.slice(0, i), propertyName])}`);
         }
 
-        schema = Schema.make(propertyType).annotations(propertyType.annotations);
+        schema = Schema.make(propertyType).annotate(propertyType.annotations);
       }
     }
 
@@ -112,14 +112,14 @@ export class SchemaValidator {
           throw new TypeError(`Unknown property: ${formatPropertyPath(propertyPath)}`);
         }
 
-        const indexSchema = Schema.make(indexSignatureType).annotations(indexSignatureType.annotations);
+        const indexSchema = Schema.make(indexSignatureType).annotate(indexSignatureType.annotations);
         this.assertExactProperties(indexSchema, value[key], getProperty, propertyPath);
         continue;
       }
 
       const propertySignature = propertySignatures.find((property) => String(property.name) === key);
       invariant(propertySignature, 'Property signature must exist.');
-      const propertySchema = Schema.make(propertySignature.type).annotations(propertySignature.type.annotations);
+      const propertySchema = Schema.make(propertySignature.type).annotate(propertySignature.type.annotations);
       this.assertExactProperties(propertySchema, value[key], getProperty, propertyPath);
     }
   }
@@ -187,13 +187,13 @@ export class SchemaValidator {
     if (propertyType == null) {
       const indexSignatureType = getIndexSignatureValueType(schema.ast);
       if (indexSignatureType != null) {
-        return Schema.make(indexSignatureType).annotations(indexSignatureType.annotations);
+        return Schema.make(indexSignatureType).annotate(indexSignatureType.annotations);
       }
 
       throw new TypeError(`Unknown property: ${String(prop)}`);
     }
 
-    return Schema.make(propertyType).annotations(propertyType.annotations);
+    return Schema.make(propertyType).annotate(propertyType.annotations);
   }
 }
 
@@ -214,11 +214,11 @@ const getArrayElementSchema = (
   }
   if (elementIndex < tupleAst.elements.length) {
     const elementType = tupleAst.elements[elementIndex].type;
-    return Schema.make(elementType).annotations(elementType.annotations);
+    return Schema.make(elementType).annotate(elementType.annotations);
   }
 
   const restType = tupleAst.rest;
-  return Schema.make(restType[0].type).annotations(restType[0].annotations);
+  return Schema.make(restType[0].type).annotate(restType[0].annotations);
 };
 
 const flattenUnion = (typeAst: SchemaAST.AST): SchemaAST.AST[] =>
@@ -405,7 +405,7 @@ const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
 
 const formatPropertyPath = (path: KeyPath): string => path.map(String).join('.');
 
-export const checkIdNotPresentOnSchema = (schema: Schema.Schema<any, any, any>) => {
+export const checkIdNotPresentOnSchema = (schema: Schema.Codec<any, any, any>) => {
   invariant(SchemaAST.isTypeLiteral(schema.ast));
   const idProperty = SchemaAST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
   if (idProperty != null) {

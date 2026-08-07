@@ -36,7 +36,7 @@ import * as DiscordTargetOptions from '../types/DiscordTargetOptions';
  * in `constants.ts` surfaces the invite link.
  */
 const DiscordTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'Bot Token',
     description:
       'Bot token from your application\'s "Bot" page in the Discord developer portal. ' +

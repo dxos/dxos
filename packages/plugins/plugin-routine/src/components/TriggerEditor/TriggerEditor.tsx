@@ -41,7 +41,7 @@ const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 
 const TimerSpecForm = Schema.extend(
   Schema.Struct({
     kind: Schema.Literal('timer'),
-    cron: Schema.String.pipe(Schema.annotations({ title: 'Schedule (cron)' }), Schema.optional),
+    cron: Schema.String.pipe(Schema.annotate({ title: 'Schedule (cron)' }), Schema.optional),
   }),
   EnabledForm,
 );
@@ -51,9 +51,9 @@ const SubscriptionSpecForm = Schema.extend(
     kind: Schema.Literal('subscription'),
     // The object type to watch; converted to a `Filter.type` query. `typename` renders via a custom select of
     // the space/registry types (see `TypeSelectField`); `deep`/`delay` map to the subscription's options.
-    typename: Schema.String.pipe(Schema.annotations({ title: 'Type' }), Schema.optional),
-    deep: Schema.Boolean.pipe(Schema.annotations({ title: 'Nested' }), Schema.optional),
-    delay: Schema.Number.pipe(Schema.annotations({ title: 'Delay (ms)' }), Schema.optional),
+    typename: Schema.String.pipe(Schema.annotate({ title: 'Type' }), Schema.optional),
+    deep: Schema.Boolean.pipe(Schema.annotate({ title: 'Nested' }), Schema.optional),
+    delay: Schema.Number.pipe(Schema.annotate({ title: 'Delay (ms)' }), Schema.optional),
   }),
   EnabledForm,
 );
@@ -61,8 +61,8 @@ const SubscriptionSpecForm = Schema.extend(
 const WebhookSpecForm = Schema.extend(
   Schema.Struct({
     kind: Schema.Literal('webhook'),
-    method: Schema.String.pipe(Schema.annotations({ title: 'Method' }), Schema.optional),
-    port: Schema.Number.pipe(Schema.annotations({ title: 'Port' }), Schema.optional),
+    method: Schema.String.pipe(Schema.annotate({ title: 'Method' }), Schema.optional),
+    port: Schema.Number.pipe(Schema.annotate({ title: 'Port' }), Schema.optional),
   }),
   EnabledForm,
 );
@@ -70,11 +70,7 @@ const WebhookSpecForm = Schema.extend(
 const FeedSpecForm = Schema.extend(
   Schema.Struct({
     kind: Schema.Literal('feed'),
-    feed: Ref.Ref(Feed.Feed).pipe(
-      ParentLabelAnnotation.set(true),
-      Schema.annotations({ title: 'Feed' }),
-      Schema.optional,
-    ),
+    feed: Ref.Ref(Feed.Feed).pipe(ParentLabelAnnotation.set(true), Schema.annotate({ title: 'Feed' }), Schema.optional),
   }),
   EnabledForm,
 );

@@ -18,7 +18,7 @@ export const Settings = Schema.mutable(
      * Defaults to `true`.
      */
     enabled: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         title: 'Accept extension actions',
         description: 'When off, actions sent from the composer-crx browser extension are ignored.',
       }),
@@ -29,7 +29,7 @@ export const Settings = Schema.mutable(
      * `false` to avoid yanking focus during active work.
      */
     autoOpenAfterClip: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         title: 'Open after action',
         description: 'Navigate to the created object when the extension creates one.',
       }),
@@ -40,7 +40,7 @@ export const Settings = Schema.mutable(
      * extension to render pages. Defaults to `true`.
      */
     renderProxyEnabled: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         title: 'Use extension to render pages',
         description: 'Let plugins render pages via the browser extension to scrape client-rendered sites.',
       }),
@@ -50,7 +50,7 @@ export const Settings = Schema.mutable(
      * Maximum time (ms) to wait for a page to render before aborting. Defaults to `20000`.
      */
     renderTimeout: Schema.optional(
-      Schema.Number.annotations({
+      Schema.Number.annotate({
         title: 'Render timeout (ms)',
         description: 'Maximum time to wait for a page to finish rendering before giving up.',
       }),
@@ -61,7 +61,7 @@ export const Settings = Schema.mutable(
      * at the cost of stealing focus. Defaults to `false`.
      */
     renderActiveTab: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         title: 'Render in focused tab',
         description: 'Render pages in a focused tab; helps sites that defer loading when backgrounded.',
       }),
@@ -71,7 +71,7 @@ export const Settings = Schema.mutable(
      * Enable verbose logging and debug previews in the extension. Defaults to `false`.
      */
     developerMode: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         title: 'Developer mode',
         description: 'Enable verbose logging and debug previews in the browser extension.',
       }),

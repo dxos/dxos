@@ -24,7 +24,7 @@ export type LevelSize = Schema.Schema.Type<typeof LevelSize>;
  * it — reading a second message drops the first one's attachment.
  */
 export const DeckLevel = Schema.Struct({
-  key: Schema.String.annotations({ description: 'Level key; forms the plank name as `<rootId>/<key>`.' }),
+  key: Schema.String.annotate({ description: 'Level key; forms the plank name as `<rootId>/<key>`.' }),
   size: Schema.optional(LevelSize),
 });
 export type DeckLevel = Schema.Schema.Type<typeof DeckLevel>;

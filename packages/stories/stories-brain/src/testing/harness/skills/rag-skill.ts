@@ -29,11 +29,11 @@ export const RetrieveSnippets = Operation.make({
   },
   services: [VectorStore],
   input: Schema.Struct({
-    query: Schema.String.annotations({
+    query: Schema.String.annotate({
       description: 'Natural-language query, e.g. "messages from Nicole Gudmand about invoices".',
     }),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.positive(), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum snippets to return (default 8).',
       }),
     ),

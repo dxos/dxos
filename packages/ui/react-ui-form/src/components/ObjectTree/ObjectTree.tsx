@@ -20,7 +20,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 export type ObjectTreeProps<T> = {
-  schema: Schema.Schema<T, any, never>;
+  schema: Schema.Codec<T, any, never>;
   value: T;
 };
 

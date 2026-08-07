@@ -69,7 +69,7 @@ export type RemoteGame = Schema.Schema.Type<typeof ChessComGame>;
 
 const getJson = <A, I>(
   url: string,
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
 ): Effect.Effect<A, ChessComNotFoundError | ChessComRequestError, HttpClient.HttpClient> =>
   Effect.gen(function* () {
     const response = yield* HttpClientRequest.get(url).pipe(HttpClient.execute);

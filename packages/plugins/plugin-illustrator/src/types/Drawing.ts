@@ -46,7 +46,7 @@ export class Drawing extends Type.makeObject<Drawing>(DXN.make('org.dxos.type.dr
   Schema.Struct({
     name: Schema.optional(Schema.String),
     canvas: Ref.Ref(Canvas)
-      .annotations({ description: 'Reference to the canvas holding the renderer-specific content.' })
+      .annotate({ description: 'Reference to the canvas holding the renderer-specific content.' })
       .pipe(FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),

@@ -19,15 +19,15 @@ const ChessBot = Operation.make({
     description: 'Plays a random move in a chess game.',
   },
   input: Schema.Struct({
-    game: Game.GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotate({
       description: 'The chess game to comment on.',
     }),
-    player: Schema.optional(Schema.Literal('white', 'black')).annotations({
+    player: Schema.optional(Schema.Literal('white', 'black')).annotate({
       description: 'The player to play the game as.',
     }),
   }),
   output: Schema.Struct({
-    state: Schema.String.annotations({
+    state: Schema.String.annotate({
       description: 'The state of the game as an ASCII art board.',
     }),
   }),

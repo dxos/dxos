@@ -10,12 +10,12 @@ import { PageAction } from './index';
 
 describe('PageAction schema', () => {
   test('decodes a valid list request', ({ expect }) => {
-    const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)({ version: 1, id: 'req-1' });
+    const decoded = Schema.decodeUnknownResult(PageAction.ListRequest)({ version: 1, id: 'req-1' });
     expect(Result.isRight(decoded)).toBe(true);
   });
 
   test('rejects a list request with a wrong version', ({ expect }) => {
-    const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)({ version: 2, id: 'req-1' });
+    const decoded = Schema.decodeUnknownResult(PageAction.ListRequest)({ version: 2, id: 'req-1' });
     expect(Result.isLeft(decoded)).toBe(true);
   });
 

@@ -17,7 +17,7 @@ export type BackendName = 'memory' | 'local';
 export interface Aspect<T, Encoded = T> {
   readonly key: string;
   readonly backend: BackendName;
-  readonly schema: Schema.Schema<T, Encoded>;
+  readonly schema: Schema.Codec<T, Encoded>;
   readonly defaultValue: () => T;
 }
 

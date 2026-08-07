@@ -61,7 +61,7 @@ export const MaterializeGitHubTarget = Operation.make({
  * everything ever opened or edited."
  */
 export const SyncOptions = Schema.Struct({
-  maxDaysBack: Schema.Number.annotations({
+  maxDaysBack: Schema.Number.annotate({
     title: 'Sync history (days)',
     description: 'Pull issues and PRs updated within this many days. Leave empty to sync everything.',
   }).pipe(Schema.optional),

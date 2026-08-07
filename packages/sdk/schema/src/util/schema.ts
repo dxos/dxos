@@ -24,11 +24,11 @@ export type SchemaPropertyDefinition = {
 
 export const createDefaultSchema = () => {
   const struct = Schema.Struct({
-    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+    title: Schema.optional(Schema.String).annotate({ title: 'Title' }),
     status: Schema.optional(
       Schema.Literal('todo', 'in-progress', 'done')
         .pipe(FormatAnnotation.set(Format.TypeFormat.SingleSelect))
-        .annotations({
+        .annotate({
           title: 'Status',
           [PropertyMetaAnnotationId]: {
             singleSelect: {
@@ -41,7 +41,7 @@ export const createDefaultSchema = () => {
           },
         }),
     ),
-    description: Schema.optional(Schema.String).annotations({
+    description: Schema.optional(Schema.String).annotate({
       title: 'Description',
     }),
   });

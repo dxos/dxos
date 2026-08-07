@@ -140,8 +140,8 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
       const base = Schema.Struct({
         query:
           mode === 'schema'
-            ? Format.URL.annotations({ title: 'Record type' })
-            : QueryAST.Query.annotations({ title: 'Query' }),
+            ? Format.URL.annotate({ title: 'Record type' })
+            : QueryAST.Query.annotate({ title: 'Query' }),
       });
 
       if (mode === 'tag') {
@@ -149,7 +149,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
           ...base.fields,
           // TODO(wittjosiah): Replace Type.Feed with Dataset.Dataset when Ref.Ref supports unions.
           target: Ref.Ref(Feed.Feed).pipe(
-            Schema.annotations({ title: 'Target Feed' }),
+            Schema.annotate({ title: 'Target Feed' }),
             ParentLabelAnnotation.set(true),
             Schema.optional,
           ),

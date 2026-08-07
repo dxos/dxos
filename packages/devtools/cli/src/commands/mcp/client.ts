@@ -190,7 +190,7 @@ export const request = async <A, I>(
   session: McpSession,
   method: string,
   params: unknown,
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
   options: { profile?: string } = {},
 ): Promise<A> => {
   const send = (token: string) =>

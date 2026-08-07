@@ -11,7 +11,7 @@ import { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 test('json-schema annotations for filter refinement get combined', () => {
-  const type = Schema.Number.annotations({
+  const type = Schema.Number.annotate({
     jsonSchema: { foo: 'foo' },
   }).pipe(Schema.filter(() => true, { jsonSchema: { bar: 'bar' } }));
 
@@ -25,7 +25,7 @@ test('json-schema annotations for filter refinement get combined', () => {
 });
 
 test('json-schema annotations on types do not override the default serialization', () => {
-  const type = Schema.Number.annotations({
+  const type = Schema.Number.annotate({
     jsonSchema: { foo: 'foo' },
   });
 
@@ -39,7 +39,7 @@ test('json-schema annotations on types do not override the default serialization
 
 // pass
 test('number with title and description annotations', () => {
-  const number = Schema.Number.annotations({
+  const number = Schema.Number.annotate({
     title: 'My Title',
     description: 'My Description',
   });
@@ -54,7 +54,7 @@ test('number with title and description annotations', () => {
 
 // pass
 test('date with title and description annotations', () => {
-  const date = Schema.Date.annotations({
+  const date = Schema.Date.annotate({
     title: 'My Title',
     description: 'My Description',
   });
@@ -88,7 +88,7 @@ test('declare', () => {
   expect(type.pipe(Schema.is)(new MyType())).toBe(true);
   expect(type.pipe(Schema.is)({})).toBe(false);
 
-  const withAnnotations = type.annotations({
+  const withAnnotations = type.annotate({
     title: 'My Title',
     description: 'My Description',
   });
@@ -110,7 +110,7 @@ test('declare with refinement', () => {
     },
   }).pipe(Schema.filter(() => true, { jsonSchema: {} }));
 
-  const named = type.annotations({
+  const named = type.annotate({
     title: 'My Title',
     description: 'My Description',
   });
@@ -138,6 +138,6 @@ test("default title annotations don't get serialized", () => {
 test.skip('ast comparison', () => {
   log.info('ast', {
     default: Schema.String.ast,
-    annotated: Schema.String.annotations({ title: 'Custom title', description: 'Custom description' }).ast,
+    annotated: Schema.String.annotate({ title: 'Custom title', description: 'Custom description' }).ast,
   });
 });

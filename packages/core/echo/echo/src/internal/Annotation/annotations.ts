@@ -80,10 +80,12 @@ export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => 
  */
 // TODO(wittjosiah): Factor out to DXN spec.
 export const TypenameSchema = Schema.String.pipe(
-  Schema.pattern(
-    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+  Schema.check(
+    Schema.isPattern(
+      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+    ),
   ),
-).annotations({
+).annotate({
   description: 'Fully qualified globally unique typename in reverse-DNS form.',
   example: 'org.dxos.type.message',
 });
@@ -92,7 +94,7 @@ export const TypenameSchema = Schema.String.pipe(
  * Semantic version format: `major.minor.patch`
  * Example: `1.0.0`
  */
-export const VersionSchema = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/)).annotations({
+export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/))).annotate({
   description: 'Semantic version format: `major.minor.patch`',
   example: '1.0.0',
 });
@@ -246,9 +248,9 @@ export type PropertyMetaAnnotation = {
  * `Type.Type` entity, unwrap it first with `Type.getSchema(entity)`.
  */
 export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
-  return <A, I, R>(self: Schema.Schema<A, I, R>): Schema.Schema<A, I, R> => {
+  return <A, I, R>(self: Schema.Codec<A, I, R>): Schema.Codec<A, I, R> => {
     const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
-    return self.annotations({
+    return self.annotate({
       [PropertyMetaAnnotationId]: {
         ...existingMeta,
         [name]: value,
@@ -488,7 +490,7 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
 
 interface MakeAnnoationsProps<T> {
   id: string;
-  schema: Schema.Schema<T, any, never>;
+  schema: Schema.Codec<T, any, never>;
 }
 
 // Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
@@ -520,7 +522,7 @@ const IconAnnotationSchema = Schema.Struct({
   /**
    * Phosphor icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'ph--link--regular ', etc.)
    */
-  icon: Schema.String.pipe(Schema.pattern(/^ph--[a-z-]+--[a-z]+$/)),
+  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^ph--[a-z-]+--[a-z]+$/))),
 
   /**
    * Color name.

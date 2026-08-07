@@ -13,10 +13,10 @@ import { Format } from '@dxos/echo';
 export const HeyGenRequestConfig = Schema.Struct({
   prompt: Schema.NonEmptyString.pipe(
     Format.FormatAnnotation.set(Format.TypeFormat.Text),
-    Schema.annotations({ title: 'Prompt' }),
+    Schema.annotate({ title: 'Prompt' }),
   ),
-  avatarId: Schema.NonEmptyString.annotations({ title: 'Avatar', description: 'HeyGen avatar id.' }),
-  voiceId: Schema.NonEmptyString.annotations({ title: 'Voice', description: 'HeyGen voice id.' }),
+  avatarId: Schema.NonEmptyString.annotate({ title: 'Avatar', description: 'HeyGen avatar id.' }),
+  voiceId: Schema.NonEmptyString.annotate({ title: 'Voice', description: 'HeyGen voice id.' }),
 });
 export interface HeyGenRequestConfig extends Schema.Schema.Type<typeof HeyGenRequestConfig> {}
 

@@ -18,9 +18,9 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 
 export const ScriptProps = Schema.Struct({
   name: Schema.optional(Schema.String),
-  gistUrl: Schema.optional(Schema.String.annotations({ title: 'Import from Gist (url)' })),
+  gistUrl: Schema.optional(Schema.String.annotate({ title: 'Import from Gist (url)' })),
   initialTemplateId: Schema.Literal(...templates.map(({ id }) => id)).pipe(
-    Schema.annotations({ title: 'Template' }),
+    Schema.annotate({ title: 'Template' }),
     Schema.optional,
   ),
 });

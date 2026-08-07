@@ -82,11 +82,11 @@ describe.skip('Bundler', () => {
           description: 'Returns the exchange rate between two currencies.',
 
           inputSchema: Schema.Struct({
-            from: Schema.String.annotations({ description: 'The source currency' }),
-            to: Schema.String.annotations({ description: 'The target currency' }),
+            from: Schema.String.annotate({ description: 'The source currency' }),
+            to: Schema.String.annotate({ description: 'The target currency' }),
           }),
 
-          outputSchema: Schema.String.annotations({ description: 'The exchange rate between the two currencies' }),
+          outputSchema: Schema.String.annotate({ description: 'The exchange rate between the two currencies' }),
 
           handler: Effect.fnUntraced(function* ({ data: { from, to } }) {
             const res = yield* HttpClientRequest.get(\`https://free.ratesdb.com/v1/rates?from=\${from}&to=\${to}\`).pipe(

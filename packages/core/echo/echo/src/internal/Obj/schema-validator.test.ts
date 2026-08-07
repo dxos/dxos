@@ -25,9 +25,9 @@ describe('schema-validator', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
       const TestSchema: Schema.Schema.AnyNoContext = Schema.Struct({
-        name: Schema.String.annotations({ [annotationId]: annotationValue }),
-        parent: Schema.optional(Schema.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
-        friends: Schema.suspend(() => Schema.Array(TestSchema.annotations({ [annotationId]: annotationValue }))),
+        name: Schema.String.annotate({ [annotationId]: annotationValue }),
+        parent: Schema.optional(Schema.suspend(() => TestSchema.annotate({ [annotationId]: annotationValue }))),
+        friends: Schema.suspend(() => Schema.Array(TestSchema.annotate({ [annotationId]: annotationValue }))),
       });
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'name', annotationId)).to.be.true;
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'parent', annotationId)).to.be.true;
@@ -84,8 +84,8 @@ describe('schema-validator', () => {
       const annotationId = Symbol('foo');
       const annotationValue = 'bar';
       const Person: Schema.Schema.AnyNoContext = Schema.Struct({
-        parent: Schema.optional(Schema.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
-        friends: Schema.suspend(() => Schema.Array(Person.annotations({ [annotationId]: annotationValue }))),
+        parent: Schema.optional(Schema.suspend(() => Person.annotate({ [annotationId]: annotationValue }))),
+        friends: Schema.suspend(() => Schema.Array(Person.annotate({ [annotationId]: annotationValue }))),
       });
       expect(SchemaValidator.getPropertySchema(Person, ['parent']).ast.annotations[annotationId]).to.eq(
         annotationValue,

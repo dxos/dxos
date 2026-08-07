@@ -182,7 +182,7 @@ const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
     jsonSchema: JsonSchemaType.pipe(Schema.optional),
     id: EntityId,
   });
-  const ast = SchemaAST.annotations(struct.ast, {
+  const ast = SchemaAST.annotate(struct.ast, {
     [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
     [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
   });

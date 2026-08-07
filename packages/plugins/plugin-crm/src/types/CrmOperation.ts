@@ -34,20 +34,20 @@ export const AttachImage = Operation.make({
     `,
   },
   input: Schema.Struct({
-    subject: Ref.Ref(Obj.Unknown).annotations({
+    subject: Ref.Ref(Obj.Unknown).annotate({
       description: 'Reference to the Person or Organization whose `image` field should be set.',
     }),
-    url: Schema.String.annotations({
+    url: Schema.String.annotate({
       description: 'External image URL. Must be a JPEG, PNG, WebP, or GIF.',
     }),
     imageServiceUrl: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Override for the image service base URL. Defaults to the value configured for the runtime.',
       }),
     ),
   }),
   output: Schema.Struct({
-    imageUrl: Schema.String.annotations({
+    imageUrl: Schema.String.annotate({
       description: 'Canonical URL returned by the DXOS image service.',
     }),
   }),
@@ -73,15 +73,15 @@ export const ResearchPerson = Operation.make({
     `,
   },
   input: Schema.Struct({
-    subject: Ref.Ref(Person.Person).annotations({
+    subject: Ref.Ref(Person.Person).annotate({
       description: 'The Person to profile.',
     }),
   }),
   output: Schema.Struct({
-    profile: Ref.Ref(Markdown.Document).annotations({
+    profile: Ref.Ref(Markdown.Document).annotate({
       description: 'The Profile document linked to the subject.',
     }),
-    created: Schema.Boolean.annotations({
+    created: Schema.Boolean.annotate({
       description: 'True when a new Profile document was created; false when one already existed.',
     }),
   }),
@@ -104,15 +104,15 @@ export const ResearchOrganization = Operation.make({
     `,
   },
   input: Schema.Struct({
-    subject: Ref.Ref(Organization.Organization).annotations({
+    subject: Ref.Ref(Organization.Organization).annotate({
       description: 'The Organization to profile.',
     }),
   }),
   output: Schema.Struct({
-    profile: Ref.Ref(Markdown.Document).annotations({
+    profile: Ref.Ref(Markdown.Document).annotate({
       description: 'The Profile document linked to the subject.',
     }),
-    created: Schema.Boolean.annotations({
+    created: Schema.Boolean.annotate({
       description: 'True when a new Profile document was created; false when one already existed.',
     }),
   }),
@@ -143,28 +143,28 @@ export const ProcessMailbox = Operation.make({
     `,
   },
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'The mailbox whose message feed should be processed.',
     }),
     pageSize: Schema.optional(
-      Schema.Number.annotations({
+      Schema.Number.annotate({
         description: 'Messages per cursor-advance page (default 20).',
       }),
     ),
     research: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         description: 'When true, scaffold a Profile document for each new contact (default false).',
       }),
     ),
   }),
   output: Schema.Struct({
-    processed: Schema.Number.annotations({
+    processed: Schema.Number.annotate({
       description: 'Number of new messages examined this run.',
     }),
-    contacts: Schema.Number.annotations({
+    contacts: Schema.Number.annotate({
       description: 'Number of Person records created this run.',
     }),
-    profiles: Schema.Number.annotations({
+    profiles: Schema.Number.annotate({
       description: 'Number of Profile documents created this run.',
     }),
   }),

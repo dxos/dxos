@@ -47,7 +47,7 @@ export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
     set:
       (value) =>
       <S extends Schema.Schema.Any>(schema: S): S =>
-        schema.annotations({ [id]: value }) as S,
+        schema.annotate({ [id]: value }) as S,
   };
 };
 

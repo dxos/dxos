@@ -5,32 +5,32 @@
 import * as Schema from 'effect/Schema';
 
 export const MinutelySpec = Schema.Struct({
-  frequency: Schema.Literal('minutely').annotations({ title: 'Frequency' }),
-  interval: Schema.Number.pipe(Schema.int(), Schema.between(1, 59)).annotations({
+  frequency: Schema.Literal('minutely').annotate({ title: 'Frequency' }),
+  interval: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(1, 59)).annotate({
     title: 'Every (minutes)',
     description: '1–59',
   }),
 });
 
 export const HourlySpec = Schema.Struct({
-  frequency: Schema.Literal('hourly').annotations({ title: 'Frequency' }),
-  interval: Schema.Number.pipe(Schema.int(), Schema.between(1, 23)).annotations({
+  frequency: Schema.Literal('hourly').annotate({ title: 'Frequency' }),
+  interval: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(1, 23)).annotate({
     title: 'Every (hours)',
     description: '1–23',
   }),
-  minute: Schema.Number.pipe(Schema.int(), Schema.between(0, 59)).annotations({
+  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 59)).annotate({
     title: 'At minute',
     description: '0–59',
   }),
 });
 
 export const DailySpec = Schema.Struct({
-  frequency: Schema.Literal('daily').annotations({ title: 'Frequency' }),
-  hour: Schema.Number.pipe(Schema.int(), Schema.between(0, 23)).annotations({
+  frequency: Schema.Literal('daily').annotate({ title: 'Frequency' }),
+  hour: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 23)).annotate({
     title: 'Hour',
     description: '0–23',
   }),
-  minute: Schema.Number.pipe(Schema.int(), Schema.between(0, 59)).annotations({
+  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 59)).annotate({
     title: 'Minute',
     description: '0–59',
   }),
@@ -41,51 +41,46 @@ export const DayOfWeek = Schema.Literal('sun', 'mon', 'tue', 'wed', 'thu', 'fri'
 export type DayOfWeek = Schema.Schema.Type<typeof DayOfWeek>;
 
 export const WeeklySpec = Schema.Struct({
-  frequency: Schema.Literal('weekly').annotations({ title: 'Frequency' }),
-  daysOfWeek: Schema.Array(DayOfWeek.annotations({ title: 'Day' })).annotations({ title: 'Days of week' }),
-  hour: Schema.Number.pipe(Schema.int(), Schema.between(0, 23)).annotations({
+  frequency: Schema.Literal('weekly').annotate({ title: 'Frequency' }),
+  daysOfWeek: Schema.Array(DayOfWeek.annotate({ title: 'Day' })).annotate({ title: 'Days of week' }),
+  hour: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 23)).annotate({
     title: 'Hour',
     description: '0–23',
   }),
-  minute: Schema.Number.pipe(Schema.int(), Schema.between(0, 59)).annotations({
+  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 59)).annotate({
     title: 'Minute',
     description: '0–59',
   }),
 });
 
 export const MonthlySpec = Schema.Struct({
-  frequency: Schema.Literal('monthly').annotations({ title: 'Frequency' }),
+  frequency: Schema.Literal('monthly').annotate({ title: 'Frequency' }),
   daysOfMonth: Schema.Array(
-    Schema.Number.pipe(Schema.int(), Schema.between(1, 31)).annotations({ title: 'Day' }),
-  ).annotations({
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(1, 31)).annotate({ title: 'Day' }),
+  ).annotate({
     title: 'Days of month',
   }),
-  hour: Schema.Number.pipe(Schema.int(), Schema.between(0, 23)).annotations({
+  hour: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 23)).annotate({
     title: 'Hour',
     description: '0–23',
   }),
-  minute: Schema.Number.pipe(Schema.int(), Schema.between(0, 59)).annotations({
+  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 59)).annotate({
     title: 'Minute',
     description: '0–59',
   }),
 });
 
 export const CustomSpec = Schema.Struct({
-  frequency: Schema.Literal('custom').annotations({ title: 'Frequency' }),
-  cronExpression: Schema.String.annotations({
+  frequency: Schema.Literal('custom').annotate({ title: 'Frequency' }),
+  cronExpression: Schema.String.annotate({
     title: 'Cron expression',
     description: 'e.g. 0 9 * * MON-FRI',
   }),
 });
 
-export const CronSpec = Schema.Union(
-  MinutelySpec,
-  HourlySpec,
-  DailySpec,
-  WeeklySpec,
-  MonthlySpec,
-  CustomSpec,
-).annotations({ title: '' });
+export const CronSpec = Schema.Union(MinutelySpec, HourlySpec, DailySpec, WeeklySpec, MonthlySpec, CustomSpec).annotate(
+  { title: '' },
+);
 
 export type CronSpecType = Schema.Schema.Type<typeof CronSpec>;
 export type Frequency = CronSpecType['frequency'];

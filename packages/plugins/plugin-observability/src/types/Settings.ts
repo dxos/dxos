@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 export const Settings = Schema.mutable(
   Schema.Struct({
-    enabled: Schema.Boolean.annotations({
+    enabled: Schema.Boolean.annotate({
       title: 'Enable telemetry',
       description: 'Send anonymous usage and performance data to help improve the product.',
     }),

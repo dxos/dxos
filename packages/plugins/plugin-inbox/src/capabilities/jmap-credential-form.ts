@@ -23,15 +23,15 @@ import { JmapCredentials } from '../services';
  * email, and token are collected directly.
  */
 const JmapCredentialFormSchema = Schema.Struct({
-  host: Schema.String.annotations({
+  host: Schema.String.annotate({
     title: 'Server',
     description: 'JMAP server host. The session is discovered at https://<host>/.well-known/jmap.',
   }),
-  email: Schema.String.annotations({
+  email: Schema.String.annotate({
     title: 'Email',
     description: 'Your email address / username on the JMAP server.',
   }),
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'API token',
     description: 'A JMAP API token, sent as a Bearer credential.',
   }),

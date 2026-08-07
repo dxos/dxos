@@ -16,7 +16,7 @@ import * as Actor from './Actor';
 export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.2.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
-      Schema.annotations({ title: 'Title' }),
+      Schema.annotate({ title: 'Title' }),
       GeneratorAnnotation.set({
         generator: 'lorem.words',
         args: [{ min: 3, max: 10 }],
@@ -28,7 +28,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         generator: 'helpers.arrayElement',
         args: [['none', 'low', 'medium', 'high', 'urgent']],
       }),
-      Schema.annotations({
+      Schema.annotate({
         title: 'Priority',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -51,7 +51,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         generator: 'helpers.arrayElement',
         args: [['todo', 'in-progress', 'done']],
       }),
-      Schema.annotations({
+      Schema.annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -68,10 +68,10 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       Schema.optional,
     ),
     /** Human or agent assignment: a HALO identity (DID), a Person ref, a bare email, or a display name. */
-    assignee: Schema.optional(Actor.Actor.annotations({ title: 'Assignee' })),
-    estimate: Schema.optional(Schema.Number.annotations({ title: 'Estimate' })),
+    assignee: Schema.optional(Actor.Actor.annotate({ title: 'Assignee' })),
+    estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
     description: Schema.optional(
-      Schema.String.annotations({ title: 'Description' }).pipe(
+      Schema.String.annotate({ title: 'Description' }).pipe(
         GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',
           args: [{ min: 1, max: 3 }],

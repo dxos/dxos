@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 export const Settings = Schema.mutable(
   Schema.Struct({
     showStatusIndicator: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         title: 'Show status indicator',
       }),
     ),

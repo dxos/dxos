@@ -17,7 +17,7 @@ const retryPolicy = Schedule.exponential('500 millis').pipe(Schedule.compose(Sch
 
 /** GETs a URL (through the optional CORS proxy) and decodes the JSON body against `schema`. */
 export const getJson = <A, I>(
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
   url: string,
   proxy?: string,
 ): Effect.Effect<A, FeedFetchError, HttpClient.HttpClient> =>

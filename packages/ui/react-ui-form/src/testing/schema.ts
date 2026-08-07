@@ -14,44 +14,44 @@ import { Annotation, DXN, Format, Ref, Tag, Type } from '@dxos/echo';
 
 export class Organization extends Type.makeObject<Organization>(DXN.make('com.example.type.organization', '0.1.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
+    name: Schema.String.pipe(Schema.check(Schema.isMinLength(1))).annotate({ title: 'Full name' }),
   }),
 ) {}
 
 export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.person', '0.1.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
+    name: Schema.String.pipe(Schema.check(Schema.isMinLength(1))).annotate({ title: 'Full name' }),
     ignore: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-    active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
+    active: Schema.optional(Schema.Boolean.annotate({ title: 'Active' })),
     address: Schema.optional(
       Schema.Struct({
         street: Schema.String,
         city: Schema.String,
         // TODO(burdon): Constrain input control.
-        state: Schema.String.pipe(Schema.minLength(2), Schema.maxLength(2)).annotations({
+        state: Schema.String.pipe(Schema.check(Schema.isMinLength(2)), Schema.check(Schema.isMaxLength(2))).annotate({
           title: 'State',
           description: 'State code',
         }),
-        zip: Schema.Number.annotations({ title: 'ZIP Code' }),
-      }).annotations({ title: 'Address' }),
+        zip: Schema.Number.annotate({ title: 'ZIP Code' }),
+      }).annotate({ title: 'Address' }),
     ),
-    employer: Schema.optional(Ref.Ref(Organization).annotations({ title: 'Employer' })),
-    tags: Schema.optional(Schema.Array(Ref.Ref(Tag.Tag)).annotations({ title: 'Tags' })),
-    status: Schema.optional(Schema.Literal('active', 'inactive').annotations({ title: 'Status' })),
-    notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
-    location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
-    birthday: Schema.optional(Format.DateOnly.annotations({ title: 'Birthday' })),
-    meetingAt: Schema.optional(Format.DateTime.annotations({ title: 'Next meeting' })),
-    reminderAt: Schema.optional(Format.TimeOnly.annotations({ title: 'Reminder time' })),
-    tasks: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Tasks' })),
-    locations: Schema.optional(Schema.Array(Format.GeoPoint).annotations({ title: 'Locations' })),
+    employer: Schema.optional(Ref.Ref(Organization).annotate({ title: 'Employer' })),
+    tags: Schema.optional(Schema.Array(Ref.Ref(Tag.Tag)).annotate({ title: 'Tags' })),
+    status: Schema.optional(Schema.Literal('active', 'inactive').annotate({ title: 'Status' })),
+    notes: Schema.optional(Format.Text.annotate({ title: 'Notes' })),
+    location: Schema.optional(Format.GeoPoint.annotate({ title: 'Location' })),
+    birthday: Schema.optional(Format.DateOnly.annotate({ title: 'Birthday' })),
+    meetingAt: Schema.optional(Format.DateTime.annotate({ title: 'Next meeting' })),
+    reminderAt: Schema.optional(Format.TimeOnly.annotate({ title: 'Reminder time' })),
+    tasks: Schema.optional(Schema.Array(Schema.String).annotate({ title: 'Tasks' })),
+    locations: Schema.optional(Schema.Array(Format.GeoPoint).annotate({ title: 'Locations' })),
     identities: Schema.optional(
       Schema.Array(
         Schema.Struct({
-          type: Schema.String.annotations({ title: 'Type' }),
-          value: Schema.String.annotations({ title: 'Value' }),
-        }).annotations({ title: 'Identities' }),
-      ).annotations({
+          type: Schema.String.annotate({ title: 'Type' }),
+          value: Schema.String.annotate({ title: 'Value' }),
+        }).annotate({ title: 'Identities' }),
+      ).annotate({
         title: 'Identities',
       }),
     ),

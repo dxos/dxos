@@ -176,5 +176,5 @@ export const isSpace = (object: unknown): object is Space =>
 // TODO(burdon): Create lower-level definition (HasId, db, etc.) and move to @dxos/echo.
 export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
   Schema.filter((space) => isSpace(space)),
-  Schema.annotations({ title: 'Space' }),
+  Schema.annotate({ title: 'Space' }),
 );

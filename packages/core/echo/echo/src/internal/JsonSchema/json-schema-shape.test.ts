@@ -29,9 +29,9 @@ import { toJsonSchema } from './json-schema';
 describe('toJsonSchema wire shape', () => {
   const Contact = Type.makeObject(DXN.make('com.example.type.Contact', '0.1.0'))(
     Schema.Struct({
-      name: Schema.String.annotations({ title: 'Full name', description: 'The contact name' }),
+      name: Schema.String.annotate({ title: 'Full name', description: 'The contact name' }),
       email: Schema.optional(Format.Email),
-      age: Schema.optional(Schema.Number.pipe(Schema.int(), Schema.between(0, 150))),
+      age: Schema.optional(Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 150))),
       active: Schema.Boolean,
       kind: Schema.Literal('personal', 'work'),
     }),
@@ -84,9 +84,9 @@ describe('toJsonSchema wire shape', () => {
     // Mirrors the assertion in edge's `toFunctionParameterSchema`, which throws otherwise.
     const Described = Type.makeObject(DXN.make('com.example.type.Described', '0.1.0'))(
       Schema.Struct({
-        plain: Schema.String.annotations({ description: 'A plain string' }),
-        refined: Schema.String.pipe(Schema.nonEmptyString()).annotations({ description: 'A refined string' }),
-        numeric: Schema.Number.pipe(Schema.int()).annotations({ description: 'A refined number' }),
+        plain: Schema.String.annotate({ description: 'A plain string' }),
+        refined: Schema.String.pipe(Schema.nonEmptyString()).annotate({ description: 'A refined string' }),
+        numeric: Schema.Number.pipe(Schema.check(Schema.isInt())).annotate({ description: 'A refined number' }),
       }),
     );
 

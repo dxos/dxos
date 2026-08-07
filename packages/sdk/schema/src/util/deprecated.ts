@@ -62,7 +62,7 @@ export type SchemaFieldDescription = {
 /**
  * @deprecated
  */
-export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldDescription[] => {
+export const mapSchemaToFields = (schema: Schema.Codec<any, any>): SchemaFieldDescription[] => {
   const fields = [] as SchemaFieldDescription[];
   SchemaEx.visit(
     schema.ast,

@@ -183,10 +183,10 @@ const makePromptAgentToolkit = (options: {
         success: Schema.optional(options.output),
         failure: Schema.optional(
           Schema.Struct({
-            message: Schema.String.annotations({
+            message: Schema.String.annotate({
               description: 'Short message describing the error.',
             }),
-            description: Schema.optional(Schema.String).annotations({
+            description: Schema.optional(Schema.String).annotate({
               description: 'Optional longer message describing in detail what went wrong',
             }),
           }),

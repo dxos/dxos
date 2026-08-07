@@ -36,11 +36,11 @@ export type InvokeDeps = {
  * serializable descriptors.
  */
 export const handleListEvent = (detail: unknown, getActions: () => PageAction.PageAction[]): PageAction.ListAck => {
-  const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)(detail);
+  const decoded = Schema.decodeUnknownResult(PageAction.ListRequest)(detail);
   if (Result.isLeft(decoded)) {
     log.info('rejected invalid page-actions list request');
     // Best-effort id echo so the extension can correlate the failure ack.
-    const envelope = Schema.decodeUnknownEither(PageAction.Envelope)(detail);
+    const envelope = Schema.decodeUnknownResult(PageAction.Envelope)(detail);
     const id = Result.isRight(envelope) ? (envelope.right.id ?? '') : '';
     return { version: 1, id, ok: false, error: 'invalidPayload' };
   }
@@ -58,7 +58,7 @@ export const handleListEvent = (detail: unknown, getActions: () => PageAction.Pa
  * the generic `invalidPayload`.
  */
 export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Promise<PageAction.InvokeAck> => {
-  const envelope = Schema.decodeUnknownEither(PageAction.Envelope)(detail);
+  const envelope = Schema.decodeUnknownResult(PageAction.Envelope)(detail);
   if (Result.isLeft(envelope)) {
     log.info('rejected invalid page-action envelope');
     return { version: 1, id: '', ok: false, error: 'invalidPayload' };
@@ -78,7 +78,7 @@ export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Prom
     return { version: 1, id: envelopeId, ok: false, error: 'unsupportedVersion' };
   }
 
-  const decoded = Schema.decodeUnknownEither(PageAction.InvokeRequest)(detail);
+  const decoded = Schema.decodeUnknownResult(PageAction.InvokeRequest)(detail);
   if (Result.isLeft(decoded)) {
     log.info('rejected invalid page-action payload');
     return { version: 1, id: envelopeId, ok: false, error: 'invalidPayload' };

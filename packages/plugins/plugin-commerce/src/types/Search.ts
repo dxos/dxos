@@ -16,7 +16,7 @@ export const STARRED_TAG = { source: 'org.dxos.plugin.commerce', id: 'starred' }
 /** A user's saved product search configuration. */
 export class Search extends Type.makeObject<Search>(DXN.make('org.dxos.type.commerce.Search', '0.1.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.annotations({ title: 'Name' }), Schema.optional),
+    name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Schema.optional),
     providers: Schema.Array(Ref.Ref(Provider)),
     /** Values for the union of provider fields, keyed by field name. */
     params: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(FormInputAnnotation.set(false)),

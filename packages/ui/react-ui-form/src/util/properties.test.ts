@@ -119,13 +119,13 @@ describe('getFormProperties', () => {
     expect(names).not.toContain('geometry');
   });
 
-  test('preserves annotation when chained with .annotations()', ({ expect }) => {
-    // Regression: `.pipe(FormInputAnnotation.set(false)).annotations({...})` must
+  test('preserves annotation when chained with .annotate()', ({ expect }) => {
+    // Regression: `.pipe(FormInputAnnotation.set(false)).annotate({...})` must
     // not lose the form-input annotation.
     const TestSchema = Type.makeObject(DXN.make('org.dxos.test.chainedHidden', '0.1.0'))(
       Schema.Struct({
         name: Schema.optional(Schema.String),
-        hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+        hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotate({
           description: 'Hidden field',
         }),
       }),

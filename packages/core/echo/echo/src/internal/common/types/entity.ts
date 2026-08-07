@@ -114,7 +114,7 @@ export type UnknownTypeSchemaBrandId = typeof UnknownTypeSchemaBrandId;
  * can pattern-match on it; arbitrary `Schema.Schema` values do not satisfy
  * this shape.
  */
-export interface UnknownTypeSchema<A, K extends EntityKind> extends Schema.Schema<A, any, never> {
+export interface UnknownTypeSchema<A, K extends EntityKind> extends Schema.Codec<A, any, never> {
   readonly [UnknownTypeSchemaBrandId]: K;
 }
 

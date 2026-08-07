@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 export const Settings = Schema.mutable(
   Schema.Struct({
     apiKey: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         title: 'API key',
         description: 'Duffel API access token (test or live).',
       }),

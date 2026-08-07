@@ -78,7 +78,7 @@ export const search = async <T extends Type.AnyEntity>(
   //     ...Object.fromEntries(
   //       mappedSchema.map((schema, index) => [
   //         `objects_${index}`,
-  //         Schema.Array(schema).annotations({
+  //         Schema.Array(schema).annotate({
   //           description: `The objects to answer the query of type ${Type.getTypename(schema) ?? SchemaAST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
   //         }),
   //       ]),
@@ -171,7 +171,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 //       }),
 //     ],
 //     schema: Schema.Struct({
-//       terms: Schema.Array(Schema.String).annotations({
+//       terms: Schema.Array(Schema.String).annotate({
 //         description: 'The search terms to use to find the objects. 0-10 terms.',
 //       }),
 //     }),
@@ -211,7 +211,7 @@ const sanitizeObjects = (entries: { data: any; schema: Type.AnyObj }[]) => {
 
 const SoftRef = Schema.Struct({
   '/': Schema.String,
-}).annotations({
+}).annotate({
   description: 'Reference to another object.',
 });
 

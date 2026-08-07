@@ -268,7 +268,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       case 'string': {
         result = Schema.String;
         if (root.pattern) {
-          result = result.pipe(Schema.pattern(new RegExp(root.pattern)));
+          result = result.pipe(Schema.check(Schema.isPattern(new RegExp(root.pattern))));
         }
         break;
       }
@@ -277,7 +277,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
         break;
       }
       case 'integer': {
-        result = Schema.Number.pipe(Schema.int());
+        result = Schema.Number.pipe(Schema.check(Schema.isInt()));
         break;
       }
       case 'boolean': {
@@ -311,14 +311,14 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     const jsonSchema = defs[refSegments[refSegments.length - 1]];
     invariant(jsonSchema, `missing definition for ${root.$ref}`);
     result = toEffectSchema(jsonSchema, defs).pipe(
-      Schema.annotations({ identifier: refSegments[refSegments.length - 1] }),
+      Schema.annotate({ identifier: refSegments[refSegments.length - 1] }),
     );
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
 
   // log.info('toEffectSchema', { root, annotations });
-  result = result.annotations(annotations);
+  result = result.annotate(annotations);
 
   return result;
 };
@@ -348,7 +348,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
     fields = orderKeys(fields, root.propertyOrder as any);
   }
 
-  let schema: Schema.Schema<any, any, unknown>;
+  let schema: Schema.Codec<any, any, unknown>;
   if (root.patternProperties) {
     invariant(propertyList.length === 0, 'pattern properties mixed with regular properties are not supported');
     invariant(
@@ -373,7 +373,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
-  return schema.annotations(annotations) as any;
+  return schema.annotate(annotations) as any;
 };
 
 const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNoContext => {

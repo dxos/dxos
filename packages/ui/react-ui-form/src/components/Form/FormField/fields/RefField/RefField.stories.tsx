@@ -18,13 +18,13 @@ import { Form } from '../../../Form';
 
 // Picker: select an existing Organization.
 const RefSchema = Schema.Struct({
-  employer: Ref.Ref(Organization).annotations({ title: 'Employer' }),
+  employer: Ref.Ref(Organization).annotate({ title: 'Employer' }),
 }).pipe(Schema.mutable);
 
 // Inline: edit the referenced Organization's fields in a nested form.
 const InlineSchema = Schema.Struct({
   employer: Ref.Ref(Organization).pipe(
-    Schema.annotations({ title: 'Employer' }),
+    Schema.annotate({ title: 'Employer' }),
     Annotation.FormInlineAnnotation.set(true),
   ),
 }).pipe(Schema.mutable);

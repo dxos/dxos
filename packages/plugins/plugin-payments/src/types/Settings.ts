@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 export const Settings = Schema.mutable(
   Schema.Struct({
     paymentsUrl: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         title: 'Payments service URL',
         description: 'Base URL of the payments-service (No trailing slash).',
       }),

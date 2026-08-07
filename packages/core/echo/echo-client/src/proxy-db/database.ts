@@ -407,7 +407,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
-      schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
+      schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
       meta =
         getTypeAnnotation(schema) ??
         ({
@@ -428,7 +428,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // Update jsonSchema with the full annotated schema.
     // TypeSchema.jsonSchema is readonly in the type but writable via change context.
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
-      schema.annotations({
+      schema.annotate({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,
         [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({

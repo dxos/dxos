@@ -54,10 +54,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     // Optional per-mailbox reply guidance (tone, standing facts, sign-off, skills). A shared
     // `Instructions` object can be referenced by several mailboxes, or a distinct one created per
     // mailbox; the reply generator merges its text + skills into the session prompt.
-    instructions: Ref.Ref(Instructions.Instructions).pipe(
-      Schema.annotations({ title: 'Instructions' }),
-      Schema.optional,
-    ),
+    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotate({ title: 'Instructions' }), Schema.optional),
     // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
     // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
     // the association lives here on the mutable Mailbox. The referenced objects are space-db
@@ -94,7 +91,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
 export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(Mailbox, value);
 
 export const CreateMailboxSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 });
 
 type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'tags' | 'filters' | 'extractors'> & {

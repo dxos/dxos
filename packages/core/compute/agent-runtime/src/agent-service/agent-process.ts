@@ -762,14 +762,14 @@ class AsynchronousExectionToolkit extends Toolkit.make(
       You will also be notified about the job completion separatelly, so you do not always need to inspect the job if you dont need the result right now.
     `,
     parameters: {
-      ids: Schema.Array(Schema.String).annotations({
+      ids: Schema.Array(Schema.String).annotate({
         description: 'The IDs of the jobs to inspect.',
       }),
-      wait: Schema.optional(Schema.Boolean).annotations({
+      wait: Schema.optional(Schema.Boolean).annotate({
         description: 'Whether to wait for the tool call to complete before returning.',
         default: false,
       }),
-      timeout: Schema.optional(Schema.Number).annotations({
+      timeout: Schema.optional(Schema.Number).annotate({
         description:
           'Maximum time to wait for the job to complete. If the job does not complete within the timeout, the current state is returned.',
         default: 10_000,

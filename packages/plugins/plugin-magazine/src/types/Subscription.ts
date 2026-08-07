@@ -71,7 +71,7 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
      * Defaults to {@link DEFAULT_KEEP} when unset.
      */
     keep: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         title: 'Keep',
         description: 'Number of synced items.',
       }),

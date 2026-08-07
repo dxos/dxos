@@ -236,7 +236,7 @@ const paginate = <T>(
     nodes: readonly T[];
     pageInfo: { hasNextPage: boolean; endCursor?: string | null };
   },
-  dataSchema: Schema.Schema<any, any>,
+  dataSchema: Schema.Codec<any, any>,
 ): LinearEffect<readonly T[]> =>
   Effect.gen(function* () {
     const out: T[] = [];

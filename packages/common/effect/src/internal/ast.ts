@@ -64,7 +64,7 @@ export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
   const properties = SchemaAST.getPropertySignatures(ast);
   return properties.map((prop) => {
     const { type, refinements } = getBaseType(prop);
-    // Merge PropertySignature-level annotations (e.g., title, description set via .annotations())
+    // Merge PropertySignature-level annotations (e.g., title, description set via .annotate())
     // onto the unwrapped base type so downstream consumers see them.
     const mergedType =
       prop.annotations && Reflect.ownKeys(prop.annotations).length > 0
@@ -335,7 +335,7 @@ export const isLiteralUnion = (node: SchemaAST.AST): node is SchemaAST.Union<Sch
  * (e.g. `Schema.Literal('a', 'b')` or `Schema.Union(Schema.Literal('a'), Schema.Literal('b'))`).
  * Returns an empty array if the schema is not a literal union.
  */
-export const getLiteralValues = <S extends Schema.Schema<any, any, any>>(
+export const getLiteralValues = <S extends Schema.Codec<any, any, any>>(
   schema: S,
 ): ReadonlyArray<Schema.Schema.Type<S>> => {
   if (!isLiteralUnion(schema.ast)) {

@@ -18,7 +18,7 @@ import { SchemaAST } from '@dxos/effect';
 export const narrowSchema = <S extends Schema.Schema.AnyNoContext>(
   schema: S,
   paths: string[],
-): Schema.Schema<unknown, unknown> | undefined => {
+): Schema.Codec<unknown, unknown> | undefined => {
   const ast = (schema as any)?.ast;
 
   if (SchemaAST.isTypeLiteral(ast)) {

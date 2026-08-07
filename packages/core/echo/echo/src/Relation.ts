@@ -66,7 +66,7 @@ export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Rel
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  Schema.annotations({
+  Schema.annotate({
     [internal.TypeAnnotationId]: {
       kind: Entity.Kind.Relation,
       typename: 'org.dxos.schema.anyRelation',

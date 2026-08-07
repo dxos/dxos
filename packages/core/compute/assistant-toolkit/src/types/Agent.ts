@@ -35,7 +35,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      * HALO identity DID takes once agents get first-class identities. Optional because nothing
      * populates it yet.
      */
-    did: Schema.optional(IdentityDid).annotations({
+    did: Schema.optional(IdentityDid).annotate({
       title: 'DID',
       description: "The agent's identity DID; attributes content the agent authors.",
     }),
@@ -43,7 +43,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     /**
      * Master switch for the agent's automation (propagated onto its compiled routine triggers).
      */
-    enabled: Schema.optional(Schema.Boolean).annotations({
+    enabled: Schema.optional(Schema.Boolean).annotate({
       title: 'Enabled',
       description: 'Master switch for agent automation; propagated to all triggers on sync.',
     }),
@@ -52,7 +52,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      * Instructions for the agent — the preset payload (text, skills, objects, commands) a chat
      * receives when the agent is applied to it.
      */
-    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotations({ title: 'Instructions' })),
+    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotate({ title: 'Instructions' })),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),

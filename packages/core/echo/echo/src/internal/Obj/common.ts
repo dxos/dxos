@@ -43,7 +43,7 @@ export const makeTypedEntityClass = (
   typename: string,
   version: string,
   baseSchema: Schema.Schema.AnyNoContext,
-): Schema.SchemaClass<any> => {
+): Schema.Codec<any> => {
   return class {
     // Implement TypedObject properties.
     static readonly typename = typename;

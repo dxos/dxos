@@ -15,7 +15,7 @@ export const toolkit = Toolkit.make(
   Tool.make('time', {
     description: 'Gets the current time.',
     parameters: {},
-    success: Schema.String.annotations({
+    success: Schema.String.annotate({
       description: 'The current time in ISO format.',
     }),
     failure: Schema.Never,

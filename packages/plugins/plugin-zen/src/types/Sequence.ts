@@ -15,7 +15,7 @@ const DEFAULT_SAMPLE = 'rain';
 /** Sample audio source. */
 export const SampleSourceSchema = Schema.Struct({
   type: Schema.Literal('sample'),
-  sample: Schema.String.annotations({ description: 'Bundled sample.' }),
+  sample: Schema.String.annotate({ description: 'Bundled sample.' }),
 });
 
 /** Generator audio source. */
@@ -32,12 +32,12 @@ export type Source = Schema.Schema.Type<typeof SourceSchema>;
 /** Schema for a single audio layer in the mixer. */
 export const Sequence = Schema.Struct({
   id: Schema.String,
-  name: Schema.optional(Schema.String.annotations({ description: 'Layer name.' })),
-  source: SourceSchema.annotations({ description: 'Audio source.' }),
+  name: Schema.optional(Schema.String.annotate({ description: 'Layer name.' })),
+  source: SourceSchema.annotate({ description: 'Audio source.' }),
   /** Layer volume (0-1). */
-  volume: Schema.Number.annotations({ description: 'Layer volume (0-1).' }),
+  volume: Schema.Number.annotate({ description: 'Layer volume (0-1).' }),
   /** Mute this layer. */
-  muted: Schema.Boolean.annotations({ description: 'Muted.' }),
+  muted: Schema.Boolean.annotate({ description: 'Muted.' }),
 });
 
 export type Sequence = Schema.Schema.Type<typeof Sequence>;

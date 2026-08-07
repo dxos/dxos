@@ -14,7 +14,7 @@ describe('getNumericConstraints', () => {
   });
 
   test('detects integer from Schema.int', ({ expect }) => {
-    const { ast } = Schema.Number.pipe(Schema.int(), Schema.between(0, 23));
+    const { ast } = Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 23));
     expect(getNumericConstraints(ast)).toEqual({ min: 0, max: 23, integer: true });
   });
 
@@ -23,7 +23,10 @@ describe('getNumericConstraints', () => {
   });
 
   test('aggregates stacked bounds to the strictest (intersection semantics)', ({ expect }) => {
-    const { ast } = Schema.Number.pipe(Schema.greaterThanOrEqualTo(5), Schema.greaterThanOrEqualTo(10));
+    const { ast } = Schema.Number.pipe(
+      Schema.check(Schema.isGreaterThanOrEqualTo(5)),
+      Schema.check(Schema.isGreaterThanOrEqualTo(10)),
+    );
     expect(getNumericConstraints(ast)).toEqual({ min: 10, max: undefined, integer: false });
   });
 });

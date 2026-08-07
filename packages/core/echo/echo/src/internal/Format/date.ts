@@ -104,7 +104,7 @@ export const DateOnly = /* Schema.transformOrFail(Schema.String, SimpleDate, {
   },
 }) */ Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Date),
-  Schema.annotations({
+  Schema.annotate({
     description: 'Valid date in ISO format',
   }),
 );
@@ -133,7 +133,7 @@ export const TimeOnly = /* Schema.transformOrFail(Schema.String, SimpleTime, {
   },
 }) */ Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Time),
-  Schema.annotations({
+  Schema.annotate({
     description: 'Valid time in ISO format',
   }),
 );
@@ -177,7 +177,7 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
   },
 }) */ Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.DateTime),
-  Schema.annotations({
+  Schema.annotate({
     description: 'Valid date and time in ISO format',
   }),
 );
@@ -188,7 +188,7 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
 // TODO(burdon): Define duration type.
 export const Duration = Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Duration),
-  Schema.annotations({
+  Schema.annotate({
     description: 'Duration in ISO 8601 format',
     [SchemaAST.ExamplesAnnotationId]: ['1h', '3D'],
   }),

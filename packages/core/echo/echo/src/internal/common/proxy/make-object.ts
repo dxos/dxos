@@ -46,13 +46,13 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId | S
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
 export const makeObject = <T extends AnyProperties>(
-  schema: Schema.Schema<T, any, never>,
+  schema: Schema.Codec<T, any, never>,
   obj: NoInfer<MakeObjectProps<T>>,
   meta?: Partial<EntityMeta>,
   typeSource?: TypeSource,
 ): T => {
   // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
-  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema as Schema.Schema<T, any>, typeSource);
+  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema as Schema.Codec<T, any>, typeSource);
 };
 
 const createReactiveObject = <T extends AnyProperties>(
@@ -115,7 +115,7 @@ const createReactiveObject = <T extends AnyProperties>(
  * validate mutations against.
  */
 export const makeDecodedEntityLive = <T extends AnyProperties>(obj: T): T => {
-  const schema = (obj as any)[SchemaId] as Schema.Schema<T, any> | undefined;
+  const schema = (obj as any)[SchemaId] as Schema.Codec<T, any> | undefined;
   if (!schema) {
     return obj;
   }

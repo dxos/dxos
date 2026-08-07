@@ -17,7 +17,7 @@ export const Settings = Schema.mutable(
     apiKeys: Schema.optional(
       Schema.Array(APIKey).pipe(
         RecognizedDomainsAnnotation.set([...RECOGNIZED_API_KEY_DOMAINS]),
-        Schema.annotations({
+        Schema.annotate({
           title: 'API keys',
           description: 'API keys for third-party services such as map tile providers.',
         }),

@@ -14,7 +14,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 
 const TypefullyTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'API key',
     description: 'The Typefully API key (v2) from account settings (Settings → API).',
   }),

@@ -328,7 +328,7 @@ const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Sch
   if (jsonSchema == null) {
     return undefined;
   }
-  const rebuilt = toEffectSchema(jsonSchema).annotations({
+  const rebuilt = toEffectSchema(jsonSchema).annotate({
     [TypeIdentifierAnnotationId]: EID.make({ entityId: target[symbolInternals].id }),
   });
   target[symbolInternals].cachedStaticSlot = rebuilt;

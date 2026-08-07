@@ -68,7 +68,7 @@ describe('mapMessage', () => {
 
       // This reproduces the ParseError that QueueImpl hits during refresh:
       //   Schema.decodeUnknown rejects null for optional Ref<Person> (expects undefined).
-      const decoded = Schema.decodeUnknownEither(Type.getSchema(Message.Message))(rawData);
+      const decoded = Schema.decodeUnknownResult(Type.getSchema(Message.Message))(rawData);
       expect(decoded._tag).toBe('Left');
     }, Effect.provide(InboxResolver.Mock())),
   );
@@ -384,7 +384,7 @@ describe('GoogleMail.Message schema', () => {
         body: { size: 11, data: Buffer.from('Hello World').toString('base64') },
       },
     };
-    const decoded = Schema.decodeUnknownEither(GoogleMail.Message)(raw);
+    const decoded = Schema.decodeUnknownResult(GoogleMail.Message)(raw);
     expect(decoded._tag).toBe('Right');
     expect(decoded._tag === 'Right' && decoded.right.labelIds).toBeUndefined();
   });

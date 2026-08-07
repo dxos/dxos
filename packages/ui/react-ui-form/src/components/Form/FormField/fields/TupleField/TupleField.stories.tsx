@@ -16,7 +16,7 @@ import { TupleField } from './TupleField';
 
 // TupleField isn't auto-dispatched and needs a `binding`; wire it via `fieldMap`.
 const schema = Schema.Struct({
-  point: Schema.Struct({ x: Schema.Number, y: Schema.Number }).annotations({ title: 'Point' }),
+  point: Schema.Struct({ x: Schema.Number, y: Schema.Number }).annotate({ title: 'Point' }),
 }).pipe(Schema.mutable);
 
 type Values = Schema.Schema.Type<typeof schema>;

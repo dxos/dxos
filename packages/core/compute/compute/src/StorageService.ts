@@ -12,13 +12,13 @@ import * as Schema from 'effect/Schema';
 
 export interface Service {
   /** Read a value by key. Returns `None` if key does not exist. */
-  get<S extends Schema.Schema<any, string, any>>(
+  get<S extends Schema.Codec<any, string, any>>(
     schema: S,
     key: string,
   ): Effect.Effect<Option.Option<Schema.Schema.Type<S>>, never, Schema.Schema.Context<S>>;
 
   /** Write a value for the given key. */
-  set<S extends Schema.Schema<any, string, any>>(
+  set<S extends Schema.Codec<any, string, any>>(
     schema: S,
     key: string,
     value: Schema.Schema.Type<S>,
@@ -61,10 +61,7 @@ export interface Cell<T> extends Pipeable.Pipeable {
 /**
  * Create a typed cell in a storage service.
  */
-export const cell = <S extends Schema.Schema<any, string, any>>(
-  schema: S,
-  key: string,
-): Cell<Schema.Schema.Type<S>> => {
+export const cell = <S extends Schema.Codec<any, string, any>>(schema: S, key: string): Cell<Schema.Schema.Type<S>> => {
   return {
     key,
     get: get(schema, key),

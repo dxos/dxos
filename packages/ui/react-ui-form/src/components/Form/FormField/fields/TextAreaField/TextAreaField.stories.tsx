@@ -15,7 +15,7 @@ import { TestLayout } from '../../../../../testing';
 import { Form } from '../../../Form';
 
 const schema = Schema.Struct({
-  notes: Format.Text.annotations({ title: 'Notes' }),
+  notes: Format.Text.annotate({ title: 'Notes' }),
 }).pipe(Schema.mutable);
 
 type Values = Schema.Schema.Type<typeof schema>;

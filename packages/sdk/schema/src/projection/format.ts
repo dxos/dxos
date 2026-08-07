@@ -13,21 +13,21 @@ import { SchemaEx } from '@dxos/effect';
  * Base schema.
  */
 export const BaseProperty = Schema.Struct({
-  property: SchemaEx.JsonProp.annotations({
+  property: SchemaEx.JsonProp.annotate({
     title: 'Property',
     description: 'Property name',
   }),
 
   // TODO(wittjosiah): Rename label?
   title: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Label',
       description: 'Property label',
     }),
   ),
 
   description: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Description',
       description: 'Property description',
     }),
@@ -41,7 +41,7 @@ const extend = <Fields extends Schema.Struct.Fields>(format: Format.TypeFormat, 
     BaseProperty,
     Schema.Struct({
       type: Schema.Literal(type),
-      format: Schema.Literal(format).annotations({
+      format: Schema.Literal(format).annotate({
         title: 'Type format',
       }),
       ...fields,
@@ -79,12 +79,12 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   [Format.TypeFormat.Number]: extend(Format.TypeFormat.Number, TypeEnum.Number),
   [Format.TypeFormat.Boolean]: extend(Format.TypeFormat.Boolean, TypeEnum.Boolean),
   [Format.TypeFormat.Ref]: extend(Format.TypeFormat.Ref, TypeEnum.Ref, {
-    referenceSchema: Schema.NonEmptyString.annotations({
+    referenceSchema: Schema.NonEmptyString.annotate({
       title: 'Record type',
       description: 'Name of the record type',
     }),
     referencePath: Schema.optional(
-      SchemaEx.JsonProp.annotations({
+      SchemaEx.JsonProp.annotate({
         title: 'Lookup property',
         description: 'Referenced property',
       }),
@@ -113,14 +113,14 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   //
 
   [Format.TypeFormat.SingleSelect]: extend(Format.TypeFormat.SingleSelect, TypeEnum.String, {
-    options: Schema.Array(SelectOption).annotations({
+    options: Schema.Array(SelectOption).annotate({
       title: 'Options',
       description: 'Available choices',
     }),
   }),
 
   [Format.TypeFormat.MultiSelect]: extend(Format.TypeFormat.MultiSelect, TypeEnum.Object, {
-    options: Schema.Array(SelectOption).annotations({
+    options: Schema.Array(SelectOption).annotate({
       title: 'Options',
       description: 'Available choices',
     }),
@@ -133,7 +133,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   [Format.TypeFormat.Currency]: extend(Format.TypeFormat.Currency, TypeEnum.Number, {
     multipleOf: Schema.optional(DecimalPrecision),
     currency: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         title: 'Currency code',
         description: 'ISO 4217 currency code.',
       }),

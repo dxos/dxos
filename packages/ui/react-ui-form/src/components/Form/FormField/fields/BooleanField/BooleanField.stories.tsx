@@ -14,7 +14,7 @@ import { TestLayout } from '../../../../../testing';
 import { Form } from '../../../Form';
 
 const schema = Schema.Struct({
-  active: Schema.Boolean.annotations({ title: 'Active' }),
+  active: Schema.Boolean.annotate({ title: 'Active' }),
 }).pipe(Schema.mutable);
 
 type Values = Schema.Schema.Type<typeof schema>;

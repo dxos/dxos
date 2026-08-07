@@ -52,7 +52,7 @@ describe('EchoSchema', () => {
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schema = Ref.make(schema);
     });
-    const schemaWithId = Type.getSchema(GeneratedSchema).annotations({
+    const schemaWithId = Type.getSchema(GeneratedSchema).annotate({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
         typename: 'com.example.type.test',

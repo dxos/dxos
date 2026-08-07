@@ -19,9 +19,9 @@ export class TaskSet extends Type.makeObject<TaskSet>(DXN.make('org.dxos.type.ta
   Schema.Struct({
     name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
     description: Schema.String.pipe(Schema.optional),
-    image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
+    image: Format.URL.pipe(Schema.annotate({ title: 'Image' }), Schema.optional),
   }).pipe(
-    Schema.annotations({ title: 'Task Set' }),
+    Schema.annotate({ title: 'Task Set' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square-offset--regular', hue: 'indigo' }),
   ),

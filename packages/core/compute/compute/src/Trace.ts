@@ -45,13 +45,13 @@ export function write<T>(eventType: EventType<T>, payload: NoInfer<T>): Effect.E
  */
 export interface EventType<T> {
   readonly key: string;
-  readonly schema: Schema.Schema<T, any>;
+  readonly schema: Schema.Codec<T, any>;
   readonly isEphemeral: boolean;
 }
 
 export const EventType = <T>(
   key: string,
-  opts: { schema: Schema.Schema<T, any>; isEphemeral: boolean },
+  opts: { schema: Schema.Codec<T, any>; isEphemeral: boolean },
 ): EventType<T> => {
   return {
     key,

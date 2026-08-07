@@ -23,6 +23,6 @@ export const getIconAnnotation = (schema: Schema.Schema.AnyNoContext): string | 
 export const withIcon =
   (icon: string) =>
   <Self extends Schema.Schema.All>(schema: Self) =>
-    schema.annotations({
+    schema.annotate({
       [IconAnnotationId]: icon,
     });

@@ -69,11 +69,11 @@ describe('json-schema', () => {
 
     {
       const schema1 = Schema.Struct({
-        x: Schema.Number.annotations({ title: 'foo', description: 'bar' }),
+        x: Schema.Number.annotate({ title: 'foo', description: 'bar' }),
       });
 
       const schema2 = Schema.Struct({
-        x: Schema.Number.pipe(Schema.annotations({ description: 'bar', title: 'foo' })),
+        x: Schema.Number.pipe(Schema.annotate({ description: 'bar', title: 'foo' })),
       });
 
       expect(schema1.ast).toEqual(schema2.ast);

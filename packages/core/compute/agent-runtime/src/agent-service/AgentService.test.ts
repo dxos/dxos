@@ -46,7 +46,7 @@ const Research = Operation.make({
     description: 'Research an organization',
   },
   input: Schema.Struct({
-    website: Schema.String.annotations({ description: 'The website of the organization to research' }),
+    website: Schema.String.annotate({ description: 'The website of the organization to research' }),
   }),
   output: Schema.String,
   services: [ResearchService.ResearchService],

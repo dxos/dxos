@@ -20,8 +20,8 @@ export class SampleItem extends Type.makeObject<SampleItem>(DXN.make('org.dxos.t
   Schema.Struct({
     // Fields are `Schema.optional` because ECHO objects start with undefined fields
     // and are populated asynchronously. The schema describes the shape, not required values.
-    name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-    description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
+    name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+    description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
 
     // `Schema.Literal` restricts the field to specific values.
     // `FormatAnnotation.set(Format.TypeFormat.SingleSelect)` tells the form system
@@ -29,7 +29,7 @@ export class SampleItem extends Type.makeObject<SampleItem>(DXN.make('org.dxos.t
     // `PropertyMetaAnnotationId` provides display metadata (labels, colors) for each option.
     status: Schema.Literal('active', 'archived', 'draft').pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      Schema.annotations({
+      Schema.annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {

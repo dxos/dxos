@@ -17,7 +17,7 @@ export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.pipe(
-    Schema.annotations({ title: 'Select type' }),
+    Schema.annotate({ title: 'Select type' }),
     SpaceForm.TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],

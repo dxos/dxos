@@ -54,7 +54,7 @@ export type Input = Schema.Schema.Type<typeof Input>;
  * Template type.
  */
 export const Template = Schema.Struct({
-  source: Ref.Ref(Text.Text).annotations({ description: 'Markdown + Handlebars template.' }),
+  source: Ref.Ref(Text.Text).annotate({ description: 'Markdown + Handlebars template.' }),
 
   /**
    * NOTE: We use an array rather than map so that updating variable names in the template doesn't disconnect existing inputs.

@@ -33,8 +33,8 @@ export const Create = Operation.make({
 });
 
 export const DeleteOutput = Schema.Struct({
-  thread: Type.getSchema(Thread.Thread).annotations({ description: 'The deleted comment thread.' }),
-  anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The deleted anchor.' }),
+  thread: Type.getSchema(Thread.Thread).annotate({ description: 'The deleted comment thread.' }),
+  anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotate({ description: 'The deleted anchor.' }),
 }).pipe(Schema.partial);
 
 export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
@@ -91,8 +91,8 @@ export const AddMessage = Operation.make({
 
 export const DeleteMessageOutput = Schema.partial(
   Schema.Struct({
-    message: Type.getSchema(Message.Message).annotations({ description: 'The deleted comment message.' }),
-    messageIndex: Schema.Number.annotations({ description: 'The index the message was at.' }),
+    message: Type.getSchema(Message.Message).annotate({ description: 'The deleted comment message.' }),
+    messageIndex: Schema.Number.annotate({ description: 'The index the message was at.' }),
   }),
 );
 
@@ -120,8 +120,8 @@ export const Restore = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    thread: Type.getSchema(Thread.Thread).annotations({ description: 'The comment thread to restore.' }),
-    anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The anchor relation to restore.' }),
+    thread: Type.getSchema(Thread.Thread).annotate({ description: 'The comment thread to restore.' }),
+    anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotate({ description: 'The anchor relation to restore.' }),
   }),
   output: Schema.Void,
 });
@@ -137,9 +137,9 @@ export const RestoreMessage = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The anchor of the comment thread.' }),
-    message: Type.getSchema(Message.Message).annotations({ description: 'The message to restore.' }),
-    messageIndex: Schema.Number.annotations({ description: 'The index to restore the message at.' }),
+    anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotate({ description: 'The anchor of the comment thread.' }),
+    message: Type.getSchema(Message.Message).annotate({ description: 'The message to restore.' }),
+    messageIndex: Schema.Number.annotate({ description: 'The index to restore the message at.' }),
   }),
   output: Schema.Void,
 });
@@ -152,8 +152,8 @@ export const RespondToThread = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    thread: Ref.Ref(Thread.Thread).annotations({ description: 'The comment thread to respond to.' }),
-    subject: Ref.Ref(Obj.Unknown).annotations({ description: 'The object the comment thread is anchored to.' }),
+    thread: Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to respond to.' }),
+    subject: Ref.Ref(Obj.Unknown).annotate({ description: 'The object the comment thread is anchored to.' }),
   }),
   output: Schema.Void,
 });
@@ -166,8 +166,8 @@ export const SetAgentConfig = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    thread: Ref.Ref(Thread.Thread).annotations({ description: 'The comment thread to configure.' }),
-    config: Schema.optional(Thread.AgentConfig).annotations({
+    thread: Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to configure.' }),
+    config: Schema.optional(Thread.AgentConfig).annotate({
       description: 'New agent config; omit to disable.',
     }),
   }),
@@ -182,10 +182,10 @@ export const CreateProposals = Operation.make({
     icon: 'ph--sparkle--regular',
   },
   input: Schema.Struct({
-    doc: Ref.Ref(Markdown.Document).annotations({
+    doc: Ref.Ref(Markdown.Document).annotate({
       description: 'The ID of the document.',
     }),
-    diffs: Schema.Array(Schema.String).annotations({
+    diffs: Schema.Array(Schema.String).annotate({
       description: 'The diffs to propose for the document.',
     }),
   }),

@@ -214,7 +214,7 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
 };
 
 const OperationActionForm = Schema.Struct({
-  operation: Ref.Ref(Operation.PersistentOperation).pipe(Schema.annotations({ title: 'Operation' }), Schema.optional),
+  operation: Ref.Ref(Operation.PersistentOperation).pipe(Schema.annotate({ title: 'Operation' }), Schema.optional),
 });
 type OperationActionValues = Schema.Schema.Type<typeof OperationActionForm>;
 

@@ -87,7 +87,7 @@ export const RefTypeId: unique symbol = Symbol.for('@dxos/echo/internal/Ref') as
 /**
  * Reference Schema.
  */
-export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T>, EncodedReference> {}
+export interface RefSchema<T extends AnyEntity> extends Schema.Codec<Ref<T>, EncodedReference> {}
 
 /**
  * Type of the `Ref` function and extra methods attached to it.
@@ -128,7 +128,7 @@ export interface RefFn {
   /**
    * @returns True if the schema is a reference schema.
    */
-  isRefSchema: (schema: Schema.Schema<any, any>) => schema is RefSchema<any>;
+  isRefSchema: (schema: Schema.Codec<any, any>) => schema is RefSchema<any>;
 
   /**
    * @returns True if the schema AST is a reference schema.
@@ -269,7 +269,7 @@ Ref.hasEntityId = (id: EntityId) => (ref: Ref<any>) => {
   return uri !== undefined && EID.isLocal(uri) && EID.getEntityId(uri) === id;
 };
 
-Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is RefSchema<any> => {
+Ref.isRefSchema = (schema: Schema.Codec<any, any>): schema is RefSchema<any> => {
   return Ref.isRefSchemaAST(schema.ast);
 };
 
@@ -311,7 +311,7 @@ export const createEchoReferenceSchema = (
   echoUri: string | undefined,
   typename: string | undefined,
   version: string | undefined,
-): Schema.SchemaClass<Ref<any>, EncodedReference> => {
+): Schema.Codec<Ref<any>, EncodedReference> => {
   if (!echoUri && !typename) {
     throw new TypeError('Either echoUri or typename must be provided.');
   }

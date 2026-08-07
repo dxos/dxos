@@ -20,17 +20,17 @@ export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
  */
 export class Ticket extends Type.makeObject<Ticket>(DXN.make('org.dxos.type.support.ticket', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.annotations({
+    title: Schema.String.annotate({
       description: 'Short summary of the issue.',
     }),
     body: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Initial description of the problem.',
       }),
     ),
     status: TicketStatus.pipe(FormInputAnnotation.set(false)),
     resolution: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Resolution notes recorded when the ticket is resolved.',
       }),
     ),

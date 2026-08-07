@@ -69,15 +69,15 @@ export namespace Research {}
 
 export namespace OKR {
   const Properties = Schema.Struct({
-    objectives: Schema.mutable(Schema.Array(Type.getSchema(Proposition.Object))).annotations({
+    objectives: Schema.mutable(Schema.Array(Type.getSchema(Proposition.Object))).annotate({
       name: 'Objectives',
       description: 'Qualitative, ambitious aspirations.',
     }),
-    keyResults: Schema.mutable(Schema.Array(Type.getSchema(Proposition.Object))).annotations({
+    keyResults: Schema.mutable(Schema.Array(Type.getSchema(Proposition.Object))).annotate({
       name: 'Key Results',
       description: 'Quantitative metrics tracking progress towards those objectives.',
     }),
-  }).annotations({
+  }).annotate({
     description: 'A goal-setting framework defining Objectives and Key Results.',
   });
 
@@ -91,22 +91,22 @@ export namespace OKR {
  */
 export namespace SWOT {
   const Properties = Schema.Struct({
-    subject: Schema.optional(Ref.Ref(Proposition.Object)).annotations({
+    subject: Schema.optional(Ref.Ref(Proposition.Object)).annotate({
       description: 'Subject of the analysis, which could be a document or a structured object.',
     }),
-    strengths: Schema.Array(Ref.Ref(Proposition.Object)).annotations({
+    strengths: Schema.Array(Ref.Ref(Proposition.Object)).annotate({
       description: 'An attribute of the organization that is helpful in achieving its objectives.',
     }),
-    weaknesses: Schema.Array(Ref.Ref(Proposition.Object)).annotations({
+    weaknesses: Schema.Array(Ref.Ref(Proposition.Object)).annotate({
       description: 'A limitation or deficiency within the organization that could hinder its progress.',
     }),
-    opportunities: Schema.Array(Ref.Ref(Proposition.Object)).annotations({
+    opportunities: Schema.Array(Ref.Ref(Proposition.Object)).annotate({
       description: 'An external factor that the organization could exploit to its advantage.',
     }),
-    threats: Schema.Array(Ref.Ref(Proposition.Object)).annotations({
+    threats: Schema.Array(Ref.Ref(Proposition.Object)).annotate({
       description: 'An external factor that could potentially harm the organization.',
     }),
-  }).annotations({
+  }).annotate({
     description:
       'SWOT is a strategic planning technique used to evaluate the Strengths, Weaknesses, Opportunities, and Threats involved in a project or business venture.',
   });

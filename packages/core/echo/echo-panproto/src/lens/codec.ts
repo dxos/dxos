@@ -116,7 +116,7 @@ export const coded = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Sche
 /** The instance type a target declares, whether it is an ECHO type or a plain schema. */
 export type TargetOf<T> = T extends Type.AnyObj
   ? Type.InstanceType<T>
-  : T extends Schema.Schema<infer A, any, any>
+  : T extends Schema.Codec<infer A, any, any>
     ? A
     : never;
 

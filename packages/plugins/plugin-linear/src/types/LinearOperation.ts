@@ -59,7 +59,7 @@ export const MaterializeLinearTarget = Operation.make({
  * `Issue.updatedAt`. Default — when unset — is "sync everything in the team."
  */
 export const SyncOptions = Schema.Struct({
-  maxDaysBack: Schema.Number.annotations({
+  maxDaysBack: Schema.Number.annotate({
     title: 'Sync history (days)',
     description: 'Pull issues updated within this many days. Leave empty to sync everything.',
   }).pipe(Schema.optional),

@@ -10,7 +10,7 @@ import { Proxy } from './index';
 
 describe('Proxy schema', () => {
   test('decodes a render request with optional fields', ({ expect }) => {
-    const decoded = Schema.decodeUnknownEither(Proxy.RenderRequest)({
+    const decoded = Schema.decodeUnknownResult(Proxy.RenderRequest)({
       version: 1,
       id: 'r1',
       url: 'https://example.com',
@@ -21,7 +21,7 @@ describe('Proxy schema', () => {
   });
 
   test('rejects a render request with a wrong version', ({ expect }) => {
-    const decoded = Schema.decodeUnknownEither(Proxy.RenderRequest)({ version: 2, id: 'r1', url: 'https://x' });
+    const decoded = Schema.decodeUnknownResult(Proxy.RenderRequest)({ version: 2, id: 'r1', url: 'https://x' });
     expect(Result.isLeft(decoded)).toBe(true);
   });
 
@@ -31,7 +31,7 @@ describe('Proxy schema', () => {
   });
 
   test('rejects a render ack with an unknown error code', ({ expect }) => {
-    const decoded = Schema.decodeUnknownEither(Proxy.RenderAck)({ version: 1, id: 'r1', ok: false, error: 'nope' });
+    const decoded = Schema.decodeUnknownResult(Proxy.RenderAck)({ version: 1, id: 'r1', ok: false, error: 'nope' });
     expect(Result.isLeft(decoded)).toBe(true);
   });
 

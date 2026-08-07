@@ -18,7 +18,7 @@ const EXTRACTION_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
  * Proper nouns extracted from transcript text.
  */
 export const ProperNouns = Schema.Struct({
-  properNouns: Schema.Array(Schema.String).annotations({
+  properNouns: Schema.Array(Schema.String).annotate({
     description: 'Proper nouns (names of people, organizations, places, products) mentioned in the text.',
   }),
 });

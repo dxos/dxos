@@ -38,7 +38,7 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
 export const instanceOf = (value: unknown): value is Calendar => Obj.instanceOf(Calendar, value);
 
 export const CreateCalendarSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 });
 
 type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'tags'>;

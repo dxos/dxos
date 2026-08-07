@@ -17,7 +17,7 @@ import { FormatAnnotation, TypeFormat } from '../Format';
 // TODO(burdon): Reuse/reconcile with ScalarTypeEnum (handle arrays).
 const SimpleTypes = Schema.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
 
-const NonNegativeInteger = Schema.Number.pipe(Schema.greaterThanOrEqualTo(0));
+const NonNegativeInteger = Schema.Number.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0)));
 
 const StringArray = Schema.Array(Schema.String);
 
@@ -204,7 +204,7 @@ const _JsonSchemaType = Schema.Struct({
   // Numbers.
   //
 
-  multipleOf: Schema.optional(Schema.Number.pipe(Schema.greaterThan(0))),
+  multipleOf: Schema.optional(Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)))),
   maximum: Schema.optional(Schema.Number),
   exclusiveMaximum: Schema.optional(Schema.Number),
   minimum: Schema.optional(Schema.Number),
@@ -289,7 +289,7 @@ const _JsonSchemaType = Schema.Struct({
   dependencies: Schema.optional(
     Schema.Record({
       key: Schema.String,
-      value: Schema.suspend(() => Schema.Union(Schema.String, StringArray, JsonSchemaType)).annotations({
+      value: Schema.suspend(() => Schema.Union(Schema.String, StringArray, JsonSchemaType)).annotate({
         identifier: 'dependency',
         description: 'Dependency',
       }),
@@ -337,7 +337,7 @@ const _JsonSchemaType = Schema.Struct({
    * @deprecated Use `annotations` instead.
    */
   echo: Schema.optional(JsonSchemaEchoAnnotations),
-}).annotations({ identifier: 'jsonSchema', description: 'JSON Schema' });
+}).annotate({ identifier: 'jsonSchema', description: 'JSON Schema' });
 
 export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
 

@@ -51,10 +51,10 @@ export type ResultMapping = Schema.Schema.Type<typeof ResultMapping>;
 /** A configured search provider (API or scrape target). */
 export class Provider extends Type.makeObject<Provider>(DXN.make('org.dxos.type.commerce.Provider', '0.1.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.annotations({ title: 'Name' })),
-    url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
+    name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
+    url: Schema.String.pipe(Schema.annotate({ title: 'URL' })),
     description: Schema.optional(Schema.String),
-    kind: Schema.Literal('api', 'scrape').pipe(Schema.annotations({ title: 'Kind' })),
+    kind: Schema.Literal('api', 'scrape').pipe(Schema.annotate({ title: 'Kind' })),
     // Raw JSONSchema of the typed search fields; authored by the skill and hidden from forms
     // (it is converted to an Effect Schema to drive the Search criteria form).
     searchSchema: JsonSchema.JsonSchema.pipe(FormInputAnnotation.set(false), Schema.optional),

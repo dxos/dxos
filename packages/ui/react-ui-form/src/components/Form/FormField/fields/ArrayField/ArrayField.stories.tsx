@@ -19,8 +19,8 @@ import { Form } from '../../../Form';
 // array of `Column`-like structs. The array is the field we render as either a
 // static or an ordered (drag-to-reorder) list.
 const Column = Schema.Struct({
-  name: Schema.String.annotations({ title: 'Name' }),
-  value: Schema.optional(Schema.Number.annotations({ title: 'Value' })),
+  name: Schema.String.annotate({ title: 'Name' }),
+  value: Schema.optional(Schema.Number.annotate({ title: 'Value' })),
 }).pipe(
   Schema.mutable,
   LabelAnnotation.set(['name']),
@@ -35,11 +35,11 @@ const Column = Schema.Struct({
 );
 type Column = Schema.Schema.Type<typeof Column>;
 
-const columnsField = Schema.Array(Column).pipe(Schema.mutable, Schema.annotations({ title: 'Columns' }));
+const columnsField = Schema.Array(Column).pipe(Schema.mutable, Schema.annotate({ title: 'Columns' }));
 
 const headerFields = {
-  name: Schema.String.pipe(Schema.annotations({ title: 'Name' }), Schema.optional),
-  description: Schema.String.pipe(Schema.annotations({ title: 'Description' }), Schema.optional),
+  name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Schema.optional),
+  description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
 };
 
 const Pipeline = Schema.Struct({

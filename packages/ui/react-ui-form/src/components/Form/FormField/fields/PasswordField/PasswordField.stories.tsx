@@ -15,7 +15,7 @@ import { TestLayout } from '../../../../../testing';
 import { Form } from '../../../Form';
 
 const schema = Schema.Struct({
-  name: Schema.String.annotations({ title: 'Name' }).pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)),
+  name: Schema.String.annotate({ title: 'Name' }).pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)),
 }).pipe(Schema.mutable);
 
 type Values = Schema.Schema.Type<typeof schema>;

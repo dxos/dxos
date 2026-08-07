@@ -377,7 +377,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           // retries themselves (see `Process.fromOperation`).
           // event.value is persisted JSON; cast required at deserialization boundary since
           // Process.Process<I,O,R> does not expose the input Schema (runtime object does).
-          const defWithSchema = definition as unknown as { input: Schema.Schema<I, unknown, never> };
+          const defWithSchema = definition as unknown as { input: Schema.Codec<I, unknown, never> };
           const input = yield* Schema.decode(defWithSchema.input)(event.value).pipe(Effect.orDie);
           yield* yield* this.#runHandler('input', () => this.#callbacks.onInput(input), event.seq);
         });

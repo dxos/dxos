@@ -71,7 +71,7 @@ export interface Annotation<T> {
   /**
    * Schema of the annotation value.
    */
-  readonly schema: Schema.Schema<T, unknown, never>;
+  readonly schema: Schema.Codec<T, unknown, never>;
 
   /**
    * Get the annotation value from an Effect schema.
@@ -101,7 +101,7 @@ export type Key = Schema.Schema.Type<typeof Key>;
 
 interface MakeProps<T> {
   id: string;
-  schema: Schema.Schema<T, any, never>;
+  schema: Schema.Codec<T, any, never>;
 }
 
 /**
@@ -116,7 +116,7 @@ interface MakeProps<T> {
  *   schema: Schema.String,
  * });
  *
- * const schema = Schema.String.annotations(ColorAnnotation.set('red'));
+ * const schema = Schema.String.annotate(ColorAnnotation.set('red'));
  * ```
  */
 export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotations.makeUserAnnotation;

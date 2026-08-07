@@ -51,7 +51,7 @@ const _SerializedError = Schema.Struct({
   cause: Schema.optional(Schema.suspend(() => SerializedError)),
 });
 export interface SerializedError extends Schema.Schema.Type<typeof _SerializedError> {}
-export const SerializedError: Schema.Schema<SerializedError, SerializedError, never> = _SerializedError;
+export const SerializedError: Schema.Codec<SerializedError, SerializedError, never> = _SerializedError;
 
 export type EdgeErrorData = { type: string } & Record<string, any>;
 
@@ -692,7 +692,7 @@ export const DEFAULT_INVITATIONS_PER_ACCOUNT = 5;
 export const INVITATION_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
 export const InvitationCodeSchema = Schema.String.pipe(
-  Schema.pattern(new RegExp(`^[${INVITATION_CODE_ALPHABET}]{${INVITATION_CODE_LENGTH}}$`)),
+  Schema.check(Schema.isPattern(new RegExp(`^[${INVITATION_CODE_ALPHABET}]{${INVITATION_CODE_LENGTH}}$`))),
 );
 
 export const CheckEmailExistsRequestSchema = Schema.Struct({

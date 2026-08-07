@@ -646,7 +646,7 @@ export class ProcessManagerImpl implements Manager {
       };
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
-      const defRaw = definition as unknown as { input: Schema.Schema<I, any, never> };
+      const defRaw = definition as unknown as { input: Schema.Codec<I, any, never> };
       // Fall back to null rather than crashing if the input cannot be persisted. The durable
       // store JSON-serializes this value, and a successful schema encode does not guarantee
       // JSON-safety (e.g. Schema.Any passes a live reference straight through), so round-trip
@@ -849,7 +849,7 @@ export class ProcessManagerImpl implements Manager {
       };
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
-      const defRaw = definition as unknown as { input: Schema.Schema<any, any, never> };
+      const defRaw = definition as unknown as { input: Schema.Codec<any, any, never> };
       const encodeInput = (input: any): Effect.Effect<unknown> => Schema.encode(defRaw.input)(input).pipe(Effect.orDie);
 
       const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);

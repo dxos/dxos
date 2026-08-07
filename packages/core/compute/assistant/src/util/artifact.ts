@@ -27,7 +27,7 @@ const ArtifactURI: Schema.Schema<string> & {
     schema: S,
     ref: ArtifactURI,
   ) => Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service>;
-} = class extends Schema.String.annotations({
+} = class extends Schema.String.annotate({
   // TODO(dmaretskyi): This section gets overriden.
   description: trim`
     The URI of the referenced object. Protocols accepted:
@@ -98,6 +98,6 @@ export const RefFromLLM = Schema.transform(ArtifactURI, Ref.Ref(Obj.Unknown), {
   },
   encode: (toI) => EncodedReference.toURI(toI),
   strict: false,
-}).annotations({
+}).annotate({
   description: ArtifactURI.ast.annotations.description as string,
 });

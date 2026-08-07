@@ -17,7 +17,7 @@ describe('effectFieldsToZod', () => {
   test('Schema.String required → z.string()', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
-        name: Schema.String.annotations({ description: 'a name' }),
+        name: Schema.String.annotate({ description: 'a name' }),
       }),
     );
     expect(out.name.parse('hello')).toBe('hello');
@@ -28,7 +28,7 @@ describe('effectFieldsToZod', () => {
   test('Schema.optional(Schema.String) → z.string().optional()', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
-        nick: Schema.optional(Schema.String).annotations({ description: 'nick' }),
+        nick: Schema.optional(Schema.String).annotate({ description: 'nick' }),
       }),
     );
     expect(out.nick.parse('hi')).toBe('hi');
@@ -48,8 +48,12 @@ describe('effectFieldsToZod', () => {
     const out = effectFieldsToZod(
       Schema.Struct({
         limit: Schema.optional(
-          Schema.Number.pipe(Schema.int(), Schema.positive(), Schema.lessThanOrEqualTo(200)),
-        ).annotations({ description: 'limit' }),
+          Schema.Number.pipe(
+            Schema.check(Schema.isInt()),
+            Schema.positive(),
+            Schema.check(Schema.isLessThanOrEqualTo(200)),
+          ),
+        ).annotate({ description: 'limit' }),
       }),
     );
     expect(out.limit.parse(50)).toBe(50);
@@ -92,12 +96,12 @@ describe('effectFieldsToZod', () => {
   });
 
   test('description on optional wrapper survives the conversion', ({ expect }) => {
-    // The user-facing pattern: `.annotations({ description })` is added at the
+    // The user-facing pattern: `.annotate({ description })` is added at the
     // wrapper level (on `Schema.optional(...)`). The converter must read it
     // from the PropertySignatureDeclaration's annotations.
     const out = effectFieldsToZod(
       Schema.Struct({
-        x: Schema.optional(Schema.String).annotations({ description: 'X-axis' }),
+        x: Schema.optional(Schema.String).annotate({ description: 'X-axis' }),
       }),
     );
     expect(out.x.description).toBe('X-axis');
@@ -106,11 +110,15 @@ describe('effectFieldsToZod', () => {
   test('multiple fields convert independently', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
-        name: Schema.optional(Schema.String).annotations({ description: 'pkg name' }),
-        privateOnly: Schema.optional(Schema.Boolean).annotations({ description: 'private?' }),
+        name: Schema.optional(Schema.String).annotate({ description: 'pkg name' }),
+        privateOnly: Schema.optional(Schema.Boolean).annotate({ description: 'private?' }),
         limit: Schema.optional(
-          Schema.Number.pipe(Schema.int(), Schema.positive(), Schema.lessThanOrEqualTo(200)),
-        ).annotations({ description: 'cap' }),
+          Schema.Number.pipe(
+            Schema.check(Schema.isInt()),
+            Schema.positive(),
+            Schema.check(Schema.isLessThanOrEqualTo(200)),
+          ),
+        ).annotate({ description: 'cap' }),
       }),
     );
     // Spread into z.object to validate as a unit (which is how the MCP SDK

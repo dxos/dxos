@@ -28,9 +28,9 @@ export type Upos = Schema.Schema.Type<typeof Upos>;
 
 /** A single word/punctuation token. `start`/`end` are character offsets within the source text. */
 export const Token = Schema.Struct({
-  index: Schema.Number.annotations({ description: 'Position of the token within its sentence.' }),
-  text: Schema.String.annotations({ description: 'Surface form exactly as it appears in the source.' }),
-  upos: Upos.annotations({ description: 'Universal part-of-speech tag.' }),
+  index: Schema.Number.annotate({ description: 'Position of the token within its sentence.' }),
+  text: Schema.String.annotate({ description: 'Surface form exactly as it appears in the source.' }),
+  upos: Upos.annotate({ description: 'Universal part-of-speech tag.' }),
   start: Schema.Number,
   end: Schema.Number,
 });

@@ -22,7 +22,7 @@ export const layer = (
   const knownKeys = new Set<string>();
 
   return {
-    get: <S extends Schema.Schema<any, string, any>>(schema: S, key: string) =>
+    get: <S extends Schema.Codec<any, string, any>>(schema: S, key: string) =>
       Effect.gen(function* () {
         const opt = yield* prefixed.get(key).pipe(Effect.orDie);
         if (Option.isNone(opt)) {
@@ -32,7 +32,7 @@ export const layer = (
         return Option.some(decoded);
       }),
 
-    set: <S extends Schema.Schema<any, string, any>>(schema: S, key: string, value: Schema.Schema.Type<S>) =>
+    set: <S extends Schema.Codec<any, string, any>>(schema: S, key: string, value: Schema.Schema.Type<S>) =>
       Effect.gen(function* () {
         const encoded = yield* Schema.encode(schema)(value).pipe(Effect.orDie);
         yield* prefixed.set(key, encoded).pipe(

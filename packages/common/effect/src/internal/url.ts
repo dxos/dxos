@@ -19,7 +19,7 @@ export const getParamKeyAnnotation: (annotated: SchemaAST.Annotated) => Option.O
 export const ParamKeyAnnotation =
   (value: ParamKeyAnnotationValue) =>
   <S extends Schema.Annotable.All>(self: S): Schema.Annotable.Self<S> =>
-    self.annotations({ [ParamKeyAnnotationId]: value });
+    self.annotate({ [ParamKeyAnnotationId]: value });
 
 /**
  * HTTP params parser.

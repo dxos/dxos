@@ -16,9 +16,9 @@ import { Form } from '../../../Form';
 
 // DateField covers all three temporal formats; show each.
 const schema = Schema.Struct({
-  date: Format.DateOnly.annotations({ title: 'Date' }),
-  time: Format.TimeOnly.annotations({ title: 'Time' }),
-  dateTime: Format.DateTime.annotations({ title: 'Date & time' }),
+  date: Format.DateOnly.annotate({ title: 'Date' }),
+  time: Format.TimeOnly.annotate({ title: 'Time' }),
+  dateTime: Format.DateTime.annotate({ title: 'Date & time' }),
 }).pipe(Schema.mutable);
 
 type Values = Schema.Schema.Type<typeof schema>;

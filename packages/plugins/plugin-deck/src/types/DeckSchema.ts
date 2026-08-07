@@ -108,7 +108,7 @@ export const EphemeralDeckState = Schema.Struct({
   popoverAnchor: Schema.optional(Schema.Any),
   popoverAnchorId: Schema.optional(Schema.String),
   popoverKind: Schema.optional(Schema.Literal('base', 'card', 'rename')),
-  popoverTitle: Schema.optional(Translations.Label.annotations({ description: 'The title of the popover.' })),
+  popoverTitle: Schema.optional(Translations.Label.annotate({ description: 'The title of the popover.' })),
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
@@ -130,14 +130,14 @@ export type DeckPluginState = StoredDeckState & EphemeralDeckState;
 
 export namespace DeckAction {
   const PartAdjustmentSchema = Schema.Union(
-    Schema.Literal('close').annotations({ description: 'Close the plank.' }),
-    Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
-    Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
-    Schema.Literal('expand').annotations({
+    Schema.Literal('close').annotate({ description: 'Close the plank.' }),
+    Schema.Literal('companion').annotate({ description: 'Open the companion plank side-by-side.' }),
+    Schema.Literal('fullscreen').annotate({ description: 'Toggle fullscreen display of the plank.' }),
+    Schema.Literal('expand').annotate({
       description: "Toggle the plank filling the deck, leaving only the other planks' spines beside it.",
     }),
-    Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
-    Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
+    Schema.Literal('increment-start').annotate({ description: 'Move the plank towards the start of the deck.' }),
+    Schema.Literal('increment-end').annotate({ description: 'Move the plank towards the end of the deck.' }),
   );
   export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
   export const Adjustment = Schema.mutable(Schema.Struct({ id: Schema.String, type: PartAdjustmentSchema }));

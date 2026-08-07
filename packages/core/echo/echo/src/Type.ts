@@ -688,7 +688,7 @@ export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
   // schema's URI (via getSchemaURI) matches the entity's local EID.
   const rebuilt = internal.toEffectSchema(type.jsonSchema);
   if (typeof type.id === 'string') {
-    return rebuilt.annotations({
+    return rebuilt.annotate({
       [internal.TypeIdentifierAnnotationId]: EID.make({ entityId: type.id }),
     });
   }

@@ -32,7 +32,7 @@ const TestToolkit = Toolkit.make(
   Tool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
-      input: Schema.String.annotations({
+      input: Schema.String.annotate({
         description: 'The calculation to perform.',
       }),
     },

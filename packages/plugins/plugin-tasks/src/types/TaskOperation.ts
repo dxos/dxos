@@ -35,7 +35,7 @@ export const CreateTask = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    taskSet: Ref.Ref(TaskSet.TaskSet).annotations({
+    taskSet: Ref.Ref(TaskSet.TaskSet).annotate({
       description: 'The task set (container) the task files into.',
     }),
     title: Schema.String,
@@ -132,7 +132,7 @@ export const ListTasks = Operation.make({
   input: Schema.Struct({
     /** Container to list. Exactly one of `taskSet` / `project` — a project lists across its task sets. */
     taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
-    project: Schema.optional(Ref.Ref(Obj.Unknown)).annotations({
+    project: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
       description: 'Project whose task sets are listed (org.dxos.type.project).',
     }),
     status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done', 'failed', 'cancelled')),
@@ -141,7 +141,7 @@ export const ListTasks = Operation.make({
     /** Include sub-tasks (children of tasks); by default only root tasks of the container. */
     includeSubtasks: Schema.optional(Schema.Boolean),
     after: Schema.optional(TaskCursor),
-    limit: Schema.optional(Schema.Number).annotations({ description: 'Page size (default 50, max 200).' }),
+    limit: Schema.optional(Schema.Number).annotate({ description: 'Page size (default 50, max 200).' }),
   }),
   // JSON snapshots, not live objects — see the create/update verbs above.
   output: Schema.Struct({

@@ -34,7 +34,7 @@ const FilterObject_ = Schema.Struct({
    * Must not include object ID.
    */
   props: Schema.Record({
-    key: Schema.String.annotations({ description: 'Property name' }),
+    key: Schema.String.annotate({ description: 'Property name' }),
     value: Schema.suspend(() => Filter),
   }),
 
@@ -227,7 +227,7 @@ export const Filter = Schema.Union(
   FilterNot,
   FilterAnd,
   FilterOr,
-).annotations({ identifier: 'org.dxos.schema.filter' });
+).annotate({ identifier: 'org.dxos.schema.filter' });
 
 export type Filter = Schema.Schema.Type<typeof Filter>;
 
@@ -527,7 +527,7 @@ const Query_ = Schema.Union(
   QuerySkipClause,
   QueryAggregateClause,
   QueryFromClause,
-).annotations({ identifier: 'org.dxos.schema.query' });
+).annotate({ identifier: 'org.dxos.schema.query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;

@@ -15,7 +15,7 @@ describe('createStructFieldsFromSchema', () => {
   const OBJECT = EntityId.random();
 
   // Projects a tool input schema for the LLM and decodes the given `in` value the way a tool call would.
-  const decodeIn = (schema: Schema.Schema<any, any>, value: unknown): any[] => {
+  const decodeIn = (schema: Schema.Codec<any, any>, value: unknown): any[] => {
     const fields = createStructFieldsFromSchema(schema);
     const decoded: any = Schema.decodeUnknownSync(Schema.Struct(fields))({ in: value });
     return decoded.in;

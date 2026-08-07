@@ -18,7 +18,7 @@ export const TestingToolkit = Toolkit.make(
   Tool.make('Markdown', {
     description: 'Load markdown document',
     parameters: {
-      name: Schema.String.annotations({
+      name: Schema.String.annotate({
         description: 'The document name.',
       }),
     },

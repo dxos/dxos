@@ -41,7 +41,7 @@ export namespace FileAction {
   export const UploadAnnotationId = Symbol.for(`${meta.profile.key}.annotation.upload`);
 
   export const CreateFileSchema = Schema.Struct({
-    file: Schema.instanceOf(File).annotations({
+    file: Schema.instanceOf(File).annotate({
       [UploadAnnotationId]: ACCEPTED_MIME,
     }),
   });

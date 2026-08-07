@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 export const Settings = Schema.mutable(
   Schema.Struct({
     endpoint: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         title: 'Build service endpoint',
         description: 'URL of the EDGE build service. Leave empty to use the default.',
       }),

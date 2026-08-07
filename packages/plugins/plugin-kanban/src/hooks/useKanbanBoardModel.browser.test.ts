@@ -22,7 +22,7 @@ const KanbanTaskSchema = Type.makeObject(DXN.make('com.example.type.kanbanTask',
     title: Schema.optional(Schema.String),
     status: Schema.Literal('__uncategorized__', 'a', 'b').pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      Schema.annotations({
+      Schema.annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {

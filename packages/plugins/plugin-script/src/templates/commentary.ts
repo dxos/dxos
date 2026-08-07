@@ -35,20 +35,20 @@ const Commentary = Operation.make({
     description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   },
   input: Schema.Struct({
-    game: Game.GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotate({
       description: 'The chess game to comment on.',
     }),
   }),
   output: Schema.Union(
     Schema.Struct({
-      documentId: URI.Schema.annotations({
+      documentId: URI.Schema.annotate({
         description: 'The ID of the markdown document that was updated or created.',
       }),
-      commentary: Schema.String.annotations({
+      commentary: Schema.String.annotate({
         description: 'The commentary that was added.',
       }),
     }),
-    Schema.Void.annotations({
+    Schema.Void.annotate({
       description: 'Function did not find anything to comment on.',
     }),
   ),

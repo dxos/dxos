@@ -14,7 +14,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { IDEOGRAM_CONNECTOR_ID, IDEOGRAM_SOURCE } from '../constants';
 
 const IdeogramTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'API key',
     description: 'The Ideogram API key from https://ideogram.ai/manage-api.',
   }),

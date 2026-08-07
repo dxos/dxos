@@ -33,7 +33,7 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
   label: 'Bluesky',
   icon: 'ph--butterfly--regular',
   createFields: Schema.Struct({
-    handle: Schema.String.annotations({ title: 'Handle', description: 'Public Bluesky handle (e.g., bsky.app.)' }),
+    handle: Schema.String.annotate({ title: 'Handle', description: 'Public Bluesky handle (e.g., bsky.app.)' }),
   }),
   makeConfig: (options) => makeBlueskyChannel(String(options.handle ?? '')),
   subscribe: (channel, onMessages) => {

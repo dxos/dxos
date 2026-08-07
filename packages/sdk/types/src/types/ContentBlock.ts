@@ -213,7 +213,7 @@ export const Stats = Schema.TaggedStruct('stats', {
   ),
   toolCalls: Schema.optional(Schema.Number),
   errors: Schema.optional(Schema.Number),
-  duration: Schema.optional(Schema.Number).annotations({
+  duration: Schema.optional(Schema.Number).annotate({
     description: 'Duration in ms.',
   }),
   finishReason: Schema.optional(FinishReason),

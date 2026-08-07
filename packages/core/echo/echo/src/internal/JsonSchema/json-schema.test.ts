@@ -76,7 +76,7 @@ describe('effect-to-json', () => {
     );
     const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
       Schema.Struct({
-        name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
+        name: Ref(Nested).annotate({ [FieldLookupAnnotationId]: 'name' }),
       }),
     );
     const jsonSchema = toJsonSchema(Test);
@@ -127,8 +127,8 @@ describe('effect-to-json', () => {
   test('annotations', () => {
     const TempSchema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
-        name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
-        email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)).annotations({
+        name: Schema.String.annotate({ description: 'Person name', title: 'Name' }),
+        email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)).annotate({
           description: 'Email address',
         }),
       }),
@@ -185,7 +185,7 @@ describe('effect-to-json', () => {
     const Contact = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
         name: Schema.String,
-        organization: Ref(Organization).annotations({ description: 'Contact organization' }),
+        organization: Ref(Organization).annotate({ description: 'Contact organization' }),
       }),
     );
 
@@ -241,7 +241,7 @@ describe('effect-to-json', () => {
     const Contact = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
         name: Schema.String,
-        organization: Ref(Organization).annotations({ description: 'Contact organization' }),
+        organization: Ref(Organization).annotate({ description: 'Contact organization' }),
       }),
     );
 
@@ -295,8 +295,8 @@ describe('effect-to-json', () => {
   test('tuple schema with description', () => {
     const schema = Schema.Struct({
       args: Schema.Tuple(
-        Schema.String.annotations({ description: 'The source currency' }),
-        Schema.String.annotations({ description: 'The target currency' }),
+        Schema.String.annotate({ description: 'The source currency' }),
+        Schema.String.annotate({ description: 'The target currency' }),
       ),
     });
     const jsonSchema = toJsonSchema(schema);
@@ -307,7 +307,7 @@ describe('effect-to-json', () => {
 
   test('reference with title annotation', () => {
     const schema = Schema.Struct({
-      contact: Ref(TestSchema.Person).annotations({ title: 'Custom Title' }),
+      contact: Ref(TestSchema.Person).annotate({ title: 'Custom Title' }),
     });
 
     // log.info('schema before', { ast: schema.ast });
@@ -399,7 +399,7 @@ describe('effect-to-json', () => {
 
   test('object id with description', () => {
     const schema = Schema.Struct({
-      id: EntityId.annotations({ description: 'The id' }),
+      id: EntityId.annotate({ description: 'The id' }),
     });
     // log.info('schema', { schema: EntityId.ast });
     const jsonSchema = toJsonSchema(schema);
@@ -563,7 +563,7 @@ describe('json-to-effect', () => {
 
   test('description gets preserved', () => {
     const schema = Schema.Struct({
-      name: Schema.String.annotations({ description: 'Name' }),
+      name: Schema.String.annotate({ description: 'Name' }),
     });
     const jsonSchema = toJsonSchema(schema);
     const effectSchema = toEffectSchema(jsonSchema);
@@ -615,14 +615,14 @@ describe('json-to-effect', () => {
 
   test('default annotation ', () => {
     const schema = Schema.Struct({
-      str: Schema.String.annotations({
+      str: Schema.String.annotate({
         default: 'foo',
       }),
-      arr: Schema.Array(Schema.String).annotations({
+      arr: Schema.Array(Schema.String).annotate({
         default: [],
       }),
       obj: Schema.Struct({
-        foo: Schema.optional(Schema.String).annotations({
+        foo: Schema.optional(Schema.String).annotate({
           default: 'bar',
         }),
       }),
@@ -776,7 +776,7 @@ describe('reference', () => {
   });
 
   test('title annotation', () => {
-    const schema = Ref(TestSchema.Person).annotations({ title: 'My custom title' });
+    const schema = Ref(TestSchema.Person).annotate({ title: 'My custom title' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
@@ -797,7 +797,7 @@ describe('reference', () => {
   });
 
   test('description annotation', () => {
-    const schema = Ref(TestSchema.Person).annotations({ description: 'My custom description' });
+    const schema = Ref(TestSchema.Person).annotate({ description: 'My custom description' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',

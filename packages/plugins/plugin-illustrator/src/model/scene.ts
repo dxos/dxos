@@ -45,13 +45,13 @@ export type Point = Schema.Schema.Type<typeof Point>;
 
 /** Style props shared by all elements; every field is optional with sensible defaults. */
 const styleFields = {
-  color: Schema.optional(Color).annotations({ description: 'Stroke/text color.' }),
-  fill: Schema.optional(Fill).annotations({ description: 'Interior fill of closed shapes.' }),
-  stroke: Schema.optional(Stroke).annotations({ description: 'Stroke rendering; sketchy is hand-drawn.' }),
-  weight: Schema.optional(Weight).annotations({ description: 'Stroke weight / text size.' }),
+  color: Schema.optional(Color).annotate({ description: 'Stroke/text color.' }),
+  fill: Schema.optional(Fill).annotate({ description: 'Interior fill of closed shapes.' }),
+  stroke: Schema.optional(Stroke).annotate({ description: 'Stroke rendering; sketchy is hand-drawn.' }),
+  weight: Schema.optional(Weight).annotate({ description: 'Stroke weight / text size.' }),
 };
 
-const id = Schema.String.annotations({
+const id = Schema.String.annotate({
   description: 'Stable element id, unique within the object (e.g. "left-eye"). Used to edit or delete the element.',
 });
 
@@ -59,12 +59,12 @@ const id = Schema.String.annotations({
 export const Box = Schema.Struct({
   kind: Schema.Literal('rect', 'ellipse', 'diamond', 'triangle'),
   id,
-  x: Schema.Number.annotations({ description: 'Left edge (object-local units).' }),
-  y: Schema.Number.annotations({ description: 'Top edge (object-local units).' }),
+  x: Schema.Number.annotate({ description: 'Left edge (object-local units).' }),
+  y: Schema.Number.annotate({ description: 'Top edge (object-local units).' }),
   w: Schema.Number,
   h: Schema.Number,
-  rotation: Schema.optional(Schema.Number).annotations({ description: 'Clockwise rotation in degrees.' }),
-  text: Schema.optional(Schema.String).annotations({ description: 'Centered label.' }),
+  rotation: Schema.optional(Schema.Number).annotate({ description: 'Clockwise rotation in degrees.' }),
+  text: Schema.optional(Schema.String).annotate({ description: 'Centered label.' }),
   ...styleFields,
 });
 export type Box = Schema.Schema.Type<typeof Box>;
@@ -73,8 +73,8 @@ export type Box = Schema.Schema.Type<typeof Box>;
 export const Circle = Schema.Struct({
   kind: Schema.Literal('circle'),
   id,
-  cx: Schema.Number.annotations({ description: 'Center x (object-local units).' }),
-  cy: Schema.Number.annotations({ description: 'Center y (object-local units).' }),
+  cx: Schema.Number.annotate({ description: 'Center x (object-local units).' }),
+  cy: Schema.Number.annotate({ description: 'Center y (object-local units).' }),
   r: Schema.Number,
   text: Schema.optional(Schema.String),
   ...styleFields,
@@ -85,8 +85,8 @@ export type Circle = Schema.Schema.Type<typeof Circle>;
 export const Polyline = Schema.Struct({
   kind: Schema.Literal('line'),
   id,
-  points: Schema.Array(Point).annotations({ description: 'Two or more points (object-local units).' }),
-  closed: Schema.optional(Schema.Boolean).annotations({ description: 'Close the path back to the first point.' }),
+  points: Schema.Array(Point).annotate({ description: 'Two or more points (object-local units).' }),
+  closed: Schema.optional(Schema.Boolean).annotate({ description: 'Close the path back to the first point.' }),
   ...styleFields,
 });
 export type Polyline = Schema.Schema.Type<typeof Polyline>;
@@ -95,7 +95,7 @@ export type Polyline = Schema.Schema.Type<typeof Polyline>;
 export const Curve = Schema.Struct({
   kind: Schema.Literal('curve'),
   id,
-  points: Schema.Array(Point).annotations({ description: 'Control points the curve passes through.' }),
+  points: Schema.Array(Point).annotate({ description: 'Control points the curve passes through.' }),
   ...styleFields,
 });
 export type Curve = Schema.Schema.Type<typeof Curve>;
@@ -123,7 +123,7 @@ export const Text = Schema.Struct({
   id,
   x: Schema.Number,
   y: Schema.Number,
-  w: Schema.optional(Schema.Number).annotations({ description: 'Wrap width; omit for auto-size.' }),
+  w: Schema.optional(Schema.Number).annotate({ description: 'Wrap width; omit for auto-size.' }),
   text: Schema.String,
   ...styleFields,
 });
@@ -137,11 +137,11 @@ export type Text = Schema.Schema.Type<typeof Text>;
 export const Arrow = Schema.Struct({
   kind: Schema.Literal('arrow'),
   id,
-  from: Schema.optional(Schema.String).annotations({ description: 'Source element ref.' }),
-  to: Schema.optional(Schema.String).annotations({ description: 'Target element ref.' }),
-  start: Schema.optional(Point).annotations({ description: 'Explicit start (used when `from` is omitted).' }),
-  end: Schema.optional(Point).annotations({ description: 'Explicit end (used when `to` is omitted).' }),
-  text: Schema.optional(Schema.String).annotations({ description: 'Label at the arrow midpoint.' }),
+  from: Schema.optional(Schema.String).annotate({ description: 'Source element ref.' }),
+  to: Schema.optional(Schema.String).annotate({ description: 'Target element ref.' }),
+  start: Schema.optional(Point).annotate({ description: 'Explicit start (used when `from` is omitted).' }),
+  end: Schema.optional(Point).annotate({ description: 'Explicit end (used when `to` is omitted).' }),
+  text: Schema.optional(Schema.String).annotate({ description: 'Label at the arrow midpoint.' }),
   ...styleFields,
 });
 export type Arrow = Schema.Schema.Type<typeof Arrow>;
@@ -156,13 +156,13 @@ export type Element = Schema.Schema.Type<typeof Element>;
  * object's bounding box, so the model survives users dragging shapes around.
  */
 export const WorldObject = Schema.Struct({
-  id: Schema.String.annotations({
+  id: Schema.String.annotate({
     description: 'Stable object id naming the thing depicted (e.g. "face", "hat").',
   }),
-  origin: Schema.optional(Point).annotations({
+  origin: Schema.optional(Point).annotate({
     description: 'Canvas position (px). Omit on upsert to keep the current position.',
   }),
-  scale: Schema.optional(Schema.Number).annotations({ description: 'Canvas px per local unit (default 1).' }),
+  scale: Schema.optional(Schema.Number).annotate({ description: 'Canvas px per local unit (default 1).' }),
   elements: Schema.Array(Element),
 });
 export type WorldObject = Schema.Schema.Type<typeof WorldObject>;
@@ -179,13 +179,13 @@ export type Scene = Schema.Schema.Type<typeof Scene>;
 export const UpsertObject = Schema.Struct({
   op: Schema.Literal('upsert-object'),
   object: WorldObject,
-}).annotations({ description: 'Create an object, or replace an existing one wholesale (same id).' });
+}).annotate({ description: 'Create an object, or replace an existing one wholesale (same id).' });
 
 export const UpsertElements = Schema.Struct({
   op: Schema.Literal('upsert-elements'),
   objectId: Schema.String,
   elements: Schema.Array(Element),
-}).annotations({ description: 'Add elements to an existing object, replacing any with matching ids.' });
+}).annotate({ description: 'Add elements to an existing object, replacing any with matching ids.' });
 
 export const RemoveElements = Schema.Struct({
   op: Schema.Literal('remove-elements'),
@@ -201,7 +201,7 @@ export const RemoveObject = Schema.Struct({
 export const MoveObject = Schema.Struct({
   op: Schema.Literal('move-object'),
   objectId: Schema.String,
-  origin: Point.annotations({ description: 'New canvas position (px) for the object top-left.' }),
+  origin: Point.annotate({ description: 'New canvas position (px) for the object top-left.' }),
 });
 
 export const Command = Schema.Union(UpsertObject, UpsertElements, RemoveElements, RemoveObject, MoveObject);

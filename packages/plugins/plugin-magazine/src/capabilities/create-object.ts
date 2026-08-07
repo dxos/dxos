@@ -80,7 +80,7 @@ const RssCreate = Schema.Struct({
             : Effect.succeed(undefined),
         ),
       ),
-    ).annotations({ title: 'Name' }),
+    ).annotate({ title: 'Name' }),
   ),
 });
 

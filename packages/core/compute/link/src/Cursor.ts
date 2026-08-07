@@ -76,23 +76,23 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  */
 export class Cursor extends Type.makeObject<Cursor>(DXN.make('org.dxos.type.cursor', '0.2.0'))(
   Schema.Struct({
-    max: Schema.String.annotations({
+    max: Schema.String.annotate({
       title: 'Max',
       description: 'Opaque, provider-defined high-water mark identifying the newest consumed position.',
     }).pipe(Schema.optional),
-    min: Schema.String.annotations({
+    min: Schema.String.annotate({
       title: 'Min',
       description:
         'Opaque, provider-defined low-water mark some consumers maintain alongside `max`; unused by ' +
         'single-directional consumers.',
     }).pipe(Schema.optional),
-    lastTick: Format.DateTime.pipe(Schema.annotations({ title: 'Last tick' }), Schema.optional),
-    lastError: Schema.String.pipe(Schema.annotations({ title: 'Last error' }), Schema.optional),
+    lastTick: Format.DateTime.pipe(Schema.annotate({ title: 'Last tick' }), Schema.optional),
+    lastError: Schema.String.pipe(Schema.annotate({ title: 'Last error' }), Schema.optional),
     spec: Spec,
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--map-pin--regular', hue: 'amber' }),
     HiddenAnnotation.set(true),
-    Schema.annotations({ description: 'Durable progress cursor for a source-driven pipeline.' }),
+    Schema.annotate({ description: 'Durable progress cursor for a source-driven pipeline.' }),
   ),
 ) {}
 

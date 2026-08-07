@@ -92,21 +92,21 @@ const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 //
 const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
   S.Struct({
-    title: S.String.pipe(S.annotations({ title: 'Batch' })),
-    date: S.optional(S.String.pipe(S.annotations({ title: 'Date' }))),
-    origin: S.optional(S.String.pipe(S.annotations({ title: 'Origin / Lot' }))),
-    machine: S.optional(S.String.pipe(S.annotations({ title: 'Machine' }))),
-    roaster: S.optional(Ref.Ref(Person.Person).annotations({ title: 'Roaster' })),
-    greenWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Green (kg)' }))),
-    roastWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Roast (kg)' }))),
-    chargeTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Charge (°C)' }))),
-    firstCrackTime: S.optional(S.String.pipe(S.annotations({ title: 'First Crack' }))),
-    developmentTime: S.optional(S.String.pipe(S.annotations({ title: 'Dev Time' }))),
-    dropTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Drop (°C)' }))),
-    roastLevel: S.optional(S.String.pipe(S.annotations({ title: 'Roast Level' }))),
+    title: S.String.pipe(S.annotate({ title: 'Batch' })),
+    date: S.optional(S.String.pipe(S.annotate({ title: 'Date' }))),
+    origin: S.optional(S.String.pipe(S.annotate({ title: 'Origin / Lot' }))),
+    machine: S.optional(S.String.pipe(S.annotate({ title: 'Machine' }))),
+    roaster: S.optional(Ref.Ref(Person.Person).annotate({ title: 'Roaster' })),
+    greenWeightKg: S.optional(S.Number.pipe(S.annotate({ title: 'Green (kg)' }))),
+    roastWeightKg: S.optional(S.Number.pipe(S.annotate({ title: 'Roast (kg)' }))),
+    chargeTemp: S.optional(S.Number.pipe(S.annotate({ title: 'Charge (°C)' }))),
+    firstCrackTime: S.optional(S.String.pipe(S.annotate({ title: 'First Crack' }))),
+    developmentTime: S.optional(S.String.pipe(S.annotate({ title: 'Dev Time' }))),
+    dropTemp: S.optional(S.Number.pipe(S.annotate({ title: 'Drop (°C)' }))),
+    roastLevel: S.optional(S.String.pipe(S.annotate({ title: 'Roast Level' }))),
     status: S.Literal('planned', 'roasted', 'cupped', 'approved').pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      S.annotations({
+      S.annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -120,7 +120,7 @@ const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
         },
       }),
     ),
-    notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
+    notes: S.optional(S.String.pipe(S.annotate({ title: 'Notes' }))),
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),

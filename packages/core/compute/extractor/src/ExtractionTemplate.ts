@@ -90,7 +90,7 @@ export interface TemplateExtractorOptions<Payload, PayloadEncoded extends Record
   /** Optional registered operation, so the extractor is also a first-class operation. */
   readonly operation?: Operation.Definition<ExtractInput, ExtractResult>;
   /** Effect Schema for the LLM structured output. */
-  readonly payloadSchema: Schema.Schema<Payload, PayloadEncoded>;
+  readonly payloadSchema: Schema.Codec<Payload, PayloadEncoded>;
   /** Cheap pre-LLM candidacy check (keywords/domains/etc.). */
   readonly match: (source: Obj.Any) => MatchResult;
   /** Source text handed to the LLM. */

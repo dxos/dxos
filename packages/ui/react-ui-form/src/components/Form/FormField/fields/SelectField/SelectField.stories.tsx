@@ -15,7 +15,7 @@ import { Form } from '../../../Form';
 
 // A literal union auto-dispatches to SelectField.
 const schema = Schema.Struct({
-  status: Schema.Literal('active', 'inactive', 'archived').annotations({ title: 'Status' }),
+  status: Schema.Literal('active', 'inactive', 'archived').annotate({ title: 'Status' }),
 }).pipe(Schema.mutable);
 
 type Values = Schema.Schema.Type<typeof schema>;

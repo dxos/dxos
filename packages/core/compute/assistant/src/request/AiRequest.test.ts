@@ -26,7 +26,7 @@ const TestToolkit = Toolkit.make(
   Tool.make('Echo', {
     description: 'Returns its input value verbatim.',
     parameters: {
-      value: Schema.String.annotations({ description: 'The value to echo.' }),
+      value: Schema.String.annotate({ description: 'The value to echo.' }),
     },
     success: Schema.Struct({ value: Schema.String }),
     failure: Schema.Never,

@@ -97,7 +97,7 @@ export const jmapRequest = (
 export const getMethodResponse = <A, I, R>(
   response: Response,
   callId: string,
-  schema: Schema.Schema<A, I, R>,
+  schema: Schema.Codec<A, I, R>,
 ): Effect.Effect<A, JmapApiError, R> => {
   const entry = response.methodResponses.find((methodResponse) => methodResponse[2] === callId);
   if (!entry) {
@@ -119,7 +119,7 @@ export const getMethodResponse = <A, I, R>(
 
 /** Decodes a 2xx JSON body against `schema`; a >=400 status fails with the (truncated) body text. */
 const decodeJsonOrFail =
-  <A, I, R>(schema: Schema.Schema<A, I, R>) =>
+  <A, I, R>(schema: Schema.Codec<A, I, R>) =>
   (response: HttpClientResponse.HttpClientResponse): Effect.Effect<A, JmapApiError, R> =>
     Effect.gen(function* () {
       if (response.status >= 400) {

@@ -34,17 +34,17 @@ const Coordinate = (min: number, max: number, title: string) =>
     strict: true,
     decode: roundCoordinate,
     encode: roundCoordinate,
-  }).annotations({ title });
+  }).annotate({ title });
 
 export const GeoPoint = Schema.Tuple(
   Coordinate(-180, 180, 'Longitude'),
   Coordinate(-90, 90, 'Latitude'),
-  Schema.optionalElement(Schema.Number).annotations({
+  Schema.optionalElement(Schema.Number).annotate({
     title: 'Height ASL (m)',
   }),
 ).pipe(
   FormatAnnotation.set(TypeFormat.GeoPoint),
-  Schema.annotations({
+  Schema.annotate({
     title: 'GeoPoint',
     description: 'GeoJSON Position',
   }),

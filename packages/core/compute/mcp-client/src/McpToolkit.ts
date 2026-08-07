@@ -68,9 +68,9 @@ export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.Op
       const parameters: any = {};
       for (const [key, value] of Object.entries(mcpTool.inputSchema.properties ?? {})) {
         if (mcpTool.inputSchema.required?.includes(key)) {
-          parameters[key] = Schema.Unknown.pipe(Schema.annotations({ jsonSchema: value }));
+          parameters[key] = Schema.Unknown.pipe(Schema.annotate({ jsonSchema: value }));
         } else {
-          parameters[key] = Schema.Unknown.pipe(Schema.annotations({ jsonSchema: value })).pipe(Schema.optional);
+          parameters[key] = Schema.Unknown.pipe(Schema.annotate({ jsonSchema: value })).pipe(Schema.optional);
         }
       }
 

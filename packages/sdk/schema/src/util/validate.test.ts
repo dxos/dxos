@@ -20,7 +20,7 @@ describe('validate', () => {
   });
 
   test('error', ({ expect }) => {
-    const TestSchema = Schema.Number.pipe(Schema.multipleOf(0.01));
+    const TestSchema = Schema.Number.pipe(Schema.check(Schema.isMultipleOf(0.01)));
     const decoder = Schema.validateEither(TestSchema, { errors: 'first' });
 
     {
@@ -41,7 +41,7 @@ describe('validate', () => {
 
   test('Schema to/from AST', ({ expect }) => {
     const TestSchema = Schema.Struct({
-      name: Schema.String.pipe(Schema.pattern(/^\w+$/)),
+      name: Schema.String.pipe(Schema.check(Schema.isPattern(/^\w+$/))),
     }).pipe(Schema.mutable);
 
     type TestType = Schema.Schema.Type<typeof TestSchema>;
