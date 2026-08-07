@@ -195,20 +195,31 @@ export class AppManager {
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
 
-    // Retry the submit until the dialog goes away, rather than clicking once and hoping. The dialog
-    // animates in and `Form.Root`'s fields resolve through a Surface lookup, so a lone click races
-    // the remount: Playwright resolves the button, reports "element is not stable", then "element was
-    // detached from the DOM" and times out. That took out `create space` in run 31130465200 and
-    // `create document` in 31131235658 — different tests, one shared cause, and this helper is called
-    // by nearly every live composer spec. The `isVisible` guard keeps a click that already landed
-    // from submitting twice; form detachment is the same postcondition `waitForSpaceReady` awaits.
     const form = this.page.getByTestId('create-space-form');
-    await expect(async () => {
-      if (await form.isVisible()) {
-        await form.getByTestId('save-button').click({ timeout: 5_000 });
+    const save = form.getByTestId('save-button');
+    // Wait for the dialog to mount before touching it, so that a later `isHidden` can only mean the
+    // submit landed. Skipping this is what broke run 31132403723: an unmounted form reads as hidden,
+    // the click was skipped as redundant, and the helper returned having created no space at all.
+    await expect(save).toBeVisible({ timeout: 10_000 });
+
+    // Retry only a click that *threw*. `Form.Root`'s fields resolve through a Surface lookup, so the
+    // button can detach mid-click ("element is not stable", then "element was detached from the DOM")
+    // — that took out `create space` in run 31130465200 and `create document` in 31131235658. A click
+    // that returns is never repeated: re-submitting a form that already accepted creates a second
+    // space, which is a wrong-state bug rather than a slow test.
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await save.click({ timeout: 10_000 });
+        break;
+      } catch (err) {
+        if (await form.isHidden()) {
+          break; // The submit landed even though the click reported a detached element.
+        }
+        if (attempt === 3) {
+          throw err;
+        }
       }
-      await expect(form).toBeHidden({ timeout: 5_000 });
-    }).toPass({ timeout, intervals: [100, 250, 500, 1_000] });
+    }
 
     await this.waitForSpaceReady(timeout);
   }
