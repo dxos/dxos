@@ -58,10 +58,21 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
   const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${packageDirName}.json`);
 
   const browser = process.env.PLAYWRIGHT_BROWSER || (process.env.CI ? 'all' : 'chromium');
+  // In the Claude Code cloud sandbox chromium has no route to HTTPS on its own: it ignores
+  // $HTTPS_PROXY, and the egress proxy resets its TLS 1.3 ClientHello, so it must be pointed at
+  // the proxy AND capped at TLS 1.2 (a proxy-side defect — see the cloud-sandbox skill). Gated so
+  // real dev and CI runs are never silently downgraded; firefox/webkit need nothing.
+  const sandboxProxy = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
+  const sandboxChromium = sandboxProxy
+    ? {
+        launchOptions: { args: ['--ssl-version-max=tls1.2'] },
+        proxy: { server: sandboxProxy, bypass: '127.0.0.1,localhost' },
+      }
+    : {};
   const projects = [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], ...sandboxChromium },
     },
     {
       name: 'firefox',
