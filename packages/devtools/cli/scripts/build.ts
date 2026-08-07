@@ -131,7 +131,11 @@ const automergeWasmPlugin: BunPlugin = {
   },
 };
 
-// Platform configurations.
+// Platform configurations. Every target needs its `@opentui/core-<platform>-<arch>` installed here —
+// `@opentui/core` reaches its native library through a dynamic import interpolating
+// `process.platform`/`process.arch`, which bun folds into a constant per target and resolves at
+// bundle time — hence the devDependencies on all five, which pnpm otherwise installs for the host
+// platform alone.
 const platforms = [
   { target: 'bun-darwin-arm64', platform: 'darwin', arch: 'arm64', ext: '' },
   { target: 'bun-darwin-x64', platform: 'darwin', arch: 'x64', ext: '' },
