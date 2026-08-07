@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Registry from '@effect-atom/atom/Registry';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
@@ -587,6 +588,42 @@ describe('Obj', () => {
       // - Obj.Any: can access arbitrary properties (has [key: string]: any)
       expectTypeOf<Obj.Unknown>().toMatchTypeOf<Obj.Any>();
       expectTypeOf<Obj.Any>().toMatchTypeOf<Obj.Unknown>();
+    });
+  });
+
+  describe('atomProperty', () => {
+    test('fires only when the observed property changes', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [] });
+
+      const tasksAtom = Obj.atomProperty(obj, 'tasks');
+      let fires = 0;
+      registry.subscribe(tasksAtom, () => {
+        fires++;
+      });
+      expect(registry.get(tasksAtom)).toEqual([]);
+      // Mounting may notify once with the initial value; only the delta after this matters.
+      const baseline = fires;
+
+      // Writes to other properties must not re-fire an array-valued atom. Change detection used to
+      // compare two fresh snapshots by identity, which is unequal for arrays/objects on every
+      // notification — one message delete re-fired a thread's `messages` atom for every unrelated
+      // write, producing the render storm behind composer's `delete message` e2e instability.
+      Obj.update(obj, (obj) => {
+        obj.name = 'Bob';
+      });
+      Obj.update(obj, (obj) => {
+        obj.name = 'Carol';
+      });
+      expect(fires).toBe(baseline);
+
+      // A genuine change to the observed property still fires.
+      const task = Obj.make(TestSchema.Task, { title: 'x' });
+      Obj.update(obj, (obj) => {
+        obj.tasks.push(Ref.make(task));
+      });
+      expect(fires).toBe(baseline + 1);
+      expect(registry.get(tasksAtom)).toHaveLength(1);
     });
   });
 
