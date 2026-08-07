@@ -27,7 +27,7 @@ import {
   EntityKindSchema,
   getStaticTypeSchema,
 } from '../common/types';
-import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
+import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
@@ -191,6 +191,18 @@ const withEchoRefinements = (
   // across the fresh caches each new expansion starts with, so it also catches mutual cycles.
   inProgress: Set<SchemaAST.AST> = new Set(),
 ): SchemaAST.AST => {
+  // Generation describes the wire form, and Effect 4 serializes only the encoded side of a
+  // transformed schema -- annotations left on the type side are silently dropped. Flattening to the
+  // encoded node here, carrying the type-side annotations over, keeps them in the output. Safe
+  // because this AST exists only to be serialized.
+  if (ast.encoding !== undefined) {
+    const typeAnnotations = ast.annotations ?? {};
+    ast =
+      Object.keys(typeAnnotations).length > 0
+        ? SchemaAST.annotate(SchemaAST.toEncoded(ast), typeAnnotations)
+        : SchemaAST.toEncoded(ast);
+  }
+
   if (path) {
     suspendCache.set(ast, path);
   }
@@ -237,9 +249,13 @@ const withEchoRefinements = (
         inProgress,
       ),
     );
-    recursiveResult = addJsonSchemaFields(recursiveResult, {
-      propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
-    });
+    // Not for a reference: its encoded side is a struct only so that v4 will serialize it, and the
+    // `$ref` node it collapses to has no properties to order.
+    if (SchemaAST.getAnnotation(ast, '$ref') !== JSON_SCHEMA_ECHO_REF_ID) {
+      recursiveResult = addJsonSchemaFields(recursiveResult, {
+        propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
+      });
+    }
   } else if (SchemaAST.isUndefinedKeyword(ast)) {
     // Ignore undefined keyword that appears in the optional fields.
     return ast;
@@ -623,6 +639,22 @@ const inlineAllOf = (node: Record<string, any>): Record<string, any> => {
   return Object.assign(rest, ...inlinable);
 };
 
+/**
+ * Collapses an ECHO reference back to its `$ref` form.
+ *
+ * The reference's encoded side is a struct so that Effect 4 will serialize it at all (declarations
+ * have no JSON schema representation), but that also emits the `{ '/': string }` shape. A JSON
+ * Schema `$ref` node carries no sibling structural keywords, and ECHO readers match on `$ref`, so
+ * the structural keys are dropped. Keyed on ECHO's own reference id, so no other node is affected.
+ */
+const collapseEchoRef = (node: Record<string, any>): Record<string, any> => {
+  if (node.$ref !== JSON_SCHEMA_ECHO_REF_ID) {
+    return node;
+  }
+  const { type, properties, required, additionalProperties, ...rest } = node;
+  return rest;
+};
+
 /** Applies {@link inlineAllOf} to a node and every nested schema position. */
 const inlineAllOfDeep = (node: any): any => {
   if (Array.isArray(node)) {
@@ -631,7 +663,7 @@ const inlineAllOfDeep = (node: any): any => {
   if (!node || typeof node !== 'object') {
     return node;
   }
-  const inlined = inlineAllOf(node);
+  const inlined = collapseEchoRef(inlineAllOf(node));
   for (const [key, value] of Object.entries(inlined)) {
     if (value && typeof value === 'object') {
       inlined[key] = inlineAllOfDeep(value);
