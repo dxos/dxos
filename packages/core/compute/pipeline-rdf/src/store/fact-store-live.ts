@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { type Quad } from 'n3';
 
 import { type SqlTransaction } from '@dxos/sql-sqlite';

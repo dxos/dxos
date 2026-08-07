@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Array from 'effect/Array';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context, ContextDisposedError } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';

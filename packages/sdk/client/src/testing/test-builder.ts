@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';

@@ -46,7 +46,7 @@ export class ToolResolverService extends Context.Service<
           ),
           Effect.result,
         ),
-      ).pipe(Effect.map(Array.filterMap(Result.getRight)));
+      ).pipe(Effect.map(Array.filterMap(Result.getSuccess)));
 
       return Toolkit.make(...tools);
     });

@@ -3,10 +3,10 @@
 //
 
 import { type Chunk, type StorageAdapterInterface, type StorageKey } from '@automerge/automerge-repo';
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { SqlTransaction } from '@dxos/sql-sqlite';

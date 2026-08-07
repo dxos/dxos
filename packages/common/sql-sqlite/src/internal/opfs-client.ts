@@ -4,12 +4,7 @@
 
 /// <reference lib="webworker" />
 
-import * as Reactivity from '@effect/experimental/Reactivity';
 import * as WasmSqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
-import * as Client from '@effect/sql/SqlClient';
-import * as SqlConnection from '@effect/sql/SqlConnection';
-import * as SqlError from '@effect/sql/SqlError';
-import * as Statement from '@effect/sql/Statement';
 import * as WaSqlite from '@effect/wa-sqlite';
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import SQLiteESMFactory from '@effect/wa-sqlite/dist/wa-sqlite.mjs';
@@ -20,6 +15,11 @@ import { identity } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as Client from 'effect/unstable/sql/SqlClient';
+import * as SqlConnection from 'effect/unstable/sql/SqlConnection';
+import * as SqlError from 'effect/unstable/sql/SqlError';
+import * as Statement from 'effect/unstable/sql/Statement';
 
 import { GlobalValue } from '@dxos/effect';
 import { log } from '@dxos/log';

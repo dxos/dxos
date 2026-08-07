@@ -6,15 +6,15 @@
 
 // Code copied from @effect/sql-sqlite-wasm/OpfsWorker.ts and augmented with logging.
 
-/**
- * @since 1.0.0
- */
-/// <reference lib="webworker" />
-import * as SqlError from '@effect/sql/SqlError';
 import * as WaSqlite from '@effect/wa-sqlite';
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import SQLiteESMFactory from '@effect/wa-sqlite/dist/wa-sqlite.mjs';
 import * as Effect from 'effect/Effect';
+/**
+ * @since 1.0.0
+ */
+/// <reference lib="webworker" />
+import * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { log } from '@dxos/log';
 // @ts-ignore

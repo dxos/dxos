@@ -3,9 +3,9 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { SqlTransaction } from '@dxos/sql-sqlite';

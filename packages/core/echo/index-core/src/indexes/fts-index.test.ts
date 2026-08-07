@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';

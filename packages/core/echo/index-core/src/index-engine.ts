@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';

@@ -3,14 +3,14 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
-import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import isEqual from 'fast-deep-equal';
 
 import { type Context, Resource } from '@dxos/context';

@@ -352,7 +352,7 @@ const connectMcpServers = (
         Effect.result,
       ),
     ),
-    Effect.map(Array.filterMap((_) => Result.getRight(_))),
+    Effect.map(Array.filterMap((_) => Result.getSuccess(_))),
   );
 };
 

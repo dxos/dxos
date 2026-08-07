@@ -40,6 +40,15 @@ const MODULES = {
   '@effect-atom/atom/AtomHttpApi': 'effect/unstable/reactivity/AtomHttpApi',
   '@effect-atom/atom': 'effect/unstable/reactivity',
   '@effect-atom/atom-react': '@effect/atom-react',
+  // @effect/sql and @effect/experimental were absorbed into effect/unstable/*.
+  '@effect/sql/SqlClient': 'effect/unstable/sql/SqlClient',
+  '@effect/sql/SqlError': 'effect/unstable/sql/SqlError',
+  '@effect/sql/SqlConnection': 'effect/unstable/sql/SqlConnection',
+  '@effect/sql/Statement': 'effect/unstable/sql/Statement',
+  '@effect/sql/Migrator': 'effect/unstable/sql/Migrator',
+  '@effect/sql': 'effect/unstable/sql',
+  '@effect/experimental/Reactivity': 'effect/unstable/reactivity/Reactivity',
+  '@effect/experimental': 'effect/unstable',
 };
 
 /** Namespace-qualified member renames, applied only to the matching namespace. */
@@ -75,7 +84,16 @@ const MEMBERS = {
   Scope: {
     extend: 'provide',
   },
+  // `Either` is `Result` in v4; its predicates renamed with it.
   Either: {
+    right: 'succeed',
+    left: 'fail',
+  },
+  Result: {
+    isRight: 'isSuccess',
+    isLeft: 'isFailure',
+    getRight: 'getSuccess',
+    getLeft: 'getFailure',
     right: 'succeed',
     left: 'fail',
   },

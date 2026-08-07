@@ -17,12 +17,12 @@ describe('Proxy schema', () => {
       waitForSelector: '#root',
       active: true,
     });
-    expect(Result.isRight(decoded)).toBe(true);
+    expect(Result.isSuccess(decoded)).toBe(true);
   });
 
   test('rejects a render request with a wrong version', ({ expect }) => {
     const decoded = Schema.decodeUnknownResult(Proxy.RenderRequest)({ version: 2, id: 'r1', url: 'https://x' });
-    expect(Result.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test('round-trips a render ack (ok)', ({ expect }) => {
@@ -32,7 +32,7 @@ describe('Proxy schema', () => {
 
   test('rejects a render ack with an unknown error code', ({ expect }) => {
     const decoded = Schema.decodeUnknownResult(Proxy.RenderAck)({ version: 1, id: 'r1', ok: false, error: 'nope' });
-    expect(Result.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test('round-trips a ping ack (ok)', ({ expect }) => {

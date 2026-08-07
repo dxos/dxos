@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as EffectStream from 'effect/Stream';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';

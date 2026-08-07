@@ -3,10 +3,10 @@
 //
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';

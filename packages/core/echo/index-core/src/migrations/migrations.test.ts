@@ -3,11 +3,11 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readdirSync } from 'node:fs';
 import { test } from 'vitest';
 

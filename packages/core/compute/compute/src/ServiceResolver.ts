@@ -183,7 +183,7 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
     Effect.gen(function* () {
       for (const resolver of resolvers) {
         const single = yield* resolver.resolve(tag, context).pipe(Effect.result);
-        if (Result.isRight(single)) {
+        if (Result.isSuccess(single)) {
           return single.right;
         }
       }

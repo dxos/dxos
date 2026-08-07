@@ -37,30 +37,30 @@ describe('Alarm skill', () => {
     it('resolves an absolute "at" timestamp', ({ expect }) => {
       const at = '2026-06-04T18:00:00.000Z';
       const result = resolveWakeAt({ at }, NOW);
-      expect(Result.isRight(result)).toBe(true);
+      expect(Result.isSuccess(result)).toBe(true);
       expect(Result.getOrThrow(result)).toBe(new Date(at).getTime());
     });
 
     it('resolves a relative "in" duration', ({ expect }) => {
       const result = resolveWakeAt({ in: '5 minutes' }, NOW);
-      expect(Result.isRight(result)).toBe(true);
+      expect(Result.isSuccess(result)).toBe(true);
       expect(Result.getOrThrow(result)).toBe(NOW + 5 * 60 * 1000);
     });
 
     it('rejects an invalid "at" timestamp', ({ expect }) => {
-      expect(Result.isLeft(resolveWakeAt({ at: 'not-a-date' }, NOW))).toBe(true);
+      expect(Result.isFailure(resolveWakeAt({ at: 'not-a-date' }, NOW))).toBe(true);
     });
 
     it('rejects an invalid "in" duration', ({ expect }) => {
-      expect(Result.isLeft(resolveWakeAt({ in: 'whenever' }, NOW))).toBe(true);
+      expect(Result.isFailure(resolveWakeAt({ in: 'whenever' }, NOW))).toBe(true);
     });
 
     it('rejects specifying both "in" and "at"', ({ expect }) => {
-      expect(Result.isLeft(resolveWakeAt({ in: '5 minutes', at: '2026-06-04T18:00:00.000Z' }, NOW))).toBe(true);
+      expect(Result.isFailure(resolveWakeAt({ in: '5 minutes', at: '2026-06-04T18:00:00.000Z' }, NOW))).toBe(true);
     });
 
     it('rejects specifying neither "in" nor "at"', ({ expect }) => {
-      expect(Result.isLeft(resolveWakeAt({}, NOW))).toBe(true);
+      expect(Result.isFailure(resolveWakeAt({}, NOW))).toBe(true);
     });
   });
 

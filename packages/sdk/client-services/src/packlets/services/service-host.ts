@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -12,6 +10,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Event, Mutex, Trigger, synchronized } from '@dxos/async';
 import {

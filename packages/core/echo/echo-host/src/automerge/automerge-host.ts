@@ -30,10 +30,10 @@ import {
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';

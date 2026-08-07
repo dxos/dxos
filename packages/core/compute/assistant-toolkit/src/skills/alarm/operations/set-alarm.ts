@@ -22,7 +22,7 @@ export default SetAlarm.pipe(
     Effect.fn(function* ({ in: inDuration, at, message }) {
       const now = yield* Clock.currentTimeMillis;
       const resolved = resolveWakeAt({ in: inDuration, at }, now);
-      if (Result.isLeft(resolved)) {
+      if (Result.isFailure(resolved)) {
         return resolved.left;
       }
       const wakeAt = DateTime.unsafeMake(resolved.right);

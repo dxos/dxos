@@ -25,14 +25,14 @@ describe('validate', () => {
 
     {
       const value = decoder(0.01);
-      expect(Result.isLeft(value)).to.be.false;
+      expect(Result.isFailure(value)).to.be.false;
     }
 
     // https://effect.website/docs/schema/error-formatters/#customizing-the-output
     {
       const value = decoder(0.001);
-      expect(Result.isLeft(value)).to.be.true;
-      if (Result.isLeft(value)) {
+      expect(Result.isFailure(value)).to.be.true;
+      if (Result.isFailure(value)) {
         const [{ message }] = ParseResult.ArrayFormatter.formatErrorSync(value.left);
         expect(message).to.eq('Expected a number divisible by 0.01, actual 0.001');
       }
@@ -63,7 +63,7 @@ describe('validate', () => {
       const decoder = Schema.validateEither(schema, { errors: 'first' });
       const value = obj[name];
       const result = decoder(value);
-      expect(Result.isLeft(result)).to.be.false;
+      expect(Result.isFailure(result)).to.be.false;
     }
   });
 });

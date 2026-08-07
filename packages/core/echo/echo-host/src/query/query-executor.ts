@@ -3,9 +3,9 @@
 //
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
-import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { type Obj, Query } from '@dxos/echo';

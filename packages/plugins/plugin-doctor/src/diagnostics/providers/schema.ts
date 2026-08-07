@@ -47,7 +47,7 @@ export const schemaDiagnostic: DiagnosticProvider = {
           continue;
         }
         const result = Schema.validateEither(Type.getSchema(type))(obj);
-        if (Result.isLeft(result)) {
+        if (Result.isFailure(result)) {
           issues.push({
             id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:schema-mismatch`,
             severity: 'error',

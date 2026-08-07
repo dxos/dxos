@@ -12,7 +12,7 @@ export type ValidationError = { path: string; message: string };
 export const validateSchema = <T>(schema: Schema.Schema<T>, values: any): ValidationError[] | undefined => {
   const validator = Schema.decodeUnknownResult(schema, { errors: 'all', onExcessProperty: 'preserve' });
   const result = validator(values);
-  if (Result.isLeft(result)) {
+  if (Result.isFailure(result)) {
     const errors = Effect.runSync(ParseResult.ArrayFormatter.formatError(result.left));
     return errors.map(({ message, path }) => {
       // TODO(burdon): Better way to patch messages? (use translations?)

@@ -103,7 +103,7 @@ export const migratePersistedState = (
   }
 
   const decoded = decodeLegacyState(parsed);
-  if (Result.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     log.warn('failed to decode persisted deck state; removing', { key, error: decoded.left.message });
     storage.removeItem(key);
     return;

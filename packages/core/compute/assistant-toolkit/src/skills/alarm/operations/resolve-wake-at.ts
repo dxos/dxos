@@ -17,30 +17,30 @@ const DURATION_PATTERN = /^(\d+(?:\.\d+)?)\s+(\S+)$/;
 
 /**
  * Resolves an alarm specification into an absolute UNIX timestamp (ms).
- * Returns a {@link Result.left} with a human-readable message describing invalid input.
+ * Returns a {@link Result.fail} with a human-readable message describing invalid input.
  */
 export const resolveWakeAt = (input: ResolveAlarmInput, now: number): Result.Either<number, string> => {
   const { in: inDuration, at } = input;
   if (inDuration != null && at != null) {
-    return Result.left('Specify either "in" or "at", not both.');
+    return Result.fail('Specify either "in" or "at", not both.');
   }
   if (at != null) {
     const timestamp = new Date(at).getTime();
     if (Number.isNaN(timestamp)) {
-      return Result.left(`Invalid "at" timestamp: "${at}". Provide an ISO-8601 date-time string.`);
+      return Result.fail(`Invalid "at" timestamp: "${at}". Provide an ISO-8601 date-time string.`);
     }
-    return Result.right(timestamp);
+    return Result.succeed(timestamp);
   }
   if (inDuration != null) {
     const match = inDuration.trim().match(DURATION_PATTERN);
     if (!match) {
-      return Result.left(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
+      return Result.fail(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
     }
     const duration = Duration.decodeUnknown(inDuration.trim());
     if (Option.isNone(duration)) {
-      return Result.left(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
+      return Result.fail(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
     }
-    return Result.right(now + Duration.toMillis(duration.value));
+    return Result.succeed(now + Duration.toMillis(duration.value));
   }
-  return Result.left('Specify either "in" (a duration from now) or "at" (an absolute time).');
+  return Result.fail('Specify either "in" (a duration from now) or "at" (an absolute time).');
 };

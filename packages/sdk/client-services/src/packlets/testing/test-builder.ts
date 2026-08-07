@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';

@@ -107,7 +107,7 @@ export default Capability.makeModule(
     // console reflects which model is resident when a chat request triggers a load.
     const refreshLoaded: Effect.Effect<void> = Effect.gen(function* () {
       const result = yield* runAdmin(admin.ps);
-      if (Result.isLeft(result)) {
+      if (Result.isFailure(result)) {
         return;
       }
       const before = (yield* getState).loaded.map((model) => model.name);
@@ -129,7 +129,7 @@ export default Capability.makeModule(
       const result = yield* runAdmin(
         admin.list.pipe(Effect.retry({ schedule: Schedule.spaced(Duration.millis(300)), times: 29 })),
       );
-      if (Result.isLeft(result)) {
+      if (Result.isFailure(result)) {
         return yield* fail(result.left);
       }
       yield* updateState((state) => ({ ...state, kind: 'ready', models: result.right, error: undefined }));
@@ -213,7 +213,7 @@ export default Capability.makeModule(
         }
         yield* Effect.sync(() => log.info('ollama load', { name }));
         const result = yield* runAdmin(admin.load(name));
-        if (Result.isLeft(result)) {
+        if (Result.isFailure(result)) {
           yield* Effect.sync(() => log.warn('ollama load failed', { name, error: result.left }));
           return yield* setError(name, result.left);
         }
@@ -229,7 +229,7 @@ export default Capability.makeModule(
         }
         yield* Effect.sync(() => log.info('ollama unload', { name }));
         const result = yield* runAdmin(admin.unload(name));
-        if (Result.isLeft(result)) {
+        if (Result.isFailure(result)) {
           return yield* setError(name, result.left);
         }
         yield* refreshLoaded;
@@ -243,7 +243,7 @@ export default Capability.makeModule(
           return yield* setError(name, formatError(Cause.squash(started.cause)));
         }
         const result = yield* runAdmin(admin.remove(name));
-        if (Result.isLeft(result)) {
+        if (Result.isFailure(result)) {
           return yield* setError(name, result.left);
         }
         yield* refresh;

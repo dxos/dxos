@@ -868,7 +868,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           // Parse cron expression using Effect's Cron module
           const cronEither = Cron.parse(timerSpec.cron);
 
-          if (Result.isRight(cronEither)) {
+          if (Result.isSuccess(cronEither)) {
             const cron = cronEither.right;
             const now = this.getCurrentTime();
             const nextExecution = entry.nextExecution ?? Cron.next(cron, now);

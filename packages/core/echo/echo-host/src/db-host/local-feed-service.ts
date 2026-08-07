@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';

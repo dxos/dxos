@@ -340,8 +340,8 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       ]);
 
       const result = yield* Effect.result(AiPreprocessor.preprocessPrompt([message]));
-      expect(Result.isLeft(result)).toBe(true);
-      if (Result.isLeft(result)) {
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
@@ -436,8 +436,8 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       const messages = [makeMessage('user', [{ _tag: 'summary', content: 'Bad summary' }])];
 
       const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
-      expect(Result.isLeft(result)).toBe(true);
-      if (Result.isLeft(result)) {
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
@@ -577,8 +577,8 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       ];
 
       const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
-      expect(Result.isLeft(result)).toBe(true);
-      if (Result.isLeft(result)) {
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
@@ -592,8 +592,8 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       ]);
 
       const result = yield* Effect.result(AiPreprocessor.preprocessPrompt([message]));
-      expect(Result.isLeft(result)).toBe(true);
-      if (Result.isLeft(result)) {
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),

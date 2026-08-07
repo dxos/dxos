@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 export interface Service {
   withTransaction: <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E | SqlError.SqlError, R>;

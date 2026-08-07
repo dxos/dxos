@@ -139,8 +139,8 @@ describe('Graph as a fiber runtime', () => {
 
         const result = yield* runtime.runGraph(URI.make('dxn:test:g4'), ValueBag.make({ condition: true, value: 1 }));
 
-        expect(yield* Effect.result(result.values.true)).toEqual(Result.right(1));
-        expect(yield* Effect.result(result.values.false)).toEqual(Result.left(NotExecuted));
+        expect(yield* Effect.result(result.values.true)).toEqual(Result.succeed(1));
+        expect(yield* Effect.result(result.values.false)).toEqual(Result.fail(NotExecuted));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

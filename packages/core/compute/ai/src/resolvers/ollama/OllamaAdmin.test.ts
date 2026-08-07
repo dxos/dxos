@@ -64,8 +64,8 @@ describe('OllamaAdmin', () => {
           throw new TypeError('fetch failed: ECONNREFUSED');
         }),
       );
-      expect(Result.isLeft(result)).toBe(true);
-      if (Result.isLeft(result)) {
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
         expect(result.left._tag).toBe('OllamaError');
         expect(result.left.message).toContain('ECONNREFUSED');
       }
@@ -142,8 +142,8 @@ describe('OllamaAdmin', () => {
           streamResponse(['{"status":"pulling manifest"}\n', '{"error":"pull model manifest: file does not exist"}\n']),
         ),
       );
-      expect(Result.isLeft(result)).toBe(true);
-      if (Result.isLeft(result)) {
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
         expect(result.left.message).toBe('pull model manifest: file does not exist');
       }
     });
@@ -178,7 +178,7 @@ describe('OllamaAdmin', () => {
         admin.remove('llama3.2:1b'),
         mockFetch(() => new Response('', { status: 200 })),
       );
-      expect(Result.isRight(result)).toBe(true);
+      expect(Result.isSuccess(result)).toBe(true);
     });
 
     test('fails on 404', async ({ expect }) => {
@@ -187,7 +187,7 @@ describe('OllamaAdmin', () => {
         admin.remove('missing-model'),
         mockFetch(() => new Response('model not found', { status: 404 })),
       );
-      expect(Result.isLeft(result)).toBe(true);
+      expect(Result.isFailure(result)).toBe(true);
     });
   });
 });

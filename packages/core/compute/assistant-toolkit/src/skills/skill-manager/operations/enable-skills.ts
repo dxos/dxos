@@ -23,7 +23,7 @@ export default EnableSkills.pipe(
           Effect.mapError(() => ({ key, reason: 'Skill not found in registry.' })),
           Effect.result,
         );
-        if (Result.isLeft(result)) {
+        if (Result.isFailure(result)) {
           rejected.push(result.left);
           continue;
         }

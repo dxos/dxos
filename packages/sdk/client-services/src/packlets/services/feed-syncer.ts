@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import { Encoder, decode as cborXdecode } from 'cbor-x';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
