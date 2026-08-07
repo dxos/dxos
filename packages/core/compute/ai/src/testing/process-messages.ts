@@ -4,6 +4,7 @@
 
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
+import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 import * as AiError from 'effect/unstable/ai/AiError';
 import type * as Chat from 'effect/unstable/ai/Chat';
@@ -23,7 +24,7 @@ import { TestingToolkit, testingLayer } from './toolkit';
 
 // TODO(dmaretskyi): What is the right stopping condition?
 export const hasToolCall = Effect.fn(function* (chat: Chat.Service) {
-  const history = yield* chat.history;
+  const history = yield* Ref.get(chat.history);
   const lastMessage = history.content.at(-1);
   return (
     (lastMessage?.role === 'assistant' && lastMessage.content.at(-1)?.type === 'tool-call') ||
