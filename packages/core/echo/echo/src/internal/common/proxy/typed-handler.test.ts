@@ -53,7 +53,7 @@ describe('complex schema validations', () => {
   });
 
   test('index signatures', () => {
-    const schema = Schema.Struct({}, { key: Schema.String, value: Schema.Number });
+    const schema = Schema.StructWithRest(Schema.Struct({}), [Schema.Record(Schema.String, Schema.Number)]);
     const object = makeObject(schema, { unknownField: 1 });
     change(object, (o) => {
       expect(() => setValue(o, ['field'], '42')).to.throw();

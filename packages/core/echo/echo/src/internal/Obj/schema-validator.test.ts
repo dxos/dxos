@@ -145,7 +145,9 @@ describe('schema-validator', () => {
     test('index signatures', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
-          schema: Schema.Struct({ field: Schema.String }, { key: Schema.String, value: Schema.Number }),
+          schema: Schema.StructWithRest(Schema.Struct({ field: Schema.String }), [
+            Schema.Record(Schema.String, Schema.Number),
+          ]),
           target: {},
           path: ['unknownField'],
           valueToAssign: value,
@@ -202,7 +204,7 @@ describe('schema-validator', () => {
     });
 
     test('allows extra properties when the schema has an index signature', () => {
-      const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any });
+      const Expando = Schema.StructWithRest(Schema.Struct({}), [Schema.Record(Schema.String, Schema.Any)]);
       expect(() => SchemaValidator.assertExactProperties(Expando, { custom: 'value' })).not.to.throw();
     });
 

@@ -3,19 +3,25 @@
 //
 
 import * as JSONSchema from 'effect/JsonSchema';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { expect, test } from 'vitest';
 
 import { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 
+/**
+ * Effect 4 returns a `Document` -- root schema plus a shared definitions pool -- instead of one flat
+ * object, and targets draft 2020-12. These tests characterise the upstream serializer that DXOS's
+ * own encoder builds on, so they assert the document rather than a flattened view of it.
+ */
+const toJsonSchema = (schema: Schema.Top) => Schema.toJsonSchemaDocument(schema);
+
 test('json-schema annotations for filter refinement get combined', () => {
   const type = Schema.Number.annotate({
     jsonSchema: { foo: 'foo' },
-  }).pipe(Schema.filter(() => true, { jsonSchema: { bar: 'bar' } }));
+  }).pipe(Schema.check(Schema.makeFilter(() => true, { jsonSchema: { bar: 'bar' } })));
 
-  const jsonSchema = JSONSchema.make(type);
+  const jsonSchema = toJsonSchema(type);
   expect(jsonSchema).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     foo: 'foo',
@@ -29,7 +35,7 @@ test('json-schema annotations on types do not override the default serialization
     jsonSchema: { foo: 'foo' },
   });
 
-  const jsonSchema = JSONSchema.make(type);
+  const jsonSchema = toJsonSchema(type);
   expect(jsonSchema).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     foo: 'foo',
@@ -44,7 +50,7 @@ test('number with title and description annotations', () => {
     description: 'My Description',
   });
 
-  expect(JSONSchema.make(number)).toEqual({
+  expect(toJsonSchema(number)).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'number',
     title: 'My Title',
@@ -59,7 +65,7 @@ test('date with title and description annotations', () => {
     description: 'My Description',
   });
 
-  expect(JSONSchema.make(date)).toEqual({
+  expect(toJsonSchema(date)).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     $defs: {
       DateFromString: {
@@ -80,20 +86,20 @@ test('declare', () => {
     },
   });
 
-  expect(JSONSchema.make(type)).toEqual({
+  expect(toJsonSchema(type)).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'my-type',
   });
 
-  expect(type.pipe(Schema.is)(new MyType())).toBe(true);
-  expect(type.pipe(Schema.is)({})).toBe(false);
+  expect(Schema.is(type)(new MyType())).toBe(true);
+  expect(Schema.is(type)({})).toBe(false);
 
   const withAnnotations = type.annotate({
     title: 'My Title',
     description: 'My Description',
   });
 
-  expect(JSONSchema.make(withAnnotations)).toEqual({
+  expect(toJsonSchema(withAnnotations)).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'my-type',
     title: 'My Title',
@@ -108,14 +114,14 @@ test('declare with refinement', () => {
     jsonSchema: {
       type: 'my-type',
     },
-  }).pipe(Schema.filter(() => true, { jsonSchema: {} }));
+  }).pipe(Schema.check(Schema.makeFilter(() => true, { jsonSchema: {} })));
 
   const named = type.annotate({
     title: 'My Title',
     description: 'My Description',
   });
 
-  expect(JSONSchema.make(named)).toEqual({
+  expect(toJsonSchema(named)).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'my-type',
     title: 'My Title',
@@ -126,10 +132,10 @@ test('declare with refinement', () => {
 test("default title annotations don't get serialized", () => {
   const schema = Schema.String;
 
-  expect(SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrUndefined)).toEqual('string');
-  expect(SchemaAST.getDescriptionAnnotation(schema.ast).pipe(Option.getOrUndefined)).toEqual('a string');
+  expect(SchemaAST.getTitleAnnotation(schema.ast)).toEqual('string');
+  expect(SchemaAST.getDescriptionAnnotation(schema.ast)).toEqual('a string');
 
-  expect(JSONSchema.make(schema)).toEqual({
+  expect(toJsonSchema(schema)).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'string',
   });

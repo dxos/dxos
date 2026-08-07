@@ -43,7 +43,9 @@ export const EchoObjectSchema: {
   return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ): EchoObjectSchema<Self, Fields> => {
-    invariant(typeof TypeAnnotationId === 'symbol', 'Sanity.');
+    // Annotation ids are string keys in Effect 4; this guards against a bundling mishap that
+    // leaves the id undefined, which would silently drop the annotation.
+    invariant(typeof TypeAnnotationId === 'string', 'Sanity.');
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
     // Extract fields from the schema if available (Struct schemas have .fields).

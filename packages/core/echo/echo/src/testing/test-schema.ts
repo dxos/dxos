@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
@@ -21,7 +22,7 @@ export namespace TestSchema {
    * This is the test variant with example.com namespace.
    */
   export class Expando extends Type.makeObject<Expando>(DXN.make('com.example.type.expando', '0.1.0'))(
-    Schema.Struct({}, { key: Schema.String, value: Schema.Any }),
+    Schema.StructWithRest(Schema.Struct({}), [Schema.Record(Schema.String, Schema.Any)]),
   ) {}
 
   //
@@ -71,10 +72,7 @@ export namespace TestSchema {
   export const MessageStruct = Schema.Struct({
     // TODO(burdon): Support S.Date; Custom Timestamp (with defaults).
     // TODO(burdon): Support defaults (update create and create).
-    timestamp: Schema.String.pipe(
-      Schema.propertySignature,
-      Schema.withConstructorDefault(() => new Date().toISOString()),
-    ),
+    timestamp: Schema.String.pipe(Schema.withConstructorDefault(Effect.sync(() => new Date().toISOString()))),
   });
 
   export class Message extends Type.makeObject<Message>(DXN.make('com.example.type.message', '0.1.0'))(MessageStruct) {}

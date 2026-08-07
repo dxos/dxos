@@ -22,17 +22,9 @@ const Organization = Schema.Struct({
 
 type Organization = Type.InstanceType<typeof Organization>;
 
-const Contact = Schema.Struct(
-  {
-    name: Schema.String,
-  },
-  {
-    key: Schema.String,
-    value: Schema.Any,
-  },
-)
-  .mapFields(Struct.map(Schema.optional))
-  .pipe(EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
+const Contact = Schema.StructWithRest(Schema.Struct({ name: Schema.String }).mapFields(Struct.map(Schema.optional)), [
+  Schema.Record(Schema.String, Schema.Any),
+]).pipe(EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
 
 type Contact = Type.InstanceType<typeof Contact>;
 
