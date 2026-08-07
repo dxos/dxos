@@ -12,6 +12,15 @@ import { Markdown, Thread } from './plugins';
 random.seed(0);
 
 // NOTE: Reduce flakiness in CI by using waitForExpect.
+/**
+ * Budget for the editor to drop a deleted thread's `cm-comment` decoration. Longer than the preset's
+ * 10s `expect` timeout because removal lags the ECHO delete rather than accompanying it: `undo delete
+ * thread` failed here at 10s in run 31146797167 while `delete thread` — identical up to this line —
+ * passed in the same run, so the two only differ in which side of the race they landed on. Three tests
+ * end on this assertion, so the race is worth waiting out rather than deferring one victim of it.
+ */
+const DECORATION_TIMEOUT = 30_000;
+
 test.describe('Comments tests', () => {
   let host: AppManager;
 
@@ -102,7 +111,7 @@ test.describe('Comments tests', () => {
 
     // Deleting last message should delete the thread.
     await Thread.deleteMessage(Thread.getMessage(thread, firstMessage));
-    await expect(Thread.getComments(host.page)).toHaveCount(0);
+    await expect(Thread.getComments(host.page)).toHaveCount(0, { timeout: DECORATION_TIMEOUT });
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
@@ -123,7 +132,7 @@ test.describe('Comments tests', () => {
 
     const thread = Thread.getThread(host.page, editorText);
     await Thread.deleteThread(thread);
-    await expect(Thread.getComments(host.page)).toHaveCount(0);
+    await expect(Thread.getComments(host.page)).toHaveCount(0, { timeout: DECORATION_TIMEOUT });
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
@@ -144,7 +153,7 @@ test.describe('Comments tests', () => {
 
     const thread = Thread.getThread(host.page, editorText);
     await Thread.deleteThread(thread);
-    await expect(Thread.getComments(host.page)).toHaveCount(0);
+    await expect(Thread.getComments(host.page)).toHaveCount(0, { timeout: DECORATION_TIMEOUT });
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
 
     // Undo delete.
