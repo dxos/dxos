@@ -112,7 +112,9 @@ export const PostToolbar = ({
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Toolbar asChild>
-        <Menu.Toolbar />
+        <Menu.Toolbar>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Panel.Toolbar>
     </Menu.Root>
   );

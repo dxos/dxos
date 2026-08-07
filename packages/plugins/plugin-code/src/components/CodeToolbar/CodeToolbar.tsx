@@ -44,7 +44,9 @@ export const CodeToolbar = ({ attendableId, role, state, onBuild, onRun }: CodeT
   return (
     <ElevationProvider elevation={role === AppSurface.Section.role ? 'positioned' : 'base'}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar />
+        <Menu.Toolbar>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     </ElevationProvider>
   );

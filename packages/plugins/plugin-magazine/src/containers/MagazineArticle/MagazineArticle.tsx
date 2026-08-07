@@ -101,7 +101,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     <Panel.Root role={role}>
       <Menu.Root {...menu} attendableId={attendableId}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content>

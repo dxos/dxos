@@ -45,8 +45,6 @@
     "@lezer/lr": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-generator": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@lezer/generator": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"

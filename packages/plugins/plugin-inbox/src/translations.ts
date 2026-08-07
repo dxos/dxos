@@ -145,6 +145,8 @@ export const translations = [
         'subscriptions.label': 'Subscriptions',
         'subscriptions.toolbar.title': 'Subscriptions toolbar',
         'subscriptions.empty.message': 'No bulk-mail subscriptions found.',
+        'subscriptions.filter.placeholder': 'Filter subscriptions…',
+        'subscriptions.no-results.message': 'No matching subscriptions.',
         'subscriptions.count.label': '{{email}} · {{count}} messages',
         'subscriptions.remove.label_zero': 'Remove',
         'subscriptions.remove.label_one': 'Remove ({{count}})',
