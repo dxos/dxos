@@ -24,10 +24,10 @@ export const normalizeUsername = (username: string): string => username.trim().t
  */
 export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.chessCom.account', '0.1.0'))(
   Schema.Struct({
-    username: Schema.String.annotations({
-      title: 'Username',
-      description: 'Chess.com username.',
-    }),
+    username: Schema.String.pipe(
+      Annotation.FormPlaceholderAnnotation.set('Chess.com username.'),
+      Schema.annotations({ title: 'Username' }),
+    ),
     playerId: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
     profileUrl: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     followers: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
@@ -91,10 +91,10 @@ export const applyProfile = (account: Account, profile: AccountProfile): void =>
 };
 
 export const CreateAccountSchema = Schema.Struct({
-  username: Schema.String.annotations({
-    title: 'Username',
-    description: 'Your Chess.com username.',
-  }),
+  username: Schema.String.pipe(
+    Annotation.FormPlaceholderAnnotation.set('Your Chess.com username.'),
+    Schema.annotations({ title: 'Username' }),
+  ),
 });
 
 export type CreateAccountInput = Schema.Schema.Type<typeof CreateAccountSchema>;

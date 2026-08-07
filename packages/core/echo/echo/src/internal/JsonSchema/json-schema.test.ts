@@ -432,6 +432,9 @@ describe('effect-to-json', () => {
     expect(jsonSchema).toMatchInlineSnapshot(`
       {
         "$schema": "http://json-schema.org/draft-07/schema#",
+        "annotations": {
+          "formPlaceholder": "Email address",
+        },
         "description": "Email address",
         "format": "email",
         "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
@@ -463,6 +466,7 @@ describe('json-to-effect', () => {
         format: 'email',
         title: 'Email',
         description: 'Email address',
+        annotations: { formPlaceholder: 'Email address' },
         // TODO(dmaretskyi): omit pattern.
         pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
       });

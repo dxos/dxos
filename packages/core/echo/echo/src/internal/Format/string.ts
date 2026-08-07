@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { FormPlaceholderAnnotationId } from '../Annotation/annotations';
 import { FormatAnnotation, TypeFormat } from './types';
 
 /**
@@ -17,6 +18,7 @@ export const Email = Schema.String.pipe(
   Schema.annotations({
     title: 'Email',
     description: 'Email address',
+    [FormPlaceholderAnnotationId]: 'Email address',
   }),
 );
 

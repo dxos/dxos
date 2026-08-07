@@ -7,11 +7,11 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
+import { Annotation } from '@dxos/echo';
 import { ThemeProvider, Tooltip, defaultTx } from '@dxos/react-ui';
 
 import { translations } from '#translations';
 
-import { PlaceholderAnnotation } from '../../../annotations';
 import { Form } from '../Form';
 
 const Wrapper = ({ children }: PropsWithChildren) => (
@@ -33,10 +33,10 @@ describe('FormField — placeholder resolution', () => {
     cleanup();
   });
 
-  test('uses PlaceholderAnnotation for the input hint and keeps the description on the label', ({ expect }) => {
+  test('uses FormPlaceholderAnnotation for the input hint and keeps the description on the label', ({ expect }) => {
     renderField(
       Schema.String.pipe(
-        PlaceholderAnnotation.set('dxos.org'),
+        Annotation.FormPlaceholderAnnotation.set('dxos.org'),
         Schema.annotations({ title: 'Handle', description: 'The atproto handle to publish under.' }),
       ),
     );
@@ -56,7 +56,7 @@ describe('FormField — placeholder resolution', () => {
   test('an explicit placeholder wins over examples', ({ expect }) => {
     renderField(
       Schema.String.pipe(
-        PlaceholderAnnotation.set('dxos.org'),
+        Annotation.FormPlaceholderAnnotation.set('dxos.org'),
         Schema.annotations({ title: 'Handle', examples: ['alice.bsky.social'] }),
       ),
     );

@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { FormPlaceholderAnnotationId } from '../Annotation/annotations';
 import { FormatAnnotation, TypeFormat } from './types';
 
 /**
@@ -105,6 +106,7 @@ export const DateOnly = /* Schema.transformOrFail(Schema.String, SimpleDate, {
   FormatAnnotation.set(TypeFormat.Date),
   Schema.annotations({
     description: 'Valid date in ISO format',
+    [FormPlaceholderAnnotationId]: 'Valid date in ISO format',
   }),
 );
 
@@ -134,6 +136,7 @@ export const TimeOnly = /* Schema.transformOrFail(Schema.String, SimpleTime, {
   FormatAnnotation.set(TypeFormat.Time),
   Schema.annotations({
     description: 'Valid time in ISO format',
+    [FormPlaceholderAnnotationId]: 'Valid time in ISO format',
   }),
 );
 
@@ -178,6 +181,7 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
   FormatAnnotation.set(TypeFormat.DateTime),
   Schema.annotations({
     description: 'Valid date and time in ISO format',
+    [FormPlaceholderAnnotationId]: 'Valid date and time in ISO format',
   }),
 );
 

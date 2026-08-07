@@ -16,6 +16,8 @@ export {
   FormLayoutAnnotationId,
   type FormLayoutMap,
   FormOrderedAnnotation,
+  FormPlaceholderAnnotation,
+  FormPlaceholderAnnotationId,
   GeneratorAnnotation,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,

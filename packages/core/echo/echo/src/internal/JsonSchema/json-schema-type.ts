@@ -55,6 +55,12 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   ),
 
   /**
+   * Ghost text for an empty input.
+   * Mapped from {@link FormPlaceholderAnnotationId}; serialized so a stored type keeps its hint.
+   */
+  formPlaceholder: Schema.optional(Schema.String),
+
+  /**
    * {@link PropertyMeta} annotations get serialized here.
    */
   meta: Schema.optional(

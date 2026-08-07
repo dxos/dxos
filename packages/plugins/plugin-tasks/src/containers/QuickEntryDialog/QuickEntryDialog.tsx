@@ -7,9 +7,9 @@ import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } f
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Format } from '@dxos/echo';
+import { Annotation, Format } from '@dxos/echo';
 import { Column, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
-import { Form, PlaceholderAnnotation, useFormContext } from '@dxos/react-ui-form';
+import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
@@ -20,7 +20,7 @@ const QuickEntryForm = Schema.Struct({
     Schema.filter((value) => value.trim().length > 0, { message: () => 'Entry cannot be empty.' }),
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     // The field carries no title, so this ghost text is its only affordance.
-    PlaceholderAnnotation.set('Journal entry'),
+    Annotation.FormPlaceholderAnnotation.set('Journal entry'),
   ),
 });
 

@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { FormPlaceholderAnnotationId } from '../Annotation/annotations';
 import { FormatAnnotation, TypeFormat } from './types';
 
 const encodeMultipleOf = (divisor: number) => 1 / Math.pow(10, divisor);
@@ -41,6 +42,7 @@ export const Currency = ({ decimals, code }: CurrencyAnnotation = { decimals: 2 
     Schema.annotations({
       title: 'Currency',
       description: 'Currency value',
+      [FormPlaceholderAnnotationId]: 'Currency value',
       ...(code ? { [CurrencyAnnotationId]: code.toUpperCase() } : {}),
     }),
   );
@@ -59,6 +61,7 @@ export const Integer = () =>
     Schema.annotations({
       title: 'Integer',
       description: 'Integer value',
+      [FormPlaceholderAnnotationId]: 'Integer value',
     }),
   );
 
@@ -73,6 +76,7 @@ export const Percent = ({ decimals }: PercentAnnotation = { decimals: 2 }) =>
     Schema.annotations({
       title: 'Percent',
       description: 'Percentage value',
+      [FormPlaceholderAnnotationId]: 'Percentage value',
     }),
   );
 
@@ -85,5 +89,6 @@ export const Timestamp = Schema.Number.pipe(
   Schema.annotations({
     title: 'Timestamp',
     description: 'Unix timestamp',
+    [FormPlaceholderAnnotationId]: 'Unix timestamp',
   }),
 );

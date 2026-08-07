@@ -4,31 +4,51 @@
 
 import * as Schema from 'effect/Schema';
 
-import { PlaceholderAnnotation } from '@dxos/react-ui-form';
+import { Annotation } from '@dxos/echo';
 
 export const MinutelySpec = Schema.Struct({
   frequency: Schema.Literal('minutely').annotations({ title: 'Frequency' }),
-  interval: Schema.Number.pipe(Schema.int(), Schema.between(1, 59), PlaceholderAnnotation.set('1–59')).annotations({
+  interval: Schema.Number.pipe(
+    Schema.int(),
+    Schema.between(1, 59),
+    Annotation.FormPlaceholderAnnotation.set('1–59'),
+  ).annotations({
     title: 'Every (minutes)',
   }),
 });
 
 export const HourlySpec = Schema.Struct({
   frequency: Schema.Literal('hourly').annotations({ title: 'Frequency' }),
-  interval: Schema.Number.pipe(Schema.int(), Schema.between(1, 23), PlaceholderAnnotation.set('1–23')).annotations({
+  interval: Schema.Number.pipe(
+    Schema.int(),
+    Schema.between(1, 23),
+    Annotation.FormPlaceholderAnnotation.set('1–23'),
+  ).annotations({
     title: 'Every (hours)',
   }),
-  minute: Schema.Number.pipe(Schema.int(), Schema.between(0, 59), PlaceholderAnnotation.set('0–59')).annotations({
+  minute: Schema.Number.pipe(
+    Schema.int(),
+    Schema.between(0, 59),
+    Annotation.FormPlaceholderAnnotation.set('0–59'),
+  ).annotations({
     title: 'At minute',
   }),
 });
 
 export const DailySpec = Schema.Struct({
   frequency: Schema.Literal('daily').annotations({ title: 'Frequency' }),
-  hour: Schema.Number.pipe(Schema.int(), Schema.between(0, 23), PlaceholderAnnotation.set('0–23')).annotations({
+  hour: Schema.Number.pipe(
+    Schema.int(),
+    Schema.between(0, 23),
+    Annotation.FormPlaceholderAnnotation.set('0–23'),
+  ).annotations({
     title: 'Hour',
   }),
-  minute: Schema.Number.pipe(Schema.int(), Schema.between(0, 59), PlaceholderAnnotation.set('0–59')).annotations({
+  minute: Schema.Number.pipe(
+    Schema.int(),
+    Schema.between(0, 59),
+    Annotation.FormPlaceholderAnnotation.set('0–59'),
+  ).annotations({
     title: 'Minute',
   }),
 });
@@ -40,10 +60,18 @@ export type DayOfWeek = Schema.Schema.Type<typeof DayOfWeek>;
 export const WeeklySpec = Schema.Struct({
   frequency: Schema.Literal('weekly').annotations({ title: 'Frequency' }),
   daysOfWeek: Schema.Array(DayOfWeek.annotations({ title: 'Day' })).annotations({ title: 'Days of week' }),
-  hour: Schema.Number.pipe(Schema.int(), Schema.between(0, 23), PlaceholderAnnotation.set('0–23')).annotations({
+  hour: Schema.Number.pipe(
+    Schema.int(),
+    Schema.between(0, 23),
+    Annotation.FormPlaceholderAnnotation.set('0–23'),
+  ).annotations({
     title: 'Hour',
   }),
-  minute: Schema.Number.pipe(Schema.int(), Schema.between(0, 59), PlaceholderAnnotation.set('0–59')).annotations({
+  minute: Schema.Number.pipe(
+    Schema.int(),
+    Schema.between(0, 59),
+    Annotation.FormPlaceholderAnnotation.set('0–59'),
+  ).annotations({
     title: 'Minute',
   }),
 });
@@ -55,17 +83,25 @@ export const MonthlySpec = Schema.Struct({
   ).annotations({
     title: 'Days of month',
   }),
-  hour: Schema.Number.pipe(Schema.int(), Schema.between(0, 23), PlaceholderAnnotation.set('0–23')).annotations({
+  hour: Schema.Number.pipe(
+    Schema.int(),
+    Schema.between(0, 23),
+    Annotation.FormPlaceholderAnnotation.set('0–23'),
+  ).annotations({
     title: 'Hour',
   }),
-  minute: Schema.Number.pipe(Schema.int(), Schema.between(0, 59), PlaceholderAnnotation.set('0–59')).annotations({
+  minute: Schema.Number.pipe(
+    Schema.int(),
+    Schema.between(0, 59),
+    Annotation.FormPlaceholderAnnotation.set('0–59'),
+  ).annotations({
     title: 'Minute',
   }),
 });
 
 export const CustomSpec = Schema.Struct({
   frequency: Schema.Literal('custom').annotations({ title: 'Frequency' }),
-  cronExpression: Schema.String.pipe(PlaceholderAnnotation.set('e.g. 0 9 * * MON-FRI')).annotations({
+  cronExpression: Schema.String.pipe(Annotation.FormPlaceholderAnnotation.set('e.g. 0 9 * * MON-FRI')).annotations({
     title: 'Cron expression',
   }),
 });

@@ -28,10 +28,12 @@ export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.pers
         street: Schema.String,
         city: Schema.String,
         // TODO(burdon): Constrain input control.
-        state: Schema.String.pipe(Schema.minLength(2), Schema.maxLength(2)).annotations({
-          title: 'State',
-          description: 'State code',
-        }),
+        state: Schema.String.pipe(
+          Schema.minLength(2),
+          Schema.maxLength(2),
+          Annotation.FormPlaceholderAnnotation.set('State code'),
+          Schema.annotations({ title: 'State' }),
+        ),
         zip: Schema.Number.annotations({ title: 'ZIP Code' }),
       }).annotations({ title: 'Address' }),
     ),

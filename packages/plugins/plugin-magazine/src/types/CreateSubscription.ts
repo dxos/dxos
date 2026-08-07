@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format } from '@dxos/echo';
+import { Annotation, Format } from '@dxos/echo';
 
 import * as Subscription from './Subscription';
 
@@ -27,16 +27,22 @@ export const isUrl = Schema.is(Format.URL);
 
 export const StandardSiteCreateBase = Schema.Struct({
   type: Schema.Literal('standard-site'),
-  handle: HandleSchema.annotations({ title: 'Handle', description: 'atproto handle, e.g. dxos.org.' }),
+  handle: HandleSchema.pipe(
+    Annotation.FormPlaceholderAnnotation.set('dxos.org'),
+    Schema.annotations({ title: 'Handle', description: 'atproto handle.' }),
+  ),
   // No `name`: the feed name is taken from the selected publication (resolved by `fetchStandardSite`).
-  publication: Schema.String.annotations({ title: 'Publication', description: 'Choose a publication.' }),
+  publication: Schema.String.pipe(
+    Annotation.FormPlaceholderAnnotation.set('Choose a publication.'),
+    Schema.annotations({ title: 'Publication' }),
+  ),
 });
 
 export type StandardSiteValues = Schema.Schema.Type<typeof StandardSiteCreateBase>;
 
 export const RssCreateBase = Schema.Struct({
   type: Schema.Literal('rss'),
-  url: Format.URL.annotations({ title: 'URL', description: 'RSS feed URL.' }),
+  url: Format.URL.pipe(Annotation.FormPlaceholderAnnotation.set('RSS feed URL.'), Schema.annotations({ title: 'URL' })),
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 });
 

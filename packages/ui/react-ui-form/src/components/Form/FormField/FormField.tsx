@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { AutofillAnnotation, OptionsLookupAnnotation, PlaceholderAnnotation } from '../../../annotations';
+import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';
@@ -114,9 +114,9 @@ export const FormField = (props: FormFieldProps) => {
     [labelProp, title, name],
   );
   // `description` is deliberately absent: it documents the field (surfaced as a tooltip on the label),
-  // so using it as ghost text would overload one annotation with two jobs — set `PlaceholderAnnotation`
+  // so using it as ghost text would overload one annotation with two jobs — set `FormPlaceholderAnnotation`
   // for an input hint.
-  const placeholderAnnotation = Option.getOrUndefined(PlaceholderAnnotation.getFromAst(type));
+  const placeholderAnnotation = Option.getOrUndefined(Annotation.FormPlaceholderAnnotation.getFromAst(type));
   const placeholder = useMemo(
     () => placeholderAnnotation ?? (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : label),
     [placeholderAnnotation, examples, label, t],
