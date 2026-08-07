@@ -22,6 +22,35 @@ import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 /**
+ * Effect 4 replaced the AI error taxonomy: `HttpRequestError` split into semantic reasons, and the
+ * errors are schema classes carrying a plain request record with no `cause` field. These adapters
+ * keep the old call sites' information by folding the module/method and cause into `description`.
+ */
+const describe = (method: string, detail: string, cause?: unknown): string => {
+  const suffix = cause === undefined ? '' : `: ${cause instanceof Error ? cause.message : String(cause)}`;
+  return `ChatCompletionsClient.${method}: ${detail}${suffix}`;
+};
+
+/** The request record v4's `NetworkError` carries, projected from an `HttpClientRequest` when there is one. */
+const toErrorRequest = (request?: HttpClientRequest.HttpClientRequest): AiError.NetworkError['request'] => ({
+  method: (request?.method ?? 'POST') as AiError.NetworkError['request']['method'],
+  url: request?.url ?? '',
+  urlParams: [],
+  hash: undefined,
+  headers: {},
+});
+
+const networkError = (method: string, detail: string, options?: { request?: unknown; cause?: unknown }) =>
+  new AiError.NetworkError({
+    reason: 'TransportError',
+    request: toErrorRequest(HttpClientRequest.isHttpClientRequest(options?.request) ? options.request : undefined),
+    description: describe(method, detail, options?.cause),
+  });
+
+const unknownError = (method: string, detail: string, cause?: unknown) =>
+  new AiError.UnknownError({ description: describe(method, detail, cause) });
+
+/**
  * OpenAI-style tool call (both Ollama and OpenAI endpoints emit a variant of this).
  *
  * - OpenAI: `arguments` is a JSON-encoded string.
@@ -307,6 +336,9 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
     } else if (message.role === 'tool') {
       const toolMsg = message as Prompt.ToolMessage;
       for (const part of toolMsg.content) {
+        if (part.type !== 'tool-result') {
+          continue;
+        }
         messages.push({
           role: 'tool',
           content: encodeToolResult(part),
@@ -428,7 +460,7 @@ const parseToolArguments = (
   args: string | Record<string, unknown>,
   toolName: string,
   method: string,
-): Effect.Effect<unknown, AiError.MalformedOutput> => {
+): Effect.Effect<unknown, AiError.InvalidOutputError> => {
   if (typeof args !== 'string') {
     return Effect.succeed(args);
   }
@@ -438,11 +470,8 @@ const parseToolArguments = (
   return Effect.try({
     try: () => Tool.unsafeSecureJsonParse(args),
     catch: (cause) =>
-      new AiError.MalformedOutput({
-        module: 'ChatCompletionsClient',
-        method,
-        description: `Failed to parse tool call parameters for tool '${toolName}': ${args}`,
-        cause,
+      new AiError.InvalidOutputError({
+        description: describe(method, `failed to parse tool call parameters for tool '${toolName}': ${args}`, cause),
       }),
   });
 };
@@ -599,40 +628,23 @@ export const make = (model: string) =>
             Effect.flatMap((req) => httpClient.execute(req).pipe(Effect.flatMap((res) => res.json))),
             Effect.timeoutOrElse({
               duration: requestTimeout,
-              orElse: () =>
-                new AiError.HttpRequestError({
-                  module: 'ChatCompletionsClient',
-                  method: 'generateText',
-                  request: undefined as any,
-                  reason: 'Transport',
-                  description: `Request timed out after ${Duration.format(requestTimeout)}`,
-                  cause: new Error('request timeout'),
-                }),
+              orElse: () => networkError('generateText', `request timed out after ${Duration.format(requestTimeout)}`),
             }),
             Effect.catch((err) => {
-              if (err instanceof AiError.HttpRequestError) {
+              if (err instanceof AiError.NetworkError) {
                 return Effect.fail(err) as Effect.Effect<never, any, never>;
               }
               if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
                 return Effect.fail(
-                  new AiError.HttpRequestError({
-                    module: 'ChatCompletionsClient',
-                    method: 'generateText',
-                    request: (err as any).request,
-                    reason: 'Transport',
-                    description: 'Connection refused',
-                    cause: err,
-                  }),
+                  networkError('generateText', 'connection refused', { request: (err as any).request, cause: err }),
                 ) as Effect.Effect<never, any, never>;
               }
 
-              return Effect.fail(
-                new AiError.UnknownError({
-                  module: 'ChatCompletionsClient',
-                  method: 'generateText',
-                  cause: err,
-                }),
-              ) as Effect.Effect<never, any, never>;
+              return Effect.fail(unknownError('generateText', 'request failed', err)) as Effect.Effect<
+                never,
+                any,
+                never
+              >;
             }),
           );
 
@@ -663,9 +675,8 @@ export const make = (model: string) =>
             type: 'finish',
             reason: finishReason,
             usage: {
-              inputTokens,
-              outputTokens,
-              totalTokens: (inputTokens ?? 0) + (outputTokens ?? 0),
+              inputTokens: { total: inputTokens },
+              outputTokens: { total: outputTokens },
             },
           });
 
@@ -687,36 +698,23 @@ export const make = (model: string) =>
               Effect.flatMap((req) => httpClient.execute(req)),
               Effect.timeoutOrElse({
                 duration: requestTimeout,
-                orElse: () =>
-                  new AiError.HttpRequestError({
-                    module: 'ChatCompletionsClient',
-                    method: 'streamText',
-                    request: undefined as any,
-                    reason: 'Transport',
-                    description: `Request timed out after ${Duration.format(requestTimeout)}`,
-                    cause: new Error('request timeout'),
-                  }),
+                orElse: () => networkError('streamText', `request timed out after ${Duration.format(requestTimeout)}`),
               }),
               Effect.catch((err) => {
-                if (err instanceof AiError.HttpRequestError) {
+                if (err instanceof AiError.NetworkError) {
                   return Effect.fail(err) as Effect.Effect<never, any, never>;
                 }
                 if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
                   return Effect.fail(
-                    new AiError.HttpRequestError({
-                      module: 'ChatCompletionsClient',
-                      method: 'streamText',
-                      request: (err as any).request,
-                      reason: 'Transport',
-                      description: 'Connection refused',
-                      cause: err,
-                    }),
+                    networkError('streamText', 'connection refused', { request: (err as any).request, cause: err }),
                   ) as Effect.Effect<never, any, never>;
                 }
 
-                return Effect.fail(
-                  new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
-                ) as Effect.Effect<never, any, never>;
+                return Effect.fail(unknownError('streamText', 'request failed', err)) as Effect.Effect<
+                  never,
+                  any,
+                  never
+                >;
               }),
             );
             if (response.status !== 200) {
@@ -725,22 +723,10 @@ export const make = (model: string) =>
                 const json = JSON.parse(body);
                 const error = json.error;
                 if (typeof error === 'string') {
-                  return Stream.fail(
-                    new AiError.UnknownError({
-                      module: 'ChatCompletionsClient',
-                      method: 'streamText',
-                      description: error,
-                    }),
-                  );
+                  return Stream.fail(unknownError('streamText', error));
                 }
               } catch {}
-              return Stream.fail(
-                new AiError.UnknownError({
-                  module: 'ChatCompletionsClient',
-                  method: 'streamText',
-                  description: body,
-                }),
-              );
+              return Stream.fail(unknownError('streamText', body));
             }
 
             const textId = `chat-text-${Date.now()}`;
@@ -776,19 +762,10 @@ export const make = (model: string) =>
             let pendingLine = '';
 
             const parsedStream: Stream.Stream<Response.StreamPartEncoded, any, any> = response.stream.pipe(
-              withIdleTimeout(
-                streamIdleTimeout,
-                () =>
-                  new AiError.HttpRequestError({
-                    module: 'ChatCompletionsClient',
-                    method: 'streamText',
-                    request: undefined as any,
-                    reason: 'Transport',
-                    description: `Stream idle for more than ${Duration.format(streamIdleTimeout)}`,
-                    cause: new Error('stream idle timeout'),
-                  }),
+              withIdleTimeout(streamIdleTimeout, () =>
+                networkError('streamText', `stream idle for more than ${Duration.format(streamIdleTimeout)}`),
               ),
-              Stream.mapConcatEffect((chunk: Uint8Array) =>
+              Stream.mapEffect((chunk: Uint8Array) =>
                 Effect.gen(function* () {
                   const text = pendingLine + decoder.decode(chunk, { stream: true });
                   const frames = text.split('\n');
@@ -912,9 +889,8 @@ export const make = (model: string) =>
                         type: 'finish',
                         reason: parsed.finishReason ?? 'stop',
                         usage: {
-                          inputTokens: parsed.inputTokens,
-                          outputTokens: parsed.outputTokens,
-                          totalTokens: (parsed.inputTokens ?? 0) + (parsed.outputTokens ?? 0),
+                          inputTokens: { total: parsed.inputTokens },
+                          outputTokens: { total: parsed.outputTokens },
                         },
                       });
                     }
@@ -923,13 +899,12 @@ export const make = (model: string) =>
                   return parts;
                 }),
               ),
-              Stream.catch((err): Stream.Stream<never, AiError.HttpRequestError | AiError.UnknownError, never> => {
-                if (err instanceof AiError.HttpRequestError || err instanceof AiError.UnknownError) {
+              Stream.flattenIterable,
+              Stream.catch((err): Stream.Stream<never, AiError.NetworkError | AiError.UnknownError, never> => {
+                if (err instanceof AiError.NetworkError || err instanceof AiError.UnknownError) {
                   return Stream.fail(err);
                 }
-                return Stream.fail(
-                  new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
-                );
+                return Stream.fail(unknownError('streamText', 'request failed', err));
               }),
             );
 
@@ -946,18 +921,13 @@ export const make = (model: string) =>
 const withIdleTimeout =
   <E2>(timeout: Duration.Duration, onTimeout: () => E2) =>
   <A, E, R>(stream: Stream.Stream<A, E, R>): Stream.Stream<A, E | E2, R> =>
-    Stream.unwrap(
-      Effect.gen(function* () {
-        const pull = yield* Stream.toPull(stream);
-        const timedPull: Effect.Effect<Chunk.Chunk<A>, Option.Option<E | E2>, R> = pull.pipe(
-          Effect.timeoutOrElse({
-            duration: timeout,
-            orElse: (): Option.Option<E | E2> => Option.some(onTimeout()),
-          }),
-        );
-        return Stream.repeatEffectChunkOption(timedPull);
-      }),
-    );
+    // v4 replaced the `Option`-encoded pull protocol: a pull ends by failing with `Cause.Done`,
+    // which `fromPull` excludes from the resulting error type, so the timeout is a plain failure.
+    Stream.fromPull(
+      Effect.map(Stream.toPull(stream), (pull) =>
+        pull.pipe(Effect.timeoutOrElse({ duration: timeout, orElse: () => Effect.fail(onTimeout()) })),
+      ),
+    ) as Stream.Stream<A, E | E2, R>;
 
 /**
  * Create a chat completions language model layer.
