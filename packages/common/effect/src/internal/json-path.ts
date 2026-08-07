@@ -25,17 +25,17 @@ const PROP_REGEX = /^\w+$/;
 export const JsonPath = Schema.String.pipe(Schema.check(Schema.isPattern(PATH_REGEX))).annotate({
   title: 'JSON path',
   description: 'JSON path to a property',
-}) as any as Schema.Schema<JsonPath>;
+}) as any as Schema.Codec<JsonPath, string>;
 export const JsonProp = Schema.NonEmptyString.pipe(
   Schema.check(
     Schema.isPattern(PROP_REGEX, {
-      message: () => 'Property name must contain only letters, numbers, and underscores',
+      message: 'Property name must contain only letters, numbers, and underscores',
     }),
   ),
-) as any as Schema.Schema<JsonProp>;
+) as any as Schema.Codec<JsonProp, string>;
 
 export const isJsonPath = (value: unknown): value is JsonPath => {
-  return Option.isSome(Schema.validateOption(JsonPath)(value));
+  return Option.isSome(Schema.decodeUnknownOption(JsonPath)(value));
 };
 
 /**

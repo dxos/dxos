@@ -27,7 +27,7 @@ const defaultRuntime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
  */
 export const createKvsStore = <T extends Record<string, any>>(options: {
   key: string;
-  schema: Schema.Schema<T>;
+  schema: Schema.Codec<T, any>;
   defaultValue: () => T;
   runtime?: ReturnType<typeof Atom.runtime>;
 }): Atom.Writable<T> => {
