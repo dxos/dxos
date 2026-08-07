@@ -414,7 +414,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         );
         const lastMessage = sourceMessages.sort((a, b) => a.created.localeCompare(b.created)).at(-1);
         if (!lastMessage) {
-          return yield* Effect.dieMessage('source conversation produced no messages');
+          return yield* Effect.die(new Error('source conversation produced no messages'));
         }
 
         // Fork: a fresh session whose feed links back to the source via a SessionLink (mirrors the

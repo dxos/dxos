@@ -391,7 +391,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           Effect.forkDetach,
         );
       } else {
-        return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
+        return yield* Effect.die(new Error('TriggerDispatcher started in manual time control mode'));
       }
 
       log.info('TriggerDispatcher started', { timeControl: this.timeControl });
@@ -452,11 +452,11 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       // `_maxConcurrency`, on top of any per-trigger concurrency enforced at the call sites.
       const result = yield* Effect.gen({ self: this }, function* () {
         if (!trigger.enabled) {
-          return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
+          return yield* Effect.die(new Error('Attempting to invoke disabled trigger'));
         }
 
         if (!trigger.runnable) {
-          return yield* Effect.dieMessage('Trigger has no runnable reference');
+          return yield* Effect.die(new Error('Trigger has no runnable reference'));
         }
 
         // Resolve the operation definition from the persistent record.
@@ -495,7 +495,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           Stream.runCollect,
           Effect.map(Chunk.head),
           Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () => Effect.dieMessage('Trigger invocation produced no output')),
+          Effect.catchTag('NoSuchElementException', () =>
+            Effect.die(new Error('Trigger invocation produced no output')),
+          ),
         );
       }).pipe(this._concurrencyLimiter.withPermits(1), Effect.exit);
 
@@ -758,7 +760,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
             // Direct triggers are only invoked through invokeTrigger.
             break;
           default: {
-            return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
+            return yield* Effect.die(new Error(`Unknown trigger kind: ${kind}`));
           }
         }
       }
@@ -823,7 +825,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
     Effect.gen({ self: this }, function* () {
       if (this.timeControl !== 'manual') {
-        return yield* Effect.dieMessage('advanceTime can only be used in manual time control mode');
+        return yield* Effect.die(new Error('advanceTime can only be used in manual time control mode'));
       }
 
       const millis = Duration.toMillis(duration);

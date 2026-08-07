@@ -84,7 +84,7 @@ const makeTestRuntime = Effect.gen(function* () {
     | ServiceResolver.ServiceResolver
   >();
   const manager = PluginManager.make({
-    pluginLoader: (id: string) => Effect.dieMessage(`No plugins in test runtime: ${id}`),
+    pluginLoader: (id: string) => Effect.die(new Error(`No plugins in test runtime: ${id}`)),
     plugins: [],
   });
   const runtime: Capabilities.ProcessManagerRuntime = ManagedRuntime.make(

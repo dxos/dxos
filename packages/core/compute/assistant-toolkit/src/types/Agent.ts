@@ -185,7 +185,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
   Effect.gen(function* () {
     const existingChat = yield* loadChat(agent);
     if (!existingChat) {
-      return yield* Effect.dieMessage('Agent must have an existing chat to reset.');
+      return yield* Effect.die(new Error('Agent must have an existing chat to reset.'));
     }
 
     const existingFeed = yield* Database.load(existingChat.feed);

@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
         const target = connection.target;
         const db = target ? Obj.getDatabase(target) : undefined;
         if (!db) {
-          return yield* Effect.dieMessage('No database for connection ref.');
+          return yield* Effect.die(new Error('No database for connection ref.'));
         }
 
         return yield* Effect.gen(function* () {

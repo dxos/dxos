@@ -22,14 +22,15 @@ import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 /**
- * Effect 4 replaced the AI error taxonomy: `HttpRequestError` split into semantic reasons, and the
- * errors are schema classes carrying a plain request record with no `cause` field. These adapters
- * keep the old call sites' information by folding the module/method and cause into `description`.
+ * Effect 4 reshaped the AI errors the way it reshaped `HttpClientError`: one `AiError` wrapper
+ * carrying the module and method, with a semantic `reason` as the payload. `HttpRequestError`
+ * became `NetworkError` (and friends); the reasons have no `cause`, so a cause is rendered into
+ * the reason's `description`.
  */
-const describe = (method: string, detail: string, cause?: unknown): string => {
-  const suffix = cause === undefined ? '' : `: ${cause instanceof Error ? cause.message : String(cause)}`;
-  return `ChatCompletionsClient.${method}: ${detail}${suffix}`;
-};
+const MODULE = 'ChatCompletionsClient';
+
+const describe = (detail: string, cause?: unknown): string =>
+  cause === undefined ? detail : `${detail}: ${cause instanceof Error ? cause.message : String(cause)}`;
 
 /** The request record v4's `NetworkError` carries, projected from an `HttpClientRequest` when there is one. */
 const toErrorRequest = (request?: HttpClientRequest.HttpClientRequest): AiError.NetworkError['request'] => ({
@@ -41,14 +42,22 @@ const toErrorRequest = (request?: HttpClientRequest.HttpClientRequest): AiError.
 });
 
 const networkError = (method: string, detail: string, options?: { request?: unknown; cause?: unknown }) =>
-  new AiError.NetworkError({
-    reason: 'TransportError',
-    request: toErrorRequest(HttpClientRequest.isHttpClientRequest(options?.request) ? options.request : undefined),
-    description: describe(method, detail, options?.cause),
+  new AiError.AiError({
+    module: MODULE,
+    method,
+    reason: new AiError.NetworkError({
+      reason: 'TransportError',
+      request: toErrorRequest(HttpClientRequest.isHttpClientRequest(options?.request) ? options.request : undefined),
+      description: describe(detail, options?.cause),
+    }),
   });
 
 const unknownError = (method: string, detail: string, cause?: unknown) =>
-  new AiError.UnknownError({ description: describe(method, detail, cause) });
+  new AiError.AiError({
+    module: MODULE,
+    method,
+    reason: new AiError.UnknownError({ description: describe(detail, cause) }),
+  });
 
 /**
  * OpenAI-style tool call (both Ollama and OpenAI endpoints emit a variant of this).
@@ -460,7 +469,7 @@ const parseToolArguments = (
   args: string | Record<string, unknown>,
   toolName: string,
   method: string,
-): Effect.Effect<unknown, AiError.InvalidOutputError> => {
+): Effect.Effect<unknown, AiError.AiError> => {
   if (typeof args !== 'string') {
     return Effect.succeed(args);
   }
@@ -470,8 +479,12 @@ const parseToolArguments = (
   return Effect.try({
     try: () => Tool.unsafeSecureJsonParse(args),
     catch: (cause) =>
-      new AiError.InvalidOutputError({
-        description: describe(method, `failed to parse tool call parameters for tool '${toolName}': ${args}`, cause),
+      new AiError.AiError({
+        module: MODULE,
+        method,
+        reason: new AiError.InvalidOutputError({
+          description: describe(`failed to parse tool call parameters for tool '${toolName}': ${args}`, cause),
+        }),
       }),
   });
 };
@@ -631,7 +644,7 @@ export const make = (model: string) =>
               orElse: () => networkError('generateText', `request timed out after ${Duration.format(requestTimeout)}`),
             }),
             Effect.catch((err) => {
-              if (err instanceof AiError.NetworkError) {
+              if (err instanceof AiError.AiError) {
                 return Effect.fail(err) as Effect.Effect<never, any, never>;
               }
               if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
@@ -701,7 +714,7 @@ export const make = (model: string) =>
                 orElse: () => networkError('streamText', `request timed out after ${Duration.format(requestTimeout)}`),
               }),
               Effect.catch((err) => {
-                if (err instanceof AiError.NetworkError) {
+                if (err instanceof AiError.AiError) {
                   return Effect.fail(err) as Effect.Effect<never, any, never>;
                 }
                 if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
@@ -900,8 +913,8 @@ export const make = (model: string) =>
                 }),
               ),
               Stream.flattenIterable,
-              Stream.catch((err): Stream.Stream<never, AiError.NetworkError | AiError.UnknownError, never> => {
-                if (err instanceof AiError.NetworkError || err instanceof AiError.UnknownError) {
+              Stream.catch((err): Stream.Stream<never, AiError.AiError, never> => {
+                if (err instanceof AiError.AiError) {
                   return Stream.fail(err);
                 }
                 return Stream.fail(unknownError('streamText', 'request failed', err));

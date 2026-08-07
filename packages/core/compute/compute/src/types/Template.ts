@@ -113,7 +113,7 @@ export const processTemplate = (
           }
 
           default: {
-            return yield* Effect.dieMessage(`Unsupported input kind: ${input.kind}`);
+            return yield* Effect.die(new Error(`Unsupported input kind: ${input.kind}`));
           }
         }
       }),

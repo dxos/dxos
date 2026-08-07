@@ -471,7 +471,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   #assertRunAndExitProcessActive(): Effect.Effect<void> {
     const { state, exit } = this.#currentStatus;
     if (state === Process.State.TERMINATED) {
-      return Effect.dieMessage('Process was terminated');
+      return Effect.die(new Error('Process was terminated'));
     }
     if (state === Process.State.FAILED) {
       const message = exit.pipe(

@@ -419,17 +419,21 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
           toolChoice: params.toolChoice as any,
           disableToolCallResolution: true,
         });
-        const response = yield* Schema.mutable(Schema.Array(Response.Part(toolkit)))
-          .pipe(Schema.encode)(upstreamResult.content)
-          .pipe(
-            Effect.catchTag('ParseError', (error) =>
-              AiError.MalformedOutput.fromParseError({
+        const response = yield* Schema.encodeEffect(Schema.mutable(Schema.Array(Response.Part(toolkit))))(
+          upstreamResult.content,
+        ).pipe(
+          Effect.catchTag('SchemaError', (error) =>
+            Effect.fail(
+              new AiError.AiError({
                 module: 'LanguageModel',
                 method: 'generateText',
-                error,
+                reason: new AiError.InvalidOutputError({
+                  description: `failed to encode response: ${error.message}`,
+                }),
               }),
             ),
-          );
+          ),
+        );
 
         const newConversation: FixtureConversation = {
           parameters: getFixtureConversationParameters(options.modelName, false, params),
@@ -475,23 +479,27 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
               .pipe(
                 withoutToolCallParising,
                 Stream.mapEffect((part) =>
-                  Schema.encode(PartCodec)(part).pipe(
-                    Effect.catchTag('ParseError', (error) =>
-                      AiError.MalformedOutput.fromParseError({
-                        module: 'LanguageModel',
-                        method: 'generateText',
-                        error,
-                      }),
+                  Schema.encodeEffect(PartCodec)(part).pipe(
+                    Effect.catchTag('SchemaError', (error) =>
+                      Effect.fail(
+                        new AiError.AiError({
+                          module: 'LanguageModel',
+                          method: 'generateText',
+                          reason: new AiError.InvalidOutputError({
+                            description: `failed to encode response: ${error.message}`,
+                          }),
+                        }),
+                      ),
                     ),
                   ),
                 ),
-                Stream.mapChunksEffect(
+                Stream.mapArrayEffect(
                   Effect.fnUntraced(function* (chunk) {
                     parts.push(...chunk);
                     return chunk;
                   }),
                 ),
-                Stream.onEnd(() =>
+                Stream.onEnd(
                   Effect.gen(function* () {
                     const conversation: FixtureConversation = {
                       parameters: getFixtureConversationParameters(options.modelName, true, params),
@@ -844,11 +852,11 @@ const throwErrorWithClosestMatch = (store: FixtureStore, conversation: FixtureCo
           'saved',
           'new',
         );
-        return yield* Effect.dieMessage(error(patch));
+        return yield* Effect.die(new Error(error(patch)));
       }
     }
 
-    return yield* Effect.dieMessage(error());
+    return yield* Effect.die(new Error(error()));
   });
 
 const error = (patch?: string) =>

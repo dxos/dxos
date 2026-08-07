@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.GetLinearTeams> = Li
       const connectionObj = connection.target;
       const db = connectionObj ? Obj.getDatabase(connectionObj) : undefined;
       if (!db) {
-        return yield* Effect.dieMessage('No database for connection ref.');
+        return yield* Effect.die(new Error('No database for connection ref.'));
       }
 
       return yield* Effect.gen(function* () {
