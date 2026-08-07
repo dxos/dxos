@@ -14,8 +14,8 @@ projects:
     summary: "Profile Composer's runtime memory usage — find what dominates the heap (main thread + workers), attribute it to subsystems, and queue fixes."
     tasks: .agents/projects/memory-usage/TASKS.md
     design: .agents/projects/memory-usage/DESIGN.md
-    prs: []
-    resume: 'Investigation complete (DESIGN.md composition model; RESEARCH.md industry comparison). Phase 3 code-residency fixes landed: ~2.9MB of resident code removed (~32MB memory) across onboarding assets, emoji-mart, mermaid, bip39, AI/MCP runtime, ML runtime, EVM client, welcome screen. Target 300-400MB resting. Next: Phase 4 idle churn (largest pool, ~51 SQL/s from four loops); Phase 2 payload retention is Linear DX-1148 (reverted from this PR, to land separately).'
+    prs: [12505]
+    resume: 'Investigation complete (DESIGN.md composition model; RESEARCH.md industry comparison). Phase 3 code-residency fixes landed: ~2.9MB of resident code removed (~32MB memory) across onboarding assets, emoji-mart, mermaid, bip39, AI/MCP runtime, ML runtime, EVM client, welcome screen. Target 300-400MB resting. PR #12505 OPEN (draft). Next: Phase 4 idle churn (largest pool, ~51 SQL/s from four loops); Phase 2 payload retention is Linear DX-1148 (reverted from this PR, to land separately).'
 
   - name: crm-pipeline-operations
     status: active
