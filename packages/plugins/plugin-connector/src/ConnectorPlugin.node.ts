@@ -7,9 +7,12 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Feed } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
 
-import { AppGraphBuilder, Commands, CreateObject, OperationHandler } from '#capabilities';
+// `Commands` comes from the node barrel directly: `connector oauth` needs a callback server, and
+// `#capabilities` resolves types through the browser barrel, which would pull that into the app.
+import { AppGraphBuilder, CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
+import { Commands } from './capabilities/node';
 import * as Connection from './types/Connection';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
