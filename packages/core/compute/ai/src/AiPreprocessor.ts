@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+// Side-effect import: the provider augments `Prompt.ReasoningPartOptions` with its `anthropic` key.
+import type {} from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -114,6 +116,9 @@ export const estimateTokens: (prompt: Prompt.Prompt) => Effect.Effect<number> = 
       }
       case 'tool': {
         for (const part of message.content) {
+          if (part.type !== 'tool-result') {
+            continue;
+          }
           totalTokens += TokenX.estimateTokenCount(part.name);
           totalTokens += TokenX.estimateTokenCount(JSON.stringify(part.result));
         }
@@ -143,6 +148,9 @@ const estimatePartTokens = (part: Prompt.UserMessagePart | Prompt.AssistantMessa
     case 'tool-result':
       return TokenX.estimateTokenCount(part.name) + TokenX.estimateTokenCount(JSON.stringify(part.result));
     case 'file':
+      return 0;
+    default:
+      // Approval request/response parts carry no content to estimate.
       return 0;
   }
 };
@@ -330,7 +338,7 @@ const makeToolResultPart = (
   block: Extract<ContentBlock.Any, { _tag: 'toolResult' }>,
   result: unknown,
   isFailure: boolean,
-): Prompt.ToolMessagePart =>
+): Prompt.ToolResultPart =>
   Prompt.makePart('tool-result', {
     id: block.toolCallId,
     name: block.name,
@@ -345,7 +353,7 @@ const makeToolResultPart = (
  */
 const buildToolResultPart = (
   block: Extract<ContentBlock.Any, { _tag: 'toolResult' }>,
-): Effect.Effect<Prompt.ToolMessagePart, PromptPreprocesorError, never> =>
+): Effect.Effect<Prompt.ToolResultPart, PromptPreprocesorError, never> =>
   Effect.gen(function* () {
     const hasError = block.error != null;
     const result = hasError
@@ -428,14 +436,15 @@ const convertAssistantMessagePart: (
           text: block.text,
         });
       case 'reasoning': {
-        const anthropicOptions = block.redactedText
-          ? { type: 'redacted_thinking' as const, redactedData: block.redactedText }
-          : block.signature
-            ? { type: 'thinking' as const, signature: block.signature }
-            : undefined;
+        const info: NonNullable<NonNullable<Prompt.ReasoningPartOptions['anthropic']>['info']> | undefined =
+          block.redactedText
+            ? { type: 'redacted_thinking', redactedData: block.redactedText }
+            : block.signature
+              ? { type: 'thinking', signature: block.signature }
+              : undefined;
         return Prompt.makePart('reasoning', {
           text: block.reasoningText ?? '',
-          ...(anthropicOptions ? { options: { anthropic: anthropicOptions } } : {}),
+          ...(info ? { options: { anthropic: { info } } } : {}),
         });
       }
 
@@ -586,6 +595,9 @@ const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
       const nextMessage = prompt.content[messageIndex + 1];
       if (nextMessage?.role === 'tool') {
         for (const toolResult of nextMessage.content) {
+          if (toolResult.type !== 'tool-result') {
+            continue;
+          }
           const idx = unsatisfiedToolCalls.findIndex((call) => call.id === toolResult.id);
           if (idx !== -1) {
             unsatisfiedToolCalls.splice(idx, 1);
@@ -702,6 +714,10 @@ const fixDuplicateToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
       case 'tool': {
         const filtered: Prompt.ToolMessagePart[] = [];
         for (const part of message.content) {
+          if (part.type !== 'tool-result') {
+            filtered.push(part);
+            continue;
+          }
           const next = processUserOrAssistantPart(part);
           if (next !== undefined) {
             filtered.push(next as any);

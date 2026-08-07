@@ -128,8 +128,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
           text: 'Let me think about this step by step...',
           options: {
             anthropic: {
-              type: 'thinking',
-              signature: 'reasoning_sig_1',
+              info: {
+                type: 'thinking',
+                signature: 'reasoning_sig_1',
+              },
             },
           },
         }),
@@ -154,8 +156,10 @@ describe('AiPreprocessor.preprocessPrompt', () => {
           text: '',
           options: {
             anthropic: {
-              type: 'redacted_thinking',
-              redactedData: '[Reasoning redacted]',
+              info: {
+                type: 'redacted_thinking',
+                redactedData: '[Reasoning redacted]',
+              },
             },
           },
         }),
@@ -342,7 +346,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       const result = yield* Effect.result(AiPreprocessor.preprocessPrompt([message]));
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -438,7 +442,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -579,7 +583,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -594,7 +598,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       const result = yield* Effect.result(AiPreprocessor.preprocessPrompt([message]));
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+        expect(result.failure).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
