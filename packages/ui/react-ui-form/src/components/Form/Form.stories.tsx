@@ -19,7 +19,13 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../../annotations';
+import {
+  AutofillAnnotation,
+  OptionsLookupAnnotation,
+  PlaceholderAnnotation,
+  autofill,
+  optionsLookup,
+} from '../../annotations';
 import { Organization, Person, TestLayout } from '../../testing';
 import { type ExcludeId, omitId } from '../../util';
 import { Form, type FormRootProps } from './Form';
@@ -247,10 +253,17 @@ const isValidUrl = Schema.is(Format.URL);
 
 // Base struct (no dynamic annotations) — its value type drives the typed `deps`/`values` below.
 const DynamicFieldsBase = Schema.Struct({
-  query: Schema.String.annotations({ title: 'Query', description: 'Type to load the choices below.' }),
+  // `description` documents the field (tooltip on the label); `PlaceholderAnnotation` is the input hint.
+  query: Schema.String.pipe(
+    PlaceholderAnnotation.set('Search term'),
+    Schema.annotations({ title: 'Query', description: 'Type to load the choices below.' }),
+  ),
   choice: Schema.optional(Schema.String),
   tag: Schema.optional(Schema.String),
-  url: Format.URL.annotations({ title: 'URL', description: 'A valid URL auto-fills the name below.' }),
+  url: Format.URL.pipe(
+    PlaceholderAnnotation.set('https://example.com/feed.xml'),
+    Schema.annotations({ title: 'URL', description: 'A valid URL auto-fills the name below.' }),
+  ),
   name: Schema.optional(Schema.String),
 });
 type DynamicFieldsValues = Schema.Schema.Type<typeof DynamicFieldsBase>;

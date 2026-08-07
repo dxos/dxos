@@ -6,6 +6,14 @@ import type * as Effect from 'effect/Effect';
 
 import { createAnnotationHelper } from '@dxos/echo/internal';
 
+/**
+ * Ghost text shown in an empty input. Kept separate from the schema's `description` annotation, which
+ * documents the field (surfaced as a tooltip on the label) rather than hinting at its input format —
+ * the two were previously overloaded onto `description`, so a field could not have both.
+ */
+export const PlaceholderAnnotationId = Symbol.for('@dxos/schema/annotation/Placeholder');
+export const PlaceholderAnnotation = createAnnotationHelper<string>(PlaceholderAnnotationId);
+
 /** One selectable option produced by an {@link OptionsLookup}. */
 export type OptionsLookupEntry = { value: string; label?: string; secondaryLabel?: string; icon?: string };
 

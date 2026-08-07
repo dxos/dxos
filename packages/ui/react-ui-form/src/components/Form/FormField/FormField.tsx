@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
+import { AutofillAnnotation, OptionsLookupAnnotation, PlaceholderAnnotation } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';
@@ -113,9 +113,13 @@ export const FormField = (props: FormFieldProps) => {
     () => labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
     [labelProp, title, name],
   );
+  // `description` is deliberately absent: it documents the field (surfaced as a tooltip on the label),
+  // so using it as ghost text would overload one annotation with two jobs — set `PlaceholderAnnotation`
+  // for an input hint.
+  const placeholderAnnotation = Option.getOrUndefined(PlaceholderAnnotation.getFromAst(type));
   const placeholder = useMemo(
-    () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
-    [examples, description, label, t],
+    () => placeholderAnnotation ?? (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : label),
+    [placeholderAnnotation, examples, label, t],
   );
 
   // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so

@@ -13,23 +13,22 @@ import { SchemaEx } from '@dxos/effect';
  * Base schema.
  */
 export const BaseProperty = Schema.Struct({
+  // No `description` annotations below: a form renders a description as field documentation (a tooltip on
+  // the label), and each of these only restated its own title as placeholder text.
   property: SchemaEx.JsonProp.annotations({
     title: 'Property',
-    description: 'Property name',
   }),
 
   // TODO(wittjosiah): Rename label?
   title: Schema.optional(
     Schema.String.annotations({
       title: 'Label',
-      description: 'Property label',
     }),
   ),
 
   description: Schema.optional(
     Schema.String.annotations({
       title: 'Description',
-      description: 'Property description',
     }),
   ),
 });
@@ -81,12 +80,11 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   [Format.TypeFormat.Ref]: extend(Format.TypeFormat.Ref, TypeEnum.Ref, {
     referenceSchema: Schema.NonEmptyString.annotations({
       title: 'Record type',
-      description: 'Name of the record type',
     }),
     referencePath: Schema.optional(
       SchemaEx.JsonProp.annotations({
         title: 'Lookup property',
-        description: 'Referenced property',
+        description: 'Property of the referenced record shown as its label.',
       }),
     ),
   }),
@@ -115,14 +113,12 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   [Format.TypeFormat.SingleSelect]: extend(Format.TypeFormat.SingleSelect, TypeEnum.String, {
     options: Schema.Array(SelectOption).annotations({
       title: 'Options',
-      description: 'Available choices',
     }),
   }),
 
   [Format.TypeFormat.MultiSelect]: extend(Format.TypeFormat.MultiSelect, TypeEnum.Object, {
     options: Schema.Array(SelectOption).annotations({
       title: 'Options',
-      description: 'Available choices',
     }),
   }),
 
