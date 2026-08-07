@@ -22,8 +22,8 @@ import { Button, DropdownMenu, Icon, Input, ThemedClassName, useTranslation } fr
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
+import hero from '../../../assets/hero.webp?url';
 import { meta } from '../../meta';
-import { hero } from './hero-image';
 import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
 
 const supportsPasskeys =
