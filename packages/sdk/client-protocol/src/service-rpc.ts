@@ -6,7 +6,6 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
 import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import type * as EffectRpc from 'effect/unstable/rpc/Rpc';
@@ -17,6 +16,7 @@ import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { runServiceCall } from '@dxos/protocols';
 import {
@@ -143,7 +143,7 @@ export type ClientRpcServerParams = {
    * Pre-built server protocol (the value the {@link RpcServer.Protocol} tag resolves to — e.g. handed
    * to a worker-framework session via effect context). Provide this or {@link port}.
    */
-  protocol?: RpcServer.Protocol['Type'];
+  protocol?: RpcServer.Protocol['Service'];
   /**
    * Resolved per call so the served set follows the host lifecycle (services host open/close).
    */
@@ -400,22 +400,20 @@ export const makeRpcFromServices = (services: () => Partial<ClientServices>): Cl
  * Unbounded buffering matches the push semantics of the source stream.
  */
 export const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, Error> =>
-  Stream.asyncScoped<T, Error>(
-    (emit) =>
-      Effect.acquireRelease(Effect.try({ try: open, catch: toError }), (stream) =>
-        Effect.promise(async () => stream.close()),
-      ).pipe(
-        Effect.tap((stream) =>
-          Effect.sync(() => {
-            stream.subscribe(
-              (data) => void emit.single(data),
-              (err) => void (err ? emit.fail(toError(err)) : emit.end()),
-            );
-          }),
-        ),
-      ),
-    'unbounded',
-  );
+  EffectEx.streamFromEmitter<T, Error>((emit) => {
+    let source: PbStream<T>;
+    try {
+      source = open();
+    } catch (err) {
+      emit.fail(toError(err));
+      return;
+    }
+    source.subscribe(
+      (data) => void emit.single(data),
+      (err) => void (err ? emit.fail(toError(err)) : emit.end()),
+    );
+    return Effect.promise(async () => source.close());
+  });
 
 /**
  * Adapts an effect stream to a protobuf service stream.
@@ -431,10 +429,10 @@ export const streamToPbStream = <T>(runtime: Context.Context<never>, stream: Str
           Effect.sync(() => close(Cause.hasInterruptsOnly(cause) ? undefined : toError(Cause.squash(cause)))),
         onSuccess: () => Effect.sync(() => close()),
       }),
-      Runtime.runFork(runtime),
+      Effect.runForkWith(runtime),
     );
 
     return () => {
-      fiber.unsafeInterruptAsFork(fiber.id());
+      fiber.interruptUnsafe();
     };
   });

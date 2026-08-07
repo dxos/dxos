@@ -22,11 +22,11 @@ export type WorkerSessionProps = {
    * Reverse-direction (worker→tab) protocol serving the tab's {@link BridgeService} (WebRTC transport)
    * over effect-rpc. The worker is the client; the tab is the runner.
    */
-  systemProtocol: RpcClient.Protocol['Type'];
+  systemProtocol: RpcClient.Protocol['Service'];
   /**
    * Forward-direction (tab→worker) protocol over which the worker serves the client services.
    */
-  appProtocol: RpcServer.Protocol['Type'];
+  appProtocol: RpcServer.Protocol['Service'];
   // TODO(wittjosiah): Remove shellPort.
   shellPort?: MessagePort;
   readySignal: Trigger<Error | undefined>;
@@ -43,7 +43,7 @@ export class WorkerSession {
   private readonly _shellClientRpc?: ClientRpcServer;
   private readonly _startTrigger = new Trigger();
   private readonly _serviceHost: ClientServicesHost;
-  private readonly _systemProtocol: RpcClient.Protocol['Type'];
+  private readonly _systemProtocol: RpcClient.Protocol['Service'];
   #closeBridge?: () => Promise<void>;
 
   public readonly onClose = new Callback<() => Promise<void>>();

@@ -80,7 +80,7 @@ export const makeBridgeServiceClient = async (
  * via effect context) rather than a raw {@link MessagePort}.
  */
 export const makeBridgeServiceClientOverProtocol = async (
-  protocol: RpcClient.Protocol['Type'],
+  protocol: RpcClient.Protocol['Service'],
 ): Promise<{ bridgeService: BridgeServiceRpc; close: () => Promise<void> }> =>
   bridgeServiceClientFromEffect((scope) =>
     Rpc.makeClientOverProtocol(Layer.succeed(RpcClient.Protocol, protocol), BridgeService.Rpcs).pipe(
@@ -95,14 +95,13 @@ const bridgeServiceClientFromEffect = async (
   const scope = Effect.runSync(Scope.make());
   const client = (await EffectEx.runPromise(makeClient(scope))) as BridgeService.Client;
 
-  const bridge = client.BridgeService;
   const bridgeService: BridgeServiceRpc = {
-    open: (request) => streamToPbStream(Context.empty(), bridge.open(request)),
-    sendSignal: (request) => EffectEx.runPromise(bridge.sendSignal(request)),
-    sendData: (request) => EffectEx.runPromise(bridge.sendData(request)),
-    close: (request) => EffectEx.runPromise(bridge.close(request)),
-    getDetails: (request) => EffectEx.runPromise(bridge.getDetails(request)),
-    getStats: (request) => EffectEx.runPromise(bridge.getStats(request)),
+    open: (request) => streamToPbStream(Context.empty(), client['BridgeService.open'](request)),
+    sendSignal: (request) => EffectEx.runPromise(client['BridgeService.sendSignal'](request)),
+    sendData: (request) => EffectEx.runPromise(client['BridgeService.sendData'](request)),
+    close: (request) => EffectEx.runPromise(client['BridgeService.close'](request)),
+    getDetails: (request) => EffectEx.runPromise(client['BridgeService.getDetails'](request)),
+    getStats: (request) => EffectEx.runPromise(client['BridgeService.getStats'](request)),
   };
 
   return {
