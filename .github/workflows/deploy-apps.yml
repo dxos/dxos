@@ -61,7 +61,7 @@ jobs:
   #   release  — cut a versioned Composer release (production + Composer in the set).
   #   bundle   — build the shared Composer bundle (Composer in the set).
   #   tauri    — signed native build (Composer in the set — every environment ships a desktop app).
-  #   ios      — also build iOS (every environment except the scheduled nightly).
+  #   ios      — also build iOS (`dev` only — see the `ios` input on deploy-tauri.yaml).
   plan:
     if: github.repository == 'dxos/dxos'
     runs-on: ubuntu-latest
@@ -77,7 +77,6 @@ jobs:
         env:
           IN_ENV: ${{ inputs.environment }}
           IN_APP: ${{ inputs.app }}
-          EVENT: ${{ github.event_name }}
         run: |
           # Resolve the environment: the dispatch input, else `nightly` (the scheduled run).
           env="${IN_ENV:-nightly}"
@@ -85,14 +84,11 @@ jobs:
 
           # Does Composer participate? (drives release / bundle / tauri).
           composer=false; if [ "$app" = all ] || [ "$app" = composer ]; then composer=true; fi
-          # Manual dispatch vs the nightly schedule (gates the iOS half of the native build — nothing
-          # consumes a daily .ipa, and it costs 90 minutes of macOS runner).
-          dispatched=false; if [ "$EVENT" = workflow_dispatch ]; then dispatched=true; fi
 
           release=false; if [ "$env" = production ] && [ "$composer" = true ]; then release=true; fi
           bundle="$composer"
           tauri="$composer"
-          ios=false;     if [ "$composer" = true ] && [ "$dispatched" = true ]; then ios=true; fi
+          ios=false;     if [ "$composer" = true ] && [ "$env" = dev ]; then ios=true; fi
 
           {
             echo "env=$env"
@@ -364,10 +360,9 @@ jobs:
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
   # Desktop/mobile build for Composer — every environment ships a desktop app, so dogfooders on the
-  # nightly channel get the same daily build the web deploy does. iOS is skipped on the scheduled nightly
-  # (see the `ios` input). CrabNebula channel is derived from the environment inside the reusable workflow;
-  # iOS → App Store Connect happens on `dev` only, since TestFlight has a single environment. On production
-  # it builds the bumped release commit.
+  # nightly channel get the same daily build the web deploy does. iOS ships on `dev` alone for now (see the
+  # `ios` input). CrabNebula channel is derived from the environment inside the reusable workflow. On
+  # production it builds the bumped release commit.
   tauri:
     needs: [plan, release, build-bundle]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' && needs.plan.outputs.tauri == 'true' }}

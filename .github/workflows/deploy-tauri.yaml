@@ -17,12 +17,13 @@ on:
         type: string
         default: ''
       ios:
-        # TestFlight has a single environment, so only `dev` uploads there — but staging/production still
-        # build iOS for CrabNebula. The scheduled nightly opts out: a 90-minute macOS build every day for
-        # an artifact nothing consumes is the one case where the cost buys nothing.
-        description: Build the iOS app (desktop always builds).
+        # Only `dev` builds iOS today, and it goes to TestFlight. The app is not shipped yet, so there is
+        # nothing for the other environments to release to and no reason to spend 90 minutes of macOS
+        # runner on them. TODO(wittjosiah): once the app ships — nightly and staging on their own TestFlight
+        # streams, production to the App Store.
+        description: Build the iOS app and upload it to TestFlight (desktop always builds).
         type: boolean
-        default: true
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ inputs.environment }}
@@ -447,8 +448,6 @@ jobs:
 
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
-        # TODO(wittjosiah): Switch to staging? Need to figure out TestFlight -> App Store release process.
-        if: inputs.environment == 'dev'
         run: |
           xcrun altool \
             --upload-app \

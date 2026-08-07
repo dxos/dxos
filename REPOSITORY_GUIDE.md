@@ -221,14 +221,14 @@ check without touching local refs at all: `git ls-remote --tags origin 'composer
 
 | Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                             |
 | -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | --------------------------------- |
-| **dev**        | `composer-dev…`          | EDGE nightly | manual → `dev`                    | composer              | desktop + iOS; iOS → TestFlight   |
-| **nightly**    | `nightly.composer.space` | EDGE prod    | auto, 08:00 UTC daily from `main` | all `nightly`-enabled | dogfood build; desktop, no iOS    |
+| **dev**        | `composer-dev…`          | EDGE nightly | manual → `dev`                    | composer              | desktop + iOS → TestFlight        |
+| **nightly**    | `nightly.composer.space` | EDGE prod    | auto, 08:00 UTC daily from `main` | all `nightly`-enabled | dogfood build; desktop only       |
 | **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused         |
 | **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release |
 
 Local dev talks to EDGE nightly by default; point it at EDGE dev or a local EDGE with `DX_EDGE_BASE_URL`.
 
-Every environment ships a **desktop** Composer on its own CrabNebula channel, so a dogfooder on nightly gets the same daily build the web deploy does. **iOS** builds alongside it everywhere except the scheduled nightly — nothing consumes a daily `.ipa` — and only `dev` uploads to TestFlight, which has a single environment.
+Every environment ships a **desktop** Composer on its own CrabNebula channel, so a dogfooder on nightly gets the same daily build the web deploy does. **iOS** builds on `dev` alone and goes to TestFlight; the app is not shipped yet, so the other environments have nothing to release to. Once it ships, the intent is nightly and staging on their own TestFlight streams and production on the App Store.
 
 **Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop + iOS via `deploy-tauri.yaml`, CrabNebula). This is the only path that advances Composer's version — it is not a Changesets package.
 
