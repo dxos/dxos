@@ -61,65 +61,70 @@ finding 2 — barrels and module-scope imports of lazily-used values.
 
 ## Phase 4: Idle churn
 
-An idle tab issues ~51 SQLite statements per second across four loops
-(DESIGN.md inventory). The churn keeps allocator pages committed, which is the
-largest single slice of the composition model (~380 MB per GB including V8
-headroom). Sequence the work so each step can be measured on its own.
+An idle tab issues ~51 SQLite statements per second. The churn keeps allocator
+pages committed, which is the largest single slice of the composition model
+(~380 MB per GB including V8 headroom). The win appears in footprint (RSS), not
+in heap-used, so measure with `scripts/memory/soak.mjs` rather than a snapshot.
 
-### Background for whoever picks this up
+### Sites — what actually ticks
 
-Each tick allocates request/response objects, serialized payloads and SQL row
-buffers across three threads, then frees them milliseconds later. The objects
-die; the pages they lived in stay committed because the allocator expects the
-next tick. Reducing tick _frequency_ matters as much as reducing per-tick
-work, and the win only shows in footprint (RSS), not in heap-used — so measure
-with the soak harness, not a heap snapshot.
+Four independent loops. Each needs its own decision; they do not have to be
+fixed the same way.
 
-### Tasks
-
-- [ ] **`TriggerDispatcher` (largest, clearly wrong when empty)** —
+- [ ] **S1. `TriggerDispatcher` fires at 1 Hz with no triggers defined.**
       `compute-runtime/src/triggers/trigger-dispatcher.ts`: `livePollInterval`
-      defaults to 1 s (line ~300) and `_startNaturalTimeProcessing` repeats
-      `invokeScheduledTriggers` on `Schedule.fixed` (line ~921), which also
-      runs an ECHO `Filter.type(Trigger)` query every tick. It is started by
-      plugin-routine, a _core_ plugin, so every tab pays it even with zero
-      triggers. Make it event-driven: no timer when the trigger set is empty,
-      and sleep to the next due time when triggers exist rather than waking at
-      1 Hz. Watch for triggers added while idle (subscribe to the query) and
-      for clock changes.
-- [ ] **Visibility gating** — pause or stretch every poll when
-      `document.hidden`, and resume on `visibilitychange`. Chrome already
-      freezes hidden CPU-heavy tabs (RESEARCH.md), so the app should degrade
-      predictably rather than being frozen mid-tick. Applies to all four
-      loops; the client worker keeps running, so the gate belongs where the
-      loop is owned, not only in the page.
-- [ ] **Coordinate feed polls** — `echo-client/src/feed/feed-handle.ts`
-      (`POLLING_INTERVAL` 1 s, `beginPolling`): every subscribed feed runs its
-      own timer and its own refresh RPC. Multiplex into one scheduler that
-      batches all due feeds into a single round-trip, with per-feed backoff
-      when a refresh returns no change (1 s → 5 s → 30 s, reset on change or
-      on local write). `DatabaseImpl`'s 2 s feed-sync-state poll
-      (`proxy-db/database.ts`, `FEED_SYNC_POLL_INTERVAL`) should ride the same
-      scheduler.
-- [ ] **Verify query invalidation narrows** — `echo-host`'s
-      `QueryService._executeQueries` re-runs every _dirty_ query per
-      invalidation hint, and `matchesHint` is deliberately conservative
-      (returns true for traversals, text search, unions, and any unconstrained
-      dimension). Measure how many reactive queries re-execute per tick in a
-      real profile; if most are conservative matches, tighten the hint for the
-      common shapes before optimizing anything else.
-- [ ] **Attribute allocation rate per loop** — disable each loop in turn and
-      sample with the harness (`sample-allocs`), so the ordering above is
-      confirmed by data rather than by size of code.
-- [ ] **Push over poll (the real fix)** — the client asks EDGE "anything new?"
-      once per second per feed and is almost always told no. Invert it: one
-      persistent connection, EDGE notifies on change (or pushes the delta), an
-      idle tab does no work at all. This is feed-live-objects stage 4; the
-      memory win rides that roadmap item rather than being duplicated here.
-- [ ] **Verify decommit** — after each step, soak an idle tab and confirm
-      renderer RSS trends toward live size instead of plateauing at the
-      high-water mark. Chrome decommits lazily, so expect the change to appear
-      over minutes, not immediately.
+      defaults to 1 s (~line 300), `_startNaturalTimeProcessing` repeats
+      `invokeScheduledTriggers` on `Schedule.fixed` (~line 921), and each tick
+      also runs an ECHO `Filter.type(Trigger)` query. Started by plugin-routine,
+      a core plugin, so every tab pays it.
+- [ ] **S2. Every subscribed feed polls at 1 Hz.**
+      `echo-client/src/feed/feed-handle.ts` (`POLLING_INTERVAL`,
+      `beginPolling`): one timer and one refresh RPC per feed handle, so cost
+      scales with feeds open (a mailbox is the common case).
+- [ ] **S3. Each open space polls sync state at 2 s.**
+      `echo-client/src/proxy-db/database.ts` (`FEED_SYNC_POLL_INTERVAL`):
+      aggregates block backlog across namespaces.
+- [ ] **S4. Query re-execution amplifies every tick.** `echo-host`'s
+      `QueryService._executeQueries` re-runs each dirty reactive query per
+      invalidation hint; the loops above generate hints, which is what turns
+      three timers into the observed SQL fan-out.
+
+### Remedies — options to evaluate per site
+
+Independent of each other; some sites may want none, one, or several.
+
+- [ ] **R1. Event-driven scheduling.** Replace a fixed tick with "wake when
+      there is something to do": no timer while the working set is empty, and
+      sleep to the next due time otherwise. Fits S1 directly. Needs a
+      subscription so work arriving while idle still starts, and care around
+      clock changes.
+- [ ] **R2. No-change backoff.** Widen the interval while a poll keeps
+      returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
+      write. Fits S2 and S3. Costs staleness after a quiet period, so pair it
+      with an explicit refresh on user action.
+- [ ] **R3. Coordinated scheduling.** One scheduler batching all due work into
+      a single round-trip instead of N independent timers. Fits S2 and S3
+      together; the win is fewer wakeups and fewer payloads, not a longer
+      interval.
+- [ ] **R4. Visibility gating.** Pause or stretch while `document.hidden`,
+      resume on `visibilitychange`. Applies to every site, and is the cheapest
+      change, but only helps background tabs. Note the client worker keeps
+      running, so the gate belongs where each loop is owned.
+- [ ] **R5. Narrower invalidation.** Tighten `matchesHint` for common query
+      shapes so a tick re-runs fewer queries. Addresses S4 without changing any
+      timer.
+- [ ] **R6. Push over poll.** A persistent connection where EDGE notifies on
+      change, so an idle tab does no work at all. Supersedes R1–R3 for S2 and
+      S3. Lands with feed-live-objects stage 4 rather than here.
+
+### Sequencing
+
+- [ ] **Measure first.** Attribute allocation rate per site (disable each in
+      turn, sample) so remedies are chosen against data, not code size.
+- [ ] **Then decide per site**, recording the choice and its cost here.
+- [ ] **Verify decommit after each change**: renderer RSS should trend toward
+      live size at idle rather than plateauing at the high-water mark. Chrome
+      decommits lazily, so allow minutes.
 
 ## Phase 5: Wasm and native
 
