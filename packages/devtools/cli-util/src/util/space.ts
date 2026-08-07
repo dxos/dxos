@@ -44,10 +44,10 @@ export const spaceLayer = (
 
     // Resolution order when fallbackToPersonalSpace is true:
     //   1. the explicit spaceId arg (if provided);
-    //   2. the space tagged `org.dxos.space.personal`;
+    //   2. the space designated as personal by the settings space;
     //   3. the first available space.
-    // This keeps profiles created outside composer-app (which is what creates
-    // the personal-space tag on identity creation) usable — the alternative
+    // This keeps profiles created outside composer-app (which is what designates
+    // a personal space on identity creation) usable — the alternative
     // is a "Space not found" throw deep inside CredentialsService.
     const resolveSpace = () => {
       if (!fallbackToPersonalSpace) {

@@ -18,7 +18,6 @@ import type * as SpaceCapabilities from './types/SpaceCapabilities';
 // Constants
 //
 
-const PERSONAL_SPACE_LABEL: Label = ['personal-space.label', { ns: meta.profile.key }];
 const UNNAMED_SPACE_LABEL: Label = ['unnamed-space.label', { ns: meta.profile.key }];
 
 export const SPACES = `${meta.profile.key}-spaces`;
@@ -47,13 +46,9 @@ export const makeCreateObjectEntryForDatabaseType = (type: Type.AnyObj): SpaceCa
 /** Returns the display label for a space (name, namesCache entry, or fallback). */
 export const getSpaceDisplayName = (
   space: Space,
-  { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
+  { namesCache = {} }: { namesCache?: Record<string, string> } = {},
 ): Label => {
   return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name!
-    : namesCache[space.id]
-      ? namesCache[space.id]
-      : personal
-        ? PERSONAL_SPACE_LABEL
-        : UNNAMED_SPACE_LABEL;
+    : (namesCache[space.id] ?? UNNAMED_SPACE_LABEL);
 };

@@ -6,6 +6,7 @@ import React, { memo, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Carousel, useTranslation } from '@dxos/react-ui';
 
@@ -25,11 +26,12 @@ type SpaceScopedProps = {
 /**
  * Home content contributor: the Welcome carousel on the personal space. Kept mounted (toggled
  * `hidden` when dismissed) so the cross-origin Stream iframe is not torn down and re-created on
- * every show/hide — that remount froze the UI. Renders nothing on non-personal spaces.
+ * every show/hide — that remount froze the UI. Renders nothing on other spaces.
  */
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
-  const isPersonal = !!space && AppSpace.isPersonalSpace(space);
-  const [dismissed] = useWelcomeDismissed(space);
+  const client = useClient();
+  const isPersonal = !!space && space.id === AppSpace.getPersonalSpace(client)?.id;
+  const [dismissed] = useWelcomeDismissed();
   if (!isPersonal) {
     return null;
   }

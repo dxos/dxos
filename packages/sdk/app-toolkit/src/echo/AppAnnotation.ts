@@ -17,6 +17,15 @@ export const RootCollectionAnnotation = Annotation.make({
   schema: Ref.Ref(Collection.Collection),
 });
 
+/**
+ * Id of the space the user has designated as their personal space. Stored on the settings space's
+ * `properties` so the choice replicates across devices and can be repointed at any space.
+ */
+export const PersonalSpaceAnnotation = Annotation.make({
+  id: 'org.dxos.space.personalSpace',
+  schema: Schema.String,
+});
+
 /** Skill keys associated with a schema type. Used by AI companion to auto-load skills. */
 export const SkillsAnnotation = Annotation.make<string[]>({
   id: 'org.dxos.annotation.skills',

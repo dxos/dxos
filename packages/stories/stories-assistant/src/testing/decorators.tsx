@@ -204,14 +204,16 @@ const buildPluginManagerOptions = ({
 
             yield* Effect.promise(() => client.halo.createIdentity());
 
-            // Tag the space as personal: plugin-space only contributes space graph nodes (and thus
-            // the collection/object nodes that back object-scoped actions like the comment toolbar)
-            // when a personal space exists. Tags cannot be added retroactively, so set it at creation
-            // — the `options` (2nd) argument carries tags, distinct from the space's properties.
-            const space = yield* Effect.promise(() =>
-              client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),
+            // Designate the space as personal so object-scoped actions (e.g. the comment toolbar)
+            // resolve a default space. Tags cannot be added retroactively, so the settings space is
+            // tagged at creation — the `options` (2nd) argument carries tags, distinct from properties.
+            const settingsSpace = yield* Effect.promise(() =>
+              client.spaces.create({ name: 'Settings' }, { tags: [AppSpace.SETTINGS_SPACE_TAG] }),
             );
+            yield* Effect.promise(() => settingsSpace.waitUntilReady());
+            const space = yield* Effect.promise(() => client.spaces.create({ name: 'Personal' }));
             yield* Effect.promise(() => space.waitUntilReady());
+            AppSpace.setPersonalSpaceId(settingsSpace, space.id);
 
             // Add tokens.
             for (const accessToken of accessTokens) {

@@ -205,11 +205,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const spacesAtom = CreateAtom.fromObservable(client.spaces);
 
         const spaces = get(spacesAtom);
-        const personalSpace = AppSpace.getPersonalSpace(client);
-
-        if (!spaces || !personalSpace) {
+        if (!spaces) {
           return Effect.succeed([]);
         }
+
+        // Cross-space ordering lives in the settings space; before it exists (or before the
+        // migration has run) spaces simply render in their natural order.
+        const settingsSpace = AppSpace.getSettingsSpace(client);
 
         const [settingsAtom] = get(settingsCapAtom);
         if (!settingsAtom) {
@@ -220,9 +222,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const ephemeralState = get(ephemeralAtom);
 
         try {
-          const [spacesOrder] = get(
-            personalSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom,
-          );
+          const [spacesOrder] = settingsSpace
+            ? get(settingsSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom)
+            : [undefined];
           const [appGraph] = get(appGraphAtom);
           if (!appGraph) {
             return Effect.succeed([]);
@@ -249,15 +251,16 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => spaceStates[idx] === SpaceState.SPACE_READY)
+              // Internal spaces (settings, filesystem mirrors) carry a tag and are hidden; the
+              // legacy personal tag stays allowed so pre-migration profiles keep their space.
               .filter(
                 (space) =>
-                  space.tags.length === 0 || AppSpace.isPersonalSpace(space) || AppSpace.isExemplarSpace(space),
+                  space.tags.length === 0 || AppSpace.isLegacyPersonalSpace(space) || AppSpace.isExemplarSpace(space),
               )
               .map((space) =>
                 constructSpaceNode({
                   space,
                   navigable: ephemeralState.navigableCollections,
-                  personal: AppSpace.isPersonalSpace(space),
                   namesCache: state.spaceNames,
                   graph,
                   spacesOrder,
@@ -326,14 +329,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 const constructSpaceNode = ({
   space,
   navigable = false,
-  personal,
   namesCache,
   graph,
   spacesOrder,
 }: {
   space: Space;
   navigable?: boolean;
-  personal?: boolean;
   namesCache?: Record<string, string>;
   graph?: Graph.ExpandableGraph;
   spacesOrder?: Obj.Any;
@@ -366,7 +367,7 @@ const constructSpaceNode = ({
     cacheable: AppNode.CACHEABLE_PROPS,
     data: space,
     properties: {
-      label: getSpaceDisplayName(space, { personal, namesCache }),
+      label: getSpaceDisplayName(space, { namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
       hue: space.state.get() === SpaceState.SPACE_READY && space.properties.hue,
       icon:

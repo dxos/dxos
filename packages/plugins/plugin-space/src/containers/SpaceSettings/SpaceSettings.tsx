@@ -4,9 +4,8 @@
 
 import React from 'react';
 
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -20,9 +19,19 @@ export type SpaceSettingsProps = {
   onOpenSpaceSettings?: (space: Space) => void;
   settings?: Settings.Settings;
   onSettingsChange?: (updater: (prev: Settings.Settings) => Settings.Settings) => void;
+  /** Id of the space currently designated as the personal space. */
+  personalSpaceId?: string;
+  onPersonalSpaceChange?: (spaceId: string) => void;
 };
 
-export const SpaceSettings = ({ spaces, onOpenSpaceSettings, settings, onSettingsChange }: SpaceSettingsProps) => {
+export const SpaceSettings = ({
+  spaces,
+  onOpenSpaceSettings,
+  settings,
+  onSettingsChange,
+  personalSpaceId,
+  onPersonalSpaceChange,
+}: SpaceSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
@@ -41,6 +50,27 @@ export const SpaceSettings = ({ spaces, onOpenSpaceSettings, settings, onSetting
             </Form.Row>
           </Form.Section>
           <Form.Section title={t('space-settings.label')} description={t('space-settings.description')}>
+            <Form.Row label={t('settings.personal-space.label')} description={t('settings.personal-space.description')}>
+              <Select.Root
+                value={personalSpaceId}
+                onValueChange={(value) => onPersonalSpaceChange?.(value)}
+                disabled={!onPersonalSpaceChange}
+              >
+                <Select.TriggerButton placeholder={t('settings.personal-space.placeholder')} />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {spaces?.map((space) => (
+                        <Select.Option key={space.id} value={space.id}>
+                          {toLocalizedString(getSpaceDisplayName(space), t)}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                    <Select.Arrow />
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            </Form.Row>
             <Form.Row label={t('settings.space-list.label')} description={t('settings.space-list.description')}>
               <Listbox.Root>
                 <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
@@ -48,12 +78,7 @@ export const SpaceSettings = ({ spaces, onOpenSpaceSettings, settings, onSetting
                     <Listbox.Item key={space.id} id={space.id} classNames='w-full gap-2 items-center'>
                       {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
                       <Listbox.ItemLabel classNames='min-h-0!'>
-                        {toLocalizedString(
-                          getSpaceDisplayName(space, {
-                            personal: AppSpace.isPersonalSpace(space),
-                          }),
-                          t,
-                        )}
+                        {toLocalizedString(getSpaceDisplayName(space), t)}
                       </Listbox.ItemLabel>
                       <IconButton
                         icon='ph--faders--regular'

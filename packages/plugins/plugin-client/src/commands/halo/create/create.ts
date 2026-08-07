@@ -44,12 +44,21 @@ export const handler = Effect.fn(function* ({
     yield* invoke(ClientOperation.CreateAgent);
   }
 
-  // Create personal space for the CLI identity.
+  // Create the settings space (app configuration) and the personal space for the CLI identity.
+  const settingsSpace = yield* Effect.promise(() =>
+    client.spaces.create(
+      { name: 'Settings' },
+      { tags: [AppSpace.SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED },
+    ),
+  );
+  yield* Effect.promise(() => settingsSpace.waitUntilReady());
+
   const space = yield* Effect.promise(() =>
-    client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+    client.spaces.create({ name: 'Personal' }, { membershipPolicy: MembershipPolicy.LOCKED }),
   );
   yield* Effect.promise(() => space.waitUntilReady());
   yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+  AppSpace.setPersonalSpaceId(settingsSpace, space.id);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 
   if (json) {

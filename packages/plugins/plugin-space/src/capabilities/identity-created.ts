@@ -13,14 +13,17 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
+import { PERSONAL_SPACE_NAME, ensureSettingsSpace } from '../settings-space';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
 
+    // Created private (locked at genesis) but otherwise an ordinary space: it carries its own name
+    // rather than a tag the rest of the app special-cases.
     const personalSpace = yield* Effect.tryPromise(() =>
-      client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+      client.spaces.create({ name: PERSONAL_SPACE_NAME }, { membershipPolicy: MembershipPolicy.LOCKED }),
     );
     yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
     // Boot-waterfall milestone: the default space is usable from here (first-run path).
@@ -35,6 +38,14 @@ export default Capability.makeModule(
       }
     });
 
-    return Capability.contribute(SpaceCapabilities.PersonalSpace, personalSpace);
+    // The cross-space ordering object is owned by `spaces-ready`, which also repairs it for
+    // profiles that predate the settings space — creating it here too would race with that.
+    const settingsSpace = yield* ensureSettingsSpace(client);
+    AppSpace.setPersonalSpaceId(settingsSpace, personalSpace.id);
+
+    return [
+      Capability.contribute(SpaceCapabilities.PersonalSpace, personalSpace),
+      Capability.contribute(SpaceCapabilities.SettingsSpace, settingsSpace),
+    ];
   }),
 );

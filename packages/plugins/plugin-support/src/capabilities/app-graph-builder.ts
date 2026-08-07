@@ -14,18 +14,19 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG } from '../constants';
 import * as HelpCapabilities from '../types/HelpCapabilities';
 import * as HelpOperation from '../types/HelpOperation';
 import * as SupportCapabilities from '../types/SupportCapabilities';
+import { readWelcomeDismissed } from '../welcome-dismissed';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
@@ -46,6 +47,9 @@ export default Capability.makeModule(
     // dependency and re-evaluates when the setting changes or the capability lands (dependency
     // modules contribute individually, not batched per wave).
     const settingsCapabilityAtom = yield* Capability.atom(SupportCapabilities.Settings);
+    // Hoisted so the Home toolbar actions re-evaluate once the client (and with it the settings
+    // space holding the dismissed flag) lands.
+    const clientCapabilityAtom = yield* Capability.atom(ClientCapabilities.Client);
 
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
@@ -164,11 +168,14 @@ export default Capability.makeModule(
           return node.type === SpaceSchema.SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
         },
         actions: (space, get) => {
-          const properties = space.properties ? get(Obj.atom(space.properties)) : undefined;
-          const isDismissed = properties
-            ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
-            : false;
-          const showActions = AppSpace.isPersonalSpace(space) && !isDismissed;
+          const [client] = get(clientCapabilityAtom);
+          const settingsProperties = client && AppSpace.getSettingsSpace(client)?.properties;
+          const personalSpace = client && AppSpace.getPersonalSpace(client);
+          const isDismissed = readWelcomeDismissed(
+            settingsProperties ? get(Obj.atom(settingsProperties)) : undefined,
+            personalSpace?.properties ? get(Obj.atom(personalSpace.properties)) : undefined,
+          );
+          const showActions = !!personalSpace && space.id === personalSpace.id && !isDismissed;
           if (!showActions) {
             return Effect.succeed([]);
           }
@@ -191,7 +198,7 @@ export default Capability.makeModule(
             Node.makeAction({
               id: HelpOperation.HideWelcome.meta.key,
               data: Effect.fnUntraced(function* () {
-                yield* Operation.invoke(HelpOperation.HideWelcome, { space });
+                yield* Operation.invoke(HelpOperation.HideWelcome);
               }),
               properties: {
                 label: HIDE_WELCOME_LABEL,

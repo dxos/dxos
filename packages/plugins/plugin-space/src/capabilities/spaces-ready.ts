@@ -14,7 +14,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList } from '@dxos/async';
-import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
@@ -26,13 +26,12 @@ import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceOperation } from '#operations';
 
+import { ensureSettingsSpace, migrateToSettingsSpace } from '../settings-space';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
-import * as SpaceSchema from '../types/SpaceSchema';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -55,65 +54,60 @@ export default Capability.makeModule(
     const haloIdentity = yield* ClientCapabilities.IdentityService;
 
     //
-    // Personal space initialization — deferred until found.
+    // Settings space bootstrap and one-time migration — deferred until a space is found.
     //
 
-    // Fiber for the one-shot personal-space init Effect; interrupted in cleanup
+    // Fiber for the one-shot settings-space init Effect; interrupted in cleanup
     // so it cannot access the db after client.destroy() closes the repo.
-    let personalSpaceInitFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
-    let personalSpaceInitialized = false;
+    let settingsSpaceInitFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
+    let settingsSpaceInitialized = false;
 
-    const personalSpaceInitEffect = (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) =>
+    const settingsSpaceInitEffect = (legacySpace: Space | undefined, { fromCredential }: { fromCredential: boolean }) =>
       Effect.gen(function* () {
-        yield* Effect.promise(() => personalSpace.waitUntilReady());
-
-        if (fromCredential) {
-          AppSpace.setPersonalSpace(personalSpace);
-        }
-
-        // Check if deck state indicates we should switch to default space.
-        const layout = registry.get(layoutAtom);
-        if (layout.workspace === 'default') {
-          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
-        }
-
-        const queryResults = yield* Effect.promise(() =>
-          personalSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).run(),
-        );
-        if (!queryResults[0]) {
-          // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
-          //  Instead, we store order as an array of space ids.
-          try {
-            personalSpace.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [] }));
-          } catch (err) {
-            // The space may have been destroyed (e.g. during test teardown) between the query and the add.
-            log.warn('Failed to initialize spaces order, space may be closing', { err });
+        if (legacySpace) {
+          yield* Effect.promise(() => legacySpace.waitUntilReady());
+          if (fromCredential) {
+            AppSpace.setLegacyPersonalSpace(legacySpace);
           }
+        }
+
+        const settingsSpace = yield* ensureSettingsSpace(client);
+        yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
+
+        // Check if deck state indicates we should switch to the personal space.
+        const personalSpace = AppSpace.getPersonalSpace(client);
+        const layout = registry.get(layoutAtom);
+        if (layout.workspace === 'default' && personalSpace) {
+          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
         }
       });
 
-    const startPersonalSpaceInit = (personalSpace: Space, opts: { fromCredential: boolean }) => {
-      if (personalSpaceInitialized) {
+    const startSettingsSpaceInit = (legacySpace: Space | undefined, opts: { fromCredential: boolean }) => {
+      if (settingsSpaceInitialized) {
         return;
       }
       // Set before forking so concurrent subscribe callbacks don't start a second initialization.
-      personalSpaceInitialized = true;
-      personalSpaceInitFiber = Effect.runFork(personalSpaceInitEffect(personalSpace, opts));
+      settingsSpaceInitialized = true;
+      settingsSpaceInitFiber = Effect.runFork(settingsSpaceInitEffect(legacySpace, opts));
     };
 
-    // Try to find the personal space now, or subscribe to find it later.
+    // Try to resolve a space to migrate from now, or subscribe to find one later. A profile that
+    // already has a settings space still runs the init so the ordering object is repaired if missing.
     // Initialization is non-blocking so subscriptions wire immediately.
-    const resolved = AppSpace.resolvePersonalSpace(client);
-    if (resolved) {
-      startPersonalSpaceInit(resolved.space, resolved);
-    } else {
-      const personalSpaceSub = client.spaces.subscribe(() => {
-        const resolved = AppSpace.resolvePersonalSpace(client);
-        if (resolved) {
-          startPersonalSpaceInit(resolved.space, resolved);
-        }
+    const tryStartSettingsSpaceInit = () => {
+      const legacy = AppSpace.resolveLegacyPersonalSpace(client);
+      if (legacy || AppSpace.getSettingsSpace(client)) {
+        startSettingsSpaceInit(legacy?.space, { fromCredential: legacy?.fromCredential ?? false });
+        return true;
+      }
+      return false;
+    };
+
+    if (!tryStartSettingsSpaceInit()) {
+      const settingsSpaceSub = client.spaces.subscribe(() => {
+        tryStartSettingsSpaceInit();
       });
-      subscriptions.add(() => personalSpaceSub.unsubscribe());
+      subscriptions.add(() => settingsSpaceSub.unsubscribe());
     }
 
     //
@@ -161,12 +155,12 @@ export default Capability.makeModule(
     // Cache space names.
     const spaceNamesSub = client.spaces.subscribe(async (spaces) => {
       // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
-      const personalSpaceForMigration = AppSpace.resolvePersonalSpace(client);
+      const legacySpaceForMigration = AppSpace.resolveLegacyPersonalSpace(client);
       if (
-        personalSpaceForMigration?.space &&
-        personalSpaceForMigration.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
+        legacySpaceForMigration?.space &&
+        legacySpaceForMigration.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
       ) {
-        await personalSpaceForMigration.space.internal.migrate();
+        await legacySpaceForMigration.space.internal.migrate();
       }
 
       spaces
@@ -365,8 +359,8 @@ export default Capability.makeModule(
 
     yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
-        if (personalSpaceInitFiber) {
-          yield* Fiber.interrupt(personalSpaceInitFiber);
+        if (settingsSpaceInitFiber) {
+          yield* Fiber.interrupt(settingsSpaceInitFiber);
         }
         spaceSubscriptions.clear();
         subscriptions.clear();

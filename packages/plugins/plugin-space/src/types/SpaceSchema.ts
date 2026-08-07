@@ -161,5 +161,7 @@ export const SpaceForm = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   icon: Schema.optional(Schema.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
   hue: Schema.optional(Schema.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
+  // Field order drives form order, so this sits ahead of the EDGE replication toggle.
+  private: Schema.optional(Schema.Boolean.annotations({ title: 'Private space' })),
   edgeReplication: Schema.optional(Schema.Boolean.annotations({ title: 'Enable EDGE Replication' })),
 });

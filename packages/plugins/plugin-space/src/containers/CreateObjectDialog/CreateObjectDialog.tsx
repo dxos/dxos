@@ -18,7 +18,6 @@ import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
@@ -58,22 +57,14 @@ export const CreateObjectDialog = ({
   const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
-  const client = useClient();
-  const spaces = useSpaces();
+  // The settings space holds app configuration only and is never a target for new objects.
+  const spaces = useSpaces().filter((space) => !AppSpace.isSettingsSpace(space));
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   const allTypes = useQuery(db, TypeOptions.allTypesQuery);
   const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
-  const spaceLabel = useMemo(
-    () =>
-      space &&
-      toLocalizedString(
-        getSpaceDisplayName(space, { personal: space.id === AppSpace.getPersonalSpace(client)?.id }),
-        t,
-      ),
-    [space, client, t],
-  );
+  const spaceLabel = useMemo(() => space && toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
 
   // Index all types by typename for label/icon lookups.
   const typeByTypename = useMemo(() => {
@@ -243,7 +234,6 @@ export const CreateObjectDialog = ({
           target={target}
           typename={typename}
           initialFormValues={initialFormValues}
-          defaultSpaceId={AppSpace.getPersonalSpace(client)?.id ?? client.spaces.get()[0]?.id}
           resolve={resolve}
           onCreateObject={handleCreateObject}
           onTargetChange={setTarget}

@@ -11,9 +11,11 @@ import React, { type Ref } from 'react';
 import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { useType } from '@dxos/echo-react';
+import { useObject, useType } from '@dxos/echo-react';
+import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
@@ -76,16 +78,31 @@ export type SpaceSettingsSurfaceProps = {
 };
 
 export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => {
+  const client = useClient();
   const spaces = useSpaces();
   const { invokePromise } = useOperationInvoker();
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
 
+  // Subscribe to the settings space properties so the picker reflects changes from other devices.
+  const settingsSpace = AppSpace.getSettingsSpace(client);
+  const [settingsProperties] = useObject(settingsSpace?.properties);
+  const personalSpaceId = settingsProperties
+    ? Annotation.get(settingsProperties, AppAnnotation.PersonalSpaceAnnotation).pipe(Option.getOrUndefined)
+    : undefined;
+
+  // The settings space is internal; it is never offered as a personal space nor listed for editing.
+  const visibleSpaces = spaces.filter((space) => !AppSpace.isSettingsSpace(space));
+
   return (
     <SpaceSettings
-      spaces={spaces}
+      spaces={visibleSpaces}
       onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
       settings={settings}
       onSettingsChange={updateSettings}
+      personalSpaceId={personalSpaceId}
+      onPersonalSpaceChange={
+        settingsSpace ? (spaceId: string) => AppSpace.setPersonalSpaceId(settingsSpace, spaceId) : undefined
+      }
     />
   );
 };

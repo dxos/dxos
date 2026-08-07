@@ -14,6 +14,7 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { useClient } from '@dxos/react-client';
 import { Button, Dialog, DropdownMenu, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
@@ -72,56 +73,56 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     [space, toggleEdgeReplication],
   );
 
+  const isPrivate = space.membershipPolicy === MembershipPolicy.LOCKED;
+
   const defaultValues = useMemo(
     () => ({
       name: space.properties.name,
       icon: space.properties.icon,
       hue: space.properties.hue,
+      private: isPrivate,
       edgeReplication,
     }),
-    [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication],
+    [space.properties.name, space.properties.icon, space.properties.hue, isPrivate, edgeReplication],
   );
 
-  const personal = AppSpace.isPersonalSpace(space);
+  // The personal space is the fallback target for unscoped content, so deleting it is not offered.
+  const personal = space.id === AppSpace.getPersonalSpace(client)?.id;
 
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      name: personal
-        ? () => null
-        : ({ type, label, getValue, onValueChange }) => {
-            const handleChange = useCallback(
-              ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
-              [onValueChange, type],
-            );
-            return (
-              <Form.Row label={label} description={t('display-name.description')}>
-                <Input.Root>
-                  <Input.TextInput
-                    value={getValue()}
-                    onChange={handleChange}
-                    placeholder={t('display-name-input.placeholder')}
-                    classNames='min-w-64'
-                  />
-                </Input.Root>
-              </Form.Row>
-            );
-          },
-      icon: personal
-        ? () => null
-        : ({ type, label, getValue, onValueChange }) => {
-            const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
-            const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
-            return (
-              <Form.Row label={label} description={t('icon.description')}>
-                <IconPicker
-                  value={getValue()}
-                  onChange={handleChange}
-                  onReset={handleReset}
-                  classNames='justify-self-end'
-                />
-              </Form.Row>
-            );
-          },
+      name: ({ type, label, getValue, onValueChange }) => {
+        const handleChange = useCallback(
+          ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
+          [onValueChange, type],
+        );
+        return (
+          <Form.Row label={label} description={t('display-name.description')}>
+            <Input.Root>
+              <Input.TextInput
+                value={getValue()}
+                onChange={handleChange}
+                placeholder={t('display-name-input.placeholder')}
+                classNames='min-w-64'
+              />
+            </Input.Root>
+          </Form.Row>
+        );
+      },
+      icon: ({ type, label, getValue, onValueChange }) => {
+        const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
+        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+        return (
+          <Form.Row label={label} description={t('icon.description')}>
+            <IconPicker
+              value={getValue()}
+              onChange={handleChange}
+              onReset={handleReset}
+              classNames='justify-self-end'
+            />
+          </Form.Row>
+        );
+      },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
@@ -131,6 +132,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           </Form.Row>
         );
       },
+      // Read-only: the membership policy is written into the genesis credential at creation.
+      private: ({ label, getValue }) => (
+        <Form.Row label={label} description={t('private.description')}>
+          <Input.Root>
+            <Input.Switch checked={getValue()} disabled classNames='justify-self-end' />
+          </Input.Root>
+        </Form.Row>
+      ),
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
@@ -142,7 +151,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         );
       },
     }),
-    [t, space, personal],
+    [t],
   );
 
   const handleBackupBinary = useCallback(async () => {
@@ -154,8 +163,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
-    await Promise.all(repairs.map((repair) => repair({ space, isDefault: AppSpace.isPersonalSpace(space) })));
-  }, [space, repairs]);
+    await Promise.all(repairs.map((repair) => repair({ space, isDefault: personal })));
+  }, [space, repairs, personal]);
 
   const handleResetHome = useCallback(() => AppSpace.resetHomeVisibility(space), [space]);
 

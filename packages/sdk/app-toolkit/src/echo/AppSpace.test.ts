@@ -4,9 +4,38 @@
 
 import { describe, test } from 'vitest';
 
+import { Annotation, Obj } from '@dxos/echo';
+import { Expando } from '@dxos/schema';
+
+import * as AppAnnotation from './AppAnnotation';
 import * as AppSpace from './AppSpace';
 
-describe('personal-space', () => {
+/** Minimal space stand-in: `getPersonalSpace` only reads `tags`, `properties` and `id`. */
+const makeSpace = ({
+  id = 'space',
+  tags = [] as string[],
+  personalSpaceId,
+}: {
+  id?: string;
+  tags?: string[];
+  personalSpaceId?: string;
+}) => {
+  const properties = Obj.make(Expando.Expando, {});
+  if (personalSpaceId) {
+    Obj.update(properties, (properties) => {
+      Annotation.set(properties, AppAnnotation.PersonalSpaceAnnotation, personalSpaceId);
+    });
+  }
+  return { id, tags, properties } as any;
+};
+
+const makeClient = (spaces: any[]) => ({
+  spaces: {
+    get: (id?: string) => (id === undefined ? spaces : spaces.find((space) => space.id === id)),
+  },
+});
+
+describe('tags', () => {
   test('hasTag returns true when tag is present', ({ expect }) => {
     const space = { tags: ['personal', 'pinned'] } as any;
     expect(AppSpace.hasTag(space, 'personal')).toBe(true);
@@ -23,13 +52,50 @@ describe('personal-space', () => {
     expect(AppSpace.hasTag(space, 'personal')).toBe(false);
   });
 
-  test('isPersonalSpace returns true for space with personal tag', ({ expect }) => {
-    const space = { tags: [AppSpace.PERSONAL_SPACE_TAG] } as any;
-    expect(AppSpace.isPersonalSpace(space)).toBe(true);
+  test('isSettingsSpace matches the settings tag only', ({ expect }) => {
+    expect(AppSpace.isSettingsSpace({ tags: [AppSpace.SETTINGS_SPACE_TAG] } as any)).toBe(true);
+    expect(AppSpace.isSettingsSpace({ tags: [AppSpace.PERSONAL_SPACE_TAG] } as any)).toBe(false);
   });
 
-  test('isPersonalSpace returns false for regular space', ({ expect }) => {
+  test('isLegacyPersonalSpace returns true for space with personal tag', ({ expect }) => {
+    const space = { tags: [AppSpace.PERSONAL_SPACE_TAG] } as any;
+    expect(AppSpace.isLegacyPersonalSpace(space)).toBe(true);
+  });
+
+  test('isLegacyPersonalSpace returns false for regular space', ({ expect }) => {
     const space = { tags: [] } as any;
-    expect(AppSpace.isPersonalSpace(space)).toBe(false);
+    expect(AppSpace.isLegacyPersonalSpace(space)).toBe(false);
+  });
+});
+
+describe('personal space resolution', () => {
+  test('resolves the space designated by the settings space', ({ expect }) => {
+    const personal = makeSpace({ id: 'chosen' });
+    const settings = makeSpace({ id: 'settings', tags: [AppSpace.SETTINGS_SPACE_TAG], personalSpaceId: 'chosen' });
+    expect(AppSpace.getPersonalSpace(makeClient([settings, personal]))?.id).toBe('chosen');
+  });
+
+  test('falls back to the legacy tagged space when no designation exists', ({ expect }) => {
+    const legacy = makeSpace({ id: 'legacy', tags: [AppSpace.PERSONAL_SPACE_TAG] });
+    const settings = makeSpace({ id: 'settings', tags: [AppSpace.SETTINGS_SPACE_TAG] });
+    expect(AppSpace.getPersonalSpace(makeClient([settings, legacy]))?.id).toBe('legacy');
+  });
+
+  test('falls back to the legacy tagged space when the designated space is gone', ({ expect }) => {
+    const legacy = makeSpace({ id: 'legacy', tags: [AppSpace.PERSONAL_SPACE_TAG] });
+    const settings = makeSpace({ id: 'settings', tags: [AppSpace.SETTINGS_SPACE_TAG], personalSpaceId: 'deleted' });
+    expect(AppSpace.getPersonalSpace(makeClient([settings, legacy]))?.id).toBe('legacy');
+  });
+
+  test('returns undefined when nothing is designated or tagged', ({ expect }) => {
+    expect(AppSpace.getPersonalSpace(makeClient([makeSpace({ id: 'plain' })]))).toBeUndefined();
+  });
+
+  test('setPersonalSpaceId writes a designation that getPersonalSpace reads back', ({ expect }) => {
+    const personal = makeSpace({ id: 'chosen' });
+    const settings = makeSpace({ id: 'settings', tags: [AppSpace.SETTINGS_SPACE_TAG] });
+    AppSpace.setPersonalSpaceId(settings, personal.id);
+    expect(AppSpace.readPersonalSpaceId(settings)).toBe('chosen');
+    expect(AppSpace.getPersonalSpace(makeClient([settings, personal]))?.id).toBe('chosen');
   });
 });

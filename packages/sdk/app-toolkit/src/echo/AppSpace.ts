@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import * as Option from 'effect/Option';
+
 import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { type Client } from '@dxos/client';
@@ -15,16 +17,27 @@ import { AppCapabilities } from '../app-framework';
 import * as AppAnnotation from './AppAnnotation';
 
 //
-// Personal and exemplar space tags.
+// Space tags.
 //
 
-/** Space tag for the personal space. */
+/**
+ * Space tag for the settings space: a hidden, membership-locked space holding app configuration
+ * that must replicate across the user's devices but never be shared with anyone else.
+ */
+export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
+
+/**
+ * Space tag for the personal space.
+ * @deprecated The personal space is now an ordinary space designated by the
+ * {@link AppAnnotation.PersonalSpaceAnnotation} setting on the settings space. This tag survives
+ * only to resolve profiles created before the settings space existed.
+ */
 export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
 
 /** Space tag for the bundled exemplar/sample space. */
 export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
 
-// TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
+// TODO(wittjosiah): Remove once all profiles have migrated to the settings space.
 const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
 // Intentional escape hatch: reads a pre-schema marker that lives outside the typed SpaceProperties
@@ -38,13 +51,22 @@ export const hasTag = (space: Pick<Space, 'tags'>, tag: string): boolean => spac
 /** Check if a space is the exemplar/sample space. */
 export const isExemplarSpace = (space: Pick<Space, 'tags'>): boolean => hasTag(space, EXEMPLAR_SPACE_TAG);
 
-/** Check if a space is the personal space. */
-export const isPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>): boolean => {
+/** Check if a space is the settings space. */
+export const isSettingsSpace = (space: Pick<Space, 'tags'>): boolean => hasTag(space, SETTINGS_SPACE_TAG);
+
+/** Find the settings space. */
+export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined =>
+  client.spaces.get().find((space) => isSettingsSpace(space));
+
+/**
+ * Check if a space is the personal space of a profile created before the settings space existed.
+ * @deprecated Compare against {@link getPersonalSpace} instead; this only reads legacy markers.
+ */
+export const isLegacyPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>): boolean => {
   if (hasTag(space, PERSONAL_SPACE_TAG)) {
     return true;
   }
 
-  // TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
   try {
     return hasLegacyDefaultSpaceMarker(space.properties as unknown as Record<string, unknown>);
   } catch {
@@ -53,35 +75,31 @@ export const isPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>): bool
 };
 
 /**
- * Mark a space as the personal space via legacy property.
- * @deprecated Use `tags: [PERSONAL_SPACE_TAG]` when creating the space instead.
- * TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
+ * Mark a space as the legacy personal space via the `__DEFAULT__` property.
+ * @deprecated Only used to persist the result of a `DefaultSpace` credential lookup so the
+ * settings-space migration can find it on the next load.
  */
-export const setPersonalSpace = (space: Space): void => {
+export const setLegacyPersonalSpace = (space: Space): void => {
   Obj.update(space.properties, (properties) => {
     (properties as any)[DEFAULT_SPACE_KEY] = true;
   });
 };
 
-/** Find the personal space. */
-export const getPersonalSpace = (client: { spaces: { get(): Space[] } }): Space | undefined =>
-  client.spaces.get().find((space) => isPersonalSpace(space));
-
 /**
- * Find the personal space, falling back to the legacy `DefaultSpace` HALO credential for profiles
+ * Find the legacy personal space, falling back to the `DefaultSpace` HALO credential for profiles
  * that predate immutable space tags.
  *
  * Returns `{ space, fromCredential }` where `fromCredential: true` means the space was found via
- * the old credential and `setPersonalSpace` should be called once the space is ready to persist
- * the `__DEFAULT__` marker for future loads.
+ * the old credential and {@link setLegacyPersonalSpace} should be called once the space is ready
+ * to persist the `__DEFAULT__` marker for future loads.
  *
- * TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
+ * @deprecated Migration input only — read {@link getPersonalSpace} at runtime.
  */
-export const resolvePersonalSpace = (client: {
+export const resolveLegacyPersonalSpace = (client: {
   spaces: { get(): Space[]; get(id: any): Space | undefined };
   halo: { queryCredentials(options: { type: string }): any[] };
 }): { space: Space; fromCredential: boolean } | undefined => {
-  const found = getPersonalSpace(client);
+  const found = client.spaces.get().find((space) => isLegacyPersonalSpace(space));
   if (found) {
     return { space: found, fromCredential: false };
   }
@@ -99,6 +117,39 @@ export const resolvePersonalSpace = (client: {
   }
   const space = client.spaces.get(defaultSpaceId);
   return space ? { space, fromCredential: true } : undefined;
+};
+
+type SpaceResolver = { spaces: { get(): Space[]; get(id: any): Space | undefined } };
+
+/** Read the personal-space designation off the settings space, if one has been made. */
+export const readPersonalSpaceId = (settingsSpace: Pick<Space, 'properties'>): string | undefined => {
+  // The settings space may not be open yet, in which case reading `properties` throws.
+  try {
+    return Annotation.get(settingsSpace.properties, AppAnnotation.PersonalSpaceAnnotation).pipe(Option.getOrUndefined);
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * The space the user has designated as their personal space — the default target for content that
+ * is not scoped to the active space (quick entry, chat, preview and entity lookup).
+ *
+ * Resolves the {@link AppAnnotation.PersonalSpaceAnnotation} setting on the settings space, falling
+ * back to the legacy personal space for profiles that have not yet been migrated.
+ */
+export const getPersonalSpace = (client: SpaceResolver): Space | undefined => {
+  const settingsSpace = getSettingsSpace(client);
+  const configuredId = settingsSpace && readPersonalSpaceId(settingsSpace);
+  const configured = configuredId ? client.spaces.get(configuredId) : undefined;
+  return configured ?? client.spaces.get().find((space) => isLegacyPersonalSpace(space));
+};
+
+/** Designate `spaceId` as the personal space by writing the setting to the settings space. */
+export const setPersonalSpaceId = (settingsSpace: Space, spaceId: string): void => {
+  Obj.update(settingsSpace.properties, (properties) => {
+    Annotation.set(properties, AppAnnotation.PersonalSpaceAnnotation, spaceId);
+  });
 };
 
 //

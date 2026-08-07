@@ -66,8 +66,11 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEpheme
   `${meta.profile.key}.capability.ephemeralState`,
 );
 
-/** The personal space, contributed once the `IdentityCreated` module has created it. */
+/** The space designated as the user's personal space, contributed once `IdentityCreated` has run. */
 export const PersonalSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.personalSpace`);
+
+/** The hidden, membership-locked space holding app configuration that replicates across devices. */
+export const SettingsSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.settingsSpace`);
 
 export type SettingsSection = { id: string; label: Label; position?: Position.Position };
 export const SettingsSection = Capability.makeSingleton<SettingsSection>()(

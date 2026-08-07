@@ -179,15 +179,15 @@ export default Capability.makeModule(
 
           const state: NativeFilesystemCapabilities.NativeFilesystemState = get(stateAtom);
           const [client] = get(clientCapabilitiesAtom);
-          const personalSpace = client && AppSpace.getPersonalSpace(client);
+          const settingsSpace = client && AppSpace.getSettingsSpace(client);
 
-          if (!state.workspaces.length || !personalSpace) {
+          if (!state.workspaces.length || !settingsSpace) {
             return Effect.succeed([]);
           }
 
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
-          const [order] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom);
+          const [order] = get(settingsSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom);
           if (order) {
             const snapshot = get(Obj.atom(order)) as { order?: string[] } | undefined;
             const orderArray: string[] = snapshot?.order ?? [];
