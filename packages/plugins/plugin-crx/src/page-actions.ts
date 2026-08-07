@@ -41,7 +41,7 @@ export const handleListEvent = (detail: unknown, getActions: () => PageAction.Pa
     log.info('rejected invalid page-actions list request');
     // Best-effort id echo so the extension can correlate the failure ack.
     const envelope = Schema.decodeUnknownResult(PageAction.Envelope)(detail);
-    const id = Result.isSuccess(envelope) ? (envelope.right.id ?? '') : '';
+    const id = Result.isSuccess(envelope) ? (envelope.success.id ?? '') : '';
     return { version: 1, id, ok: false, error: 'invalidPayload' };
   }
   return {

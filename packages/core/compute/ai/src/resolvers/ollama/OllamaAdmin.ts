@@ -268,7 +268,7 @@ const readErrorBody = (response: HttpClientResponse.HttpClientResponse): Effect.
     Effect.orElse(() => Effect.succeed('')),
     Effect.map((body) => {
       const decoded = decodeErrorBody(body);
-      if (Result.isSuccess(decoded) && decoded.right.error !== undefined && decoded.right.error.length > 0) {
+      if (Result.isSuccess(decoded) && decoded.success.error !== undefined && decoded.right.error.length > 0) {
         return decoded.right.error;
       }
       return body.trim().length > 0 ? `HTTP ${response.status}: ${body.slice(0, 300)}` : `HTTP ${response.status}`;
