@@ -620,7 +620,8 @@ describe('Obj', () => {
       // A genuine change to the observed property still fires.
       const task = Obj.make(TestSchema.Task, { title: 'x' });
       Obj.update(obj, (obj) => {
-        obj.tasks.push(Ref.make(task));
+        // Optional-chained for the mutator's widened type; the length assertion below catches a no-op.
+        obj.tasks?.push(Ref.make(task));
       });
       expect(fires).toBe(baseline + 1);
       expect(registry.get(tasksAtom)).toHaveLength(1);
