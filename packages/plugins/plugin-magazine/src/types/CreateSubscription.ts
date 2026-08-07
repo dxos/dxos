@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format } from '@dxos/echo';
+import { Annotation, Format } from '@dxos/echo';
 
 import * as Subscription from './Subscription';
 
@@ -14,7 +14,11 @@ import * as Subscription from './Subscription';
 // effects on obviously-malformed input. Handle existence is verified implicitly by the publication lookup
 // (an unresolvable handle yields no publications, and a publication is required to submit).
 export const HandleSchema = Schema.String.pipe(
-  Schema.pattern(/^@?([\da-z-]+\.)+[a-z]{2,}$|^did:[a-z]+:[a-zA-Z0-9._%:-]+$/i),
+  // The regex travels as the `pattern` annotation; the description stays prose, since a form shows it to
+  // people and agents read it as the field's documentation.
+  Schema.pattern(/^@?([\da-z-]+\.)+[a-z]{2,}$|^did:[a-z]+:[a-zA-Z0-9._%:-]+$/i, {
+    description: 'An atproto handle or DID.',
+  }),
 );
 
 export const isHandle = Schema.is(HandleSchema);
@@ -27,16 +31,22 @@ export const isUrl = Schema.is(Format.URL);
 
 export const StandardSiteCreateBase = Schema.Struct({
   type: Schema.Literal('standard-site'),
-  handle: HandleSchema.annotations({ title: 'Handle', description: 'atproto handle, e.g. dxos.org.' }),
+  handle: HandleSchema.pipe(
+    Annotation.FormPlaceholderAnnotation.set('dxos.org'),
+    Schema.annotations({ title: 'Handle', description: 'atproto handle.' }),
+  ),
   // No `name`: the feed name is taken from the selected publication (resolved by `fetchStandardSite`).
-  publication: Schema.String.annotations({ title: 'Publication', description: 'Choose a publication.' }),
+  publication: Schema.String.pipe(
+    Annotation.FormPlaceholderAnnotation.set('Choose a publication.'),
+    Schema.annotations({ title: 'Publication' }),
+  ),
 });
 
 export type StandardSiteValues = Schema.Schema.Type<typeof StandardSiteCreateBase>;
 
 export const RssCreateBase = Schema.Struct({
   type: Schema.Literal('rss'),
-  url: Format.URL.annotations({ title: 'URL', description: 'RSS feed URL.' }),
+  url: Format.URL.pipe(Annotation.FormPlaceholderAnnotation.set('RSS feed URL.'), Schema.annotations({ title: 'URL' })),
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 });
 

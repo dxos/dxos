@@ -6,9 +6,10 @@ import { format as formatDate } from 'date-fns';
 import React, { Component, type PropsWithChildren, type ReactNode, type Ref } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Icon, Input, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { Icon, Input, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
 import { useFormContext } from '../../../hooks';
@@ -46,7 +47,7 @@ export type FormFieldLabelProps = ThemedClassName<
      */
     labelEnd?: ReactNode;
     onClick?: () => void;
-  } & Pick<FormFieldRendererProps, 'label' | 'readonly' | 'required'>
+  } & Pick<FormFieldRendererProps, 'label' | 'description' | 'readonly' | 'required'>
 >;
 
 export const FormFieldLabel = ({
@@ -54,6 +55,7 @@ export const FormFieldLabel = ({
   labelClassName,
   variant = 'default',
   label,
+  description,
   error,
   readonly,
   required,
@@ -62,6 +64,7 @@ export const FormFieldLabel = ({
   labelEnd,
   onClick,
 }: FormFieldLabelProps) => {
+  const { t } = useTranslation(translationKey);
   const styles = formTheme.styles({ variant });
   // Render the required asterisk via a `::after` pseudo-element rather than a DOM node: it keeps the
   // label's `textContent` exactly `label`, so fields stay locatable by their exact label text
@@ -84,7 +87,28 @@ export const FormFieldLabel = ({
 
   return (
     <div className={styles.fieldLabel({ class: mx(onClick && 'cursor-pointer', classNames) })} onClick={onClick}>
-      {labelNode}
+      {description ? (
+        <span className='flex items-center gap-1 min-w-0'>
+          {labelNode}
+          <Tooltip.Trigger
+            // `Tooltip.Trigger` deliberately omits `type`, which would default to `submit` inside a `<form>`.
+            type='button'
+            content={description}
+            side='bottom'
+            // Reading a field's documentation is the point of the affordance, so it opens well ahead of the
+            // provider's default — but not instantly, or a cursor crossing the label row would flash it.
+            delayDuration={200}
+            aria-label={t('field-description.label')}
+            className='grid place-items-center text-description'
+            // The affordance may sit in a header row whose click toggles collapse.
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Icon icon='ph--info--regular' size={4} />
+          </Tooltip.Trigger>
+        </span>
+      ) : (
+        labelNode
+      )}
       {labelEnd}
       {error ? (
         <Tooltip.Trigger asChild content={error} side='bottom'>
@@ -202,6 +226,9 @@ export const FormRow = <T,>({
   const styles = formTheme.styles({ variant });
   const { showDescription } = formTheme.behavior[variant];
   const resolved = presentationFor(presentation);
+  // Variants that render the description as visible text below the label don't also need the
+  // label's info affordance — it would state the same thing twice.
+  const labelDescription = showDescription ? undefined : description;
 
   //
   // Field mode: a render-prop control bound to the form value.
@@ -229,6 +256,7 @@ export const FormRow = <T,>({
               standalone={standalone}
               labelEnd={labelEnd}
               label={label}
+              description={labelDescription}
               path={jsonPath}
             />
           )}
@@ -261,6 +289,7 @@ export const FormRow = <T,>({
           standalone
           labelEnd={labelEnd}
           label={label}
+          description={labelDescription}
           path={jsonPath}
         />
       )}

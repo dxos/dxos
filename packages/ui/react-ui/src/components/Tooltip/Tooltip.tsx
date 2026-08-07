@@ -143,14 +143,17 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
     setOpen(false);
   }, [setOpen]);
 
-  const handleDelayedOpen = useCallback(() => {
-    window.clearTimeout(openTimerRef.current);
-    openTimerRef.current = window.setTimeout(() => {
-      wasOpenDelayedRef.current = true;
-      setOpen(true);
-      openTimerRef.current = 0;
-    }, delayDuration);
-  }, [delayDuration, setOpen]);
+  const handleDelayedOpen = useCallback(
+    (delay: number = delayDuration) => {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = window.setTimeout(() => {
+        wasOpenDelayedRef.current = true;
+        setOpen(true);
+        openTimerRef.current = 0;
+      }, delay);
+    },
+    [delayDuration, setOpen],
+  );
 
   useEffect(() => {
     return () => {
@@ -173,13 +176,16 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
         stateAttribute={stateAttribute}
         trigger={trigger}
         onTriggerChange={handleTriggerChange}
-        onTriggerEnter={useCallback(() => {
-          if (isOpenDelayedRef.current) {
-            handleDelayedOpen();
-          } else {
-            handleOpen();
-          }
-        }, [isOpenDelayedRef, handleDelayedOpen, handleOpen])}
+        onTriggerEnter={useCallback(
+          (triggerDelayDuration?: number) => {
+            if (isOpenDelayedRef.current) {
+              handleDelayedOpen(triggerDelayDuration);
+            } else {
+              handleOpen();
+            }
+          },
+          [isOpenDelayedRef, handleDelayedOpen, handleOpen],
+        )}
         onTriggerLeave={useCallback(() => {
           if (disableHoverableContent) {
             handleClose();
@@ -239,15 +245,7 @@ type TooltipTriggerProps = Omit<PrimitiveButtonProps, 'content'> &
 
 const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
   (props: TooltipScopedProps<TooltipTriggerProps>, forwardedRef) => {
-    const {
-      __scopeTooltip,
-      onInteract,
-      // TODO(thure): Pass `delayDuration` into the context.
-      delayDuration: _delayDuration,
-      side,
-      content,
-      ...triggerProps
-    } = props;
+    const { __scopeTooltip, onInteract, delayDuration, side, content, ...triggerProps } = props;
     const context = useTooltipContext(TRIGGER_NAME, __scopeTooltip);
     const ref = useRef<TooltipTriggerElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
@@ -277,7 +275,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
               return;
             }
             context.onTriggerChange(ref.current, content, side);
-            context.onTriggerEnter();
+            context.onTriggerEnter(delayDuration);
             hasPointerMoveOpenedRef.current = true;
           }
         })}

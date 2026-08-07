@@ -64,8 +64,8 @@ export class TableManager {
       await this.page.getByRole('combobox').click();
       await this.page.getByLabel(format).click();
     }
-    await this.page.getByPlaceholder('Property label').click();
-    await this.page.getByPlaceholder('Property label').fill(label);
+    await this.page.getByPlaceholder('Label').click();
+    await this.page.getByPlaceholder('Label').fill(label);
     await this.page.getByRole('button', { name: 'Save' }).click();
   }
 }

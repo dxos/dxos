@@ -30,7 +30,8 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
     url: Schema.optional(
       Schema.String.pipe(
         Format.FormatAnnotation.set(Format.TypeFormat.URL),
-        Schema.annotations({ title: 'URL', description: 'Ephemeral provider URL.' }),
+        Annotation.FormPlaceholderAnnotation.set('Ephemeral provider URL.'),
+        Schema.annotations({ title: 'URL' }),
       ),
     ),
     /** The request config that produced this variant (validated against the provider's requestSchema). */

@@ -19,7 +19,7 @@ import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps 
 
 import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
-import { getRefProps } from '../../../util';
+import { getFieldDescription, getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';
 import {
   ArrayField,
@@ -106,16 +106,20 @@ export const FormField = (props: FormFieldProps) => {
   } = props;
   const { t } = useTranslation(translationKey);
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
-  const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
+  const description = getFieldDescription(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
   const label = useMemo(
     () => labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
     [labelProp, title, name],
   );
+  // `description` is deliberately absent: it documents the field (surfaced as a tooltip on the label),
+  // so using it as ghost text would overload one annotation with two jobs — set `FormPlaceholderAnnotation`
+  // for an input hint.
+  const placeholderAnnotation = Option.getOrUndefined(Annotation.FormPlaceholderAnnotation.getFromAst(type));
   const placeholder = useMemo(
-    () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
-    [examples, description, label, t],
+    () => placeholderAnnotation ?? (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : label),
+    [placeholderAnnotation, examples, label, t],
   );
 
   // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so
@@ -189,7 +193,7 @@ export const FormField = (props: FormFieldProps) => {
   //
 
   if (SchemaEx.isArrayType(type)) {
-    return <ArrayField fieldProps={fieldState} label={label} {...props} />;
+    return <ArrayField fieldProps={fieldState} label={label} description={description} {...props} />;
   }
 
   //
@@ -286,6 +290,7 @@ export const FormField = (props: FormFieldProps) => {
           readonly={readonly}
           layout={layout}
           label={label}
+          description={description}
           collapsible
           projection={projection}
           fieldMap={fieldMap}

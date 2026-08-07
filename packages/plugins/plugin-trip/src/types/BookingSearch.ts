@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format } from '@dxos/echo';
+import { Annotation, Format } from '@dxos/echo';
 
 import * as Segment from './Segment';
 
@@ -31,7 +31,10 @@ export const FlightSearchFields = Schema.Struct({
   returnDate: Schema.optional(Format.DateTime.annotations({ title: 'Return' })),
   serviceClass: Schema.optional(Segment.ServiceClass),
   operator: Schema.optional(
-    Schema.String.annotations({ title: 'Operator', description: 'Preferred operator IATA code' }),
+    Schema.String.pipe(
+      Annotation.FormPlaceholderAnnotation.set('Preferred operator IATA code'),
+      Schema.annotations({ title: 'Operator' }),
+    ),
   ),
   passengers: Schema.optional(Schema.Number.annotations({ title: 'Passengers' })),
 });

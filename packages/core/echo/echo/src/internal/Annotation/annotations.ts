@@ -410,6 +410,14 @@ export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInp
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 
 /**
+ * Ghost text shown in an empty input. Distinct from the schema's `description`, which documents the
+ * property (a form surfaces it as a tooltip on the label) rather than hinting at its input format —
+ * one annotation cannot serve both, so a field with only a `description` gets no placeholder.
+ */
+export const FormPlaceholderAnnotationId = Symbol.for('@dxos/schema/annotation/FormPlaceholder');
+export const FormPlaceholderAnnotation = createAnnotationHelper<string>(FormPlaceholderAnnotationId);
+
+/**
  * When set on a `Ref` property, the form renders the referenced object's own
  * fields inline (a nested form bound to the target) instead of a picker.
  */

@@ -25,6 +25,8 @@ export type FormFieldSetProps<T extends AnyProperties> = Merge<
     /** Applied to the field set's container (the bordered box when collapsible). */
     classNames?: string;
     label?: string;
+    /** Schema description of the group, surfaced as a tooltip on an info affordance beside the label. */
+    description?: string;
     sort?: string[];
     /**
      * When set, renders a toggle button at the end of the label row that
@@ -50,6 +52,7 @@ export type FormFieldSetProps<T extends AnyProperties> = Merge<
 export const FormFieldSet = ({
   classNames,
   label,
+  description,
   schema,
   readonly,
   path,
@@ -105,6 +108,7 @@ export const FormFieldSet = ({
     <FormFieldSetContainer
       classNames={classNames}
       label={label}
+      description={description}
       path={SchemaEx.createJsonPath(path ?? [])}
       readonly={readonly}
       presentation={presentationFor(layout)}

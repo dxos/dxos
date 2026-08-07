@@ -9,6 +9,8 @@ import { FormFieldLabel } from './FormRow';
 
 export type FormFieldHeaderProps = {
   label: string;
+  /** Schema description, surfaced as a tooltip on an info affordance beside the label. */
+  description?: string;
   /** JSON path forwarded to the label as field metadata. */
   path?: string;
   required?: boolean;
@@ -29,6 +31,7 @@ export type FormFieldHeaderProps = {
  */
 export const FormFieldHeader = ({
   label,
+  description,
   path,
   required,
   readonly,
@@ -41,6 +44,7 @@ export const FormFieldHeader = ({
     standalone
     classNames={classNames}
     label={label}
+    description={description}
     required={required}
     readonly={readonly}
     path={path}

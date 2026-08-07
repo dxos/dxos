@@ -130,7 +130,7 @@ describe('effect-to-json', () => {
       Schema.Struct({
         name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
         email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)).annotations({
-          description: 'Email address',
+          description: 'Email address.',
         }),
       }),
     );
@@ -152,7 +152,7 @@ describe('effect-to-json', () => {
         email: {
           type: 'string',
 
-          description: 'Email address',
+          description: 'Email address.',
           format: 'email',
         },
       },
@@ -432,7 +432,10 @@ describe('effect-to-json', () => {
     expect(jsonSchema).toMatchInlineSnapshot(`
       {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "description": "Email address",
+        "annotations": {
+          "formPlaceholder": "Email address",
+        },
+        "description": "Email address.",
         "format": "email",
         "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
         "title": "Email",
@@ -462,10 +465,28 @@ describe('json-to-effect', () => {
         type: 'string',
         format: 'email',
         title: 'Email',
-        description: 'Email address',
+        description: 'Email address.',
+        annotations: { formPlaceholder: 'Email address' },
         // TODO(dmaretskyi): omit pattern.
         pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
       });
+    });
+
+    test('a pattern does not become the description', () => {
+      // A description is prose about the field, shown to people in a form and read by agents as the
+      // field's documentation; the constraint itself travels as `pattern`. Without suppression, Effect
+      // derives "a string matching the pattern ^[a-z]+$" here.
+      const schema = toEffectSchema({ type: 'string', pattern: '^[a-z]+$' } as JsonSchemaType);
+      expect(Option.getOrUndefined(SchemaAST.getDescriptionAnnotation(schema.ast))).toBeUndefined();
+    });
+
+    test('a stored description survives alongside a pattern', () => {
+      const schema = toEffectSchema({
+        type: 'string',
+        pattern: '^[a-z]+$',
+        description: 'Lowercase name.',
+      } as JsonSchemaType);
+      expect(Option.getOrUndefined(SchemaAST.getDescriptionAnnotation(schema.ast))).toEqual('Lowercase name.');
     });
   });
 

@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { clamp } from '@dxos/util';
 
+import { FormPlaceholderAnnotationId } from '../Annotation/annotations';
 import { FormatAnnotation, TypeFormat } from './types';
 
 /**
@@ -47,6 +48,7 @@ export const GeoPoint = Schema.Tuple(
   Schema.annotations({
     title: 'GeoPoint',
     description: 'GeoJSON Position',
+    [FormPlaceholderAnnotationId]: 'GeoJSON Position',
   }),
 );
 

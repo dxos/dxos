@@ -4,7 +4,12 @@
 
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId } from '../Annotation/annotations';
+import {
+  FormPlaceholderAnnotationId,
+  GeneratorAnnotationId,
+  LabelAnnotationId,
+  PropertyMetaAnnotationId,
+} from '../Annotation/annotations';
 import { CurrencyAnnotationId, FormatAnnotationId } from '../Format';
 import { type JsonSchemaEchoAnnotations, type JsonSchemaType } from '../JsonSchema';
 
@@ -47,4 +52,5 @@ export const EchoAnnotations: Partial<Record<NamespacedJsonSchemaProperty, symbo
   meta: PropertyMetaAnnotationId,
   generator: GeneratorAnnotationId,
   labelProp: LabelAnnotationId,
+  formPlaceholder: FormPlaceholderAnnotationId,
 };

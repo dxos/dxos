@@ -247,10 +247,17 @@ const isValidUrl = Schema.is(Format.URL);
 
 // Base struct (no dynamic annotations) — its value type drives the typed `deps`/`values` below.
 const DynamicFieldsBase = Schema.Struct({
-  query: Schema.String.annotations({ title: 'Query', description: 'Type to load the choices below.' }),
+  // `description` documents the field (tooltip on the label); `FormPlaceholderAnnotation` is the input hint.
+  query: Schema.String.pipe(
+    Annotation.FormPlaceholderAnnotation.set('Search term'),
+    Schema.annotations({ title: 'Query', description: 'Type to load the choices below.' }),
+  ),
   choice: Schema.optional(Schema.String),
   tag: Schema.optional(Schema.String),
-  url: Format.URL.annotations({ title: 'URL', description: 'A valid URL auto-fills the name below.' }),
+  url: Format.URL.pipe(
+    Annotation.FormPlaceholderAnnotation.set('https://example.com/feed.xml'),
+    Schema.annotations({ title: 'URL', description: 'A valid URL auto-fills the name below.' }),
+  ),
   name: Schema.optional(Schema.String),
 });
 type DynamicFieldsValues = Schema.Schema.Type<typeof DynamicFieldsBase>;

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { Message } from '@dxos/types';
 
@@ -61,11 +61,14 @@ export const makeFreeqChannelBackend = (
   label: 'Freeq',
   icon: 'ph--dog--regular',
   createFields: Schema.Struct({
-    serverUrl: Schema.String.annotations({
-      title: 'Server URL',
-      description: 'freeq WebSocket URL, e.g. wss://irc.freeq.at/irc',
-    }),
-    channel: Schema.String.annotations({ title: 'Channel', description: 'IRC channel name (e.g. #general).' }),
+    serverUrl: Schema.String.pipe(
+      Annotation.FormPlaceholderAnnotation.set('wss://irc.freeq.at/irc'),
+      Schema.annotations({ title: 'Server URL', description: 'freeq WebSocket URL.' }),
+    ),
+    channel: Schema.String.pipe(
+      Annotation.FormPlaceholderAnnotation.set('#general'),
+      Schema.annotations({ title: 'Channel', description: 'IRC channel name.' }),
+    ),
     handle: Schema.optional(
       Schema.String.annotations({ title: 'Handle', description: 'Bluesky handle for authentication (optional).' }),
     ),
