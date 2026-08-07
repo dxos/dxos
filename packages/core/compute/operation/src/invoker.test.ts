@@ -110,7 +110,7 @@ const createEventCollector = (invoker: OperationInvoker.OperationInvoker): Effec
     );
 
     // Yield to ensure subscription is established
-    yield* Effect.yieldNow();
+    yield* Effect.yieldNow;
 
     return {
       events,
@@ -231,7 +231,7 @@ describe('OperationInvoker', () => {
       const collector = yield* createEventCollector(invoker);
 
       // Small delay to ensure subscription is ready.
-      yield* Effect.yieldNow();
+      yield* Effect.yieldNow;
 
       yield* invoker.invoke(ToString, { value: 42 });
 
@@ -250,13 +250,13 @@ describe('OperationInvoker', () => {
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([failHandler]), testRuntime);
       const collector = yield* createEventCollector(invoker);
-      yield* Effect.yieldNow();
+      yield* Effect.yieldNow;
 
       const result = yield* invoker.invoke(Fail, { value: 1 }).pipe(Effect.result);
       expect(result._tag).toBe('Left');
 
       // Give any (unexpected) event a chance to arrive, then assert none was published.
-      yield* Effect.yieldNow();
+      yield* Effect.yieldNow;
       expect(collector.events.length).toBe(0);
 
       yield* collector.dispose;

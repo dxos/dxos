@@ -31,7 +31,7 @@ describe('LoggingService', () => {
       Effect.gen(function* () {
         const fiber = yield* Effect.forkChild(Stream.runHead(loggingService['LoggingService.queryLogs']({})));
         // Yield so the forked subscription registers its log handler before emitting.
-        yield* Effect.yieldNow();
+        yield* Effect.yieldNow;
         yield* Effect.sync(() => log(message));
         return Option.getOrThrow(yield* Fiber.join(fiber));
       }),
@@ -48,7 +48,7 @@ describe('LoggingService', () => {
           Stream.runHead(loggingService['LoggingService.queryLogs']({ filters: [{ level: LogLevel.ERROR }] })),
         );
         // Yield so the forked subscription registers its log handler before emitting.
-        yield* Effect.yieldNow();
+        yield* Effect.yieldNow;
         yield* Effect.sync(() => {
           log('debugging something');
           log.error(message);

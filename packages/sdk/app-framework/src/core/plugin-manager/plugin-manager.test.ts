@@ -2635,7 +2635,7 @@ describe('PluginManager', () => {
         const eventFiber = yield* Effect.forkChild(manager.activate(EventX));
         // Let the event fiber run to its snapshot (broken) or its provider wait (fixed) before
         // the provider is released — otherwise the race can accidentally resolve correctly.
-        yield* Effect.yieldNow().pipe(Effect.repeatN(50));
+        yield* Effect.yieldNow.pipe(Effect.repeatN(50));
         yield* Deferred.succeed(providerGate, undefined);
         yield* Fiber.join(eventFiber);
         yield* Fiber.join(startFiber);
@@ -3063,7 +3063,7 @@ describe('PluginManager', () => {
         // breaking the demand-pull contract (a lookup retry then misses and hard-fails).
         const fiberB = yield* Effect.forkChild(manager.activate(OtherEvent));
         for (let i = 0; i < 10; i++) {
-          yield* Effect.yieldNow();
+          yield* Effect.yieldNow;
         }
         assert.strictEqual((yield* Fiber.poll(fiberB))._tag, 'None');
 

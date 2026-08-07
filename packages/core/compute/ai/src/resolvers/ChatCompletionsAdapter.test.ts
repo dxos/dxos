@@ -71,7 +71,7 @@ describe('ChatCompletionsLanguageModel', () => {
           function* (_) {
             const parts = yield* LanguageModel.streamText({
               prompt: 'Count from 1 to 5, one number per line.',
-            }).pipe(Stream.runCollect, Effect.map(Chunk.toArray));
+            }).pipe(Stream.runCollect);
 
             log.info('parts', { count: parts.length });
 

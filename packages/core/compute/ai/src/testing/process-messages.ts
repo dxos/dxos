@@ -65,7 +65,7 @@ export const agenticLoop: {
       disableToolCallResolution: true,
       toolkit,
       prompt,
-    }).pipe(AiParser.parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
+    }).pipe(AiParser.parseResponse(), Stream.runCollect);
     const message = Obj.make(Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'assistant' },

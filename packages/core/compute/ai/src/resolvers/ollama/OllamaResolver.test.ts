@@ -48,7 +48,7 @@ describe('OllamaResolver', () => {
       Effect.fn(function* (_) {
         const parts = yield* LanguageModel.streamText({
           prompt: 'Count from 1 to 5, one number per line.',
-        }).pipe(Stream.runCollect, Effect.map(Chunk.toArray));
+        }).pipe(Stream.runCollect);
 
         const textDeltas = parts.filter((p) => p.type === 'text-delta');
         const fullText = textDeltas.map((p) => (p as { delta: string }).delta).join('');
@@ -87,7 +87,7 @@ describe('OllamaResolver', () => {
           const parts = yield* LanguageModel.streamText({
             toolkit: CalculatorToolkit,
             prompt: 'What is six times seven? Use the Calculator tool and just answer with the number.',
-          }).pipe(Stream.runCollect, Effect.map(Chunk.toArray));
+          }).pipe(Stream.runCollect);
 
           const toolCalls = parts.filter((p) => p.type === 'tool-call');
           log.info('streamText with tools', {

@@ -63,4 +63,4 @@ describe('Stage.window', () => {
 });
 
 const collect = <Out, E>(stream: Stream.Stream<Out, E>): Promise<readonly Out[]> =>
-  EffectEx.runPromise(stream.pipe(Stream.runCollect, Effect.map(Chunk.toReadonlyArray)));
+  EffectEx.runPromise(stream.pipe(Stream.runCollect));

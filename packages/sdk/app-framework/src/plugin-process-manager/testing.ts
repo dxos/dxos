@@ -127,7 +127,7 @@ export const createEventCollector = (invoker: OperationInvoker.OperationInvoker)
     // Wait for the subscription to be established.
     yield* Deferred.await(subscriptionReady);
     // Additional yield to ensure PubSub subscription is fully registered.
-    yield* Effect.yieldNow();
+    yield* Effect.yieldNow;
 
     const waitForEvents = (count: number): Effect.Effect<void> =>
       Effect.gen(function* () {

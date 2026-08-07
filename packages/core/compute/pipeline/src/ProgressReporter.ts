@@ -33,7 +33,7 @@ export const logSink: ProgressSink = (snapshot) =>
  */
 export const layer = (options: {
   readonly sink: ProgressSink;
-  readonly throttle?: Duration.DurationInput;
+  readonly throttle?: Duration.Input;
 }): Layer.Layer<never, never, Progress.Progress> =>
   Layer.effectDiscard(
     Effect.gen(function* () {

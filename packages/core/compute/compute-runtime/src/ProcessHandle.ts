@@ -551,7 +551,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       if (delay > 0) {
         yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.withClock(this.#clock));
       } else {
-        yield* Effect.yieldNow();
+        yield* Effect.yieldNow;
       }
       // The alarm has fired and is committed to dispatching its handler. Mark the process busy
       // before clearing #alarmFiber so it is not reported settled across the persistence writes and

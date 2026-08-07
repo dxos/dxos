@@ -114,10 +114,13 @@ export const window = <In, Out, E, R>(
 
   return <E0, R0>(self: Stream.Stream<In, E0, R0>) =>
     self.pipe(
-      Stream.mapAccum([] as readonly In[], (buffer, item) => {
-        const next = [...buffer, item].slice(-size);
-        return [next, next];
-      }),
+      Stream.mapAccum(
+        () => [] as readonly In[],
+        (buffer, item) => {
+          const next = [...buffer, item].slice(-size);
+          return [next, [next]];
+        },
+      ),
       Stream.mapEffect((buffer) => fn(buffer).pipe(Effect.withSpan(id)), { concurrency: 1 }),
       withBuffer(options),
       Stream.filter((item): item is Exclude<Out, undefined> => item !== undefined),
@@ -150,7 +153,7 @@ export const track =
             Stream.tap(() => Effect.sync(() => handle.advance())),
             Stream.tapCause((cause) => Effect.sync(() => handle.fail(Cause.pretty(cause)))),
           ),
-          Stream.execute(Effect.sync(() => handle.done())),
+          Stream.drain(Stream.fromEffect(Effect.sync(() => handle.done()))),
         );
       }),
     );

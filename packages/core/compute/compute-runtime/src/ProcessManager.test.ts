@@ -589,8 +589,8 @@ describe('ManagerImpl', () => {
       // ProcessHandle.requestChildEvent, the late child-exit notification would
       // re-enter #runHandler after the parent set #finished=true, clobbering
       // SUCCEEDED with RUNNING and leaving the process permanently stuck.
-      yield* Effect.yieldNow();
-      yield* Effect.yieldNow();
+      yield* Effect.yieldNow;
+      yield* Effect.yieldNow;
 
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),

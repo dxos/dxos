@@ -40,7 +40,7 @@ export default Anthropic.pipe(
       //
       const parts = yield* LanguageModel.streamText({
         prompt: 'Count from 1 to 5, one number per line.',
-      }).pipe(Stream.runCollect, Effect.map(Chunk.toArray), Effect.provide(model));
+      }).pipe(Stream.runCollect, Effect.provide(model));
       const textDeltas = parts.filter((p) => p.type === 'text-delta');
       const fullText = textDeltas.map((p) => (p as { delta: string }).delta).join('');
 
