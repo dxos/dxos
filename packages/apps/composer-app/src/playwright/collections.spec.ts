@@ -65,8 +65,7 @@ test.describe('Collection tests', () => {
     expect(await host.getObjectByName('Collection 2').getAttribute('aria-owns')).toEqual(collection1);
   });
 
-  // TODO(wittjosiah): Failed on firefox in run 31046879125. Re-enable once fixed.
-  test.fixme('delete a collection', async () => {
+  test('delete a collection', async () => {
     await host.createSpace();
     await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
