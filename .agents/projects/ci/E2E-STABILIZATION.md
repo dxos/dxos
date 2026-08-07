@@ -106,7 +106,12 @@ not test flake, and should be triaged as such rather than as a test fix.
 
 `collaboration.spec.ts` has no live tests.
 
-### 9. Startup harness
+### 9. Startup harness — and four tests CI never runs
+
+The CI pool is `moon exec ':e2e-ci*' plugin-script:e2e`, so composer's `e2e-startup`, `e2e-dev` and
+`e2e-welcome-focus` tasks are outside it. Four of the disabled tests therefore have no bearing on a
+green Check — `Welcome focus` (2, `e2e-welcome-focus`) and both startup entries below
+(`e2e-startup`). Re-enable them for their own sake, not to make CI green.
 
 - `warm-cold start (persisted identity, fresh tab)` — deferred pending the ResetDialog race; only
   ever passed on the retries since removed
