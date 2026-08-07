@@ -4,8 +4,11 @@
 
 Bring an idle Composer tab's resident memory to **300–400 MB** (500 MB
 ceiling), and keep memory proportional to the data a user actually has open.
-Comparable apps sit at 150–500 MB initialized (RESEARCH.md); Composer measured
-~470–860 MB empty and multi-GB with a mailbox open.
+Comparable apps sit at 150–500 MB initialized (RESEARCH.md). An empty Composer
+tab measured ~470–540 MB of attributed allocators, and 615–860 MB of private
+footprint depending on machine load and how much slack the allocators had
+committed (the two quantities are defined below). With a mailbox open it
+reached multiple GB.
 
 ## What "memory usage" means here
 

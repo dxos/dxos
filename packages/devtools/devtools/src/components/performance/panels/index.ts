@@ -4,6 +4,8 @@
 
 import { type ComponentType, lazy } from 'react';
 
+import { type CustomPanelProps } from '../Panel';
+
 export * from './Database';
 export * from './EdgePanel';
 export * from './MemoryPanel';
@@ -18,4 +20,4 @@ export * from './SyncStatus';
  * chart.js and its streaming/luxon adapters (~250 KB) are only needed by this panel, so it loads
  * when rendered rather than with the devtools barrel.
  */
-export const TimeSeries: ComponentType<any> = lazy(() => import('./TimeSeries'));
+export const TimeSeries: ComponentType<CustomPanelProps<{}>> = lazy(() => import('./TimeSeries'));

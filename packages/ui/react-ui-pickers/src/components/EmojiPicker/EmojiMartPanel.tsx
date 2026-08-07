@@ -17,7 +17,7 @@ export type EmojiMartPanelProps = {
  * the pickers barrel, for a panel that only renders once a user opens it.
  */
 const EmojiMartPanel = ({ onEmojiSelect, themeMode }: EmojiMartPanelProps) => (
-  // https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props
+  // Options reference: https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props.
   <EmojiMart
     data={emojiData}
     onEmojiSelect={onEmojiSelect}

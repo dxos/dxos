@@ -123,6 +123,10 @@ export const makeInitialized = (
   Effect.gen(function* () {
     const { skills: propsSkills, contextObjects, ...agentProps } = props;
 
+    // Loaded before anything is persisted: a rejected chunk after the first `Database.add` would
+    // leave a half-built agent graph behind with nothing to clean it up.
+    const { AiContext: AiContextRuntime } = yield* Effect.promise(assistantRuntime);
+
     // Persist any inline (transient) skills so their refs are resolvable from feed bindings later.
     // Refs created with Ref.make(obj) carry an inline target, but when stored in ECHO and read back
     // by a new AiSession, the target is lost and must be found in the DB via tryLoad().
@@ -152,7 +156,6 @@ export const makeInitialized = (
     Obj.setParent(instructions, agent);
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.runtime<Database.Service>();
-    const { AiContext: AiContextRuntime } = yield* Effect.promise(assistantRuntime);
     const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
     // TODO(dmaretskyi): Skill registry.
     const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));

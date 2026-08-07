@@ -26,8 +26,11 @@ postmortems, strategy playbook). Sources linked inline. Passes 1 (norms) and 3
 - The hover tooltip reports the tab's **private memory footprint**; no
   documented numeric threshold for the "high memory" phrasing — it is
   informational, and leak alerts ("Performance Issue Alert") are separate.
-- Memory Saver (Chrome 108+) discards inactive tabs (100–500 MB back per
-  tab); crash limits are ~1–1.5 GB on low-RAM machines, ~4 GB heap cap.
+- Memory Saver (Chrome 108+) discards inactive tabs on heuristics rather than a
+  documented per-tab threshold; how much a discard reclaims is whatever that tab
+  held. Renderer crash points are device- and build-specific — the one figure
+  Chrome does define is V8's ~4 GB per-heap ceiling on 64-bit, which is a
+  separate limit from Memory Saver.
 - Sources: <https://developer.chrome.com/blog/memory-and-energy-saver-mode>,
   <https://support.google.com/chrome/answer/12929150>,
   <https://developer.chrome.com/docs/devtools/memory-problems>.
