@@ -23,7 +23,6 @@ import {
   validateInvitationCode,
 } from '../../credentials';
 import { useForceDarkTheme } from '../../hooks';
-import { meta } from '../../meta';
 import { OnboardingOperation } from '../../operations';
 import { translations } from '../../translations';
 import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome';
