@@ -42,14 +42,7 @@ test.describe('Board', () => {
     await expect(board.column(1).title()).toHaveText(col0Label!);
   });
 
-  // TODO(wittjosiah): Deterministic on firefox — 0/5 locally, while chromium is 5/5. Not the silent
-  //   no-op the harness used to hide: with the harness now throwing on a broken gesture it does not
-  //   throw, so the drag runs and the target placeholder does reach
-  //   `data-mosaic-placeholder-state="active"` before the release. The item still leaves the column
-  //   and never lands — the column ends with one item fewer, which the 10s retry never recovers. So
-  //   the drop is being registered somewhere other than the placeholder that activated. Firefox is
-  //   installed locally now, so this reproduces on demand.
-  test.fixme('rearrange within column', async () => {
+  test('rearrange within column', async () => {
     // Pick whichever column has more items for a reliable test.
     const col0Count = await board.column(0).items().count();
     const col1Count = await board.column(1).items().count();
@@ -106,12 +99,7 @@ test.describe('Board', () => {
     await expect(col1.items().getByRole('heading', { name: draggedLabel! })).toBeVisible();
   });
 
-  // TODO(wittjosiah): Failed on chromium in run 31151115830 — the drag did not land, so column 1 read
-  //   5 items where 6 were expected, having passed on the same commit in 31150524195. That makes
-  //   three of this file's five drag tests deferred for a drag that silently does nothing
-  //   (`rearrange columns` and `rearrange within column` are the others). The pattern points at the
-  //   drag harness rather than at any one test, so fix it there rather than per-test.
-  test.fixme('drag to end of another column', async () => {
+  test('drag to end of another column', async () => {
     const col0 = board.column(0);
     const col1 = board.column(1);
 

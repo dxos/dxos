@@ -69,9 +69,18 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
     [containerId, location],
   );
 
+  // Scrolling pauses activation, not registration. Tearing the drop target down mid-drag also
+  // erases the pointer's aim: pragmatic drops the element from `location.current.dropTargets`, so a
+  // release inside the container's 500ms scroll window resolves to the container and the drop
+  // becomes "move to end" instead of landing in the gap under the cursor. That is what destroyed a
+  // card in `rearrange within column` on firefox — expanding this placeholder scrolls the viewport,
+  // the scroll unregisters every placeholder, and the drop lands nowhere the user aimed.
+  const scrollingRef = useRef(scrolling);
+  scrollingRef.current = scrolling;
+
   useLayoutEffect(() => {
     const root = rootRef.current;
-    if (!root || scrolling) {
+    if (!root) {
       return;
     }
 
@@ -85,16 +94,20 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
       // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
       getDropEffect: () => 'move',
       onDragEnter: () => {
-        setActiveLocation(data.location);
+        if (!scrollingRef.current) {
+          setActiveLocation(data.location);
+        }
       },
       onDragLeave: () => {
-        setActiveLocation(undefined);
+        if (!scrollingRef.current) {
+          setActiveLocation(undefined);
+        }
       },
       onDrop: () => {
         setActiveLocation(undefined);
       },
     });
-  }, [rootRef, data, scrolling, setActiveLocation]);
+  }, [rootRef, data, setActiveLocation]);
 
   return (
     <Comp

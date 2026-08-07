@@ -7,7 +7,6 @@ import { useMemo } from 'react';
 import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type DndContainerHandler, type GetId } from '@dxos/react-ui-dnd';
-import { arrayMove } from '@dxos/util';
 
 export type UseEventHandlerProps<TItem = any, TObject extends Obj.Unknown = Obj.Unknown> = Pick<
   DndContainerHandler<TItem>,
@@ -85,13 +84,21 @@ export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown 
                 : -1;
           const from = items.findIndex((item) => getId(item) === source.id);
           const insertIndex = typeof to === 'number' && to >= 0 ? Math.floor(to) : -1;
-          if (insertIndex !== -1) {
-            if (from !== -1) {
-              arrayMove(items, from, insertIndex);
-            } else {
-              // TODO(burdon): This should be the responsibility of the source container.
-              items.splice(insertIndex, 0, make(get(source.data)));
-            }
+          if (insertIndex === -1) {
+            return;
+          }
+
+          if (from !== -1) {
+            // `to` is measured against the list as the user sees it, which still counts the dragged
+            // item; the insert happens after it has been spliced out, so the index can be one past
+            // the end. A plain array appends, but an ECHO array throws ("index N is out of bounds")
+            // — and since the removal has already committed, the item is destroyed. Dropping on the
+            // container body (`to === items.length`) hits this on every browser.
+            const [item] = items.splice(from, 1);
+            items.splice(Math.min(insertIndex, items.length), 0, item);
+          } else {
+            // TODO(burdon): This should be the responsibility of the source container.
+            items.splice(Math.min(insertIndex, items.length), 0, make(get(source.data)));
           }
         };
 

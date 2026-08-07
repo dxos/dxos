@@ -81,16 +81,26 @@ Both are host→guest replication assertions that never settle. Same suite, same
 
 ## Tier 3 — genuine product bugs or hard races
 
-### 6. `react-ui-mosaic › Board › rearrange columns` — a wrong result, not a timeout
+### 6. Mosaic drag-and-drop — FIXED, two product bugs
 
-The only failure in the whole set that is not a hang: the drag ran and the assertion read
-`Column 2` where `Column 1` was expected (run 31107630885). That is an ordering bug in the product,
-not test flake, and should be triaged as such rather than as a test fix.
+Every mosaic drag failure in this set (`rearrange columns`, `rearrange within column`,
+`drag to end of another column`, and kanban's `rearrange columns`) shares one cause, found by
+logging pragmatic's drop targets through a failing firefox drag:
 
-### 7. Drag-and-drop flakes
+1. `Mosaic.Placeholder` unregistered its drop target for 500ms whenever the container scrolled. A
+   drop released in that window resolves to the container instead of the gap under the cursor, so
+   the drag silently becomes "move to end". Auto-scroll during a drag is normal, and on firefox
+   _expanding a placeholder_ scrolls the viewport — so the aim was erased one frame after being
+   acquired. Fixed by keeping the drop target registered and gating only the visual activation.
+2. `useEventHandlerAdapter.onDrop` then destroyed the card. `to` is measured against the list the
+   user sees, which still counts the dragged item; the insert happens after it has been spliced
+   out, so a container drop asks for index `length` in a list of `length - 1`. A plain array
+   appends; an ECHO array throws `index N is out of bounds` after the removal has committed. That
+   is the "10 items become 9" — browser-independent, reachable by any user dropping a card on the
+   empty area of its own column. Fixed by clamping the insert index.
 
-- `react-ui-mosaic › Board › rearrange within column` (firefox)
-- `plugin-kanban › Kanban MutableSchema › rearrange columns` (webkit, passed 5/5 the run before)
+Measured after the fix: mosaic board suite 21/21 on firefox (`rearrange within column` was 0/5
+before), and both previously-deferred tests re-enabled.
 
 ### 8. Collaboration and presence — awareness-channel races
 
