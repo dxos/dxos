@@ -83,7 +83,7 @@ export const getAll = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T[], nev
  * @returns The first capability implementation, or `Option.none()` if none is contributed.
  */
 export const getOption = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<Option.Option<T>, never, Service> =>
-  Effect.map(getAll(interfaceDef), (all) => Option.fromNullable(all[0]));
+  Effect.map(getAll(interfaceDef), (all) => Option.fromNullishOr(all[0]));
 
 /**
  * Wait for a capability to be available.

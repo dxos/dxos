@@ -328,7 +328,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._hypergraph;
   }
 
-  get registry(): Registry.AtomRegistry {
+  get registry(): Registry.Registry {
     return this.graph.registry;
   }
 

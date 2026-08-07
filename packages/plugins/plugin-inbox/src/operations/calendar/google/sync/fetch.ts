@@ -63,7 +63,7 @@ export const fetchEvents = (
       const { items = [], nextPageToken } = yield* fetchPage(Option.getOrUndefined(state.pageToken));
       return Option.some([
         Chunk.fromIterable(items),
-        { pageToken: Option.fromNullable(nextPageToken), done: !nextPageToken },
+        { pageToken: Option.fromNullishOr(nextPageToken), done: !nextPageToken },
       ] as const);
     }),
   );

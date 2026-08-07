@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
 import { Atom } from 'effect/unstable/reactivity';
 
@@ -87,7 +86,7 @@ const sliceFamily = Atom.family((key: SliceKey) =>
 export const atom = <S extends object>(stateMap: StateMap, id: EntityId): Atom.Atom<Partial<S>> =>
   // The family is keyed/memoized over open `Record<string, unknown>` slices; `S` is a caller-side
   // projection of the open stored value, so the typed view is asserted at this generic boundary.
-  sliceFamily(Data.tuple(stateMap, id)) as Atom.Atom<Partial<S>>;
+  sliceFamily([stateMap, id]) as Atom.Atom<Partial<S>>;
 
 /** Binds an {@link Accessor} over a {@link StateMap} object; all mutations go through `Obj.update`. */
 export const bind = <S extends object = Record<string, unknown>>(stateMap: StateMap): Accessor<S> => {

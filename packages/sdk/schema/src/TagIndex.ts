@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
 import { Atom } from 'effect/unstable/reactivity';
 
@@ -135,9 +134,9 @@ export function atom(
   tagUri?: string | undefined,
 ): ((objectId: EntityId) => Atom.Atom<string[]>) | Atom.Atom<boolean> {
   if (objectId === undefined) {
-    return (objectId: EntityId) => objectTagsFamily(Data.tuple(tagIndex, objectId, undefined));
+    return (objectId: EntityId) => objectTagsFamily([tagIndex, objectId, undefined]);
   }
-  return tagFamily(Data.tuple(tagIndex, objectId, tagUri));
+  return tagFamily([tagIndex, objectId, tagUri]);
 }
 
 /**
@@ -145,7 +144,7 @@ export function atom(
  * per-object family. Re-renders only when that tag's own id set changes (not on unrelated tags).
  */
 export const taggedIdsAtom = (tagIndex: TagIndex, tagId: string): Atom.Atom<readonly EntityId[]> =>
-  taggedIdsFamily(Data.tuple(tagIndex, tagId));
+  taggedIdsFamily([tagIndex, tagId]);
 
 /**
  * Reduce a tag id to its space-relative form for membership comparison. A tag id is a {@link Tag}

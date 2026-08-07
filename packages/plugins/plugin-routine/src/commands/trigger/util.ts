@@ -45,10 +45,10 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
       trigger.enabled ? 'enabled' : 'disabled',
       trigger.enabled ? Ansi.green : Ansi.blackBright,
     ),
-    FormBuilder.option('kind', Option.fromNullable(trigger.spec?.kind)),
+    FormBuilder.option('kind', Option.fromNullishOr(trigger.spec?.kind)),
     FormBuilder.option(
       'remote',
-      Option.fromNullable(remoteStatus),
+      Option.fromNullishOr(remoteStatus),
       Match.type<TriggerRemoteStatus>().pipe(
         Match.withReturnType<Ansi.Ansi>(),
         Match.when('available', () => Ansi.green),
@@ -67,7 +67,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
         ),
       ),
     ),
-    FormBuilder.nestedOption('spec', Option.fromNullable(trigger.spec).pipe(Option.map(printSpec))),
+    FormBuilder.nestedOption('spec', Option.fromNullishOr(trigger.spec).pipe(Option.map(printSpec))),
     FormBuilder.build,
   );
 });

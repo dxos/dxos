@@ -30,8 +30,8 @@ export const handler = Effect.fn(function* () {
     );
   } else {
     const builder = FormBuilder.make({ title: 'HALO Keys' }).pipe(
-      FormBuilder.option('identityKey', Option.fromNullable(identity?.identityKey.truncate())),
-      FormBuilder.option('deviceKey', Option.fromNullable(device?.deviceKey.truncate())),
+      FormBuilder.option('identityKey', Option.fromNullishOr(identity?.identityKey.truncate())),
+      FormBuilder.option('deviceKey', Option.fromNullishOr(device?.deviceKey.truncate())),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

@@ -12,7 +12,7 @@ import { FieldEditor } from '@dxos/react-ui-form';
 import { type ModalController, type TableModel } from '../../model';
 
 type ColumnSettingsProps = {
-  registry?: Registry.AtomRegistry;
+  registry?: Registry.Registry;
   model?: TableModel;
   modals: ModalController;
   onNewColumn: () => void;

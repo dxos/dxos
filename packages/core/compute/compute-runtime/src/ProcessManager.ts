@@ -506,7 +506,7 @@ export class ProcessManagerImpl implements Manager {
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
-      const parentOption = Option.fromNullable(options?.parentProcessId);
+      const parentOption = Option.fromNullishOr(options?.parentProcessId);
 
       const parentHandle =
         options?.parentProcessId !== undefined ? this.#handles.get(options.parentProcessId) : undefined;
@@ -732,7 +732,7 @@ export class ProcessManagerImpl implements Manager {
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
-      const parentOption = Option.fromNullable(record.parentId);
+      const parentOption = Option.fromNullishOr(record.parentId);
       // Deserialization boundary: schema stores space/conversation as plain strings;
       // cast back to opaque branded types.
       const environment: Environment = {

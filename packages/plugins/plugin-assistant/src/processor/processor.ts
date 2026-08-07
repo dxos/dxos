@@ -71,7 +71,7 @@ export type AiChatProcessorOptions = {
   // pair — the catalog's shared model ids are ambiguous without it.
   provider?: DXN.DXN;
   modelRegistry?: Model.Registry;
-  registry?: Registry.AtomRegistry;
+  registry?: Registry.Registry;
   observableRegistry?: AtomRegistry.AtomRegistry;
   /**
    * For tracing.

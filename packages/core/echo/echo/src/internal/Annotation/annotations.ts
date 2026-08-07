@@ -618,7 +618,7 @@ export const getLabelProperty = (entity: AnyProperties): string => {
     return 'name';
   }
   return LabelAnnotation.get(schema).pipe(
-    Option.flatMap((fields) => Option.fromNullable(fields[0])),
+    Option.flatMap((fields) => Option.fromNullishOr(fields[0])),
     Option.getOrElse(() => 'name'),
   );
 };
@@ -669,7 +669,7 @@ export { Dictionary, Key, getDictionary, setDictionary } from './dictionary';
 
 export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
   return SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
-    Option.flatMap((meta) => Option.fromNullable(meta[annotation.key])),
+    Option.flatMap((meta) => Option.fromNullishOr(meta[annotation.key])),
     Option.map(Schema.decodeUnknownSync(annotation.schema)),
   );
 };

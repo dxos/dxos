@@ -119,7 +119,7 @@ export default FetchMessages.pipe(
                 ),
               );
               if (messages.length > 0) {
-                lastMessage = Option.fromNullable(messages.at(-1));
+                lastMessage = Option.fromNullishOr(messages.at(-1));
                 allMessages.push(...messages);
               } else {
                 break;

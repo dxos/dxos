@@ -188,7 +188,7 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
             log('fetched message IDs', { count: ids.length, done: !nextPageToken });
             // Report each page's count as it arrives so the meter's retrieval total leads the fetch.
             onEnumerated?.(ids.length);
-            return [Chunk.fromIterable(ids), Option.fromNullable(nextPageToken)];
+            return [Chunk.fromIterable(ids), Option.fromNullishOr(nextPageToken)];
           }),
         );
       }

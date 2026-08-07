@@ -10,7 +10,7 @@ import { type Database, Filter, Obj, Ref, type Registry } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { distinctBy } from '@dxos/util';
 
-export const useSkills = ({ registry, db }: { registry?: Registry.AtomRegistry; db?: Database.Database }) => {
+export const useSkills = ({ registry, db }: { registry?: Registry.Registry; db?: Database.Database }) => {
   const [registrySkills, setRegistrySkills] = useState<Skill.Skill[]>(
     () => registry?.query(Filter.type(Skill.Skill)).runSync() ?? [],
   );
@@ -75,7 +75,7 @@ export const useSkillHandlers = ({
 }: {
   db: Database.Database;
   context?: AiContext.Binder;
-  registry?: Registry.AtomRegistry;
+  registry?: Registry.Registry;
 }) => {
   const onUpdateSkill = useCallback(
     async (key: string, checked: boolean) => {

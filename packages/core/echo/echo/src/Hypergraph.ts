@@ -46,7 +46,7 @@ export interface Hypergraph extends Database.Queryable {
    * Populated at startup via `registry.add(objects)` / `registry.add(schemas)`.
    * Queries that include no explicit from() clause will fan out to this registry automatically.
    */
-  get registry(): Registry.AtomRegistry;
+  get registry(): Registry.Registry;
 
   /**
    * Query objects.

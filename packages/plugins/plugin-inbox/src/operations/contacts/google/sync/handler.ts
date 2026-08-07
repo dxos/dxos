@@ -56,7 +56,7 @@ const connectionsSource = () =>
       const response = yield* GoogleContacts.listConnections({ pageToken: Option.getOrUndefined(state.pageToken) });
       return Option.some([
         Chunk.fromIterable(response.connections ?? []),
-        { pageToken: Option.fromNullable(response.nextPageToken), done: !response.nextPageToken },
+        { pageToken: Option.fromNullishOr(response.nextPageToken), done: !response.nextPageToken },
       ] as const);
     }),
   );

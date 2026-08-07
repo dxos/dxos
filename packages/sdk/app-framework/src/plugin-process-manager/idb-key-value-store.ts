@@ -34,7 +34,7 @@ export const layerIdb: Layer.Layer<KeyValueStore.KeyValueStore> =
         return KeyValueStore.makeStringOnly({
           get: (key) =>
             Effect.tryPromise({
-              try: () => idb.get<string>(key, store).then(Option.fromNullable),
+              try: () => idb.get<string>(key, store).then(Option.fromNullishOr),
               catch: (err) => idbError('get', key, err),
             }),
 

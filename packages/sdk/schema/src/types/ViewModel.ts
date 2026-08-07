@@ -102,7 +102,7 @@ export const make = ({
 };
 
 export type MakeWithReferencesProps = MakeProps & {
-  registry?: Registry.AtomRegistry;
+  registry?: Registry.Registry;
 };
 
 /**
@@ -152,21 +152,21 @@ export const makeWithReferences = async ({
     await Effect.gen(function* () {
       const referenceDXN = yield* Function.pipe(
         SchemaEx.findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
-        Option.fromNullable,
+        Option.fromNullishOr,
         Option.map((ref) => DXN.make(ref.typename, ref.version)),
       );
 
       const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDXN, registry));
 
       const referencePath = yield* Function.pipe(
-        Option.fromNullable(referenceSchema),
+        Option.fromNullishOr(referenceSchema),
         Option.map((schema) => Type.getSchema(schema)),
         Option.flatMap((schema) => LabelAnnotation.get(schema)),
         Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
       );
 
       if (referenceSchema && referencePath) {
-        const fieldId = yield* Option.fromNullable(view.projection.fields?.find((f) => f.path === property.name)?.id);
+        const fieldId = yield* Option.fromNullishOr(view.projection.fields?.find((f) => f.path === property.name)?.id);
         const title =
           SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.type) ?? String.capitalize(name);
         projection.setFieldProjection({

@@ -50,7 +50,7 @@ export type ViewEditorProps = ThemedClassName<
     type?: Type.AnyEntity;
     view: View.View;
     mode?: 'schema' | 'tag';
-    registry?: Registry.AtomRegistry;
+    registry?: Registry.Registry;
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: EID.EID) => void;
     onDelete?: (fieldId: string) => void;
@@ -115,7 +115,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
         }
 
         const feedScope = from.scopes.find((s) => s._tag === 'feed');
-        return Option.fromNullable(feedScope).pipe(
+        return Option.fromNullishOr(feedScope).pipe(
           Option.map((s) => s.feedUri),
           Option.getOrUndefined,
         );

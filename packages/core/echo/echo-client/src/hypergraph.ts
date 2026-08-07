@@ -48,7 +48,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   // TODO(burdon): Space dependency?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
-  private readonly _registry: Registry.AtomRegistry;
+  private readonly _registry: Registry.Registry;
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
@@ -76,7 +76,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     this._registry.add([Type.Type]);
   }
 
-  get registry(): Registry.AtomRegistry {
+  get registry(): Registry.Registry {
     return this._registry;
   }
 

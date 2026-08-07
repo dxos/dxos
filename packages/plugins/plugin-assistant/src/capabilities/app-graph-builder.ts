@@ -171,12 +171,12 @@ export default Capability.makeModule(
 
             // Resolve chat from persisted state or transient cache.
             const chat = pipe(
-              Option.fromNullable(state.currentChat[objectUri]),
-              Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryMake(dxnStr))),
-              Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
+              Option.fromNullishOr(state.currentChat[objectUri]),
+              Option.flatMap((dxnStr) => Option.fromNullishOr(DXN.tryMake(dxnStr))),
+              Option.flatMap((dxn) => Option.fromNullishOr(Obj.getDatabase(object)?.makeRef(dxn))),
               Option.map((ref) => get(Obj.atom(ref as Ref.Ref<Obj.Unknown>))),
               Option.filter(Obj.isObject),
-              Option.orElse(() => pipe(Option.fromNullable(cache[objectUri]), Option.filter(Obj.isObject))),
+              Option.orElse(() => pipe(Option.fromNullishOr(cache[objectUri]), Option.filter(Obj.isObject))),
               Option.getOrNull,
             );
 

@@ -25,7 +25,7 @@ import { Form, type FormRootProps, SelectField, SelectOptionField } from '../For
 export type FieldEditorProps = Pick<FormRootProps<any>, 'readonly'> & {
   projection: ProjectionModel;
   field: View.FieldType;
-  registry?: Registry.AtomRegistry;
+  registry?: Registry.Registry;
   view?: Obj.Unknown;
   onSave: () => void;
   onCancel?: () => void;

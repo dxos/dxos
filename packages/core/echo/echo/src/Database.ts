@@ -135,7 +135,7 @@ export interface Database extends Queryable {
    * To persist a schema so it replicates to other clients, add the type entity with
    * {@link addType} (e.g. `await db.addType(Type.makeObjectFromJsonSchema(...))`).
    */
-  readonly registry: Registry.AtomRegistry;
+  readonly registry: Registry.Registry;
 
   toJSON(): object;
 

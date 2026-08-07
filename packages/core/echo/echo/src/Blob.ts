@@ -201,5 +201,5 @@ export const exists = (blob: Blob): Effect.Effect<boolean, never, Database.Servi
 export const url = (blob: Blob): Effect.Effect<Option.Option<string>, never, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) => Effect.promise(() => db.getBlobUrl(blob))),
-    Effect.map(Option.fromNullable),
+    Effect.map(Option.fromNullishOr),
   ).pipe(Effect.withSpan('Blob.url'));

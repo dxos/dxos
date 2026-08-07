@@ -24,6 +24,14 @@ const ALIASES = { Registry: 'AtomRegistry', Result: 'AsyncResult' };
 /** Lives in the core barrel, never in the React package. */
 const CORE_ONLY = new Set(['Atom', 'Registry', 'Result', 'AtomRef', 'AtomRpc', 'AtomHttpApi']);
 
+/**
+ * Whether the file's `Registry` binding is the aliased atom namespace rather than `@dxos/echo`'s own
+ * `Registry` module. Both expose a `Registry` member, so a blanket `Registry.Registry` rename
+ * silently rewrites DXOS type references; only rename where the alias is in scope.
+ */
+const bindsAtomRegistry = (source) =>
+  /\bAtomRegistry as Registry\b/.test(source) || /^import (?:type )?\* as Registry from '[^']*reactivity/m.test(source);
+
 const args = process.argv.slice(2);
 const dry = args.includes('--dry');
 const paths = args.filter((arg) => arg !== '--dry');
@@ -61,6 +69,7 @@ const files = execFileSync(
 let changedFiles = 0;
 let aliased = 0;
 let moved = 0;
+let retyped = 0;
 
 for (const file of files) {
   const before = readFileSync(file, 'utf-8');
@@ -91,6 +100,12 @@ for (const file of files) {
     return react.length === 0 ? coreImport : `${coreImport}\nimport { ${react.join(', ')} } from '${REACT}';`;
   });
 
+  // The atom namespace renamed its `Registry` member to `AtomRegistry`. Guarded by the binding check
+  // so `@dxos/echo`'s own `Registry.Registry` -- same spelling, different module -- is left alone.
+  if (bindsAtomRegistry(source)) {
+    source = source.replace(/(?<![\w$])Registry\.Registry\b/g, () => ((retyped += 1), 'Registry.AtomRegistry'));
+  }
+
   if (source !== before) {
     changedFiles += 1;
     if (!dry) {
@@ -99,4 +114,6 @@ for (const file of files) {
   }
 }
 
-console.log(`${dry ? '[dry] ' : ''}${changedFiles} files; ${aliased} aliased, ${moved} moved to the core barrel`);
+console.log(
+  `${dry ? '[dry] ' : ''}${changedFiles} files; ${aliased} aliased, ${moved} moved to the core barrel, ${retyped} Registry.Registry retyped`,
+);

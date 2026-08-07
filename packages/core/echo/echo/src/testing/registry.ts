@@ -40,5 +40,5 @@ export const registryLayerNoop: Layer.Layer<Registry.Service> = Layer.succeed(Re
     firstOrUndefined: async () => undefined,
     subscribe: () => () => {},
     atom: Atom.make((): never[] => []),
-  })) as Registry.AtomRegistry['query'],
-} satisfies Registry.AtomRegistry);
+  })) as Registry.Registry['query'],
+} satisfies Registry.Registry);

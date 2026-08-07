@@ -42,7 +42,7 @@ export const resolveSchemaWithRegistry = (db: Database.Database, query: QueryAST
       db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
     );
     const schema = types.find((t) => Type.getTypename(t) === typename);
-    return Option.fromNullable(schema);
+    return Option.fromNullishOr(schema);
   });
 
   return resolveType(query, resolve).pipe(
@@ -106,7 +106,7 @@ const resolveType = (
           base.pipe(
             Option.map((type) => getTypeAnnotation(Type.getSchema(type))),
             Option.flatMap((annotation) =>
-              Option.fromNullable(direction === 'source' ? annotation?.sourceSchema : annotation?.targetSchema),
+              Option.fromNullishOr(direction === 'source' ? annotation?.sourceSchema : annotation?.targetSchema),
             ),
           ),
         ),
@@ -129,7 +129,7 @@ const resolveType = (
 const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
   Match.value(filter).pipe(
     Match.withReturnType<Option.Option<string>>(),
-    Match.when({ type: 'object' }, ({ typename }) => Option.fromNullable(typename)),
+    Match.when({ type: 'object' }, ({ typename }) => Option.fromNullishOr(typename)),
     Match.when({ type: 'and' }, ({ filters }) =>
       EffectFunction.pipe(filters, Array.map(typenameFromFilter), Array.findFirst(Option.isSome), Option.flatten),
     ),

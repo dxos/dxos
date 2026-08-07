@@ -22,11 +22,11 @@ import { getRegistryScopeForQuery, isSimpleSelectionQuery } from './util';
 export class RegistryQuerySource implements QuerySource {
   public readonly changed = new Event<void>();
 
-  #registry: Registry.AtomRegistry;
+  #registry: Registry.Registry;
   #ctx: Context | undefined = undefined;
   #query: QueryAST.Query | undefined = undefined;
 
-  constructor(registry: Registry.AtomRegistry) {
+  constructor(registry: Registry.Registry) {
     this.#registry = registry;
   }
 

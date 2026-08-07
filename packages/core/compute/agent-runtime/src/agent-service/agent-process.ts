@@ -149,7 +149,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // outstanding work into linked child processes after each turn and folds their results back
         // into the conversation on completion. Absent (the default), the process behaves as a plain
         // conversational agent.
-        const strategy = Option.fromNullable(options.delegationStrategy);
+        const strategy = Option.fromNullishOr(options.delegationStrategy);
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
         const requestModelLayer = AiService.model(

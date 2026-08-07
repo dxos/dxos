@@ -47,7 +47,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     const formSchema = useMemo(() => {
       return Function.pipe(
         type,
-        Option.fromNullable,
+        Option.fromNullishOr,
         Option.map((type) => Type.getSchema(type)),
         Option.map((schema) => withMetaTags(schema)),
         Option.getOrUndefined,

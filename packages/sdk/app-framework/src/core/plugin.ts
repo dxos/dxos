@@ -468,7 +468,7 @@ const resolveModule = (
 ): PluginModuleImpl => {
   const moduleOptions = typeof module === 'function' ? module(options) : module;
   const pluginName = meta.profile.key;
-  const id = Option.fromNullable(moduleOptions.id).pipe(
+  const id = Option.fromNullishOr(moduleOptions.id).pipe(
     Option.match({
       onNone: () => {
         const exportName = Capability.getModuleTag(moduleOptions.activate);

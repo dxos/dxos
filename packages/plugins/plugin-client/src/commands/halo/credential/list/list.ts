@@ -27,9 +27,9 @@ const mapCredentials = (credentials: Credential[]) => {
 const printCredential = (credential: Credential) => {
   const type = credential.subject.assertion['@type'] ?? '<unknown>';
   return FormBuilder.make({ title: type }).pipe(
-    FormBuilder.option('id', Option.fromNullable(credential.id?.truncate())),
-    FormBuilder.option('issuer', Option.fromNullable(credential.issuer?.truncate())),
-    FormBuilder.option('subject', Option.fromNullable(credential.subject?.id?.truncate())),
+    FormBuilder.option('id', Option.fromNullishOr(credential.id?.truncate())),
+    FormBuilder.option('issuer', Option.fromNullishOr(credential.issuer?.truncate())),
+    FormBuilder.option('subject', Option.fromNullishOr(credential.subject?.id?.truncate())),
     FormBuilder.build,
   );
 };

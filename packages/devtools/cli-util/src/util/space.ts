@@ -19,7 +19,7 @@ import { isBun } from '@dxos/util';
 export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFoundError, ClientService> =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    return yield* Option.fromNullable(client.spaces.get(spaceId));
+    return yield* Option.fromNullishOr(client.spaces.get(spaceId));
   }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(spaceId))));
 
 export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
@@ -51,12 +51,12 @@ export const spaceLayer = (
     // is a "Space not found" throw deep inside CredentialsService.
     const resolveSpace = () => {
       if (!fallbackToPersonalSpace) {
-        return spaceId$.pipe(Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))));
+        return spaceId$.pipe(Option.flatMap((id) => Option.fromNullishOr(client.spaces.get(id))));
       }
       return spaceId$.pipe(
-        Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-        Option.orElse(() => Option.fromNullable(AppSpace.getPersonalSpace(client))),
-        Option.orElse(() => Option.fromNullable(client.spaces.get()[0])),
+        Option.flatMap((id) => Option.fromNullishOr(client.spaces.get(id))),
+        Option.orElse(() => Option.fromNullishOr(AppSpace.getPersonalSpace(client))),
+        Option.orElse(() => Option.fromNullishOr(client.spaces.get()[0])),
       );
     };
 

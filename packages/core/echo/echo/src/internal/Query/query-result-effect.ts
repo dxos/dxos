@@ -19,7 +19,7 @@ export const makeQueryResultEffect = <T, E, R>(
   return {
     run: Effect.flatMap(eff, (result) => Effect.promise(() => result.run())),
     first: Effect.flatMap(eff, (result) =>
-      Effect.promise(async () => Option.fromNullable(await result.firstOrUndefined())),
+      Effect.promise(async () => Option.fromNullishOr(await result.firstOrUndefined())),
     ),
 
     // Effect internals: the result is itself an Effect, so it carries the commit prototype.

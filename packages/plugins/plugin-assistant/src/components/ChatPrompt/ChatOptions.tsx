@@ -29,7 +29,7 @@ export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   chat?: ChatModule.Chat;
   db: Database.Database;
   context: AiContext.Binder;
-  registry?: Registry.AtomRegistry;
+  registry?: Registry.Registry;
 };
 
 /**
