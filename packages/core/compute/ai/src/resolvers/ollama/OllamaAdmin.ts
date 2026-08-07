@@ -77,7 +77,9 @@ export type Options = {
 // The HttpClient with trace propagation disabled: the headers it adds by default (`b3`,
 // `traceparent`) are rejected by Ollama's CORS allow-list, blocking every request at preflight.
 // Matches OllamaResolver, which disables it on the chat endpoint for the same reason.
-const ollamaHttpClient = HttpClient.HttpClient.pipe(Effect.map(HttpClient.withTracerPropagation(false)));
+const ollamaHttpClient = HttpClient.HttpClient.pipe(
+  Effect.map(HttpClient.transformResponse(Effect.provideService(HttpClient.TracerPropagationEnabled, false))),
+);
 
 /**
  * Client for the Ollama administrative REST API (model management). Distinct from
@@ -172,7 +174,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
       Effect.scoped(
         Effect.gen(function* () {
           const client = yield* ollamaHttpClient;
-          const request = yield* HttpClientRequest.del(`${endpoint}/api/delete`).pipe(
+          const request = yield* HttpClientRequest.make('DELETE')(`${endpoint}/api/delete`).pipe(
             HttpClientRequest.bodyJson({ model: name }),
           );
           const response = yield* client.execute(request);
@@ -226,11 +228,11 @@ const PullFrame = Schema.Struct({
   total: Schema.optional(Schema.Number),
   error: Schema.optional(Schema.String),
 });
-const decodePullFrame = Schema.decodeUnknownResult(Schema.parseJson(PullFrame));
+const decodePullFrame = Schema.decodeUnknownResult(Schema.fromJsonString(PullFrame));
 
 /** Error body returned by Ollama on a non-OK response. */
 const ErrorBody = Schema.Struct({ error: Schema.optional(Schema.String) });
-const decodeErrorBody = Schema.decodeUnknownResult(Schema.parseJson(ErrorBody));
+const decodeErrorBody = Schema.decodeUnknownResult(Schema.fromJsonString(ErrorBody));
 
 const isOk = (status: number): boolean => status >= 200 && status < 300;
 
@@ -255,7 +257,7 @@ const pullFrame = (frame: string): Stream.Stream<PullProgress, OllamaError> => {
     // Partial/garbage frame: skip rather than fail the whole pull.
     return Stream.empty;
   }
-  const { error, status, digest, completed, total } = decoded.right;
+  const { error, status, digest, completed, total } = decoded.success;
   if (error !== undefined) {
     return Stream.fail(new OllamaError(error));
   }
@@ -265,11 +267,11 @@ const pullFrame = (frame: string): Stream.Stream<PullProgress, OllamaError> => {
 /** Extract the most useful error message from a non-OK response (Ollama returns `{ error }`). */
 const readErrorBody = (response: HttpClientResponse.HttpClientResponse): Effect.Effect<string> =>
   response.text.pipe(
-    Effect.orElse(() => Effect.succeed('')),
+    Effect.catch(() => Effect.succeed('')),
     Effect.map((body) => {
       const decoded = decodeErrorBody(body);
-      if (Result.isSuccess(decoded) && decoded.success.error !== undefined && decoded.right.error.length > 0) {
-        return decoded.right.error;
+      if (Result.isSuccess(decoded) && decoded.success.error !== undefined && decoded.success.error.length > 0) {
+        return decoded.success.error;
       }
       return body.trim().length > 0 ? `HTTP ${response.status}: ${body.slice(0, 300)}` : `HTTP ${response.status}`;
     }),

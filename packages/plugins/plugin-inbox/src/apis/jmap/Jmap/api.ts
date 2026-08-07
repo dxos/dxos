@@ -47,7 +47,9 @@ export const getSession: Effect.Effect<Session, JmapApiError, HttpClient.HttpCli
   function* () {
     const { host, token } = yield* JmapCredentials;
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
-    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const httpClientWithTracerDisabled = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
 
     return yield* HttpClientRequest.get(`https://${host}/.well-known/jmap`).pipe(
       HttpClientRequest.setHeader('accept', 'application/json'),
@@ -75,7 +77,9 @@ export const jmapRequest = (
   Effect.gen(function* () {
     const { token } = yield* JmapCredentials;
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
-    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const httpClientWithTracerDisabled = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
 
     const executed = HttpClientRequest.post(apiUrl).pipe(
       HttpClientRequest.setHeader('accept', 'application/json'),

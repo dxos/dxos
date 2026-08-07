@@ -217,7 +217,7 @@ const githubRequest = <T>(
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
     return yield* clientNoTracer.execute(withAuth(build(), creds)).pipe(
@@ -268,7 +268,7 @@ const githubPaginated = <T>(
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* GitHubCredentials;
     const clientNoTracer = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
     const arraySchema = Schema.Array(itemSchema);
@@ -406,7 +406,7 @@ const githubPatch = <T>(
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
     const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyJsonUnsafe(body));

@@ -24,7 +24,7 @@ export const invoke = Command.make(
     key: Args.text({ name: 'key' }).pipe(Args.withDescription('The key of the function to invoke.')),
     data: Args.text({ name: 'data' }).pipe(
       Args.withDescription('The data to pass to the function.'),
-      Args.withSchema(Schema.parseJson(Schema.Unknown)),
+      Args.withSchema(Schema.fromJsonString(Schema.Unknown)),
     ),
     cpuTimeLimit: Options.integer('cpuTimeLimit').pipe(
       Options.withDescription('The CPU time limit in seconds.'),

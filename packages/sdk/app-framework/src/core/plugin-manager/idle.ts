@@ -37,7 +37,7 @@ const afterPaint: Effect.Effect<void> = Effect.suspend(() => {
     });
   }).pipe(
     Effect.timeout(PAINT_TIMEOUT),
-    Effect.orElse(() => Effect.void),
+    Effect.catch(() => Effect.void),
   );
 });
 

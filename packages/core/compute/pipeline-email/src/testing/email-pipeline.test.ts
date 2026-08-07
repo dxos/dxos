@@ -158,7 +158,7 @@ const summarizeStage: Stage.Stage<Message.Message, Message.Message, never, Ctx> 
     const { summarize } = yield* Ctx;
     const text = Message.extractText(message);
     const result = yield* Effect.tryPromise(() => summarize(text)).pipe(
-      Effect.orElse(() => Effect.succeed<Summary>({ summary: '', isSpam: false, keywords: [] })),
+      Effect.catch(() => Effect.succeed<Summary>({ summary: '', isSpam: false, keywords: [] })),
     );
     const summaryBlock: ContentBlock.Text = { _tag: 'text', text: result.summary };
     return Message.make({

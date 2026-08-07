@@ -24,13 +24,13 @@ export const make = () =>
       return (model, options): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never> => {
         // Resolve only when the request targets the edge provider (or leaves it unset).
         if (options?.provider !== undefined && options.provider !== Provider.edge.id) {
-          return Layer.fail(new AiModelNotAvailableError(model));
+          return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
         // Edge models are served by Anthropic; the catalog supplies the back-end name, the output-token
         // ceiling, and which models use adaptive thinking (Opus).
         const info = Model.get(Provider.edge.id, model);
         if (!info) {
-          return Layer.fail(new AiModelNotAvailableError(model));
+          return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
         const max_tokens = info.characteristics?.maxTokens;
         const thinking =

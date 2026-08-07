@@ -35,7 +35,9 @@ const localModelResolver = Capability.makeModule(() =>
         Layer.provide(FetchHttpClient.layer),
       ),
       OllamaResolver.make({
-        transformClient: HttpClient.withTracerPropagation(false),
+        transformClient: HttpClient.transformResponse(
+          Effect.provideService(HttpClient.TracerPropagationEnabled, false),
+        ),
       }).pipe(Layer.provide(FetchHttpClient.layer)),
     ]),
   ),

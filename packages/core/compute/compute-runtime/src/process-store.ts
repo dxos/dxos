@@ -66,8 +66,8 @@ export type PersistedProcess = Schema.Schema.Type<typeof PersistedProcess>;
 const INDEX_KEY = 'processes';
 const recordKey = (id: Process.ID) => `process/${id}/__record`;
 
-const IndexSchema = Schema.parseJson(Schema.Array(Process.ID));
-const RecordSchema = Schema.parseJson(PersistedProcess);
+const IndexSchema = Schema.fromJsonString(Schema.Array(Process.ID));
+const RecordSchema = Schema.fromJsonString(PersistedProcess);
 
 /**
  * Durable persistence for the process registry over a KeyValueStore.

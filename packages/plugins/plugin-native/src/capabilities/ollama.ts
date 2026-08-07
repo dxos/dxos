@@ -97,7 +97,7 @@ export default Capability.makeModule(
     // callers branch on the result without a typed error channel.
     const runAdmin = <A, E extends { readonly message: string }>(
       effect: Effect.Effect<A, E, HttpClient.HttpClient>,
-    ): Effect.Effect<Result.Either<A, string>> =>
+    ): Effect.Effect<Result.Result<A, string>> =>
       effect.pipe(Effect.provide(clientLayer), Effect.result, Effect.map(Result.mapLeft((error) => error.message)));
 
     // In-flight pull fibers, so a pull can be cancelled via interruption.
@@ -324,7 +324,7 @@ const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, n
     return OllamaResolver.make({
       endpoint,
       provider: Provider.builtIn.id,
-      transformClient: HttpClient.withTracerPropagation(false),
+      transformClient: HttpClient.transformResponse(Effect.provideService(HttpClient.TracerPropagationEnabled, false)),
     });
   }),
 ).pipe(Layer.provide(FetchHttpClient.layer));

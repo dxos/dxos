@@ -47,7 +47,7 @@ const handler = InboxOperation.CreateProjectFromMessage.pipe(
             Effect.provideService(AiService.AiService, aiService),
             Effect.timeout('30 seconds'),
             Effect.map((response) => response.text),
-            Effect.orElse(() => Effect.succeed('')),
+            Effect.catch(() => Effect.succeed('')),
           ),
         );
 

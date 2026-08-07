@@ -38,13 +38,15 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
   // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
   //  Is this an issue on Google's side or is it a bug in `@effect/platform`?
   //  https://github.com/Effect-TS/effect/issues/4568
-  const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+  const httpClientWithTracerDisabled = httpClient.pipe(
+    HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+  );
 
   let request;
   if (options.method === 'POST') {
     request = HttpClientRequest.post(url);
   } else if (options.method === 'DELETE') {
-    request = HttpClientRequest.del(url);
+    request = HttpClientRequest.make('DELETE')(url);
   } else {
     request = HttpClientRequest.get(url);
   }

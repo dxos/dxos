@@ -446,7 +446,7 @@ const AgentEvent = Schema.Union([
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
 const AgentEventsCell = StorageService.cell(
-  Schema.parseJson(Schema.Array(AgentEvent).pipe(Schema.mutable)),
+  Schema.fromJsonString(Schema.Array(AgentEvent).pipe(Schema.mutable)),
   'inputQueue',
 ).pipe(StorageService.withDefault(() => []));
 
@@ -458,7 +458,7 @@ const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).mapFiel
 type Delegation = Schema.Schema.Type<typeof Delegation>;
 
 const DelegationsCell = StorageService.cell(
-  Schema.parseJson(Schema.Array(Delegation).pipe(Schema.mutable)),
+  Schema.fromJsonString(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
 ).pipe(StorageService.withDefault(() => []));
 
@@ -475,7 +475,7 @@ interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
 
 // Id's of processes who's results were already submitted to the agent.
 const ToolCallStateCell = StorageService.cell(
-  Schema.parseJson(ToolCallState.pipe(Schema.mutable)),
+  Schema.fromJsonString(ToolCallState.pipe(Schema.mutable)),
   'toolCallState',
 ).pipe(StorageService.withDefault(() => ({ activeCalls: [] })));
 
@@ -579,7 +579,7 @@ export const isAgentWorkPending = ({
  * message delivered when it fires, or `null` when no self-wake is set.
  */
 const AgentAlarmCell = StorageService.cell(
-  Schema.parseJson(Schema.NullOr(Schema.Struct({ wakeAt: Schema.Number, message: Schema.NullOr(Schema.String) }))),
+  Schema.fromJsonString(Schema.NullOr(Schema.Struct({ wakeAt: Schema.Number, message: Schema.NullOr(Schema.String) }))),
   'agentAlarm',
 ).pipe(StorageService.withDefault(() => null));
 

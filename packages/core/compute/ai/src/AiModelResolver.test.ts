@@ -30,7 +30,8 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
       },
       Effect.gen(function* () {
         const claudeSonnet = yield* AnthropicLanguageModel.model('claude-sonnet-4-6');
-        return (name: DXN.DXN) => (name === SONNET ? claudeSonnet : Layer.fail(new AiModelNotAvailableError(name)));
+        return (name: DXN.DXN) =>
+          name === SONNET ? claudeSonnet : Layer.unwrap(Effect.fail(new AiModelNotAvailableError(name)));
       }),
     ),
   ),
@@ -48,7 +49,8 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
           ),
         );
 
-        return (name: DXN.DXN) => (name === GEMMA ? gemma : Layer.fail(new AiModelNotAvailableError(name)));
+        return (name: DXN.DXN) =>
+          name === GEMMA ? gemma : Layer.unwrap(Effect.fail(new AiModelNotAvailableError(name)));
       }),
     ),
   ),

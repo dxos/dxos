@@ -39,7 +39,7 @@ export class TriggerStateStore extends Context.Service<
     TriggerStateStore,
     Effect.gen(function* () {
       const kv = yield* KeyValueStore.KeyValueStore;
-      const schemaStore = kv.forSchema(Schema.parseJson(TriggerState));
+      const schemaStore = kv.forSchema(Schema.fromJsonString(TriggerState));
       const store: Context.Service.Shape<typeof TriggerStateStore> = {
         getState: Effect.fn('TriggerStateStore.getState')(function* (triggerId: EntityId) {
           const valueOption = yield* schemaStore.get(triggerId).pipe(Effect.orDie);

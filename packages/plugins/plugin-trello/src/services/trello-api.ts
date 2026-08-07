@@ -225,7 +225,9 @@ const shouldRetry = (error: HttpClientError.HttpClientError | ParseResult.ParseE
 const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): TrelloEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
     return yield* clientNoTracer.execute(request).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),

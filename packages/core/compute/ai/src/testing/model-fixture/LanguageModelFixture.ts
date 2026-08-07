@@ -577,12 +577,12 @@ const hashKey = async (key: string): Promise<string> => {
 };
 
 const decodeConversation = (data: string): FixtureConversation =>
-  Schema.decodeSync(Schema.parseJson(FixtureConversation))(data);
+  Schema.decodeSync(Schema.fromJsonString(FixtureConversation))(data);
 
 // Compact (single-line) JSON: the store is treated as opaque generated blobs via `.gitattributes`
 // (`-diff -merge linguist-generated`), so pretty-printing only inflates line counts in review.
 const encodeConversation = (conversation: FixtureConversation): string =>
-  Schema.encodeSync(Schema.parseJson(FixtureConversation))(conversation);
+  Schema.encodeSync(Schema.fromJsonString(FixtureConversation))(conversation);
 
 /**
  * Resolves the suite directory for a test file: `<repo-root>/.store/conversations/<suite>`, where
@@ -756,7 +756,7 @@ class FixtureStore {
 export const __migrate = async (testFilePath: string, legacyCachePath: string): Promise<number> => {
   const { readFile } = await import('node:fs/promises');
   const legacy = Schema.decodeSync(
-    Schema.parseJson(Schema.Struct({ conversations: Schema.Array(FixtureConversation) })),
+    Schema.fromJsonString(Schema.Struct({ conversations: Schema.Array(FixtureConversation) })),
   )(await readFile(legacyCachePath, 'utf-8'));
   const store = new FixtureStore(testFilePath, undefined);
   for (const conversation of legacy.conversations) {

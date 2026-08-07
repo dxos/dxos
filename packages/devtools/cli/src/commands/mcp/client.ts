@@ -56,7 +56,7 @@ const sessionPath = (profile: string, serverUrl: string): string => {
 
 export const loadSession = (profile: string, serverUrl: string): Effect.Effect<McpSession | undefined, never, never> =>
   Effect.tryPromise(() => readFile(sessionPath(profile, serverUrl), 'utf8')).pipe(
-    Effect.flatMap((raw) => Schema.decodeUnknownEffect(Schema.parseJson(McpSession))(raw)),
+    Effect.flatMap((raw) => Schema.decodeUnknownEffect(Schema.fromJsonString(McpSession))(raw)),
     // A missing or corrupt session file is reported by the caller as "not connected".
     Effect.orElseSucceed(() => undefined),
   );

@@ -133,7 +133,7 @@ export const tagMessage = (
       Effect.provide(AiService.model(resolveModel('tag', options.policy)).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
-      Effect.orElse(() => Effect.succeed('')),
+      Effect.catch(() => Effect.succeed('')),
     );
     const parsed = parseTagResult(raw);
     // Deterministic bulk gate overrides the model: an unsubscribe affordance (header or body link)

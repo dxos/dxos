@@ -57,7 +57,7 @@ export const summarizeStage: Stage.Stage<
       Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
-      Effect.orElse(() => Effect.succeed('')),
+      Effect.catch(() => Effect.succeed('')),
     );
     const summary = parseSummary(raw);
     const messageId = String(message.properties?.messageId ?? message.id);

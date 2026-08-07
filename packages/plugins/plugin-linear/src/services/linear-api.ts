@@ -191,7 +191,9 @@ const linearGraphQL = <T>(
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* LinearCredentials;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
     const request = withAuth(HttpClientRequest.post(LINEAR_API_URL), creds).pipe(
       HttpClientRequest.bodyJsonUnsafe({ query, variables }),
     );

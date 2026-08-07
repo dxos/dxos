@@ -63,5 +63,5 @@ export const model: {
   );
 
 export const notAvailable = Layer.succeed(AiService, {
-  model: (model) => Layer.fail(new AiModelNotAvailableError(model)),
+  model: (model) => Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model))),
 });

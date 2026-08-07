@@ -22,7 +22,9 @@ const CONTACT_GROUPS_BASE_URL = 'https://people.googleapis.com/v1/contactGroups'
 const listAllContactGroups = (token: string) =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
-    const client = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const client = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
 
     const groups: GoogleContacts.ContactGroup[] = [];
     let pageToken: string | undefined;

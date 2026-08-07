@@ -334,7 +334,7 @@ const sanitizeRpcs = <Rpcs extends Rpc.Any>(
  * re-delivered input can tell that the previous attempt was in-flight. Cleared automatically
  * when the process reaches a terminal state (the runtime clears the process's storage).
  */
-const OperationStartedCell = StorageService.cell(Schema.parseJson(Schema.Boolean), 'operation/started').pipe(
+const OperationStartedCell = StorageService.cell(Schema.fromJsonString(Schema.Boolean), 'operation/started').pipe(
   StorageService.withDefault(() => false),
 );
 

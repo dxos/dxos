@@ -63,7 +63,9 @@ const getAccountEmail = (token: string, account: string | undefined) =>
     }
 
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
-    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const httpClientWithTracerDisabled = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
 
     const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
       httpClientWithTracerDisabled.execute,
@@ -93,7 +95,7 @@ const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
 

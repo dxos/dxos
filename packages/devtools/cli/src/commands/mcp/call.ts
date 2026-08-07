@@ -21,7 +21,7 @@ export const call = Command.make(
     tool: Args.text({ name: 'tool' }).pipe(Args.withDescription('Tool name (see `dx mcp tools`).')),
     input: Options.text('input').pipe(
       Options.withDescription('Tool arguments as JSON.'),
-      Options.withSchema(Schema.parseJson(Schema.Unknown)),
+      Options.withSchema(Schema.fromJsonString(Schema.Unknown)),
       Options.optional,
     ),
     url: serverUrlOption,

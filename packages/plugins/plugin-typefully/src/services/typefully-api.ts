@@ -167,7 +167,9 @@ const execute = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* TypefullyCredentials;
-    const client = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const client = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
     return yield* client.execute(withAuth(request, creds)).pipe(
       // Read the body as text first so a shape mismatch surfaces the actual payload (Typefully's
       // response shape is under-documented) instead of an opaque "Expected ReadonlyArray<…>".
@@ -202,7 +204,7 @@ const executeVoid = (request: HttpClientRequest.HttpClientRequest): TypefullyEff
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* TypefullyCredentials;
     const client = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
     yield* client
@@ -277,7 +279,7 @@ const getDraftEffect = (id: string): TypefullyEffect<Publisher.PublisherDraft> =
 const deleteDraftEffect = (id: string): TypefullyEffect<void> =>
   resolveSocialSetIdEffect().pipe(
     Effect.flatMap((socialSetId) =>
-      executeVoid(HttpClientRequest.del(`${TYPEFULLY_API_URL}/social-sets/${socialSetId}/drafts/${id}`)),
+      executeVoid(HttpClientRequest.make('DELETE')(`${TYPEFULLY_API_URL}/social-sets/${socialSetId}/drafts/${id}`)),
     ),
   );
 

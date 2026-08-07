@@ -19,7 +19,7 @@ const DURATION_PATTERN = /^(\d+(?:\.\d+)?)\s+(\S+)$/;
  * Resolves an alarm specification into an absolute UNIX timestamp (ms).
  * Returns a {@link Result.fail} with a human-readable message describing invalid input.
  */
-export const resolveWakeAt = (input: ResolveAlarmInput, now: number): Result.Either<number, string> => {
+export const resolveWakeAt = (input: ResolveAlarmInput, now: number): Result.Result<number, string> => {
   const { in: inDuration, at } = input;
   if (inDuration != null && at != null) {
     return Result.fail('Specify either "in" or "at", not both.');

@@ -66,8 +66,8 @@ describe('OllamaAdmin', () => {
       );
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
-        expect(result.left._tag).toBe('OllamaError');
-        expect(result.left.message).toContain('ECONNREFUSED');
+        expect(result.failure._tag).toBe('OllamaError');
+        expect(result.failure.message).toContain('ECONNREFUSED');
       }
     });
   });
@@ -144,7 +144,7 @@ describe('OllamaAdmin', () => {
       );
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
-        expect(result.left.message).toBe('pull model manifest: file does not exist');
+        expect(result.failure.message).toBe('pull model manifest: file does not exist');
       }
     });
   });
@@ -204,11 +204,11 @@ const layerFor = (fetch: typeof globalThis.fetch): Layer.Layer<HttpClient.HttpCl
 const run = <A, E>(effect: Effect.Effect<A, E, HttpClient.HttpClient>, fetch: typeof globalThis.fetch): Promise<A> =>
   EffectEx.runPromise(effect.pipe(Effect.provide(layerFor(fetch))));
 
-/** Run an admin effect to an `Either`, capturing the typed failure rather than throwing. */
+/** Run an admin effect to a `Result`, capturing the typed failure rather than throwing. */
 const runExit = <A, E>(
   effect: Effect.Effect<A, E, HttpClient.HttpClient>,
   fetch: typeof globalThis.fetch,
-): Promise<Result.Either<A, E>> => EffectEx.runPromise(effect.pipe(Effect.provide(layerFor(fetch)), Effect.result));
+): Promise<Result.Result<A, E>> => EffectEx.runPromise(effect.pipe(Effect.provide(layerFor(fetch)), Effect.result));
 
 /** Build a stub `fetch` that ignores its arguments and yields the response from `handler`. */
 const mockFetch =
