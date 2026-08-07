@@ -29,8 +29,8 @@ export class ToolResolverService extends Context.Service<
     resolve: (id) => Effect.fail(new AiToolNotFoundError(id)),
   });
 
-  static resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError, ToolResolverService> =
-    Effect.serviceFunctionEffect(ToolResolverService, (_) => _.resolve);
+  static resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError, ToolResolverService> = (id) =>
+    ToolResolverService.use((service) => service.resolve(id));
 
   static resolveToolkit: (
     ids: ToolId[],
@@ -46,7 +46,7 @@ export class ToolResolverService extends Context.Service<
           ),
           Effect.result,
         ),
-      ).pipe(Effect.map(Array.filterMap(Result.getSuccess)));
+      ).pipe(Effect.map((results) => Array.filterMap(results, (result) => result)));
 
       return Toolkit.make(...tools);
     });

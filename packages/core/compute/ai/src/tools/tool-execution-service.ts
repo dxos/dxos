@@ -27,5 +27,6 @@ export class ToolExecutionService extends Context.Service<
       toolkit.of(Record.map(toolkit.tools, (tool, name) => Effect.fail(new AiToolNotFoundError(name))) as any) as any,
   });
 
-  static handlersFor = Effect.serviceFunction(ToolExecutionService, (_) => _.handlersFor);
+  static handlersFor = <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
+    ToolExecutionService.use((service) => Effect.succeed(service.handlersFor(toolkit)));
 }
