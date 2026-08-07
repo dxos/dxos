@@ -4,8 +4,8 @@ Every disabled Playwright test in the repo, grouped by root cause and ordered by
 looks. Produced by a flake sweep that ran the 9-cell e2e matrix repeatedly, deferring each failure
 until the suite ran green (see [How this list was built](#how-this-list-was-built)).
 
-**35 tests are off**: 9 `test.fixme`, 11 `test.skip`, and 5 `test.describe.skip` suites covering a
-further 15. Seven have been re-enabled since this list was written — see
+**38 tests are off**: 9 `test.fixme`, 11 `test.skip`, and 5 `test.describe.skip` suites covering a
+further 15. Four have been re-enabled since this list was written — see
 [What has been resolved](#what-has-been-resolved).
 
 Findings below marked **verified** were reproduced (or ruled out) against a local chromium run of the
@@ -138,9 +138,31 @@ the failure to a different test next run:
 
 ## What has been resolved
 
-Seven tests are back on: `Basic tests › create space, which is displayed in tree`; `Collection tests ›
-create collection`, `delete a collection`, `deletion undo restores collection` (`collections.spec.ts`
-now has none disabled); and `Comments tests › delete message`, `delete thread`, `undo delete thread`.
+Four tests are back on: `Basic tests › create space, which is displayed in tree`, and `Collection
+tests › create collection`, `delete a collection`, `deletion undo restores collection` —
+`collections.spec.ts` now has none disabled.
+
+The three `Comments tests` delete tests were re-enabled and then **re-deferred**. They passed a local
+chromium run, but their notes cited firefox and webkit, and those browsers took them out again in run 31147977323. Recorded here because it is the general lesson of this pass: a local chromium run clears a
+test only if chromium is where it was failing.
+
+## Cache hits can hide deterministic failures
+
+Two `storybook` jobs failed mid-sweep and looked like new flakes. Both reproduced locally on the first
+try, deterministically, and both predate this work:
+
+- `plugin-assistant › AssistantSettings › Default` raised `Missing PluginManagerContext` — the story
+  renders a component that reads a capability through `useOptionalCapability`, which raises without a
+  plugin manager rather than returning undefined. Fixed with a `withPluginManager` decorator.
+- `plugin-tasks › Convert To Task` asserted a sub-pixel spread between the tallest and shortest
+  `.cm-line`, to prove an anchor chip does not make its line taller. The editor's first line carries
+  the content's top padding in its bounding box (56px against every other line's 32px), so the
+  assertion could not pass whatever the chip did. Instrumenting it showed the chip's line at 32px —
+  the property under test was holding. Fixed by comparing the converted line to one plain sibling.
+
+They had been passing on stale moon cache entries; a change to `plugin-space` invalidated the
+downstream `test-storybook` graph and exposed them. `cli:test` surfaced the same way. Worth
+remembering when reading a green Check: it can be reporting cache hits rather than runs.
 
 Two CI-hygiene changes make the remaining signal trustworthy: `retries: 0`, so a flake fails loudly
 instead of costing 3× the runtime; and `quarantine: false` on the Trunk uploader, after two cells in
