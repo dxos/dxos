@@ -4,7 +4,9 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
@@ -71,8 +73,8 @@ describe('OpaqueToolkit.merge', () => {
       const withHandler = yield* merged.handlers;
       expect(Object.keys(withHandler.tools).sort()).toEqual(['age']);
 
-      const ageResult = yield* withHandler.handle('age', {} as never);
-      expect(ageResult.result).toEqual(42);
+      const ageResult = yield* withHandler.handle('age', {} as never).pipe(Effect.flatMap(Stream.runLast));
+      expect(Option.getOrThrow(ageResult).result).toEqual(42);
     }),
   );
 
@@ -84,10 +86,10 @@ describe('OpaqueToolkit.merge', () => {
       const withHandler = yield* merged.handlers;
       expect(Object.keys(withHandler.tools).sort()).toEqual(['age', 'name']);
 
-      const ageResult = yield* withHandler.handle('age', {} as never);
-      const nameResult = yield* withHandler.handle('name', {} as never);
-      expect(ageResult.result).toEqual(42);
-      expect(nameResult.result).toEqual('Alice');
+      const ageResult = yield* withHandler.handle('age', {} as never).pipe(Effect.flatMap(Stream.runLast));
+      const nameResult = yield* withHandler.handle('name', {} as never).pipe(Effect.flatMap(Stream.runLast));
+      expect(Option.getOrThrow(ageResult).result).toEqual(42);
+      expect(Option.getOrThrow(nameResult).result).toEqual('Alice');
     }),
   );
 });

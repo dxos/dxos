@@ -29,7 +29,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
         name: 'Anthropic',
       },
       Effect.gen(function* () {
-        const claudeSonnet = yield* AnthropicLanguageModel.model('claude-sonnet-4-6');
+        const claudeSonnet = yield* AnthropicLanguageModel.model('claude-sonnet-4-6').captureRequirements;
         return (name: DXN.DXN) =>
           name === SONNET ? claudeSonnet : Layer.unwrap(Effect.fail(new AiModelNotAvailableError(name)));
       }),
@@ -41,7 +41,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
         name: 'LM Studio',
       },
       Effect.gen(function* () {
-        const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b').pipe(
+        const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b').captureRequirements.pipe(
           Effect.provide(
             OpenAiClient.layer({
               apiUrl: LMStudioResolver.DEFAULT_LMSTUDIO_ENDPOINT,

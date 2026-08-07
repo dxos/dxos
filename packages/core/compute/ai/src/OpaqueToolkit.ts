@@ -10,8 +10,6 @@ import type * as Schema from 'effect/Schema';
 import type * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import type { SchemaAST } from '@dxos/effect';
-
 /**
  * Unique identifier for opaque toolkit instances.
  */
@@ -179,7 +177,7 @@ export type OpaqueTools<R = never> = Record<
   Tool.Tool<
     string,
     {
-      readonly parameters: AnyStructSchemaNoContext;
+      readonly parameters: Schema.Codec<any, any>;
       readonly success: Schema.Codec<any, any>;
       readonly failure: typeof Schema.Never;
       readonly failureMode: Tool.FailureMode;
@@ -187,17 +185,6 @@ export type OpaqueTools<R = never> = Record<
     R
   >
 >;
-
-export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
-  readonly [Schema.TypeId]: any;
-  readonly make: any;
-  readonly Type: any;
-  readonly Encoded: any;
-  readonly Context: never;
-  readonly ast: SchemaAST.AST;
-  readonly fields: Schema.Struct.Fields;
-  readonly annotations: any;
-}
 
 /**
  * Provides an opaque toolkit to the agent.

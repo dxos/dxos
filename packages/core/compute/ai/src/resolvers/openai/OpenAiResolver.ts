@@ -26,7 +26,7 @@ export const make = () =>
         Record<DXN.DXN, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>
       > = {};
       for (const model of Model.forProvider(Provider.openai.id)) {
-        modelMap[model.id] = yield* OpenAiLanguageModel.model(model.backend);
+        modelMap[model.id] = yield* OpenAiLanguageModel.model(model.backend).captureRequirements;
       }
       return modelMap;
     }),

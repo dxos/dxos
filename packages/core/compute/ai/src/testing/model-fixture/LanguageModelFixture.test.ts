@@ -5,6 +5,7 @@
 import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Chat from 'effect/unstable/ai/Chat';
@@ -27,10 +28,10 @@ import * as LanguageModelFixture from './LanguageModelFixture';
 // causing a schema decode failure. This local definition uses the correct schema.
 const AnthropicWebSearch = Tool.providerDefined({
   id: 'anthropic.web_search_20250305' as `${string}.${string}`,
-  toolkitName: 'AnthropicWebSearch',
+  customName: 'AnthropicWebSearch',
   providerName: 'web_search',
-  args: {},
-  parameters: { query: Schema.optional(Schema.String) },
+  args: Schema.Struct({}),
+  parameters: Schema.Struct({ query: Schema.optional(Schema.String) }),
   success: Schema.Unknown,
 })({});
 
@@ -115,7 +116,7 @@ describe('memoization', () => {
             }),
           );
 
-          const lastMessage = (yield* chat.history).content.at(-1);
+          const lastMessage = (yield* Ref.get(chat.history)).content.at(-1);
           if (lastMessage?.role === 'tool') {
             continue;
           } else {

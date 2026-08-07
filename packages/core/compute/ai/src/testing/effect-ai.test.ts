@@ -108,7 +108,7 @@ describe('LanguageModel', () => {
           }).pipe(
             // Effect.tap((response) => Console.log(response)),
             Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
-            Effect.retry(EffectFunction.pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
+            Effect.retry(Schedule.max([Schedule.exponential('1 second'), Schedule.recurs(2)])),
             Effect.timeout('30 seconds'),
           );
 
