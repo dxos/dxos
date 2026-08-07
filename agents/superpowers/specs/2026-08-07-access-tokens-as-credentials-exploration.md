@@ -87,8 +87,17 @@ One canonical stored shape plus two overlapping ones:
    (`protocols/src/edge/edge.ts:379`); the real token lives in the kms-service
    `SpaceSecretsObject` DO and is fetched per-use via `/oauth/token`
    (`edge-client/src/edge-http-client.ts:247`), gated by an EDGE-side **space membership**
-   check. Function invocations get a space-bound `AccessTokenService` binding that cannot
-   name another space (`compute-runtime/src/services/access-token-resolver.ts`).
+   check (`DATA_SERVICE.isSpaceMember`, edge `kms-service/src/api.ts:158`). Function
+   invocations get a space-bound `AccessTokenService` binding that cannot name another
+   space (`compute-runtime/src/services/access-token-resolver.ts`).
+
+Verified against the edge repo (2026-08-07): **managed mode is only enabled for Google**
+(`kms-service/src/oauth/managed-tokens.ts` — `MANAGED_PROVIDERS = {GOOGLE}`). For every
+other provider — GitHub included — the kms DO custodies the _refresh_ token and runs the
+20-minute refresh alarm, but each refreshed _access_ token is published back into the ECHO
+`AccessToken` object (`SpaceSecretsObject._publishAccessToken` → `setDocumentPath`), i.e.
+replicated in plaintext to the space. Today's split is therefore "EDGE holds the renewal
+capability, the space holds the live secret" for all non-Google providers.
 
 Sharing/gating today:
 
@@ -226,7 +235,119 @@ Ordered so each step survives the Keyhive cut-over:
    `removeMember`, `grantServiceAccess`) already names these verbs, so consumers don't
    move again.
 
-## 5. Open questions
+## 5. Case study: GitHub App connections (installation-style connectors)
+
+GitHub offers two integration models, and the difference maps directly onto the custody
+tiers above. Facts verified against docs.github.com, 2026-08.
+
+### 5.1 The two models
+
+|                       | OAuth App (classic)                                 | GitHub App                                                                                      |
+| --------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Actor                 | Always _the user_ (token = user's access ∩ scopes)  | Itself (`app[bot]`, installation tokens) **or** on behalf of a user (user-to-server)            |
+| Grant shape           | Coarse classic scopes (`repo` = every private repo) | Installation on an org/user with **per-repo selection** + fine-grained per-category permissions |
+| Token lifetimes       | User token **non-expiring** by default              | App JWT ≤10 min; installation token **1 h**; user-to-server 8 h + 6-month rotating refresh      |
+| Down-scoping          | None                                                | Installation token can be minted narrowed to specific `repositories` + `permissions` per mint   |
+| Durable secrets       | Client secret + every user's non-expiring token     | **App RSA private key** (crown jewel), client secret, refresh tokens                            |
+| Rate limits           | 5k/h per user, fixed                                | Scales per installation (up to 12.5k/h each)                                                    |
+| Webhooks              | Per-repo, manually managed                          | App-level, auto-managed across installations                                                    |
+| Survives user leaving | No (token dies with access)                         | Yes (installation belongs to the org)                                                           |
+
+GitHub's own guidance: "In general, GitHub Apps are preferred over OAuth apps"; OAuth
+Apps receive only security lockdowns while Apps keep gaining capabilities (enterprise
+ownership/installation APIs 2025–26).
+
+### 5.2 What we do today
+
+The DXOS GitHub connector is **already a GitHub App — but we only use its
+user-authorization half**:
+
+- `plugin-github/src/capabilities/connector.ts:65` declares `scopes: []` with the comment
+  that permissions come from the App's settings (user-to-server flow ignores scope
+  strings). Edge's provider config (`kms-service/src/oauth/provider.ts:50`) notes the 8 h /
+  6-month token model, and the refresh pipeline specifically handles GitHub's single-use
+  rotating refresh tokens (`space-secrets.ts:331`).
+- So the current connection is _user-identity-shaped_: the token acts as the connecting
+  user, is bound to their standing, and (per §1.4) the live 8 h access token is published
+  into the space document in plaintext.
+- No GitHub App _installation_ machinery exists anywhere in edge: no app-id/PEM env, no
+  RS256 app-JWT signer (the only JWT signer is atproto's ES256 `AtprotoJwtFacotry`), no
+  `POST /app/installations/{id}/access_tokens` call, no installation-token cache, and the
+  generic `/webhook/:token` endpoint has no signature verification (grep: no
+  `X-Hub-Signature-256` handling), so app webhooks can't be received safely yet.
+- Vestige to clean up either way: the CLI preset still requests classic scopes
+  `['repo', 'read:user']` (`plugin-connector/src/commands/connector/util.ts:27`), which the
+  user-to-server flow ignores.
+
+### 5.3 Why installation connections need — and reward — server custody
+
+The user's instinct is right: installation-style connections are only possible with
+server-custodied credentials, and in exchange they give the custody model its cleanest
+tier:
+
+1. **The durable secret isn't a token at all.** It's the App's RSA private key — one
+   platform-level secret, held once in kms (ideally non-extractable / KMS-signed), never
+   per-space, never replicable to a client by construction.
+2. **Everything downstream is ephemeral.** JWTs live ≤10 min, installation tokens 1 h.
+   There is nothing worth storing in a space document — a "connection" object becomes pure
+   metadata: `{installationId, resourceOwner, repoSelection, permissions}`. Zero secret
+   bytes at rest client-side; the encryption-at-rest problem vanishes for this tier
+   rather than being solved.
+3. **`use` is the only meaningful grant.** You cannot hand out "the credential" — only the
+   ability to ask kms to mint. The grant model (§3.2) stops being aspirational: every
+   access is necessarily a mediated mint/proxy call, which is exactly the enforcement
+   point where per-principal `ServiceAccess` checks and audit logging belong.
+4. **Attenuation is enforced by the provider.** Minting can narrow to specific repos and
+   permissions per request — so "agent Z may only touch repo X read-only" becomes a
+   _GitHub-enforced_ property of the token it receives, not a policy we hope our own code
+   honors. This is capability attenuation (the Keyhive sub-delegation idea) implemented by
+   the upstream service today.
+5. **Space-level, not user-level, sharing.** An installation belongs to the org/user who
+   installed it and survives the connecting user leaving. A space's GitHub connection
+   backed by an installation is naturally a _shared_ credential with a real owner — unlike
+   today, where "the space's GitHub access" is secretly one member's personal token and
+   dies (or lingers dangerously) when they leave.
+6. **Attribution splits cleanly.** App-authored actions land as `app[bot]` on GitHub, and
+   our mint-time grant check names the internal principal — user-authored actions stay on
+   the user-to-server flow. Today every action by every member and agent is
+   indistinguishable from the connecting user.
+
+The atproto path is the precedent: kms already does DPoP-signed _proxied_ calls where the
+key never leaves the DO (`proxyAtprotoCall`). Installation-token minting is the same
+shape — a per-provider signer plus a short-TTL token cache — generalized.
+
+### 5.4 The generalized connector taxonomy
+
+GitHub is the canonical case of a split that recurs across providers, and the connector
+model should name it:
+
+- **User-identity connections** (OAuth/user-to-server): act _as a person_; right for
+  reading your inbox, posting as you. Custody tiers L\*/C1; grant `read` is meaningful.
+- **Installation connections** (GitHub App installations; Slack bot tokens; Google service
+  accounts / domain-wide delegation; Atlassian Forge): act _as the integration_ against a
+  resource set granted by a resource owner; platform custodies an app-level key; per-use
+  short-lived, down-scoped tokens. Custody tier C2 only; grants are
+  `discover`/`use`/`manage` — `read` doesn't exist.
+
+DX-917's requirement flow gets sharper with this split: "requirement: github repo X"
+resolves against installation coverage (is repo X in the selection?) rather than "is
+there a GitHub token in the space", and an unsatisfiable requirement becomes an
+actionable "install/extend the app on repo X" prompt.
+
+### 5.5 What building it would take (edge-side)
+
+1. App registration + secrets: app id, RSA PEM (env/keyring), webhook secret.
+2. An RS256 app-JWT signer in kms (sibling of the atproto ES256 factory).
+3. Installation storage: `installationId` per connection (captured via the `setup_url` /
+   post-install callback), plus repo-selection metadata refresh.
+4. Mint endpoint/binding: `getInstallationToken({connectionId, repos?, permissions?})`,
+   membership + (once enforced) `ServiceAccess` checked at mint, 1 h cache keyed by the
+   narrowed scope — the C2 tier's first concrete API.
+5. Webhook receiver with `X-Hub-Signature-256` HMAC verification (the existing
+   `/webhook/:token` bearer-URL scheme is insufficient for provider webhooks; the Ghost
+   handler in hub-service is the only HMAC precedent in edge).
+
+## 6. Open questions
 
 1. **Vault granularity** — one vault per space, per connector, or per credential? Per-
    credential maximizes gating and revocation precision but multiplies BeeKEM groups;
@@ -271,3 +392,18 @@ Ordered so each step survives the Keyhive cut-over:
   IACR ePrint 2026/1434 (BeeKEM analysis), lab notebooks 00–06 at
   inkandswitch.com/keyhive/notebook.
 - Linear: DX-799, DX-917, DX-979, DX-758/759, DX-874, DX-1107.
+- Edge repo (dxos/edge, verified 2026-08-07 @ 2e59d8a): kms-service
+  `src/store/space-secrets.ts` (`SpaceSecretsObject` DO, refresh alarm,
+  `proxyAtprotoCall`; `makeAuthorizedCall` is an unimplemented stub),
+  `src/store/space-secrets-store.ts` (`TokenInfo`), `src/oauth/{provider,handler,managed-tokens}.ts`
+  (provider configs; `MANAGED_PROVIDERS = {GOOGLE}`), `src/api.ts` (`/oauth/*` routes;
+  `/oauth/initiate` and `/atproto/proxy` lack membership checks — TODOs),
+  `src/atproto/{handler,challenge}.ts` (DPoP/ES256 signer), hub-protocol
+  `src/middleware.ts:350` (`edgeAuth`; nonce + ServiceAccess verification TODOs;
+  `serviceAccessCapabilities` set but never enforced), functions-service
+  `src/triggers/webhook.ts` (bearer-URL webhook, no HMAC).
+- GitHub integration models: docs.github.com — "Differences between GitHub Apps and OAuth
+  apps", "About authentication with a GitHub App", "Generating an installation access
+  token", "Deciding when to build a GitHub App"; changelogs: fine-grained PATs GA
+  (2025-03), enterprise-owned Apps GA (2025-03), enterprise installation APIs (2025-07),
+  PKCE (2025-07), credential revocation API for OAuth/App credentials (2026-03).
