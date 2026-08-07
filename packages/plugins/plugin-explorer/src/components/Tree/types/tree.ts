@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { DXN, Key, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -15,7 +16,7 @@ export const TreeNodeType = Schema.Struct({
   children: Schema.mutable(Schema.Array(Key.EntityId)),
   data: Schema.mutable(Schema.Record(Schema.String, Schema.Any)),
   ref: Schema.optional(Ref.Ref(TestSchema.Expando)),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type TreeNodeType = Schema.Schema.Type<typeof TreeNodeType>;
 

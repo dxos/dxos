@@ -13,6 +13,7 @@ import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
@@ -453,7 +454,7 @@ const AgentEventsCell = StorageService.cell(
  * Tracks delegated sub-agent child processes (pid -> correlation id) so that, after a hibernation,
  * a delegated child's exit can be matched back to the work it was fulfilling.
  */
-const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).pipe(Schema.mutable);
+const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).mapFields(Struct.map(Schema.mutableKey));
 type Delegation = Schema.Schema.Type<typeof Delegation>;
 
 const DelegationsCell = StorageService.cell(
@@ -467,7 +468,7 @@ const ToolCallState = Schema.Struct({
       pid: Process.ID,
       // Whether the result was reported to the agent.
       reported: Schema.Boolean,
-    }).pipe(Schema.mutable),
+    }).mapFields(Struct.map(Schema.mutableKey)),
   ).pipe(Schema.mutable),
 });
 interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}

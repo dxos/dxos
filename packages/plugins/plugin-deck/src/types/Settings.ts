@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 export const Settings = Schema.Struct({
   showHints: Schema.optional(
@@ -39,5 +40,5 @@ export const Settings = Schema.Struct({
         'Let the deck keep scrolling once the last plank reaches the right edge, so it can be brought to the front like any other plank — the one before it collapses to a spine, leaving empty space beside it.',
     }),
   ),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

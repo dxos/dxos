@@ -6,6 +6,7 @@ import { RegistryContext } from '@effect/atom-react';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
 import {
@@ -153,7 +154,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
             ParentLabelAnnotation.set(true),
             Schema.optional,
           ),
-        }).pipe(Schema.mutable);
+        }).mapFields(Struct.map(Schema.mutableKey));
       }
 
       return base.pipe(Schema.mutable);

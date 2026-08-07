@@ -46,7 +46,7 @@ const extend = <Fields extends Schema.Struct.Fields>(format: Format.TypeFormat, 
       }),
       ...fields,
     }),
-  ).pipe(Schema.mutable);
+  ).mapFields(Struct.map(Schema.mutableKey));
 
 interface FormatSchemaCommon extends BaseProperty {
   type: TypeEnum;

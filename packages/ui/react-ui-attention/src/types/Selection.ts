@@ -4,6 +4,7 @@
 
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { type Aspect, type Manager, define } from './ViewState';
 
@@ -13,21 +14,23 @@ export const Selection = Schema.Union([
   Schema.Struct({
     mode: Schema.Literal('single'),
     id: Schema.optional(Schema.String),
-  }).pipe(Schema.mutable),
+  }).mapFields(Struct.map(Schema.mutableKey)),
   Schema.Struct({
     mode: Schema.Literal('multi'),
-    ids: Schema.Array(Schema.String).pipe(Schema.mutable),
+    ids: Schema.Array(Schema.String).mapFields(Struct.map(Schema.mutableKey)),
   }).pipe(Schema.mutable),
   Schema.Struct({
     mode: Schema.Literal('range'),
     from: Schema.optional(Schema.String),
     to: Schema.optional(Schema.String),
-  }).pipe(Schema.mutable),
+  }).mapFields(Struct.map(Schema.mutableKey)),
   Schema.Struct({
     mode: Schema.Literal('multi-range'),
-    ranges: Schema.Array(Schema.Struct({ from: Schema.String, to: Schema.String })).pipe(Schema.mutable),
+    ranges: Schema.Array(Schema.Struct({ from: Schema.String, to: Schema.String })).mapFields(
+      Struct.map(Schema.mutableKey),
+    ),
   }).pipe(Schema.mutable),
-]).pipe(Schema.mutable);
+]);
 
 export type Selection = Schema.Schema.Type<typeof Selection>;
 

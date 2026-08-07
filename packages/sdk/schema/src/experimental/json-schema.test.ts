@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
 import { JsonSchema } from '@dxos/echo';
@@ -46,7 +47,7 @@ describe('json-schema', () => {
       const schema2 = Schema.Struct({
         x: Schema.optional(Schema.Number),
         y: Schema.optional(Schema.String),
-      }).pipe(Schema.mutable);
+      }).mapFields(Struct.map(Schema.mutableKey));
 
       const schema3 = Schema.Struct({
         x: Schema.Number,

@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { Format } from '@dxos/echo';
@@ -16,7 +17,7 @@ import { Form } from '../../../Form';
 
 const schema = Schema.Struct({
   name: Schema.String.annotate({ title: 'Name' }).pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 type Values = Schema.Schema.Type<typeof schema>;
 

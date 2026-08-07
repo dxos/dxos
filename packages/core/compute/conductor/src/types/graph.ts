@@ -54,7 +54,7 @@ export const ComputeNode = Schema.extend(
     // TODO(dmaretskyi): Reuse `value`.
     enabled: Schema.optional(Schema.Boolean),
   }),
-).pipe(Schema.mutable);
+).mapFields(Struct.map(Schema.mutableKey));
 
 export interface ComputeNode extends Schema.Schema.Type<typeof ComputeNode> {}
 

@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
@@ -69,7 +70,7 @@ export const viewAspect: ViewState.Aspect<VersioningView> = ViewState.define<Ver
     mode: Schema.optional(Schema.Literals(['editing', 'suggesting', 'viewing'])),
     suggestion: Schema.optional(Schema.Struct({ author: Schema.String, from: Schema.Number, to: Schema.Number })),
     hiddenAuthors: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
-  }).pipe(Schema.mutable),
+  }).mapFields(Struct.map(Schema.mutableKey)),
   defaultValue: () => ({}),
 });
 

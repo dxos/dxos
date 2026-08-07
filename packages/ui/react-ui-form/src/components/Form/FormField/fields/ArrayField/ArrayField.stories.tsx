@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { FormLayoutAnnotation, FormOrderedAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
@@ -45,17 +46,17 @@ const headerFields = {
 const Pipeline = Schema.Struct({
   ...headerFields,
   columns: columnsField,
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 const OrderedPipeline = Schema.Struct({
   ...headerFields,
   columns: columnsField.pipe(FormOrderedAnnotation.set(true)),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 const StringPipeline = Schema.Struct({
   ...headerFields,
   columns: Schema.Array(Schema.String).pipe(FormOrderedAnnotation.set(true)),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 type PipelineValues = { name?: string; description?: string; columns: readonly unknown[] };
 

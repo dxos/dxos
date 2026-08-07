@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 export const Settings = Schema.Struct({
   /** Group messages into conversations and display only the most recent message per conversation. */
@@ -24,5 +25,5 @@ export const Settings = Schema.Struct({
       description: 'Render remote images inline. When off, image links are shown as plain links.',
     }),
   ),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

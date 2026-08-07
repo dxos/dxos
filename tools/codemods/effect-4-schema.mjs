@@ -316,8 +316,19 @@ for (const file of files) {
     return `${base}.mapFields(Struct.assign(${match[1].trim()}))`;
   });
 
+  // v4's `mutable` applies to arrays and records only. A struct's fields are made mutable per
+  // key, and a union's members carry their own mutability, so the wrapper is dropped there.
+  source = source.replace(
+    /Schema\.Struct\(([\s\S]*?)\)\.pipe\(Schema\.mutable\)/g,
+    (_match, inner) => (
+      bump('Struct .pipe(mutable)'),
+      `Schema.Struct(${inner}).mapFields(Struct.map(Schema.mutableKey))`
+    ),
+  );
+  source = source.replace(/\]\)\.pipe\(Schema\.mutable\)/g, () => (bump('Union .pipe(mutable)'), '])'));
+
   // `Struct.assign` needs its module in scope.
-  if (source.includes('Struct.assign(') && !/^import \* as Struct from 'effect\/Struct';$/m.test(source)) {
+  if (/Struct\.(assign|map)\(/.test(source) && !/^import \* as Struct from 'effect\/Struct';$/m.test(source)) {
     source = source.replace(
       /^(import \* as Schema from 'effect\/Schema';)$/m,
       "$1\nimport * as Struct from 'effect/Struct';",

@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { describe, test } from 'vitest';
 
@@ -12,7 +13,7 @@ import { Manager, define } from './ViewState';
 const Counter = define({
   key: 'counter',
   backend: 'memory',
-  schema: Schema.Struct({ value: Schema.Number }).pipe(Schema.mutable),
+  schema: Schema.Struct({ value: Schema.Number }).mapFields(Struct.map(Schema.mutableKey)),
   defaultValue: () => ({ value: 0 }),
 });
 

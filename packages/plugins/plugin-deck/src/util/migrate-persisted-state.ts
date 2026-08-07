@@ -4,6 +4,7 @@
 
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { log } from '@dxos/log';
 
@@ -28,7 +29,7 @@ const LegacyDeckState = Schema.Struct({
   initialized: Schema.optional(Schema.Boolean),
   fullscreen: Schema.optional(Schema.Boolean),
   companionOrientation: Schema.optional(Schema.Literals(['horizontal', 'vertical'])),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 type LegacyDeckState = Schema.Schema.Type<typeof LegacyDeckState>;
 
 const LegacyStoredDeckState = Schema.Struct({
@@ -39,7 +40,7 @@ const LegacyStoredDeckState = Schema.Struct({
   previousDeck: Schema.String,
   decks: Schema.mutable(Schema.Record(Schema.String, Schema.mutable(LegacyDeckState))),
   previousMode: Schema.optional(Schema.mutable(Schema.Record(Schema.String, Schema.Any))),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 type LegacyStoredDeckState = Schema.Schema.Type<typeof LegacyStoredDeckState>;
 
 const decodeLegacyState = Schema.decodeUnknownResult(LegacyStoredDeckState);

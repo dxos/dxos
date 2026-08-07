@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 /**
  * Fact-analysis settings. Left unset, analysis uses the default edge model; a story or a
@@ -32,5 +33,5 @@ export const Settings = Schema.Struct({
       description: 'Require strict structured output. Turn off for local models (e.g. Ollama) that fail it.',
     }),
   ),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

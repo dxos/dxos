@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -82,7 +83,7 @@ export const StoredDeckState = Schema.Struct({
   activeDeck: Schema.String,
   previousDeck: Schema.String,
   decks: Schema.mutable(Schema.Record(Schema.String, Schema.mutable(DeckState))),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 
 // Transient/ephemeral plugin state (not persisted).
@@ -122,7 +123,7 @@ export const EphemeralDeckState = Schema.Struct({
   currentUndoId: Schema.optional(Schema.String),
   /** The identifier of a component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(Schema.String),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 export type EphemeralDeckState = Schema.Schema.Type<typeof EphemeralDeckState>;
 
 // Combined state type (for convenience in components that need both).

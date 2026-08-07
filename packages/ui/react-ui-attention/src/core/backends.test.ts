@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { afterEach, describe, test } from 'vitest';
 
@@ -12,7 +13,7 @@ import { LocalBackend } from './backends';
 const Editor = ViewState.define({
   key: 'editor',
   backend: 'local',
-  schema: Schema.Struct({ scrollTo: Schema.optional(Schema.Number) }).pipe(Schema.mutable),
+  schema: Schema.Struct({ scrollTo: Schema.optional(Schema.Number) }).mapFields(Struct.map(Schema.mutableKey)),
   defaultValue: () => ({}),
 });
 
