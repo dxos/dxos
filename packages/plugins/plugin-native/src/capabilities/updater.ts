@@ -3,9 +3,11 @@
 //
 
 import { Atom } from '@effect-atom/atom';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { ask } from '@tauri-apps/plugin-dialog';
 import { type } from '@tauri-apps/plugin-os';
 import { relaunch } from '@tauri-apps/plugin-process';
-import * as Updater from '@tauri-apps/plugin-updater';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -14,6 +16,7 @@ import * as Schedule from 'effect/Schedule';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
@@ -21,30 +24,62 @@ import { meta } from '#meta';
 
 import { TAURI_LOCALHOST_PORT } from '../constants';
 import * as NativeCapabilities from '../types/NativeCapabilities';
+import type * as Settings from '../types/Settings';
 import type * as Update from '../types/Update';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
-/** Safe wrapper around Updater.check(). Distinguishes "no update" (ok with null update) from a thrown error. */
-const safeCheck = async (): Promise<{ ok: true; update: Updater.Update | null } | { ok: false; error: string }> => {
+/**
+ * CrabNebula channel per user-facing channel. Production ships on `main` — every build bakes its
+ * channel into the updater endpoint, so renaming it would strand installs still polling `main`.
+ */
+const CHANNEL_NAME: Record<Settings.UpdateChannel, string> = { stable: 'main', nightly: 'nightly' };
+
+const DEFAULT_CHANNEL: Settings.UpdateChannel = 'stable';
+
+type UpdateInfo = { version: string; currentVersion: string };
+
+/** Mirrors the `Progress` enum emitted by src-tauri/src/update_channel.rs. */
+type ProgressEvent =
+  | { event: 'Started'; data: { contentLength?: number } }
+  | { event: 'Progress'; data: { chunkLength: number } }
+  | { event: 'Finished' };
+
+const PROGRESS_EVENT = 'composer://update-progress';
+
+/**
+ * Check the given channel. `allowDowngrade` is only ever set by a deliberate channel switch — a
+ * routine check carrying it would walk the user backwards the moment nightly led stable.
+ */
+const safeCheck = async (
+  channel: Settings.UpdateChannel,
+  allowDowngrade = false,
+): Promise<{ ok: true; update: UpdateInfo | null } | { ok: false; error: string }> => {
   try {
-    return { ok: true, update: await Updater.check() };
+    const update = await invoke<UpdateInfo | null>('check_channel_update', {
+      channel: CHANNEL_NAME[channel],
+      allowDowngrade,
+    });
+    return { ok: true, update };
   } catch (error) {
-    log.error('failed to check for updates', { error });
+    log.error('failed to check for updates', { channel, error });
     return { ok: false, error: formatError(error) };
   }
 };
 
-/** Safe wrapper around update.downloadAndInstall(). */
+/** Download + install the given channel's latest build. Progress arrives on `PROGRESS_EVENT`. */
 const safeDownloadAndInstall = async (
-  update: Updater.Update,
-  onEvent: (event: Updater.DownloadEvent) => void,
-): Promise<{ ok: true } | { ok: false; error: string }> => {
+  channel: Settings.UpdateChannel,
+  allowDowngrade = false,
+): Promise<{ ok: true; installed: boolean } | { ok: false; error: string }> => {
   try {
-    await update.downloadAndInstall(onEvent);
-    return { ok: true };
+    const installed = await invoke<boolean>('install_channel_update', {
+      channel: CHANNEL_NAME[channel],
+      allowDowngrade,
+    });
+    return { ok: true, installed };
   } catch (error) {
-    log.error('failed to download and install update', { error });
+    log.error('failed to download and install update', { channel, error });
     return { ok: false, error: formatError(error) };
   }
 };
@@ -67,28 +102,32 @@ export default Capability.makeModule(
     const enabled = SUPPORTS_OTA.includes(platform) && !isDevServer;
 
     const registry = yield* Capabilities.AtomRegistry;
-    const { invoke } = yield* Capabilities.OperationInvoker;
+    const { invoke: invokeOperation } = yield* Capabilities.OperationInvoker;
+    const settingsAtom = yield* Capability.get(NativeCapabilities.Settings);
+    const { t } = yield* Capability.get(AppCapabilities.Translator);
+
+    const currentChannel = (): Settings.UpdateChannel => registry.get(settingsAtom).updateChannel ?? DEFAULT_CHANNEL;
 
     const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : { kind: 'unsupported' }).pipe(
       Atom.keepAlive,
     );
 
-    // Updater.Update is a class with instance methods (downloadAndInstall) and can't live in an
-    // atom value; cache it here between check and install.
-    let pendingUpdate: Updater.Update | null = null;
+    // Whether the last check found something, so `install` knows there is work to do. The update
+    // itself lives in Rust — it is re-resolved there rather than parked across two commands.
+    let pendingUpdate: UpdateInfo | null = null;
 
     // Core: check for an update and update the status atom. Returns the update if available.
-    const doCheck = async (): Promise<Updater.Update | null> => {
+    const doCheck = async (channel = currentChannel()): Promise<UpdateInfo | null> => {
       registry.set(statusAtom, { kind: 'checking' });
-      log.info('checking for updates');
-      const result = await safeCheck();
+      log.info('checking for updates', { channel });
+      const result = await safeCheck(channel);
       if (!result.ok) {
         pendingUpdate = null;
         registry.set(statusAtom, { kind: 'failed', error: result.error });
         return null;
       }
       const update = result.update;
-      if (!update?.available) {
+      if (!update) {
         pendingUpdate = null;
         registry.set(statusAtom, { kind: 'up-to-date', checkedAt: Date.now() });
         return null;
@@ -99,33 +138,45 @@ export default Capability.makeModule(
       return update;
     };
 
-    // Core: download + install the cached pending update, streaming progress to the status atom.
-    const doInstall = async (): Promise<boolean> => {
-      const update = pendingUpdate;
-      if (!update) {
-        return false;
-      }
-      let downloaded = 0;
-      let contentLength = 0;
+    // Download progress is emitted from Rust rather than returned through a callback, since the
+    // install runs entirely inside the command. One listener for the module's lifetime, registered
+    // only where the updater runs: outside a Tauri window there is no IPC bridge for `listen` to
+    // attach to, and a rejected `Effect.promise` is a defect that would fail activation outright
+    // rather than degrading to `unsupported`.
+    let downloaded = 0;
+    let contentLength = 0;
+    const unlisten = enabled
+      ? yield* Effect.tryPromise(() =>
+          listen<ProgressEvent>(PROGRESS_EVENT, ({ payload }) => {
+            Match.value(payload).pipe(
+              Match.when({ event: 'Started' }, (event) => {
+                downloaded = 0;
+                contentLength = event.data.contentLength ?? 0;
+                registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
+              }),
+              Match.when({ event: 'Progress' }, (event) => {
+                downloaded += event.data.chunkLength;
+                registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
+              }),
+              Match.when({ event: 'Finished' }, () => {
+                log.info('download completed');
+              }),
+              Match.exhaustive,
+            );
+          }),
+        ).pipe(Effect.orElseSucceed(() => () => {}))
+      : () => {};
+
+    // Core: download + install the given channel's latest build, streaming progress to the status atom.
+    const doInstall = async (channel = currentChannel(), allowDowngrade = false): Promise<boolean> => {
+      downloaded = 0;
+      contentLength = 0;
       registry.set(statusAtom, { kind: 'downloading', downloaded: 0, contentLength: 0 });
-      const onEvent = Match.type<Updater.DownloadEvent>().pipe(
-        Match.when({ event: 'Started' }, (event) => {
-          contentLength = event.data.contentLength ?? 0;
-          registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
-        }),
-        Match.when({ event: 'Progress' }, (event) => {
-          downloaded += event.data.chunkLength;
-          registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
-        }),
-        Match.when({ event: 'Finished' }, () => {
-          log.info('download completed');
-        }),
-        Match.exhaustive,
-      );
-      const result = await safeDownloadAndInstall(update, onEvent);
+      const result = await safeDownloadAndInstall(channel, allowDowngrade);
       if (result.ok) {
-        registry.set(statusAtom, { kind: 'ready' });
-        return true;
+        pendingUpdate = null;
+        registry.set(statusAtom, result.installed ? { kind: 'ready' } : { kind: 'up-to-date', checkedAt: Date.now() });
+        return result.installed;
       }
       registry.set(statusAtom, { kind: 'failed', error: result.error });
       return false;
@@ -140,7 +191,7 @@ export default Capability.makeModule(
         await doCheck();
       },
       install: async () => {
-        if (!enabled) {
+        if (!enabled || !pendingUpdate) {
           return;
         }
         await doInstall();
@@ -148,12 +199,48 @@ export default Capability.makeModule(
       relaunch: async () => {
         await relaunch();
       },
+      // Confirmed before anything moves: the switch installs immediately rather than at the next
+      // check, and going back to stable replaces the running build with an older one.
+      switchChannel: async (channel) => {
+        if (channel === currentChannel()) {
+          return;
+        }
+        // `doInstall` reports its own failures; the confirm and the settings write do not, and an
+        // unhandled rejection here would leave the panel showing no error at all.
+        try {
+          const key = `settings.channel.confirm.${channel}` as const;
+          const confirmed = await ask(t(`${key}.message`, { ns: meta.profile.key }), {
+            title: t(`${key}.title`, { ns: meta.profile.key }),
+            kind: 'warning',
+            okLabel: t(`${key}.label`, { ns: meta.profile.key }),
+          });
+          if (!confirmed) {
+            return;
+          }
+
+          // Persist first so a failed install still leaves the user on the channel they chose, then
+          // force the move: the target channel's latest build is a downgrade whenever it trails the
+          // running one, which is the normal case going nightly -> stable, and no periodic check
+          // would ever offer it.
+          registry.set(settingsAtom, { ...registry.get(settingsAtom), updateChannel: channel });
+        } catch (error) {
+          log.error('failed to switch update channel', { channel, error });
+          registry.set(statusAtom, { kind: 'failed', error: formatError(error) });
+          return;
+        }
+
+        if (!enabled) {
+          return;
+        }
+        await doInstall(channel, true);
+      },
     };
 
     const managerContribution = Capability.contribute(NativeCapabilities.UpdateManager, manager);
 
     if (!enabled) {
       log.info('updater disabled', { platform, port: window.location.port });
+      yield* Effect.addFinalizer(() => Effect.sync(unlisten));
       return [managerContribution];
     }
 
@@ -168,7 +255,7 @@ export default Capability.makeModule(
       if (!ok) {
         return true;
       }
-      yield* invoke(LayoutOperation.AddToast, {
+      yield* invokeOperation(LayoutOperation.AddToast, {
         id: `${meta.profile.key}.update-ready`,
         title: ['update-ready.label', { ns: meta.profile.key }],
         description: ['update-ready.description', { ns: meta.profile.key }],
@@ -188,7 +275,7 @@ export default Capability.makeModule(
 
     // Fiber.interrupt is async and would throw AsyncFiberException if wrapped in Effect.runSync,
     // so the finalizer returns the interruption effect directly.
-    yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
+    yield* Effect.addFinalizer(() => Fiber.interrupt(fiber).pipe(Effect.tap(() => Effect.sync(unlisten))));
 
     return managerContribution;
   }),

@@ -6,7 +6,7 @@ inputs:
     description: 'Version'
     required: true
   environment:
-    description: Target environment (labs | staging | production) — selects the updater channel.
+    description: Target environment (dev | nightly | staging | production) — selects the updater channel.
     required: true
   ios-bundle-version:
     description: >-
