@@ -92,7 +92,7 @@ const _Part = Schema.Struct({
   parts: Schema.optional(Schema.Array(Schema.suspend((): Schema.Schema<Part> => Part))),
 });
 export interface Part extends Schema.Schema.Type<typeof _Part> {}
-export const Part: Schema.Schema<Part> = _Part;
+export const Part: Schema.Codec<Part> = _Part;
 
 export const Message = Schema.Struct({
   id: Schema.String,

@@ -72,9 +72,9 @@ export interface Unknown extends OfKind<Kind> {}
  * isn't an `UnknownTypeSchema<_, K>` (there's no single `K`) and carries no
  * `TypeAnnotation`.
  */
-export const Unknown: Schema.Schema<Unknown> = Schema.StructWithRest(Schema.Struct({ id: Schema.String }), [
+export const Unknown: Schema.Codec<Unknown> = Schema.StructWithRest(Schema.Struct({ id: Schema.String }), [
   Schema.Record(Schema.String, Schema.Unknown),
-]) as unknown as Schema.Schema<Unknown>;
+]) as unknown as Schema.Codec<Unknown>;
 
 /**
  * Snapshot of an Obj or Relation.

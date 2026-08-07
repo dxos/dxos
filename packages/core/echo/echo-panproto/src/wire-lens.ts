@@ -48,7 +48,7 @@ const RefText = Schema.Struct({
  * - `derive` — synthesize a wire-only value from an ECHO path via a `${'{0}'}`-style template
  *   (e.g. `hiveBookUri`); dropped on decode.
  */
-export const Adapter: Schema.Schema<Adapter> = Schema.Union([
+export const Adapter: Schema.Codec<Adapter> = Schema.Union([
   Schema.Struct({ kind: Schema.Literal('scalar'), wire: Schema.String, echo: Path }),
   Schema.Struct({ kind: Schema.Literal('array'), wire: Schema.String, echo: Path, separator: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('ref'), wire: Schema.String, echo: Path, ref: RefText }),

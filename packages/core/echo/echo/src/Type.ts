@@ -396,7 +396,7 @@ export const expectTypeKind = (entity: AnyEntity): Type => {
  * Type that represents any Ref schema (with unknown target type).
  * This is a schema type, not an instance type.
  */
-export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
+export type AnyRef = Schema.Codec<internal.Ref<any>, EncodedReference>;
 
 //
 // Schema utility functions

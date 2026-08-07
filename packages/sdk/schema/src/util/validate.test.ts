@@ -48,7 +48,7 @@ describe('validate', () => {
     type TestType = Schema.Schema.Type<typeof TestSchema>;
 
     // Convert to/from AST.
-    const s1: Schema.Schema<TestType> = TestSchema;
+    const s1: Schema.Codec<TestType> = TestSchema;
     expect(SchemaAST.isTypeLiteral(s1.ast)).to.be.true;
     const s2 = Schema.make(s1.ast);
     expect(s1.ast.toJSON()).to.deep.eq(s2.ast.toJSON());

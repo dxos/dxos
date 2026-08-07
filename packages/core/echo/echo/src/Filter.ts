@@ -458,7 +458,7 @@ const propsFilterToAst = (predicates: Props<any>): Pick<QueryAST.FilterObject, '
       'invalid id filter',
     );
     idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
-    Schema.Array(EntityId).pipe(Schema.validateSync)(idFilter);
+    Schema.decodeSync(Schema.toType(Schema.Array(EntityId)))(idFilter);
   }
 
   return {

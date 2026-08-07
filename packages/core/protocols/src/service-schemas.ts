@@ -23,7 +23,7 @@ export const publicKey: Schema.Codec<PublicKey, Uint8Array> = Schema.Uint8Array.
 /**
  * Effect schema for `google.protobuf.Struct`, matching the proto codec substitution shape.
  */
-export const protoStruct: Schema.Schema<Record<string, unknown>> = Schema.Record(Schema.String, Schema.Unknown);
+export const protoStruct: Schema.Codec<Record<string, unknown>> = Schema.Record(Schema.String, Schema.Unknown);
 
 /**
  * Effect schema for `google.protobuf.Timestamp`, matching the proto codec substitution shape.

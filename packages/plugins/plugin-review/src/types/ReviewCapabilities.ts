@@ -53,7 +53,7 @@ export type VersioningView = {
   hiddenAuthors?: string[];
 };
 
-const VersionSelectionSchema: Schema.Schema<VersionSelection> = Schema.Union([
+const VersionSelectionSchema: Schema.Codec<VersionSelection> = Schema.Union([
   Schema.Struct({ kind: Schema.Literal('current') }),
   Schema.Struct({ kind: Schema.Literal('branch'), branchId: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('fork'), branchId: Schema.String }),

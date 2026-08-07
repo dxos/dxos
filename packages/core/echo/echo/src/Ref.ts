@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
 import { SchemaAST } from '@dxos/effect';
@@ -113,12 +112,9 @@ export const hasEntityId = refInternal.Ref.hasEntityId;
 
 // TODO(wittjosiah): Factor out?
 export const isRefType = (ast: SchemaAST.AST): boolean => {
-  return SchemaAST.getAnnotation<JsonSchema.JsonSchema>(ast, SchemaAST.JSONSchemaAnnotationId).pipe(
-    Option.flatMap((jsonSchema) => ('$id' in jsonSchema ? Option.some(jsonSchema) : Option.none())),
-    Option.flatMap((jsonSchema) => {
-      const { typename } = refInternal.getSchemaReference(jsonSchema) ?? {};
-      return typename ? Option.some(true) : Option.some(false);
-    }),
-    Option.getOrElse(() => false),
-  );
+  const jsonSchema = SchemaAST.getAnnotation<JsonSchema.JsonSchema>(ast, SchemaAST.JSONSchemaAnnotationId);
+  if (jsonSchema === undefined || !('$id' in jsonSchema)) {
+    return false;
+  }
+  return refInternal.getSchemaReference(jsonSchema)?.typename !== undefined;
 };

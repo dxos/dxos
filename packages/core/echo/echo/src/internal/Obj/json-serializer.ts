@@ -101,7 +101,7 @@ export const objectFromJSON = async (
 
   let obj: any;
   if (schema != null) {
-    obj = await schema.pipe(Schema.decodeUnknownPromise)(decodedInput);
+    obj = await Schema.decodeUnknownPromise(schema)(decodedInput);
     if (refResolver) {
       setRefResolverOnData(obj, refResolver);
     }
@@ -149,7 +149,7 @@ export const objectFromJSON = async (
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
-    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(normalizeMeta(jsonData[ATTR_META]));
+    const meta = await Schema.decodeUnknownPromise(EntityMetaSchema)(normalizeMeta(jsonData[ATTR_META]));
     invariant(Array.isArray(meta.keys));
     defineHiddenProperty(obj, MetaId, meta);
   } else {

@@ -33,7 +33,7 @@ export interface TriggerShape extends ComputeShape {
   functionTrigger?: Ref.Ref<Trigger.Trigger>;
 }
 
-export const TriggerShape: Schema.Schema<TriggerShape> = TriggerShapeSchema as any;
+export const TriggerShape: Schema.Codec<TriggerShape> = TriggerShapeSchema as any;
 
 export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
   spaceId?: SpaceId;

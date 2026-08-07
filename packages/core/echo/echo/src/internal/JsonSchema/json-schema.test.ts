@@ -279,11 +279,11 @@ describe('effect-to-json', () => {
       readonly kind: 'b';
       readonly a?: A;
     }
-    const A: Schema.Schema<A> = Schema.Struct({
+    const A: Schema.Codec<A> = Schema.Struct({
       kind: Schema.Literal('a'),
       b: Schema.optional(Schema.suspend((): Schema.Schema<B> => B)),
     });
-    const B: Schema.Schema<B> = Schema.Struct({
+    const B: Schema.Codec<B> = Schema.Struct({
       kind: Schema.Literal('b'),
       a: Schema.optional(Schema.suspend((): Schema.Schema<A> => A)),
     });

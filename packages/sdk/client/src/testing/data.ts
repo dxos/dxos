@@ -45,7 +45,7 @@ export namespace TestSchema {
   });
 
   export interface BlockType extends Schema.Schema.Type<typeof BlockSchema> {}
-  export const BlockType: Schema.Schema<BlockType, Schema.Schema.Encoded<typeof BlockSchema>> = BlockSchema;
+  export const BlockType: Schema.Codec<BlockType, Schema.Schema.Encoded<typeof BlockSchema>> = BlockSchema;
 
   export class MessageType extends Type.makeObject<MessageType>(DXN.make('com.braneframe.message', '0.1.0'))(
     Schema.Struct({

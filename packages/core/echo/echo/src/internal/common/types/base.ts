@@ -36,8 +36,10 @@ type WithMeta = { [ATTR_META]?: EntityMeta };
 /**
  * The raw object should not include the ECHO id, but may include metadata.
  */
-export const RawObject = <S extends Schema.Top>(
+// `Schema.Top` leaves `Type` as `unknown`, which `ExcludeId` cannot accept; pinning it here states
+// the object-shape requirement that v3's `Schema.Schema.Type<S>` carried implicitly.
+export const RawObject = <S extends Schema.Top & { readonly Type: AnyProperties }>(
   schema: S,
-): Schema.Schema<ExcludeId<Schema.Schema.Type<S>> & WithMeta, Schema.Schema.Encoded<S>> => {
-  return Schema.make(SchemaAST.omit(schema.ast, ['id']));
+): Schema.Codec<ExcludeId<S['Type']> & WithMeta, S['Encoded']> => {
+  return Schema.make<Schema.Codec<ExcludeId<S['Type']> & WithMeta, S['Encoded']>>(SchemaAST.omit(schema.ast, ['id']));
 };

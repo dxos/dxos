@@ -336,7 +336,7 @@ export const setLabelWithSchema = <S extends Schema.Top>(schema: S, object: Sche
     Option.map((field) => field[0]),
     Option.getOrElse(() => 'name'),
   );
-  object[annotation] = label;
+  (object as AnyProperties)[annotation] = label;
 };
 
 /**
