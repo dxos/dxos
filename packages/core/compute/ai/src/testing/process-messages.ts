@@ -52,7 +52,7 @@ export const agenticLoop: {
   }): Effect.Effect<
     Message.Message[],
     PromptPreprocessingError | AiError.AiError,
-    LanguageModel.LanguageModel | Tool.Requirements<Tools>
+    LanguageModel.LanguageModel | Tool.HandlerServices<Tools>
   >;
 } = Effect.fn('agenticLoop')(function* (opts) {
   const tk: Toolkit.Toolkit<{}> = opts.toolkit ?? (Toolkit.make() as any);

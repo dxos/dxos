@@ -73,7 +73,7 @@ export type Requirements<T extends Any> = T extends OpaqueToolkit<infer _TR, inf
 export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   toolkit: Toolkit.Toolkit<Tools>,
   layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>,
-): OpaqueToolkit<Tool.Requirements<Tools>, E, R> =>
+): OpaqueToolkit<Tool.HandlerServices<Tools>, E, R> =>
   ({
     [TypeId]: TypeId,
     toolkit,
@@ -90,10 +90,10 @@ export const make = <Tools extends Record<string, Tool.Any>, E, R>(
  */
 export const fromContext = <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>,
-): Effect.Effect<OpaqueToolkit<Tool.Requirements<Tools>>, never, Tool.HandlersFor<Tools>> =>
+): Effect.Effect<OpaqueToolkit<Tool.HandlerServices<Tools>>, never, Tool.HandlersFor<Tools>> =>
   Effect.map(
     Effect.context<Tool.HandlersFor<Tools>>(),
-    (context): OpaqueToolkit<Tool.Requirements<Tools>> => make(toolkit, Layer.succeedContext(context)),
+    (context): OpaqueToolkit<Tool.HandlerServices<Tools>> => make(toolkit, Layer.succeedContext(context)),
   );
 
 /**

@@ -19,7 +19,7 @@ export const AnthropicWebSearchTool = Tool.providerDefined({
   parameters: {
     query: Schema.String,
   },
-  args: Struct.omit(Generated.WebSearchTool20250305.fields, 'name', 'type'),
+  args: Struct.omit(Generated.WebSearchTool_20250305.fields, 'name', 'type'),
   success: Schema.Array(Generated.RequestWebSearchResultBlock),
   failure: Generated.ResponseWebSearchToolResultError,
 })({});

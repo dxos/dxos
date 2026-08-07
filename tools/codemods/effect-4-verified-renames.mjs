@@ -92,14 +92,24 @@ const RENAMES = {
       TaggedErrorClass: 'TaggedError',
     },
   },
+  Generated: {
+    module: '@effect/ai-anthropic/Generated',
+    renames: { WebSearchTool20250305: 'WebSearchTool_20250305', CacheControlEphemeral: 'ChatContentCacheControl' },
+  },
   Scope: {
     module: 'effect/Scope',
     renames: { CloseableScope: 'Closeable' },
+  },
+  Tool: {
+    module: 'effect/unstable/ai/Tool',
+    renames: { Requirements: 'HandlerServices' },
   },
   Stream: {
     module: 'effect/Stream',
     renames: {
       unwrapScoped: 'unwrap',
+      // The callback receives an Array rather than a Chunk; the compiler flags any that cared.
+      mapChunksEffect: 'mapArrayEffect',
       StreamTypeId: 'TypeId',
       flattenIterables: 'flattenIterable',
       onDone: 'onEnd',
@@ -113,7 +123,13 @@ const paths = args.filter((arg) => arg !== '--dry');
 
 const files = execFileSync(
   'grep',
-  ['-rlE', "from 'effect/", '--include=*.ts', '--include=*.tsx', ...(paths.length ? paths : ['packages', 'tools'])],
+  [
+    '-rlE',
+    "from '(effect/|@effect/ai)",
+    '--include=*.ts',
+    '--include=*.tsx',
+    ...(paths.length ? paths : ['packages', 'tools']),
+  ],
   { encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 },
 )
   .split('\n')

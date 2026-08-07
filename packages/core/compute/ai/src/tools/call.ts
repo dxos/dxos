@@ -17,7 +17,7 @@ import { safeParseJson } from '@dxos/util';
 export const callTools: <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.WithHandler<Tools>,
   toolCalls: ContentBlock.ToolCall[],
-) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, Tool.Requirements<Tools>> = Effect.fn('callTools')(
+) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, Tool.HandlerServices<Tools>> = Effect.fn('callTools')(
   function* (toolkit, toolCalls) {
     log.info('callTools', { count: toolCalls.length });
     return yield* Effect.forEach(toolCalls, (toolCall) => callTool(toolkit, toolCall));
@@ -30,7 +30,7 @@ export const callTools: <Tools extends Record<string, Tool.Any>>(
 export const callTool: <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.WithHandler<Tools>,
   toolCall: ContentBlock.ToolCall,
-) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, Tool.Requirements<Tools>> = Effect.fn('callTool')(
+) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, Tool.HandlerServices<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
     const input = safeParseJson<Record<string, unknown>>(toolCall.input, {});
 
