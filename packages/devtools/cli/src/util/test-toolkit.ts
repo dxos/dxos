@@ -14,7 +14,7 @@ import { DXN } from '@dxos/keys';
 export const toolkit = Toolkit.make(
   Tool.make('time', {
     description: 'Gets the current time.',
-    parameters: {},
+    parameters: Schema.Struct({}),
     success: Schema.String.annotate({
       description: 'The current time in ISO format.',
     }),

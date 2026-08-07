@@ -56,9 +56,9 @@ const TestLayer = Layer.mergeAll(
 class TestObjectReadToolkit extends Toolkit.make(
   Tool.make('read-object', {
     description: 'Read an object',
-    parameters: {
+    parameters: Schema.Struct({
       objectId: EntityId,
-    },
+    }),
   }),
 ) {
   static layer = TestObjectReadToolkit.toLayer({

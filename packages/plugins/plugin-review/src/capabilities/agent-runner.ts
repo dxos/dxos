@@ -58,22 +58,22 @@ const baseInstructions = trim`
 const EditAnchoredRangeTool = Tool.make('editAnchoredRange', {
   description:
     'Replace the text of the anchored selection in the markdown document. Call this for in-place edits when a <selection> is provided.',
-  parameters: {
+  parameters: Schema.Struct({
     replacement: Schema.String.annotate({
       description: 'The new text for the anchored range. Only this span will be replaced.',
     }),
-  },
+  }),
   success: Schema.String,
 });
 
 const UpdateDocumentTool = Tool.make('updateDocument', {
   description:
     'Replace the entire markdown content of the document. Call this for in-place edits when there is no anchored selection.',
-  parameters: {
+  parameters: Schema.Struct({
     content: Schema.String.annotate({
       description: 'The full new markdown content of the document.',
     }),
-  },
+  }),
   success: Schema.String,
 });
 

@@ -179,7 +179,7 @@ const makePromptAgentToolkit = (options: {
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
     Tool.make('completeJob', {
-      parameters: {
+      parameters: Schema.Struct({
         success: Schema.optional(options.output),
         failure: Schema.optional(
           Schema.Struct({
@@ -191,7 +191,7 @@ const makePromptAgentToolkit = (options: {
             }),
           }),
         ),
-      },
+      }),
     }),
   ) {}
   const layer = PromptAgentToolkit.toLayer({

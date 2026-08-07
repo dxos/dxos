@@ -13,7 +13,7 @@ import * as OpaqueToolkit from './OpaqueToolkit';
 const AgeToolkit = Toolkit.make(
   Tool.make('age', {
     description: 'Gets the age',
-    parameters: {},
+    parameters: Schema.Struct({}),
     success: Schema.Number,
   }),
 );
@@ -30,7 +30,7 @@ const ageOpaque = OpaqueToolkit.make(
 const NameToolkit = Toolkit.make(
   Tool.make('name', {
     description: 'Gets the name',
-    parameters: {},
+    parameters: Schema.Struct({}),
     success: Schema.String,
   }),
 );

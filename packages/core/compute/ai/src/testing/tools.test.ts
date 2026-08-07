@@ -31,7 +31,7 @@ const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
 const UserToolkit = Toolkit.make(
   Tool.make('test/age', {
     description: 'Gets the age of the user',
-    parameters: {},
+    parameters: Schema.Struct({}),
     success: Schema.Number,
   }),
 );

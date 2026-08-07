@@ -31,11 +31,11 @@ class CalendarEvent extends Type.makeObject<CalendarEvent>(DXN.make('com.example
 const TestToolkit = Toolkit.make(
   Tool.make('Calculator', {
     description: 'Basic calculator tool',
-    parameters: {
+    parameters: Schema.Struct({
       input: Schema.String.annotate({
         description: 'The calculation to perform.',
       }),
-    },
+    }),
     success: Schema.Struct({
       result: Schema.Number,
     }),

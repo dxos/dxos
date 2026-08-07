@@ -18,11 +18,11 @@ import { log } from '@dxos/log';
  */
 export const CalculatorTool = Tool.make('Calculator', {
   description: 'Basic calculator tool',
-  parameters: {
+  parameters: Schema.Struct({
     input: Schema.String.annotate({
       description: 'The calculation to perform.',
     }),
-  },
+  }),
   success: Schema.Struct({
     result: Schema.Number,
   }),

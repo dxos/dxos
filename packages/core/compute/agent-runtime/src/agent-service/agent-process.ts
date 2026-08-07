@@ -762,7 +762,7 @@ class AsynchronousExectionToolkit extends Toolkit.make(
       Set an appropriate timeout to avoid waiting forever.
       You will also be notified about the job completion separatelly, so you do not always need to inspect the job if you dont need the result right now.
     `,
-    parameters: {
+    parameters: Schema.Struct({
       ids: Schema.Array(Schema.String).annotate({
         description: 'The IDs of the jobs to inspect.',
       }),
@@ -775,7 +775,7 @@ class AsynchronousExectionToolkit extends Toolkit.make(
           'Maximum time to wait for the job to complete. If the job does not complete within the timeout, the current state is returned.',
         default: 10_000,
       }),
-    },
+    }),
   }),
 ) {}
 

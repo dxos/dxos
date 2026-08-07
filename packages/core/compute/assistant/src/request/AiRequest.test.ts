@@ -25,9 +25,9 @@ const { text, toolCall, scriptedLanguageModelLayer } = ScriptedLanguageModel;
 const TestToolkit = Toolkit.make(
   Tool.make('Echo', {
     description: 'Returns its input value verbatim.',
-    parameters: {
+    parameters: Schema.Struct({
       value: Schema.String.annotate({ description: 'The value to echo.' }),
-    },
+    }),
     success: Schema.Struct({ value: Schema.String }),
     failure: Schema.Never,
   }),
