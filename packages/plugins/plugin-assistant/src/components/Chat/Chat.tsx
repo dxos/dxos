@@ -236,6 +236,7 @@ const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
     return (
       <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
         <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+          <Menu.Items />
           {children}
         </Menu.Toolbar>
       </Menu.Root>

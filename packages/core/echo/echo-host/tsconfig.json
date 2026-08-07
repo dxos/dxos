@@ -49,9 +49,6 @@
       "path": "../../../common/test-utils"
     },
     {
-      "path": "../../../common/timeframe"
-    },
-    {
       "path": "../../../common/tracing"
     },
     {

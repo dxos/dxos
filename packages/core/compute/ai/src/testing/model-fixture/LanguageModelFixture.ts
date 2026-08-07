@@ -124,6 +124,21 @@ export const ISO_TIMESTAMP_PATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}
  */
 export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
 
+/**
+ * Dynamic-value patterns canonicalized on every fixture match by default (see {@link make}). Because
+ * deterministic id generation only holds the id sequence stable while the surrounding allocation
+ * order is unchanged, an unrelated change to activation/allocation order silently drifts the ids —
+ * so normalization, not determinism, is the load-bearing defence and is on by default. Ordered
+ * most-specific first so {@link buildDynamicMatcher}'s alternation never partially overlaps a longer
+ * token. Opt a fixture layer out by passing `dynamicValuePatterns: []`.
+ */
+export const DEFAULT_DYNAMIC_VALUE_PATTERNS: readonly RegExp[] = [
+  SPACE_ID_PATTERN,
+  ENTITY_ID_PATTERN,
+  UUID_PATTERN,
+  ISO_TIMESTAMP_PATTERN,
+];
+
 const dynamicPlaceholder = (index: number): string => `<memoized-dynamic-${index}>`;
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -283,7 +298,8 @@ export type ServiceOptions = {
   allowGeneration: boolean;
   /**
    * Patterns matching run-specific identifiers (e.g. {@link SPACE_ID_PATTERN}) to canonicalize for
-   * matching and substitute back into the response on a cache hit. Opt-in.
+   * matching and substitute back into the response on a cache hit. Defaults to
+   * {@link DEFAULT_DYNAMIC_VALUE_PATTERNS}; pass `[]` to disable normalization.
    */
   dynamicValuePatterns?: readonly RegExp[];
 };
@@ -335,8 +351,8 @@ export interface LayerOptions {
 
   /**
    * Patterns matching run-specific identifiers (e.g. {@link SPACE_ID_PATTERN}) that should be
-   * canonicalized for matching and substituted back into the response on a cache hit. Opt-in;
-   * defaults to no normalization. List more specific (longer) patterns first.
+   * canonicalized for matching and substituted back into the response on a cache hit. Defaults to
+   * {@link DEFAULT_DYNAMIC_VALUE_PATTERNS}; pass `[]` to disable. List more specific patterns first.
    */
   dynamicValuePatterns?: readonly RegExp[];
 }
@@ -376,7 +392,7 @@ type MakeProps = {
  * model and records the turn.
  */
 export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
-  const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? []);
+  const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? DEFAULT_DYNAMIC_VALUE_PATTERNS);
   const store = new FixtureStore(options.testFilePath, dynamicMatcher);
 
   return LanguageModel.make({

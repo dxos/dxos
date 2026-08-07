@@ -24,19 +24,17 @@
     "test": "true"
   },
   "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "argparse": "catalog:",
     "chalk": "catalog:",
-    "extensionless": "catalog:",
     "glob": "catalog:",
     "protobufjs": "catalog:",
     "read-pkg": "catalog:",
     "ts-morph": "catalog:"
   },
   "devDependencies": {
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/protobuf-test": "workspace:*",
     "@types/argparse": "catalog:",
     "@types/mocha": "catalog:",
     "expect": "catalog:",

@@ -16,12 +16,6 @@
   ],
   "references": [
     {
-      "path": "../../common/test-utils"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
       "path": "../react-primitives/react-hooks"
     },
     {

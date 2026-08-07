@@ -24,21 +24,16 @@
   },
   "dependencies": {
     "@dxos/log": "workspace:*",
-    "array-iterate": "catalog:",
-    "chalk": "catalog:",
     "color-hash": "catalog:",
     "cosmiconfig": "catalog:",
-    "js-yaml": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "minimatch": "catalog:",
     "ts-morph": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "catalog:",
     "@types/color-hash": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/minimatch": "catalog:",
     "@types/yargs": "catalog:"
   }
 }

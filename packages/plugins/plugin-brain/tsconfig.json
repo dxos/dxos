@@ -43,16 +43,10 @@
       "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-react"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
@@ -77,9 +71,6 @@
     },
     {
       "path": "../plugin-routine"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

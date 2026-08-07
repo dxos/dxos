@@ -376,7 +376,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar classNames='dx-document' />
+          <Menu.Toolbar classNames='dx-document'>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>

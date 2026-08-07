@@ -113,7 +113,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
-    "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -124,7 +123,6 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
@@ -136,14 +134,13 @@
     "@effect/experimental": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@effect/rpc": "catalog:",
-    "@effect/sql": "catalog:",
     "effect": "catalog:",
-    "fast-deep-equal": "catalog:",
     "jwt-decode": "catalog:",
     "lodash.isequalwith": "catalog:"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
+    "@effect/sql": "catalog:",
     "@types/lodash.isequalwith": "catalog:",
     "typedoc": "catalog:"
   },

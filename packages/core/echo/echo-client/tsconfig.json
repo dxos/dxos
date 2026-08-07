@@ -38,9 +38,6 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/random"
-    },
-    {
       "path": "../../../common/sql-sqlite"
     },
     {
@@ -51,12 +48,6 @@
     },
     {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../mesh/edge-client"
-    },
-    {
-      "path": "../../mesh/teleport"
     },
     {
       "path": "../../protocols"

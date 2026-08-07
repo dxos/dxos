@@ -296,7 +296,9 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
-      .classNames('dx-link flex items-center gap-2')
+      // Not `dx-link`: the tooltip sits on the inverse surface, where the accent link color has no
+      // contrast — inherit the tooltip's own `text-inverse-fg` instead.
+      .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
       .text(safeUrl(url)?.toString() ?? url)
       .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );

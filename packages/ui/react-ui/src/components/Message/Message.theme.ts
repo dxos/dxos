@@ -10,13 +10,9 @@ export type MessageStyleProps = {
   elevation?: Elevation;
 };
 
-const root: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
-  return mx('p-1 rounded-sm', messageValence(valence), etc);
-};
-
-// Subgrid rather than a plain block so a nested `Message.Title` row still reaches the root's gutters.
-const content: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-span-full grid grid-cols-subgrid p-trim-md', etc);
+// The grid itself comes from `Column.Root`; this fragment only supplies the valence surface.
+const content: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
+  return mx('rounded-sm', messageValence(valence), etc);
 };
 
 const header: ComponentFunction<MessageStyleProps> = (_, etc) => {
@@ -32,7 +28,6 @@ const body: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 export const messageTheme: Theme<MessageStyleProps> = {
-  root,
   content,
   header,
   title,

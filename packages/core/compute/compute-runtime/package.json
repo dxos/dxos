@@ -58,7 +58,6 @@
     "@effect/platform": "catalog:",
     "@effect/rpc": "catalog:",
     "effect": "catalog:",
-    "i18next": "catalog:",
     "jsonata": "catalog:"
   },
   "devDependencies": {

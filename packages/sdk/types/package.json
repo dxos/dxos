@@ -29,7 +29,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -41,12 +40,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "fast-check": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
