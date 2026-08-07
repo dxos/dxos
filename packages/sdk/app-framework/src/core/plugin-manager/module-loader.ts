@@ -71,7 +71,7 @@ export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
  */
 export class ModuleLoader {
   readonly #memo = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
-  readonly #semaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
+  readonly #semaphores = new Map<Plugin.PluginModule['id'], Semaphore.Semaphore>();
   readonly #scopes = new Map<string, Scope.Closeable>();
   readonly #contributed = new Map<string, Capability.Any[]>();
   readonly #state: ManagerState;
@@ -279,7 +279,7 @@ export class ModuleLoader {
     });
   }
 
-  #semaphore(moduleId: Plugin.PluginModule['id']): Effect.Semaphore {
+  #semaphore(moduleId: Plugin.PluginModule['id']): Semaphore.Semaphore {
     let semaphore = this.#semaphores.get(moduleId);
     if (!semaphore) {
       semaphore = Effect.runSync(Semaphore.make(1));

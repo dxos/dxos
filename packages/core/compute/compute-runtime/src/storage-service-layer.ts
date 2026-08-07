@@ -25,10 +25,10 @@ export const layer = (
     get: <S extends Schema.Codec<any, string, any>>(schema: S, key: string) =>
       Effect.gen(function* () {
         const opt = yield* prefixed.get(key).pipe(Effect.orDie);
-        if (Option.isNone(opt)) {
+        if (opt === undefined) {
           return Option.none();
         }
-        const decoded = yield* Schema.decodeEffect(schema)(opt.value).pipe(Effect.orDie);
+        const decoded = yield* Schema.decodeEffect(schema)(opt).pipe(Effect.orDie);
         return Option.some(decoded);
       }),
 

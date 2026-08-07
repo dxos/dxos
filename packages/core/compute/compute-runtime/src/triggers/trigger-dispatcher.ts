@@ -17,6 +17,7 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 import { Atom } from 'effect/unstable/reactivity';
@@ -286,7 +287,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
    * manual, and retry drain). Enforces {@link _maxConcurrency} on top of any per-trigger
    * concurrency. Created eagerly so it can wrap invocations without an initialization effect.
    */
-  private _concurrencyLimiter: Effect.Semaphore;
+  private _concurrencyLimiter: Semaphore.Semaphore;
 
   /**
    * Monotonic counter assigning FIFO ordering to pending retries so re-enqueued retries land at
@@ -301,7 +302,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
     this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;
-    this._concurrencyLimiter = Effect.makeSemaphoreUnsafe(this._maxConcurrency);
+    this._concurrencyLimiter = Semaphore.makeUnsafe(this._maxConcurrency);
   }
 
   private _isInCooldown = (triggerId: string): boolean => {

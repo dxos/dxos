@@ -640,7 +640,7 @@ class Slice {
         if (Option.isSome(failure) && failure.value instanceof ServiceNotAvailableError) {
           return yield* Effect.fail(failure.value);
         }
-        const defect = Cause.dieOption(exit.cause);
+        const defect = Option.fromNullishOr(exit.cause.reasons.find(Cause.isDieReason)?.defect);
         if (Option.isSome(defect) && defect.value instanceof ServiceNotAvailableError) {
           return yield* Effect.fail(defect.value);
         }

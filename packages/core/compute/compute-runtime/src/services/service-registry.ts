@@ -26,9 +26,9 @@ export class ServiceRegistry extends Context.Service<ServiceRegistry, ServiceReg
    */
   static resolve: <T extends Context.Key<any, any>>(
     tag: T,
-  ) => Effect.Effect<T, ServiceNotAvailableError, ServiceRegistry> = (tag) =>
+  ) => Effect.Effect<Context.Service.Shape<T>, ServiceNotAvailableError, ServiceRegistry> = (tag) =>
     ServiceRegistry.pipe(
-      Effect.flatMap((_) => _.resolve(tag)),
+      Effect.flatMap((registry) => Effect.fromOption(registry.resolve(tag))),
       Effect.mapError(() => new ServiceNotAvailableError(tag.key)),
     );
 

@@ -32,7 +32,7 @@ const extractDefect = (exit: Exit.Exit<unknown, unknown>): Error | null => {
   if (Exit.isSuccess(exit)) {
     return null;
   }
-  return (Chunk.toReadonlyArray(Cause.defects(exit.cause))[0] as Error | undefined) ?? null;
+  return (exit.cause.reasons.filter(Cause.isDieReason).map((reason) => reason.defect)[0] as Error | undefined) ?? null;
 };
 
 describe('FunctionsAiHttpClient', () => {
