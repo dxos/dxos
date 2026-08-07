@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { type AiToolNotFoundError, OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import type * as Skill from '@dxos/compute/Skill';

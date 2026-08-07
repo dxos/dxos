@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as AiError from '@effect/ai/AiError';
-import type * as Tool from '@effect/ai/Tool';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import type * as AiError from 'effect/unstable/ai/AiError';
+import type * as Tool from 'effect/unstable/ai/Tool';
+import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';

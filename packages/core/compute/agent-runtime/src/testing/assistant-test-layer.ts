@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { Registry as AtomRegistry } from 'effect/unstable/reactivity';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';

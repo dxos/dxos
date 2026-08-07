@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
 import * as Context from 'effect/Context';
 import type * as Schema from 'effect/Schema';
+import type * as Tool from 'effect/unstable/ai/Tool';
 
 export interface FormattingOptions<Tool extends Tool.Any> {
   readonly debugFormatCall?: (parameters: Tool.Parameters<Tool>) => string | unknown;

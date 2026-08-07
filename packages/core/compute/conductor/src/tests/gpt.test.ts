@@ -107,7 +107,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
               tokenStream.pipe(
                 Stream.filterMap((part) => (part.type === 'text-delta' ? Option.some(part.delta) : Option.none())),
                 Stream.runCollect,
-                Effect.map(Chunk.toArray),
               ),
             ),
             output.values.text,

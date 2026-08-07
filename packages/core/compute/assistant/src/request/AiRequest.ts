@@ -4,15 +4,15 @@
 
 // @import-as-namespace
 
-import type * as AiError from '@effect/ai/AiError';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
+import type * as AiError from 'effect/unstable/ai/AiError';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import {
   AiParser,
@@ -294,7 +294,6 @@ export class Request {
         ),
         Stream.filterMap((_) => _),
         Stream.runCollect,
-        Effect.map(Chunk.toArray),
       );
       log('messages', { messages });
 

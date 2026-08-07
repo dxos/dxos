@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Prompt from '@effect/ai/Prompt';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';

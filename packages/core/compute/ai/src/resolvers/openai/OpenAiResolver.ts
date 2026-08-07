@@ -3,9 +3,9 @@
 //
 
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
-import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
+import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { DXN } from '@dxos/keys';
 

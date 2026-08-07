@@ -4,12 +4,6 @@
 
 // @import-as-namespace
 
-import * as AiError from '@effect/ai/AiError';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
-import * as Response from '@effect/ai/Response';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { createPatch } from 'diff';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
@@ -19,6 +13,12 @@ import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as AiError from 'effect/unstable/ai/AiError';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
+import * as Response from 'effect/unstable/ai/Response';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import jsonStableStringify from 'json-stable-stringify';
 
 import { EffectEx } from '@dxos/effect';

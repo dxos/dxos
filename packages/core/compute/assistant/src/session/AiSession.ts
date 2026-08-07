@@ -137,7 +137,7 @@ export class Session extends Resource {
   }
 
   getTools(): Effect.Effect<
-    Record<string, import('@effect/ai/Tool').Any>,
+    Record<string, import('effect/unstable/ai/Tool').Any>,
     never,
     ToolExecutionService | ToolResolverService
   > {

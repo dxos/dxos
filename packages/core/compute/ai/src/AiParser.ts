@@ -4,14 +4,14 @@
 
 // @import-as-namespace
 
-import type * as Response from '@effect/ai/Response';
-import type * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
+import type * as Response from 'effect/unstable/ai/Response';
+import type * as Tool from 'effect/unstable/ai/Tool';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

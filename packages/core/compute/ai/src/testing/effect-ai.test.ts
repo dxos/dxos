@@ -7,10 +7,6 @@ import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageM
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
-import * as Chat from '@effect/ai/Chat';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as NodeHttpClient from '@effect/platform-node/NodeHttpClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
@@ -21,6 +17,10 @@ import * as EffectFunction from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
+import * as Chat from 'effect/unstable/ai/Chat';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -284,7 +284,7 @@ describe('LanguageModel', () => {
           const stream = chat.streamText({ prompt, toolkit }).pipe(AiParser.parseResponse());
           prompt = Prompt.empty;
 
-          const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));
+          const result = yield* Stream.runCollect(stream);
           log.info('result', { result });
           log.break();
         } while (yield* hasToolCall(chat));

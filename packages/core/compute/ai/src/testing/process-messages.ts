@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as AiError from '@effect/ai/AiError';
-import type * as Chat from '@effect/ai/Chat';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
+import * as AiError from 'effect/unstable/ai/AiError';
+import type * as Chat from 'effect/unstable/ai/Chat';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';

@@ -3,9 +3,9 @@
 //
 
 import * as Generated from '@effect/ai-anthropic/Generated';
-import * as Tool from '@effect/ai/Tool';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
+import * as Tool from 'effect/unstable/ai/Tool';
 
 /**
  * Provider-defined Anthropic web search tool with per-call `parameters`.

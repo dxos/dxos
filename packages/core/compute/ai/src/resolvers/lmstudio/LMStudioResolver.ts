@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import type * as HttpClient from 'effect/unstable/http/HttpClient';
 

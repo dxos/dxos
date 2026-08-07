@@ -4,8 +4,6 @@
 
 // @import-as-namespace
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 // SSEClientTransport is marked @deprecated in the SDK in favor of StreamableHTTP, but the
 // SDK itself notes that clients should keep supporting both while servers migrate.
@@ -16,6 +14,8 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
