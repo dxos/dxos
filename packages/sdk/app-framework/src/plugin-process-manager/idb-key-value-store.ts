@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as PlatformError from 'effect/PlatformError';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as idb from 'idb-keyval';
 
 const DB_NAME = 'dxos-process-manager';

@@ -17,6 +17,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
@@ -150,7 +151,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   // letting runUntilSettled resolve during the persistence→dispatch hand-off before the turn runs.
   #alarmDispatching = false;
   #services: Context.Context<R | Process.BaseServices>;
-  #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  #alarmSemaphore = Effect.runSync(Semaphore.make(1));
   readonly #callbacks: Process.Callbacks<I, O, R, any>;
   readonly #scope: Scope.Closeable;
   readonly #registry: Registry.AtomRegistry;
@@ -378,7 +379,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           // event.value is persisted JSON; cast required at deserialization boundary since
           // Process.Process<I,O,R> does not expose the input Schema (runtime object does).
           const defWithSchema = definition as unknown as { input: Schema.Codec<I, unknown, never> };
-          const input = yield* Schema.decode(defWithSchema.input)(event.value).pipe(Effect.orDie);
+          const input = yield* Schema.decodeEffect(defWithSchema.input)(event.value).pipe(Effect.orDie);
           yield* yield* this.#runHandler('input', () => this.#callbacks.onInput(input), event.seq);
         });
       case 'alarm':
@@ -404,7 +405,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
               return Effect.runSync(Deferred.succeed(deferred, undefined));
             case Process.State.FAILED: {
               const error = state.exit.pipe(
-                Option.flatMap(Exit.causeOption),
+                Option.flatMap(Exit.getCause),
                 Option.map(Cause.pretty),
                 Option.getOrElse(() => 'Process failed with unknown error'),
               );
@@ -442,7 +443,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
                 : Effect.void;
             case Process.State.FAILED: {
               const error = state.exit.pipe(
-                Option.flatMap(Exit.causeOption),
+                Option.flatMap(Exit.getCause),
                 Option.map(Cause.pretty),
                 Option.getOrElse(() => 'Process failed with unknown error'),
               );
@@ -475,7 +476,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     }
     if (state === Process.State.FAILED) {
       const message = exit.pipe(
-        Option.flatMap(Exit.causeOption),
+        Option.flatMap(Exit.getCause),
         Option.map(Cause.pretty),
         Option.getOrElse(() => 'Process failed with unknown error'),
       );
@@ -498,7 +499,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
               return Effect.runSync(Deferred.succeed(deferred, undefined));
             case Process.State.FAILED: {
               const error = state.exit.pipe(
-                Option.flatMap(Exit.causeOption),
+                Option.flatMap(Exit.getCause),
                 Option.getOrElse(() => Cause.die('Process failed with unknown error')),
               );
               return Effect.runSync(Deferred.failCause(deferred, error));

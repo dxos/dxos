@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -14,7 +13,9 @@ import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
@@ -359,7 +360,7 @@ export class ProcessManagerImpl implements Manager {
    * attaching to individual handles.
    */
   readonly #traceSubscribers: Queue.Queue<Trace.Message>[] = [];
-  readonly #lifecycleSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  readonly #lifecycleSemaphore = Effect.runSync(Semaphore.make(1));
   #shutDown = false;
 
   constructor(opts: ProcessManagerImplOpts) {
@@ -653,7 +654,7 @@ export class ProcessManagerImpl implements Manager {
       // through JSON and degrade to null when it is not serializable. The handler still receives
       // the original typed value; re-delivery after restart sees null — best-effort by design.
       const encodeInput = (input: I): Effect.Effect<unknown> =>
-        Schema.encode(defRaw.input)(input).pipe(
+        Schema.encodeEffect(defRaw.input)(input).pipe(
           Effect.flatMap((encoded) => Effect.try((): unknown => JSON.parse(JSON.stringify(encoded)))),
           Effect.orElseSucceed(() => null),
         );
@@ -850,7 +851,8 @@ export class ProcessManagerImpl implements Manager {
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
       const defRaw = definition as unknown as { input: Schema.Codec<any, any, never> };
-      const encodeInput = (input: any): Effect.Effect<unknown> => Schema.encode(defRaw.input)(input).pipe(Effect.orDie);
+      const encodeInput = (input: any): Effect.Effect<unknown> =>
+        Schema.encodeEffect(defRaw.input)(input).pipe(Effect.orDie);
 
       const rpcClient = yield* makeLoopbackRpcClient(definition.rpcs, callbacks.rpcHandlers, scope);
 

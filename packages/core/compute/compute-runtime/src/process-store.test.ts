@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as Process from '@dxos/compute/Process';
 

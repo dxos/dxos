@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Semaphore from 'effect/Semaphore';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
@@ -77,16 +78,16 @@ const RecordSchema = Schema.fromJsonString(PersistedProcess);
 export class ProcessStore {
   readonly #kv: KeyValueStore.KeyValueStore;
   readonly #seq = new Map<Process.ID, number>();
-  readonly #locks = new Map<Process.ID, Effect.Semaphore>();
+  readonly #locks = new Map<Process.ID, Semaphore.Semaphore>();
 
   constructor(kv: KeyValueStore.KeyValueStore) {
     this.#kv = kv;
   }
 
-  #lock(id: Process.ID): Effect.Semaphore {
+  #lock(id: Process.ID): Semaphore.Semaphore {
     let lock = this.#locks.get(id);
     if (!lock) {
-      lock = Effect.runSync(Effect.makeSemaphore(1));
+      lock = Effect.runSync(Semaphore.make(1));
       this.#locks.set(id, lock);
     }
     return lock;
@@ -96,10 +97,10 @@ export class ProcessStore {
   listProcessIds(): Effect.Effect<readonly Process.ID[]> {
     return Effect.gen({ self: this }, function* () {
       const raw = yield* this.#kv.get(INDEX_KEY).pipe(Effect.orDie);
-      if (Option.isNone(raw)) {
+      if (raw === undefined) {
         return [];
       }
-      return yield* Schema.decode(IndexSchema)(raw.value).pipe(Effect.orDie);
+      return yield* Schema.decodeEffect(IndexSchema)(raw).pipe(Effect.orDie);
     });
   }
 
@@ -107,15 +108,15 @@ export class ProcessStore {
   getProcess(id: Process.ID): Effect.Effect<PersistedProcess | undefined> {
     return Effect.gen({ self: this }, function* () {
       const raw = yield* this.#kv.get(recordKey(id)).pipe(Effect.orDie);
-      if (Option.isNone(raw)) {
+      if (raw === undefined) {
         return undefined;
       }
-      const decoded = yield* Schema.decode(RecordSchema)(raw.value).pipe(Effect.result);
-      if (decoded._tag === 'Left') {
+      const decoded = yield* Schema.decodeEffect(RecordSchema)(raw).pipe(Effect.result);
+      if (decoded._tag === 'Failure') {
         yield* this.#purgeProcess(id);
         return undefined;
       }
-      return decoded.right;
+      return decoded.success;
     });
   }
 
@@ -132,11 +133,11 @@ export class ProcessStore {
   putProcess(record: PersistedProcess): Effect.Effect<void> {
     return this.#lock(record.id).withPermits(1)(
       Effect.gen({ self: this }, function* () {
-        const encoded = yield* Schema.encode(RecordSchema)(record).pipe(Effect.orDie);
+        const encoded = yield* Schema.encodeEffect(RecordSchema)(record).pipe(Effect.orDie);
         yield* this.#kv.set(recordKey(record.id), encoded).pipe(Effect.orDie);
         const ids = yield* this.listProcessIds();
         if (!ids.includes(record.id)) {
-          const nextIndex = yield* Schema.encode(IndexSchema)([...ids, record.id]).pipe(Effect.orDie);
+          const nextIndex = yield* Schema.encodeEffect(IndexSchema)([...ids, record.id]).pipe(Effect.orDie);
           yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
         }
         this.#seq.set(
@@ -156,7 +157,7 @@ export class ProcessStore {
     return Effect.gen({ self: this }, function* () {
       yield* this.#kv.remove(recordKey(id)).pipe(Effect.orDie);
       const ids = yield* this.listProcessIds();
-      const nextIndex = yield* Schema.encode(IndexSchema)(ids.filter((value) => value !== id)).pipe(Effect.orDie);
+      const nextIndex = yield* Schema.encodeEffect(IndexSchema)(ids.filter((value) => value !== id)).pipe(Effect.orDie);
       yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
       this.#seq.delete(id);
       this.#locks.delete(id);
@@ -171,7 +172,7 @@ export class ProcessStore {
           return;
         }
         const next = fn(record);
-        const encoded = yield* Schema.encode(RecordSchema)(next).pipe(Effect.orDie);
+        const encoded = yield* Schema.encodeEffect(RecordSchema)(next).pipe(Effect.orDie);
         yield* this.#kv.set(recordKey(id), encoded).pipe(Effect.orDie);
       }),
     );

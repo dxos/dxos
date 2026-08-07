@@ -12,6 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 
 import { ServiceNotAvailableError } from '@dxos/compute';
 import type * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -27,7 +28,7 @@ interface LayerStackOpts {
 
 export class LayerStack {
   #slices: Slice[] = [];
-  #semapphore = Effect.runSync(Effect.makeSemaphore(1));
+  #semapphore = Effect.runSync(Semaphore.make(1));
   #layers: LayerSpec.LayerSpec[];
 
   constructor(opts: LayerStackOpts) {

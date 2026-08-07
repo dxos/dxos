@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Semaphore from 'effect/Semaphore';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
@@ -555,7 +556,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             // semaphore + cache pair gives us a single in-flight upsert per login;
             // subsequent callers read from `personByLogin`.
             const personByLogin = new Map<string, Person.Person>();
-            const personSemaphore = yield* Effect.makeSemaphore(1);
+            const personSemaphore = yield* Semaphore.make(1);
             const ensurePerson = (user: GitHubApi.GitHubUser, organization: Organization.Organization | undefined) =>
               personSemaphore.withPermits(1)(
                 Effect.gen(function* () {

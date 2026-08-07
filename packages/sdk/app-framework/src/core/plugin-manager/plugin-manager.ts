@@ -45,6 +45,7 @@ import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
+import * as Semaphore from 'effect/Semaphore';
 import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { EffectEx } from '@dxos/effect';
@@ -288,7 +289,7 @@ class ManagerImpl implements PluginManager {
   private readonly _loader: ModuleLoader;
   private readonly _scheduler: ActivationScheduler;
   private readonly _catalog: PluginCatalog;
-  private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  private readonly _shutdownSemaphore = Effect.runSync(Semaphore.make(1));
   /** The failure-supervision fiber; stopped by `shutdown`, restarted by `_withRuntime`. */
   private _supervisor: Fiber.Fiber<never> | undefined;
 

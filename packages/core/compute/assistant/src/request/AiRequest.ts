@@ -9,6 +9,7 @@ import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import type * as AiError from 'effect/unstable/ai/AiError';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
@@ -121,7 +122,7 @@ export type TurnResult = {
  */
 export class Request {
   /** Prevents concurrent execution of session. */
-  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
+  private readonly _semaphore = Effect.runSync(Semaphore.make(1));
 
   private readonly _observer: GenerationObserver;
   private readonly _onOutput: (message: Message.Message) => Effect.Effect<void, never, never>;

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as StorageService from '@dxos/compute/StorageService';
 
@@ -28,13 +28,13 @@ export const layer = (
         if (Option.isNone(opt)) {
           return Option.none();
         }
-        const decoded = yield* Schema.decode(schema)(opt.value).pipe(Effect.orDie);
+        const decoded = yield* Schema.decodeEffect(schema)(opt.value).pipe(Effect.orDie);
         return Option.some(decoded);
       }),
 
     set: <S extends Schema.Codec<any, string, any>>(schema: S, key: string, value: Schema.Schema.Type<S>) =>
       Effect.gen(function* () {
-        const encoded = yield* Schema.encode(schema)(value).pipe(Effect.orDie);
+        const encoded = yield* Schema.encodeEffect(schema)(value).pipe(Effect.orDie);
         yield* prefixed.set(key, encoded).pipe(
           Effect.tap(() => Effect.sync(() => knownKeys.add(key))),
           Effect.orDie,

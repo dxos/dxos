@@ -11,6 +11,7 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -281,7 +282,7 @@ export class ModuleLoader {
   #semaphore(moduleId: Plugin.PluginModule['id']): Effect.Semaphore {
     let semaphore = this.#semaphores.get(moduleId);
     if (!semaphore) {
-      semaphore = Effect.runSync(Effect.makeSemaphore(1));
+      semaphore = Effect.runSync(Semaphore.make(1));
       this.#semaphores.set(moduleId, semaphore);
     }
     return semaphore;

@@ -85,7 +85,7 @@ const createLivePrototype = (ast: SchemaAST.AST) => {
               get(this: LiveProto) {
                 return this[Cell].get(prop.name);
               },
-              set: prop.isReadonly
+              set: !SchemaAST.isMutable(prop.type)
                 ? undefined
                 : function set(this: LiveProto, value: any) {
                     this[Cell].set(prop.name, value);

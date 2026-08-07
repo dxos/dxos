@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
@@ -19,6 +18,7 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
@@ -630,7 +630,7 @@ describe('ManagerImpl', () => {
       expect(Cause.isCause(defect)).toBe(false);
       expect(RunAgainError.is(defect)).toBe(true);
 
-      const processCause = handle.status.exit.pipe(Option.flatMap(Exit.causeOption), Option.getOrUndefined);
+      const processCause = handle.status.exit.pipe(Option.flatMap(Exit.getCause), Option.getOrUndefined);
       expect(processCause).toEqual(cause);
     }, Effect.provide(TestLayer)),
   );

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -10,6 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { AiService } from '@dxos/ai';

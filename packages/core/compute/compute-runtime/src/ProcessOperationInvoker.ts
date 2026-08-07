@@ -77,7 +77,7 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
                 case Process.State.FAILED: {
                   return yield* Effect.failCause(
                     handle.status.exit.pipe(
-                      Option.flatMap(Exit.causeOption),
+                      Option.flatMap(Exit.getCause),
                       Option.getOrElse(() => Cause.die('Operation failed with unknown error')),
                     ),
                   );

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { describe, test } from 'vitest';
 

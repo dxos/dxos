@@ -308,7 +308,7 @@ export class GraphExecutor {
       }
 
       // Assert that the value matches the schema.
-      yield* Schema.decode(input.schema)(value).pipe(
+      yield* Schema.decodeEffect(input.schema)(value).pipe(
         Effect.mapError(
           (error) =>
             new InvalidValueError({
@@ -420,7 +420,7 @@ export class GraphExecutor {
           inputs: Object.keys(inputValues.values),
         });
 
-        // const sanitizedInputs = yield* Schema.decode(node.meta.input)(inputValues);
+        // const sanitizedInputs = yield* Schema.decodeEffect(node.meta.input)(inputValues);
         // TODO(dmaretskyi): Figure out schema validation on value bags.
         invariant(ValueBag.isValueBag(inputValues), 'Input must be a value bag');
         let outputBag = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
@@ -446,7 +446,7 @@ export class GraphExecutor {
             }
 
             // Assert that the value matches the schema.
-            yield* Schema.decode(outputTopology.schema)(value).pipe(
+            yield* Schema.decodeEffect(outputTopology.schema)(value).pipe(
               Effect.mapError(
                 (error) =>
                   new InvalidValueError({
