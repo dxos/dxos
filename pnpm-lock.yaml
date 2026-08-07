@@ -333,6 +333,21 @@ catalogs:
     '@opentui/core':
       specifier: 0.1.61
       version: 0.1.61
+    '@opentui/core-darwin-arm64':
+      specifier: 0.1.61
+      version: 0.1.61
+    '@opentui/core-darwin-x64':
+      specifier: 0.1.61
+      version: 0.1.61
+    '@opentui/core-linux-arm64':
+      specifier: 0.1.61
+      version: 0.1.61
+    '@opentui/core-linux-x64':
+      specifier: 0.1.61
+      version: 0.1.61
+    '@opentui/core-win32-x64':
+      specifier: 0.1.61
+      version: 0.1.61
     '@opentui/solid':
       specifier: 0.1.61
       version: 0.1.61
@@ -7000,6 +7015,21 @@ importers:
         specifier: 'catalog:'
         version: 2.8.2
     devDependencies:
+      '@opentui/core-darwin-arm64':
+        specifier: 'catalog:'
+        version: 0.1.61
+      '@opentui/core-darwin-x64':
+        specifier: 'catalog:'
+        version: 0.1.61
+      '@opentui/core-linux-arm64':
+        specifier: 'catalog:'
+        version: 0.1.61
+      '@opentui/core-linux-x64':
+        specifier: 'catalog:'
+        version: 0.1.61
+      '@opentui/core-win32-x64':
+        specifier: 'catalog:'
+        version: 0.1.61
       '@types/node':
         specifier: 22.10.2
         version: 22.10.2
@@ -49592,23 +49622,18 @@ snapshots:
 
   '@opentelemetry/semantic-conventions@1.43.0': {}
 
-  '@opentui/core-darwin-arm64@0.1.61':
-    optional: true
+  '@opentui/core-darwin-arm64@0.1.61': {}
 
-  '@opentui/core-darwin-x64@0.1.61':
-    optional: true
+  '@opentui/core-darwin-x64@0.1.61': {}
 
-  '@opentui/core-linux-arm64@0.1.61':
-    optional: true
+  '@opentui/core-linux-arm64@0.1.61': {}
 
-  '@opentui/core-linux-x64@0.1.61':
-    optional: true
+  '@opentui/core-linux-x64@0.1.61': {}
 
   '@opentui/core-win32-arm64@0.1.61':
     optional: true
 
-  '@opentui/core-win32-x64@0.1.61':
-    optional: true
+  '@opentui/core-win32-x64@0.1.61': {}
 
   '@opentui/core@0.1.61(typescript@6.0.3)(web-tree-sitter@0.25.10)':
     dependencies:

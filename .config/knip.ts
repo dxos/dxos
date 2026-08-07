@@ -331,6 +331,20 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // leaves `#spaces` a full-flow block over the todo list intercepting every click — 5 of 7 todomvc
   // e2e tests failed that way on all three browsers in run 31134237965.
   'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
+  // `@opentui/core` reaches its native library through
+  // `await import(`@opentui/core-${process.platform}-${process.arch}/index.ts`)`, which Bun resolves
+  // statically once per `--compile` target. `cli:bundle` cross-compiles all five targets from one
+  // Linux runner, so all five must be installed — and `@opentui/core` only declares them as
+  // `optionalDependencies` gated by `os`/`cpu`, which installs just the host's. Listing them here is
+  // what pulls the other four in; nothing imports them, so knip cannot see that. Dropping them broke
+  // `cli:bundle` with `Could not resolve: "@opentui/core-darwin-arm64/index.ts"`.
+  'packages/devtools/cli': [
+    '@opentui/core-darwin-arm64',
+    '@opentui/core-darwin-x64',
+    '@opentui/core-linux-arm64',
+    '@opentui/core-linux-x64',
+    '@opentui/core-win32-x64',
+  ],
 };
 
 const workspaces: KnipConfig['workspaces'] = {
