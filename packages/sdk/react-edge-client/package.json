@@ -25,7 +25,6 @@
   ],
   "dependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/react-client": "workspace:*"

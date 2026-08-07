@@ -49,7 +49,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
         <Panel.Content>
           {selectedObjects.length === 0 ? (
             <Message.Root>
-              <Message.Content>
+              <Message.Content classNames='m-trim-md'>
                 <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
               </Message.Content>
             </Message.Root>
@@ -64,8 +64,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
-                        {/* The card's only content is a form, so it takes the form gutter rather than the card's chrome inset. */}
-                        <Card.Root fullWidth gutter='sm' classNames='pb-form-gap'>
+                        <Card.Root fullWidth gutter='sm'>
                           <ObjectForm object={props.data} type={type} />
                         </Card.Root>
                       </Mosaic.Tile>

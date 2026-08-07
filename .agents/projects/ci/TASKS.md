@@ -27,6 +27,11 @@ REPORT.md, "In CI". What remains is operational hardening, not the rollout itsel
 - [x] **Store the certificates** — one `moon-cache-certs` item in the 1Password `CI` vault, each
       file its own concealed field; `install-certs.sh --op` reads the three client files from it.
       `ca.key` is in the item but never fetched by that path.
+- [x] **Install once per machine, not per worktree** — certificates live in
+      `~/.config/dxos/moon-cache` and are found via `MOON_REMOTE_MTLS_*`, which take absolute
+      paths. The in-repo `.moon/certs` layout would have needed repeating in every checkout, and a
+      machine here has twenty-three. CI keeps the in-repo layout via `--worktree`, since a runner
+      has one.
 - [x] **Set the three `MOON_CACHE_*` repository secrets** on `dxos/dxos`.
 - [x] **Measure the cache in CI** — 14 s cached against 161 s uncached on a Depot runner,
       324/324 hits, mTLS working from inside the job container. REPORT.md, "In CI".

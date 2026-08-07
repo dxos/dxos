@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react-vite';
 import React from 'react';
 import { I18nProvider } from 'react-aria-components';
 

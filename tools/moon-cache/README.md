@@ -8,20 +8,24 @@ machine, over the same 25 ms of RTT. Wall clock per run: **338 s → 30 s**.
 
 ## Local development
 
-One command, if you have the 1Password CLI and access to the `CI` vault:
+Once per machine, not per checkout:
 
 ```bash
 ./tools/moon-cache/install-certs.sh --op
 ```
 
-Otherwise get `ca.pem`, `client.pem` and `client.key` from an admin and point the script at them:
+Then add the line it prints to your shell profile:
 
 ```bash
-./tools/moon-cache/install-certs.sh ~/Downloads/moon-cache-certs
+[ -f ~/.config/dxos/moon-cache/env.sh ] && source ~/.config/dxos/moon-cache/env.sh
 ```
 
-Either way they land in `.moon/certs/`, which is gitignored. Nothing else changes; `moon run`
-picks the cache up from `.moon/workspace.yml`.
+Certificates live in `~/.config/dxos/moon-cache` and are found through `MOON_REMOTE_MTLS_*`, which
+take absolute paths — so every worktree on the machine uses the cache, including ones created
+later. Storing them in the repo would mean repeating this in each of them.
+
+Without the 1Password CLI, get `ca.pem`, `client.pem` and `client.key` from an admin and pass the
+directory instead of `--op`.
 
 Check it is actually working — moon **never fails** on a broken cache, it just quietly rebuilds:
 
@@ -68,10 +72,11 @@ route returns 401 without one.
 
 ```bash
 # Health. No client certificate needed, but the CA is private, so it must still be trusted.
-curl -s --cacert .moon/certs/ca.pem https://cache.dxos.network:9093/status
+curl -s --cacert ~/.config/dxos/moon-cache/ca.pem https://cache.dxos.network:9093/status
 
 # Anything real needs the client certificate.
-curl -s --cacert .moon/certs/ca.pem --cert .moon/certs/client.pem --key .moon/certs/client.key \
+curl -s --cacert ~/.config/dxos/moon-cache/ca.pem \
+  --cert ~/.config/dxos/moon-cache/client.pem --key ~/.config/dxos/moon-cache/client.key \
   https://cache.dxos.network:9093/metrics | grep bazel_remote_incoming
 
 # Service state.
@@ -104,9 +109,9 @@ CI reads three of them from repository secrets — `MOON_CACHE_CA_PEM`, `MOON_CA
 survives:
 
 ```bash
-gh secret set MOON_CACHE_CA_PEM < .moon/certs/ca.pem
-gh secret set MOON_CACHE_CLIENT_PEM < .moon/certs/client.pem
-gh secret set MOON_CACHE_CLIENT_KEY < .moon/certs/client.key
+gh secret set MOON_CACHE_CA_PEM < ~/.config/dxos/moon-cache/ca.pem
+gh secret set MOON_CACHE_CLIENT_PEM < ~/.config/dxos/moon-cache/client.pem
+gh secret set MOON_CACHE_CLIENT_KEY < ~/.config/dxos/moon-cache/client.key
 ```
 
 The server certificate carries the droplet IP and `cache.dxos.network` as SANs, so it stays valid
@@ -114,9 +119,10 @@ whether clients dial the name or the address.
 
 ## CI
 
-`.github/actions/setup` writes the three files into `.moon/certs/` before any moon task runs, and
-**fails the job if they are missing** — except on fork PRs, which cannot receive secrets and fall
-back to local-cache-only with a warning.
+`.github/actions/setup` writes the three files into `.moon/certs/` before any moon task runs —
+the in-repo layout that `.moon/workspace.yml` points at, which suits a runner because it has
+exactly one checkout — and **fails the job if they are missing**, except on fork PRs, which
+cannot receive secrets and fall back to local-cache-only with a warning.
 
 They arrive as environment variables, bound once per workflow, because a composite action cannot
 read the `secrets` context:
@@ -129,8 +135,8 @@ env:
 ```
 
 Deployment and publish workflows opt out instead — `remote-cache: 'false'` on the setup call, which
-points moon at an unroutable host. A released artifact is built from source rather than trusted
-from a cache any CI job can write to.
+blanks `MOON_REMOTE_HOST`. A released artifact is built from source rather than trusted from a
+cache any CI job can write to.
 
 | secret | contents |
 | --- | --- |

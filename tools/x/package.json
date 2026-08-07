@@ -23,32 +23,17 @@
     "info": "tsc --showConfig | jq"
   },
   "dependencies": {
-    "@dxos/log": "workspace:*",
     "@octokit/rest": "catalog:",
     "chalk": "catalog:",
-    "color-hash": "catalog:",
     "columnify": "catalog:",
-    "console-table-printer": "catalog:",
-    "enquirer": "catalog:",
     "ink": "catalog:",
-    "ink-spinner": "catalog:",
-    "ink-table": "catalog:",
     "ink-text-input": "catalog:",
-    "js-yaml": "catalog:",
-    "lodash.defaultsdeep": "catalog:",
-    "log-update": "catalog:",
     "node-notifier": "catalog:",
     "react": "catalog:",
-    "unzip-stream": "catalog:",
-    "yargs": "catalog:"
+    "unzip-stream": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "catalog:",
-    "@types/color-hash": "catalog:",
     "@types/columnify": "catalog:",
-    "@types/lodash.defaultsdeep": "catalog:",
-    "@types/minimatch": "catalog:",
-    "@types/react": "catalog:",
-    "@types/yargs": "catalog:"
+    "@types/react": "catalog:"
   }
 }

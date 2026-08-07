@@ -10,9 +10,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/protobuf-test"
-    },
-    {
       "path": "../codec-protobuf"
     },
     {

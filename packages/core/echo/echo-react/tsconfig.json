@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/log"
-    },
-    {
       "path": "../echo"
     },
     {

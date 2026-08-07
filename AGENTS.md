@@ -124,10 +124,12 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Test all: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`
 - Lint & fix: `moon run :lint -- --fix`
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
+- Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
 - Storybook: `moon run storybook-react:serve` (port 9009)
 
 A remote-cache warning from moon is harmless — builds work, they just don't share the team's
-cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates.
+cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
+once per machine, for every worktree.
 
 ## Code style
 

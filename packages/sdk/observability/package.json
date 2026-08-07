@@ -14,7 +14,6 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     }
@@ -31,13 +30,11 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
@@ -63,10 +60,10 @@
     "zone.js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client-services": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/messaging": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@effect/platform": "catalog:",
-    "@types/debug": "catalog:",
     "@types/js-yaml": "catalog:"
   },
   "peerDependencies": {

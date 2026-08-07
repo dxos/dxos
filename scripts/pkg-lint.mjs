@@ -213,6 +213,9 @@ for (const { name, path: pkgPath } of packages) {
 
   // Check exports.
   const exports = pkgJson.exports ?? {};
+  // Dist-runtime packages omit `source` deliberately (see the dist-runtime-tag rule below), so the
+  // missing-source warning is expected there rather than a finding.
+  const isDistRuntime = moonYml?.tags?.includes('dist-runtime') ?? false;
   for (const [exportPath, exportValue] of Object.entries(exports)) {
     if (typeof exportValue !== 'object' || exportValue === null) {
       continue;
@@ -236,9 +239,11 @@ for (const { name, path: pkgPath } of packages) {
       addDiagnostic('warning', 'types-order', `export "${exportPath}": "types" should be first or after "source"`);
     }
 
-    // No source export - warning.
+    // No source export - warning (expected for dist-runtime packages).
     if (!conditions.includes('source')) {
-      addDiagnostic('warning', 'no-source-export', `export "${exportPath}" has no "source" condition`);
+      if (!isDistRuntime) {
+        addDiagnostic('warning', 'no-source-export', `export "${exportPath}" has no "source" condition`);
+      }
     } else {
       // Source may be a string or a nested condition object (e.g. { workerd: "...", default: "..." }).
       const sourceEntries =
@@ -275,6 +280,25 @@ for (const { name, path: pkgPath } of packages) {
           `export "${exportPath}": types file does not exist yet: ${exportValue.types}`,
         );
       }
+    }
+  }
+
+  // A package consumed from dist declares it by omitting the `source` export condition — which is
+  // what keeps node/bun and vite resolving it the same way — and carries the `dist-runtime` moon
+  // tag, which fans its build out to tasks that otherwise skip `^:build` (composer-app:serve-min).
+  // The two must agree, or the tagged build is unused (or the missing one breaks the dev server).
+  {
+    const hasDistRuntimeTag = moonYml?.tags?.includes('dist-runtime') ?? false;
+    const conditionalExports = Object.values(exports).filter((value) => typeof value === 'object' && value !== null);
+    const hasSourceCondition = conditionalExports.some((value) => 'source' in value);
+    if (hasDistRuntimeTag && hasSourceCondition) {
+      addDiagnostic(
+        'error',
+        'dist-runtime-tag',
+        '"dist-runtime" tag requires no "source" export condition — with one, vite resolves this package from source and the tagged build is unused',
+      );
+    } else if (hasDistRuntimeTag) {
+      addDiagnostic('conventional', 'dist-runtime-tag', 'dist-runtime tag consistent with package exports');
     }
   }
 
