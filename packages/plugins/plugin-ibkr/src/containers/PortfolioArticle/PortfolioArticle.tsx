@@ -150,7 +150,9 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>

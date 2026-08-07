@@ -124,11 +124,9 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
@@ -137,10 +135,10 @@
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "vite": "catalog:"

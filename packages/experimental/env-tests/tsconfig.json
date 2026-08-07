@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -27,9 +24,6 @@
       "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/compute/compute"
-    },
-    {
       "path": "../../core/compute/compute-runtime"
     },
     {
@@ -40,12 +34,6 @@
     },
     {
       "path": "../../core/echo/echo-client"
-    },
-    {
-      "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../sdk/app-framework"
     }
   ]
 }

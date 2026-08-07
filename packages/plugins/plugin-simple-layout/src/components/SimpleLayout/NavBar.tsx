@@ -25,7 +25,9 @@ export const NavBar = composable<HTMLDivElement, NavBarProps>(({ actions, onActi
 
   return (
     <Menu.Root {...menuActions} alwaysActive onAction={onAction}>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 });

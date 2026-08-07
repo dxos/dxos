@@ -66,7 +66,9 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
     <Panel.Root role={role}>
       <Panel.Toolbar>
         <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content>

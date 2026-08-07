@@ -111,7 +111,9 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
       {canStartCall && (
         <Menu.Root {...menuActions} attendableId={attendableId}>
           <Panel.Toolbar asChild>
-            <Menu.Toolbar />
+            <Menu.Toolbar>
+              <Menu.Items />
+            </Menu.Toolbar>
           </Panel.Toolbar>
         </Menu.Root>
       )}

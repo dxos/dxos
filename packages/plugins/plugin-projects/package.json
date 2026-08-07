@@ -136,7 +136,6 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
@@ -151,6 +150,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "vite": "catalog:"

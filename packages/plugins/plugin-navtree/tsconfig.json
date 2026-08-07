@@ -37,16 +37,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -88,22 +82,13 @@
       "path": "../plugin-attention"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
       "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-space"
-    },
-    {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

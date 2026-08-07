@@ -44,6 +44,7 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
       <ElevationProvider elevation='base'>
         <Menu.Root attendableId={attendableId} alwaysActive={alwaysActive} {...menuActions}>
           <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+            <Menu.Items />
             {/* TODO(burdon): Extend builder to support custom components. */}
             <HuePicker value={editorState.hue} onChange={(hue) => updateEditorState({ hue })} />
           </Menu.Toolbar>

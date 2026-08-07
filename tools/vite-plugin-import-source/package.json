@@ -29,9 +29,6 @@
     "minimatch": "catalog:",
     "oxc-resolver": "catalog:"
   },
-  "devDependencies": {
-    "@types/minimatch": "catalog:"
-  },
   "peerDependencies": {
     "vite": "catalog:"
   }

@@ -8,13 +8,17 @@ on:
         required: false
         type: string
 
-env:
-  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
-
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 jobs:
   track-todos:

@@ -66,7 +66,6 @@
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-automerge-replicator": "workspace:*",
-    "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -75,12 +74,10 @@
     "bs58check": "catalog:",
     "effect": "catalog:",
     "fast-deep-equal": "catalog:",
-    "level-transcoder": "catalog:",
-    "semver": "catalog:"
+    "level-transcoder": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
-    "@types/semver": "catalog:",
     "get-port-please": "catalog:"
   },
   "publishConfig": {

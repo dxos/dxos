@@ -106,9 +106,6 @@
       "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../core/mesh/rpc"
-    },
-    {
       "path": "../../core/mesh/teleport"
     },
     {

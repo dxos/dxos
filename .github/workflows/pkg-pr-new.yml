@@ -11,7 +11,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 jobs:
   publish:

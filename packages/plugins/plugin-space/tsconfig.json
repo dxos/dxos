@@ -47,9 +47,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -63,9 +60,6 @@
     },
     {
       "path": "../../core/compute/extractor-lib"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -92,9 +86,6 @@
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-graph"
-    },
-    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -117,9 +108,6 @@
     },
     {
       "path": "../../sdk/types"
-    },
-    {
-      "path": "../../ui/lit-ui"
     },
     {
       "path": "../../ui/react-ui"

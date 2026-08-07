@@ -16,13 +16,7 @@
   ],
   "references": [
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/node-std"
-    },
-    {
-      "path": "../../common/util"
     },
     {
       "path": "../ui-types"
