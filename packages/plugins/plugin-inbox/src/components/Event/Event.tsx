@@ -87,7 +87,9 @@ const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
 
     return (
       <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     );
   },

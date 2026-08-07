@@ -112,7 +112,9 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
       <Menu.Root {...taskActions} attendableId={attendableId}>
         <Panel.Root role={role}>
           <Panel.Toolbar>
-            <Menu.Toolbar classNames='dx-document' />
+            <Menu.Toolbar classNames='dx-document'>
+              <Menu.Items />
+            </Menu.Toolbar>
           </Panel.Toolbar>
           <Panel.Content>
             <TaskForm task={task} classNames='dx-document' />
@@ -138,7 +140,9 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
       <Menu.Root {...outlineActions} attendableId={attendableId}>
         <Panel.Root role={role}>
           <Panel.Toolbar>
-            <Menu.Toolbar classNames='dx-document' />
+            <Menu.Toolbar classNames='dx-document'>
+              <Menu.Items />
+            </Menu.Toolbar>
           </Panel.Toolbar>
           <Panel.Content asChild>
             <Outline.Content classNames='dx-document' />

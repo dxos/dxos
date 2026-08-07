@@ -16,7 +16,6 @@ import { Doc } from '@dxos/echo-doc';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
@@ -43,7 +42,7 @@ export class EchoReplicant {
   @trace.span()
   async open(): Promise<void> {
     log.trace('dxos.echo-replicant.open');
-    this._testPeer = new EchoTestPeer({ kv: createTestLevel(this.env.params.planRunDir) });
+    this._testPeer = new EchoTestPeer({ storagePath: `${this.env.params.planRunDir}/echo.sqlite` });
     await this._testPeer.open();
   }
 
@@ -51,7 +50,11 @@ export class EchoReplicant {
   async close(): Promise<void> {
     log.trace('dxos.echo-replicant.close');
     void this._ctx.dispose();
-    await this._testPeer!.close();
+    const testPeer = this._testPeer;
+    invariant(testPeer, 'EchoTestPeer not initialized.');
+    await testPeer.close();
+    // storagePath keeps the SQLite runtime alive across close()/open(); dispose it for final teardown.
+    await testPeer.disposeStorage();
   }
 
   @trace.span()

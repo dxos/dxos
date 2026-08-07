@@ -144,7 +144,9 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} attendableId={id}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content>

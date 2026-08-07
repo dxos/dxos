@@ -345,6 +345,10 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     '@opentui/core-linux-x64',
     '@opentui/core-win32-x64',
   ],
+  // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
+  // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
+  // dependency is not reachable from the emitted chunk.
+  'docs': ['sharp'],
 };
 
 const workspaces: KnipConfig['workspaces'] = {

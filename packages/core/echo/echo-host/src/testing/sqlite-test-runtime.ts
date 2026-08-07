@@ -10,6 +10,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { RuntimeProvider } from '@dxos/effect';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { SqliteStorageAdapter } from '../automerge/sqlite-storage-adapter';
+
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
@@ -30,5 +32,28 @@ export const createTestSqliteRuntime = (filename = ':memory:'): TestSqliteRuntim
   return {
     runtime: rt.runtimeEffect,
     dispose: () => rt.dispose(),
+  };
+};
+
+export type TestSqliteStorageAdapter = {
+  adapter: SqliteStorageAdapter;
+  dispose: () => Promise<void>;
+};
+
+/**
+ * Opens a migrated {@link SqliteStorageAdapter} over a fresh SQLite runtime.
+ * `dispose` closes the adapter and tears down the runtime.
+ */
+export const createTestSqliteStorageAdapter = async (filename = ':memory:'): Promise<TestSqliteStorageAdapter> => {
+  const { runtime, dispose } = createTestSqliteRuntime(filename);
+  const adapter = new SqliteStorageAdapter({ runtime });
+  await adapter.open();
+  await RuntimeProvider.runPromise(runtime)(adapter.migrate);
+  return {
+    adapter,
+    dispose: async () => {
+      await adapter.close();
+      await dispose();
+    },
   };
 };

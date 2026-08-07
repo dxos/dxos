@@ -21,6 +21,7 @@
       "@dxos/test-utils",
       "@dxos/timeframe",
       "@dxos/tracing",
+      "@dxos/ui-theme",
       "@dxos/util"
     ]
   },

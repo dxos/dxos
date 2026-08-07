@@ -20,6 +20,7 @@ export const BuiltinConnectors = Capability.lazyModule(
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connectors'),
 );
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,

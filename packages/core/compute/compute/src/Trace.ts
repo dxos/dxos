@@ -491,6 +491,11 @@ export const OperationEnd = EventType('operation.end', {
     outcome: Schema.Literal('success', 'failure'),
     /** Error message if the operation failed. */
     error: Schema.optional(Schema.String),
+    /**
+     * Stable code (error name) of the failure, when the operation failed with a typed error.
+     * Lets consumers match on the error kind (e.g. a run-again yield) without parsing the message.
+     */
+    errorCode: Schema.optional(Schema.String),
   }),
   isEphemeral: false,
 });

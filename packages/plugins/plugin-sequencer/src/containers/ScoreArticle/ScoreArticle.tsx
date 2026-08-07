@@ -451,6 +451,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Toolbar asChild>
           <Menu.Toolbar>
+            <Menu.Items />
             <Input.Root>
               <Input.Label classNames='text-xs mr-1'>BPM</Input.Label>
               <Input.TextInput
