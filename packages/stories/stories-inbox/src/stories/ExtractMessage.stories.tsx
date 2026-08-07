@@ -173,7 +173,7 @@ const MockAiServicePlugin = Plugin.define(
 );
 
 /**
- * Seeds a personal space with a Mailbox and one message that matches FOUR extractors:
+ * Seeds a default space with a Mailbox and one message that matches FOUR extractors:
  *  - `ContactMessageExtractor` (plugin-inbox) — any sender with an email.
  *  - `TripMessageExtractor` (plugin-trip) — body contains a United-style flight block;
  *    creates Trip + Booking + Segment AND tags the message `travel`.

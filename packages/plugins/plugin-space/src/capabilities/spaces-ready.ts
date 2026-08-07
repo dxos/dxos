@@ -123,7 +123,7 @@ export default Capability.makeModule(
         !settingsSpace ||
         !legacySpace ||
         settingsSpace.state.get() !== SpaceState.SPACE_READY ||
-        AppSpace.readDefaultSpaceId(settingsSpace)
+        AppSpace.getDefaultSpaceId(settingsSpace)
       ) {
         return;
       }
@@ -139,7 +139,7 @@ export default Capability.makeModule(
     subscriptions.add(() => spacesSub.unsubscribe());
 
     //
-    // Space subscriptions — set up immediately, do not depend on personal space.
+    // Space subscriptions — set up immediately, do not depend on default space.
     //
 
     // Await missing objects - subscribe to layout atom changes.
@@ -182,7 +182,7 @@ export default Capability.makeModule(
 
     // Cache space names.
     const spaceNamesSub = client.spaces.subscribe(async (spaces) => {
-      // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
+      // TODO(wittjosiah): Remove. This is a hack to be able to migrate the default space properties.
       const legacySpace = AppSpace.resolveLegacyDefaultSpace(client);
       if (legacySpace && legacySpace.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
         await legacySpace.internal.migrate();

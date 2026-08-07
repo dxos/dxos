@@ -489,7 +489,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       const { invoke } = yield* Capabilities.OperationInvoker;
       const client = yield* ClientCapabilities.Client;
       // Not `spaces.get()[0]`: the settings space is created first, and story content belongs in
-      // the personal space.
+      // the default space.
       const space = AppSpace.getDefaultSpace(client) ?? client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 

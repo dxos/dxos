@@ -159,7 +159,7 @@ export default Capability.makeModule(
 
       // Home article toolbar actions: Start tour + Hide Welcome. Matched on the Home node (created
       // by plugin-space: type === SpaceSchema.SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
-      // conditional on the personal space and the welcome not being dismissed — read reactively via
+      // conditional on the default space and the welcome not being dismissed — read reactively via
       // the space properties atom so the actions appear/disappear live without a React re-render cycle.
       GraphBuilder.createExtension({
         id: 'spaceHomeActions',

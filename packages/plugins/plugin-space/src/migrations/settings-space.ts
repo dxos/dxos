@@ -39,7 +39,7 @@ export const migrateToSettingsSpace = Effect.fnUntraced(function* ({
     writeSpacesOrder(ordering, legacyOrder);
   }
 
-  if (!AppSpace.readDefaultSpaceId(settingsSpace)) {
+  if (!AppSpace.getDefaultSpaceId(settingsSpace)) {
     AppSpace.setDefaultSpaceId(settingsSpace, legacySpace.id);
   }
 

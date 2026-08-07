@@ -210,9 +210,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         }
 
         // Cross-space ordering lives in the settings space; until it exists and opens (or before
-        // the migration has run) spaces simply render in their natural order.
+        // the migration has run) spaces simply render in their natural order. `spacesAtom` covers
+        // the space appearing; its state is read through an atom so the ordering also appears when
+        // an already-listed settings space finishes opening.
         const settingsSpace = AppSpace.getSettingsSpace(client);
-        const orderingSpace = settingsSpace?.state.get() === SpaceState.SPACE_READY ? settingsSpace : undefined;
+        const settingsSpaceState = settingsSpace ? get(CreateAtom.fromObservable(settingsSpace.state)) : undefined;
+        const orderingSpace = settingsSpaceState === SpaceState.SPACE_READY ? settingsSpace : undefined;
 
         const [settingsAtom] = get(settingsCapAtom);
         if (!settingsAtom) {
@@ -236,7 +239,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
 
-          const spaceStates = spaces.map((space) => get(CreateAtom.fromObservable(space.state)));
+          // Keyed by id rather than position: the array below is re-sorted by `orderMap`, so a
+          // positional lookup would test one space's readiness against another's state.
+          const spaceStates = new Map(spaces.map((space) => [space.id, get(CreateAtom.fromObservable(space.state))]));
 
           spaces.forEach((space) => {
             if (space.state.get() === SpaceState.SPACE_READY) {
@@ -251,7 +256,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 .sort((sortA, sortB) => orderMap.get(sortA.id)! - orderMap.get(sortB.id)!),
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
-              .filter((space, idx) => spaceStates[idx] === SpaceState.SPACE_READY)
+              .filter((space) => spaceStates.get(space.id) === SpaceState.SPACE_READY)
               .filter((space) => AppSpace.isVisibleSpace(space))
               .map((space) =>
                 constructSpaceNode({

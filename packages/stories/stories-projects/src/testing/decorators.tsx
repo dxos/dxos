@@ -125,7 +125,7 @@ const StoryAiPlugin = (kind: StoryAiService) =>
   )();
 
 /**
- * Story decorators for a project template scenario: a personal space seeded with one mailbox, the
+ * Story decorators for a project template scenario: a default space seeded with one mailbox, the
  * plugin set that owns the project machinery, and this package's module surfaces.
  *
  * The plugin list is what populates the skill-definition registry that resolves a skill ref to a

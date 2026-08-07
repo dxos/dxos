@@ -35,7 +35,7 @@ describe('settings space migration', () => {
       const settingsSpace = yield* ensureSettingsSpace(client);
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
 
-      expect(AppSpace.readDefaultSpaceId(settingsSpace)).toBe(legacySpace.id);
+      expect(AppSpace.getDefaultSpaceId(settingsSpace)).toBe(legacySpace.id);
       expect(yield* readSpacesOrder(settingsSpace)).toEqual(order);
       expect(legacySpace.properties.name).toBe(AppSpace.DEFAULT_SPACE_NAME);
       expect(AppSpace.getDefaultSpace(client)?.id).toBe(legacySpace.id);
@@ -62,7 +62,7 @@ describe('settings space migration', () => {
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
 
       // The user's choice wins, and a space that already has a name keeps it.
-      expect(AppSpace.readDefaultSpaceId(settingsSpace)).toBe(chosen.id);
+      expect(AppSpace.getDefaultSpaceId(settingsSpace)).toBe(chosen.id);
       expect(legacySpace.properties.name).toBe('Renamed');
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -77,7 +77,7 @@ describe('settings space migration', () => {
       // is nothing to designate and the ordering starts empty.
       const settingsSpace = yield* ensureSettingsSpace(client);
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace: undefined });
-      expect(AppSpace.readDefaultSpaceId(settingsSpace)).toBeUndefined();
+      expect(AppSpace.getDefaultSpaceId(settingsSpace)).toBeUndefined();
 
       // Second pass, once the legacy space turns up: its ordering and designation still transfer.
       const legacySpace = yield* Effect.promise(() =>
@@ -89,7 +89,7 @@ describe('settings space migration', () => {
 
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
 
-      expect(AppSpace.readDefaultSpaceId(settingsSpace)).toBe(legacySpace.id);
+      expect(AppSpace.getDefaultSpaceId(settingsSpace)).toBe(legacySpace.id);
       expect(yield* readSpacesOrder(settingsSpace)).toEqual(order);
     }).pipe(Effect.provide(TestLayer)),
   );

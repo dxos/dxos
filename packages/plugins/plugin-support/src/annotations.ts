@@ -9,7 +9,7 @@ import { Annotation } from '@dxos/echo';
 import { meta } from '#meta';
 
 /**
- * Whether the user has dismissed the Welcome content on the personal space's Home page. Stored on
+ * Whether the user has dismissed the Welcome content on the default space's Home page. Stored on
  * the settings space's `properties` meta (via {@link Annotation.set}) so the choice is app-wide and
  * replicates across the user's devices.
  */

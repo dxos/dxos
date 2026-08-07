@@ -27,7 +27,7 @@ export const Start = Operation.make({
 
 /**
  * Persists the "welcome dismissed" annotation on the settings space so the Welcome carousel stays
- * hidden on the personal space's Home page. Invoked from the Home article toolbar's "Hide Welcome"
+ * hidden on the default space's Home page. Invoked from the Home article toolbar's "Hide Welcome"
  * action.
  */
 export const HideWelcome = Operation.make({

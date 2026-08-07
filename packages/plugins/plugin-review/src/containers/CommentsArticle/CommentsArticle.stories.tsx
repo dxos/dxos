@@ -112,7 +112,7 @@ const StubAgentRunner: CommentCapabilities.AgentRunner = {
 
 /**
  * Common story-only plugin:
- * 1. Exposes Markdown documents in the personal space as direct children of the
+ * 1. Exposes Markdown documents in the default space as direct children of the
  *    graph root, so ReviewPlugin's `comment-toolbar` extension can attach the
  *    `comment` action to the doc's node.
  * 2. Stubs out plugin-deck's layout operations (`UpdateCompanion`,

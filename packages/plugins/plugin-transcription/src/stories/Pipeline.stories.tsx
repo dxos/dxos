@@ -85,7 +85,7 @@ const TRANSCRIPT = trim`
   I should follow up with Michael Chen next week
 `.split('\n');
 
-// Story-only plugin exposing Markdown documents in the personal space as direct children of the graph
+// Story-only plugin exposing Markdown documents in the default space as direct children of the graph
 // root, so TranscriptionPlugin's toolbar extension can attach the record action to the doc's node.
 const StoryGraphPlugin = () =>
   Plugin.define(

@@ -83,14 +83,14 @@ export const isVisibleSpace = (space: TaggedSpace): boolean =>
 //
 
 /**
- * Read the designated default space id from the settings space.
+ * Get the designated default space id from the settings space.
  * The settings space must be open; callers resolve it via {@link getSettingsSpace} after
  * `SpacesReady`, at which point its properties are readable.
  */
-export const readDefaultSpaceId = (settingsSpace: Pick<Space, 'properties'>): string | undefined =>
+export const getDefaultSpaceId = (settingsSpace: Pick<Space, 'properties'>): string | undefined =>
   Annotation.get(settingsSpace.properties, AppAnnotation.DefaultSpaceAnnotation).pipe(Option.getOrUndefined);
 
-/** Designate `spaceId` as the default space. Pairs with {@link readDefaultSpaceId}. */
+/** Designate `spaceId` as the default space. Pairs with {@link getDefaultSpaceId}. */
 export const setDefaultSpaceId = (settingsSpace: Space, spaceId: string): void => {
   Obj.update(settingsSpace.properties, (properties) => {
     Annotation.set(properties, AppAnnotation.DefaultSpaceAnnotation, spaceId);
@@ -105,11 +105,11 @@ export const setDefaultSpaceId = (settingsSpace: Space, spaceId: string): void =
  * profiles that have not been migrated yet.
  */
 export const getDefaultSpace = (client: SpaceResolver): Space | undefined => {
-  // Resolvable from render paths that run before the space opens, and `readDefaultSpaceId` reads
+  // Resolvable from render paths that run before the space opens, and `getDefaultSpaceId` reads
   // properties unguarded, so readiness is checked here rather than swallowed there.
   const settingsSpace = getSettingsSpace(client);
   const configuredId =
-    settingsSpace?.state.get() === SpaceState.SPACE_READY ? readDefaultSpaceId(settingsSpace) : undefined;
+    settingsSpace?.state.get() === SpaceState.SPACE_READY ? getDefaultSpaceId(settingsSpace) : undefined;
   const configured = configuredId ? client.spaces.get(configuredId) : undefined;
   // The settings space is internal; designating it would hand app configuration out as the default
   // content target, so a stale or hand-edited designation falls through to the legacy space.

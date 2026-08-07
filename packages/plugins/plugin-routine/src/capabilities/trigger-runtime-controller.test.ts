@@ -36,7 +36,7 @@ describe('TriggerRuntimeController', () => {
       plugins: [ClientPlugin({ types: [Feed.Feed] }), RoutinePlugin()],
     });
 
-    // Creating identity also creates the personal space and emits SpacesReady,
+    // Creating identity also creates the default space and emits SpacesReady,
     // which is what gates the TriggerRuntimeController module's activation.
     const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),

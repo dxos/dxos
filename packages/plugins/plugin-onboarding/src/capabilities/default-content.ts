@@ -39,9 +39,10 @@ export default Capability.makeModule(
     const client = yield* ClientCapabilities.Client;
     const defaultSpace = yield* SpaceCapabilities.DefaultSpace;
 
+    // `hue` (not the vestigial `iconHue`) is what the navtree renders and what space settings edits.
     Obj.update(defaultSpace.properties, (obj) => {
       obj.icon = DEFAULT_SPACE_ICON;
-      obj.iconHue = DEFAULT_SPACE_ICON_HUE;
+      obj.hue = DEFAULT_SPACE_ICON_HUE;
     });
 
     // Run plugin OnCreateSpace callbacks against the default space so capabilities that
