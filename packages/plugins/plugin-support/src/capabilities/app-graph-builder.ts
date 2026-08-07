@@ -14,7 +14,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Attention } from '@dxos/react-ui-attention';
@@ -22,11 +22,11 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
+import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG } from '../constants';
 import * as HelpCapabilities from '../types/HelpCapabilities';
 import * as HelpOperation from '../types/HelpOperation';
 import * as SupportCapabilities from '../types/SupportCapabilities';
-import { readWelcomeDismissed } from '../welcome-dismissed';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
@@ -171,10 +171,10 @@ export default Capability.makeModule(
           const [client] = get(clientCapabilityAtom);
           const settingsProperties = client && AppSpace.getSettingsSpace(client)?.properties;
           const personalSpace = client && AppSpace.getPersonalSpace(client);
-          const isDismissed = readWelcomeDismissed(
-            settingsProperties ? get(Obj.atom(settingsProperties)) : undefined,
-            personalSpace?.properties ? get(Obj.atom(personalSpace.properties)) : undefined,
-          );
+          const properties = settingsProperties ? get(Obj.atom(settingsProperties)) : undefined;
+          const isDismissed = properties
+            ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
+            : false;
           const showActions = !!personalSpace && space.id === personalSpace.id && !isDismissed;
           if (!showActions) {
             return Effect.succeed([]);

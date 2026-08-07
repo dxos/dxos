@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React from 'react';
 
 import { useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
@@ -19,7 +20,6 @@ import { meta } from '#meta';
 
 import { WelcomeDismissedAnnotation } from '../../annotations';
 import * as Settings from '../../types/Settings';
-import { readWelcomeDismissed } from '../../welcome-dismissed';
 
 export type SupportSettingsProps = AppSurface.SettingsData;
 
@@ -33,9 +33,10 @@ export const SupportSettings = ({ subject }: SupportSettingsProps) => {
   const { invokePromise } = useOperationInvoker();
   const personal = AppSpace.getPersonalSpace(client);
   const [properties, updateProperties] = useObject(AppSpace.getSettingsSpace(client)?.properties);
-  const [legacyProperties] = useObject(personal?.properties);
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-  const welcomeDismissed = readWelcomeDismissed(properties, legacyProperties);
+  const welcomeDismissed = properties
+    ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
+    : false;
 
   const handleShowWelcome = () => {
     if (!personal) {

@@ -278,7 +278,7 @@ export const translations = [
         'icon.description': 'Icon used to represent the space in the app.',
         'hue.description': 'Color used to represent the space in the app.',
         'private.description':
-          'A private space is locked at creation and can never be shared — no one else can be invited to it. This cannot be changed later.',
+          'A private space can never be shared — no one else can be invited to it. This is fixed when the space is created and cannot be changed.',
         'edge-replication.description':
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
         'space-id.title': 'Space ID',
