@@ -37,7 +37,8 @@ export const SpotlightListener = Capability.lazyModule(
 export const Updater = Capability.lazyModule(
   'Updater',
   {
-    requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker],
+    // Settings carries the selected release channel, which the first check reads.
+    requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker, NativeCapabilities.Settings],
     provides: [NativeCapabilities.UpdateManager],
     activatesOn: NativeEvents.Start,
   },

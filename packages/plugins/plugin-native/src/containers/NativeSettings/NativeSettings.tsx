@@ -10,18 +10,20 @@ import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
 import * as NativeCapabilities from '../../types/NativeCapabilities';
-import type * as Settings from '../../types/Settings';
+import * as Settings from '../../types/Settings';
 import type * as Update from '../../types/Update';
+
+const CHANNELS: Settings.UpdateChannel[] = ['stable', 'nightly'];
 
 export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
-type Pending = null | 'check' | 'install' | 'relaunch';
+type Pending = null | 'check' | 'install' | 'relaunch' | 'switch';
 
 type UpdateActions = {
   onCheck: () => Promise<void>;
@@ -38,7 +40,10 @@ type UpdateRow = {
 export const NativeSettings = () => {
   const { t } = useTranslation(meta.profile.key);
   const manager = useCapability(NativeCapabilities.UpdateManager);
+  const settingsAtom = useCapability(NativeCapabilities.Settings);
   const status = useAtomValue(manager.status);
+  const settings = useAtomValue(settingsAtom);
+  const channel = settings.updateChannel ?? 'stable';
 
   // UI-level pending flag. The status atom can flip between `checking` and `up-to-date` faster
   // than the user can perceive, so we also gate the button on the click handler's lifetime to
@@ -65,6 +70,27 @@ export const NativeSettings = () => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
+            <Form.Row label={t('settings.channel.label')} description={t(`settings.channel.${channel}.description`)}>
+              <Select.Root
+                value={channel}
+                onValueChange={(next) =>
+                  void runAction('switch', () => manager.switchChannel(next as Settings.UpdateChannel))()
+                }
+              >
+                <Select.TriggerButton disabled={pending !== null} />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {CHANNELS.map((value) => (
+                        <Select.Option key={value} value={value}>
+                          {t(`settings.channel.${value}.label`)}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            </Form.Row>
             <Form.Row label={t('settings.updates.label')} description={description}>
               {button}
             </Form.Row>

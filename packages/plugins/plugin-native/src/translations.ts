@@ -14,6 +14,12 @@ export const translations = [
         'update-ready.description': 'A new version of Composer is available.',
         'update.label': 'Update',
         'update.alt': 'Relaunch the app to update',
+        'settings.channel.label': 'Release channel',
+        'settings.channel.stable.label': 'Stable',
+        'settings.channel.nightly.label': 'Nightly',
+        'settings.channel.stable.description': 'Released builds. Switch to Nightly to try changes before they ship.',
+        'settings.channel.nightly.description':
+          'A build of the latest development work, published daily. Switching back to Stable reinstalls the released version.',
         'settings.updates.label': 'Updates',
         'settings.updates.check.label': 'Check for updates',
         'settings.updates.checking.label': 'Checking…',
