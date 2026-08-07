@@ -20,6 +20,14 @@ export const translations = [
         'settings.channel.stable.description': 'Released builds. Switch to Nightly to try changes before they ship.',
         'settings.channel.nightly.description':
           'A build of the latest development work, published daily. Switching back to Stable reinstalls the released version.',
+        'settings.channel.confirm.nightly.title': 'Switch to Nightly?',
+        'settings.channel.confirm.nightly.message':
+          'Composer will download and install the latest nightly build now. Nightly is published daily from unreleased work and may be unstable.',
+        'settings.channel.confirm.nightly.label': 'Switch to Nightly',
+        'settings.channel.confirm.stable.title': 'Switch to Stable?',
+        'settings.channel.confirm.stable.message':
+          'Composer will download and install the latest released build now. That build is older than the nightly you are running, and anything the newer build wrote stays on disk.',
+        'settings.channel.confirm.stable.label': 'Switch to Stable',
         'settings.updates.label': 'Updates',
         'settings.updates.check.label': 'Check for updates',
         'settings.updates.checking.label': 'Checking…',

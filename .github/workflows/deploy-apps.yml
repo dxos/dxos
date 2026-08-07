@@ -169,11 +169,77 @@ jobs:
           git push "$remote" "refs/tags/composer-v${{ steps.bump.outputs.version }}"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+  # The version every Composer artifact in this run carries — the web bundle and the native build alike,
+  # so About, the feedback report and the updater all agree on what you are running. Production ships the
+  # release job's clean version; every other environment gets `<next patch>-<env>.<build>`.
+  #
+  # The next patch, not the shipped one: a prerelease sorts below its own release, so numbering nightly
+  # against the shipped version would make every nightly look like a downgrade from stable and nobody could
+  # move to it. `<build>` counts that channel's builds of that base version, claimed by an immutable
+  # `composer-<env>-<base>-<n>` tag — pushing the tag IS the claim, so a run that loses a race recounts
+  # instead of shipping a duplicate number.
+  version:
+    needs: [plan, release]
+    if: ${{ !cancelled() && needs.release.result != 'failure' && needs.plan.outputs.bundle == 'true' }}
+    permissions:
+      contents: write # Claims the build-counter tag.
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.release.outputs.sha || github.sha }}
+
+      - id: version
+        env:
+          ENVIRONMENT: ${{ needs.plan.outputs.env }}
+          RELEASE_VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          base=$(jq -r '.version' packages/apps/composer-app/package.json)
+          if [ "$ENVIRONMENT" = production ]; then
+            # The release job already bumped package.json; prefer its output when it ran.
+            version="${RELEASE_VERSION:-$base}"
+          else
+            core="${base%%-*}"
+            major="${core%%.*}"; rest="${core#*.}"
+            minor="${rest%%.*}"; patch="${rest#*.}"
+            base="${major}.${minor}.$((patch + 1))"
+
+            prefix="composer-${ENVIRONMENT}-${base}-"
+            attempt=1
+            while :; do
+              # -1 so the first build of a base version is 0, not 1 — it has to be distinguishable
+              # from "the highest build so far is 0".
+              last=-1
+              while read -r _sha ref; do
+                n="${ref#refs/tags/${prefix}}"
+                case "$n" in '' | *[!0-9]*) continue ;; esac
+                if [ "$n" -gt "$last" ]; then last="$n"; fi
+              done < <(git ls-remote --tags origin "refs/tags/${prefix}*")
+
+              build=$((last + 1))
+              if git tag "${prefix}${build}" && git push origin "refs/tags/${prefix}${build}"; then
+                break
+              fi
+              git tag -d "${prefix}${build}" || true
+              if [ "$attempt" -ge 3 ]; then
+                echo "::error::could not claim a build number for ${ENVIRONMENT} after 3 attempts"
+                exit 1
+              fi
+              attempt=$((attempt + 1))
+            done
+            version="${base}-${ENVIRONMENT}.${build}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Composer version: $version (env=$ENVIRONMENT)"
+
   # Build Composer's web bundle ONCE and share it as an artifact so the web deploy + native (Tauri) jobs
   # don't each rebuild it.
   build-bundle:
-    needs: [plan, release]
-    if: ${{ !cancelled() && needs.release.result != 'failure' && needs.plan.outputs.bundle == 'true' }}
+    needs: [plan, release, version]
+    if: ${{ !cancelled() && needs.release.result != 'failure' && needs.version.result == 'success' }}
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -213,6 +279,16 @@ jobs:
         uses: ./.github/actions/setup
         with:
           remote-cache: 'false'
+
+      # Stamp the version BEFORE the bundle: `runtime.app.build.version` (what About and the feedback
+      # report show) is read out of package.json at vite build time, so a bundle built without this
+      # would report the last shipped version on a nightly.
+      - name: Stamp the Composer version
+        run: |
+          jq --arg version "$VERSION" '.version = $version' packages/apps/composer-app/package.json > version.tmp
+          mv version.tmp packages/apps/composer-app/package.json
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
 
       # Build only — the artifact is deployed by `deploy` and embedded by the tauri jobs.
       - name: Build Composer bundle
@@ -360,13 +436,12 @@ jobs:
   # `ios` input). CrabNebula channel is derived from the environment inside the reusable workflow. On
   # production it builds the bumped release commit.
   tauri:
-    needs: [plan, release, build-bundle]
+    needs: [plan, release, version, build-bundle]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' && needs.plan.outputs.tauri == 'true' }}
-    permissions:
-      contents: write # `draft_tauri` pushes the build-counter tag it claims.
     uses: ./.github/workflows/deploy-tauri.yaml
     with:
       environment: ${{ needs.plan.outputs.env }}
       ref: ${{ needs.release.outputs.sha || github.sha }}
       ios: ${{ needs.plan.outputs.ios == 'true' }}
+      version: ${{ needs.version.outputs.version }}
     secrets: inherit

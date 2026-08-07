@@ -16,6 +16,7 @@ import * as Schedule from 'effect/Schedule';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
@@ -35,26 +36,6 @@ const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 const CHANNEL_NAME: Record<Settings.UpdateChannel, string> = { stable: 'main', nightly: 'nightly' };
 
 const DEFAULT_CHANNEL: Settings.UpdateChannel = 'stable';
-
-/**
- * Copy for the system confirm shown before a switch. Not translated: it comes from the OS dialog,
- * which renders before the app can be sure a translation bundle is loaded, and the switch is a
- * destructive-ish action that must read correctly regardless.
- */
-const CHANNEL_PROMPT: Record<Settings.UpdateChannel, { title: string; message: string; okLabel: string }> = {
-  nightly: {
-    title: 'Switch to Nightly?',
-    message:
-      'Composer will download and install the latest nightly build now. Nightly is published daily from unreleased work and may be unstable.',
-    okLabel: 'Switch to Nightly',
-  },
-  stable: {
-    title: 'Switch to Stable?',
-    message:
-      'Composer will download and install the latest released build now. That build is older than the nightly you are running, and anything the newer build wrote stays on disk.',
-    okLabel: 'Switch to Stable',
-  },
-};
 
 type UpdateInfo = { version: string; currentVersion: string };
 
@@ -123,6 +104,7 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const { invoke: invokeOperation } = yield* Capabilities.OperationInvoker;
     const settingsAtom = yield* Capability.get(NativeCapabilities.Settings);
+    const { t } = yield* Capability.get(AppCapabilities.Translator);
 
     const currentChannel = (): Settings.UpdateChannel => registry.get(settingsAtom).updateChannel ?? DEFAULT_CHANNEL;
 
@@ -218,10 +200,11 @@ export default Capability.makeModule(
         if (channel === currentChannel()) {
           return;
         }
-        const confirmed = await ask(CHANNEL_PROMPT[channel].message, {
-          title: CHANNEL_PROMPT[channel].title,
+        const key = `settings.channel.confirm.${channel}` as const;
+        const confirmed = await ask(t(`${key}.message`, { ns: meta.profile.key }), {
+          title: t(`${key}.title`, { ns: meta.profile.key }),
           kind: 'warning',
-          okLabel: CHANNEL_PROMPT[channel].okLabel,
+          okLabel: t(`${key}.label`, { ns: meta.profile.key }),
         });
         if (!confirmed) {
           return;
