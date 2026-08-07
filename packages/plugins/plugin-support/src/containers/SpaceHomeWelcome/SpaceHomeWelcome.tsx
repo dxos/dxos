@@ -5,8 +5,7 @@
 import React, { memo, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { useClient } from '@dxos/react-client';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/react-client/echo';
 import { Carousel, useTranslation } from '@dxos/react-ui';
 
@@ -29,10 +28,10 @@ type SpaceScopedProps = {
  * every show/hide — that remount froze the UI. Renders nothing on other spaces.
  */
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
-  const client = useClient();
-  const isPersonal = !!space && space.id === AppSpace.getDefaultSpace(client)?.id;
+  const defaultSpace = useDefaultSpace();
+  const isDefault = !!space && space.id === defaultSpace?.id;
   const [dismissed] = useWelcomeDismissed();
-  if (!isPersonal) {
+  if (!isDefault) {
     return null;
   }
 

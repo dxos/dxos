@@ -66,7 +66,14 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEpheme
   `${meta.profile.key}.capability.ephemeralState`,
 );
 
-/** The space designated as the default target for unscoped content, contributed by `IdentityCreated`. */
+/**
+ * The spaces created by identity setup, for consumers that seed them on first run.
+ *
+ * Contributed only by `IdentityCreated`, so they are absent on every boot that does not create an
+ * identity, and they hold the spaces as created rather than the live designation. Anything asking
+ * "which space is the default right now" must use {@link AppSpace.getDefaultSpace} /
+ * {@link AppSpace.getSettingsSpace}, which read the designation the user can change in settings.
+ */
 export const DefaultSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.defaultSpace`);
 
 /** The hidden, membership-locked space holding app configuration that replicates across devices. */

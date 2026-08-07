@@ -12,11 +12,10 @@ import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
+import { useActiveSpace, useHomeVisibility, useSettingsSpace, useSettingsSpaceProperties } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { useObject, useType } from '@dxos/echo-react';
+import { useType } from '@dxos/echo-react';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
@@ -79,14 +78,13 @@ export type SpaceSettingsSurfaceProps = {
 };
 
 export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => {
-  const client = useClient();
   const spaces = useSpaces();
   const { invokePromise } = useOperationInvoker();
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
 
   // Subscribe to the settings space properties so the picker reflects changes from other devices.
-  const settingsSpace = AppSpace.getSettingsSpace(client);
-  const [settingsProperties] = useObject(settingsSpace?.properties);
+  const settingsSpace = useSettingsSpace();
+  const [settingsProperties] = useSettingsSpaceProperties();
   const defaultSpaceId = settingsProperties
     ? Annotation.get(settingsProperties, AppAnnotation.DefaultSpaceAnnotation).pipe(Option.getOrUndefined)
     : undefined;

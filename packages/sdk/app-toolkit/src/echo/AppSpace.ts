@@ -43,9 +43,6 @@ export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'Personal';
 
-/** Name given to the settings space. Hidden from the UI, but shows in devtools. */
-export const SETTINGS_SPACE_NAME = 'Settings';
-
 /** Resolves spaces by id or in bulk; structural so callers can pass a `Client` or a stub. */
 type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefined } };
 
@@ -137,10 +134,7 @@ export const getDefaultSpace = (client: SpaceResolver): Space | undefined => {
  */
 export const setupIdentitySpaces = Effect.fnUntraced(function* (client: Client) {
   const settingsSpace = yield* Effect.promise(() =>
-    client.spaces.create(
-      { name: SETTINGS_SPACE_NAME },
-      { tags: [SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED },
-    ),
+    client.spaces.create({}, { tags: [SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
   );
   yield* Effect.promise(() => settingsSpace.waitUntilReady());
   yield* Effect.promise(() => settingsSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));

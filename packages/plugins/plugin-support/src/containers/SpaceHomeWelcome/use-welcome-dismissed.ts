@@ -3,13 +3,10 @@
 //
 
 import * as Option from 'effect/Option';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { useSettingsSpaceProperties } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
-import { useClient } from '@dxos/react-client';
-import { useSpaces } from '@dxos/react-client/echo';
 
 import { WelcomeDismissedAnnotation } from '../../annotations';
 
@@ -23,11 +20,7 @@ import { WelcomeDismissedAnnotation } from '../../annotations';
  * Settings "Show welcome page" action, and other devices all re-render live.
  */
 export const useWelcomeDismissed = (): [boolean, (value: boolean) => void] => {
-  const client = useClient();
-  // Depend on the space list so the flag resolves once the settings space is created or migrated in.
-  const spaces = useSpaces();
-  const settingsProperties = useMemo(() => AppSpace.getSettingsSpace(client)?.properties, [client, spaces]);
-  const [properties, updateProperties] = useObject(settingsProperties);
+  const [properties, updateProperties] = useSettingsSpaceProperties();
   const dismissed = properties
     ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
     : false;
