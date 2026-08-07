@@ -13,7 +13,8 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { CommandConfig, performRecoveryOAuthFlow, print } from '@dxos/cli-util';
+import { CommandConfig, print } from '@dxos/cli-util';
+import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';

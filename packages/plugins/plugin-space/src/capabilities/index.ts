@@ -19,6 +19,7 @@ import { makeCreateInvitationUrl } from './helpers';
 export * from './app-graph-builder';
 export { makeCreateObjectEntryForDatabaseType } from '../util';
 
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',

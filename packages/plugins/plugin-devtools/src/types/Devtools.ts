@@ -18,6 +18,7 @@ const devtoolsId = `${meta.profile.key}.devtools`;
 export const id = devtoolsId;
 export const AppGraph = `${devtoolsId}.appGraph`;
 export const ToolsExplorer = `${devtoolsId}.toolsExplorer`;
+export const Cli = `${devtoolsId}.cli`;
 
 export namespace Client {
   export const id = `${devtoolsId}.client`;

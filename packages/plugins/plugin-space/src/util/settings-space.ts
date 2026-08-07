@@ -72,19 +72,19 @@ export const findSpacesOrder = Effect.fnUntraced(function* (space: Space) {
 
 /**
  * Read the persisted cross-space ordering, or `[]` when absent.
- * This and {@link writeSpacesOrder} are the only places that know the Expando's shape — it is
- * untyped by construction, so the persisted value is validated rather than asserted.
+ * This and {@link writeSpacesOrder} are the only places that know the Expando's shape. Expando
+ * properties are `any` by construction, so the persisted value is validated rather than trusted.
  */
 export const readSpacesOrder = Effect.fnUntraced(function* (space: Space) {
   const ordering = yield* findSpacesOrder(space);
-  const order: unknown = ordering && (ordering as unknown as Record<string, unknown>).order;
+  const order: unknown = ordering?.order;
   return Array.isArray(order) ? order.filter((id): id is string => typeof id === 'string') : [];
 });
 
 /** Overwrite the ordering held by an ordering Expando. Pairs with {@link readSpacesOrder}. */
-export const writeSpacesOrder = (ordering: Obj.Any, order: string[]): void => {
+export const writeSpacesOrder = (ordering: Expando.Expando, order: readonly string[]): void => {
   Obj.update(ordering, (ordering) => {
-    (ordering as unknown as Record<string, unknown>).order = order;
+    ordering.order = [...order];
   });
 };
 

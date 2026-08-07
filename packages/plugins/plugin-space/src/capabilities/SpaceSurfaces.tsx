@@ -93,10 +93,14 @@ export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => 
 
   const visibleSpaces = spaces.filter((space) => AppSpace.isVisibleSpace(space));
   // The default space holds integration credentials (the Atmosphere `AccessToken` written by OAuth
-  // registration), so designating a shareable space would widen their audience.
+  // registration), so designating a shareable space would widen their audience. The space already
+  // designated stays listed whatever its policy — a profile migrated from an unlocked personal
+  // space would otherwise see an empty picker rather than its own current choice.
   // TODO(wittjosiah): Offer every visible space once OAuth registration no longer stores
   //  credentials in the default space.
-  const eligibleSpaces = visibleSpaces.filter((space) => space.membershipPolicy === MembershipPolicy.LOCKED);
+  const eligibleSpaces = visibleSpaces.filter(
+    (space) => space.membershipPolicy === MembershipPolicy.LOCKED || space.id === defaultSpaceId,
+  );
 
   return (
     <SpaceSettings

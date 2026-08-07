@@ -19,5 +19,5 @@ export default defineConfig({
     'DevtoolsEvents': 'src/types/DevtoolsEvents.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  test: { node: true, storybook: { isolate: false } },
 });
