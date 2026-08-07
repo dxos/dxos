@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Runtime from 'effect/Runtime';
 import * as EffectScope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
@@ -66,7 +66,7 @@ describe('IndexQuerySource', () => {
 
     const source = new IndexQuerySource({
       service,
-      runtime: Runtime.defaultRuntime,
+      runtime: EffectContext.empty(),
       objectLoader: {
         loadObject: async () => undefined,
         updateEvent: noopUpdateEvent,
@@ -106,7 +106,7 @@ describe('IndexQuerySource', () => {
 
     const source = new IndexQuerySource({
       service,
-      runtime: Runtime.defaultRuntime,
+      runtime: EffectContext.empty(),
       objectLoader: {
         loadObject: async () => undefined,
         updateEvent: noopUpdateEvent,
@@ -149,7 +149,7 @@ describe('IndexQuerySource', () => {
     const updateEvent = new Event<ObjectUpdate>();
     const source = new IndexQuerySource({
       service,
-      runtime: Runtime.defaultRuntime,
+      runtime: EffectContext.empty(),
       objectLoader: {
         loadObject: async () => loaded,
         updateEvent,

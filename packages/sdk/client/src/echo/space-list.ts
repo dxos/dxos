@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, PushStream, SubscriptionList, Trigger, scheduleMicroTask } from '@dxos/async';
@@ -49,7 +49,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
-    private readonly _runtime: Context.Context<never> = Runtime.defaultRuntime,
+    private readonly _runtime: EffectContext.Context<never> = EffectContext.empty(),
   ) {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
@@ -195,7 +195,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     };
 
     this._streamSubscriptions.add(
-      subscribeStream(this._runtime, this._serviceProvider.rpc.SpacesService.querySpaces(undefined), { onData }),
+      subscribeStream(this._runtime, this._serviceProvider.rpc['SpacesService.querySpaces'](undefined), { onData }),
     );
   }
 
@@ -215,7 +215,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   async setConfig(config: IndexConfig): Promise<void> {
     // TODO(dmaretskyi): Set global timeout instead.
-    await runServiceCall(this._runtime, this._serviceProvider.rpc.QueryService.setConfig(config), {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc['QueryService.setConfig'](config), {
       timeout: 20_000,
       label: 'QueryService.setConfig',
     });
@@ -272,7 +272,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     log('creating space');
     const space = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc.SpacesService.createSpace({
+      this._serviceProvider.rpc['SpacesService.createSpace']({
         tags: options?.tags ?? [],
         membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE,
       }),
@@ -299,7 +299,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   async import(archive: SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
     const { newSpaceId } = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc.SpacesService.importSpace({ archive, tags: options?.tags }),
+      this._serviceProvider.rpc['SpacesService.importSpace']({ archive, tags: options?.tags }),
       { timeout: IMPORT_SPACE_TIMEOUT, label: 'SpacesService.importSpace' },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
@@ -329,7 +329,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private async _joinBySpaceKeyInternal(ctx: Context, spaceKey: PublicKey): Promise<Space> {
     const response = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc.SpacesService.joinBySpaceKey({ spaceKey }),
+      this._serviceProvider.rpc['SpacesService.joinBySpaceKey']({ spaceKey }),
       { label: 'SpacesService.joinBySpaceKey' },
     );
     return this._findProxy(response.space);

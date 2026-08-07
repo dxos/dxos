@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
@@ -97,7 +97,7 @@ const bridgeServiceClientFromEffect = async (
 
   const bridge = client.BridgeService;
   const bridgeService: BridgeServiceRpc = {
-    open: (request) => streamToPbStream(Runtime.defaultRuntime, bridge.open(request)),
+    open: (request) => streamToPbStream(Context.empty(), bridge.open(request)),
     sendSignal: (request) => EffectEx.runPromise(bridge.sendSignal(request)),
     sendData: (request) => EffectEx.runPromise(bridge.sendData(request)),
     close: (request) => EffectEx.runPromise(bridge.close(request)),

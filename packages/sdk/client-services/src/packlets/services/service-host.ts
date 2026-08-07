@@ -8,7 +8,6 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
@@ -272,7 +271,7 @@ export class ClientServicesHost {
           const rpc = await EffectEx.runPromise(
             makeInProcessClientServicesRpc(() => this.#handlers).pipe(Effect.provideService(Scope.Scope, scope)),
           );
-          const services = makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+          const services = makeServicesFromRpc(rpc, EffectContext.empty());
           return await createDiagnostics(services, this, this.#config!);
         } finally {
           await EffectEx.runPromise(Scope.close(scope, Exit.void));

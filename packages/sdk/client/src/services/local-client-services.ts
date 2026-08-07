@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as EffectRuntime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
@@ -264,7 +264,7 @@ export class LocalClientServices implements ClientServicesProvider {
     this._rpc = await EffectEx.runPromise(
       makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.provide(this._serviceScope)),
     );
-    this._services = makeServicesFromRpc(this._rpc, EffectRuntime.defaultRuntime);
+    this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
 
     setIdentityTags({
       identityService: this._rpc,

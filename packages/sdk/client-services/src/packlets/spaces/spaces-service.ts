@@ -464,7 +464,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         await EffectEx.runPromise(
           Effect.gen(function* () {
             const feedClient = yield* makeInProcessClient(FeedService.Rpcs, feedService);
-            yield* feedClient.FeedService.insertIntoFeed({
+            yield* feedClient['FeedService.insertIntoFeed']({
               spaceId: space.id,
               feedId: feed.feedObjectId,
               subspaceTag: namespace,

@@ -4,10 +4,10 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Record from 'effect/Record';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
@@ -477,7 +477,7 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
 function* createProxyRepos(dataService: DataService.Client): Generator<RepoProxy> {
   for (let i = 0; i < 1_00; i++) {
     // Counter just to protect against infinite loops.
-    yield new RepoProxy(dataService, Runtime.defaultRuntime, SpaceId.random());
+    yield new RepoProxy(dataService, EffectContext.empty(), SpaceId.random());
   }
   throw new Error('Too many repos requested');
 }

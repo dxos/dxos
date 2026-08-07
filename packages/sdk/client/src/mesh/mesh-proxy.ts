@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as Context from 'effect/Context';
 
 import { Event, MulticastObservable, SubscriptionList } from '@dxos/async';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
@@ -27,7 +27,7 @@ export class MeshProxy {
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _runtime: Context.Context<never> = Runtime.defaultRuntime,
+    private readonly _runtime: Context.Context<never> = Context.empty(),
   ) {}
 
   toJSON(): { networkStatus: NetworkStatus } {
@@ -41,7 +41,7 @@ export class MeshProxy {
   }
 
   async updateConfig(swarm: ConnectionState): Promise<void> {
-    await runServiceCall(this._runtime, this._serviceProvider.rpc.NetworkService.updateConfig({ swarm }), {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc['NetworkService.updateConfig']({ swarm }), {
       timeout: RPC_TIMEOUT,
       label: 'NetworkService.updateConfig',
     });
@@ -70,7 +70,7 @@ export class MeshProxy {
     this._streamSubscriptions.clear();
 
     this._streamSubscriptions.add(
-      subscribeStream(this._runtime, this._serviceProvider.rpc.NetworkService.queryStatus(undefined), {
+      subscribeStream(this._runtime, this._serviceProvider.rpc['NetworkService.queryStatus'](undefined), {
         onData: (networkStatus) => this._networkStatusUpdated.emit(networkStatus),
       }),
     );

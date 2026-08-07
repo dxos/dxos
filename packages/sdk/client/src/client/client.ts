@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Runtime from 'effect/Runtime';
 import { inspect } from 'node:util';
 
@@ -55,7 +56,7 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
 
   /** Effect runtime used by client components to run service-rpc effects. Defaults to the default runtime. */
-  runtime?: Context.Context<never>;
+  runtime?: EffectContext.Context<never>;
 
   /** ECHO schema. */
   types?: Type.AnyEntity[];
@@ -88,7 +89,7 @@ export class Client {
   private readonly _options: ClientOptions;
 
   /** Effect runtime threaded to client components for running service-rpc effects. */
-  private readonly _effectRuntime: Context.Context<never>;
+  private readonly _effectRuntime: EffectContext.Context<never>;
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -138,7 +139,7 @@ export class Client {
     }
 
     this._options = options;
-    this._effectRuntime = options.runtime ?? Runtime.defaultRuntime;
+    this._effectRuntime = options.runtime ?? EffectContext.empty();
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = options.config?.get('runtime.client.log.filter');
@@ -346,7 +347,7 @@ export class Client {
 
     {
       invariant(this._services, 'Client not initialized.');
-      await runServiceCall(this._effectRuntime, this._services.rpc.QueryService.reindex(undefined), {
+      await runServiceCall(this._effectRuntime, this._services.rpc['QueryService.reindex'](undefined), {
         timeout: 30_000,
         label: 'QueryService.reindex',
       });
@@ -546,7 +547,7 @@ export class Client {
     log('client._open: subscribing to system status...');
     this._statusStreamCleanup = subscribeStream(
       this._effectRuntime,
-      this._services.rpc.SystemService.queryStatus({ interval: 3_000 }),
+      this._services.rpc['SystemService.queryStatus']({ interval: 3_000 }),
       {
         onData: ({ status }) => {
           log('client._open: status received', { status });
@@ -672,7 +673,7 @@ export class Client {
   async resumeHostServices(): Promise<void> {
     await runServiceCall(
       this._effectRuntime,
-      this.services.rpc.SystemService.updateStatus({ status: SystemStatus.ACTIVE }),
+      this.services.rpc['SystemService.updateStatus']({ status: SystemStatus.ACTIVE }),
       {
         label: 'SystemService.updateStatus',
       },
@@ -693,7 +694,7 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services, 'Client not initialized.');
-    await runServiceCall(this._effectRuntime, this._services.rpc.SystemService.reset(undefined), {
+    await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
       label: 'SystemService.reset',
     });
     await this._close();

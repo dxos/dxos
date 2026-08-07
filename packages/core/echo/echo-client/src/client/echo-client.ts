@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
@@ -25,7 +25,7 @@ export type ConnectToServiceProps = {
   feedService?: FeedService.Client;
 
   /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
-  runtime?: Context.Context<never>;
+  runtime?: EffectContext.Context<never>;
 };
 
 export type ConstructDatabaseProps = {
@@ -70,7 +70,7 @@ export class EchoClient extends Resource {
   private _dataService: DataService.Client | undefined = undefined;
   private _queryService: QueryService.Client | undefined = undefined;
   private _feedService: FeedService.Client | undefined = undefined;
-  private _runtime: Context.Context<never> = Runtime.defaultRuntime;
+  private _runtime: EffectContext.Context<never> = EffectContext.empty();
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -99,7 +99,7 @@ export class EchoClient extends Resource {
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
-    this._runtime = runtime ?? Runtime.defaultRuntime;
+    this._runtime = runtime ?? EffectContext.empty();
     return this;
   }
 

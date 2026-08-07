@@ -4,6 +4,7 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import * as Context from 'effect/Context';
 
 import { Event, UpdateScheduler, sleep } from '@dxos/async';
 import { type Struct } from '@dxos/codec-protobuf';
@@ -153,7 +154,7 @@ export class RepoProxy extends Resource {
     // TODO(dmaretskyi): Set proper space id.
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
-      this._dataService.DataService.subscribe({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
+      this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
       { onData: (updates) => this._receiveUpdate(updates) },
     );
   }
@@ -209,7 +210,7 @@ export class RepoProxy extends Resource {
     // sentinel to the `subscribe` stream and await it here before re-adding documents.
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
-      this._dataService.DataService.subscribe({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
+      this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
       { onData: (updates) => this._receiveUpdate(updates) },
     );
 
@@ -218,7 +219,7 @@ export class RepoProxy extends Resource {
     if (documentIds.length > 0) {
       await runServiceCall(
         this._runtime,
-        this._dataService.DataService.updateSubscription({
+        this._dataService['DataService.updateSubscription']({
           subscriptionId: this._subscriptionId,
           addIds: documentIds,
           removeIds: [],
@@ -324,7 +325,7 @@ export class RepoProxy extends Resource {
       handle._internalId,
       runServiceCall(
         this._runtime,
-        this._dataService.DataService.createDocument({
+        this._dataService['DataService.createDocument']({
           spaceId: this._spaceId,
           initialValue: initialValue as Struct,
         }),
@@ -402,7 +403,11 @@ export class RepoProxy extends Resource {
     try {
       await runServiceCall(
         this._runtime,
-        this._dataService.DataService.updateSubscription({ subscriptionId: this._subscriptionId, addIds, removeIds }),
+        this._dataService['DataService.updateSubscription']({
+          subscriptionId: this._subscriptionId,
+          addIds,
+          removeIds,
+        }),
         { timeout: RPC_TIMEOUT },
       );
 
@@ -428,7 +433,7 @@ export class RepoProxy extends Resource {
       if (updates.length > 0) {
         await runServiceCall(
           this._runtime,
-          this._dataService.DataService.update({ subscriptionId: this._subscriptionId, updates }),
+          this._dataService['DataService.update']({ subscriptionId: this._subscriptionId, updates }),
           { timeout: RPC_TIMEOUT },
         );
         if (this._lifecycleState === LifecycleState.CLOSED) {

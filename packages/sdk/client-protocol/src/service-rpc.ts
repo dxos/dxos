@@ -272,10 +272,10 @@ export const makeClientServicesHandlers = ({
 
 /**
  * Effect-native client for all client services, inferred from the effect-rpc definitions.
- * Nested by service key (e.g. `rpc.DataService.subscribe(req)` returns a `Stream`, unary methods
- * return an `Effect`). Each service's `Client` type already nests its methods under the service key
- * (the rpc tags are prefixed), so this is their intersection — cheaper for the type-checker than
- * re-expanding the full merged {@link RpcClient.RpcClient} mapped type over all services.
+ * Keyed by the full rpc tag (e.g. `rpc['DataService.subscribe'](req)` returns a `Stream`, unary
+ * methods return an `Effect`). Each service's `Client` type already carries its own prefixed tags,
+ * so this is their intersection — cheaper for the type-checker than re-expanding the full merged
+ * {@link RpcClient.RpcClient} mapped type over all services.
  */
 export interface ClientServicesRpc
   extends

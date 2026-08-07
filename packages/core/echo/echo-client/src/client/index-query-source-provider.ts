@@ -3,6 +3,7 @@
 //
 
 import * as Array from 'effect/Array';
+import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -53,7 +54,7 @@ export interface ObjectLoader {
 
 export type IndexQueryProviderProps = {
   service: QueryService.Client;
-  runtime: Context.Context<never>;
+  runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -80,7 +81,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 
 export type IndexQuerySourceProps = {
   service: QueryService.Client;
-  runtime: Context.Context<never>;
+  runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -204,7 +205,7 @@ export class IndexQuerySource implements QuerySource {
 
     cleanup = subscribeStream(
       this._params.runtime,
-      this._params.service.QueryService.execQuery({
+      this._params.service['QueryService.execQuery']({
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
@@ -243,7 +244,7 @@ export class IndexQuerySource implements QuerySource {
 
     this._streamCleanup = subscribeStream(
       this._params.runtime,
-      this._params.service.QueryService.execQuery({
+      this._params.service['QueryService.execQuery']({
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,

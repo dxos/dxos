@@ -146,12 +146,12 @@ export class EchoTestPeer extends Resource {
     // Keep the same SQLite-backed services across peer reloads by reading them from the
     // persistent runtime context, then provide those services into a new runtime that
     // recreates only the transaction layer.
-    const persistedSqlLayer = Layer.unwrapEffect(
+    const persistedSqlLayer = Layer.unwrap(
       this._persistentRuntime.contextEffect.pipe(
-        Effect.map((runtime) =>
+        Effect.map((context) =>
           Layer.merge(
-            Layer.succeed(SqlClient.SqlClient, EffectContext.get(runtime.context, SqlClient.SqlClient)),
-            Layer.succeed(SqlExport.SqlExport, EffectContext.get(runtime.context, SqlExport.SqlExport)),
+            Layer.succeed(SqlClient.SqlClient, EffectContext.get(context, SqlClient.SqlClient)),
+            Layer.succeed(SqlExport.SqlExport, EffectContext.get(context, SqlExport.SqlExport)),
           ),
         ),
       ),

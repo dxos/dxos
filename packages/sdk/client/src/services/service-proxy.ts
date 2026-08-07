@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 
 import { Event } from '@dxos/async';
@@ -73,7 +73,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
       await EffectEx.runPromise(Scope.close(scope, Exit.void));
       throw err;
     }
-    this._services = makeServicesFromRpc(this._rpc, Runtime.defaultRuntime);
+    this._services = makeServicesFromRpc(this._rpc, Context.empty());
     this._scope = scope;
     log('client-services-proxy: opened');
   }

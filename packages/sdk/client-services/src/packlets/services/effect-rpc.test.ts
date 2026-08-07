@@ -4,10 +4,10 @@
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
@@ -110,7 +110,7 @@ const setup = async (
   options?: { onRequest?: () => Promise<void> },
 ) => {
   const rpc = await setupRpc(services, options);
-  return makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+  return makeServicesFromRpc(rpc, Context.empty());
 };
 
 //
@@ -229,10 +229,10 @@ describe('client services effect-rpc', () => {
       }),
     }));
 
-    const config = await EffectEx.runPromise(rpc.SystemService.getConfig(undefined));
+    const config = await EffectEx.runPromise(rpc['SystemService.getConfig'](undefined));
     expect(config.runtime?.client?.remoteSource).toEqual('https://example.com');
 
-    const statuses = await EffectEx.runPromise(rpc.SystemService.queryStatus({}).pipe(Stream.runCollect));
+    const statuses = await EffectEx.runPromise(rpc['SystemService.queryStatus']({}).pipe(Stream.runCollect));
     expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
   });
 });

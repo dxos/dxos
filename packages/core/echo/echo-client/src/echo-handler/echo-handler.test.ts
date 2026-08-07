@@ -122,13 +122,15 @@ describe('without database', () => {
     };
   }
 
+  const NestedStruct = Schema.Struct({
+    name: Schema.optional(Schema.String),
+    arr: Schema.optional(Schema.Array(Schema.String)),
+    ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
+  });
+
   const TestSchema: Type.Obj<TestSchema> = Schema.Struct({
     text: Schema.optional(Schema.String),
-    nested: Schema.Struct({
-      name: Schema.optional(Schema.String),
-      arr: Schema.optional(Schema.Array(Schema.String)),
-      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
-    }),
+    nested: NestedStruct,
   }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0'))) as any;
 
   test('get schema on object', () => {
@@ -143,7 +145,8 @@ describe('without database', () => {
   // TODO(dmaretskyi): Fix -- right now we always return the root schema.
   test.skip('get schema on nested object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const NestedSchema = Type.getSchema(TestSchema).pipe(Schema.pluck('nested'), Schema.typeSchema);
+    // v4 dropped `Schema.pluck`; the standalone struct is the same projection.
+    const NestedSchema = Schema.toType(NestedStruct);
     expect(prepareAstForCompare(Type.getSchema(Obj.getType(obj.nested as Obj.Unknown)!).ast)).to.deep.eq(
       prepareAstForCompare(NestedSchema.ast),
     );

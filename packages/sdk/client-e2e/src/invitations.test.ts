@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import { afterAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -701,7 +701,7 @@ const createInvitationsApi = async (
       Scope.provide(scope),
     ),
   );
-  const service = makeServicesFromRpc(rpc, Runtime.defaultRuntime).InvitationsService!;
+  const service = makeServicesFromRpc(rpc, EffectContext.empty()).InvitationsService!;
   return { manager, service, metadata };
 };
 

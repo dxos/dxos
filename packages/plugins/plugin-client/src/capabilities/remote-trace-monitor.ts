@@ -43,7 +43,7 @@ export default Capability.makeModule(
                   peerKey:
                     client.halo.device?.deviceKey.toHex() ?? client.halo.identity.get()?.identityKey.toHex() ?? '',
                 };
-                return client.services.rpc.NetworkService.subscribeMessages({ peer, tags }).pipe(
+                return client.services.rpc['NetworkService.subscribeMessages']({ peer, tags }).pipe(
                   // Carry the envelope tags with the payload — the wire payload drops ref meta
                   // (`trigger`), and decode restores it from the tags for cancel addressing.
                   Stream.filterMap((message) =>

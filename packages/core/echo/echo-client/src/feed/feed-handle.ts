@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Predicate from 'effect/Predicate';
 
 import { DeferredTask, Event, UpdateScheduler } from '@dxos/async';
@@ -53,7 +54,7 @@ export class FeedHandle {
         log.info('feed refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
       const { objects } = await runServiceCall(
         this._runtime,
-        this._service.FeedService.queryFeed({
+        this._service['FeedService.queryFeed']({
           query: {
             feedNamespace: this._namespace,
             spaceId: this._spaceId,
@@ -145,7 +146,7 @@ export class FeedHandle {
 
   constructor(
     private readonly _service: FeedService.Client,
-    private readonly _runtime: Context.Context<never>,
+    private readonly _runtime: EffectContext.Context<never>,
     private readonly _refResolver: Ref.Resolver,
     private readonly _echoUri: EID.EID,
     private readonly _database: DatabaseImpl,
@@ -296,7 +297,7 @@ export class FeedHandle {
     try {
       await runServiceCall(
         this._runtime,
-        this._service.FeedService.deleteFromFeed({
+        this._service['FeedService.deleteFromFeed']({
           subspaceTag: this._namespace,
           spaceId: this._spaceId,
           feedId: this._feedId,
@@ -317,7 +318,7 @@ export class FeedHandle {
     for (let i = 0; i < encoded.length; i += FEED_APPEND_BATCH_SIZE) {
       await runServiceCall(
         this._runtime,
-        this._service.FeedService.insertIntoFeed({
+        this._service['FeedService.insertIntoFeed']({
           subspaceTag: this._namespace,
           spaceId: this._spaceId,
           feedId: this._feedId,
@@ -387,7 +388,7 @@ export class FeedHandle {
   }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
     await runServiceCall(
       this._runtime,
-      this._service.FeedService.syncFeed({
+      this._service['FeedService.syncFeed']({
         subspaceTag: this._namespace,
         spaceId: this._spaceId,
         feedId: this._feedId,
@@ -404,7 +405,7 @@ export class FeedHandle {
   async getSyncState(): Promise<Feed.SyncState> {
     const response = await runServiceCall(
       this._runtime,
-      this._service.FeedService.getSyncState({
+      this._service['FeedService.getSyncState']({
         spaceId: this._spaceId,
         namespaces: [this._namespace],
       }),
@@ -420,7 +421,7 @@ export class FeedHandle {
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
     const { objects } = await runServiceCall(
       this._runtime,
-      this._service.FeedService.queryFeed({
+      this._service['FeedService.queryFeed']({
         query: {
           feedNamespace: this._namespace,
           spaceId: this._spaceId,
