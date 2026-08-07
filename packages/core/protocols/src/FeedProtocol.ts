@@ -119,7 +119,7 @@ export const QueryRequest = Schema.Struct({
   feedNamespace: Schema.String,
 
   query: Schema.optional(
-    Schema.Union(
+    Schema.Union([
       Schema.Struct({
         /**
          * Explicit list of feed IDs to read from.
@@ -132,7 +132,7 @@ export const QueryRequest = Schema.Struct({
          */
         subscriptionId: Schema.String,
       }),
-    ),
+    ]),
   ),
 
   /**
@@ -277,7 +277,7 @@ export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse
 /**
  * Tagged transport message union for queue protocol RPC traffic.
  */
-export const ProtocolMessage = Schema.Union(
+export const ProtocolMessage = Schema.Union([
   Schema.TaggedStruct('QueryRequest', QueryRequest.fields),
   Schema.TaggedStruct('QueryResponse', QueryResponse.fields),
   Schema.TaggedStruct('SubscribeRequest', SubscribeRequest.fields),
@@ -290,7 +290,7 @@ export const ProtocolMessage = Schema.Union(
      */
     message: Schema.String,
   }),
-).pipe(
+]).pipe(
   Schema.extend(
     Schema.Struct({
       senderPeerId: Schema.UndefinedOr(Schema.String),

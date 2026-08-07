@@ -34,7 +34,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
    * Label for this schema.
    * Mapped from {@link LabelAnnotationId}.
    */
-  labelProp: Schema.optional(Schema.Union(SchemaEx.JsonPath, Schema.Array(SchemaEx.JsonPath))),
+  labelProp: Schema.optional(Schema.Union([SchemaEx.JsonPath, Schema.Array(SchemaEx.JsonPath)])),
 
   /**
    * Generator function for this schema.
@@ -43,7 +43,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
    * those schemas unserializable (`Operation.serialize` fails on any operation referencing them).
    */
   generator: Schema.optional(
-    Schema.Union(
+    Schema.Union([
       Schema.String,
       Schema.Tuple([Schema.String, Schema.Number]),
       Schema.Struct({
@@ -51,7 +51,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
         args: Schema.optional(Schema.Array(Schema.Any)),
         probability: Schema.optional(Schema.Number),
       }),
-    ),
+    ]),
   ),
 
   /**
@@ -188,7 +188,7 @@ const _JsonSchemaType = Schema.Struct({
   /**
    * Base type of the schema.
    */
-  type: Schema.optional(Schema.Union(SimpleTypes, Schema.Array(SimpleTypes))),
+  type: Schema.optional(Schema.Union([SimpleTypes, Schema.Array(SimpleTypes)])),
 
   //
   // Numbers.

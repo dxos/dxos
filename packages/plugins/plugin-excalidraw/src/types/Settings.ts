@@ -6,10 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-export const ExcalidrawGridSchema = Schema.Union(
+export const ExcalidrawGridSchema = Schema.Union([
   Schema.Literal('mesh').annotate({ title: 'Mesh' }),
   Schema.Literal('dotted').annotate({ title: 'Dotted' }),
-);
+]);
 export type ExcalidrawGridType = Schema.Schema.Type<typeof ExcalidrawGridSchema>;
 
 export const Settings = Schema.mutable(

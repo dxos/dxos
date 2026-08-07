@@ -16,7 +16,7 @@ import * as Schema from 'effect/Schema';
 // Primitives
 //
 
-export const SymbolKindSchema = Schema.Literal(
+export const SymbolKindSchema = Schema.Literals([
   'function',
   'class',
   'interface',
@@ -25,7 +25,7 @@ export const SymbolKindSchema = Schema.Literal(
   'variable',
   'namespace',
   'unknown',
-);
+]);
 export type SymbolKind = typeof SymbolKindSchema.Type;
 
 export const SymbolIncludeSchema = Schema.Literals(['source', 'jsdoc']);

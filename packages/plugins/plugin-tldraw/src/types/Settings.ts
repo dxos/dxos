@@ -6,10 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-export const GridSchema = Schema.Union(
+export const GridSchema = Schema.Union([
   Schema.Literal('mesh').annotate({ title: 'Mesh' }),
   Schema.Literal('dotted').annotate({ title: 'Dotted' }),
-);
+]);
 export type GridType = Schema.Schema.Type<typeof GridSchema>;
 
 export const Settings = Schema.mutable(

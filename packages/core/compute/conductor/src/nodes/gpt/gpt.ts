@@ -24,7 +24,7 @@ import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } f
 import { StreamSchema } from '../../util';
 
 export const GptMessage = Schema.Struct({
-  role: Schema.Union(Schema.Literal('system'), Schema.Literal('user')),
+  role: Schema.Union([Schema.Literal('system'), Schema.Literal('user')]),
   message: Schema.String,
 });
 

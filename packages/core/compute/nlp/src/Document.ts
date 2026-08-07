@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 /** Universal POS tagset (17 tags). https://universaldependencies.org/u/pos/ */
-export const Upos = Schema.Literal(
+export const Upos = Schema.Literals([
   'ADJ',
   'ADP',
   'ADV',
@@ -23,7 +23,7 @@ export const Upos = Schema.Literal(
   'SYM',
   'VERB',
   'X',
-);
+]);
 export type Upos = Schema.Schema.Type<typeof Upos>;
 
 /** A single word/punctuation token. `start`/`end` are character offsets within the source text. */

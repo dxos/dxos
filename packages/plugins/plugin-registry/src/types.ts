@@ -39,7 +39,7 @@ export namespace RegistryCapabilities {
   );
 }
 
-export const RegistryTagType = Schema.Literal(
+export const RegistryTagType = Schema.Literals([
   'new',
   'beta',
   'alpha',
@@ -49,6 +49,6 @@ export const RegistryTagType = Schema.Literal(
   'experimental',
   'registry',
   'local',
-);
+]);
 
 export type RegistryTagType = Schema.Schema.Type<typeof RegistryTagType>;

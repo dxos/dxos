@@ -18,18 +18,22 @@ import { EditorInputMode, EditorViewMode } from '@dxos/ui-editor/types';
  * - `auto`: every user message in a thread triggers an agent response.
  * - `mention`: agent only responds when the message contains `@{agentName}`.
  */
-export const CommentAgentMode = Schema.Union(Schema.Literal('off'), Schema.Literal('auto'), Schema.Literal('mention'));
+export const CommentAgentMode = Schema.Union([
+  Schema.Literal('off'),
+  Schema.Literal('auto'),
+  Schema.Literal('mention'),
+]);
 export type CommentAgentMode = Schema.Schema.Type<typeof CommentAgentMode>;
 
 /**
  * How document version comparisons are rendered.
  */
-export const DiffViewMode = Schema.Union(
+export const DiffViewMode = Schema.Union([
   Schema.Literal('inline'),
   Schema.Literal('sideBySide'),
   Schema.Literal('gutter'),
   Schema.Literal('suggest'),
-);
+]);
 export type DiffViewMode = Schema.Schema.Type<typeof DiffViewMode>;
 
 /**

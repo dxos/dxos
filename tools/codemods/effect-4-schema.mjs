@@ -64,7 +64,7 @@ const FILTERS = {
  * a real TypeScript AST tool (ts-morph/jscodeshift); ~277 sites are left as visible compile
  * errors rather than silent corruption.
  */
-const VARIADIC = {};
+const VARIADIC = { Union: 'Union', Tuple: 'Tuple', Literal: 'Literals' };
 
 /**
  * Filters v4 removed outright, expressed with the comparison that replaces them. The v3 forms
@@ -180,19 +180,17 @@ const mapCalls = (source, name, rewrite) => {
     }
     let depth = 1;
     let end = at + needle.length;
-    let quote = null;
     while (end < source.length && depth > 0) {
-      const char = source[end];
-      if (quote) {
-        if (char === quote && source[end - 1] !== '\\') {
-          quote = null;
+      // Consult the mask rather than re-deriving string state here: an apostrophe inside a
+      // comment ("the definition's schema") otherwise opens a string that never closes, and the
+      // scan runs past the call's real closing paren.
+      if (!inert[end]) {
+        const char = source[end];
+        if (char === '(') {
+          depth++;
+        } else if (char === ')') {
+          depth--;
         }
-      } else if (char === "'" || char === '"' || char === '`') {
-        quote = char;
-      } else if (char === '(') {
-        depth++;
-      } else if (char === ')') {
-        depth--;
       }
       end++;
     }

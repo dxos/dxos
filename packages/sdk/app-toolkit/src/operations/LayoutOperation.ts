@@ -123,7 +123,7 @@ const PopoverBaseInput = Schema.Struct({
   ),
 });
 
-const PopoverBaseWithKind = Schema.Union(
+const PopoverBaseWithKind = Schema.Union([
   PopoverBaseInput.pipe(
     Schema.extend(
       Schema.Struct({
@@ -147,7 +147,7 @@ const PopoverBaseWithKind = Schema.Union(
       }),
     ),
   ),
-);
+]);
 
 export const UpdatePopover = Operation.make({
   meta: {
@@ -158,7 +158,7 @@ export const UpdatePopover = Operation.make({
   },
   executionMode: 'sync',
   services: [Capability.Service],
-  input: Schema.Union(
+  input: Schema.Union([
     PopoverBaseWithKind.pipe(
       Schema.extend(
         Schema.Struct({
@@ -177,7 +177,7 @@ export const UpdatePopover = Operation.make({
         }),
       ),
     ),
-  ),
+  ]),
   output: Schema.Void,
 });
 

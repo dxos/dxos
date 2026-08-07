@@ -18,7 +18,7 @@ import * as Sheet from './Sheet';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
-const Axis = Schema.Union(Schema.Literal('row'), Schema.Literal('col'));
+const Axis = Schema.Union([Schema.Literal('row'), Schema.Literal('col')]);
 
 export const InsertAxis = Operation.make({
   meta: { key: makeKey('axisInsert'), name: 'Insert Axis', icon: 'ph--plus--regular' },

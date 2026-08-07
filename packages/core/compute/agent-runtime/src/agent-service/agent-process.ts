@@ -88,7 +88,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     {
       key: AGENT_PROCESS_KEY,
       // String member keeps queue entries persisted before the block-array widening decodable.
-      input: Schema.Union(Schema.String, Schema.Array(ContentBlock.Any)),
+      input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
       output: Schema.Void,
       services: [
         Database.Service,
@@ -427,7 +427,7 @@ interface ToolExecutionServiceOptions {
   feed: Feed.Feed;
 }
 
-const AgentEvent = Schema.Union(
+const AgentEvent = Schema.Union([
   Schema.TaggedStruct('prompt', {
     content: Schema.Array(ContentBlock.Any),
   }),
@@ -441,7 +441,7 @@ const AgentEvent = Schema.Union(
     // Optional reminder carried from the self-wake; surfaced to the agent when the alarm fires.
     message: Schema.NullOr(Schema.String),
   }),
-);
+]);
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
 const AgentEventsCell = StorageService.cell(

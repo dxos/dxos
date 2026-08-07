@@ -294,10 +294,10 @@ describe('effect-to-json', () => {
 
   test('tuple schema with description', () => {
     const schema = Schema.Struct({
-      args: Schema.Tuple(
+      args: Schema.Tuple([
         Schema.String.annotate({ description: 'The source currency' }),
         Schema.String.annotate({ description: 'The target currency' }),
-      ),
+      ]),
     });
     const jsonSchema = toJsonSchema(schema);
     log('schema', { jsonSchema });

@@ -39,7 +39,7 @@ const Commentary = Operation.make({
       description: 'The chess game to comment on.',
     }),
   }),
-  output: Schema.Union(
+  output: Schema.Union([
     Schema.Struct({
       documentId: URI.Schema.annotate({
         description: 'The ID of the markdown document that was updated or created.',
@@ -51,7 +51,7 @@ const Commentary = Operation.make({
     Schema.Void.annotate({
       description: 'Function did not find anything to comment on.',
     }),
-  ),
+  ]),
   types: [Game.Game, Chess.State, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
   services: [AiService.AiService, Database.Service],
 });

@@ -6,11 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-export const Appearance = Schema.Union(
+export const Appearance = Schema.Union([
   Schema.Literal('light').annotate({ title: 'Light' }),
   Schema.Literal('dark').annotate({ title: 'Dark' }),
   Schema.Literal('system').annotate({ title: 'System' }),
-);
+]);
 export type Appearance = Schema.Schema.Type<typeof Appearance>;
 
 /**

@@ -20,7 +20,7 @@ import * as Operation from '../Operation';
 /**
  * Template input kind determines how template variables are resolved.
  */
-export const InputKind = Schema.Literal(
+export const InputKind = Schema.Literals([
   'value', // Literal value.
   'operation',
   // 'pass-through',
@@ -29,7 +29,7 @@ export const InputKind = Schema.Literal(
   // 'resolver',
   // 'context',
   // 'schema',
-);
+]);
 
 export type InputKind = Schema.Schema.Type<typeof InputKind>;
 

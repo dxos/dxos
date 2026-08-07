@@ -8,10 +8,10 @@ import { Database } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-export const TriggerTemplate = Schema.Union(
+export const TriggerTemplate = Schema.Union([
   Schema.Struct({ type: Schema.Literal('timer'), cron: Schema.String }),
   Schema.Struct({ type: Schema.Literal('feed'), feed: Schema.Any }),
-);
+]);
 
 export namespace AutomationAction {
   export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(

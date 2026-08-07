@@ -13,7 +13,7 @@ import { DXN, Ref, Type } from '@dxos/echo';
 const ApiAuthorizationKey = Schema.Struct({
   type: Schema.Literal('api-key'),
   key: Schema.String,
-  placement: Schema.Union(
+  placement: Schema.Union([
     Schema.Struct({
       type: Schema.Literal('authorization-header'),
     }),
@@ -21,7 +21,7 @@ const ApiAuthorizationKey = Schema.Struct({
       type: Schema.Literal('query'),
       name: Schema.String,
     }),
-  ),
+  ]),
 });
 
 const ApiAuthorizationOauth = Schema.Struct({
@@ -64,12 +64,12 @@ const ServiceInterfaceApi = Schema.Struct({
   authorization: Schema.optional(ApiAuthorization),
 });
 
-const ServiceInterface = Schema.Union(
+const ServiceInterface = Schema.Union([
   // Service types.
   ServiceInterfaceFunction,
   ServiceInterfaceWorkflow,
   ServiceInterfaceApi,
-) as any;
+]) as any;
 
 export type ServiceInterface = Schema.Schema.Type<typeof ServiceInterface>;
 

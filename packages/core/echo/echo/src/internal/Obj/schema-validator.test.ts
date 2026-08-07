@@ -13,7 +13,7 @@ describe('schema-validator', () => {
   describe('validateSchema', () => {
     test('throws on ambiguous discriminated type union', () => {
       const TestSchema = Schema.Struct({
-        union: Schema.Union(Schema.Struct({ a: Schema.Number }), Schema.Struct({ b: Schema.String })),
+        union: Schema.Union([Schema.Struct({ a: Schema.Number }), Schema.Struct({ b: Schema.String })]),
       });
 
       expect(() => SchemaValidator.validateSchema(TestSchema)).to.throw();
@@ -172,7 +172,7 @@ describe('schema-validator', () => {
       const schemaWithSuspend = Schema.Struct({
         array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union([Schema.Null, Schema.Number])))),
         object: Schema.optional(
-          Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number }))),
+          Schema.suspend(() => Schema.Union([Schema.Null, Schema.Struct({ field: Schema.Number })])),
         ),
       });
       const target: any = { array: [1, 2, null], object: { field: 3 } };
@@ -216,10 +216,10 @@ describe('schema-validator', () => {
     });
 
     test('resolves nested discriminated union using target property values', () => {
-      const spec = Schema.Union(
+      const spec = Schema.Union([
         Schema.Struct({ kind: Schema.Literal('feed'), feed: Schema.optional(Schema.String) }),
         Schema.Struct({ kind: Schema.Literal('timer'), cron: Schema.String }),
-      );
+      ]);
       const schema = Schema.Struct({ spec });
       const target = { spec: { kind: 'feed' as const, feed: 'echo:/feed', extra: true } };
       expect(() => SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path))).to.throw(

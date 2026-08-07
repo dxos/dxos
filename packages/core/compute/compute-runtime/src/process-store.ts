@@ -23,7 +23,7 @@ const PersistedChildEvent = Schema.Struct({
   data: Schema.optional(Schema.Unknown),
 });
 
-export const PersistedEvent = Schema.Union(
+export const PersistedEvent = Schema.Union([
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('spawn') }),
   // `value` is the input encoded via the process definition's input schema.
   Schema.Struct({
@@ -33,7 +33,7 @@ export const PersistedEvent = Schema.Union(
   }),
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('alarm') }),
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('childEvent'), event: PersistedChildEvent }),
-);
+]);
 export type PersistedEvent = Schema.Schema.Type<typeof PersistedEvent>;
 
 // Event payload as accepted by ProcessStore.appendEvent (seq assigned internally).

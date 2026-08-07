@@ -39,14 +39,14 @@ export const RENDER_READY_DATASET_KEY = 'composerProxy';
  *   - `invalidAck`      : the injected script returned an unexpected shape.
  *   - `transportError`  : an unexpected browser-API error.
  */
-export const ProxyError = Schema.Literal(
+export const ProxyError = Schema.Literals([
   'badRequest',
   'forbiddenOrigin',
   'noTab',
   'timeout',
   'invalidAck',
   'transportError',
-);
+]);
 export type ProxyError = Schema.Schema.Type<typeof ProxyError>;
 
 /** Request to render a URL in a background tab. */
@@ -62,7 +62,7 @@ export const RenderRequest = Schema.Struct({
 export type RenderRequest = Schema.Schema.Type<typeof RenderRequest>;
 
 /** Reply to a {@link RenderRequest}. */
-export const RenderAck = Schema.Union(
+export const RenderAck = Schema.Union([
   Schema.Struct({
     version: Schema.Literal(1),
     id: Schema.String,
@@ -71,7 +71,7 @@ export const RenderAck = Schema.Union(
     finalUrl: Schema.String,
   }),
   Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: ProxyError }),
-);
+]);
 export type RenderAck = Schema.Schema.Type<typeof RenderAck>;
 
 /** Health-check round-trip: the page asks the extension to identify itself. */
@@ -79,7 +79,7 @@ export const PingRequest = Schema.Struct({ version: Schema.Literal(1), id: Schem
 export type PingRequest = Schema.Schema.Type<typeof PingRequest>;
 
 /** Reply to a {@link PingRequest}, carrying the extension's manifest identity. */
-export const PingAck = Schema.Union(
+export const PingAck = Schema.Union([
   Schema.Struct({
     version: Schema.Literal(1),
     id: Schema.String,
@@ -88,5 +88,5 @@ export const PingAck = Schema.Union(
     extensionName: Schema.String,
   }),
   Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: ProxyError }),
-);
+]);
 export type PingAck = Schema.Schema.Type<typeof PingAck>;

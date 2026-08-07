@@ -109,7 +109,7 @@ export const ListRequest = Schema.Struct({
 });
 export type ListRequest = Schema.Schema.Type<typeof ListRequest>;
 
-export const ListAck = Schema.Union(
+export const ListAck = Schema.Union([
   Schema.Struct({
     version: Schema.Literal(1),
     id: Schema.String,
@@ -117,7 +117,7 @@ export const ListAck = Schema.Union(
     actions: Schema.Array(Descriptor),
   }),
   Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: Schema.String }),
-);
+]);
 export type ListAck = Schema.Schema.Type<typeof ListAck>;
 
 export const InvokeRequest = Schema.Struct({
@@ -130,7 +130,7 @@ export const InvokeRequest = Schema.Struct({
 });
 export type InvokeRequest = Schema.Schema.Type<typeof InvokeRequest>;
 
-export const InvokeAck = Schema.Union(
+export const InvokeAck = Schema.Union([
   Schema.Struct({
     version: Schema.Literal(1),
     id: Schema.String,
@@ -138,5 +138,5 @@ export const InvokeAck = Schema.Union(
     objectId: Schema.optional(Schema.String),
   }),
   Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: Schema.String }),
-);
+]);
 export type InvokeAck = Schema.Schema.Type<typeof InvokeAck>;

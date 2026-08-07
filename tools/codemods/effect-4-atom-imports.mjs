@@ -67,7 +67,7 @@ for (const file of files) {
   let source = before;
 
   // Alias the renamed modules in the core barrel import.
-  source = source.replace(new RegExp(`import \\{([^}]*)\\} from '${CORE}';`, 'g'), (_match, body) => {
+  source = source.replace(new RegExp(`import (type )?\\{([^}]*)\\} from '${CORE}';`, 'g'), (_match, typeOnly, body) => {
     const specifiers = parseSpecifiers(body).map((specifier) => {
       const next = withAlias(specifier);
       if (next !== specifier) {
@@ -75,7 +75,7 @@ for (const file of files) {
       }
       return next;
     });
-    return `import { ${specifiers.join(', ')} } from '${CORE}';`;
+    return `import ${typeOnly ?? ''}{ ${specifiers.join(', ')} } from '${CORE}';`;
   });
 
   // Split core-only specifiers out of the React import.

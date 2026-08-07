@@ -36,13 +36,13 @@ const Coordinate = (min: number, max: number, title: string) =>
     encode: roundCoordinate,
   }).annotate({ title });
 
-export const GeoPoint = Schema.Tuple(
+export const GeoPoint = Schema.Tuple([
   Coordinate(-180, 180, 'Longitude'),
   Coordinate(-90, 90, 'Latitude'),
   Schema.optionalElement(Schema.Number).annotate({
     title: 'Height ASL (m)',
   }),
-).pipe(
+]).pipe(
   FormatAnnotation.set(TypeFormat.GeoPoint),
   Schema.annotate({
     title: 'GeoPoint',

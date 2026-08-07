@@ -17,7 +17,7 @@ import * as Blog from '../types/Blog';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /** The database or collection a new object is filed under; matches `SpaceOperation.AddObject`'s `target`. */
-const TargetSchema = Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotate({
+const TargetSchema = Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
   description: 'The database or collection to add to.',
 });
 

@@ -50,7 +50,7 @@ export const TransportFields = Schema.Struct({
   arriveAt: Schema.optional(Format.DateTime).annotate({ title: 'Arrive' }),
   serviceClass: Schema.optional(ServiceClass),
   /** Single seat assignment, or a list when the booking covers multiple passengers. */
-  seat: Schema.optional(Schema.Union(Schema.String, Schema.Array(Schema.String))).annotate({ title: 'Seat' }),
+  seat: Schema.optional(Schema.Union([Schema.String, Schema.Array(Schema.String)])).annotate({ title: 'Seat' }),
 });
 export interface TransportFields extends Schema.Schema.Type<typeof TransportFields> {}
 
@@ -118,14 +118,14 @@ export const ActivityDetails = Schema.TaggedStruct('activity', {
 
 export interface ActivityDetails extends Schema.Schema.Type<typeof ActivityDetails> {}
 
-export const Details = Schema.Union(
+export const Details = Schema.Union([
   FlightDetails,
   TrainDetails,
   BoatDetails,
   RoadDetails,
   AccommodationDetails,
   ActivityDetails,
-);
+]);
 
 export type Details = Schema.Schema.Type<typeof Details>;
 

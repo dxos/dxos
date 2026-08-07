@@ -14,7 +14,7 @@ import { meta } from '#meta';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
-const PartAdjustmentSchema = Schema.Union(
+const PartAdjustmentSchema = Schema.Union([
   Schema.Literal('close').annotate({ description: 'Close the plank.' }),
   Schema.Literal('companion').annotate({ description: 'Open the companion plank side-by-side.' }),
   Schema.Literal('fullscreen').annotate({ description: 'Toggle fullscreen display of the plank.' }),
@@ -23,7 +23,7 @@ const PartAdjustmentSchema = Schema.Union(
   }),
   Schema.Literal('increment-start').annotate({ description: 'Move the plank towards the start of the deck.' }),
   Schema.Literal('increment-end').annotate({ description: 'Move the plank towards the end of the deck.' }),
-);
+]);
 
 export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
 

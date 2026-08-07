@@ -113,10 +113,10 @@ export const EphemeralDeckState = Schema.Struct({
   popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
   popoverContent: Schema.NullOr(
-    Schema.Union(
+    Schema.Union([
       Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) }),
       Schema.Struct({ subject: Schema.Any }),
-    ),
+    ]),
   ),
   toasts: Schema.mutable(Schema.Array(LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
@@ -129,7 +129,7 @@ export type EphemeralDeckState = Schema.Schema.Type<typeof EphemeralDeckState>;
 export type DeckPluginState = StoredDeckState & EphemeralDeckState;
 
 export namespace DeckAction {
-  const PartAdjustmentSchema = Schema.Union(
+  const PartAdjustmentSchema = Schema.Union([
     Schema.Literal('close').annotate({ description: 'Close the plank.' }),
     Schema.Literal('companion').annotate({ description: 'Open the companion plank side-by-side.' }),
     Schema.Literal('fullscreen').annotate({ description: 'Toggle fullscreen display of the plank.' }),
@@ -138,7 +138,7 @@ export namespace DeckAction {
     }),
     Schema.Literal('increment-start').annotate({ description: 'Move the plank towards the start of the deck.' }),
     Schema.Literal('increment-end').annotate({ description: 'Move the plank towards the end of the deck.' }),
-  );
+  ]);
   export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
   export const Adjustment = Schema.mutable(Schema.Struct({ id: Schema.String, type: PartAdjustmentSchema }));
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;

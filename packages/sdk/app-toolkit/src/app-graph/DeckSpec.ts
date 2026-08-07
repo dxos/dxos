@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
  *
  * `'fill'` shares the span the two spine piles leave with the other open `'fill'` levels.
  */
-export const LevelSize = Schema.Union(Schema.Number, Schema.Literal('fill'));
+export const LevelSize = Schema.Union([Schema.Number, Schema.Literal('fill')]);
 export type LevelSize = Schema.Schema.Type<typeof LevelSize>;
 
 /**

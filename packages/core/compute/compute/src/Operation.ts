@@ -477,12 +477,12 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
  * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
  * the app-level `Label` type so values flow into UI toasts unchanged.
  */
-export const Label = Schema.Union(
+export const Label = Schema.Union([
   Schema.String,
   // `Schema.mutable` mirrors the app-level `Label` (whose tuple is mutable), so decoded values are
   // assignable to UI toast `title`/`label` slots without a readonly-vs-mutable tuple mismatch.
   Schema.mutable(
-    Schema.Tuple(
+    Schema.Tuple([
       Schema.String,
       Schema.mutable(
         Schema.Struct({
@@ -491,9 +491,9 @@ export const Label = Schema.Union(
           defaultValue: Schema.optional(Schema.String),
         }),
       ),
-    ),
+    ]),
   ),
-);
+]);
 export type Label = Schema.Schema.Type<typeof Label>;
 
 /**

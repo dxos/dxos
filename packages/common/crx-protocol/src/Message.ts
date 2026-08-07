@@ -11,14 +11,14 @@ import * as PageAction from './PageAction';
 const base = { version: Schema.Literal(1), id: Schema.String };
 
 export const List = Schema.TaggedStruct('page-actions.list', { ...base });
-export const ListAck = Schema.Union(
+export const ListAck = Schema.Union([
   Schema.TaggedStruct('page-actions.list-ack', {
     ...base,
     ok: Schema.Literal(true),
     actions: Schema.Array(PageAction.Descriptor),
   }),
   Schema.TaggedStruct('page-actions.list-ack', { ...base, ok: Schema.Literal(false), error: Schema.String }),
-);
+]);
 export const Invoke = Schema.TaggedStruct('page-actions.invoke', {
   ...base,
   actionId: Schema.String,
@@ -26,14 +26,14 @@ export const Invoke = Schema.TaggedStruct('page-actions.invoke', {
   inputs: Schema.Unknown,
   invokedFrom: Schema.Literals(['popup', 'contextMenu', 'picker']),
 });
-export const InvokeAck = Schema.Union(
+export const InvokeAck = Schema.Union([
   Schema.TaggedStruct('page-actions.invoke-ack', {
     ...base,
     ok: Schema.Literal(true),
     objectId: Schema.optional(Schema.String),
   }),
   Schema.TaggedStruct('page-actions.invoke-ack', { ...base, ok: Schema.Literal(false), error: Schema.String }),
-);
+]);
 export const Ready = Schema.TaggedStruct('page-actions.ready', { ...base });
 
 /** The full set of protocol messages. Extend by adding a variant here. */

@@ -172,7 +172,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
  * This is the schema used by the ViewEditor's Form.
  * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
-export const PropertySchema = Schema.Union(
+export const PropertySchema = Schema.Union([
   formatToSchema[Format.TypeFormat.None],
   formatToSchema[Format.TypeFormat.String],
   formatToSchema[Format.TypeFormat.Number],
@@ -220,7 +220,7 @@ export const PropertySchema = Schema.Union(
   //
 
   formatToSchema[Format.TypeFormat.GeoPoint],
-);
+]);
 
 export interface PropertyType extends Schema.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 

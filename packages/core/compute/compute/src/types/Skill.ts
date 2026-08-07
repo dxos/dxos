@@ -84,7 +84,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
 /**
  * Controls when the hook is triggered.
  */
-export const HookSpec = Schema.Union(
+export const HookSpec = Schema.Union([
   /**
    * Triggered when the agent is about to start a request.
    * A request is a series of agent/tool turns that the model drives.
@@ -95,7 +95,7 @@ export const HookSpec = Schema.Union(
    * A request is a series of agent/tool turns that the model drives.
    */
   Schema.TaggedStruct('end-request', {}),
-);
+]);
 
 /**
  * Allows hooking into the agent's lifecycle.

@@ -213,7 +213,7 @@ export const FilterChildOf: Schema.Schema<FilterChildOf> = FilterChildOf_;
 /**
  * Union of filters.
  */
-export const Filter = Schema.Union(
+export const Filter = Schema.Union([
   FilterObject,
   FilterCompare,
   FilterIn,
@@ -227,7 +227,7 @@ export const Filter = Schema.Union(
   FilterNot,
   FilterAnd,
   FilterOr,
-).annotate({ identifier: 'org.dxos.schema.filter' });
+]).annotate({ identifier: 'org.dxos.schema.filter' });
 
 export type Filter = Schema.Schema.Type<typeof Filter>;
 
@@ -358,7 +358,7 @@ export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> =
 export const OrderDirection = Schema.Literals(['asc', 'desc']);
 export type OrderDirection = Schema.Schema.Type<typeof OrderDirection>;
 
-const Order_ = Schema.Union(
+const Order_ = Schema.Union([
   Schema.Struct({
     // How the database wants to order them by default. For non-feed sources this is by id;
     // for feed sources this is insertion order, so `desc` gives newest-first head reads.
@@ -382,7 +382,7 @@ const Order_ = Schema.Union(
     field: Schema.Literals(['createdAt', 'updatedAt']),
     direction: OrderDirection,
   }),
-);
+]);
 
 export type Order = Schema.Schema.Type<typeof Order_>;
 export const Order: Schema.Schema<Order> = Order_;
@@ -467,13 +467,13 @@ const GroupAggregateItems_ = Schema.Struct({
 });
 const GroupAggregateCount_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('count') });
 
-const GroupAggregate_ = Schema.Union(
+const GroupAggregate_ = Schema.Union([
   GroupAggregateGroup_,
   GroupAggregateMax_,
   GroupAggregateMin_,
   GroupAggregateItems_,
   GroupAggregateCount_,
-);
+]);
 
 export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
 export const GroupAggregate: Schema.Schema<GroupAggregate> = GroupAggregate_;
@@ -499,19 +499,19 @@ export const QueryAggregateClause: Schema.Schema<QueryAggregateClause> = QueryAg
 export const QueryFromClause_ = Schema.Struct({
   type: Schema.Literal('from'),
   query: Schema.suspend(() => Query),
-  from: Schema.Union(
+  from: Schema.Union([
     Schema.TaggedStruct('scope', {
       scopes: Schema.Array(Schema.suspend(() => Scope)),
     }),
     Schema.TaggedStruct('query', {
       query: Schema.suspend(() => Query),
     }),
-  ),
+  ]),
 });
 export interface QueryFromClause extends Schema.Schema.Type<typeof QueryFromClause_> {}
 export const QueryFromClause: Schema.Schema<QueryFromClause> = QueryFromClause_;
 
-const Query_ = Schema.Union(
+const Query_ = Schema.Union([
   QuerySelectClause,
   QueryFilterClause,
   QueryReferenceTraversalClause,
@@ -527,7 +527,7 @@ const Query_ = Schema.Union(
   QuerySkipClause,
   QueryAggregateClause,
   QueryFromClause,
-).annotate({ identifier: 'org.dxos.schema.query' });
+]).annotate({ identifier: 'org.dxos.schema.query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;

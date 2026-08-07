@@ -13,10 +13,10 @@ import { trim } from '@dxos/util';
 const LevelLetter = Schema.Literals(['T', 'D', 'V', 'I', 'W', 'E']);
 const SelectField = Schema.Literals(['t', 'l', 'm', 'f', 'n', 'o', 'c', 'i', 'e']);
 
-const GroupBy = Schema.Union(
+const GroupBy = Schema.Union([
   Schema.Literals(['level', 'message', 'file', 'tabId']),
   Schema.TemplateLiteral('context.', Schema.String),
-);
+]);
 
 const Aggregate = Schema.Literals(['count', 'sample', 'firstLast']);
 const Order = Schema.Literals(['asc', 'desc']);

@@ -11,7 +11,7 @@
 
 import * as Schema from 'effect/Schema';
 
-export const Color = Schema.Literal(
+export const Color = Schema.Literals([
   'black',
   'grey',
   'light-violet',
@@ -25,7 +25,7 @@ export const Color = Schema.Literal(
   'light-red',
   'red',
   'white',
-);
+]);
 export type Color = Schema.Schema.Type<typeof Color>;
 
 export const Fill = Schema.Literals(['none', 'solid', 'pattern']);

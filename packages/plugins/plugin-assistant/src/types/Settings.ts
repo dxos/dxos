@@ -16,12 +16,12 @@ export const ModelProvider = DXN.Schema;
 export type ModelProvider = DXN.DXN;
 export const ModelProviders: readonly DXN.DXN[] = Provider.all.map((provider) => provider.id);
 
-export const ChatView = Schema.Union(
+export const ChatView = Schema.Union([
   Schema.Literal('normal').annotate({ title: 'Normal' }),
   Schema.Literal('summary').annotate({ title: 'Summary' }),
   Schema.Literal('thinking').annotate({ title: 'Thinking' }),
   Schema.Literal('debug').annotate({ title: 'Debug' }),
-);
+]);
 export type ChatView = Schema.Schema.Type<typeof ChatView>;
 export const ChatViews = SchemaEx.getLiteralValues(ChatView);
 

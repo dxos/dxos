@@ -46,7 +46,7 @@ export const AddMailbox = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
-    target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)),
+    target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]),
   }),
   output: Schema.Struct({
     id: Schema.String,
@@ -391,7 +391,7 @@ export const ClassifyEmail = Operation.make({
       description: 'The message object to classify.',
     }),
   }),
-  output: Schema.Union(
+  output: Schema.Union([
     Schema.Struct({
       tagId: Schema.String.annotate({
         description: 'The ID of the selected tag.',
@@ -401,7 +401,7 @@ export const ClassifyEmail = Operation.make({
       }),
     }),
     Schema.Void,
-  ),
+  ]),
   services: [AiService.AiService, Database.Service],
 });
 

@@ -291,7 +291,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
             Array.map((v) => toEffectSchema(v as JsonSchemaType, defs)),
             Array.splitAt(root.minItems ?? root.items.length),
           );
-          result = Schema.Tuple(...required, ...optional.map(Schema.optionalElement));
+          result = Schema.Tuple([...required, ...optional.map(Schema.optionalElement)]);
         } else {
           invariant(root.items);
           const items = root.items;

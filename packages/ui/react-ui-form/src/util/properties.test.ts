@@ -87,10 +87,10 @@ describe('getFormProperties', () => {
     const Route = Schema.Struct({ legs: Schema.Array(Leg) });
     const TestSchema = Type.makeObject(DXN.make('org.dxos.test.nestedHidden', '0.1.0'))(
       Schema.Struct({
-        details: Schema.Union(
+        details: Schema.Union([
           Schema.TaggedStruct('road', { routes: Schema.optional(Schema.Array(Route)) }),
           Schema.TaggedStruct('other', { note: Schema.optional(Schema.String) }),
-        ),
+        ]),
       }),
     );
 

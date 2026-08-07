@@ -168,7 +168,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       object: Obj.Unknown.annotate({ description: 'The object to add.' }),
-      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotate({
+      target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
         description: 'The database or collection to add to.',
       }),
       targetNodeId: Schema.optional(
@@ -246,7 +246,7 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotate({
+      target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
         description: 'The database or collection to create in.',
       }),
       views: Schema.optional(Schema.Boolean),
@@ -473,7 +473,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       object: Obj.Unknown,
-      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)),
+      target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]),
     }),
     output: Schema.Void,
   });

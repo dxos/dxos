@@ -71,12 +71,12 @@ export const WebhookEvent = Schema.Struct({
 });
 export type WebhookEvent = Schema.Schema.Type<typeof WebhookEvent>;
 
-export const TriggerEvent = Schema.Union(
+export const TriggerEvent = Schema.Union([
   EmailEvent,
   FeedEvent,
   DirectEvent,
   SubscriptionEvent,
   TimerEvent,
   WebhookEvent,
-);
+]);
 export type TriggerEvent = Schema.Schema.Type<typeof TriggerEvent>;
