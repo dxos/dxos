@@ -4,7 +4,6 @@
 
 import * as Equal from 'effect/Equal';
 import type * as Schema from 'effect/Schema';
-import * as Utils from 'effect/Utils';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Ref } from '@dxos/echo';
@@ -401,8 +400,8 @@ const applyOverrides = <T>(base: Partial<T>, overrides: Record<SchemaEx.JsonPath
 };
 
 // Copied from `@dxos/echo` (internal `Obj.valuesEqual`): references compare by target URI, arrays and plain
-// object-shaped property bags (excluding `id`) compare recursively, and leaves fall back to Effect `Equal.equals`
-// inside a structural region. Effect's `Schema.equivalence` is not a safe substitute — it returns false-positive
+// object-shaped property bags (excluding `id`) compare recursively, and leaves fall back to Effect `Equal.equals`,
+// which is structural by default in Effect 4. Effect's `Schema.equivalence` is not a safe substitute — it returns false-positive
 // equality for dynamic/union/ref-array schemas, which would silently prune edits.
 // TODO(wittjosiah): Factor out into a shared util rather than duplicating echo's internal implementation.
 const valuesEqual = (left: unknown, right: unknown): boolean => {
@@ -413,7 +412,7 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
     return left === right;
   }
   if (typeof left !== 'object' || typeof right !== 'object') {
-    return Utils.structuralRegion(() => Equal.equals(left, right));
+    return Equal.equals(left, right);
   }
   if (Ref.isRef(left) && Ref.isRef(right)) {
     return left.uri === right.uri;

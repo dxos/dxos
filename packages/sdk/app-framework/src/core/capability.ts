@@ -4,7 +4,6 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
@@ -35,9 +34,9 @@ export class Service extends Context.Service<Service, CapabilityManager.Capabili
  * `activate` so instrumentation inside module bodies (e.g. {@link lazyModule}'s chunk-import
  * timing) can attribute itself to the module without threading the id through every body.
  */
-export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValue.globalValue(
-  Symbol.for('@dxos/app-framework/Capability/CurrentModuleId'),
-  () => FiberRef.makeUnsafe<string | undefined>(undefined),
+export const CurrentModuleId: Context.Reference<string | undefined> = Context.Reference<string | undefined>(
+  '@dxos/app-framework/Capability/CurrentModuleId',
+  { defaultValue: () => undefined },
 );
 
 /**
@@ -46,9 +45,9 @@ export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValu
  * it is running inside. Such a wait only ends at the activation timeout, which the failure
  * supervisor reads as a broken plugin and disables.
  */
-export const ActivatingModuleIds: FiberRef.FiberRef<ReadonlySet<string>> = GlobalValue.globalValue(
-  Symbol.for('@dxos/app-framework/Capability/ActivatingModuleIds'),
-  () => FiberRef.makeUnsafe<ReadonlySet<string>>(new Set<string>()),
+export const ActivatingModuleIds: Context.Reference<ReadonlySet<string>> = Context.Reference<ReadonlySet<string>>(
+  '@dxos/app-framework/Capability/ActivatingModuleIds',
+  { defaultValue: () => new Set<string>() },
 );
 
 /**
@@ -530,7 +529,7 @@ export const lazyModule = <
     Effect.gen(function* () {
       // Chunk import measured separately from the body: on deferral the import moves to the
       // interaction path wholesale, so its cost has its own axis in the startup profile.
-      const moduleId = (yield* FiberRef.get(CurrentModuleId)) ?? name;
+      const moduleId = (yield* CurrentModuleId) ?? name;
       performance.mark(`module-import:${moduleId}:start`);
       const { default: getModule } = yield* Effect.promise(() => loader());
       performance.mark(`module-import:${moduleId}:end`);

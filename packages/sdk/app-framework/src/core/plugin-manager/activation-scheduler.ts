@@ -7,7 +7,6 @@ import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import * as FiberRef from 'effect/FiberRef';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
@@ -630,7 +629,7 @@ export class ActivationScheduler {
    */
   #notActivatingHere(modules: Plugin.PluginModule[]): Effect.Effect<Plugin.PluginModule[]> {
     return Effect.gen(function* () {
-      const activating = yield* FiberRef.get(Capability.ActivatingModuleIds);
+      const activating = yield* Capability.ActivatingModuleIds;
       if (activating.size === 0) {
         return modules;
       }

@@ -344,8 +344,8 @@ export class ModuleLoader {
       const [duration, capabilities] = yield* module.activate().pipe(
         Effect.provide(requiresContext),
         Effect.provideService(Capability.Service, this.#capabilities),
-        Effect.locally(Capability.CurrentModuleId, module.id),
-        Effect.locallyWith(Capability.ActivatingModuleIds, (ids) => new Set([...ids, module.id])),
+        Effect.provideService(Capability.CurrentModuleId, module.id),
+        Effect.updateService(Capability.ActivatingModuleIds, (ids) => new Set([...ids, module.id])),
 
         Scope.provide(scope),
         // Cap activation so a single misbehaving module can't hold the

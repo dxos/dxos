@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as Headers from 'effect/unstable/http/Headers';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
@@ -14,11 +14,6 @@ import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv, ErrorCodec } from '@dxos/protocols';
-
-/**
- * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
- */
-export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions';
 
 /**
  * Shape of the JSON error envelope emitted by the upstream AI gateway (and by the memoization
@@ -48,8 +43,7 @@ type UpstreamErrorEnvelope = {
 export class FunctionsAiHttpClient {
   static make = (service: EdgeFunctionEnv.FunctionsAiService) =>
     HttpClient.make((request, url, signal, fiber) => {
-      const context = fiber.getFiberRef(FiberRef.currentContext);
-      const options: RequestInit = context.unsafeMap.get(requestInitTagKey) ?? {};
+      const options: RequestInit = fiber.context.mapUnsafe.get(FetchHttpClient.RequestInit.key) ?? {};
       const headers = options.headers
         ? Headers.merge(Headers.fromInput(options.headers), request.headers)
         : request.headers;

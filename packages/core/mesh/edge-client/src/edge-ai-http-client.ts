@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as Headers from 'effect/unstable/http/Headers';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
@@ -37,11 +37,6 @@ export class ByokError extends BaseError.extend('ByokError', 'BYOK authenticatio
  * {@link HttpClientError.ResponseError} so it survives `@effect/ai`'s error mapping.
  */
 export class UsageQuotaExceededError extends BaseError.extend('UsageQuotaExceededError', 'Usage quota exceeded') {}
-
-/**
- * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
- */
-export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions';
 
 type AnthropicMessagesPayload = {
   tools?: ReadonlyArray<Record<string, unknown>>;
@@ -112,8 +107,7 @@ export class EdgeAiHttpClient {
   static make = (getClient: GetEdgeHttpClient) =>
     HttpClient.make((request, url, signal, fiber) => {
       const edgeClient = getClient();
-      const context = fiber.getFiberRef(FiberRef.currentContext);
-      const options: RequestInit = context.unsafeMap.get(requestInitTagKey) ?? {};
+      const options: RequestInit = fiber.context.mapUnsafe.get(FetchHttpClient.RequestInit.key) ?? {};
       const headers = options.headers
         ? Headers.merge(Headers.fromInput(options.headers), request.headers)
         : request.headers;

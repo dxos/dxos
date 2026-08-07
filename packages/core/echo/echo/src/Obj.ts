@@ -10,7 +10,6 @@ import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
@@ -787,7 +786,7 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
     return left === right;
   }
   if (typeof left !== 'object' || typeof right !== 'object') {
-    return Utils.structuralRegion(() => Equal.equals(left, right));
+    return Equal.equals(left, right);
   }
   if (Ref.isRef(left) && Ref.isRef(right)) {
     return left.uri === right.uri;
