@@ -224,7 +224,10 @@ const makeSumAggregator = () =>
           }),
         onInput: (input: number) =>
           Effect.gen(function* () {
-            let acc = yield* StorageService.get(Schema.NumberFromString, 'acc').pipe(Effect.flatten, Effect.orDie);
+            let acc = yield* StorageService.get(Schema.NumberFromString, 'acc').pipe(
+              Effect.flatMap((value) => Effect.fromOption(value)),
+              Effect.orDie,
+            );
             acc += input;
             yield* StorageService.set(Schema.NumberFromString, 'acc', acc);
             ctx.submitOutput(acc);
@@ -275,7 +278,7 @@ const ProcessWithRpcs = Process.make(
     Effect.gen(function* () {
       const storage = yield* StorageService.StorageService;
       return {
-        rpcHandlers: yield* rpcs.toHandlersContext({
+        rpcHandlers: yield* rpcs.toHandlers({
           getValue: Effect.fn(function* () {
             return yield* storage.get(Schema.NumberFromString, 'acc').pipe(Effect.map(Option.getOrElse(() => 0)));
           }),
@@ -336,7 +339,7 @@ describe('ManagerImpl', () => {
       yield* handle.submitInput({ value: 5 });
 
       const outputs = yield* Fiber.join(outputFiber);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([10]);
+      expect(outputs).toEqual([10]);
     }, Effect.provide(TestLayer)),
   );
 
@@ -346,7 +349,7 @@ describe('ManagerImpl', () => {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 7 }] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([14]);
+      expect(outputs).toEqual([14]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
@@ -357,7 +360,7 @@ describe('ManagerImpl', () => {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeSumAggregator());
       const outputs = yield* handle.runAndExit({ inputs: [4] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([4]);
+      expect(outputs).toEqual([4]);
       expect(handle.status.state).toEqual(Process.State.IDLE);
     }, Effect.provide(TestLayer)),
   );
@@ -571,7 +574,7 @@ describe('ManagerImpl', () => {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 11 }] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([22]);
+      expect(outputs).toEqual([22]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
@@ -583,7 +586,7 @@ describe('ManagerImpl', () => {
 
       const handle = yield* manager.spawn(Process.fromOperation(ParentInvoker, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [7] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([7]);
+      expect(outputs).toEqual([7]);
 
       // Drain any background child-cleanup callbacks. Without the fix in
       // ProcessHandle.requestChildEvent, the late child-exit notification would
@@ -623,7 +626,7 @@ describe('ManagerImpl', () => {
       }
 
       const cause = exit.cause;
-      expect(cause._tag).toBe('Die');
+      expect(cause.reasons.some(Cause.isDieReason)).toBe(true);
 
       const defect = Cause.squash(cause);
       expect(typeof defect).not.toBe('string');
@@ -1028,7 +1031,7 @@ describe('ProcessOperationInvoker invocations', () => {
           const output = yield* invoker.invoke(Double, { value: 5 });
           expect(output).toEqual(10);
 
-          const event = yield* Queue.take(events);
+          const event = yield* PubSub.take(events);
           expect(event.operation.meta.key).toEqual(Double.meta.key);
           expect(event.output).toEqual(10);
         }),
@@ -1048,7 +1051,7 @@ describe('ProcessOperationInvoker invocations', () => {
           expect(Exit.isFailure(exit)).toBe(true);
 
           // No success event should be queued for a failed invocation.
-          expect(yield* Queue.size(events)).toBe(0);
+          expect(yield* PubSub.remaining(events)).toBe(0);
         }),
       );
     }, Effect.provide(TestLayer)),
@@ -1115,7 +1118,7 @@ describe('reentrancy', () => {
       const dormant = yield* manager.list({ key: executable.key });
       const restored = yield* dormant[0].hydrate(executable);
       const outputs = yield* restored.runAndExit({ inputs: [2] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([3]);
+      expect(outputs).toEqual([3]);
     }, Effect.provide(TestLayer)),
   );
 
@@ -1141,7 +1144,7 @@ describe('reentrancy', () => {
 
       const restored = yield* dormant[0].hydrate(executable);
       const outputs = yield* restored.runAndExit({ inputs: [4] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([7]);
+      expect(outputs).toEqual([7]);
     }, Effect.provide(TestLayer)),
   );
 
@@ -1161,7 +1164,7 @@ describe('reentrancy', () => {
       expect(dormant).toHaveLength(1);
       const restored = yield* dormant[0].hydrate(executable);
       const outputs = yield* restored.runAndExit({ inputs: [1] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([1]);
+      expect(outputs).toEqual([1]);
     }, Effect.provide(TestLayer)),
   );
 
@@ -1658,7 +1661,7 @@ describe('durability', () => {
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 5 }] }).pipe(Stream.runCollect);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual([10]);
+      expect(outputs).toEqual([10]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
       yield* managerA.shutdown();
 

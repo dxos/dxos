@@ -494,8 +494,8 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
         return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
           Stream.runCollect,
-          Effect.map(Chunk.head),
-          Effect.flatten,
+          Effect.map(Array.head),
+          Effect.flatMap((result) => Effect.fromOption(result)),
           Effect.catchTag('NoSuchElementError', () => Effect.die(new Error('Trigger invocation produced no output'))),
         );
       }).pipe(this._concurrencyLimiter.withPermits(1), Effect.exit);
@@ -538,9 +538,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       this._publishRuntimeStatuses(registry);
       registry.update(
         this._state,
-        Struct.evolve({
-          invocations: Array.map((_) =>
-            _.invocationId === invocation.invocationId ? { ..._, result: () => result } : _,
+        (state): TriggerDispatcherState => ({
+          ...state,
+          invocations: state.invocations.map((_) =>
+            _.invocationId === invocation.invocationId ? { ..._, result } : _,
           ),
         }),
       );
@@ -870,7 +871,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           const cronEither = Cron.parse(timerSpec.cron);
 
           if (Result.isSuccess(cronEither)) {
-            const cron = cronEither.right;
+            const cron = cronEither.success;
             const now = this.getCurrentTime();
             const nextExecution = entry.nextExecution ?? Cron.next(cron, now);
 
@@ -889,7 +890,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
             log.error('Invalid cron expression', {
               triggerId: trigger.id,
               cron: timerSpec.cron,
-              error: cronEither.left.message,
+              error: cronEither.failure.message,
             });
           }
         } else {

@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import * as Cause from 'effect/Cause';
-import type * as Clock from 'effect/Clock';
+import * as Clock from 'effect/Clock';
 import type * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
@@ -380,7 +380,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           // Process.Process<I,O,R> does not expose the input Schema (runtime object does).
           const defWithSchema = definition as unknown as { input: Schema.Codec<I, unknown, never> };
           const input = yield* Schema.decodeEffect(defWithSchema.input)(event.value).pipe(Effect.orDie);
-          yield* yield* this.#runHandler('input', () => this.#callbacks.onInput(input), event.seq);
+          yield* Fiber.join(yield* this.#runHandler('input', () => this.#callbacks.onInput(input), event.seq));
         });
       case 'alarm':
         return this.#dispatchAlarm(event.seq);
@@ -550,7 +550,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       // 0ms delays must not block on the TestClock — use yieldNow() so they complete in the
       // current event loop without requiring a TestClock.adjust call from the test.
       if (delay > 0) {
-        yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.withClock(this.#clock));
+        yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.provideService(Clock.Clock, this.#clock));
       } else {
         yield* Effect.yieldNow;
       }
@@ -686,13 +686,13 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         this.#finished = true;
         const error = this.#failError;
         yield* this.#cleanup().pipe(
-          Effect.tap(() => this.#setStatus(Process.State.FAILED, Exit.die(error))),
+          Effect.tap(() => Effect.sync(() => this.#setStatus(Process.State.FAILED, Exit.die(error)))),
           Effect.tap(() => this.#onFinished?.(Process.State.FAILED, Cause.die(error)) ?? Effect.void),
         );
       } else if (this.#succeedRequested && this.#activeHandlers === 0) {
         this.#finished = true;
         yield* this.#cleanup().pipe(
-          Effect.tap(() => this.#setStatus(Process.State.SUCCEEDED, Exit.void)),
+          Effect.tap(() => Effect.sync(() => this.#setStatus(Process.State.SUCCEEDED, Exit.void))),
           Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
         );
       } else if (this.#activeHandlers === 0) {

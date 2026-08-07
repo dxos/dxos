@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
@@ -67,7 +68,7 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
     // scope closed.
     const outputFiber = yield* handle.subscribeOutputs().pipe(
       Stream.runCollect,
-      Effect.map(Chunk.head),
+      Effect.map(Array.head),
       Effect.flatMap(
         Option.match({
           onSome: Effect.succeed,
@@ -95,8 +96,8 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
     log('lifecycle: subscribed to outputs', { handle });
     return {
       pid: handle.pid,
-      await: outputFiber.await,
-      poll: outputFiber.poll,
+      await: Effect.exit(Fiber.join(outputFiber)),
+      poll: Effect.sync(() => Option.fromNullishOr(outputFiber.pollUnsafe())),
     };
   });
 
@@ -343,7 +344,7 @@ export const make = (opts: {
     invoke(op, input, options) as any;
 
   const awaitFollowups: Effect.Effect<void> = Effect.suspend(() =>
-    Fiber.awaitAll(Array.from(pendingFibers)).pipe(Effect.asVoid),
+    Fiber.awaitAll(globalThis.Array.from(pendingFibers)).pipe(Effect.asVoid),
   );
 
   return {

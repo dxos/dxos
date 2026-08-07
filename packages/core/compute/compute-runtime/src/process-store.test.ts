@@ -76,7 +76,7 @@ describe('ProcessStore', () => {
       const store = new ProcessStore(kv);
       expect(yield* store.getProcess(pid)).toBeUndefined();
       expect(yield* store.listProcessIds()).toEqual([]);
-      expect(Option.isNone(yield* kv.get(`process/${pid}/__record`).pipe(Effect.orDie))).toBe(true);
+      expect(yield* kv.get(`process/${pid}/__record`).pipe(Effect.orDie)).toBeUndefined();
     }, Effect.provide(KeyValueStore.layerMemory)),
   );
 });

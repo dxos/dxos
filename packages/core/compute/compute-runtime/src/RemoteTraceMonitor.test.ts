@@ -38,7 +38,7 @@ describe('createSwarmRemoteTraceMonitor', () => {
     const collected = await EffectEx.runPromise(
       Stream.runCollect(monitor.subscribeToTraceMessages({ type: 'status.update', pid: 'p1' })),
     );
-    const messages = Chunk.toReadonlyArray(collected);
+    const messages = collected;
 
     // Coarse subscription uses the most selective present dimension (pid over type).
     expect(requestedTags).toEqual([['pid:p1']]);
@@ -71,7 +71,7 @@ describe('createSwarmRemoteTraceMonitor', () => {
     const collected = await EffectEx.runPromise(
       Stream.runCollect(monitor.subscribeToTraceMessages({ type: 'status.update' })),
     );
-    const messages = Chunk.toReadonlyArray(collected);
+    const messages = collected;
 
     expect(messages).toHaveLength(1);
     expect(messages[0].meta.trigger?.uri.toString()).toBe(trigger.uri.toString());

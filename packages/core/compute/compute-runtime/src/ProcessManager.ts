@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Cause from 'effect/Cause';
+import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -494,7 +495,7 @@ export class ProcessManagerImpl implements Manager {
   ): Effect.Effect<Handle<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
-      const clock = yield* Effect.clock;
+      const clock = yield* Clock.Clock;
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -725,7 +726,7 @@ export class ProcessManagerImpl implements Manager {
   ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
     return Effect.gen({ self: this }, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
-      const clock = yield* Effect.clock;
+      const clock = yield* Clock.Clock;
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 

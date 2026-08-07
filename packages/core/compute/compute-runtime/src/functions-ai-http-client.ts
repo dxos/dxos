@@ -62,10 +62,8 @@ export class FunctionsAiHttpClient {
             ),
           catch: (cause) => {
             log.error('Failed to fetch', { errorSerialized: ErrorCodec.encode(cause as Error) });
-            return new HttpClientError.RequestError({
-              request,
-              reason: 'Transport',
-              cause,
+            return new HttpClientError.HttpClientError({
+              reason: new HttpClientError.TransportError({ request, cause }),
             });
           },
         }).pipe(

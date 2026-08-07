@@ -120,7 +120,7 @@ const TestHanlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fn(function* () {
         const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
-          Effect.flatten,
+          Effect.flatMap((result) => Effect.fromOption(result)),
           Effect.catchTag('NoSuchElementError', () => Database.add(Obj.make(RetryCounter, { count: 0 }))),
         );
         if (counter.count >= 3) {
@@ -1148,7 +1148,9 @@ describe('TriggerDispatcher', () => {
         yield* dispatcher.invokeTrigger({ trigger, event: {} });
 
         yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
-        const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(Effect.flatten);
+        const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
+          Effect.flatMap((result) => Effect.fromOption(result)),
+        );
         expect(counter.count).toBe(3);
       }, Effect.provide(TestLayer())),
     );
