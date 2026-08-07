@@ -48,8 +48,10 @@ export const RecoveryCredentialsContainer = () => {
           <Form.Section title={t('credentials-list.label')}>
             {recoveryCredentials.length < 1 ? (
               <Message.Root valence='error'>
-                <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
-                <Message.Body>{t('no-credentials.message')}</Message.Body>
+                <Message.Content>
+                  <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
+                  <Message.Body>{t('no-credentials.message')}</Message.Body>
+                </Message.Content>
               </Message.Root>
             ) : (
               <Listbox.Root>

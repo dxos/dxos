@@ -64,6 +64,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
+          # Published artifacts are built from source, never trusted from a cache any CI job can
+          # write to — the same reasoning as the isolated pnpm scope below.
+          remote-cache: 'false'
           # Isolate publish cache from PR caches (cache-poisoning defense).
           cache-scope: publish
           verify-integrity: 'true'

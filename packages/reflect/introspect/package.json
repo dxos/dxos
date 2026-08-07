@@ -29,7 +29,6 @@
   ],
   "dependencies": {
     "@dxos/introspect-tools": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "glob": "catalog:",
     "ts-morph": "catalog:"

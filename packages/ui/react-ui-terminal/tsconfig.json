@@ -15,19 +15,10 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../react-ui"
     },
     {
       "path": "../ui-theme"
-    },
-    {
-      "path": "../ui-types"
     }
   ]
 }

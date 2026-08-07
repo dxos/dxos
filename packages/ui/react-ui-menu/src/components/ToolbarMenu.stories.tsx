@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton } from '@dxos/react-ui';
+import { IconButton, Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -64,7 +64,9 @@ export const Toolbar: Story = {
 
     return (
       <Menu.Root {...nestedMenuActions}>
-        <Menu.Toolbar />
+        <Menu.Toolbar>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     );
   },
@@ -89,7 +91,9 @@ export const UseMenuActionsToolbar: Story = {
 
     return (
       <Menu.Root {...menuActions}>
-        <Menu.Toolbar />
+        <Menu.Toolbar>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     );
   },
@@ -117,7 +121,31 @@ export const SwitchToolbar: Story = {
 
     return (
       <Menu.Root {...menuActions} alwaysActive>
-        <Menu.Toolbar />
+        <Menu.Toolbar>
+          <Menu.Items />
+        </Menu.Toolbar>
+      </Menu.Root>
+    );
+  },
+};
+
+/**
+ * `Menu.Toolbar` renders only its children, so JSX order controls where the graph items sit —
+ * here a growing filter input leads and the actions trail (the SubscriptionsArticle shape).
+ */
+export const CustomPlacement: Story = {
+  render: () => {
+    const registry = useContext(RegistryContext);
+    const nestedMenuActions = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
+
+    return (
+      <Menu.Root {...nestedMenuActions}>
+        <Menu.Toolbar>
+          <Input.Root>
+            <Input.TextInput variant='subdued' placeholder='Filter…' classNames='grow min-w-40' />
+          </Input.Root>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     );
   },

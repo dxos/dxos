@@ -97,7 +97,6 @@
       "@dxos/keyboard",
       "@dxos/keyring",
       "@dxos/keys",
-      "@dxos/kv-store",
       "@dxos/link",
       "@dxos/lit-grid",
       "@dxos/lit-ui",

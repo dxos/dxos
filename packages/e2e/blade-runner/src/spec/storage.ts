@@ -12,7 +12,7 @@ import { type RunResults, StorageReplicant } from '../replicants/storage-replica
 
 export type StorageTestSpec = {
   platform: Platform;
-  storageAdaptor: 'idb' | 'opfs' | 'node' | 'leveldb';
+  storageAdaptor: 'idb' | 'opfs' | 'node' | 'sqlite';
 
   filesAmount: number;
   fileSize: number; // in bytes
@@ -28,7 +28,7 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, RunResults> {
   defaultSpec(): StorageTestSpec {
     return {
       platform: 'chromium',
-      storageAdaptor: 'leveldb',
+      storageAdaptor: 'sqlite',
       filesAmount: 10_000,
       fileSize: 1024,
       batchSize: 100,

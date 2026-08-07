@@ -15,46 +15,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/test-utils"
-    },
-    {
-      "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
-    },
-    {
-      "path": "../react-primitives/react-hooks"
-    },
-    {
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-form"
-    },
-    {
-      "path": "../react-ui-mosaic"
-    },
-    {
       "path": "../ui-theme"
-    },
-    {
-      "path": "../ui-types"
     }
   ]
 }

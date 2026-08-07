@@ -85,15 +85,6 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-list"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -110,9 +101,6 @@
     },
     {
       "path": "../plugin-routine"
-    },
-    {
-      "path": "../plugin-space"
     }
   ]
 }

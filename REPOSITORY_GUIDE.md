@@ -378,6 +378,42 @@ Run `pnpm lint` to conform the entire repository with (equivalent of `lint --fix
 
 Run `pnpm lint:changed` to lint only what you've been working on using `pnpm changed-packages`.
 
+### Unused dependencies and dead code
+
+`pnpm knip` reports unused dependencies, dependencies that are imported without being declared, and
+source files nothing references. CI runs the same command in the **Check** workflow's `knip` job, so
+a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
+packages through their `source` export condition — so it needs no build and takes about 80 seconds.
+
+Most of what the config in `.config/knip.ts` does is teach knip the ways this repo reaches code
+without importing it: lazily via `() => import('./handler')`, by path from a moon task or vite
+alias, through a `browser` field substitution, from CSS `@import` and Tailwind `@plugin`, or from a
+glslify `#pragma`. Each rule is derived from the manifests and task definitions rather than
+hardcoded, so a new package is covered without touching the config. When knip reports something that
+is genuinely reachable, prefer extending the relevant rule over adding an ignore.
+
+`pnpm knip` runs two passes. The first checks the whole repo for unused dependencies, undeclared
+imports and unreferenced files. The second adds `--production --strict`, which analyses only what
+ships — no tests, stories or configs — and requires production code to import from `dependencies`
+alone. That second pass is what keeps a published package from making consumers install a package
+only its storybook needs. Only entry and project patterns suffixed with `!` count as production, so
+a new pattern needs that suffix to be visible to it.
+
+Unreferenced _files_ are excluded from the strict pass: some 74 components are reachable only from
+stories, and whether those are work in progress or genuinely dead is a judgement per component
+rather than a rule. `pnpm knip --production --strict` without the exclusion lists them.
+
+A `peerDependencies` entry is a contract that the consumer must supply the package, so it belongs
+there only when the code a consumer runs needs it. Something only a storybook or a test imports is a
+`devDependency`, not a peer — the strict pass reports the difference rather than exempting it.
+
+**The repo root's own dependencies are not audited.** They are consumed by moon task commands and the
+shared vitest/vite bases rather than by the few files knip attributes to the root workspace, so
+nearly all of them read as unused, and removing them breaks `pnpm install` on peer resolution. The
+root workspace is still analysed — it is what supplies `vitest` and friends to every other package —
+but its dependencies are ignored. Auditing them needs a pass of its own; drop the
+`ignoreDependencies` entry on the `'.'` workspace to see that backlog.
+
 ### ESLint errors in vscode
 
 To make all eslint errors look yellow in `vscode`, open your user preferences (not workspace preferences) and add this to the JSON:
@@ -478,7 +514,11 @@ See the [Run commands](#run-commands) section above for the full list.
 ### Gotchas
 
 - `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git-hooks setup prompt.
-- The `DEPOT_TOKEN` warning from moon is expected and harmless (remote-cache auth token).
+- A remote-cache warning from moon means the certificates aren't installed. Running moon directly,
+  nothing breaks — builds fall back to the local cache and just don't share the team's. Install
+  them with `tools/moon-cache/install-certs.sh --op` — once per machine, covering every worktree. In GitHub Actions it is stricter: any job
+  using `.github/actions/setup` **fails** when the credentials are missing or the cache does not
+  answer, unless it is a fork PR or the call passes `remote-cache: 'false'`.
 - The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

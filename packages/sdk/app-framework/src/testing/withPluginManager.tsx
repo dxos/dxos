@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Decorator, type StoryContext } from '@storybook/react';
+import { type Decorator, type StoryContext } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 

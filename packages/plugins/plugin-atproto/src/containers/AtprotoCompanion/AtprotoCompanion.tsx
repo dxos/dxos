@@ -205,7 +205,9 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
     <Panel.Root role={role}>
       <Panel.Toolbar>
         <Menu.Root {...menuActions} attendableId={attendableId}>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
@@ -218,40 +220,50 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 valence={statusMeta?.valence ?? 'neutral'}
                 icon={statusMeta?.icon ?? 'ph--circle-notch--regular'}
               >
-                <Message.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Message.Title>
+                <Message.Content>
+                  <Message.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Message.Title>
+                </Message.Content>
               </Message.Root>
 
               {/* Reasons publishing is unavailable. */}
               {!connection && (
                 <Message.Root valence='info'>
-                  <Message.Body>{t('no-connection.label')}</Message.Body>
+                  <Message.Content>
+                    <Message.Body>{t('no-connection.label')}</Message.Body>
+                  </Message.Content>
                 </Message.Root>
               )}
               {ineligibleReason && (
                 <Message.Root valence={reasonValence}>
-                  <Message.Body>{ineligibleReason}</Message.Body>
+                  <Message.Content>
+                    <Message.Body>{ineligibleReason}</Message.Body>
+                  </Message.Content>
                 </Message.Root>
               )}
               {error && (
                 <Message.Root valence='error'>
-                  <Message.Body>{error}</Message.Body>
+                  <Message.Content>
+                    <Message.Body>{error}</Message.Body>
+                  </Message.Content>
                 </Message.Root>
               )}
 
               {/* First-publish confirmation. */}
               {confirming && (
                 <Message.Root valence='warning'>
-                  <Message.Body>{t('confirm-publish.message')}</Message.Body>
-                  <Message.Body asChild>
-                    <div role='none' className='flex gap-2 pbs-2'>
-                      <Button variant='primary' disabled={busy} onClick={handlePublish}>
-                        {t('confirm-publish.label')}
-                      </Button>
-                      <Button disabled={busy} onClick={() => setConfirming(false)}>
-                        {t('cancel.label')}
-                      </Button>
-                    </div>
-                  </Message.Body>
+                  <Message.Content>
+                    <Message.Body>{t('confirm-publish.message')}</Message.Body>
+                    <Message.Body asChild>
+                      <div role='none' className='flex gap-2 pbs-2'>
+                        <Button variant='primary' disabled={busy} onClick={handlePublish}>
+                          {t('confirm-publish.label')}
+                        </Button>
+                        <Button disabled={busy} onClick={() => setConfirming(false)}>
+                          {t('cancel.label')}
+                        </Button>
+                      </div>
+                    </Message.Body>
+                  </Message.Content>
                 </Message.Root>
               )}
 
@@ -262,7 +274,9 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Message.Root valence='warning'>
-                    <Message.Body>{t('mirror-unresolved.label')}</Message.Body>
+                    <Message.Content>
+                      <Message.Body>{t('mirror-unresolved.label')}</Message.Body>
+                    </Message.Content>
                   </Message.Root>
                 )}
                 <Treegrid.Root gridTemplateColumns='minmax(0, 1fr) minmax(0, 1fr) min-content' classNames='gap-x-3'>

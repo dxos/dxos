@@ -120,8 +120,10 @@ export const AccountContainer = () => {
             {accountState === 'loading' ? null : accountState === 'missing' ? (
               <>
                 <Message.Root valence='warning'>
-                  <Message.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Message.Title>
-                  <Message.Body>{t('no-edge-access.description')}</Message.Body>
+                  <Message.Content>
+                    <Message.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Message.Title>
+                    <Message.Body>{t('no-edge-access.description')}</Message.Body>
+                  </Message.Content>
                 </Message.Root>
                 <Form.Row label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
@@ -147,8 +149,10 @@ export const AccountContainer = () => {
               </>
             ) : accountState === 'error' && !account ? (
               <Message.Root valence='error'>
-                <Message.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Message.Title>
-                <Message.Body>{t('account-offline.description')}</Message.Body>
+                <Message.Content>
+                  <Message.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Message.Title>
+                  <Message.Body>{t('account-offline.description')}</Message.Body>
+                </Message.Content>
               </Message.Root>
             ) : account ? (
               <>

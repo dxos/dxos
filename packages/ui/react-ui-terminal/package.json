@@ -35,10 +35,8 @@
   ],
   "dependencies": {
     "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
     "@xterm/addon-fit": "catalog:",
@@ -46,7 +44,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/storybook-utils": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
