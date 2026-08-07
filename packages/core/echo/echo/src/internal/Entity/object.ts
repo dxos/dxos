@@ -55,7 +55,9 @@ export const EchoObjectSchema: {
     // rebuilding drops index signatures, which is how `Expando` and other record-shaped types are
     // declared. (`mapFields` is unavailable here -- it is a `Struct` method and `self` is generic.)
     const schemaWithId = new SchemaAST.TypeLiteral(
-      [new SchemaAST.PropertySignature('id', Schema.String.ast), ...self.ast.propertySignatures],
+      self.ast.propertySignatures.some((property) => property.name === 'id')
+        ? self.ast.propertySignatures
+        : [...self.ast.propertySignatures, new SchemaAST.PropertySignature('id', Schema.String.ast)],
       self.ast.indexSignatures,
     );
     const ast = SchemaAST.annotate(schemaWithId, {

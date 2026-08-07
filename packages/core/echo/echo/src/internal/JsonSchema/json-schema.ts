@@ -359,8 +359,10 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
             Array.splitAt(root.minItems ?? root.items.length),
           );
           result = Schema.Tuple([...required, ...optional.map(Schema.optionalKey)]);
+        } else if (root.items === undefined) {
+          // v4 emits a bare `{ type: 'array' }` for an unconstrained array; v3 always wrote `items`.
+          result = Schema.Array(Schema.Unknown);
         } else {
-          invariant(root.items);
           const items = root.items;
           result = Array.isArray(items)
             ? Schema.Tuple(items.map((v) => toEffectSchema(v as JsonSchemaType, defs)))

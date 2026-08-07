@@ -57,7 +57,9 @@ export const EchoTypeKindSchema: {
     // The id is prepended to the existing object node rather than rebuilt from `.fields`:
     // rebuilding drops index signatures, which is how record-shaped types are declared.
     const schemaWithId = new SchemaAST.TypeLiteral(
-      [new SchemaAST.PropertySignature('id', Schema.String.ast), ...self.ast.propertySignatures],
+      self.ast.propertySignatures.some((property) => property.name === 'id')
+        ? self.ast.propertySignatures
+        : [...self.ast.propertySignatures, new SchemaAST.PropertySignature('id', Schema.String.ast)],
       self.ast.indexSignatures,
     );
     const ast = SchemaAST.annotate(schemaWithId, {
