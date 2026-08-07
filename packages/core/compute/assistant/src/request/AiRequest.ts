@@ -155,7 +155,7 @@ export class Request {
   }
 
   private _submitMessage = (message: Message.Message): Effect.Effect<Message.Message, never, Trace.TraceService> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       this._pending.push(message);
       yield* this._observer.onMessage(message);
       if (this._options.persist === false) {
@@ -199,7 +199,7 @@ export class Request {
     objects = [],
     instructions = [],
   }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       this._started = Date.now();
       this._history = [...history];
       this._pending = [];
@@ -229,7 +229,7 @@ export class Request {
     system,
     toolkit: opaqueToolkit,
   }: TurnProps<R>): Effect.Effect<TurnResult, RunError, RunRequirements | R> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       log('request', {
         system: { snippet: createSnippet(system), length: system.length },
         pending: this._pending.length,
@@ -263,7 +263,7 @@ export class Request {
         Stream.map((block) => enrichToolCallBlock(block, toolkit)),
         Stream.mapEffect(
           (block) =>
-            Effect.gen(this, function* () {
+            Effect.gen({ self: this }, function* () {
               if (block._tag === 'stats' && block.finishReason !== undefined) {
                 finishReason = block.finishReason;
               }
@@ -322,7 +322,7 @@ export class Request {
   }: {
     toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
   }): Effect.Effect<void, RunError, RunRequirements | R> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
       const toolCalls = this.getToolCalls();
       const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
@@ -355,7 +355,7 @@ export class Request {
     instructions = [],
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* this.begin({ prompt, system: systemTemplate, history, objects, skills, instructions });
 
       const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects, instructions }).pipe(

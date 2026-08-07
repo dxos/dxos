@@ -335,14 +335,14 @@ export class FiberTracker {
    * cannot supply.
    */
   trackForked(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this.track(fiber);
       yield* Effect.forkDetach(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
     });
   }
 
   interruptAll(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const fibers = yield* Ref.get(this.#fibers);
       yield* Effect.forEach(fibers, (fiber) => Fiber.interrupt(fiber), { concurrency: 'unbounded', discard: true });
       yield* Ref.set(this.#fibers, []);

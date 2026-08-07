@@ -104,7 +104,7 @@ class FollowupSchedulerImpl implements FollowupScheduler {
       ),
     );
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Fork as daemon so it survives parent fiber completion.
       const fiber = yield* Effect.forkDetach(effect);
       yield* this._addFiber(fiber);
@@ -125,7 +125,7 @@ class FollowupSchedulerImpl implements FollowupScheduler {
       ),
     );
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Fork as daemon so it survives parent fiber completion.
       const fiber = yield* Effect.forkDetach(wrappedEffect);
       yield* this._addFiber(fiber);
@@ -140,7 +140,7 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   }
 
   get awaitAll(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const { fibers } = yield* Ref.get(this._state);
       yield* Effect.forEach(fibers, (fiber) => Fiber.await(fiber), { concurrency: 'unbounded' });
     });

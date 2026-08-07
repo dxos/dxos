@@ -60,7 +60,7 @@ export class AutomergeDataSource implements IndexDataSource {
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Build a map of documentId -> cursor for quick lookup.
       const cursorMap = new Map<string, string>();
       for (const cursor of cursors) {

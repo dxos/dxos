@@ -250,7 +250,7 @@ export class AiChatProcessor {
 
   async getSystemPrompt(): Promise<string> {
     return this._runtime.runPromise(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const skills = this.context.getSkills();
         const objects = this.context.getObjects();
         const instructions = yield* this.#getInstructions();
@@ -272,7 +272,7 @@ export class AiChatProcessor {
    * its chat, so the ref is resolved here and handed down.
    */
   #getInstructions(): Effect.Effect<Instructions.Instructions[], never, Database.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const instructionsRef = this._options.chat?.target?.instructions;
       if (!instructionsRef) {
         return [];
@@ -297,7 +297,7 @@ export class AiChatProcessor {
       this.#registry.set(this.mcpErrors, []);
       this.#registry.set(this.active, true);
 
-      const effect = Effect.gen(this, function* () {
+      const effect = Effect.gen({ self: this }, function* () {
         // NOTE: Gets or creates a session for the feed.
         log.info('init agent session', {
           feed: Obj.getURI(this._feed),
@@ -375,7 +375,7 @@ export class AiChatProcessor {
    */
   async cancel(): Promise<void> {
     await EffectEx.runAndForwardErrors(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         log.info('cancelling request', { fiber: this.#requestFiber });
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);

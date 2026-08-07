@@ -84,7 +84,7 @@ export class ActivationScheduler {
   }
 
   #start(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (yield* this.#state.isShuttingDown()) {
         log('skipping start during shutdown');
         return false;
@@ -126,7 +126,7 @@ export class ActivationScheduler {
       // own watchdog.
       const ranAny = yield* this.runDependencyPass().pipe(
         Effect.tapError((error) =>
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             log.error('dependency activation failed', { error: String(error) });
             yield* PubSub.publish(this.#state.activation, { event: key, state: 'error', error });
           }),
@@ -175,7 +175,7 @@ export class ActivationScheduler {
    * app that is already interactive.
    */
   #activateWhenIdle(): Effect.Effect<void, never, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this.#whenIdle;
       yield* this.activate(ActivationEvents.Idle).pipe(
         Effect.catch((error) => Effect.sync(() => log.warn('idle activation failed', { error: String(error) }))),
@@ -192,7 +192,7 @@ export class ActivationScheduler {
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error, Plugin.Service> {
     const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Startup is not a plain event: it triggers the dependency pass alongside the event
       // dispatch. Delegating keeps useApp/harness/cli call sites unchanged.
       if (key === ActivationEvent.eventKey(ActivationEvent.Startup)) {
@@ -258,7 +258,7 @@ export class ActivationScheduler {
    * marked for reactivation when a provider returns.
    */
   deactivatePlugin(id: string): Effect.Effect<boolean, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const plugin = this.#state.getPlugin(id);
       if (!plugin) {
         return false;
@@ -284,7 +284,7 @@ export class ActivationScheduler {
    * Re-activates the modules that were activated by the event.
    */
   resetEvent(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
       log('reset', { key });
       const modules = this.#state.getActiveModulesByEvent(key);
@@ -318,7 +318,7 @@ export class ActivationScheduler {
     fiber: Fiber.Fiber<unknown, unknown>,
     opts?: { suppressEventMessage?: boolean },
   ): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this.#state.fibers.track(fiber);
       log('activating', { key, ...params });
       yield* Ref.update(this.#activatingEvents, (activating) => Array.append(activating, key));
@@ -378,7 +378,7 @@ export class ActivationScheduler {
     candidateModules?: Plugin.PluginModule[];
     scopedToCandidates?: boolean;
   }): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       let scoped = options?.candidateModules;
       let ranAny = false;
       let allSucceeded = true;
@@ -408,7 +408,7 @@ export class ActivationScheduler {
    * and everything else proceeds.
    */
   #reportGlobalCycle(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const graph = ActivationGraph.buildSingletonGraph(this.#state.getModules());
       if (ActivationGraph.computeActivationWaves(graph, ['hard']) !== undefined) {
         return;
@@ -467,7 +467,7 @@ export class ActivationScheduler {
     opts?: { suppressEventMessage?: boolean },
   ): Effect.Effect<boolean, Error, Plugin.Service> {
     const activatingModuleIds = modules.map((module) => module.id);
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* Ref.update(this.#activatingModules, (activating) => Array.appendAll(activating, activatingModuleIds));
 
       log('activation wave', { event: key, modules: activatingModuleIds });
@@ -545,7 +545,7 @@ export class ActivationScheduler {
    * activation stream (so boot UIs surface it) without aborting the pass.
    */
   #reportStructuralError(moduleIds: string[], error: Error): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log.error('dependency graph error', { error: String(error), modules: moduleIds });
       const plugins = new Set<string>();
       for (const moduleId of moduleIds) {
@@ -643,7 +643,7 @@ export class ActivationScheduler {
   #runRound(
     candidateModules: Plugin.PluginModule[] | undefined,
   ): Effect.Effect<boolean | undefined, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const key = ActivationEvent.eventKey(ActivationEvent.Startup);
       const active = this.#state.getActiveIds();
       const allModules = this.#state.getModules();
@@ -786,7 +786,7 @@ export class ActivationScheduler {
   #orderRoundBreakingCycles(
     graph: ActivationGraph.ActivationGraphModel,
   ): Effect.Effect<{ waves: Plugin.PluginModule[][]; cycleFailed: Set<string> } | undefined, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const cycleFailed = new Set<string>();
       let hardWaves = ActivationGraph.computeActivationWaves(graph, ['hard']);
       while (hardWaves === undefined) {
@@ -827,7 +827,7 @@ export class ActivationScheduler {
     preFailed: Set<string>,
     key: string,
   ): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const failed = new Set<string>(preFailed);
       const providersOf = (moduleId: string): string[] => ActivationGraph.requiredProviderIds(graph, moduleId);
       // Singleton providers gate dependents (in this round or a later pass), so under the
@@ -839,7 +839,7 @@ export class ActivationScheduler {
         const ordered = [...wave].sort((a, b) => singletonProvides(b) - singletonProvides(a));
         yield* Effect.all(
           ordered.map((module) =>
-            Effect.gen(this, function* () {
+            Effect.gen({ self: this }, function* () {
               if (providersOf(module.id).some((provider) => failed.has(provider))) {
                 log.warn('skipping module: provider failed', { module: module.id });
                 failed.add(module.id);
@@ -868,7 +868,7 @@ export class ActivationScheduler {
    * completes (not batched per wave), so singleton gating is exactly wave ordering.
    */
   #activateModule(module: Plugin.PluginModule, parentEvent: string): Effect.Effect<void, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (this.#state.getActiveIds().includes(module.id)) {
         return;
       }
@@ -894,7 +894,7 @@ export class ActivationScheduler {
     modules: Plugin.PluginModule[],
     activating?: string,
   ): Effect.Effect<void, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const active = this.#state.getActiveIds();
       const allModules = this.#state.getModules();
       const providerIndex = new Map<string, Plugin.PluginModule>();

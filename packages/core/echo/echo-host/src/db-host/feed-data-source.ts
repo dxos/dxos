@@ -67,7 +67,7 @@ export class FeedDataSource implements IndexDataSource {
 
     // We also add new cursors from all previously unindexed spaces.
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
 

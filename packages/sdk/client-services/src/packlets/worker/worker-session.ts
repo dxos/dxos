@@ -69,7 +69,7 @@ export class WorkerSession {
     'WorkerService.stop': () =>
       // Close on the next tick (forked) so the RPC response is delivered before the transport tears down.
       Effect.forkDetach(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           yield* Effect.callback<void>((resume) => {
             setTimeout(() => resume(Effect.void));
           });
@@ -111,7 +111,7 @@ export class WorkerSession {
   }
 
   open(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('opening...');
       // The tab serves the WebRTC `BridgeService` on the reverse channel; build a client the worker's
       // network stack can proxy through.
@@ -137,7 +137,7 @@ export class WorkerSession {
   }
 
   close(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log.debug('closing...');
       yield* Effect.promise(async () => {
         try {

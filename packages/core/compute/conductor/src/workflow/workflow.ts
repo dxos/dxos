@@ -59,7 +59,7 @@ export class Workflow {
 
     const allAffectedNodes = executor.getAllDependantNodes(inputNodeId);
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const tasks: ComputeResult<ValueBag<any>>[] = allAffectedNodes.map((nodeId) => {
         const executable = this._requireResolved(nodeId);
         const computingOutputs = executable.exec != null;

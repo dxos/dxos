@@ -94,7 +94,7 @@ export class ProcessStore {
 
   /** Returns the IDs of all persisted processes. */
   listProcessIds(): Effect.Effect<readonly Process.ID[]> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const raw = yield* this.#kv.get(INDEX_KEY).pipe(Effect.orDie);
       if (Option.isNone(raw)) {
         return [];
@@ -105,7 +105,7 @@ export class ProcessStore {
 
   /** Returns the persisted record for the given process ID, or `undefined` if not found. */
   getProcess(id: Process.ID): Effect.Effect<PersistedProcess | undefined> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const raw = yield* this.#kv.get(recordKey(id)).pipe(Effect.orDie);
       if (Option.isNone(raw)) {
         return undefined;
@@ -121,7 +121,7 @@ export class ProcessStore {
 
   /** Returns all persisted process records. */
   listProcesses(): Effect.Effect<readonly PersistedProcess[]> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const ids = yield* this.listProcessIds();
       const records = yield* Effect.forEach(ids, (id) => this.getProcess(id));
       return records.filter((record): record is PersistedProcess => record !== undefined);
@@ -131,7 +131,7 @@ export class ProcessStore {
   /** Persists a process record, adding it to the index if it is not already present. */
   putProcess(record: PersistedProcess): Effect.Effect<void> {
     return this.#lock(record.id).withPermits(1)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const encoded = yield* Schema.encode(RecordSchema)(record).pipe(Effect.orDie);
         yield* this.#kv.set(recordKey(record.id), encoded).pipe(Effect.orDie);
         const ids = yield* this.listProcessIds();
@@ -153,7 +153,7 @@ export class ProcessStore {
   }
 
   #purgeProcess(id: Process.ID): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this.#kv.remove(recordKey(id)).pipe(Effect.orDie);
       const ids = yield* this.listProcessIds();
       const nextIndex = yield* Schema.encode(IndexSchema)(ids.filter((value) => value !== id)).pipe(Effect.orDie);
@@ -165,7 +165,7 @@ export class ProcessStore {
 
   #modify(id: Process.ID, fn: (record: PersistedProcess) => PersistedProcess): Effect.Effect<void> {
     return this.#lock(id).withPermits(1)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const record = yield* this.getProcess(id);
         if (!record) {
           return;
@@ -189,7 +189,7 @@ export class ProcessStore {
 
   /** Appends an event to the process event journal and returns the assigned sequence number. */
   appendEvent(id: Process.ID, event: PersistedEventInput): Effect.Effect<number> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const seq = (this.#seq.get(id) ?? 0) + 1;
       this.#seq.set(id, seq);
       yield* this.#modify(id, (record) => ({

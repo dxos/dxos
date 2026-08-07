@@ -56,7 +56,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         invariant(query, 'query is required');
         const { spaceId, feedIds } = query;
         return RuntimeProvider.runPromise(this.#runtime)(
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             const result = yield* this.#feedStore.query({
               requestId: crypto.randomUUID(),
               feedNamespace: request.query.feedNamespace || FeedProtocol.WellKnownNamespaces.data,
@@ -93,7 +93,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
           'expected a well-known feed namespace',
         );
         await RuntimeProvider.runPromise(this.#runtime)(
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             const messages = (objects ?? []).map((encoded) => ({
               spaceId: spaceId,
               feedId: feedId!,
@@ -120,7 +120,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
           'expected a well-known feed namespace',
         );
         await RuntimeProvider.runPromise(this.#runtime)(
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             const messages = objectIds!.map((id) => ({
               spaceId: spaceId,
               feedId: feedId!,
@@ -165,11 +165,11 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         : Object.values(FeedProtocol.WellKnownNamespaces);
 
     return RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const namespaceStates = yield* Effect.forEach(
           namespaces,
           (feedNamespace) =>
-            Effect.gen(this, function* () {
+            Effect.gen({ self: this }, function* () {
               const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
                 spaceId,
                 feedNamespace,

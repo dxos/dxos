@@ -275,7 +275,7 @@ export class GraphExecutor {
   }
 
   computeInput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
       const input = node.inputs.find((input) => input.name === prop) ?? failedInvariant();
@@ -336,7 +336,7 @@ export class GraphExecutor {
    * Compute inputs for a node using a pull-based computation.
    */
   computeInputs(nodeId: string): ComputeResult<ValueBag<any>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
       const layer = yield* this._createServiceLayer();
@@ -353,7 +353,7 @@ export class GraphExecutor {
    */
   private _createServiceLayer() {
     // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       return Layer.mergeAll(
         Layer.succeed(AiService.AiService, yield* AiService.AiService),
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
@@ -367,7 +367,7 @@ export class GraphExecutor {
   }
 
   computeOutput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const output = yield* this.computeOutputs(nodeId);
       invariant(ValueBag.isValueBag(output), 'Output must be a value bag');
       if (isNotExecuted(output)) {
@@ -394,7 +394,7 @@ export class GraphExecutor {
    * Compute outputs for a node using a pull-based computation.
    */
   computeOutputs(nodeId: string): ComputeResult<ValueBag<any>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       invariant(this._topology, 'Graph not loaded');
       if (this._computeCache.has(nodeId)) {
         const result = yield* this._computeCache.get(nodeId)!;
@@ -407,7 +407,7 @@ export class GraphExecutor {
 
       const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
 
-      const compute = Effect.gen(this, function* () {
+      const compute = Effect.gen({ self: this }, function* () {
         const inputValues = yield* this.computeInputs(nodeId);
         // TODO(dmaretskyi): Consider resolving the node implementation at the start of the computation.
         const nodeSpec = yield* Effect.promise(() => this._computeNodeResolver(node.graphNode));

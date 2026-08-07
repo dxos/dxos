@@ -85,7 +85,7 @@ class FilesystemManagerImpl implements FilesystemManager {
   }
 
   activateWorkspace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this._directoryWatcher.startWatching(workspace);
       yield* this._mirrorSpaceManager.getOrCreateSpace(workspace).pipe(Effect.asVoid);
       yield* this._markdownDocuments.syncFromDisk(workspace);
@@ -93,14 +93,14 @@ class FilesystemManagerImpl implements FilesystemManager {
   }
 
   deactivateWorkspace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this._directoryWatcher.stopWatching(workspace.id);
       this._markdownDocuments.evictForWorkspace(workspace);
     });
   }
 
   refreshWorkspaceContent(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this._markdownDocuments.evictForWorkspace(workspace);
       const refreshed = yield* refreshWorkspace(workspace);
       if (refreshed) {
@@ -116,7 +116,7 @@ class FilesystemManagerImpl implements FilesystemManager {
   }
 
   persistState(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const state = this._registry.get(this._stateAtom);
       yield* Effect.tryPromise(() => localforage.setItem(STORAGE_KEY, state.workspaces)).pipe(
         Effect.catch((error) => {

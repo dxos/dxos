@@ -271,7 +271,7 @@ export class ComputeGraphController extends Resource {
 
     EffectEx.unwrapExit(
       await this._computeRuntime.runPromiseExit(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           const scope = yield* Scope.make();
 
           // TODO(dmaretskyi): Code duplication.
@@ -334,7 +334,7 @@ export class ComputeGraphController extends Resource {
 
     EffectEx.unwrapExit(
       await this._computeRuntime.runPromiseExit(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           const scope = yield* Scope.make();
 
           // TODO(burdon): Return map?

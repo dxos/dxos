@@ -254,7 +254,7 @@ class CapabilityManagerImpl implements CapabilityManager {
   }
 
   waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const [capability] = this.getAll(interfaceDef);
       if (capability) {
         return capability;

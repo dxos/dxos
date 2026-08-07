@@ -151,7 +151,7 @@ export class FeedSyncer extends Resource {
           serviceId: msg.serviceId,
           payloadByteLength: msg.payload?.value?.byteLength,
         });
-        const handleMessageEffect = Effect.gen(this, function* () {
+        const handleMessageEffect = Effect.gen({ self: this }, function* () {
           const decoded = yield* Effect.try({
             try: () => cborXdecode(msg.payload!.value),
             catch: (error) => new Error(`Failed to decode feed sync message: ${error}`),
@@ -264,11 +264,11 @@ export class FeedSyncer extends Resource {
 
     return this.#runSerialized(() =>
       RuntimeProvider.runPromise(this.#runtime)(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           const namespaceStates = yield* Effect.forEach(
             namespaces,
             (feedNamespace) =>
-              Effect.gen(this, function* () {
+              Effect.gen({ self: this }, function* () {
                 const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
                   spaceId,
                   feedNamespace,
@@ -285,7 +285,7 @@ export class FeedSyncer extends Resource {
                   })
                   .pipe(
                     Effect.catch((cause) =>
-                      Effect.gen(this, function* () {
+                      Effect.gen({ self: this }, function* () {
                         this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
                         return { blocksToPull: 0 };
                       }),
@@ -331,7 +331,7 @@ export class FeedSyncer extends Resource {
 
     await this.#runSerialized(() =>
       RuntimeProvider.runPromise(this.#runtime)(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           let done = false;
           let iterations = 0;
           while (!done) {
@@ -396,7 +396,7 @@ export class FeedSyncer extends Resource {
     ctx: Context,
     message: FeedProtocol.QueryRequest | FeedProtocol.AppendRequest,
   ): Effect.Effect<void, unknown, never> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const encoded = encoder.encode(message);
       const serviceId = this.#getTargetServiceId(message);
       const rpcTag = 'blocks' in message ? 'AppendRequest' : 'QueryRequest';
@@ -455,11 +455,11 @@ export class FeedSyncer extends Resource {
   }
 
   readonly #pollTask = new AsyncTask(async () =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* Effect.forEach(
         this.#spacesToPoll,
         (spaceId) =>
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             let doneForAllNamespaces = true;
             for (const feedNamespace of this.#syncNamespaces) {
               const { done } = yield* this.#syncClient
@@ -470,7 +470,7 @@ export class FeedSyncer extends Resource {
                 })
                 .pipe(
                   Effect.catch((cause) =>
-                    Effect.gen(this, function* () {
+                    Effect.gen({ self: this }, function* () {
                       this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
                       return { done: false };
                     }),
@@ -507,11 +507,11 @@ export class FeedSyncer extends Resource {
   );
 
   readonly #pushTask = new AsyncTask(async () =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* Effect.forEach(
         this.#getSpaceIds(),
         (spaceId) =>
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             let needsMorePush = false;
             let hadPushFailure = false;
             for (const feedNamespace of this.#syncNamespaces) {
@@ -528,7 +528,7 @@ export class FeedSyncer extends Resource {
                     }),
                   ),
                   Effect.catch((cause) =>
-                    Effect.gen(this, function* () {
+                    Effect.gen({ self: this }, function* () {
                       this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
                       hadPushFailure = true;
                       return { done: false };

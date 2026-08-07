@@ -166,7 +166,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   ): Effect.Effect<O, NoHandlerError> => {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const output = yield* this._invokeCore(op, input, options);
 
       // Publish a success event. Failures propagate without an event; in-progress/failure lifecycle is
@@ -198,7 +198,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   private _resolveHandler(
     operation: Operation.Definition<any, any>,
   ): Effect.Effect<Operation.Handler<any, any, NoHandlerError, Operation.Service> | undefined> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const match = yield* this._getHandlers().pipe(
         // Last registration wins so plugins can override earlier handlers (e.g. story testing hooks).
         Effect.map((handlers) => handlers.findLast((reg) => reg.meta.key === operation.meta.key)),
@@ -217,7 +217,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     input: I,
     options?: Operation.InvokeOptions,
   ): Effect.Effect<O, NoHandlerError> => {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const handler = yield* this._resolveHandler(op);
       if (!handler) {
         // TODO(burdon): Only throw in development mode.

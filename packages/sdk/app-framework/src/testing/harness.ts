@@ -203,7 +203,7 @@ class TestHarnessImpl implements TestHarness {
     const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
     const timeout = opts?.timeout ?? DEFAULT_TIMEOUT_MS;
 
-    const program = Effect.gen(this, function* () {
+    const program = Effect.gen({ self: this }, function* () {
       const queue = yield* PubSub.subscribe(this.manager.activation);
       // Re-check after subscribing to avoid a race where the event fires
       // between the caller invoking this and the subscription being installed.

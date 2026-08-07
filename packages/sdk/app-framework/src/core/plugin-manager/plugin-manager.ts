@@ -550,7 +550,7 @@ class ManagerImpl implements PluginManager {
 
   shutdown(): Effect.Effect<boolean, Error> {
     return this._shutdownSemaphore.withPermits(1)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         yield* Ref.set(this._state.shuttingDown, true);
         log('shutdown');
 

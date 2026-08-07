@@ -357,7 +357,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   }
 
   start = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (this._running) {
         return;
       }
@@ -398,7 +398,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }).pipe(Effect.provide(this._services));
 
   stop = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (!this._running) {
         return;
       }
@@ -426,7 +426,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }).pipe(Effect.provide(this._services));
 
   invokeTrigger = (options: InvokeTriggerOptions): Effect.Effect<TriggerExecutionResult> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const { trigger, event } = options;
       log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
@@ -450,7 +450,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Sandboxed section. The global concurrency limiter wraps the actual op invocation so that
       // the total number of concurrent invocations across all triggers/kinds never exceeds
       // `_maxConcurrency`, on top of any per-trigger concurrency enforced at the call sites.
-      const result = yield* Effect.gen(this, function* () {
+      const result = yield* Effect.gen({ self: this }, function* () {
         if (!trigger.enabled) {
           return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
         }
@@ -557,7 +557,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   invokeScheduledTriggers = ({ kinds = ['timer', 'feed', 'subscription'], untilExhausted = false } = {}): Effect.Effect<
     TriggerExecutionResult[]
   > =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* this.refreshTriggers();
       const invocations: TriggerExecutionResult[] = [];
       for (const kind of kinds) {
@@ -778,7 +778,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * concurrency limit (enforced within {@link invokeTrigger}) and are processed FIFO.
    */
   private _drainRetries = ({ untilExhausted }: { untilExhausted: boolean }): Effect.Effect<TriggerExecutionResult[]> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const invocations: TriggerExecutionResult[] = [];
       while (true) {
         const pending: { trigger: Trigger.Trigger; enqueuedAt: number; event: TriggerEvent.TriggerEvent }[] = [];
@@ -821,7 +821,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     });
 
   advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (this.timeControl !== 'manual') {
         return yield* Effect.dieMessage('advanceTime can only be used in manual time control mode');
       }
@@ -844,7 +844,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   };
 
   refreshTriggers = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const triggers = yield* this._fetchTriggers();
       this._triggers = triggers;
       const currentTriggerIds = new Set(triggers.map((t) => t.id));
@@ -907,7 +907,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       .pipe(Effect.provide(this._services));
 
   private _fetchTriggers = () =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const objects = yield* Database.query(
         Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.fetchTriggers'),
       ).run;
@@ -916,7 +916,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
   private _startNaturalTimeProcessing = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 

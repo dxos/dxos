@@ -488,20 +488,20 @@ class ToolCallManager {
   }
 
   load() {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this.#state = yield* ToolCallStateCell.get;
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
   beginCall(pid: Process.ID) {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this.#state.activeCalls.push({ pid, reported: false });
       yield* ToolCallStateCell.set(this.#state);
     }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 
   markAsReported(pid: Process.ID) {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const call = this.#state.activeCalls.find((call) => call.pid === pid);
       if (!call) {
         return;
@@ -529,7 +529,7 @@ class ToolCallManager {
    * After reload the in-flight createRequest is gone, so those results must be redelivered via onAlarm.
    */
   reconcileWithInputQueue(queue: readonly AgentEvent[]) {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       let changed = false;
       for (const item of queue) {
         if (item._tag !== 'tool_result') {
@@ -651,7 +651,7 @@ export class AlarmManager {
 
   /** Restores the persisted alarm state. */
   load(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const persisted = yield* AgentAlarmCell.get;
       this.#wakeAt = persisted?.wakeAt ?? null;
       this.#message = persisted?.message ?? null;
@@ -660,7 +660,7 @@ export class AlarmManager {
 
   /** Records a new self-wake target (with an optional reminder message) and persists it. */
   setWakeAt(wakeAt: number, message: string | null = null): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this.#wakeAt = wakeAt;
       this.#message = message;
       yield* AgentAlarmCell.set({ wakeAt, message });
@@ -672,7 +672,7 @@ export class AlarmManager {
    * reminder message it carried (or `null` if no alarm was due).
    */
   takeFiredAlarm(): Effect.Effect<{ firedAt: number; message: string | null } | null> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (this.#wakeAt == null || this.#now() < this.#wakeAt) {
         return null;
       }

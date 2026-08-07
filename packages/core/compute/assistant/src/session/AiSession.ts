@@ -141,7 +141,7 @@ export class Session extends Resource {
     never,
     ToolExecutionService | ToolResolverService
   > {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const toolkit = yield* createToolkit({ skills: this.context.getSkills() });
       return toolkit.toolkit.tools;
     }).pipe(Effect.orDie);
@@ -175,7 +175,7 @@ export class Session extends Resource {
     const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
 
     return Runtime.runPromise(this._runtime)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
         if (rewindFrom !== undefined) {
           Obj.update(this._feed, (feed) => {
@@ -199,7 +199,7 @@ export class Session extends Resource {
   public createRequest<R = never>(
     params: RunProps<R>,
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();

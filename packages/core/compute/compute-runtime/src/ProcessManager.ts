@@ -378,7 +378,7 @@ export class ProcessManagerImpl implements Manager {
       processTreeAtom: this.#processTreeAtom,
       subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
         Stream.unwrapScoped(
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message>(), (queue) =>
               Effect.sync(() => {
                 const index = this.#traceSubscribers.indexOf(queue);
@@ -423,7 +423,7 @@ export class ProcessManagerImpl implements Manager {
   }
 
   #terminateChildren(parentPid: Process.ID): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const children = [...this.#handles.values()].filter(
         (handle) => handle.parentId === parentPid && ProcessManagerImpl.#isNonTerminal(handle),
       );
@@ -453,7 +453,7 @@ export class ProcessManagerImpl implements Manager {
    */
   shutdown(): Effect.Effect<void> {
     return this.#lifecycleSemaphore.withPermits(1)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         if (this.#shutDown) {
           log('lifecycle: manager shutdown skipped (already shut down)');
           return;
@@ -491,7 +491,7 @@ export class ProcessManagerImpl implements Manager {
     definition: Process.Process<I, O, any, _Rpcs>,
     options?: SpawnOptions,
   ): Effect.Effect<Handle<I, O, _Rpcs>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const clock = yield* Effect.clock;
       const id = this.#idGenerator();
@@ -616,7 +616,7 @@ export class ProcessManagerImpl implements Manager {
       const callbacks = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           log('lifecycle: ended', { pid: handle.pid, state });
           if (handle.parentId !== null) {
             const parentHandle = this.#handles.get(handle.parentId);
@@ -722,7 +722,7 @@ export class ProcessManagerImpl implements Manager {
     record: PersistedProcess,
     definition: Process.Process<any, any, any, any>,
   ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const clock = yield* Effect.clock;
       const id = record.id;
@@ -825,7 +825,7 @@ export class ProcessManagerImpl implements Manager {
       const callbacks = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           log('lifecycle: ended', { pid: handle.pid, state });
           if (handle.parentId !== null) {
             const parentHandle = this.#handles.get(handle.parentId);
@@ -907,7 +907,7 @@ export class ProcessManagerImpl implements Manager {
     id: Process.ID,
     definition: Process.Process<I, O, any, any>,
   ): Effect.Effect<Handle<I, O, Rpcs>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const existing = this.#handles.get(id);
       if (existing) {
         log('lifecycle: hydrate skipped (already live)', { pid: id });
@@ -941,7 +941,7 @@ export class ProcessManagerImpl implements Manager {
   }
 
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const handle = this.#handles.get(id);
       if (!handle) {
         log('lifecycle: attach failed (not found)', { pid: id });
@@ -953,7 +953,7 @@ export class ProcessManagerImpl implements Manager {
   }
 
   list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const results: Handle.Any[] = [];
       const seenIds = new Set<Process.ID>();
 
@@ -1012,7 +1012,7 @@ export class ProcessManagerImpl implements Manager {
   }
 
   runAllProcessesToCompletion(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const handles = [...this.#handles.values()];
       log('lifecycle: await all processes', { count: handles.length });
       yield* Effect.forEach(handles, (handle) => handle.runToCompletion(), {

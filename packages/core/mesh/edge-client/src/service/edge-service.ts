@@ -88,7 +88,7 @@ export class EdgeServiceClient {
   }
 
   #request<A>(path: string, schema: Schema.Schema<A>, init: RequestInit): Effect.Effect<A, EdgeServiceError> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const url = new URL(path, this.#baseUrl);
       const headers = new Headers(init.headers ?? undefined);
       if (this.#clientTag) {

@@ -130,7 +130,7 @@ export class PluginCatalog {
    * @param id The id of the plugin.
    */
   add(id: string): Effect.Effect<Plugin.Plugin, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('add plugin', { id });
       const { plugin, dev = false } = yield* this.#options.pluginLoader(id);
       const pluginId = plugin.meta.profile.key;
@@ -168,7 +168,7 @@ export class PluginCatalog {
    */
   enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error, Plugin.Service> {
     const resolveDependencies = opts?.resolveDependencies !== false;
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('enable plugin', { id, resolveDependencies });
 
       if (!resolveDependencies) {
@@ -274,7 +274,7 @@ export class PluginCatalog {
    * state but still needs to perform the module registration and activation.
    */
   #enableOne(id: string): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const stub = this.#state.getPlugin(id);
       if (!stub) {
         return false;
@@ -363,7 +363,7 @@ export class PluginCatalog {
    * subscriber and a retry can be attempted.
    */
   #resolveLazy(plugin: Plugin.Plugin): Effect.Effect<Plugin.Plugin, Plugin.LazyPluginError> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (!Plugin.isLazy(plugin)) {
         return plugin;
       }
@@ -376,7 +376,7 @@ export class PluginCatalog {
       const deferred = yield* Deferred.make<Plugin.Plugin, Plugin.LazyPluginError>();
       this.#resolving.set(id, deferred);
 
-      return yield* Effect.gen(this, function* () {
+      return yield* Effect.gen({ self: this }, function* () {
         log('resolving lazy plugin', { id });
         yield* PubSub.publish(this.#state.activation, { event: '', state: 'activating', module: `lazy:${id}` });
         // The plugin-definition chunk import is startup work that predates any module
@@ -403,7 +403,7 @@ export class PluginCatalog {
         return resolvedPlugin;
       }).pipe(
         Effect.tapError((error) =>
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             yield* PubSub.publish(this.#state.activation, { event: '', state: 'error', module: `lazy:${id}`, error });
             this.#state.recordFailure(id, 'load', error);
             this.scheduleAutoDisable(id);
@@ -422,7 +422,7 @@ export class PluginCatalog {
    * @param opts See {@link PluginManager.remove}.
    */
   remove(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('remove plugin', { id });
       const wasDev = this.#devPlugins.has(id);
       const disabled = yield* this.disable(id, opts);
@@ -464,7 +464,7 @@ export class PluginCatalog {
    * @param opts See {@link PluginManager.disable}.
    */
   disable(id: string, { cascade = true }: { cascade?: boolean } = {}): Effect.Effect<boolean, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('disable plugin', { id, cascade });
       if (this.#state.isCore(id)) {
         return false;
@@ -506,7 +506,7 @@ export class PluginCatalog {
    * `cascade: false`).
    */
   #disableOne(id: string): Effect.Effect<boolean, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (this.#state.isCore(id)) {
         return false;
       }

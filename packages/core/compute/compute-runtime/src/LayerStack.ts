@@ -67,7 +67,7 @@ export class LayerStack {
     tag: Context.Key<any, any>,
     context: LayerSpec.LayerContext,
   ): Effect.Effect<unknown, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Initialise slices top-down (dependencies first) so that higher-affinity slices
       // can use the services provided by lower-affinity ones.
       yield* this.#getOrInitSlice('application', contextForAffinity('application', context));
@@ -102,7 +102,7 @@ export class LayerStack {
     affinity: LayerSpec.Affinity,
     context: LayerSpec.LayerContext,
   ): Effect.Effect<Slice, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       let slice = this.#slices.find((s) => s.affinity === affinity && layerContextEquals(s.context, context));
 
       if (!slice) {
@@ -148,7 +148,7 @@ export class LayerStack {
 
       slice.incrementRefCount();
       yield* Effect.addFinalizer(() =>
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           slice.decrementRefCount();
           yield* this.#maybeDestroySlice(slice);
         }),
@@ -195,7 +195,7 @@ export class LayerStack {
     context: LayerSpec.LayerContext,
     tags: Context.Key<any, any>[],
   ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       let currentAffinity: LayerSpec.Affinity | undefined = affinity;
       while (currentAffinity) {
         const affinityContext = contextForAffinity(currentAffinity, context);
@@ -214,7 +214,7 @@ export class LayerStack {
   }
 
   #maybeDestroySlice(slice: Slice) {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (slice.refCount === 0 && !slice.keepAlive) {
         const index = this.#slices.indexOf(slice);
         if (index !== -1) {
@@ -613,7 +613,7 @@ class Slice {
   }
 
   #materializeLayers(newLayers: LayerSpec.LayerSpec[]): Effect.Effect<void, ServiceNotAvailableError> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const baseLayer: Layer.Layer<unknown, unknown, unknown> = Layer.syncContext(() => this.#services) as any;
       const combinedLayer = newLayers.reduce<Layer.Layer<unknown, unknown, unknown>>(
         (acc, spec) => Layer.provideMerge(spec.make(this.#context) as Layer.Layer<unknown, unknown, unknown>, acc),
@@ -622,7 +622,7 @@ class Slice {
 
       const runtime = ManagedRuntime.make(combinedLayer as Layer.Layer<unknown, unknown, never>);
 
-      const exit = yield* Effect.gen(this, function* () {
+      const exit = yield* Effect.gen({ self: this }, function* () {
         const rt = yield* runtime.runtimeEffect;
         const providedTags = newLayers.flatMap((layer) => layer.provides);
         const materialized = yield* Effect.context().pipe(

@@ -125,7 +125,7 @@ export class IndexEngine {
   }
 
   migrate() {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this.#tracker.migrate();
       yield* this.#objectMetaIndex.migrate();
       yield* this.#ftsIndex.migrate();
@@ -137,7 +137,7 @@ export class IndexEngine {
    * Query text index and return full object metadata with rank.
    */
   queryText(query: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       return yield* this.#ftsIndex.query(query);
     });
   }
@@ -230,7 +230,7 @@ export class IndexEngine {
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
   ): Effect.Effect<IndexingResult, SqlError.SqlError, SqlTransaction.SqlTransaction | SqlClient.SqlClient> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const result = makeEmptyIndexingResult();
 
       const {
@@ -282,7 +282,7 @@ export class IndexEngine {
     SqlError.SqlError,
     SqlTransaction.SqlTransaction | SqlClient.SqlClient
   > {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const sqlTransaction = yield* SqlTransaction.SqlTransaction;
 
       // Reads run OUTSIDE the transaction: getChangedObjects may call RuntimeProvider.runPromise
@@ -303,7 +303,7 @@ export class IndexEngine {
 
       // Writes run INSIDE the transaction for atomicity.
       return yield* sqlTransaction.withTransaction(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           // Ensure objects exist in EntityMetaIndex.
           yield* this.#objectMetaIndex.update(objects);
 
