@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { CapabilityManager } from '@dxos/app-framework';

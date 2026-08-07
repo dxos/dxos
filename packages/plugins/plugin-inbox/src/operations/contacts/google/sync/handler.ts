@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';

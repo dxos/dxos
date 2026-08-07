@@ -6,10 +6,6 @@
 
 // @import-as-namespace
 
-import * as HttpBody from '@effect/platform/HttpBody';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -18,6 +14,10 @@ import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as HttpBody from 'effect/unstable/http/HttpBody';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';

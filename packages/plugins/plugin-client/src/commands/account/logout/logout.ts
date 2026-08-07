@@ -5,10 +5,10 @@
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Prompt from '@effect/cli/Prompt';
-import * as Error from '@effect/platform/Error';
-import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
+import * as Error from 'effect/PlatformError';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';

@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
-import type * as HttpClientError from '@effect/platform/HttpClientError';
-import type * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
+import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import type * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { log } from '@dxos/log';
 

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { Jmap, JmapMail } from '../apis';
 import { JmapApiError } from '../errors';

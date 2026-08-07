@@ -3,12 +3,12 @@
 //
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { log } from '@dxos/log';
 

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type { Client } from '@dxos/client';

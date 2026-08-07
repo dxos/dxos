@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import * as ts from 'typescript';
 

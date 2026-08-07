@@ -3,10 +3,10 @@
 //
 
 import * as Command from '@effect/cli/Command';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
+import * as Path from 'effect/Path';
 import * as Yaml from 'yaml';
 
 import { CommandConfig, printList } from '@dxos/cli-util';

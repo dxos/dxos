@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { describe, test } from 'vitest';
 
 import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';

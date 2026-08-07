@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
 

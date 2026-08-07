@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import type * as Config from 'effect/Config';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import * as Credential from '@dxos/compute/Credential';
 import { Database, Query } from '@dxos/echo';

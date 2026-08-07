@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Headers from '@effect/platform/Headers';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as Headers from 'effect/unstable/http/Headers';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';

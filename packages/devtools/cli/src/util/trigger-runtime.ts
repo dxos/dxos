@@ -3,14 +3,14 @@
 //
 
 import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
-import type * as PlatformError from '@effect/platform/Error';
-import * as FileSystem from '@effect/platform/FileSystem';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import type * as ConfigError from 'effect/Config';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
+import type * as PlatformError from 'effect/PlatformError';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';

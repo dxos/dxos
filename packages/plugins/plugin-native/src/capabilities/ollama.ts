@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import { Command } from '@tauri-apps/plugin-shell';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
@@ -16,6 +14,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 import { Atom } from 'effect/unstable/reactivity';
 
 import { type AiModelResolver, Provider } from '@dxos/ai';

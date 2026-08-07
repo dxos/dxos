@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { DiscordConfig, type DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { Database, Err, type Ref } from '@dxos/echo';
 import * as Connection from '@dxos/plugin-connector/Connection';

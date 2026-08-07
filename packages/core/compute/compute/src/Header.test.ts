@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';

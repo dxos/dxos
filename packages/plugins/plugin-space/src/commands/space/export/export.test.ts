@@ -3,9 +3,9 @@
 //
 
 import * as NodeContext from '@effect/platform-node/NodeContext';
-import * as FileSystem from '@effect/platform/FileSystem';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { useCallback, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';

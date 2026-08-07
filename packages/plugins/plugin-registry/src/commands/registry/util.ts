@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import type * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import type * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';

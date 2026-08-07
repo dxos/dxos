@@ -7,10 +7,10 @@ import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageM
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { DXN } from '@dxos/keys';
 

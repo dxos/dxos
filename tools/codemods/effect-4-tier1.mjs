@@ -62,6 +62,24 @@ const MODULES = {
   '@effect/rpc': 'effect/unstable/rpc',
   // ConfigError folded into Config.
   'effect/ConfigError': 'effect/Config',
+  // @effect/platform was absorbed: HTTP under effect/unstable/http, the rest promoted to
+  // top-level modules. `Error` became PlatformError. KeyValueStore and Command have no v4
+  // equivalent yet and are deliberately absent -- they need a decision, not a rename.
+  '@effect/platform/FetchHttpClient': 'effect/unstable/http/FetchHttpClient',
+  '@effect/platform/Headers': 'effect/unstable/http/Headers',
+  '@effect/platform/HttpBody': 'effect/unstable/http/HttpBody',
+  '@effect/platform/HttpClientError': 'effect/unstable/http/HttpClientError',
+  '@effect/platform/HttpClientRequest': 'effect/unstable/http/HttpClientRequest',
+  '@effect/platform/HttpClientResponse': 'effect/unstable/http/HttpClientResponse',
+  '@effect/platform/HttpClient': 'effect/unstable/http/HttpClient',
+  '@effect/platform/HttpRouter': 'effect/unstable/http/HttpRouter',
+  '@effect/platform/HttpServerRequest': 'effect/unstable/http/HttpServerRequest',
+  '@effect/platform/HttpServerResponse': 'effect/unstable/http/HttpServerResponse',
+  '@effect/platform/HttpServer': 'effect/unstable/http/HttpServer',
+  '@effect/platform/FileSystem': 'effect/FileSystem',
+  '@effect/platform/Path': 'effect/Path',
+  '@effect/platform/Terminal': 'effect/Terminal',
+  '@effect/platform/Error': 'effect/PlatformError',
 };
 
 /** Namespace-qualified member renames, applied only to the matching namespace. */
@@ -98,6 +116,9 @@ const MEMBERS = {
   },
   Scope: {
     extend: 'provide',
+  },
+  RpcMiddleware: {
+    Tag: 'Service',
   },
   Cause: {
     isInterruptedOnly: 'hasInterruptsOnly',

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { JmapApiError } from '../../errors';
