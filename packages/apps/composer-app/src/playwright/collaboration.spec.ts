@@ -21,8 +21,14 @@ const navigateToNewDocument = async (app: AppManager) => {
   await app.navigateToObject(0); // New document.
 };
 
-// TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
-//   https://github.com/microsoft/playwright/issues/2973
+// TODO(wittjosiah): The chromium-only gate below is NOT the playwright#2973 WebRTC limitation it
+//   used to cite. todomvc's two-peer replication suite passes on both other browsers locally —
+//   8 tests x3 on webkit, x2 on firefox, all green — using this same `ShellManager`, so peer
+//   connections work there. Measured on webkit with the gate lifted and the budget raised to 180s
+//   (60s expires during setup, since host and guest each boot composer): both tests get past setup
+//   and then fail at one point, the guest's `space-auth-code-input` staying disabled because the
+//   invitation never leaves `connectingSpaceInvitation`. So what to fix is composer's invitation
+//   connect step on non-chromium, and the gate can come off once that lands.
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
