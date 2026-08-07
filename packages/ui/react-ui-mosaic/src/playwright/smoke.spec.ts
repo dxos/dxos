@@ -31,10 +31,7 @@ test.describe('Board', () => {
     await page.close();
   });
 
-  // TODO(wittjosiah): Failed on webkit in run 31107630885 — and unlike the timeout-shaped failures
-  //   elsewhere this one is a wrong result: the drag ran and the assertion read "Column 2" where
-  //   "Column 0" was expected, so the reorder itself landed in the wrong place. Passes on chromium.
-  test.fixme('rearrange columns', async () => {
+  test('rearrange columns', async () => {
     const col0Label = await board.column(0).title().textContent();
     const col1Label = await board.column(1).title().textContent();
 
@@ -45,8 +42,7 @@ test.describe('Board', () => {
     await expect(board.column(1).title()).toHaveText(col0Label!);
   });
 
-  // TODO(wittjosiah): Failed on firefox in run 31046879125 (quarantined in Trunk). Re-enable once fixed.
-  test.fixme('rearrange within column', async () => {
+  test('rearrange within column', async () => {
     // Pick whichever column has more items for a reliable test.
     const col0Count = await board.column(0).items().count();
     const col1Count = await board.column(1).items().count();

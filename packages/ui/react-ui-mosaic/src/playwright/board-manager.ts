@@ -61,7 +61,7 @@ export class ColumnManager {
     const handle = this.header().getByTestId('mosaicBoard.columnDragHandle');
     const handleBox = await handle.boundingBox();
     if (!handleBox) {
-      return;
+      throw new Error('column drag handle has no bounding box — the drag never started');
     }
 
     await handle.hover();
@@ -74,12 +74,15 @@ export class ColumnManager {
     // (the dragged column is removed from visible items, shifting remaining columns).
     await this._page.waitForTimeout(200);
     const box = await target.boundingBox();
-    if (box) {
-      await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
-      // Allow the drop target to process the hover before releasing.
-      await this._page.waitForTimeout(100);
+    if (!box) {
+      // Releasing here would leave the button down and corrupt the next gesture.
       await this._page.mouse.up();
+      throw new Error('column drop target has no bounding box — nothing to drop onto');
     }
+    await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
+    // Allow the drop target to process the hover before releasing.
+    await this._page.waitForTimeout(100);
+    await this._page.mouse.up();
   }
 }
 
@@ -98,7 +101,7 @@ export class ItemManager {
     const handle = this.locator.getByTestId('mosaicBoard.cardDragHandle');
     const handleBox = await handle.boundingBox();
     if (!handleBox) {
-      return;
+      throw new Error('card drag handle has no bounding box — the drag never started');
     }
 
     // Capture stable ElementHandles to source and target before the drag
@@ -108,7 +111,7 @@ export class ItemManager {
     const targetHandle = await target.elementHandle();
     const box = targetHandle ? await targetHandle.boundingBox() : null;
     if (!targetHandle || !box) {
-      return;
+      throw new Error('drop target has no bounding box — nothing to drop onto');
     }
     const sourceHandle = await this.locator.elementHandle();
 
@@ -150,9 +153,17 @@ export class ItemManager {
       // both change once the source is filtered out — measure after the
       // reflow, never before.
       const placeholderHandle = await this._adjacentPlaceholder(targetHandle, edge);
-      if (placeholderHandle) {
+      if (!placeholderHandle) {
+        await this._page.mouse.up();
+        throw new Error(`no ${edge} placeholder adjacent to the drop target — the drop would land unaimed`);
+      }
+      {
         const phBox = await placeholderHandle.boundingBox();
-        if (phBox) {
+        if (!phBox) {
+          await this._page.mouse.up();
+          throw new Error(`${edge} placeholder has no bounding box — the drop would land unaimed`);
+        }
+        {
           const aimX = phBox.x + phBox.width / 2;
           const aimY = phBox.y + Math.max(phBox.height / 2, 1);
           await this._page.mouse.move(aimX, aimY, { steps: 4 });
@@ -244,7 +255,7 @@ export class ItemManager {
     const handle = this.locator.getByTestId('mosaicBoard.cardDragHandle');
     const holdBox = await holdTarget.boundingBox();
     if (!holdBox) {
-      return;
+      throw new Error('auto-scroll hold target has no bounding box — the drag never started');
     }
 
     // The hold position is ~20px above the footer to trigger pragmatic auto-scroll.
@@ -266,14 +277,14 @@ export class ItemManager {
       // Target is already visible — drag directly without auto-scroll.
       await this._page.mouse.move(holdX, holdY, { steps: 4 });
       const dropBox = await dropTarget.boundingBox();
-      if (dropBox) {
-        const dropX = dropOffset.x + dropBox.x + dropBox.width / 2;
-        const dropY = dropOffset.y + dropBox.y + dropBox.height / 2;
-        await this._page.mouse.move(dropX, dropY, { steps: 8 });
-        await this._page.waitForTimeout(200);
+      if (!dropBox) {
         await this._page.mouse.up();
-        return;
+        throw new Error('drop target vanished after the drag started — nothing to drop onto');
       }
+      const dropX = dropOffset.x + dropBox.x + dropBox.width / 2;
+      const dropY = dropOffset.y + dropBox.y + dropBox.height / 2;
+      await this._page.mouse.move(dropX, dropY, { steps: 8 });
+      await this._page.waitForTimeout(200);
       await this._page.mouse.up();
       return;
     }
@@ -294,7 +305,7 @@ export class ItemManager {
         const finalBox = await dropTarget.boundingBox();
         if (!finalBox) {
           await this._page.mouse.up();
-          return;
+          throw new Error('drop target vanished after scrolling into view — nothing to drop onto');
         }
 
         const dropX = dropOffset.x + finalBox.x + finalBox.width / 2;
@@ -308,7 +319,10 @@ export class ItemManager {
       }
     }
 
-    // Fallback: drop wherever we are.
+    // Auto-scroll never brought the target into view. Releasing here drops the card at whatever
+    // position the cursor happens to hold, which is how this helper used to report a successful drag
+    // that moved nothing (or moved the wrong way) — the shape behind runs 31107630885 and 31151115830.
     await this._page.mouse.up();
+    throw new Error('auto-scroll did not bring the drop target into view within 40 nudges');
   }
 }
