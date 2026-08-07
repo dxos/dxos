@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { type MutableRefObject, type RefObject } from 'react';
 
 export type ColumnSettingsMode = { type: 'create' } | { type: 'edit'; fieldId: string };
@@ -15,11 +15,11 @@ export type ModalState =
   | { type: 'closed' };
 
 export class ModalController {
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
   private readonly _state: Atom.Writable<ModalState>;
   private readonly _triggerRef: MutableRefObject<HTMLElement> = { current: null as unknown as HTMLElement };
 
-  constructor(registry: Registry.Registry) {
+  constructor(registry: Registry.AtomRegistry) {
     this._registry = registry;
     this._state = Atom.make<ModalState>({ type: 'closed' });
   }

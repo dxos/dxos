@@ -3,14 +3,14 @@
 //
 
 import * as Option from 'effect/Option';
-import { Registry } from 'effect/unstable/reactivity';
+import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import * as Graph from '../graph';
 import * as GraphBuilder from '../graph-builder';
 import * as Node from '../node';
 
 export type SetupGraphBuilderOptions = {
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   extensions?: GraphBuilder.BuilderExtensions;
 };
 

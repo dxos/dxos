@@ -10,7 +10,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import type * as Scope from 'effect/Scope';
-import { Atom, Registry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { type Client, ClientService } from '@dxos/client';
 import { RemoteTriggerManager } from '@dxos/compute-runtime';
@@ -65,7 +65,7 @@ const toExit = (result: EdgeTriggerStatus['lastResult']): Exit.Exit<unknown> | n
 const make = (
   getEdgeClient: () => EdgeClient,
   spaceId: SpaceId,
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ): Effect.Effect<RemoteTriggerManager.Manager, never, Scope.Scope> =>
   Effect.gen(function* () {
     const triggers = Atom.make<readonly Trigger.State[]>([]);

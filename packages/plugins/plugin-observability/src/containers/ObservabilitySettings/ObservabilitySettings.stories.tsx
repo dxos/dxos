@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Atom } from 'effect/unstable/reactivity';
 import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';

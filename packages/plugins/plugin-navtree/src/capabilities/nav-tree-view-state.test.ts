@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from 'effect/unstable/reactivity';
+import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { describe, test } from 'vitest';
 
 import { LocalBackend, MemoryBackend, ViewState } from '@dxos/react-ui-attention';
@@ -24,7 +24,7 @@ const fakeStorage = (): Storage => {
   } as Storage;
 };
 
-const makeManager = (registry: Registry.Registry, storage: Storage) =>
+const makeManager = (registry: Registry.AtomRegistry, storage: Storage) =>
   new ViewState.Manager({
     registry,
     backends: { memory: new MemoryBackend(), local: new LocalBackend({ registry, storage }) },

@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect/atom-react';
+import { useAtomValue } from '@effect/atom-react';
 import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
+import { Atom } from 'effect/unstable/reactivity';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';

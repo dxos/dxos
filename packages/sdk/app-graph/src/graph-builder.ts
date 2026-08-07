@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
-import { Atom, Registry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Type } from '@dxos/echo';
@@ -231,7 +231,7 @@ const stampUrlSegment = (
 
 export type GraphBuilderTraverseOptions = {
   visitor: (node: Node.Node, path: string[]) => MaybePromise<boolean | void>;
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   source?: string;
   relation: Node.RelationInput | Node.RelationInput[];
 };
@@ -313,7 +313,7 @@ class GraphBuilderImpl implements GraphBuilder {
   /** The URL grammar (see {@link UrlGrammar}); the keys are absent when URLs are not in play. */
   readonly urlGrammar: UrlGrammar;
   /** Shared atom registry for reactive subscriptions. */
-  readonly _registry: Registry.Registry;
+  readonly _registry: Registry.AtomRegistry;
   /** Backing graph with internal accessors for node atoms and construction. */
   readonly _graph: Graph.Graph & {
     _node: (id: string) => Atom.Writable<Option.Option<Node.Node>>;
@@ -583,7 +583,7 @@ export const make = (params?: GraphBuilderProps): GraphBuilder => {
 /**
  * Creates a GraphBuilder from a serialized pickle string.
  */
-export const from = (pickle?: string, registry?: Registry.Registry, urlGrammar?: UrlGrammarProps): GraphBuilder => {
+export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGrammar?: UrlGrammarProps): GraphBuilder => {
   if (!pickle) {
     return make({ registry, urlGrammar });
   }

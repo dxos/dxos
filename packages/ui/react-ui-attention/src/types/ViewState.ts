@@ -3,7 +3,7 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import { type Atom, type Registry } from 'effect/unstable/reactivity';
+import { type Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 /**
  * Persistence backend identifier. `personal` (ECHO/personal-space) is reserved for a future backend.
@@ -54,7 +54,7 @@ export interface Backend {
 }
 
 export interface ManagerOptions {
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
   readonly backends: Record<BackendName, Backend>;
 }
 
@@ -63,7 +63,7 @@ export interface ManagerOptions {
  * effect-atom registry so React hooks and graph atoms observe changes uniformly.
  */
 export class Manager {
-  readonly #registry: Registry.Registry;
+  readonly #registry: Registry.AtomRegistry;
   readonly #backends: Record<BackendName, Backend>;
 
   constructor({ registry, backends }: ManagerOptions) {

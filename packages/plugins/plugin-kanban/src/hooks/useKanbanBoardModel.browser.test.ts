@@ -4,7 +4,7 @@
 
 import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
-import { Atom, Registry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { beforeEach, describe, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
@@ -42,7 +42,7 @@ const KanbanTaskSchema = Type.makeObject(DXN.make('com.example.type.kanbanTask',
 type KanbanTask = Type.InstanceType<typeof KanbanTaskSchema>;
 
 describe('useKanbanBoardModel', () => {
-  let registry: Registry.Registry;
+  let registry: Registry.AtomRegistry;
   let view: View.View;
   let kanban: Kanban.Kanban;
   let projection: ProjectionModel;

@@ -3,8 +3,8 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { type Atom } from '@effect/atom-react';
 import { createContext } from '@radix-ui/react-context';
+import { type Atom } from 'effect/unstable/reactivity';
 
 import { type XmlWidgetState } from '@dxos/ui-editor';
 

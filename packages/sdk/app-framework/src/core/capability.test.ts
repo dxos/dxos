@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect/atom-react';
 import { describe, expect, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';

@@ -85,7 +85,7 @@ export class Manager {
   readonly plugins: Atom.Writable<PluginsState>;
   readonly #provider: PluginProvider;
 
-  constructor(provider: PluginProvider | undefined, atomRegistry: AtomRegistry.Registry) {
+  constructor(provider: PluginProvider | undefined, atomRegistry: AtomRegistry.AtomRegistry) {
     this.#provider = provider ?? NULL_PROVIDER;
     const initialLoading = provider !== undefined;
     this.plugins = Atom.make<PluginsState>({ entries: [], loading: initialLoading, error: null }).pipe(Atom.keepAlive);

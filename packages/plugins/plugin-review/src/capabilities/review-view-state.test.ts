@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from 'effect/unstable/reactivity';
+import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { describe, test } from 'vitest';
 
 import { ViewState, createDefaultBackends } from '@dxos/react-ui-attention';

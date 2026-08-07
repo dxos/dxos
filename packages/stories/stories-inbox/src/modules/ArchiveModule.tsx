@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect/atom-react';
+import { useAtomValue } from '@effect/atom-react';
+import { Atom } from 'effect/unstable/reactivity';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';

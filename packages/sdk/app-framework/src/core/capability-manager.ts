@@ -4,7 +4,7 @@
 
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -67,7 +67,7 @@ export const expandContributions = (
  * @internal
  */
 export type CapabilityManagerOptions = {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
 };
 
 /**
@@ -136,7 +136,7 @@ export interface CapabilityManager {
  * Internal implementation of CapabilityManager.
  */
 class CapabilityManagerImpl implements CapabilityManager {
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
 
   private readonly _registeredIdentifiers = new Set<string>();
 

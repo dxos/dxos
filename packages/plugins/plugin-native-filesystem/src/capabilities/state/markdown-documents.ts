@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -104,7 +104,7 @@ export type MarkdownDocuments = {
  *     workspace's files (called on close or before refresh).
  */
 export const createMarkdownDocuments = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>,
   getSpaceForWorkspace: (workspaceId: string) => Option.Option<Space>,
   client: Client,

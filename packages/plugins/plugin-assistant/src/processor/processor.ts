@@ -71,8 +71,8 @@ export type AiChatProcessorOptions = {
   // pair — the catalog's shared model ids are ambiguous without it.
   provider?: DXN.DXN;
   modelRegistry?: Model.Registry;
-  registry?: Registry.Registry;
-  observableRegistry?: AtomRegistry.Registry;
+  registry?: Registry.AtomRegistry;
+  observableRegistry?: AtomRegistry.AtomRegistry;
   /**
    * For tracing.
    */
@@ -168,7 +168,7 @@ export const parseError = (err: unknown): Error => {
  * Uses AgentService to spawn a process-backed agent and subscribes to ephemeral trace events for streaming.
  */
 export class AiChatProcessor {
-  readonly #registry: AtomRegistry.Registry;
+  readonly #registry: AtomRegistry.AtomRegistry;
 
   /** Pending messages (finalized, non-streaming). */
   readonly #pending = Atom.make<Message.Message[]>([]);

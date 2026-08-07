@@ -3,7 +3,7 @@
 //
 
 import * as Predicate from 'effect/Predicate';
-import { type Registry } from 'effect/unstable/reactivity';
+import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { Obj, type View } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
@@ -30,11 +30,11 @@ import { type TableModel, type TableRow } from './table-model';
  * different grid planes.
  */
 export class TablePresentation<T extends TableRow = TableRow> {
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
   private fieldProjectionCache = new Map<string, ReturnType<typeof this.model.projection.getFieldProjection>>();
 
   constructor(
-    registry: Registry.Registry,
+    registry: Registry.AtomRegistry,
     private readonly model: TableModel<T>,
   ) {
     this._registry = registry;

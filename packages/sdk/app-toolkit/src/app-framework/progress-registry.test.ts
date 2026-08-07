@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from 'effect/unstable/reactivity';
+import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { describe, expect, test } from 'vitest';
 
 import { createProgressRegistry } from './progress-registry';

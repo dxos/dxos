@@ -11,7 +11,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
-import { Registry } from 'effect/unstable/reactivity';
+import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';

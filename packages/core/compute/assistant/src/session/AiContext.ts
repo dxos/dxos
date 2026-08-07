@@ -60,7 +60,7 @@ export type BinderOptions = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Database.Service>;
   /** @effect/atom-react Registry for reactive state management. */
-  registry?: AtomRegistry.Registry;
+  registry?: AtomRegistry.AtomRegistry;
 };
 
 /**
@@ -70,7 +70,7 @@ export type BinderOptions = {
 export class Binder extends Resource {
   private readonly _skills = Atom.make<Skill.Skill[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
-  private readonly _registry: AtomRegistry.Registry;
+  private readonly _registry: AtomRegistry.AtomRegistry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Database.Service>;
 

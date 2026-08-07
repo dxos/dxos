@@ -49,7 +49,7 @@ export type ViewEditorProps = ThemedClassName<
     type?: Type.AnyEntity;
     view: View.View;
     mode?: 'schema' | 'tag';
-    registry?: Registry.Registry;
+    registry?: Registry.AtomRegistry;
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: EID.EID) => void;
     onDelete?: (fieldId: string) => void;

@@ -20,7 +20,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 import { Atom } from 'effect/unstable/reactivity';
-import { Registry } from 'effect/unstable/reactivity';
+import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
@@ -337,7 +337,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * Publish the current per-trigger runtime state onto the observable dispatcher state so the UI
    * can render cursor/next-run/cooldown/retry status.
    */
-  private _publishRuntimeStatuses = (registry: Registry.Registry): void => {
+  private _publishRuntimeStatuses = (registry: Registry.AtomRegistry): void => {
     const triggers: TriggerRuntimeStatus[] = Array.fromIterable(this._runtimeState.values()).map((entry) => ({
       triggerId: entry.trigger.id,
       nextExecution: entry.nextExecution,

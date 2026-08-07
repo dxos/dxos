@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomSet } from '@effect/atom-react';
+import { RegistryContext, useAtomSet } from '@effect/atom-react';
 import * as Effect from 'effect/Effect';
+import { Atom } from 'effect/unstable/reactivity';
 import { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';

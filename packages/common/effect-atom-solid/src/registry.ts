@@ -11,7 +11,7 @@ import { GlobalValue } from '@dxos/effect';
 /**
  * Default registry instance
  */
-export const defaultRegistry: AtomRegistry.Registry = GlobalValue.globalValue(
+export const defaultRegistry: AtomRegistry.AtomRegistry = GlobalValue.globalValue(
   '@dxos/effect-atom-solid/defaultRegistry',
   () => AtomRegistry.make(),
 );
@@ -19,12 +19,13 @@ export const defaultRegistry: AtomRegistry.Registry = GlobalValue.globalValue(
 /**
  * Solid context for the atom registry
  */
-export const RegistryContext: Context<AtomRegistry.Registry> = createContext<AtomRegistry.Registry>(defaultRegistry);
+export const RegistryContext: Context<AtomRegistry.AtomRegistry> =
+  createContext<AtomRegistry.AtomRegistry>(defaultRegistry);
 
 /**
  * Get the current registry from context
  */
-export const useRegistry = (): AtomRegistry.Registry => {
+export const useRegistry = (): AtomRegistry.AtomRegistry => {
   return useContext(RegistryContext);
 };
 
@@ -33,7 +34,7 @@ export const useRegistry = (): AtomRegistry.Registry => {
  */
 export interface RegistryProviderProps {
   children: any;
-  registry?: AtomRegistry.Registry;
+  registry?: AtomRegistry.AtomRegistry;
   initialValues?: Iterable<readonly [Atom.Atom<any>, any]>;
   scheduleTask?: (f: () => void) => void;
   timeoutResolution?: number;

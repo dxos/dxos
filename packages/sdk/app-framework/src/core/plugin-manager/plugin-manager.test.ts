@@ -14,7 +14,7 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import * as TestClock from 'effect/testing/TestClock';
-import { type Atom, Registry } from 'effect/unstable/reactivity';
+import { type Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -41,7 +41,7 @@ const FailEvent = ActivationEvent.make('org.dxos.test.fail');
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test' });
 
 // TODO(wittjosiah): Factor out?
-const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
+const atomCounter = (registry: Registry.AtomRegistry, atom: Atom.Atom<any>) => {
   let count = 0;
   let initial = true;
   const dispose = registry.subscribe(
@@ -1788,7 +1788,7 @@ describe('PluginManager', () => {
     // `Effect.callback` lets a TestClock-driven test wait for state produced by
     // a background `_runForkedFiber` (e.g. the auto-disable triggered when a
     // module activation times out) without relying on real-time `sleep`.
-    const waitFor = <T>(registry: Registry.Registry, atom: Atom.Atom<T>, predicate: (value: T) => boolean) =>
+    const waitFor = <T>(registry: Registry.AtomRegistry, atom: Atom.Atom<T>, predicate: (value: T) => boolean) =>
       Effect.callback<void>((resume) => {
         if (predicate(registry.get(atom))) {
           resume(Effect.void);

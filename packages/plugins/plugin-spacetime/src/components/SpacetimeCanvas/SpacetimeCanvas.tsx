@@ -3,7 +3,8 @@
 //
 
 import { Color3, Color4, HighlightLayer, Mesh, StandardMaterial, Vector3 } from '@babylonjs/core';
-import { type Atom, RegistryContext, useAtomValue } from '@effect/atom-react';
+import { RegistryContext, useAtomValue } from '@effect/atom-react';
+import { type Atom } from 'effect/unstable/reactivity';
 import React, { type RefObject, useContext, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/react-ui';

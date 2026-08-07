@@ -14,7 +14,7 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { useObject } from './useObject';
 
-const createWrapper = (registry: AtomRegistry.Registry) => {
+const createWrapper = (registry: AtomRegistry.AtomRegistry) => {
   return ({ children }: PropsWithChildren) => (
     <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>
   );

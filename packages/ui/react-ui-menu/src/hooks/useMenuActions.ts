@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect/atom-react';
+import { RegistryContext, useAtomValue } from '@effect/atom-react';
+import { Atom } from 'effect/unstable/reactivity';
 import { type DependencyList, useCallback, useContext, useMemo } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';

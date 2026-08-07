@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect/atom-react';
+import { RegistryContext, useAtomValue } from '@effect/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
@@ -22,7 +23,7 @@ class Generator {
   readonly count: Atom.Atom<number>;
   readonly text: Atom.Atom<string[]>;
 
-  constructor(private readonly _registry: Registry.Registry) {
+  constructor(private readonly _registry: Registry.AtomRegistry) {
     this._current = Atom.make<string>(random.lorem.sentence(5));
     this._lines = Atom.make<string[]>([]);
     this.count = Atom.make((get) => get(this._lines).length);

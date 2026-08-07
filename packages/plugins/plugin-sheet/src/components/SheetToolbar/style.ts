@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react';
+import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { useContext, useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
@@ -72,7 +73,7 @@ type StyleActionsContext = {
   model: SheetModel;
   state: ToolbarState;
   stateAtom: ToolbarStateAtom;
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   cursorFallbackRange?: CompleteCellRange;
 };
 

@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
-import { type Registry } from 'effect/unstable/reactivity';
+import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
@@ -30,7 +30,7 @@ export type ChatProcessorOptions = {
   toolkit: OpaqueToolkit.OpaqueToolkit;
   functions: OperationHandlerSet.OperationHandlerSet;
   metadata?: AiService.ServiceMetadata;
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
 };
 
 // TODO(burdon): Factor out common guts from AiChatProcessor.
@@ -39,7 +39,7 @@ export class ChatProcessor {
   private readonly _toolkit: OpaqueToolkit.OpaqueToolkit;
   private readonly _functions: OperationHandlerSet.OperationHandlerSet;
   private readonly _metadata?: AiService.ServiceMetadata;
-  private readonly _registry?: Registry.Registry;
+  private readonly _registry?: Registry.AtomRegistry;
 
   constructor(options: ChatProcessorOptions) {
     this._runtime = options.runtime;

@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect/atom-react';
+import { RegistryContext, useAtomValue } from '@effect/atom-react';
 import { createContext } from '@radix-ui/react-context';
+import { Atom } from 'effect/unstable/reactivity';
 import React, {
   type PropsWithChildren,
   type RefObject,

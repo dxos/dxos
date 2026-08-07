@@ -102,7 +102,7 @@ export const make = ({
 };
 
 export type MakeWithReferencesProps = MakeProps & {
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
 };
 
 /**

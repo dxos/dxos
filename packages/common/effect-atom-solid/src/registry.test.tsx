@@ -16,7 +16,7 @@ describe('registry', () => {
 
   describe('useRegistry', () => {
     test('returns the default registry', () => {
-      let capturedRegistry: AtomRegistry.Registry | null = null;
+      let capturedRegistry: AtomRegistry.AtomRegistry | null = null;
 
       function TestComponent() {
         capturedRegistry = useRegistry();
@@ -31,7 +31,7 @@ describe('registry', () => {
   describe('RegistryProvider', () => {
     test('provides a custom registry to children', () => {
       const customRegistry = AtomRegistry.make();
-      let capturedRegistry: AtomRegistry.Registry | null = null;
+      let capturedRegistry: AtomRegistry.AtomRegistry | null = null;
 
       function Child() {
         capturedRegistry = useRegistry();

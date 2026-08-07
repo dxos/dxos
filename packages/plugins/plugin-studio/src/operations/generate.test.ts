@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
-import { Registry } from 'effect/unstable/reactivity';
+import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { CapabilityManager } from '@dxos/app-framework';

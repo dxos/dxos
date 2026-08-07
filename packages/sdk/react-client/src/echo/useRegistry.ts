@@ -9,7 +9,7 @@ import { useClient } from '../client';
 /**
  * Returns the hypergraph registry attached to the current client.
  */
-export const useRegistry = (): Registry.Registry => {
+export const useRegistry = (): Registry.AtomRegistry => {
   const client = useClient();
   return client.graph.registry;
 };

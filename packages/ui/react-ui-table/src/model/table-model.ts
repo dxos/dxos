@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
@@ -107,7 +107,7 @@ const defaultFeatures: TableFeatures = {
 export type InsertRowResult = 'draft' | 'final';
 
 export type TableModelProps<T extends TableRow = TableRow> = {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   object: Table.Table;
   projection: ProjectionModel;
   db?: Database.Database;
@@ -136,7 +136,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 };
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
   private readonly _object: Table.Table;
   private readonly _projection: ProjectionModel;
   private readonly _db?: Database.Database;

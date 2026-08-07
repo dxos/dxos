@@ -31,7 +31,7 @@ const getFieldId = (projection: View.Projection, path: string): string => {
 
 describe('ProjectionModel', () => {
   let builder: EchoTestBuilder;
-  let atomRegistry: AtomRegistry.Registry;
+  let atomRegistry: AtomRegistry.AtomRegistry;
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();

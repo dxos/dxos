@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, useAtomValue } from '@effect/atom-react';
+import { useAtomValue } from '@effect/atom-react';
+import { type Atom } from 'effect/unstable/reactivity';
 import React, { Fragment } from 'react';
 
 import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';

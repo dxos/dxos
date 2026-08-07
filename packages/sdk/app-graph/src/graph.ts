@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
-import { Atom, Registry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
@@ -54,7 +54,7 @@ export type GraphTraversalOptions = {
 };
 
 export type GraphProps = {
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   nodes?: MakeOptional<Node.Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
   onExpand?: (id: string, relation: Node.Relation) => void;
@@ -143,7 +143,7 @@ class GraphImpl implements WritableGraph {
   readonly _onInitialize?: GraphProps['onInitialize'];
   readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
-  readonly _registry: Registry.Registry;
+  readonly _registry: Registry.AtomRegistry;
   readonly _expanded = new Set<string>();
   readonly _pendingExpands = new Set<string>();
   readonly _initialized = new Set<string>();

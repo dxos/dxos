@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Atom } from 'effect/unstable/reactivity';
 import React, { useContext, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';

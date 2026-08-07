@@ -6,7 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { Atom, Registry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { type Client } from '@dxos/client';
 import { RemoteProcessManager } from '@dxos/compute-runtime';
@@ -29,7 +29,7 @@ import { createEdgeClient } from './edge-client';
  * A manager built without a client (the {@link layer} stub) omits `cancel`.
  */
 const makeManager = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   getEdgeClient?: () => EdgeHttpClient,
 ): RemoteProcessManager.Manager => {
   // TODO(edge): Populate from an EDGE process-tree endpoint once available.

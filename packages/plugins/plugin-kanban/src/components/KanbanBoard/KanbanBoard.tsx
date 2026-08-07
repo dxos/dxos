@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react';
+import { type Atom } from 'effect/unstable/reactivity';
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';

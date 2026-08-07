@@ -31,7 +31,7 @@ const TestViewWrapper = Type.makeObject(DXN.make('com.example.type.viewWrapper',
 describe('buildViewIndex', () => {
   let testBuilder: EchoTestBuilder;
   let db: EchoDatabase;
-  let registry: AtomRegistry.Registry;
+  let registry: AtomRegistry.AtomRegistry;
 
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();

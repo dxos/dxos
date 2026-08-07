@@ -49,7 +49,10 @@ export const createDefaultSchema = () => {
   return Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0'))(struct);
 };
 
-export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Promise<Type.AnyEntity | undefined> => {
+export const getSchema = async (
+  dxn: DXN.DXN,
+  registry?: Registry.AtomRegistry,
+): Promise<Type.AnyEntity | undefined> => {
   if (!DXN.isDXN(dxn)) {
     return;
   }

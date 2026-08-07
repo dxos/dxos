@@ -19,7 +19,7 @@ import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
@@ -153,7 +153,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   readonly #callbacks: Process.Callbacks<I, O, R, any>;
   readonly #scope: Scope.CloseableScope;
-  readonly #registry: Registry.Registry;
+  readonly #registry: Registry.AtomRegistry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: StorageService.Service;
   readonly #traceSink: Trace.Sink;
@@ -171,7 +171,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     callbacks: Process.Callbacks<I, O, R, any>,
     scope: Scope.CloseableScope,
     services: Context.Context<R | Process.BaseServices>,
-    registry: Registry.Registry,
+    registry: Registry.AtomRegistry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: StorageService.Service,
     key: string,

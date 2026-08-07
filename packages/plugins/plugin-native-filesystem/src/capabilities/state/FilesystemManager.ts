@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
-import { type Atom, type Registry } from 'effect/unstable/reactivity';
+import { type Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import localforage from 'localforage';
 
 import { log } from '@dxos/log';
@@ -55,7 +55,7 @@ export interface FilesystemManager {
 
 /** Create a new FilesystemManager instance. */
 export const make = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>,
   markdownDocuments: MarkdownDocuments,
   directoryWatcher: DirectoryWatcher,
@@ -65,7 +65,7 @@ export const make = (
 
 class FilesystemManagerImpl implements FilesystemManager {
   constructor(
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
     private readonly _stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>,
     private readonly _markdownDocuments: MarkdownDocuments,
     private readonly _directoryWatcher: DirectoryWatcher,

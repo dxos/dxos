@@ -3,7 +3,7 @@
 //
 
 import type * as Types from 'effect/Types';
-import { type Registry } from 'effect/unstable/reactivity';
+import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import {
@@ -57,7 +57,7 @@ export const makeDynamicTable = ({
   type,
   properties,
 }: {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   type: Type.AnyEntity;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; object: Table.Table } => {

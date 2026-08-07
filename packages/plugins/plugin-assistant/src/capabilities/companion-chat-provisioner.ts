@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -33,7 +33,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
-    const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
+    const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
 
     // Optional: provisioning is keyed off deck planks, so a host without a deck has nothing to
     // provision for.

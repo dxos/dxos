@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { Atom, Registry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
@@ -146,7 +146,7 @@ const setupNativeFilesystemGraphBuilder = ({
   registry,
   stateAtom,
 }: {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>;
 }) => {
   const initialState = registry.get(stateAtom);

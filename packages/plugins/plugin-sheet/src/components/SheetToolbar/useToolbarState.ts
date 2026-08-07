@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect/atom-react';
+import { RegistryContext, useAtomValue } from '@effect/atom-react';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { useContext, useMemo } from 'react';
 
 import { type AlignState } from './align';
@@ -28,6 +29,6 @@ export const useToolbarStateValue = (stateAtom: ToolbarStateAtom): ToolbarState 
 /**
  * Hook to get the registry for updating toolbar state.
  */
-export const useToolbarStateRegistry = (): Registry.Registry => {
+export const useToolbarStateRegistry = (): Registry.AtomRegistry => {
   return useContext(RegistryContext);
 };

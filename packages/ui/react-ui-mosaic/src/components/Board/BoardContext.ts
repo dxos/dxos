@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Atom } from '@effect/atom-react';
 import { createContext } from '@radix-ui/react-context';
+import { type Atom } from 'effect/unstable/reactivity';
 
 import { type GetId } from '@dxos/react-ui-dnd';
 

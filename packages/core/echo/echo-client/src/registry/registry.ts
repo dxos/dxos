@@ -16,17 +16,17 @@ import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 import { QueryResultCache } from '../query';
 
 /**
- * Concrete implementation of the {@link Registry.Registry} interface.
+ * Concrete implementation of the {@link Registry.AtomRegistry} interface.
  *
  * All entities (objects, relations, and type-definition entities) are stored in the primary
  * `#entitiesById` map keyed by their (bare) entity id. They are additionally indexed in the
  * secondary `#entitiesByUri` map under every URI that addresses them — a type entity by its
  * typename DXN (or, when persisted, its identifier EID), and a keyed entity (one carrying a
  * `key` in its meta — e.g. operations, skills) by its `dxn:<key>[:<version>]`. Types and
- * non-type entities are indexed uniformly, so {@link Registry.Registry.getByURI} resolves by URI
+ * non-type entities are indexed uniformly, so {@link Registry.AtomRegistry.getByURI} resolves by URI
  * in O(1) without separate per-kind indexes.
  */
-export class RegistryImpl implements Registry.Registry {
+export class RegistryImpl implements Registry.AtomRegistry {
   readonly [Registry.TypeId]: typeof Registry.TypeId = Registry.TypeId;
   readonly id = PublicKey.random().toHex();
   readonly #changed = new Event<void>();
@@ -42,7 +42,7 @@ export class RegistryImpl implements Registry.Registry {
    * type under both its typename DXN and identifier EID).
    */
   readonly #entitiesByUri: Map<URI.URI, Entity.Unknown> = new Map();
-  readonly #upstream: Registry.Registry | undefined;
+  readonly #upstream: Registry.AtomRegistry | undefined;
 
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
   // serialized query against this registry.
@@ -136,12 +136,12 @@ export class RegistryImpl implements Registry.Registry {
 }
 
 /**
- * Create a new {@link Registry.Registry}.
+ * Create a new {@link Registry.AtomRegistry}.
  */
-export const makeRegistry = (options: Registry.Options = {}): Registry.Registry => new RegistryImpl(options);
+export const makeRegistry = (options: Registry.Options = {}): Registry.AtomRegistry => new RegistryImpl(options);
 
 /**
- * Build an Effect Layer providing a {@link Registry.Registry} with the given options.
+ * Build an Effect Layer providing a {@link Registry.AtomRegistry} with the given options.
  */
 export const registryLayer = (options: Registry.Options = {}): Layer.Layer<Registry.Service> =>
   Layer.sync(Registry.Service, () => makeRegistry(options));
@@ -257,7 +257,7 @@ const getEntityUris = (entity: Entity.Unknown): URI.URI[] => {
 const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(uri) ?? URI.make(uri);
 
 /**
- * Executes a {@link Query.Query} against a {@link Registry.Registry}.
+ * Executes a {@link Query.Query} against a {@link Registry.AtomRegistry}.
  *
  * Only AST nodes that can be evaluated locally against an in-memory entity collection are supported:
  * - `select` clauses applied to plain {@link QueryAST.Filter} nodes (object, key, tag, props, etc.).
@@ -269,10 +269,10 @@ const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(
  * Server-side concerns such as traversal, ordering, and text/timestamp filters are not supported.
  */
 class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
-  readonly #registry: Registry.Registry;
+  readonly #registry: Registry.AtomRegistry;
   readonly #query: Query.Query<T>;
 
-  constructor(registry: Registry.Registry, query: Query.Query<T>) {
+  constructor(registry: Registry.AtomRegistry, query: Query.Query<T>) {
     this.#registry = registry;
     this.#query = query;
   }
@@ -341,7 +341,7 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   }
 }
 
-const executeQuery = (registry: Registry.Registry, ast: QueryAST.Query): Entity.Unknown[] => {
+const executeQuery = (registry: Registry.AtomRegistry, ast: QueryAST.Query): Entity.Unknown[] => {
   switch (ast.type) {
     case 'select':
       return registry.list().filter((entity) => matchFilter(ast.filter, entity));

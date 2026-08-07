@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry, RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import React, { useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
@@ -26,7 +27,7 @@ import { type ToolbarStateAtom, useToolbarState } from './useToolbarState';
 type ToolbarActionsContext = {
   model: SheetModel;
   stateAtom: ToolbarStateAtom;
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   cursorFallbackRange?: CompleteCellRange;
   customActions?: Atom.Atom<ActionGraphProps>;
 };

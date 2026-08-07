@@ -4,7 +4,7 @@
 
 import type * as Context from 'effect/Context';
 import * as Option from 'effect/Option';
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -206,7 +206,7 @@ export class CallManager extends Resource {
   // TODO(burdon): Can this be mocked?
   constructor(
     private readonly _client: Client,
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
     private readonly _haloIdentity: Context.Tag.Service<Identity.Service>,
   ) {
     super();

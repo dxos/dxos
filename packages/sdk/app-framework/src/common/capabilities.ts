@@ -9,7 +9,7 @@ import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import type * as Runtime$ from 'effect/Runtime';
-import { type Atom, type Registry } from 'effect/unstable/reactivity';
+import { type Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {
@@ -42,7 +42,7 @@ export const PluginManager = Capability$.makeSingleton<PluginManager$.PluginMana
 /**
  * @category Capability
  */
-export const AtomRegistry = Capability$.makeSingleton<Registry.Registry>()(
+export const AtomRegistry = Capability$.makeSingleton<Registry.AtomRegistry>()(
   'org.dxos.app-framework.capability.atomRegistry',
 );
 

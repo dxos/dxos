@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect/atom-react';
+import { useAtomSet, useAtomValue } from '@effect/atom-react';
+import { Atom } from 'effect/unstable/reactivity';
 import { useMemo, useState } from 'react';
 
 export type AtomState<T> = {

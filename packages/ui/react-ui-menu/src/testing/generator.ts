@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry, RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { useContext, useEffect } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';
@@ -73,7 +74,7 @@ export const createNestedActions = Atom.make(buildNestedActions()).pipe(Atom.kee
 export const createNestedActionsResolver = (props?: {
   groupParams?: CreateActionsProps;
   params?: CreateActionsProps;
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
 }) => {
   const { groupParams, params, registry } = props ?? {};
   const graph = Graph.make({ ...(registry && { registry }) });

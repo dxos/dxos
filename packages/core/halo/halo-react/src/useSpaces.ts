@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Result, useAtomValue } from '@effect/atom-react';
+import { useAtomValue } from '@effect/atom-react';
 import * as Stream from 'effect/Stream';
+import { Atom, AsyncResult as Result } from 'effect/unstable/reactivity';
 import { useMemo } from 'react';
 
 import { Space } from '@dxos/halo';

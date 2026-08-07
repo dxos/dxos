@@ -21,7 +21,7 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
-import { Registry } from 'effect/unstable/reactivity';
+import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { RUN_AGAIN_ERROR_CODE, RunAgainError, ServiceNotAvailableError } from '@dxos/compute';
 import * as Cancellation from '@dxos/compute/Cancellation';
@@ -1237,7 +1237,7 @@ describe('reentrancy', () => {
 describe('durability', () => {
   const mkManager = (deps: {
     kv: KeyValueStore.KeyValueStore;
-    registry: Registry.Registry;
+    registry: Registry.AtomRegistry;
     resolver: ServiceResolver.ServiceResolver;
     handlerSet: OperationHandlerSet.OperationHandlerSet;
     traceSink: Trace.Sink;

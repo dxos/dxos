@@ -45,7 +45,7 @@ import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
-import { Atom, Registry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -99,7 +99,7 @@ export type ManagerOptions = {
   pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
   enabled?: string[];
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
    * no-op `pluginRegistry` (empty list, no versions endpoint). Implementations
@@ -136,7 +136,7 @@ export interface PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId;
   readonly activation: PubSub.PubSub<ActivationMessage>;
   readonly capabilities: CapabilityManager.CapabilityManager;
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
   /**
    * Cached registry catalog state plus pass-throughs for `listVersions` /
    * `getPlugin`. Always present — the host supplies a `pluginRegistryProvider`
@@ -281,7 +281,7 @@ export const isManager = (value: unknown): value is PluginManager => {
 class ManagerImpl implements PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId = ManagerTypeId;
   readonly capabilities: CapabilityManager.CapabilityManager;
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
   readonly pluginRegistry: PluginRegistry.Manager;
 
   private readonly _state: ManagerState;

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -32,7 +32,7 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
   kanban: Kanban.Kanban,
   projection: ProjectionModel,
   itemsAtom: Atom.Atom<T[]>,
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ): BoardModel<KanbanLayout.ColumnStructure, T> {
   // Source atoms: reactive reads from the kanban object; items come from the passed-in atom (e.g. AtomQuery or in-memory).
   const arrangementAtom = useMemo(() => Obj.atomProperty(kanban, 'arrangement'), [kanban]);

@@ -30,7 +30,7 @@ export type UseChatProcessorProps = {
   chat?: Chat.Chat;
   preset?: AiServicePreset;
   runtime?: Capabilities.ProcessManagerRuntime;
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   settings?: Assistant.Settings;
 };
 

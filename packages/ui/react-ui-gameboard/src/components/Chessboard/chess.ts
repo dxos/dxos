@@ -3,7 +3,7 @@
 //
 
 import { Chess as ChessJS } from 'chess.js';
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { type FC, type SVGProps } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -89,7 +89,7 @@ export class ChessModel implements GameboardModel<ChessPiece> {
   private readonly _moveIndex = Atom.make(0);
 
   constructor(
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
     pgn?: string,
   ) {
     this.update(pgn);

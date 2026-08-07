@@ -12,7 +12,7 @@ const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 8;
 
 export type WheelControllerOptions<T> = {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   atoms: CellGridAtoms<T>;
   headers: Headers;
 };

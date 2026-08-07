@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import React, { useEffect, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
@@ -159,7 +159,7 @@ const meta = {
             OperationHandlerSet.make(
               Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
                 Effect.gen(function* () {
-                  const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
+                  const registry: Registry.AtomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
                   registry.set(storyStateAtom, { tab: subject });
                 }),
               ),

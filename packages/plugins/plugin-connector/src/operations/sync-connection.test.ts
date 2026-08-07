@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect/atom-react';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { CapabilityManager } from '@dxos/app-framework';

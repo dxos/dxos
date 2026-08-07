@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { useMemo } from 'react';
 
 import { getQueryTarget } from '@dxos/app-toolkit/query';
@@ -14,7 +14,7 @@ import { Pipeline } from '@dxos/types';
 
 export const usePipelineBoardModel = (
   pipeline: Pipeline.Pipeline | undefined,
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ): BoardModel<Pipeline.Column, Obj.Unknown> =>
   useMemo<BoardModel<Pipeline.Column, Obj.Unknown>>(() => {
     if (pipeline == null) {

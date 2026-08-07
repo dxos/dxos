@@ -8,7 +8,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
-import { type Atom, type Registry } from 'effect/unstable/reactivity';
+import { type Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { EffectEx } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
@@ -84,7 +84,7 @@ export const make = (...handlers: Operation.WithHandler<Operation.Definition.Any
  * cheap but newly registered handlers are picked up.
  */
 export const reactive = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   atom: Atom.Atom<readonly OperationHandlerSet[]>,
 ): OperationHandlerSet => {
   let cached: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;

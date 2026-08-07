@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
-import { Atom, Registry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { Format, Obj, Type, View } from '@dxos/echo';
 import { TypeEnum, formatToType, typeToFormat } from '@dxos/echo/Format';
@@ -79,7 +79,7 @@ export const createDirectChangeCallback = (
  */
 export type ProjectionModelProps = {
   /** Registry for atom management. Optional - if not provided, atoms won't be created. */
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   /** The View object (for subscriptions). */
   view: View.View;
   /** The base JSON schema of the data being projected. */
@@ -99,7 +99,7 @@ export class ProjectionModel {
   private readonly _encode = Schema.encodeSync(PropertySchema);
   private readonly _decode = Schema.decodeSync(PropertySchema, {});
 
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
   private readonly _view: View.View;
   private readonly _baseSchema: JsonSchemaType;
   private readonly _change: ProjectionChangeCallback;

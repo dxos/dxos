@@ -60,7 +60,7 @@ export type Options = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Database.Service>;
   /** @effect/atom-react Registry for reactive state. */
-  registry?: AtomRegistry.Registry;
+  registry?: AtomRegistry.AtomRegistry;
   /**
    * Instructions steering the conversation (typically the owning `Chat`'s), rendered into the system
    * prompt on every turn. The session is feed-centric and cannot reach its chat, so these are passed in.

@@ -19,7 +19,7 @@ import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import { Atom, Registry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -325,7 +325,7 @@ export { ProcessManagerService };
 export { ProcessManagerService as Service };
 
 export interface ProcessManagerImplOpts {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   kvStore: KeyValueStore.KeyValueStore;
   traceSink: Trace.Sink;
   serviceResolver?: ServiceResolver.ServiceResolver;
@@ -343,7 +343,7 @@ export interface ProcessManagerImplOpts {
 export class ProcessManagerImpl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
   readonly #handles = new Map<Process.ID, ProcessHandle.ProcessHandleImpl<any, any, any>>();
-  readonly #registry: Registry.Registry;
+  readonly #registry: Registry.AtomRegistry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
   readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;

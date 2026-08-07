@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -318,7 +318,7 @@ export class ReactiveGraphModel<
   private readonly _graphAtom: Atom.Writable<Graph.Graph<Node, Edge>>;
 
   constructor(
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
     graph?: Partial<Graph.Graph<Node, Edge>>,
   ) {
     const initialGraph: Graph.Graph<Node, Edge> = {
@@ -329,7 +329,7 @@ export class ReactiveGraphModel<
     this._graphAtom = Atom.make<Graph.Graph<Node, Edge>>(initialGraph);
   }
 
-  get registry(): Registry.Registry {
+  get registry(): Registry.AtomRegistry {
     return this._registry;
   }
 

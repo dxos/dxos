@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect/atom-react';
+import { useAtomValue } from '@effect/atom-react';
 import * as Data from 'effect/Data';
+import { Atom } from 'effect/unstable/reactivity';
 
 import { Obj } from '@dxos/echo';
 

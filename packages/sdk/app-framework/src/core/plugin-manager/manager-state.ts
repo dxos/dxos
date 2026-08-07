@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
-import { Atom, type Registry } from 'effect/unstable/reactivity';
+import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
 
 import { log } from '@dxos/log';
 
@@ -76,10 +76,10 @@ export class ManagerState {
    */
   readonly structurallyFailed = new Set<string>();
 
-  readonly #registry: Registry.Registry;
+  readonly #registry: Registry.AtomRegistry;
 
   constructor(
-    registry: Registry.Registry,
+    registry: Registry.AtomRegistry,
     initial: { plugins: readonly Plugin.Plugin[]; core: readonly string[]; enabled: readonly string[] },
   ) {
     this.#registry = registry;

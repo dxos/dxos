@@ -26,7 +26,7 @@ export type SetAtomFn<R, W, Mode extends 'value' | 'promise' | 'promiseExit'> = 
     : (value: W | ((value: R) => W)) => void;
 
 export function createSetAtom<R, W, Mode extends 'value' | 'promise' | 'promiseExit' = never>(
-  registry: AtomRegistry.Registry,
+  registry: AtomRegistry.AtomRegistry,
   atom: Atom.Writable<R, W>,
   options?: {
     readonly mode?: ([R] extends [AsyncResult.Result<any, any>] ? Mode : 'value') | undefined;
