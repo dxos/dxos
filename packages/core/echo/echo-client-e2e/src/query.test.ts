@@ -6,7 +6,7 @@ import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import {
   Aggregate,
   Collection,
@@ -446,6 +446,33 @@ describe('Query', () => {
       expect(byKey.get('b')?.items).to.have.length(1);
     });
 
+    test('items order is its own per-group ordering, independent of a differently-ordered orderBy', async () => {
+      const { db } = await builder.createDatabase();
+      for (let i = 0; i < 5; i++) {
+        db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: i }));
+      }
+      await db.flush();
+
+      // The outer orderBy sorts ascending (only relevant to initial group formation here, since a
+      // single group needs no reordering by a following orderBy), but `items.order` asks for the
+      // top 2 by rank *descending* — a different order than the outer orderBy establishes.
+      const groups = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('rank', 'asc'))
+            .aggregate({
+              category: Aggregate.group('category'),
+              count: Aggregate.count(),
+              items: Aggregate.items({ limit: 2, order: [Order.property('rank', 'desc')] }),
+            }),
+        )
+        .run();
+
+      expect(groups).to.have.length(1);
+      expect(groups[0].count).to.equal(5);
+      expect(groups[0].items.map((obj) => obj.rank)).to.deep.equal([4, 3]);
+    });
+
     test('groups by multiple properties (composite key)', async () => {
       const { db } = await builder.createDatabase();
       db.add(Obj.make(TestSchema.Expando, { category: 'a', value: 1 }));
@@ -848,6 +875,118 @@ describe('Query', () => {
       const second = db.query(Query.select(Filter.everything()).aggregate({ category: Aggregate.group('category') }));
       expect(second).toBe(first);
       expect(second.atom).toBe(first.atom);
+    });
+  });
+
+  // Mirrors the mailbox use case: group by `title` (its `threadId`), keep a "thread" if any member
+  // matches a filter, and return ALL members across a feed + this-space scope with accurate counts.
+  describe('Filter.in subquery (semi-join)', () => {
+    test('pulls in every object sharing a threadId with the subquery results, across feed + space scopes', async () => {
+      const { db } = await builder.createDatabase({ types: [Feed.Feed, TestSchema.Task] });
+      const feed = db.add(Feed.make({}));
+
+      // Feed: thread "t1" has one matching (completed) task and one non-matching reply; thread "t2"
+      // has no matching member at all.
+      const feedMatch = Obj.make(TestSchema.Task, { title: 't1', completed: true });
+      const feedReply = Obj.make(TestSchema.Task, { title: 't1', completed: false });
+      const feedOtherThread = Obj.make(TestSchema.Task, { title: 't2', completed: false });
+      await db.appendToFeed(feed, [feedMatch, feedReply, feedOtherThread]);
+
+      // Space: a draft sharing thread "t1" (pulled in even though it doesn't itself match) and an
+      // unrelated thread "t3" (excluded).
+      db.add(Obj.make(TestSchema.Task, { title: 't1', completed: false }));
+      db.add(Obj.make(TestSchema.Task, { title: 't3', completed: false }));
+      await db.flush();
+
+      const matches = Query.select(Filter.type(TestSchema.Task, { completed: true })).from(
+        Scope.feed(Feed.getFeedUri(feed)!),
+      );
+      const source = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(matches.project('title')) })).from([
+        Scope.feed(Feed.getFeedUri(feed)!),
+        Scope.space(),
+      ]);
+
+      const results = await db.query(source).run();
+      const titles = results.map((r: TestSchema.Task) => r.title).sort();
+      // All three "t1" members (2 feed + 1 space) are pulled in; "t2"/"t3" are excluded.
+      expect(titles).toEqual(['t1', 't1', 't1']);
+    });
+
+    test('an empty subquery result yields an empty parent result', async () => {
+      const { db } = await builder.createDatabase({ types: [Feed.Feed, TestSchema.Task] });
+      const feed = db.add(Feed.make({}));
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 't1', completed: false })]);
+      await db.flush();
+
+      const matches = Query.select(Filter.type(TestSchema.Task, { completed: true })).from(
+        Scope.feed(Feed.getFeedUri(feed)!),
+      );
+      const source = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(matches.project('title')) })).from(
+        Scope.feed(Feed.getFeedUri(feed)!),
+      );
+
+      const results = await db.query(source).run();
+      expect(results).toEqual([]);
+    });
+
+    test('composes with aggregate: groups whole threads with accurate per-thread counts', async () => {
+      const { db } = await builder.createDatabase({ types: [Feed.Feed, TestSchema.Task] });
+      const feed = db.add(Feed.make({}));
+
+      await db.appendToFeed(feed, [
+        Obj.make(TestSchema.Task, { title: 't1', completed: true }),
+        Obj.make(TestSchema.Task, { title: 't1', completed: false }),
+        Obj.make(TestSchema.Task, { title: 't2', completed: false }), // non-matching thread, excluded
+      ]);
+      await db.flush();
+
+      const matches = Query.select(Filter.type(TestSchema.Task, { completed: true })).from(
+        Scope.feed(Feed.getFeedUri(feed)!),
+      );
+      const source = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(matches.project('title')) }))
+        .from(Scope.feed(Feed.getFeedUri(feed)!))
+        .aggregate({ title: Aggregate.group('title'), count: Aggregate.count() });
+
+      const groups = await db.query(source).run();
+      expect(groups).toHaveLength(1);
+      expect(groups[0]).toMatchObject({ title: 't1', count: 2 });
+    });
+
+    test('reactivity: inserting an object that newly matches the subquery adds its whole thread', async (ctx) => {
+      const { db } = await builder.createDatabase({ types: [Feed.Feed, TestSchema.Task] });
+      const feed = db.add(Feed.make({}));
+
+      // "t1" has only a non-matching member so far — its thread does not qualify yet.
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 't1', completed: false })]);
+      await db.flush();
+
+      const matches = Query.select(Filter.type(TestSchema.Task, { completed: true })).from(
+        Scope.feed(Feed.getFeedUri(feed)!),
+      );
+      const source = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(matches.project('title')) })).from(
+        Scope.feed(Feed.getFeedUri(feed)!),
+      );
+
+      const updates: number[] = [];
+      const unsub = db.query(source).subscribe(
+        (query) => {
+          updates.push(query.results.length);
+        },
+        { fire: true },
+      );
+      ctx.onTestFinished(unsub);
+
+      // This is a feed-scoped, host-routed query (the nested in-query forces isSimple=false), so
+      // the initial event is deferred until the async round trip arrives — db.flush({ updates: true })
+      // does not await it (see the equivalent note in echo-client/src/feed/feed.test.ts). Poll instead.
+      await waitForCondition({ condition: () => updates.length > 0, timeout: 2000 });
+      expect(updates.at(-1)).toEqual(0);
+
+      // A new completed "t1" task now makes the whole thread qualify.
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 't1', completed: true })]);
+      await waitForCondition({ condition: () => updates.at(-1) === 2, timeout: 2000 });
+
+      expect(updates.at(-1)).toEqual(2);
     });
   });
 

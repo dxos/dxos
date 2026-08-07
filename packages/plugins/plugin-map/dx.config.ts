@@ -26,7 +26,7 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map',
     icon: { key: 'ph--compass--regular', hue: 'sky' },
     spec: 'PLUGIN.mdl',
-    tags: ['labs'],
-    screenshots: [{ dark: 'https://dxos.network/plugin-details-map-dark.png' }],
+    tags: ['alpha'],
+    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-map-dark.png' }],
   },
 });

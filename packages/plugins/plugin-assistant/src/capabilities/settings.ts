@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { Assistant, AssistantCapabilities } from '#types';
+
+import * as Assistant from '../types/Assistant';
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
@@ -20,8 +22,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(AssistantCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.contribute(AssistantCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Assistant.Settings,
         atom: settingsAtom,

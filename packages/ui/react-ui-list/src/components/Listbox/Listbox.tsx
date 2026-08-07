@@ -46,11 +46,11 @@
 //   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`.
 //   - Multi-select. Future expansion — the aspect (`useListSelection`) already supports it.
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithRef,
   type FocusEvent,
   type ForwardedRef,
+  type KeyboardEvent,
   type MouseEvent,
   type PropsWithChildren,
   forwardRef,
@@ -70,49 +70,25 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import {
-  type SelectionItemBinding,
-  type UseListSelectionReturn,
-  useListNavigation,
-  useListSelection,
-} from '../../aspects';
+import { type SelectionItemBinding, useListNavigation, useListSelection } from '../../aspects';
 import { listTheme } from '../List.theme';
+import {
+  LISTBOX_ITEM_NAME,
+  type ListboxItemContextValue,
+  ListboxItemProvider,
+  ListboxProvider,
+  useListboxContext,
+  useListboxItemContext,
+} from './ListboxContext';
 import { ListItemContent, type ListItemContentProps } from './ListItemContent';
 
 const styles = listTheme.styles();
 
-const LISTBOX_NAME = 'Listbox';
 const LISTBOX_ROOT_NAME = 'Listbox.Root';
 const LISTBOX_VIEWPORT_NAME = 'Listbox.Viewport';
 const LISTBOX_CONTENT_NAME = 'Listbox.Content';
-const LISTBOX_ITEM_NAME = 'Listbox.Item';
 const LISTBOX_ITEM_LABEL_NAME = 'Listbox.ItemLabel';
 const LISTBOX_INDICATOR_NAME = 'Listbox.Indicator';
-
-//
-// Contexts — plain Radix contexts (un-scoped). Scoped composition (nested Listboxes,
-// Combobox embeddings) is a future expansion; when needed, switch to `createContextScope`
-// and thread `__listboxScope` through every subcomponent's props in one focused PR.
-//
-
-type ListboxContextValue = {
-  /**
-   * Whether the list participates in selection. Inferred on `Root` from the presence of
-   * `value`/`defaultValue`/`onValueChange`. Drives `role` (listbox/option vs list/listitem),
-   * `aria-selected`, and whether row clicks update the selection model.
-   */
-  selectable: boolean;
-  /** Selection aspect binding factory; items consume their own bindings from this. */
-  selection: UseListSelectionReturn;
-};
-
-type ListboxItemContextValue = {
-  id: string;
-  selected: boolean;
-};
-
-const [ListboxProvider, useListboxContext] = createContext<ListboxContextValue>(LISTBOX_NAME);
-const [ListboxItemProvider, useListboxItemContext] = createContext<ListboxItemContextValue>(LISTBOX_ITEM_NAME);
 
 //
 // Root — headless context provider. Renders no DOM.
@@ -241,7 +217,7 @@ type ItemProps = PropsWithChildren<{
   id: string;
   /** Disable the row — focusable but doesn't update selection, dimmed. */
   disabled?: boolean;
-  /** Optional click handler in addition to selection. */
+  /** Optional click handler in addition to selection; also fired by Enter/Space when interactive. */
   onClick?: (event: MouseEvent<HTMLLIElement>) => void;
   /** Optional focus handler in addition to selection-follows-focus. */
   onFocus?: (event: FocusEvent<HTMLLIElement>) => void;
@@ -289,6 +265,22 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
     [selectable, binding, onFocus],
   );
 
+  // Options aren't natively-interactive elements (unlike `<button>`), so the browser won't fire
+  // Enter/Space clicks on their own — wire that up for every interactive row (selectable or not),
+  // matching `<button>`'s native activation keys per WAI-ARIA APG listbox guidance. Dispatches a
+  // real click (rather than calling `handleClick` directly) so `onClick` keeps its native
+  // `MouseEvent` type — matches the same `.click()` pattern `MessageStack`'s row navigation uses.
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLLIElement>) => {
+      if (!interactive || disabled || (event.key !== 'Enter' && event.key !== ' ')) {
+        return;
+      }
+      event.preventDefault();
+      event.currentTarget.click();
+    },
+    [interactive, disabled],
+  );
+
   const composed = composableProps<HTMLLIElement>(rest, {
     classNames: styles.listboxItem({
       class: [!interactive && 'cursor-default', disabled && 'opacity-50 cursor-not-allowed'],
@@ -297,17 +289,20 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
 
   // Per WAI-ARIA APG listbox guidance, disabled options remain keyboard-navigable for SR
   // announcement; the selection model is not updated for disabled rows (the aspect's binding
-  // enforces that internally). Non-selectable rows are `role=listitem` with no `aria-selected`.
+  // enforces that internally). Non-selectable rows are `role=listitem` with no `aria-selected`;
+  // a plain row with an `onClick` (no selection model) is still keyboard-focusable so Enter/Space
+  // can activate it, matching `<button>`'s native behaviour.
   return (
     <ListItemProviderHost id={id} selected={selected}>
       <ListItem
         {...composed}
         role={selectable ? 'option' : 'listitem'}
-        tabIndex={selectable ? 0 : -1}
+        tabIndex={interactive ? 0 : -1}
         aria-selected={selectable ? selected : undefined}
         aria-disabled={disabled || undefined}
         onClick={handleClick}
         onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
         onMouseDown={onMouseDown}
         ref={forwardedRef}
       >
@@ -336,8 +331,8 @@ const ListItemProviderHost = ({ id, selected, children }: PropsWithChildren<List
 
 type ItemLabelProps = ThemedClassName<ComponentPropsWithRef<'span'>>;
 
-const ItemLabel = forwardRef<HTMLSpanElement, ItemLabelProps>(({ classNames, children, ...rest }, forwardedRef) => (
-  <span {...rest} className={styles.listboxItemLabel({ class: mx(classNames) })} ref={forwardedRef}>
+const ItemLabel = composable<HTMLSpanElement, ItemLabelProps>(({ children, ...rest }, forwardedRef) => (
+  <span {...composableProps<HTMLSpanElement>(rest, { classNames: styles.listboxItemLabel() })} ref={forwardedRef}>
     {children}
   </span>
 ));
@@ -364,16 +359,6 @@ const Indicator = forwardRef<SVGSVGElement, IndicatorProps>(({ classNames, ...ro
 
 Indicator.displayName = LISTBOX_INDICATOR_NAME;
 
-/**
- * Read selection state for a single id from inside any descendant of `<Listbox.Root>`.
- * Returns `true` when the row is currently selected. Lets composing components react to
- * selection without re-rendering on unrelated changes.
- */
-const useListboxSelection = (id: string): boolean => {
-  const { selection } = useListboxContext('useListboxSelection');
-  return selection.bind(id).selected;
-};
-
 //
 // Public namespace.
 //
@@ -388,7 +373,7 @@ const Listbox = {
   Indicator,
 };
 
-export { Listbox, useListboxSelection };
+export { Listbox };
 
 export type {
   ListItemContentProps as ItemContentProps,

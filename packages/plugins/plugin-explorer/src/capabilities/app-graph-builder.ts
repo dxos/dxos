@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -25,7 +25,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('neighborhood'),
+              variant: 'neighborhood',
               label: ['neighborhood-companion.label', { ns: meta.profile.key }],
               icon: 'ph--share-network--regular',
               data: 'neighborhood',
@@ -35,6 +35,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

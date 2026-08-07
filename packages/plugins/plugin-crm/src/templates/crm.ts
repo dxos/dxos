@@ -4,35 +4,22 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Instructions, Skill, Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Mailbox } from '@dxos/plugin-inbox';
-import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
-import { trim } from '@dxos/util';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import { makeRoutine } from '@dxos/plugin-routine';
+import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+
+import * as CrmOperation from '../types/CrmOperation';
 
 /**
- * Skill keys composed into the CRM instructions. The CRM skill provides CRM-specific tools; the others
- * supply the database, web-search, and document utilities the agent relies on.
+ * CRM automation template: the routine-only counterpart of the `crmPipeline` project template. The
+ * trigger binds `ProcessMailbox` directly (kind: runnable) so the loop is deterministic — no model
+ * between trigger and operation. The operation's durable feed cursor plus the identity index make
+ * per-item firing idempotent: each firing catches up on everything new and extra firings process
+ * nothing. Only applies to a Mailbox subject — the feed trigger needs `mailbox.feed`.
  */
-const SKILL_KEYS = [
-  'org.dxos.skill.crm',
-  'org.dxos.skill.webSearch',
-  'org.dxos.skill.database',
-  'org.dxos.skill.markdown',
-] as const;
-
-/** Default instructions seeded into the instructions; the user edits these by opening the instructions. */
-const DEFAULT_INSTRUCTIONS = trim`
-  A new email message is provided in the <input> block below.
-
-  - Research the sender and any contacts mentioned in the message.
-  - Create and link a summary document for the sender's Organization if one does not already exist.
-  - Create or update CRM Profiles (Person and/or Organization objects) for those contacts using the CRM tools.
-  - Attach a profile photo or company logo if you can find one.
-`;
-
-/** CRM automation template. Only applies to a Mailbox subject — the feed trigger needs `mailbox.feed`. */
 export const crm: RoutineCapabilities.Template = {
   id: 'org.dxos.routine.crm',
   label: 'CRM',
@@ -45,24 +32,18 @@ export const crm: RoutineCapabilities.Template = {
         'CRM template requires a Mailbox subject.',
       );
       const mailbox = subject;
-      const instructionsName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
-
-      const skillRefs = SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
 
       // The feed spec requires the live feed object; Database.load is a read-only DB operation.
       const feed = yield* Database.load(mailbox.feed);
-      return Routine.make({
-        name: name ?? instructionsName,
-        instructions: Instructions.make({
-          name: instructionsName,
-          text: DEFAULT_INSTRUCTIONS,
-          skills: skillRefs,
-        }),
+      return makeRoutine({
+        name: name ?? `CRM — ${mailbox.name ?? 'Mailbox'}`,
+        spec: { kind: 'runnable', runnable: Ref.fromURI(CrmOperation.ProcessMailbox.meta.key) },
         trigger: Trigger.make({
           enabled: false,
           spec: Trigger.specFeed(feed),
-          // The raw trigger event item is passed as the agent's input.
-          input: { input: '{{event.item}}' },
+          // The operation reads the mailbox itself, so the trigger passes the subject rather than the
+          // event item; `research` scaffolds a Profile per new contact.
+          input: { mailbox: Ref.make(mailbox), research: true },
           concurrency: 1,
         }),
       });

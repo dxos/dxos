@@ -6,16 +6,17 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import { useMemo } from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
-import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { type GeoMarker } from '@dxos/react-ui-geo';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
-import { Map, MapCapabilities } from '#types';
+import * as Map from '../types/Map';
+import * as MapCapabilities from '../types/MapCapabilities';
 
 /**
  * Reactive markers for a {@link Map.Map}: queries the map's backing view and plots each row at its
@@ -71,5 +72,5 @@ export const viewMarkerProvider: MapCapabilities.MarkerProvider = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(MapCapabilities.MarkerProvider, viewMarkerProvider)),
+  Effect.succeed(Capability.contribute(MapCapabilities.MarkerProvider, viewMarkerProvider)),
 );

@@ -5,7 +5,6 @@
 export * from './core';
 export * from './corpus';
 export * from './meta';
-export * from './types';
 
 // `@dxos/plugin-testing` is a testing-only package, so `StorybookPlugin` is
 // exported eagerly from the `.` entrypoint (no `Plugin.lazy` indirection).
@@ -13,3 +12,4 @@ export * from './types';
 // dynamic `import()` — see `./core.ts` for the underlying chunk-init issue
 // — and there is no production code-splitting benefit to recover here.
 export * from './StorybookPlugin';
+export * as StorybookCapabilities from './types/StorybookCapabilities';

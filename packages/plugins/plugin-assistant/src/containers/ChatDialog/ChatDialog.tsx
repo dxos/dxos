@@ -8,14 +8,17 @@ import { Provider } from '@dxos/ai';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type Chat as ChatTypes } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
-import { useObject, useRegistry } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
+import { useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
 import { Chat, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
-import { type Assistant, AssistantCapabilities } from '#types';
+
+import type * as Assistant from '../../types/Assistant';
+import * as AssistantCapabilities from '../../types/AssistantCapabilities';
 
 export type ChatDialogProps = {
   chat?: ChatTypes.Chat;

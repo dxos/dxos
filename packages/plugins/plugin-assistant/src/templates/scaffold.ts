@@ -4,9 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Instructions, Skill, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import type * as Routine from '@dxos/compute/Routine';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Ref } from '@dxos/echo';
-import { Routine } from '@dxos/plugin-routine/types';
+import { makeRoutine } from '@dxos/plugin-routine';
 
 export type ScheduledRoutineOptions = {
   name: string;
@@ -30,7 +33,7 @@ export const makeScheduledRoutine = ({
 }: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, never, never> => {
   const skills = skillKeys.map((key) => Ref.fromURI(Skill.registryURI(key)));
   return Effect.succeed(
-    Routine.make({
+    makeRoutine({
       name,
       instructions: Instructions.make({ name, text, skills }),
       trigger: Trigger.make({ spec: Trigger.specTimer(cron), enabled: false }),

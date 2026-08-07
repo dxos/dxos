@@ -1,6 +1,6 @@
 # Builds the @dxos/introspect core.json (symbol cache) and plugins.json
 # (plugin metadata sidecar) and uploads both to R2 so the
-# @dxos/introspect-service edge worker can read them. Triggers on push to the
+# @dxos/mcp-introspect-service edge worker can read them. Triggers on push to the
 # `labs` branch; manual dispatch is also supported for ad-hoc reruns.
 #
 # Secrets required:
@@ -21,6 +21,13 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 jobs:
   upload:

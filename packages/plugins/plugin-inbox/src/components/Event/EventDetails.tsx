@@ -5,13 +5,13 @@
 import React from 'react';
 
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
+import { Row } from '@dxos/react-ui-card';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Row } from '../Row';
 import { EventEditor } from './EventEditor';
 
 // The hub `Meeting` type is owned by plugin-meeting; reference its typename by string so plugin-inbox
@@ -83,7 +83,7 @@ export const EventDetails = ({
           <Card.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
           </Card.Block>
-          <Card.Text className='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
+          <Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
             <Card.Block end>
               <IconButton

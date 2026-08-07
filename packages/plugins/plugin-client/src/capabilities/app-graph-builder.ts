@@ -4,18 +4,24 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { ConnectionState } from '@dxos/client/mesh';
+import * as Operation from '@dxos/compute/Operation';
 import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
-import { Account, ClientCapabilities } from '#types';
+
+import * as Account from '../types/Account';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Read the client through its atom so the extension establishes a reactive dependency:
+    // the connector may evaluate before the client module finishes activating (dependency
+    // modules contribute individually, not batched per wave) and re-evaluates when it lands.
+    const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
     const extensions = yield* GraphBuilder.createExtension({
       id: 'root',
       match: NodeMatcher.whenRoot,
@@ -39,7 +45,10 @@ export default Capability.makeModule(
         ]),
       connector: (node, get) =>
         Effect.gen(function* () {
-          const client = yield* Capability.get(ClientCapabilities.Client);
+          const [client] = get(clientAtom);
+          if (!client) {
+            return [];
+          }
           const identity = get(CreateAtom.fromObservable(client.halo.identity));
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 
@@ -120,6 +129,6 @@ export default Capability.makeModule(
         }).pipe(Effect.orDie),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

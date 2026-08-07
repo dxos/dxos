@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -10,7 +10,8 @@ import { ElevationProvider } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuRootProps, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { type CodeCapabilities } from '#types';
+
+import type * as CodeCapabilities from '../../types/CodeCapabilities';
 
 export type CodeToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
   state: CodeCapabilities.ProjectBuildState | undefined;
@@ -43,7 +44,9 @@ export const CodeToolbar = ({ attendableId, role, state, onBuild, onRun }: CodeT
   return (
     <ElevationProvider elevation={role === AppSurface.Section.role ? 'positioned' : 'base'}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar />
+        <Menu.Toolbar>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     </ElevationProvider>
   );

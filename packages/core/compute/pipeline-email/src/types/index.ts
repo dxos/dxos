@@ -3,4 +3,3 @@
 //
 
 export * from './Thread';
-export * from './Topic';

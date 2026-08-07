@@ -10,39 +10,13 @@ import {
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type FocusEvent,
-  type KeyboardEvent,
-  type MouseEvent,
-  createContext,
-  useCallback,
-  useContext,
-  useRef,
-  useState,
-} from 'react';
+import React, { type FocusEvent, type KeyboardEvent, type MouseEvent, useCallback, useRef, useState } from 'react';
 
 import { type Axis } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { composableProps, slottable } from '../../util';
-
-//
-// Context
-//
-
-type FocusState = 'active' | 'error';
-
-const FOCUS_STATE_ATTR = 'focus-state';
-
-type ContextValue = {
-  setFocus?: (state: FocusState | undefined) => void;
-  /** True when any item within the group has DOM focus. */
-  groupHasFocus?: boolean;
-};
-
-const FocusContext = createContext<ContextValue>({});
-
-const useFocus = () => useContext(FocusContext);
+import { FOCUS_STATE_ATTR, FocusContext, type FocusState } from './FocusContext';
 
 //
 // Group
@@ -197,5 +171,3 @@ export const Focus = {
 };
 
 export type { GroupProps as FocusGroupProps, ItemProps as FocusItemProps };
-
-export { useFocus };

@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { getRoutinesPath } from '../paths';
-import { RoutineCapabilities, RoutineOperation } from '../types';
+import * as RoutineCapabilities from '../types/RoutineCapabilities';
+import * as RoutineOperation from '../types/RoutineOperation';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = RoutineOperation.CreateRoutine.pipe(
   Operation.withHandler(
@@ -21,7 +22,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = Ro
       invariant(template, `Unknown routine template: ${templateId}`);
 
       // The scaffold returns a fully-wired in-memory routine graph (runnable, owned instructions, and trigger
-      // all parented and bound by `Routine.make`); AddObject's `Database.add` cascades the whole graph.
+      // all parented and bound by `makeRoutine`); AddObject's `Database.add` cascades the whole graph.
       const draft = yield* template
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));

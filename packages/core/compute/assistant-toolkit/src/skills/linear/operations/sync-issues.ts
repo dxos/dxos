@@ -8,11 +8,12 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { Credential, Operation } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Person, Pipeline, Task } from '@dxos/types';
+import { Person, Task } from '@dxos/types';
 
 import { syncObjects } from '../../../sync';
 import { graphqlRequestBody } from '../../../util';
@@ -156,27 +157,10 @@ const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): Tas
     },
     title: issue.title ?? undefined,
     description: issue.description ?? undefined,
-    assigned: !issue.assignee ? undefined : Ref.make(mapLinearPerson(issue.assignee, { teamId })),
+    assignee: !issue.assignee ? undefined : { contact: Ref.make(mapLinearPerson(issue.assignee, { teamId })) },
     // TODO(dmaretskyi): Sync those (+ linear team as org?).
     // state: issue.state.name,
-
-    project: !issue.project
-      ? undefined
-      : Ref.make(
-          Pipeline.make({
-            [Obj.Meta]: {
-              keys: [
-                {
-                  id: issue.project.id,
-                  source: LINEAR_ID_KEY,
-                },
-                {
-                  id: teamId,
-                  source: LINEAR_TEAM_ID_KEY,
-                },
-              ],
-            },
-            name: issue.project.name,
-          }),
-        ),
+    // Container membership (TaskSet parent edge) is not mapped here: `syncObjects` upserts
+    // detached objects, and parent edges need persisted objects — plugin-linear's sync owns
+    // real project mirroring.
   });

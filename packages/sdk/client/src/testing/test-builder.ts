@@ -18,7 +18,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import {
   MemoryTransportFactory,
   type TransportFactory,
@@ -35,12 +35,10 @@ import * as Coordinator from '@dxos/worker-framework/Coordinator';
 import * as WorkerProtocol from '@dxos/worker-framework/WorkerProtocol';
 
 import { Client } from '../client';
-import {
-  ClientServicesProxy,
-  DedicatedWorkerClientServices,
-  type LeaderTimeoutOptions,
-  LocalClientServices,
-} from '../services';
+import { ClientServicesProxy, DedicatedWorkerClientServices, type LeaderTimeoutOptions } from '../services';
+// `@dxos/client/testing` is itself a test-only entry, so reaching the in-process host directly is
+// the point here (see `../services/local.ts`).
+import { LocalClientServices } from '../services/local';
 import { TestWorkerFactory } from './test-worker-factory';
 
 export const testConfigWithLocalSignal = new Config({
@@ -211,7 +209,9 @@ export class TestBuilder {
       }
 
       return {
-        signalManager: new WebsocketSignalManager(signals),
+        // KUBE `WebsocketSignalManager` was removed; use the shared in-memory context (peers in the
+        // same process connect, and the WebRTC/TCP transport still exercises real connections).
+        signalManager: new MemorySignalManager(this.signalManagerContext),
         transportFactory,
       };
     }

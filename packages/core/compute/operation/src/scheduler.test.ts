@@ -10,7 +10,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import { describe, expect } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
 import * as OperationInvoker from './OperationInvoker';

@@ -200,11 +200,15 @@ export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
 
 /**
  * Provides an opaque toolkit to the agent.
+ *
+ * Effectful because materializing the toolkit can itself be the demand signal for the feature that
+ * contributes to it: a headless routine reaches here with no assistant UI open, and a synchronous
+ * read would return whatever happened to be registered at that instant.
  */
 export class OpaqueToolkitProvider extends Context.Tag('@dxos/ai/OpaqueToolkit.OpaqueToolkitProvider')<
   OpaqueToolkitProvider,
   {
-    readonly getToolkit: () => OpaqueToolkit;
+    readonly getToolkit: () => Effect.Effect<OpaqueToolkit>;
   }
 >() {}
 
@@ -213,7 +217,7 @@ export class OpaqueToolkitProvider extends Context.Tag('@dxos/ai/OpaqueToolkit.O
  */
 export const providerLayer = (toolkit: OpaqueToolkit) =>
   Layer.succeed(OpaqueToolkitProvider, {
-    getToolkit: () => toolkit,
+    getToolkit: () => Effect.succeed(toolkit),
   });
 
 /**

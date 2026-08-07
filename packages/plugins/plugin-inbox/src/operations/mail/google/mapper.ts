@@ -12,7 +12,7 @@ import { ContentBlock, Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
-import { Mailbox } from '../../../types';
+import * as Mailbox from '../../../types/Mailbox';
 import { parseFromHeader } from '../../util';
 
 /**

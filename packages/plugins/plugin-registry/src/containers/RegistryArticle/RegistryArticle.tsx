@@ -5,7 +5,8 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { type Plugin, type PluginManager } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { composable } from '@dxos/react-ui';
 

@@ -37,9 +37,6 @@
       "path": "../../common/markdown"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -59,6 +56,9 @@
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -103,9 +103,6 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-assistant"
-    },
-    {
       "path": "../plugin-attention"
     },
     {
@@ -131,9 +128,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

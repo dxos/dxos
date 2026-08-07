@@ -14,7 +14,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { todo } from '@dxos/debug';
 import { DXN, Filter, Ref, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -36,7 +36,7 @@ export const makeToolResolverFromOperations = <R = never>({
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
-            const toolkit = OpaqueToolkit.merge(extraToolkit, toolkitProvider.getToolkit());
+            const toolkit = OpaqueToolkit.merge(extraToolkit, yield* toolkitProvider.getToolkit());
 
             const tool = toolkit.toolkit.tools[id];
             if (tool) {
@@ -65,7 +65,7 @@ export const makeToolExecutionService = <E, R>(opts: {
     ToolExecutionService,
     Effect.gen(function* () {
       const toolkitProvider = yield* OpaqueToolkit.OpaqueToolkitProvider;
-      const toolkit = toolkitProvider.getToolkit();
+      const toolkit = yield* toolkitProvider.getToolkit();
 
       const toolkitHandler = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
       invariant(isHandlerLike(toolkitHandler));
@@ -173,7 +173,14 @@ const makeToolName = (name: string) => {
 };
 
 // TODO(dmaretskyi): Factor out.
-const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<string, Schema.Schema<any, any>> => {
+/**
+ * Projects an operation input struct into the LLM-facing tool parameter fields, mapping each
+ * property through {@link mapSchemaTypeForLLM} (so refs become the model-friendly `RefFromLLM`).
+ * Exported for testing.
+ */
+export const createStructFieldsFromSchema = (
+  schema: Schema.Schema<any, any>,
+): Record<string, Schema.Schema<any, any>> => {
   switch (schema.ast._tag) {
     case 'TypeLiteral':
       return Object.fromEntries(
@@ -216,6 +223,14 @@ const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
           ),
       ),
       ast.indexSignatures,
+      ast.annotations,
+    );
+  } else if (SchemaAST.isUnion(ast)) {
+    // `Schema.optional(Schema.Array(Ref(...)))` surfaces the value as a `T | undefined` union, so a
+    // ref nested inside an optional/union field must be mapped through each member — otherwise it
+    // keeps the raw `Ref` encoding and an LLM-supplied URI string is never coerced via `RefFromLLM`.
+    return SchemaAST.Union.make(
+      ast.types.map((member) => mapSchemaTypeForLLM(member)),
       ast.annotations,
     );
   }

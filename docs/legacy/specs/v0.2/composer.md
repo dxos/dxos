@@ -104,9 +104,7 @@ Example:
 export const Plugin = {
   meta: { id: '...' },
   provides: {
-    someCapability: {
-      /* some capability API fulfillment provided here */
-    },
+    someCapability: {/* some capability API fulfillment provided here */},
   },
 };
 ```

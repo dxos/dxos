@@ -24,10 +24,11 @@ export default Config2.make({
 
       The shared message and thread UI comes from @dxos/react-ui-thread; the Channel,
       Message, and Thread schema come from @dxos/types. Document comments and the
-      comment-thread AI agent live in the @dxos/plugin-comments plugin.
+      comment-thread AI agent live in the @dxos/plugin-review plugin.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-thread',
     icon: { key: 'ph--video-conference--regular', hue: 'rose' },
     spec: 'PLUGIN.mdl',
+    tags: ['alpha'],
   },
 });

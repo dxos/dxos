@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-toolkit",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Assistant toolkit, definitions, and utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,12 +15,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "files": [
@@ -30,7 +30,6 @@
   "dependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -44,20 +43,21 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
-    "@effect/ai-anthropic": "catalog:",
     "@effect/platform": "catalog:",
-    "dfx": "catalog:",
-    "exa-js": "catalog:"
+    "dfx": "catalog:"
   },
   "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",

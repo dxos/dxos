@@ -48,7 +48,7 @@ const HomeSectionHeader = forwardRef<HTMLDivElement, HomeSectionHeaderProps>(
   ({ title, onClose, classNames, children }, forwardedRef) => (
     <div ref={forwardedRef} className={mx('flex items-center gap-2', classNames)}>
       {title && <h2 className='grow truncate text-sm font-medium text-description'>{title}</h2>}
-      {!title && <span role='none' className='grow' />}
+      {!title && <span className='grow' />}
       {children}
       {onClose && <SystemIconButton.Close variant='ghost' iconOnly onClick={onClose} />}
     </div>

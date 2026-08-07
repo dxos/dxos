@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';

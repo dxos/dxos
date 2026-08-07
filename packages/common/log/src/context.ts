@@ -289,14 +289,43 @@ const computeContext = (entry: LogEntry, rawContext: unknown): Record<string, un
   return result;
 };
 
+/** Max depth when walking `error.cause` / Effect `UnknownException.error`. */
+const MAX_ERROR_CAUSE_DEPTH = 10;
+
+/**
+ * Formats an error for JSONL / file processors, including the cause chain.
+ * Walks standard `Error.cause` and falls back to Effect's `UnknownException.error`
+ * when `cause` is absent so wrapped tryPromise failures stay diagnosable.
+ */
 const stringifyError = (err: unknown): string | undefined => {
   if (err === null || err === undefined) {
     return undefined;
   }
-  if (err instanceof Error) {
-    return err.stack ?? err.message;
+
+  const parts: string[] = [];
+  const seen = new Set<unknown>();
+  let current: unknown = err;
+
+  for (let depth = 0; current != null && depth < MAX_ERROR_CAUSE_DEPTH; depth++) {
+    if (seen.has(current)) {
+      parts.push('[Circular]');
+      break;
+    }
+    seen.add(current);
+
+    if (current instanceof Error) {
+      parts.push(current.stack ?? current.message);
+      const next = current.cause ?? (current as { error?: unknown }).error;
+      // Stop when there is no distinct wrapped value (UnknownException sets both to the same object).
+      current = next !== undefined && next !== current ? next : undefined;
+      continue;
+    }
+
+    parts.push(String(current));
+    break;
   }
-  return String(err);
+
+  return parts.length > 0 ? parts.join('\nCaused by: ') : undefined;
 };
 
 const computeError = (entry: LogEntry, rawContext: unknown): string | undefined => {

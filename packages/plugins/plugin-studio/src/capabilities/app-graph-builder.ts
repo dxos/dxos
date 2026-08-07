@@ -5,14 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { Artifact } from '#types';
 
 import {
   ARTIFACTS_NODE_DATA,
@@ -22,20 +24,28 @@ import {
   STUDIO_SEGMENT,
   getKindIcon,
 } from '../constants';
+import * as Artifact from '../types/Artifact';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       /**
-       * Contributes the Studio navtree entry: a "Studio" section under the `content` group (always
-       * present, so it is the create hub) with a virtual "Artifacts" child node that opens the
-       * ArtifactsArticle. Mirrors plugin-inbox's Mailboxes section + virtual Drafts/Topics nodes.
+       * Contributes the Studio navtree entry: a "Studio" section under the `content` group with a
+       * virtual "Artifacts" child node that opens the ArtifactsArticle. Mirrors plugin-inbox's
+       * Mailboxes section + virtual Drafts/Topics nodes.
        */
       GraphBuilder.createExtension({
         id: 'studioSection',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
-        connector: (space) =>
-          Effect.succeed([
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
+        connector: (space, get) => {
+          // The section is elided while the space has no Artifacts (as plugin-inbox does for
+          // Mailboxes), so the first one is created from the space's generic create-object menu.
+          const artifacts = get(space.db.query(Filter.type(Artifact.Artifact)).atom);
+          if (artifacts.length === 0) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
             AppNode.makeSection({
               id: STUDIO_SEGMENT,
               type: STUDIO_SECTION_TYPE,
@@ -45,11 +55,13 @@ export default Capability.makeModule(
               space,
               position: 350,
             }),
-          ]),
+          ]);
+        },
       }),
 
       GraphBuilder.createExtension({
         id: 'studioArtifactsNode',
+        url: { key: 'studio', kind: 'item', path: [GraphPath.GroupSegments.content, STUDIO_SEGMENT] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === STUDIO_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -85,6 +97,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

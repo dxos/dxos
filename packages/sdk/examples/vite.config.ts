@@ -47,9 +47,12 @@ export default defineConfig({
     target: [...browserTargets],
   },
   resolve: {
-    alias: {
-      'node-fetch': 'isomorphic-fetch',
-    },
+    // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, so
+    // `tiktoken/lite` must use the regex form to avoid also matching deeper subpaths.
+    alias: [
+      { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
+      { find: /^tiktoken\/lite$/, replacement: path.resolve(dirname, 'stub.mjs') },
+    ],
   },
   worker: {
     format: 'es',

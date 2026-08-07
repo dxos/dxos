@@ -4,13 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { Connection, type ConnectorEntry } from '#types';
+import * as Connection from '../../types/Connection';
+import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ensureSyncTrigger } from '../../util';
 
 /**
  * Create exactly one binding for a single-target connector (no `getSyncTargets`):
@@ -20,7 +22,7 @@ import { Connection, type ConnectorEntry } from '#types';
 export const createSingleCursor = (
   invoker: Operation.OperationService,
   db: Database.Database,
-  connector: ConnectorEntry,
+  connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
@@ -33,9 +35,9 @@ export const createSingleCursor = (
       if (name) {
         Obj.update(target, (target) => Obj.setLabel(target, name));
       }
-    } else if (connector.materializeTarget) {
+    } else if (connector.sync?.materializeTarget) {
       const { target: materialized } = yield* invoker.invoke(
-        connector.materializeTarget,
+        connector.sync.materializeTarget,
         { connection: Ref.make(connection) },
         { spaceId: db.spaceId },
       );
@@ -49,10 +51,13 @@ export const createSingleCursor = (
       Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
     );
     invariant(Cursor.isExternal(cursor));
-    // Sets up recurring background sync for the target, if the connector declares it. Its own
-    // failure is not special-cased — a defect here is caught by this function's own outer
+    // Sets up recurring background sync for the binding, if the connector declares a trigger spec.
+    // Its own failure is not special-cased — a defect here is caught by this function's own outer
     // `catchAllDefect` below, same as any other step in this flow.
-    yield* connector.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
+    yield* ensureSyncTrigger({ connector, cursor });
+    // Flush the index so a caller that queries cursors right after (e.g. the mailbox/calendar
+    // article this navigates to) observes the new binding immediately, matching `reconcileCursors`.
+    yield* Database.flush({ indexes: true });
   }).pipe(
     Effect.provide(Database.layer(db)),
     Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),

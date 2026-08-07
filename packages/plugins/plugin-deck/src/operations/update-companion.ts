@@ -4,32 +4,54 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import { Attention } from '@dxos/react-ui-attention';
 
-import { DeckCapabilities } from '../types';
-import { COMPANION_VIEW_STATE_CONTEXT, companionVariantAspect } from '../util';
-import { updateActiveDeck } from './helpers';
+import * as DeckCapabilities from '../types/DeckCapabilities';
+import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, resolveCompanionAnchor, resolveCompanionPlank } from '../util';
+import { addCompanionPlank, updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       if (input.subject === null) {
-        // Leave the selected variant intact so reopening the companion restores the last tab.
+        // Closing targets the named plank: companions are per-plank, so the close control says which
+        // plank it belongs to. Callers that cannot know (the URL handler pruning a companion the URL no
+        // longer carries) fall back to the attended plank. The selected variant is left intact so
+        // reopening restores the last tab.
+        const deck = yield* DeckCapabilities.getDeck();
+        const attention = yield* Capability.get(AttentionCapabilities.Attention);
+        const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionOpen: false }),
+          updateActiveDeck(state, { companionPlanks: deck.companionPlanks.filter((id) => id !== plankId) }),
         );
       } else {
-        // The selected variant is global view state (shared with the split point), not deck state.
-        const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-        viewState.set(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT, {
-          variant: getLinkedVariant(input.subject),
+        // Resolve the plank first: a bare variant on an empty deck names none, and recording a selected
+        // variant for a companion that never opened would surface it on the next unrelated open.
+        const deck = yield* DeckCapabilities.getDeck();
+        const attention = yield* Capability.get(AttentionCapabilities.Attention);
+        const plankId = resolveCompanionPlank({
+          subject: input.subject,
+          anchor: input.anchor,
+          planks: deck.active,
+          attended: attention.getCurrent(),
         });
+        if (!plankId) {
+          return;
+        }
+
+        // The selected variant is global view state (shared with the split point), not deck state.
+        // Merge so a variant change preserves the persisted split sizes.
+        const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+        const variant = Attention.getLinkedVariant(input.subject);
+        viewState.update(companionAspect, COMPANION_VIEW_STATE_CONTEXT, (prev) => ({ ...prev, variant }));
+
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionOpen: true }),
+          updateActiveDeck(state, { companionPlanks: addCompanionPlank(state, plankId) }),
         );
       }
     }),

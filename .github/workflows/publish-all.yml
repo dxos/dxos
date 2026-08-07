@@ -6,7 +6,9 @@ name: Publish
 #
 #   - push to main (automatic → @latest): maintain the Changesets "Version Packages" PR; merging that PR
 #     (a push with the versions bumped and no changesets left) publishes the bumped packages to npm @latest
-#     with provenance. The human gate is merging the PR — nobody runs changeset/publish locally.
+#     with provenance, then tags and releases each version group. The human gate is merging the PR — nobody
+#     runs changeset/publish locally, and the PR is maintained by dxos-bot's PAT so Check runs on it like any
+#     other PR.
 #   - manual workflow_dispatch (→ @next): cut a SNAPSHOT pre-release — `changeset version --snapshot next`
 #     then `changeset publish --tag next`. Ephemeral versions, no commit, no git tags, no `pre` mode.
 #
@@ -23,7 +25,9 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write # Create the Version Packages PR + git tags (@latest flow).
+  # Both write scopes are dormant — the @latest flow writes as GH_DXOS_BOT_PAT — but are kept so reverting
+  # the changesets step to GITHUB_TOKEN stays a one-line change.
+  contents: write # Version Packages branch + git tags (@latest flow).
   pull-requests: write # Maintain the Version Packages PR.
   id-token: write # npm trusted-publisher OIDC + provenance.
 
@@ -43,6 +47,10 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # changesets/action pushes over a `~/.netrc` it writes from `github-token`, and a persisted
+          # checkout credential outranks netrc (`http.extraheader` is an explicit Authorization header),
+          # which would silently put the Version PR's commits back on GITHUB_TOKEN.
+          persist-credentials: false
 
       # This repo does not use Changesets `pre` mode — the @next channel uses snapshot releases instead.
       # A stray `.changeset/pre.json` would silently turn a stable publish into a pre-release, so fail fast.
@@ -56,6 +64,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
+          # Published artifacts are built from source, never trusted from a cache any CI job can
+          # write to — the same reasoning as the isolated pnpm scope below.
+          remote-cache: 'false'
           # Isolate publish cache from PR caches (cache-poisoning defense).
           cache-scope: publish
           verify-integrity: 'true'
@@ -86,13 +97,43 @@ jobs:
         if: github.event_name == 'push'
         uses: changesets/action@v1
         with:
+          # dxos-bot's PAT, not GITHUB_TOKEN: GitHub's recursion guard parks every `pull_request` run a
+          # GITHUB_TOKEN update triggers in `action_required`, so a GITHUB_TOKEN-owned Version PR reports
+          # zero check runs until a human approves each one by hand. The action reads
+          # `process.env.GITHUB_TOKEN` ahead of this input, so that env var must stay unset here.
+          github-token: ${{ secrets.GH_DXOS_BOT_PAT }}
           version: pnpm changeset:version
-          publish: pnpm changeset:publish
+          # `--no-git-tag`: tagging and releases are done per group by the next step, not per package. The
+          # action pushes each tag it finds in the publish output as its own `git push`, and GitHub's ref
+          # backend rejected roughly half of ~300 back-to-back single-ref pushes with `fatal error in
+          # commit_refs`. Suppressing the tags at the source leaves that loop nothing to iterate over.
+          publish: pnpm changeset:publish --no-git-tag
+          # Per-package releases are replaced by one release per version group (see the next step). The
+          # action derives releases from the tags `changeset publish` prints, so this is already inert under
+          # `--no-git-tag` — set explicitly so the intent survives a future flag change.
+          createGithubReleases: 'false'
           commit: 'Version packages'
           title: 'Version packages'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
+
+      # One tag + one GitHub Release per lockstep group (`v<version>` for core/SDK, `plugins-v<version>` for
+      # plugins + CLI), both refs in a single push.
+      #
+      # Gated on the commit subject rather than the action's `published` output: that output is derived by
+      # scraping `New tag:` out of the publish log, so `--no-git-tag` leaves it permanently false
+      # (changesets/action#141). A "Version packages" commit on main IS the release commit — every other push
+      # only refreshes the Version PR. No `always()`/`!cancelled()`: a failed publish must not be tagged, and
+      # a plain `if:` keeps the implicit "previous steps succeeded" requirement.
+      - name: Tag + release groups (@latest)
+        if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Version packages')
+        run: |
+          git config user.name 'dxos-bot'
+          git config user.email 'bot@dxos.org'
+          node scripts/release-groups.mjs
+        env:
+          # Carries both the tag push (the checkout persists no credentials) and the Releases API calls.
+          GH_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
 
       # @next (dispatch): publish the snapshot versions under the `next` dist-tag. --no-git-tag: snapshots
       # are ephemeral and never tagged. No-op when no changesets are pending.

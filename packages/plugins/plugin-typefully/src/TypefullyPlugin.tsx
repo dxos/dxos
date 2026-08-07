@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { Connector, PublisherService } from '#capabilities';
 import { meta } from '#meta';
@@ -13,19 +13,17 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 import { translations } from './translations';
 
 export const TypefullyPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupConnectors,
-    activate: Connector,
-  }),
-  Plugin.addModule({
-    id: `${meta.profile.key}/publisher-service`,
-    activatesOn: ActivationEvents.Startup,
-    activate: PublisherService,
-  }),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
+  Plugin.addModule(Connector),
+  Plugin.addModule(PublisherService),
   Plugin.make,
 );
 

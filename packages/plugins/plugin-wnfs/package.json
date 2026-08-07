@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-wnfs",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "WNFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,17 +16,17 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#helpers": {
       "source": "./src/helpers/index.ts",
       "types": "./dist/types/src/helpers/index.d.ts",
-      "default": "./dist/lib/neutral/helpers/index.mjs"
+      "default": "./dist/lib/helpers.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
       "source": {
@@ -35,40 +35,56 @@
         "default": "./src/WnfsPlugin.tsx"
       },
       "types": "./dist/types/src/WnfsPlugin.d.ts",
-      "workerd": "./dist/lib/neutral/WnfsPlugin.workerd.mjs",
-      "node": "./dist/lib/neutral/WnfsPlugin.node.mjs",
-      "default": "./dist/lib/neutral/WnfsPlugin.mjs"
+      "workerd": "./dist/lib/WnfsPlugin.workerd.mjs",
+      "node": "./dist/lib/WnfsPlugin.node.mjs",
+      "default": "./dist/lib/WnfsPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/translations.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
-    }
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./WnfsCapabilities": {
+      "source": "./src/types/WnfsCapabilities.ts",
+      "types": "./dist/types/src/types/WnfsCapabilities.d.ts",
+      "import": "./dist/lib/WnfsCapabilities.mjs"
+    },
+    "./WnfsEvents": {
+      "source": "./src/types/WnfsEvents.ts",
+      "types": "./dist/types/src/types/WnfsEvents.d.ts",
+      "import": "./dist/lib/WnfsEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "WnfsCapabilities": [
+        "dist/types/src/types/WnfsCapabilities.d.ts"
+      ],
+      "WnfsEvents": [
+        "dist/types/src/types/WnfsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -89,7 +105,6 @@
     "@dxos/plugin-file": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@ipld/car": "catalog:",
     "blockstore-core": "catalog:",
@@ -105,8 +120,6 @@
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

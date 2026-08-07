@@ -29,6 +29,11 @@ export type ChatEvent =
       type: 'delete';
       id: string;
     }
+  /** Soft-fork the thread: continue from this message, leaving what followed it unreachable. */
+  | {
+      type: 'rewind';
+      id: string;
+    }
   | {
       type: 'add';
       object: Obj.Unknown;

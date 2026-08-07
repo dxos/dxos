@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { runDedicatedWorker } from '@dxos/client';
+import { runDedicatedWorker } from '@dxos/client/worker';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { isTauri } from '@dxos/util';
 
-import { LOG_STORE_DB_NAME, initializeObservability } from '../util';
+import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, initializeObservability } from '../util';
 
-const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
+const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES });
 log.addProcessor(logStore.processor);
 
 runDedicatedWorker({

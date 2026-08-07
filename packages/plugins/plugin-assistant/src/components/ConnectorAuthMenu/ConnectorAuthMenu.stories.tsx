@@ -8,18 +8,21 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useContext, useMemo } from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection, Connector, type ConnectorEntry, connectorAuthActions } from '@dxos/plugin-connector';
+import { connectorAuthActions } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
-import { Graph, useActionRunner } from '@dxos/plugin-graph';
+import { Graph } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Menu, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
@@ -46,17 +49,17 @@ const makeCredentialForm = (connectorId: string) => ({
   },
 });
 
-const testConnectors: ConnectorEntry[] = [
+const testConnectors: ConnectorSpec.ConnectorEntry[] = [
   {
     id: 'connector-a',
     source: 'connector-a.example',
-    label: 'Connector A',
+    label: 'ConnectorSpec.Connector A',
     credentialForm: makeCredentialForm('connector-a'),
   },
   {
     id: 'connector-b',
     source: 'connector-b.example',
-    label: 'Connector B',
+    label: 'ConnectorSpec.Connector B',
     credentialForm: makeCredentialForm('connector-b'),
   },
 ];
@@ -85,7 +88,7 @@ const ToolbarStory = () => {
   const [space] = useSpaces();
   const registry = useContext(RegistryContext);
   const runAction = useActionRunner();
-  const allConnectors = useCapabilities(Connector).flat();
+  const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(space?.db, Filter.type(Connection.Connection));
   const targets = useQuery(space?.db, Filter.type(Expando.Expando));
   const target = targets[0];
@@ -118,7 +121,9 @@ const ToolbarStory = () => {
   return (
     <div className='p-4 border border-separator rounded-sm'>
       <Menu.Root {...menuActions} onAction={runAction} attendableId={TOOLBAR_NODE_ID} alwaysActive>
-        <Menu.Toolbar />
+        <Menu.Toolbar>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     </div>
   );
@@ -130,8 +135,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
-      capabilities: [Capability.contributes(Connector, testConnectors)],
+      capabilities: [Capability.contribute(ConnectorSpec.Connector, testConnectors)],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -146,7 +150,7 @@ const meta = {
               const accessToken = AccessToken.make({ source: 'connector-b.example', token: 'mock-token' });
               space.db.add(
                 Connection.make({
-                  name: 'Existing Connector B',
+                  name: 'Existing ConnectorSpec.Connector B',
                   connectorId: 'connector-b',
                   accessToken: Ref.make(accessToken),
                 }),

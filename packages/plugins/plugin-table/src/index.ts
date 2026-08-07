@@ -5,4 +5,5 @@
 export * from './skills';
 export * from './meta';
 export * from './operations';
-export * from './types';
+export * as TableEvents from './types/TableEvents';
+export * as TableOperation from './types/TableOperation';

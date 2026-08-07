@@ -1,7 +1,6 @@
 {
   "name": "@dxos/halo-adapter-client",
-  "version": "0.10.0",
-  "private": true,
+  "version": "0.11.1",
   "description": "Implements the @dxos/halo services over a @dxos/client instance.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/halo/halo-adapter-client#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,16 +16,14 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/halo": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "effect": "catalog:"

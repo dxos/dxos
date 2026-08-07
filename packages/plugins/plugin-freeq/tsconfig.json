@@ -22,13 +22,7 @@
       "path": "../../common/errors"
     },
     {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -37,16 +31,13 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
@@ -68,9 +59,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     },
     {
       "path": "../plugin-thread"

@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { CommentConfig, CreateObject, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 
 export const TablePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Table.Table] }),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Table.Table])),
   Plugin.make,
 );
 

@@ -8,9 +8,10 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
@@ -18,8 +19,8 @@ import { arrayMove } from '@dxos/util';
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
 import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
-import { type NavTreeItemGraphNode } from '#types';
 
+import * as NavTreeNode from '../../types/NavTreeNode';
 import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
@@ -76,7 +77,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     );
 
     const handleTabChange = useCallback(
-      (node: NavTreeItemGraphNode) => {
+      (node: NavTreeNode.NavTreeItemGraphNode) => {
         Graph.expand(graph, node.id, 'child');
 
         const {
@@ -102,15 +103,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            if (layout.mode === 'multi') {
-              void invokePromise(LayoutOperation.Set, { subject: [item.id] });
-            } else {
-              void invokePromise(LayoutOperation.Open, { subject: [item.id] });
-            }
+            void invokePromise(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokePromise, graph, layout.mode],
+      [invokePromise, graph],
     );
 
     const blockInstruction = useCallback(
@@ -129,7 +126,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     }, []);
 
     const handleSelect = useCallback(
-      ({ item: node, path, option }: { item: Node.Node; path: string[]; option: boolean }) => {
+      ({ item: node, path, option, shift }: { item: Node.Node; path: string[]; option: boolean; shift: boolean }) => {
         if (!node.data) {
           return;
         }
@@ -144,11 +141,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = getItem(path).current;
         if (!current) {
-          if (layout.mode === 'multi') {
-            void invokePromise(LayoutOperation.Set, { subject: [node.id] });
-          } else {
-            void invokePromise(LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
-          }
+          // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
+          // handler, which upgrades any disposition to add when shift is held).
+          void invokePromise(LayoutOperation.Open, {
+            subject: [node.id],
+            disposition: 'solo',
+            modifiers: { shift },
+          });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
@@ -164,7 +163,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, getItem, runAction, isLg, layout.mode],
+      [graph, invokePromise, getItem, runAction, isLg],
     );
 
     const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);
@@ -181,8 +180,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           const target = location.current.dropTargets[0];
           const instruction: Instruction | null = extractInstruction(target.data);
           if (instruction !== null && instruction.type !== 'instruction-blocked') {
-            const sourceNode = source.data.item as NavTreeItemGraphNode;
-            const targetNode = target.data.item as NavTreeItemGraphNode;
+            const sourceNode = source.data.item as NavTreeNode.NavTreeItemGraphNode;
+            const targetNode = target.data.item as NavTreeNode.NavTreeItemGraphNode;
             const sourcePath = source.data.path as string[];
             const targetPath = target.data.path as string[];
             const sameParent = sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join();

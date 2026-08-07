@@ -13,9 +13,11 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { Assistant, AssistantCapabilities, Ollama } from '#types';
 
 import { presetsForProvider, resolveProvider } from '../../processor';
+import * as Assistant from '../../types/Assistant';
+import * as AssistantCapabilities from '../../types/AssistantCapabilities';
+import * as Ollama from '../../types/Ollama';
 import { OllamaModels } from './OllamaModels';
 
 export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;

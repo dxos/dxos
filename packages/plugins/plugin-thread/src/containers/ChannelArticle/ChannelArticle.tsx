@@ -8,9 +8,9 @@ import React, { useCallback } from 'react';
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { getSpace, useMembers } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useIdentity, useMembers } from '@dxos/halo-react';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
+import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Channel } from '@dxos/types';
@@ -18,7 +18,10 @@ import { type Channel } from '@dxos/types';
 import { MessageThread } from '#components';
 import { useMessages, useStatus } from '#hooks';
 import { meta } from '#meta';
-import { ThreadCapabilities, ThreadOperation, resolveProvider } from '#types';
+
+import * as ChannelBackend from '../../types/ChannelBackend';
+import * as ThreadCapabilities from '../../types/ThreadCapabilities';
+import * as ThreadOperation from '../../types/ThreadOperation';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);
@@ -51,7 +54,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const { invokePromise } = useOperationInvoker();
 
   const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
-  const provider = channel ? resolveProvider(providers, channel.backend.kind) : undefined;
+  const provider = channel ? ChannelBackend.resolveProvider(providers, channel.backend.kind) : undefined;
   const messages = useMessages(channel);
   const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
 
@@ -108,7 +111,9 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
       {canStartCall && (
         <Menu.Root {...menuActions} attendableId={attendableId}>
           <Panel.Toolbar asChild>
-            <Menu.Toolbar />
+            <Menu.Toolbar>
+              <Menu.Items />
+            </Menu.Toolbar>
           </Panel.Toolbar>
         </Menu.Root>
       )}

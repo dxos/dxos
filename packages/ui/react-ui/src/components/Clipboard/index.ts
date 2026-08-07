@@ -11,4 +11,4 @@ export const Clipboard = {
   Provider: ClipboardProvider,
 };
 
-export { useClipboard } from './ClipboardProvider';
+export { useClipboard } from './ClipboardContext';

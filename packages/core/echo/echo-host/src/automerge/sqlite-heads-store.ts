@@ -4,6 +4,7 @@
 
 import type { Heads } from '@automerge/automerge';
 import type { DocumentId } from '@automerge/automerge-repo';
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
@@ -14,6 +15,8 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import type { Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
 import { SqlTransaction } from '@dxos/sql-sqlite';
+
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -28,7 +31,7 @@ const decodeHeads = (data: Uint8Array): Heads => {
   try {
     return getHeadsCodec().decode(data).hashes!;
   } catch {
-    // Legacy encoding migration path (same as HeadsStore).
+    // Legacy encoding migration path for heads persisted before protobuf encoding.
     log.warn('Detected legacy encoding of heads in SQLite storage.');
     const concatenated = Buffer.from(data).toString('utf8').replace(/"/g, '');
     const heads: string[] = [];
@@ -45,7 +48,6 @@ export type SqliteHeadsStoreProps = {
 
 /**
  * SQLite-backed store for automerge document heads.
- * Replaces HeadsStore (LevelDB-based).
  */
 export class SqliteHeadsStore {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
@@ -55,20 +57,19 @@ export class SqliteHeadsStore {
   }
 
   /**
-   * Creates the automerge_heads table if it does not exist.
+   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
+   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
+   * `BEGIN` / `COMMIT` — rejected in workerd.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
-    'SqliteHeadsStore.migrate',
-  )(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`CREATE TABLE IF NOT EXISTS automerge_heads (
-          document_id TEXT PRIMARY KEY,
-          heads BLOB NOT NULL
-        )`;
-      log('automerge_heads table ready');
-    }).pipe(Effect.withSpan('SqliteHeadsStore.migrate')),
-  )();
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
+    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
+  ).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('SqliteHeadsStore.migrate'),
+  );
 
   /**
    * Returns an Effect that sets heads for a document.

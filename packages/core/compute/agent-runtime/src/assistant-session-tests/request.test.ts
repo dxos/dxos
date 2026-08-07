@@ -71,7 +71,7 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(toolkitLayer),
 );
 
-describe('AiRequest.Request', () => {
+describe('AiRequest.Request', { tags: ['model-fixture'] }, () => {
   it.effect(
     'no tools',
     Effect.fnUntraced(

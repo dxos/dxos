@@ -17,15 +17,13 @@ import React, {
 import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { type Size } from './sizes';
+
 const emptyLines: string[] = [];
 
 // The per-line opacity fade runs at 1/3 of the ribbon translate duration, so
 // the active line is fully bright by the time the ribbon settles in place.
 const LINE_FADE_RATIO = 1 / 3;
-
-// TODO(burdon): Factor out to theme?
-export type Size = 'sm' | 'md' | 'lg';
-export const sizes: Size[] = ['sm', 'md', 'lg'];
 
 export type TextCrawlProps = {
   /** Auto-advance after `minDuration`. */

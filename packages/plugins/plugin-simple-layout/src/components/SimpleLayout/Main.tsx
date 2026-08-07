@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useNode } from '@dxos/plugin-graph';
+import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
@@ -14,7 +14,7 @@ import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '#hooks';
 
 import { useExpandPath } from '../hooks';
 import { Loading } from '../Loading';
-import { useMobileLayout } from '../MobileLayout';
+import { useMobileLayout } from '../MobileLayout/MobileLayoutContext';
 import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 
@@ -52,11 +52,11 @@ export const Main = () => {
   const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
 
   return (
-    <Panel.Root {...attentionAttrs} className='dx-document'>
+    <Panel.Root {...attentionAttrs} classNames='dx-document'>
       <Panel.Toolbar asChild>
         <AppBar {...appBarProps} />
       </Panel.Toolbar>
-      <Panel.Content role='article' className='bg-base-surface'>
+      <Panel.Content role='article' classNames='dx-base-surface'>
         <Surface.Surface
           key={id}
           type={AppSurface.Article}

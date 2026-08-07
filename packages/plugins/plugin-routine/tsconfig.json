@@ -28,12 +28,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -55,10 +49,10 @@
       "path": "../../core/compute/compute-runtime"
     },
     {
-      "path": "../../core/compute/conductor"
+      "path": "../../core/compute/edge-compute"
     },
     {
-      "path": "../../core/compute/edge-compute"
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
@@ -68,9 +62,6 @@
     },
     {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../devtools/cli-util"
@@ -85,16 +76,10 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/client-protocol"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
@@ -137,9 +122,6 @@
     },
     {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"

@@ -2,22 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Capabilities } from '@dxos/app-framework';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Account, ClientOperation } from '@dxos/plugin-client';
+import { ClientOperation } from '@dxos/plugin-client';
+import * as Account from '@dxos/plugin-client/Account';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { HelpOperation } from '@dxos/plugin-support';
+import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { WELCOME_SCREEN } from './components';
 import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
+import { probeEmailExists } from './credentials';
 import { meta } from './meta';
 import { queryAllCredentials, removeQueryParamByValue } from './util';
 
@@ -91,21 +94,21 @@ export class OnboardingManager {
 
     this._identity = this._client.halo.identity.get();
 
-    this._subscriptions.add(
-      this._client.halo.identity.subscribe((identity) => {
-        if (this._destroyed) {
-          return;
-        }
-        const wasNull = this._identity === null;
-        this._identity = identity;
+    const subscription = this._client.halo.identity.subscribe((identity) => {
+      if (this._destroyed) {
+        return;
+      }
+      const wasNull = this._identity === null;
+      this._identity = identity;
 
-        // The gate is identity-presence: the moment a local identity exists, dismiss
-        // the welcome dialog. Account binding / activation can complete asynchronously.
-        if (identity && wasNull) {
-          void this._closeWelcome();
-        }
-      }).unsubscribe,
-    );
+      // The gate is identity-presence: the moment a local identity exists, dismiss
+      // the welcome dialog. Account binding / activation can complete asynchronously.
+      if (identity && wasNull) {
+        void this._closeWelcome();
+      }
+    });
+    // Bound closure: a detached `subscription.unsubscribe` loses its receiver and throws on dispose.
+    this._subscriptions.add(() => subscription.unsubscribe());
   }
 
   async initialize(): Promise<void> {
@@ -120,6 +123,13 @@ export class OnboardingManager {
     // is checked separately on the profile page (where users without an account see
     // a "no edge access" warning + request-access form).
     if (this._identity) {
+      // A device invitation targets a different identity, so accepting it requires a storage
+      // reset; confirm via the reset dialog rather than dropping the invitation silently. Stop
+      // here — no recovery/agent provisioning for an identity the user may be about to abandon.
+      if (this._deviceInvitationCode !== undefined) {
+        await this._confirmJoinNewIdentity();
+        return;
+      }
       // For users who already have a local identity but a fresh `?email=...`
       // URL param: hand it to the redeem endpoint, which is idempotent (the
       // server may auto-bind, return a login token, or reject -- we swallow
@@ -163,10 +173,11 @@ export class OnboardingManager {
       // URL-driven signup: `?accountInvitationCode=...&email=...`. The user
       // landed here from the invitation email; redeem the code with the
       // emailed address.
-      await this._redeemAccountInvitation();
-      await this._setupRecovery();
-      await this._startHelp();
-      await this._createAgent();
+      if (await this._redeemAccountInvitation()) {
+        await this._setupRecovery();
+        await this._startHelp();
+        await this._createAgent();
+      }
     } else if (!this._identity && this._skipAuth) {
       // Auth disabled (e.g. integration tests): just bring up a fresh identity.
       await this._createIdentity();
@@ -228,9 +239,9 @@ export class OnboardingManager {
       actionLabel: ['passkey-setup-toast-action.label', { ns: meta.profile.key }],
       actionAlt: ['passkey-setup-toast-action.alt', { ns: meta.profile.key }],
       onAction: async () => {
-        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(Account.id) });
+        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(Account.id) });
         await this._invokePromise(LayoutOperation.Open, {
-          subject: [Paths.getSpacePath(Account.id, Account.Security)],
+          subject: [GraphPath.getSpacePath(Account.id, Account.Security)],
         });
       },
     });
@@ -248,10 +259,29 @@ export class OnboardingManager {
    * fresh local identity and bind it. Account restoration is intentionally not
    * supported on this path -- magic-link login (`/account/login`) handles
    * recovery for real emails, and test emails are always fresh (no restore).
+   *
+   * Resolves false when no identity was created — either the email already has an
+   * account (the welcome dialog stays open so the user can log in instead) or the
+   * probe was inconclusive, in which case the URL params are left intact so a reload
+   * retries the signup.
    */
-  private async _redeemAccountInvitation(): Promise<void> {
+  private async _redeemAccountInvitation(): Promise<boolean> {
     invariant(this._email);
     invariant(this._hubUrl, 'hubUrl required for redemption');
+
+    // Probe before creating anything: redemption rejects a duplicate email, and an
+    // identity created first would be stranded with no account and no way to retry.
+    const probe = await probeEmailExists({ hubUrl: this._hubUrl, email: this._email });
+    if (probe === 'unavailable') {
+      log.warn('could not check whether signup email is registered; leaving signup params for retry');
+      return false;
+    }
+    if (probe === 'exists') {
+      log.info('signup email already registered; awaiting login');
+      this._accountInvitationCode && removeQueryParamByValue(this._accountInvitationCode);
+      removeQueryParamByValue(this._email);
+      return false;
+    }
 
     await this._createIdentity();
     invariant(this._identity, 'identity should exist after create');
@@ -268,6 +298,7 @@ export class OnboardingManager {
 
     this._accountInvitationCode && removeQueryParamByValue(this._accountInvitationCode);
     removeQueryParamByValue(this._email);
+    return true;
   }
 
   /**
@@ -359,6 +390,11 @@ export class OnboardingManager {
     }
 
     await this._invokePromise(ClientOperation.CreateAgent);
+  }
+
+  /** The invitation code stays in the URL so it survives the reset reload. */
+  private async _confirmJoinNewIdentity(): Promise<void> {
+    await this._invokePromise(ClientOperation.ResetStorage, { mode: 'join-new-identity' });
   }
 
   private async _openJoinIdentity(): Promise<void> {

@@ -9,7 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, IconButton, Input, Tag, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { hues, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
+import { hues } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';

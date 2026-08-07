@@ -7,7 +7,18 @@ import { describe, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { createDraftMessage, getMessageBodyText, getMessageProps, messageMatchesQuery } from './util';
+import { meta } from '#meta';
+
+import {
+  createDraftMessage,
+  dedupeSupersededDrafts,
+  formatAge,
+  getMessageBodyText,
+  getMessageLabel,
+  getMessageProps,
+  messageMatchesQuery,
+  orderThreadItems,
+} from './util';
 
 describe('createDraftMessage', () => {
   test('compose mode returns empty to and provided subject/body', ({ expect }) => {
@@ -109,6 +120,84 @@ describe('createDraftMessage', () => {
   test('compose mode sets no threadId', ({ expect }) => {
     const props = createDraftMessage({ mode: 'compose', subject: 'Hi', body: 'Hello' });
     expect(props.threadId).toBeUndefined();
+  });
+});
+
+describe('orderThreadItems', () => {
+  test('renders a reply draft immediately after the message it answers', ({ expect }) => {
+    const m1 = makeRead('2025-01-01T00:00:00.000Z');
+    const m2 = makeRead('2025-01-02T00:00:00.000Z');
+    const m3 = makeRead('2025-01-03T00:00:00.000Z');
+    // Draft replies to m1 but was created last (chronologically at the bottom).
+    const draft = makeDraft('2025-01-04T00:00:00.000Z', m1);
+
+    const ordered = orderThreadItems([m1, m2, m3, draft]);
+    expect(ordered.map((message) => message.id)).toEqual([m1.id, draft.id, m2.id, m3.id]);
+  });
+
+  test('keeps a draft with no parent in the thread at its chronological position', ({ expect }) => {
+    const m1 = makeRead('2025-01-01T00:00:00.000Z');
+    const m2 = makeRead('2025-01-02T00:00:00.000Z');
+    const orphan = makeDraft('2025-01-03T00:00:00.000Z');
+
+    const ordered = orderThreadItems([m1, m2, orphan]);
+    expect(ordered.map((message) => message.id)).toEqual([m1.id, m2.id, orphan.id]);
+  });
+
+  test('groups multiple drafts under the same parent in order', ({ expect }) => {
+    const m1 = makeRead('2025-01-01T00:00:00.000Z');
+    const m2 = makeRead('2025-01-02T00:00:00.000Z');
+    const first = makeDraft('2025-01-03T00:00:00.000Z', m1);
+    const second = makeDraft('2025-01-04T00:00:00.000Z', m1);
+
+    const ordered = orderThreadItems([m1, m2, first, second]);
+    expect(ordered.map((message) => message.id)).toEqual([m1.id, first.id, second.id, m2.id]);
+  });
+
+  test('returns the input unchanged when there are no attachable drafts', ({ expect }) => {
+    const m1 = makeRead('2025-01-01T00:00:00.000Z');
+    const m2 = makeRead('2025-01-02T00:00:00.000Z');
+    const messages = [m1, m2];
+    expect(orderThreadItems(messages)).toBe(messages);
+  });
+});
+
+describe('dedupeSupersededDrafts', () => {
+  const MAILBOX_URI = 'echo:mailbox-1';
+  const OTHER_MAILBOX_URI = 'echo:mailbox-2';
+
+  const makeSynced = (foreignId: string) =>
+    Obj.make(Message.Message, {
+      [Obj.Meta]: { keys: [{ id: foreignId, source: 'test' }] },
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Alice', email: 'alice@example.com' },
+      blocks: [{ _tag: 'text' as const, text: 'Body' }],
+      properties: { subject: 'Topic' },
+    });
+
+  const makeDraft = (mailboxUri: string, sentMessageId?: string) =>
+    Obj.make(Message.Message, {
+      created: '2025-01-02T00:00:00.000Z',
+      sender: { name: 'Me' },
+      blocks: [{ _tag: 'text' as const, text: '' }],
+      properties: { subject: 'Re: Topic', mailbox: mailboxUri, ...(sentMessageId ? { sentMessageId } : {}) },
+    });
+
+  test("keeps synced messages and this mailbox's unsent drafts", ({ expect }) => {
+    const synced = makeSynced('foreign-1');
+    const draft = makeDraft(MAILBOX_URI);
+    expect(dedupeSupersededDrafts([synced, draft], MAILBOX_URI)).toEqual([synced, draft]);
+  });
+
+  test('drops a draft superseded by its synced sent copy', ({ expect }) => {
+    const synced = makeSynced('foreign-1');
+    const draft = makeDraft(MAILBOX_URI, 'foreign-1');
+    expect(dedupeSupersededDrafts([synced, draft], MAILBOX_URI)).toEqual([synced]);
+  });
+
+  test('drops a draft belonging to a different mailbox', ({ expect }) => {
+    const draft = makeDraft(OTHER_MAILBOX_URI);
+    expect(dedupeSupersededDrafts([draft], MAILBOX_URI)).toEqual([]);
   });
 });
 
@@ -250,5 +339,77 @@ describe('messageMatchesQuery', () => {
   test('an empty query always matches', ({ expect }) => {
     expect(messageMatchesQuery(message, '')).toBe(true);
     expect(messageMatchesQuery(message, '   ')).toBe(true);
+  });
+});
+
+describe('getMessageLabel', () => {
+  test('uses the subject when there is one', ({ expect }) => {
+    expect(getMessageLabel(makeRead('2025-01-01T00:00:00.000Z'))).toBe('Topic');
+  });
+
+  test('a compose draft (empty subject) falls back to the draft label, not a blank heading', ({ expect }) => {
+    const draft = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Me' },
+      blocks: [{ _tag: 'text' as const, text: '' }],
+      properties: { subject: '', mailbox: DRAFT_MAILBOX },
+    });
+    expect(getMessageLabel(draft)).toEqual(['draft.label', { ns: meta.profile.key }]);
+  });
+
+  test('a non-draft without a subject falls back to the message label', ({ expect }) => {
+    const message = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Sender' },
+      blocks: [{ _tag: 'text' as const, text: '' }],
+      properties: { subject: '' },
+    });
+    expect(getMessageLabel(message)).toEqual(['message.label', { ns: meta.profile.key }]);
+  });
+});
+
+const makeRead = (created: string) =>
+  Obj.make(Message.Message, {
+    created,
+    sender: { name: 'Sender' },
+    blocks: [{ _tag: 'text' as const, text: '' }],
+    properties: { subject: 'Topic' },
+  });
+
+// A draft is a message with an EID `properties.mailbox` (see DraftMessage); any `echo:`-prefixed
+// string is a valid EID. A reply draft also carries `parentMessage`.
+const DRAFT_MAILBOX = 'echo:mailbox';
+const makeDraft = (created: string, parent?: Message.Message) =>
+  Obj.make(Message.Message, {
+    created,
+    sender: { name: 'Me' },
+    ...(parent ? { parentMessage: parent.id } : {}),
+    blocks: [{ _tag: 'text' as const, text: '' }],
+    properties: { subject: 'Re: Topic', mailbox: DRAFT_MAILBOX },
+  });
+
+describe('formatAge', () => {
+  const now = new Date('2026-07-31T12:00:00Z');
+  const ago = (ms: number) => new Date(now.getTime() - ms);
+  const MINUTE = 60_000;
+  const HOUR = 60 * MINUTE;
+  const DAY = 24 * HOUR;
+
+  test('picks the largest unit that still reads unambiguously', ({ expect }) => {
+    expect(formatAge(ago(30_000), now)).toBe('now');
+    expect(formatAge(ago(12 * MINUTE), now)).toBe('12m');
+    expect(formatAge(ago(59 * MINUTE), now)).toBe('59m');
+    expect(formatAge(ago(4 * HOUR), now)).toBe('4h');
+    expect(formatAge(ago(23 * HOUR), now)).toBe('23h');
+    expect(formatAge(ago(3 * DAY), now)).toBe('3d');
+    expect(formatAge(ago(6 * DAY), now)).toBe('6d');
+    expect(formatAge(ago(14 * DAY), now)).toBe('2w');
+    expect(formatAge(ago(120 * DAY), now)).toBe('3mo');
+    expect(formatAge(ago(400 * DAY), now)).toBe('1y');
+  });
+
+  test('a message just over a month old reads in months, never `0mo`', ({ expect }) => {
+    // 35d is 5 weeks — past the week cutoff, but `differenceInMonths` rounds down to 1.
+    expect(formatAge(ago(35 * DAY), now)).toBe('1mo');
   });
 });

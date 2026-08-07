@@ -6,7 +6,8 @@ import React, { useCallback } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -24,7 +25,7 @@ export const ImportSpaceDialog = () => {
       });
       await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       if (result?.space) {
-        await invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(result.space.id) });
+        await invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(result.space.id) });
       }
     },
     [invokePromise],

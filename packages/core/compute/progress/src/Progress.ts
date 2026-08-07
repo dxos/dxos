@@ -128,6 +128,11 @@ export const make = (): ProgressApi => {
       done: () => touch(entry, (item) => (item.status = 'done')),
       fail: (error) => touch(entry, (item) => ((item.status = 'error'), (item.error = error))),
       remove: () => {
+        // Scoped to this handle: two writers can register the same key, and a superseded handle
+        // must not delete the live entry (which would also strip its cancel handler).
+        if (tasks.get(name) !== entry) {
+          return;
+        }
         tasks.delete(name);
         cancelHandlers.delete(name);
         emit();

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { useCredentials } from '@dxos/react-client/halo';
+import { useCredentials } from '@dxos/halo-react';
 import { Icon, IconButton, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
@@ -20,7 +20,7 @@ export const RecoveryCredentialsContainer = () => {
   const { invokePromise } = useOperationInvoker();
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(
-    (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    (credential) => credential.type === 'dxos.halo.credentials.IdentityRecovery',
   );
 
   return (
@@ -48,20 +48,18 @@ export const RecoveryCredentialsContainer = () => {
           <Form.Section title={t('credentials-list.label')}>
             {recoveryCredentials.length < 1 ? (
               <Message.Root valence='error'>
-                <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
-                <Message.Content>{t('no-credentials.message')}</Message.Content>
+                <Message.Content>
+                  <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
+                  <Message.Body>{t('no-credentials.message')}</Message.Body>
+                </Message.Content>
               </Message.Root>
             ) : (
               <Listbox.Root>
                 <Listbox.Content classNames='gap-1'>
                   {recoveryCredentials.map((credential, index) => (
-                    <Listbox.Item
-                      key={credential.id?.toHex() ?? index}
-                      id={credential.id?.toHex() ?? `${index}`}
-                      classNames='gap-2'
-                    >
+                    <Listbox.Item key={credential.id ?? index} id={credential.id ?? `${index}`} classNames='gap-2'>
                       <Icon icon='ph--key--regular' />
-                      <Listbox.ItemLabel>{credential.issuanceDate.toLocaleString()}</Listbox.ItemLabel>
+                      <Listbox.ItemLabel>{credential.issuanceDate?.toLocaleString()}</Listbox.ItemLabel>
                     </Listbox.Item>
                   ))}
                 </Listbox.Content>

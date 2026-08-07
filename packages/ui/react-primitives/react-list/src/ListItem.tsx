@@ -2,65 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { CheckboxProps } from '@radix-ui/react-checkbox';
 import { type CollapsibleContentProps, type CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
 import * as Collapsible from '@radix-ui/react-collapsible';
-import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  type ComponentProps,
-  type ComponentPropsWithoutRef,
-  type ComponentRef,
-  type Dispatch,
-  type ForwardRefExoticComponent,
-  type RefAttributes,
-  type SetStateAction,
-  forwardRef,
-} from 'react';
+import React, { type ComponentProps, type ForwardRefExoticComponent, forwardRef } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
-import { LIST_NAME, type ListScopedProps, useListContext } from './List';
-
-const LIST_ITEM_NAME = 'ListItem';
-
-type ListItemScopedProps<P> = P & { __listItemScope?: Scope };
-
-interface ListItemData {
-  id: string;
-  labelId?: string;
-  selected?: CheckboxProps['checked'];
-  open?: boolean;
-}
-
-type ListItemProps = Omit<ListItemData, 'id'> & { collapsible?: boolean } & RefAttributes<HTMLLIElement> &
-  ComponentPropsWithoutRef<'li'> & {
-    defaultOpen?: boolean;
-    onOpenChange?: (nextOpen: boolean) => void;
-  } & {
-    onSelectedChange?: CheckboxProps['onCheckedChange'];
-    defaultSelected?: CheckboxProps['defaultChecked'];
-  };
-
-type ListItemElement = ComponentRef<'li'>;
-
-const [createListItemContext, createListItemScope] = createContextScope(LIST_ITEM_NAME, []);
-
-type ListItemContextValue = {
-  headingId: string;
-  open: boolean;
-  selected: CheckboxProps['checked'];
-  setSelected: Dispatch<SetStateAction<CheckboxProps['checked']>>;
-};
-
-const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
-
-type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithoutRef<'p'>, 'id'>> &
-  RefAttributes<HTMLParagraphElement> & {
-    asChild?: boolean;
-  };
+import { LIST_NAME, type ListScopedProps, useListContext } from './ListContext';
+import {
+  LIST_ITEM_NAME,
+  type ListItemElement,
+  type ListItemHeadingProps,
+  type ListItemProps,
+  ListItemProvider,
+  type ListItemScopedProps,
+  useListItemContext,
+} from './ListItemContext';
 
 const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
   ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {
@@ -151,20 +111,6 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>(
 
 ListItem.displayName = LIST_ITEM_NAME;
 
-export {
-  LIST_ITEM_NAME,
-  ListItem,
-  ListItemCollapsibleContent,
-  ListItemHeading,
-  ListItemOpenTrigger,
-  createListItemScope,
-  useListItemContext,
-};
+export { ListItem, ListItemCollapsibleContent, ListItemHeading, ListItemOpenTrigger };
 
-export type {
-  ListItemCollapsibleContentProps,
-  ListItemHeadingProps,
-  ListItemOpenTriggerProps,
-  ListItemProps,
-  ListItemScopedProps,
-};
+export type { ListItemCollapsibleContentProps, ListItemOpenTriggerProps };

@@ -7,8 +7,8 @@ import React, { useMemo, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import type { EntityId } from '@dxos/keys';
-import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -43,7 +43,7 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <div className={mx('grid divide-y divide-separator', db && 'grid-rows-[1fr_2fr]')}>
+          <div className={mx('grid divide-y divide-subdued-separator', db && 'grid-rows-[1fr_2fr]')}>
             {db && (
               <ScrollArea.Root>
                 <ScrollArea.Viewport>

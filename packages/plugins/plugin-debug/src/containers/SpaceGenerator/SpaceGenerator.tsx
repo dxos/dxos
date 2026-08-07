@@ -5,13 +5,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useProgress } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown';
-import { Sheet } from '@dxos/plugin-sheet';
-import { Sketch } from '@dxos/plugin-sketch';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Panel, ScrollArea, ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
@@ -24,7 +24,7 @@ import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGe
 import { meta } from '#meta';
 
 // TODO(burdon): Make extensible.
-const staticTypes = [Markdown.Document, Sketch.Sketch, Sheet.Sheet, ComputeGraph];
+const staticTypes = [Markdown.Document, Drawing.Drawing, Sheet.Sheet, ComputeGraph];
 const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
 
 export type SpaceGeneratorProps = {

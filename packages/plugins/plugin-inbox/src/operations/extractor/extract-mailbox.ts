@@ -5,15 +5,16 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { InboxOperation } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
 
 const DEFAULT_CONCURRENCY = InboxOperation.DEFAULT_EXTRACT_MAILBOX_CONCURRENCY;
 
+/** @deprecated Use batch dispatchers like on-arrival extractors or direct ExtractMessage invocations instead. */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractMailbox> = InboxOperation.ExtractMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ mailbox: mailboxRef, extractorId, concurrency = DEFAULT_CONCURRENCY }) {

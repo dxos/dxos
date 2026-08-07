@@ -1,0 +1,40 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { defineConfig } from '../../../vite.base.config.ts';
+
+export default defineConfig({
+  entry: {
+    'index': 'src/index.ts',
+    'AssistantPlugin': 'src/AssistantPlugin.ts',
+    'AssistantPlugin.node': 'src/AssistantPlugin.node.ts',
+    'AssistantPlugin.workerd': 'src/AssistantPlugin.workerd.ts',
+    'skills': 'src/skills/index.ts',
+    'capabilities': 'src/capabilities/index.ts',
+    'capabilities.workerd': 'src/capabilities/workerd.ts',
+    'components': 'src/components/index.ts',
+    'containers': 'src/containers/index.ts',
+    'execution-graph': 'src/execution-graph/index.ts',
+    'extensions': 'src/extensions/index.ts',
+    'hooks': 'src/hooks/index.ts',
+    'meta': 'src/meta.ts',
+    'operations': 'src/operations/index.ts',
+    'plugin': 'src/plugin.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
+    'testing': 'src/testing.ts',
+    'translations': 'src/translations.ts',
+    'AssistantEvents': 'src/types/AssistantEvents.ts',
+    'AssistantOptions': 'src/types/AssistantOptions.ts',
+    'AssistantPreset': 'src/types/AssistantPreset.ts',
+    'AssistantService': 'src/types/AssistantService.ts',
+    'ChatSurface': 'src/types/ChatSurface.ts',
+    'Settings': 'src/types/Settings.ts',
+    'Assistant': 'src/types/Assistant.ts',
+    'AssistantOperation': 'src/types/AssistantOperation.ts',
+    'AssistantCapabilities': 'src/types/AssistantCapabilities.ts',
+    'Ollama': 'src/types/Ollama.ts',
+  },
+  jsx: 'react',
+  test: { node: true, storybook: true },
+});

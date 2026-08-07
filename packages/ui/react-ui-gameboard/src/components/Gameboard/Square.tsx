@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useGameboardContext } from './Gameboard';
+import { useGameboardContext } from './GameboardContext';
 import { type Location, isPiece } from './types';
 import { type DOMRectBounds } from './util';
 

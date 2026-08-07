@@ -4,8 +4,8 @@
 
 import { type Accessor } from 'solid-js';
 
-import { Capabilities } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { useCapability } from './useCapabilities';
 

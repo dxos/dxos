@@ -1,0 +1,20 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { defineConfig } from '../../../vite.base.config.ts';
+
+export default defineConfig({
+  entry: {
+    index: 'src/index.ts',
+    LinearPlugin: 'src/LinearPlugin.ts',
+    capabilities: 'src/capabilities/index.ts',
+    meta: 'src/meta.ts',
+    operations: 'src/operations/index.ts',
+    plugin: 'src/plugin.ts',
+    translations: 'src/translations.ts',
+    LinearEvents: 'src/types/LinearEvents.ts',
+    LinearOperation: 'src/types/LinearOperation.ts',
+  },
+  test: { node: true },
+});

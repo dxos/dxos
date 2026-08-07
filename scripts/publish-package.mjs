@@ -7,9 +7,10 @@
 // Bootstrap-publish a single workspace package to npm. Intended for the FIRST publish of a new
 // public package (e.g. a freshly-extracted leaf lib), after which CI's `check-packages-published`
 // passes and release automation takes over. Builds the package, validates it is publishable, and
-// runs `npm publish`, then opens the package's npm settings page (where trusted publishing is
-// configured for future automated releases). Auth is the caller's responsibility (`npm login` or a
-// scoped token in ~/.npmrc) — this script never handles credentials.
+// runs `pnpm publish` (which rewrites `workspace:`/`catalog:` specifiers to concrete versions —
+// npm would ship them verbatim), then opens the package's npm settings page (where trusted
+// publishing is configured for future automated releases). When `npm whoami` reports no session the
+// script starts an interactive `npm login`; credentials stay with npm and never pass through here.
 //
 // Usage:
 //   node scripts/publish-package.mjs <package-name|package-dir> [--dry-run] [--tag <tag>] [--no-build] [--no-open]
@@ -137,15 +138,25 @@ const main = async () => {
     process.exit(1);
   }
 
-  // Fail early with a clear message rather than a cryptic npm error (a dry run needs no auth).
+  // Ensure npm auth before publishing (a dry run needs none). If not logged in, run `npm login`
+  // interactively — npm opens its own browser flow; credentials never pass through this script.
   if (!dryRun) {
+    const whoami = () => execFileSync('npm', ['whoami'], { encoding: 'utf8' }).trim();
+    let user;
     try {
-      const whoami = execFileSync('npm', ['whoami'], { encoding: 'utf8' }).trim();
-      console.log(`npm user: ${whoami}`);
+      user = whoami();
     } catch {
-      console.error('ERROR: not authenticated to npm. Run `npm login` (needs publish rights to the package scope).');
-      process.exit(1);
+      console.log('\nNot authenticated to npm — starting `npm login` (browser flow).');
+      console.log(`The account needs publish rights to the ${pkg.name.split('/')[0]} scope.\n`);
+      try {
+        execFileSync('npm', ['login'], { stdio: 'inherit' });
+        user = whoami();
+      } catch {
+        console.error('ERROR: npm login did not complete; re-run this script once authenticated.');
+        process.exit(1);
+      }
     }
+    console.log(`npm user: ${user}`);
   }
 
   if (build) {
@@ -154,23 +165,37 @@ const main = async () => {
     run(moonBin(), ['run', `${projectId}:build`], REPO_ROOT);
   }
 
-  const publishArgs = ['publish', '--access', access ?? 'public'];
+  // `pnpm publish` (not npm): it rewrites `workspace:`/`catalog:` protocol specifiers to concrete
+  // versions at pack time — `npm publish` would ship them verbatim and produce an uninstallable
+  // manifest for any package with in-repo dependencies. `--no-git-checks` because bootstrap
+  // publishes legitimately run from feature branches.
+  const publishArgs = ['publish', '--access', access ?? 'public', '--no-git-checks'];
   if (tag) {
     publishArgs.push('--tag', tag);
   }
   if (dryRun) {
     publishArgs.push('--dry-run');
   }
-  run('npm', publishArgs, packageDir);
+  run('pnpm', publishArgs, packageDir);
 
   // The npm package settings page is where trusted publishing (OIDC) is configured for future
   // automated releases — surface it (and open it) after the first real publish.
   const settingsUrl = `https://www.npmjs.com/package/${pkg.name}/access`;
   if (dryRun) {
     console.log('\nDry run complete — nothing was published.');
+    console.log(`Publish for real with: node scripts/publish-package.mjs ${pkg.name}`);
   } else {
     console.log(`\nPublished ${pkg.name}@${pkg.version}.`);
-    console.log(`Configure trusted publishing at: ${settingsUrl}`);
+    console.log('\nNext steps:');
+    console.log(`  1. Configure trusted publishing (OIDC) so CI can release future versions:`);
+    console.log(`     ${settingsUrl}`);
+    console.log('     → Trusted Publisher → GitHub Actions (org/repo/workflow/actions):');
+    console.log('       dxos / dxos');
+    console.log('       publish-all.yml');
+    console.log('       [x] allow npm publish');
+    console.log(`  2. Verify the publish: npm view ${pkg.name} version`);
+    console.log("  3. CI's check-packages-published now passes for this package; release automation");
+    console.log('     takes over from the next changeset release.');
     if (open) {
       openUrl(settingsUrl);
     }

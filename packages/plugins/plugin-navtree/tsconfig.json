@@ -37,9 +37,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -85,22 +82,13 @@
       "path": "../plugin-attention"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
       "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-space"
-    },
-    {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

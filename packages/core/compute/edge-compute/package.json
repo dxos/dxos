@@ -1,6 +1,6 @@
 {
   "name": "@dxos/edge-compute",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "EDGE compute: function deploy, scripts, and Edge implementations of Remote* runtime interfaces.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,22 +16,22 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     },
     "./bundler": {
       "source": "./src/bundler/index.ts",
       "types": "./dist/types/src/bundler/index.d.ts",
-      "default": "./dist/lib/neutral/bundler/index.mjs"
+      "import": "./dist/lib/bundler.mjs"
     },
     "./native": {
       "source": "./src/native/index.ts",
       "types": "./dist/types/src/native/index.d.ts",
-      "default": "./dist/lib/neutral/native/index.mjs"
+      "import": "./dist/lib/native.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -64,7 +64,6 @@
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -83,7 +82,8 @@
     "iso-did": "catalog:"
   },
   "devDependencies": {
-    "@effect/vitest": "catalog:",
+    "@aws-sdk/client-s3": "catalog:",
+    "@dxos/echo-client": "workspace:*",
     "vitest": "catalog:"
   },
   "peerDependencies": {

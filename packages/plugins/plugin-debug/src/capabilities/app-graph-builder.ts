@@ -4,14 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { DebugNodes } from '#types';
+
+import * as DebugNodes from '../types/DebugNodes';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -19,7 +23,7 @@ export default Capability.makeModule(
       // Top-level Debug node (sibling of DevTools under SYSTEM); only present when a space is active.
       GraphBuilder.createExtension({
         id: 'debug',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.system),
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
         connector: (space: Space) =>
           Effect.succeed([
             Node.make({
@@ -53,7 +57,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'debug',
+              variant: 'debug',
               label: ['debug.label', { ns: meta.profile.key }],
               icon: 'ph--bug--regular',
               data: 'debug',
@@ -77,8 +81,24 @@ export default Capability.makeModule(
             }),
           ]),
       }),
+
+      // Log panel deck companion.
+      GraphBuilder.createExtension({
+        id: 'logs',
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeDeckCompanion({
+              id: 'logs',
+              label: ['logs.label', { ns: meta.profile.key }],
+              icon: 'ph--list-magnifying-glass--regular',
+              data: 'logs' as const,
+              position: Position.last,
+            }),
+          ]),
+      }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

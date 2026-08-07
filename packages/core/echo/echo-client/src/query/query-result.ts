@@ -46,7 +46,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
       filter: JSON.stringify(this._query),
       creationStack: new StackTrace(),
     };
-    QUERIES.add(this._diagnostic);
+    registerQueryDiagnostic(this._diagnostic);
 
     log('construct', { query: Query.pretty(this._query) });
   }
@@ -424,18 +424,42 @@ type QueryDiagnostic = {
   creationStack: StackTrace;
 };
 
-const QUERIES = new Set<QueryDiagnostic>();
+/**
+ * Live queries, for the `client-queries` diagnostic.
+ *
+ * Held weakly, and this is load-bearing rather than tidy. A diagnostic record is reachable only from
+ * its own `QueryResultImpl`, but it carries an unformatted `creationStack`, and an unformatted stack
+ * retains the receiver of every frame it captured — including the `QueryResultImpl` under
+ * construction, hence its query context, hypergraph, client, database, and every document loaded
+ * through them. A strong entry here therefore pinned one whole client graph per query for the
+ * lifetime of the process, which killed long-lived hosts: a Cloudflare Worker running ECHO
+ * operations on a cron trigger OOMed after ~400 invocations (DX-1140). Weak refs let the query, its
+ * diagnostic, and that graph collect together; the finalizer then drops the empty ref.
+ */
+const QUERIES = new Set<WeakRef<QueryDiagnostic>>();
+
+const QUERY_FINALIZATION = new FinalizationRegistry<WeakRef<QueryDiagnostic>>((ref) => {
+  QUERIES.delete(ref);
+});
+
+const registerQueryDiagnostic = (diagnostic: QueryDiagnostic): void => {
+  const ref = new WeakRef(diagnostic);
+  QUERIES.add(ref);
+  QUERY_FINALIZATION.register(diagnostic, ref);
+};
 
 trace.diagnostic({
   id: 'client-queries',
   name: 'Queries (Client)',
   fetch: () => {
-    return Array.from(QUERIES).map((query) => {
-      return {
-        isActive: query.isActive,
-        filter: query.filter,
-        creationStack: query.creationStack.getStack(),
-      };
-    });
+    return Array.from(QUERIES, (ref) => ref.deref())
+      .filter(isNonNullable)
+      .map((query) => {
+        return {
+          isActive: query.isActive,
+          filter: query.filter,
+          creationStack: query.creationStack.getStack(),
+        };
+      });
   },
 });

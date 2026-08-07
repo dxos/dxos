@@ -4,12 +4,13 @@
 
 // @import-as-namespace
 
-import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
+import { type CapabilityManager } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
 
-import { Paths } from '../app';
+import { GraphPath } from '../app';
 import { AppCapabilities } from '../app-framework';
 import * as AppAnnotation from './AppAnnotation';
 
@@ -111,7 +112,8 @@ export const getActiveWorkspace = (capabilities: CapabilityManager.CapabilityMan
   return layout.workspace;
 };
 
-export const getActiveSpaceId = (workspace?: string) => (workspace ? Paths.getSpaceIdFromPath(workspace) : undefined);
+export const getActiveSpaceId = (workspace?: string) =>
+  workspace ? GraphPath.getSpaceIdFromPath(workspace) : undefined;
 
 export const getActiveSpace = (client: Client, capabilities: CapabilityManager.CapabilityManager) => {
   const spaceId = getActiveSpaceId(getActiveWorkspace(capabilities));

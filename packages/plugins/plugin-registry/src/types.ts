@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from './meta';
 
@@ -34,12 +34,15 @@ export type RegistrySettings = Schema.Schema.Type<typeof RegistrySettingsSchema>
  * Per-plugin capabilities exposed by `@dxos/plugin-registry`.
  */
 export namespace RegistryCapabilities {
-  export const Settings = Capability.make<Atom.Writable<RegistrySettings>>(`${meta.profile.key}.capability.settings`);
+  export const Settings = Capability.makeSingleton<Atom.Writable<RegistrySettings>>()(
+    `${meta.profile.key}.capability.settings`,
+  );
 }
 
 export const RegistryTagType = Schema.Literal(
   'new',
   'beta',
+  'alpha',
   'labs',
   'popular',
   'featured',

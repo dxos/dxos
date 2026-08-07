@@ -4,45 +4,38 @@
 
 import React, { useMemo } from 'react';
 
-import { Plan } from '@dxos/assistant-toolkit';
-import { type Process, type Trace } from '@dxos/compute';
-import { useObject } from '@dxos/react-client/echo';
-import { type Space } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Icon, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { TextCrawl } from '@dxos/react-ui-components';
 import { Listbox } from '@dxos/react-ui-list';
-
-import { collectProcessActivityLines, deriveInFlightActivityLine } from '#execution-graph';
-import { isTerminalActivityLine, useProcessEphemeralStatus } from '#hooks';
+import { Outline } from '@dxos/types';
 
 export type TaskListProps = ThemedClassName<{
-  plan: Plan.Plan;
-  space?: Space;
-  /**
-   * Supervisor conversation feed id; trace messages without a conversation id still match by pid.
-   */
-  conversationId?: string;
-  traceMessages?: readonly Trace.Message[];
+  outline: Outline.Outline;
+  /** Title of the item currently being worked by a delegated sub-agent, if any. */
+  activeTitle?: string;
 }>;
 
+/**
+ * Renders the conversation's working checklist (the outline's markdown `- [ ]` lines).
+ * Durable promoted tasks keep richer state; the checklist is the at-a-glance view.
+ */
+// TODO(burdon): Re-correlate live sub-agent activity (trace lines) via a Process annotation
+//  carrying the task ref — the pid no longer lives on the task.
 export const TaskList = composable<HTMLDivElement, TaskListProps>(
-  ({ plan, space, conversationId, traceMessages, ...props }, forwardedRef) => {
-    const [snapshot] = useObject(plan);
-    const tasks = snapshot?.tasks ?? [];
+  ({ outline, activeTitle, ...props }, forwardedRef) => {
+    const [text] = useObject(outline.content);
+    const items = useMemo(() => Outline.parseChecklist(text?.content ?? ''), [text?.content]);
+    if (items.length === 0) {
+      return null;
+    }
 
     return (
       <Listbox.Root>
         <Listbox.Viewport {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
           <Listbox.Content aria-label='Tasks'>
-            {tasks.map((task) => (
-              <TaskListItem
-                key={task.id}
-                task={task}
-                space={space}
-                traceMessages={traceMessages}
-                conversationId={conversationId}
-              />
+            {items.map((item) => (
+              <TaskListItem key={item.title} item={item} active={item.title === activeTitle} />
             ))}
           </Listbox.Content>
         </Listbox.Viewport>
@@ -52,88 +45,23 @@ export const TaskList = composable<HTMLDivElement, TaskListProps>(
 );
 
 type TaskListItemProps = {
-  task: Plan.Task;
-  space?: Space;
-  traceMessages?: readonly Trace.Message[];
-  conversationId?: string;
+  item: Outline.ChecklistItem;
+  active?: boolean;
 };
 
-const TaskListItem = ({ task, space, traceMessages, conversationId }: TaskListItemProps) => {
-  const durableLines = useMemo(() => {
-    if (!task.agentPid || !traceMessages?.length) {
-      return [];
-    }
-    const lines = collectProcessActivityLines(traceMessages, String(task.agentPid), { conversationId });
-    if (task.status !== 'in-progress') {
-      return lines;
-    }
-    return lines.filter((line) => !isTerminalActivityLine(line));
-  }, [task.agentPid, task.status, traceMessages, conversationId]);
-
-  const ephemeralLine = useProcessEphemeralStatus(
-    task.delegated === true && task.status === 'in-progress' ? task.agentPid : undefined,
-    space,
-  );
-
-  const inFlightLine = useMemo(() => {
-    if (ephemeralLine || task.status !== 'in-progress' || !task.agentPid || !traceMessages?.length) {
-      return undefined;
-    }
-    return deriveInFlightActivityLine(traceMessages, String(task.agentPid), { conversationId });
-  }, [ephemeralLine, task.status, task.agentPid, traceMessages, conversationId]);
-
-  const activityLines = useMemo(() => {
-    if (ephemeralLine) {
-      return [ephemeralLine];
-    }
-    if (inFlightLine) {
-      return [inFlightLine];
-    }
-    return durableLines;
-  }, [durableLines, ephemeralLine, inFlightLine]);
-
-  const agentPid = task.agentPid;
-  const showActivity = task.delegated === true && agentPid != null && activityLines.length > 0;
-
+const TaskListItem = ({ item, active }: TaskListItemProps) => {
   return (
-    <Listbox.Item id={task.id} classNames='py-0'>
-      <div className='flex flex-col gap-0.5 min-w-0'>
-        <div className='flex items-center gap-2 min-w-0'>
-          <Icon
-            icon={task.status === 'done' ? 'ph--check--regular' : 'ph--circle--regular'}
-            classNames={task.status === 'done' ? 'text-success-text' : undefined}
-            size={4}
-          />
-          <span className='sr-only'>
-            {task.status === 'done' ? 'done' : task.status === 'in-progress' ? 'in progress' : 'to do'}
-          </span>
-          <span className='truncate flex-1'>{task.title}</span>
-          {task.status === 'in-progress' && <Tag hue='info'>pending</Tag>}
-          {task.agentPid && <Tag hue='info'>{Plan.formatAgentPidTag(task.agentPid)}</Tag>}
-        </div>
-        {showActivity && agentPid != null && <DelegatedTaskActivity agentPid={agentPid} lines={activityLines} />}
+    <Listbox.Item id={item.title} classNames='py-0'>
+      <div className='flex items-center gap-2 min-w-0'>
+        <Icon
+          icon={item.done ? 'ph--check--regular' : 'ph--circle--regular'}
+          classNames={item.done ? 'text-success-text' : undefined}
+          size={4}
+        />
+        <span className='sr-only'>{item.done ? 'done' : 'to do'}</span>
+        <span className='truncate flex-1'>{item.title}</span>
+        {active && <Tag hue='info'>working</Tag>}
       </div>
     </Listbox.Item>
-  );
-};
-
-type DelegatedTaskActivityProps = {
-  agentPid: Process.ID;
-  lines: string[];
-};
-
-const DelegatedTaskActivity = ({ agentPid, lines }: DelegatedTaskActivityProps) => {
-  return (
-    <div className='flex items-center gap-2 ps-6 min-w-0 text-placeholder'>
-      <Icon icon='ph--brain--regular' size={3} classNames='shrink-0 opacity-70' />
-      <TextCrawl
-        key={`${String(agentPid)}:${lines.length}:${lines[lines.length - 1]}`}
-        lines={lines}
-        autoAdvance
-        greedy
-        size='sm'
-        classNames='text-xs text-subdued min-w-0 flex-1'
-      />
-    </div>
   );
 };

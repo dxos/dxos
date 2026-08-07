@@ -3,15 +3,14 @@
 //
 
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
-import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
   PropsWithChildren,
+  type ReactNode,
   forwardRef,
   useCallback,
-  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -46,6 +45,7 @@ import { useDensityContext, useElevationContext, useThemeContext } from '../../h
 import { type ThemedClassName } from '../../util';
 import { IconButton, IconButtonProps } from '../Button';
 import { Icon } from '../Icon';
+import { type InputTriggerHandler, InputTriggerProvider, useInputTriggerContext } from './InputTriggerContext';
 import {
   SegmentedDate,
   type SegmentedDateProps,
@@ -58,40 +58,6 @@ import {
 type InputVariant = 'default' | 'subdued';
 
 type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
-
-//
-// Trigger context — lets a sibling `Input.TriggerIcon` open a picker registered by a field inside
-// the same `Input.Root`. Each registered handler is keyed; the most recent registration wins.
-//
-
-type InputTriggerHandler = () => void;
-
-type InputTriggerContextValue = {
-  registerTrigger: (handler: InputTriggerHandler) => () => void;
-  trigger: () => void;
-  hasTrigger: boolean;
-};
-
-// Default context makes the trigger registry a no-op outside `Input.Root` (consumers opt in).
-const [InputTriggerProvider, useInputTriggerContext] = createContext<InputTriggerContextValue>(INPUT_NAME, {
-  registerTrigger: () => () => {},
-  trigger: () => {},
-  hasTrigger: false,
-});
-
-/**
- * Field hook. Pass an opener function; while the field is mounted, an `Input.TriggerIcon`
- * sibling will call this opener on press. Returns a no-op when used outside `Input.Root`.
- */
-const useInputTrigger = (handler: InputTriggerHandler | undefined) => {
-  const ctx = useInputTriggerContext('useInputTrigger');
-  useEffect(() => {
-    if (!handler) {
-      return;
-    }
-    return ctx.registerTrigger(handler);
-  }, [ctx, handler]);
-};
 
 //
 // Root — wraps the @dxos/react-input primitive root with the trigger registry.
@@ -281,11 +247,28 @@ type AutoFillProps = {
   noAutoFill?: boolean;
 };
 
-type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps;
+type AdornmentProps = {
+  /** Content rendered inside the input container before the field (icon or text). */
+  start?: ReactNode;
+  /** Content rendered inside the input container after the field (icon, text, or button). */
+  end?: ReactNode;
+};
+
+type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps & AdornmentProps;
 
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
   (
-    { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, noAutoFill, ...props },
+    {
+      __inputScope,
+      classNames,
+      density: densityProp,
+      elevation: elevationProp,
+      variant,
+      noAutoFill,
+      start,
+      end,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { hasIosKeyboard } = useThemeContext();
@@ -293,26 +276,47 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
     const density = useDensityContext(densityProp);
     const elevation = useElevationContext(elevationProp);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const adorned = start != null || end != null;
 
-    return (
+    const field = (
       <TextInputPrimitive
         {...props}
         // TODO(wittjosiah): Factor out autofill properies.
         {...{ 'data-1p-ignore': noAutoFill }}
+        // Sizing comes from the `--dx-control*` knobs; `data-density` is what applies a per-control
+        // override of them (see theme/spacing.css), so a `density` prop still works standalone.
+        data-density={density}
         className={tx(
           'input.input',
           {
-            variant,
+            // When adorned the surrounding container owns the surface/border/focus, so the field is
+            // rendered "bare" (subdued) regardless of the requested variant.
+            variant: adorned ? 'subdued' : variant,
             disabled: props.disabled,
             density,
             elevation,
             validationValence,
           },
-          classNames,
+          adorned ? undefined : classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
         ref={forwardedRef}
       />
+    );
+
+    if (!adorned) {
+      return field;
+    }
+
+    return (
+      <div
+        data-density={density}
+        className={tx('input.container', { variant, disabled: props.disabled, density, validationValence }, classNames)}
+      >
+        {start != null && <span className={tx('input.adornment', { side: 'start' })}>{start}</span>}
+        {field}
+        {end != null && <span className={tx('input.adornment', { side: 'end' })}>{end}</span>}
+      </div>
     );
   },
 );
@@ -336,6 +340,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
     return (
       <TextAreaPrimitive
         {...props}
+        data-density={density}
         className={tx(
           'input.textArea',
           {
@@ -521,8 +526,6 @@ export const Input = {
   Validation,
   DescriptionAndValidation,
 };
-
-export { useInputTrigger };
 
 export type {
   CheckboxProps,

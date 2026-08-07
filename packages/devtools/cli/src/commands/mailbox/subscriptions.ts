@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, Common, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter, Query } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox/types';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 const handler = Effect.fn(function* () {

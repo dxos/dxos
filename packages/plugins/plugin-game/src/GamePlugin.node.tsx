@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Game } from '#types';
+
+import * as Game from './types/Game';
 
 /**
  * Headless variant of GamePlugin (no React surfaces / CreateObject panel).
@@ -16,8 +17,8 @@ import { Game } from '#types';
  * downstream bundlers don't resolve cleanly under nested pnpm symlinks.
  */
 export const GamePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Game.Game] }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule(AppCapability.schema([Game.Game])),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

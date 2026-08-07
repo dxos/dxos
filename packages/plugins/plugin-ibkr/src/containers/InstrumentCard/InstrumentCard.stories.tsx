@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { TRADINGVIEW_SOURCE } from '../../constants';
-import { Ibkr } from '../../types';
+import * as Ibkr from '../../types/Ibkr';
 import { InstrumentCard } from './InstrumentCard';
 
 // Fictional instrument only — this is a public repo (never real holdings).
@@ -29,7 +29,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <Card.Root border={false} classNames='is-80'>
+    <Card.Root border={false} classNames='w-80'>
       <InstrumentCard subject={subject} />
     </Card.Root>
   );

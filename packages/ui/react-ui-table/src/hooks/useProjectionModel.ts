@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom';
 import { useState } from 'react';
 
 import { Type } from '@dxos/echo';

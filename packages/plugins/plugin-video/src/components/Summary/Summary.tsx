@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';

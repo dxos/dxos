@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const TranscriptionOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create'),
-  () => import('./open'),
-  () => import('./summarize'),
-  () => import('./enrich-message'),
-);
+import * as TranscriptOperation from '../types/TranscriptOperation';
+
+export const TranscriptionOperationHandlerSet = OperationHandlerSet.lazy([
+  TranscriptOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
+  TranscriptOperation.Open.pipe(Operation.lazyHandler(() => import('./open'))),
+  TranscriptOperation.Summarize.pipe(Operation.lazyHandler(() => import('./summarize'))),
+  TranscriptOperation.EnrichMessage.pipe(Operation.lazyHandler(() => import('./enrich-message'))),
+]);

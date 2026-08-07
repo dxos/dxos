@@ -13,8 +13,10 @@ import * as Option from 'effect/Option';
 import type * as Runtime from 'effect/Runtime';
 import type * as Scope from 'effect/Scope';
 
-import { LayerSpec, Process, ServiceNotAvailableError } from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Process from '@dxos/compute/Process';
 import { Annotation, Database, EID, Feed, Filter, Obj, type URI } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';

@@ -5,13 +5,16 @@
 import * as Either from 'effect/Either';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
-import { AppSpace } from '@dxos/app-toolkit';
+import { type CapabilityManager } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { CrxCapabilities, PageAction, Settings } from '#types';
+import * as CrxCapabilities from './types/CrxCapabilities';
+import * as PageAction from './types/PageAction';
+import * as Settings from './types/Settings';
 
 /**
  * Dependencies for the invoke handler, injected so the handler can be

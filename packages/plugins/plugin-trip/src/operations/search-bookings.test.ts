@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { Capability, CapabilityManager } from '@dxos/app-framework';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { BookingSearch, TripCapabilities } from '../types';
+import * as BookingSearch from '../types/BookingSearch';
+import * as TripCapabilities from '../types/TripCapabilities';
 import handler from './search-bookings';
 
 const FLIGHT_OFFER: BookingSearch.FlightOffer = {

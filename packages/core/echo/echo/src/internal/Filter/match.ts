@@ -117,6 +117,28 @@ const structuralMatch = (filterObj: any, targetObj: any, strict = true): boolean
   });
 };
 
+/** Normalizes an encoded reference to its URI string so ref-valued properties compare by identity. */
+const _normalizeInValue = (value: unknown): unknown =>
+  isEncodedReference(value) ? EncodedReference.toURI(value) : value;
+
+/**
+ * Memoizes a `Set` per `values` array so `Filter.in` membership is O(1) rather than
+ * `Array.includes`'s O(n) — this matters most for large sets projected from a subquery
+ * (`Filter.in(query.project(...))`, resolved to a literal `in` by the query executor), but
+ * also speeds up ordinary literal-list `Filter.in`. Keyed by array identity: the planner and
+ * executor never mutate a filter's `values` array in place, so the cache stays valid for the
+ * array's lifetime.
+ */
+const _inSetCache = new WeakMap<readonly unknown[], Set<unknown>>();
+const _getInSet = (values: readonly unknown[]): Set<unknown> => {
+  let set = _inSetCache.get(values);
+  if (!set) {
+    set = new Set(values.map(_normalizeInValue));
+    _inSetCache.set(values, set);
+  }
+  return set;
+};
+
 export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boolean => {
   switch (filter.type) {
     case 'compare': {
@@ -161,7 +183,10 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
       return true;
     }
     case 'in': {
-      return filter.values.includes(value);
+      return _getInSet(filter.values).has(_normalizeInValue(value));
+    }
+    case 'in-query': {
+      throw new Error('in-query filters must be resolved to a literal `in` by the query executor before matching.');
     }
     case 'contains': {
       if (!Array.isArray(value)) {
@@ -264,6 +289,10 @@ export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): b
 
     case 'child-of': {
       throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
+    }
+
+    case 'in-query': {
+      throw new Error('in-query filters must be resolved to a literal `in` by the query executor before matching.');
     }
 
     case 'not': {

@@ -7,19 +7,24 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Artifact, type GenerationService, StudioCapabilities, Variant } from '#types';
 
 import { StudioPlugin } from '../../StudioPlugin';
+import * as Artifact from '../../types/Artifact';
+import type * as GenerationService from '../../types/GenerationService';
+import * as StudioCapabilities from '../../types/StudioCapabilities';
+import * as Variant from '../../types/Variant';
 import { ArtifactArticle } from './ArtifactArticle';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */
@@ -56,8 +61,8 @@ const MockProviderPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'story.studio.mock-provider/module',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(StudioCapabilities.GenerationService, mockService)),
+    provides: [StudioCapabilities.GenerationService],
+    activate: () => Effect.succeed([Capability.contribute(StudioCapabilities.GenerationService, mockService)]),
   }),
   Plugin.make,
 );

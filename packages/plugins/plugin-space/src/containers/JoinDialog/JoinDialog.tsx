@@ -5,9 +5,10 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger } from '@dxos/async';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -61,8 +62,8 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
       // TODO(wittjosiah): `result.target` is ignored so acceptance navigates to the space home
       // immediately; revisit how to incorporate the target once immediate navigation is settled.
       await invokePromise(LayoutOperation.Open, {
-        subject: [Paths.getSpaceHomePath(space.id)],
-        workspace: Paths.getSpacePath(space.id),
+        subject: [GraphPath.getSpaceHomePath(space.id)],
+        workspace: GraphPath.getSpacePath(space.id),
         navigation: 'immediate',
       });
 

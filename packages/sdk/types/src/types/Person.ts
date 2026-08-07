@@ -52,14 +52,10 @@ const PersonSchema = Schema.Struct({
   jobTitle: Schema.String.pipe(Schema.annotations({ title: 'Job Title' }), Schema.optional),
   department: Schema.String.pipe(Schema.annotations({ title: 'Department' }), Schema.optional),
   notes: Schema.String.pipe(Schema.annotations({ title: 'Notes' }), Schema.optional),
-  // TODO(burdon): Change to array of `handles`.
   emails: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
-      value: Format.Email.pipe(
-        Schema.annotations({ default: 'hello@email.com' }),
-        GeneratorAnnotation.set('internet.email'),
-      ),
+      value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
     }),
   ).pipe(Schema.optional),
   identities: Schema.Array(

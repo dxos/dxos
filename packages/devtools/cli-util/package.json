@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli-util",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Shared CLI utilities for DXOS CLI commands and plugins",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,12 +16,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -32,10 +32,7 @@
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/compute": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -51,8 +48,7 @@
   },
   "devDependencies": {
     "effect": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

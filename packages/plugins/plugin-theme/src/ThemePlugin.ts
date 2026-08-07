@@ -2,29 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
 
 import { type ThemePluginOptions } from './react-context';
+import * as ThemeCapabilities from './types/ThemeCapabilities';
 
-const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
-const Translator = Capability.lazy('Translator', () => import('./translator'));
+const ReactContext = AppCapability.reactContext(() => import('./react-context'), {
+  requires: [Capabilities.AtomRegistry, ThemeCapabilities.Settings],
+});
+const Translator = Capability.lazyModule(
+  'Translator',
+  { requires: [Capabilities.AtomRegistry, AppCapabilities.Translations], provides: [AppCapabilities.Translator] },
+  () => import('./translator'),
+);
+const Settings = AppCapability.settings(() => import('./settings'), {
+  provides: [ThemeCapabilities.Settings],
+});
 
 export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
-  Plugin.addModule((options: ThemePluginOptions) => ({
-    id: Capability.getModuleTag(ReactContext),
-    activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [AppActivationEvents.SetupTranslations],
-    activate: () => ReactContext(options),
-  })),
-  Plugin.addModule((options: ThemePluginOptions) => ({
-    id: Capability.getModuleTag(Translator),
-    activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [AppActivationEvents.SetupTranslations],
-    activate: () => Translator(options),
-  })),
+  Plugin.addModule(Settings),
+  Plugin.addModule(ReactContext),
+  Plugin.addModule(Translator),
   Plugin.make,
 );
 

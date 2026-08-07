@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 
-import { Connection, type ConnectorEntry } from '#types';
-
-import { isCursorForConnection } from '../../util';
+import * as Connection from '../../types/Connection';
+import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ensureSyncTrigger, isCursorForConnection } from '../../util';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
@@ -22,7 +22,7 @@ export type ReconcileCursorsInput = {
   /** Live database the cursors are reconciled in. */
   db: Database.Database;
   connection: Connection.Connection;
-  connector: ConnectorEntry;
+  connector: ConnectorSpec.ConnectorEntry;
   selected: ReadonlyArray<SyncTargetSelection>;
   /** Bind this pre-existing object as the first newly-selected target instead of materializing one. */
   existingTarget?: Ref.Ref<Obj.Unknown>;
@@ -32,10 +32,11 @@ export type ReconcileCursorsInput = {
  * Reconcile a connection's external-sync {@link Cursor} objects against the chosen remote targets:
  * remove deselected cursors (the synced object is left in place), and create one cursor per
  * newly-selected target — binding `existingTarget` for the first new selection, otherwise
- * materializing a fresh local root via `connector.materializeTarget`. A connector with no
+ * materializing a fresh local root via `connector.sync.materializeTarget`. A connector with no
  * `materializeTarget` (no dedicated local root type, e.g. Google Contacts) binds the connection
  * itself as the target; its synced objects land directly in the space keyed by foreign id. Returns
- * add/remove counts.
+ * add/remove counts plus the number of cursors bound before this reconciliation, which distinguishes
+ * initial setup (none) from a later change of targets.
  *
  * Runs within a {@link Database} context (provide `Database.layer(db)`); the HTTP client
  * `materializeTarget` needs is provided internally.
@@ -84,9 +85,9 @@ export const reconcileCursors = ({
         if (sel.name) {
           Obj.update(target, (target) => Obj.setLabel(target, sel.name!));
         }
-      } else if (connector.materializeTarget) {
+      } else if (connector.sync?.materializeTarget) {
         const { target: materialized } = yield* invoker.invoke(
-          connector.materializeTarget,
+          connector.sync.materializeTarget,
           {
             connection: Ref.make(connection),
             remoteTarget: { id: sel.externalId, name: sel.name ?? sel.externalId },
@@ -111,10 +112,10 @@ export const reconcileCursors = ({
         }),
       );
       invariant(Cursor.isExternal(cursor));
-      // Sets up recurring background sync for the target, if the connector declares it. Not
-      // specially protected — a failure here propagates like any other step in this loop (e.g. a
-      // `materializeTarget` failure); this function has no blanket catch of its own today.
-      yield* connector.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
+      // Sets up recurring background sync for the binding, if the connector declares a trigger
+      // spec. Not specially protected — a failure here propagates like any other step in this loop
+      // (e.g. a `materializeTarget` failure); this function has no blanket catch of its own today.
+      yield* ensureSyncTrigger({ connector, cursor });
       added++;
     }
 
@@ -124,5 +125,5 @@ export const reconcileCursors = ({
       yield* Database.flush({ indexes: true });
     }
 
-    return { added, removed };
+    return { added, removed, existing: existingCursors.length };
   });

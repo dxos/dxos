@@ -13,7 +13,6 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 import isEqual from 'fast-deep-equal';
 
-import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-host';
@@ -30,6 +29,7 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
+import { type BranchStore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 type OpenDatabaseOptions = {
@@ -94,6 +94,30 @@ export class EchoTestPeer extends Resource {
   private _serviceScope?: Scope.CloseableScope;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
+
+  /**
+   * Device-local current-branch selections per space, held on the peer so they survive `reload()`
+   * (which recreates ECHO but not the peer). Stands in for the host metadata store; non-synced.
+   */
+  private readonly _branchStores = new Map<string, Map<string, string>>();
+
+  private _branchStoreFor(spaceId: string): BranchStore {
+    let map = this._branchStores.get(spaceId);
+    if (!map) {
+      map = new Map<string, string>();
+      this._branchStores.set(spaceId, map);
+    }
+    const store = map;
+    return {
+      load: async () => Object.fromEntries(store),
+      save: async (entries) => {
+        store.clear();
+        for (const [key, value] of Object.entries(entries)) {
+          store.set(key, value);
+        }
+      },
+    };
+  }
 
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<
@@ -264,7 +288,13 @@ export class EchoTestPeer extends Resource {
     // NOTE: Client closes the database when it is closed.
     const root = await this.host.createSpaceRoot(this._ctx, spaceKey);
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({
+      spaceId,
+      spaceKey,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+      branchStore: this._branchStoreFor(String(spaceId)),
+    });
     await db.setSpaceRoot(root.url);
     await db.open();
 
@@ -294,7 +324,13 @@ export class EchoTestPeer extends Resource {
       resolvedRootUrl = this.host.spaces.find((s) => s.spaceId === spaceId)?.rootDocUrl;
       invariant(resolvedRootUrl, 'Root URL not found on host');
     }
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({
+      spaceId,
+      spaceKey,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+      branchStore: this._branchStoreFor(String(spaceId)),
+    });
     await db.setSpaceRoot(resolvedRootUrl);
     await db.open();
 
@@ -357,15 +393,6 @@ export const createDataAssertion = ({
         db.add(Obj.make(TestSchema.Expando, { type: 'task', title: 'A', idx })),
       );
       await db.flush();
-    },
-    waitForReplication: (db: EchoDatabase) => {
-      return waitForCondition({
-        breakOnError: true,
-        condition: async () => {
-          const { received } = await findSeedObject(db);
-          return received.every((obj) => obj != null);
-        },
-      });
     },
     verify: async (db: EchoDatabase) => {
       const { objects } = await findSeedObject(db);

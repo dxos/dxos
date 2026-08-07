@@ -21,21 +21,25 @@ type StoryArgs = {
   button?: boolean;
 };
 
-const DefaultStory = ({ valence, title, body, button }: StoryArgs) => (
-  <div className='w-[30rem]'>
-    <Message.Root valence={valence}>
-      {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
-      {body && (
-        <Message.Content asChild classNames='gap-2'>
-          <div>
-            <p>{body}</p>
-            {button && <Button>Test</Button>}
-          </div>
+const DefaultStory = ({ valence, title, body, button }: StoryArgs) => {
+  return (
+    <div className='w-[30rem]'>
+      <Message.Root valence={valence}>
+        <Message.Content>
+          {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
+          {body && (
+            <Message.Body asChild classNames='gap-2'>
+              <div>
+                <p>{body}</p>
+                {button && <Button>Test</Button>}
+              </div>
+            </Message.Body>
+          )}
         </Message.Content>
-      )}
-    </Message.Root>
-  </div>
-);
+      </Message.Root>
+    </div>
+  );
+};
 
 const meta = {
   title: 'ui/react-ui-core/components/Message',

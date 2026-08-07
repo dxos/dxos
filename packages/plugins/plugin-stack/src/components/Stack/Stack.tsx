@@ -6,16 +6,14 @@ import React, {
   type ComponentPropsWithoutRef,
   type ForwardedRef,
   type PropsWithChildren,
-  createContext,
   forwardRef,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
@@ -31,6 +29,8 @@ import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
+
+import { StackContext, useStack, useStackContext } from './StackContext';
 
 //
 // Types
@@ -58,7 +58,7 @@ export type StackContextValue = {
   onDelete: (id: string) => void;
 };
 
-type StackContextType = StackContextValue & {
+export type StackContextType = StackContextValue & {
   /** Container id used to scope Mosaic drag/drop. */
   id: string;
   eventHandler: DndContainerHandler;
@@ -66,19 +66,6 @@ type StackContextType = StackContextValue & {
   viewport: HTMLElement | null;
   setViewport: (element: HTMLElement | null) => void;
 };
-
-const StackContext = createContext<StackContextType | undefined>(undefined);
-
-const useStackContext = (consumer: string): StackContextType => {
-  const context = useContext(StackContext);
-  if (!context) {
-    throw new Error(`\`${consumer}\` must be used within \`Stack.Root\`.`);
-  }
-  return context;
-};
-
-/** Section-level callbacks consumed by stack sections. */
-export const useStack = (): StackContextValue => useStackContext('useStack');
 
 //
 // Root
@@ -210,7 +197,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { attendableId: parentAttendableId, collapsed, onAdd, onMoveUp, onMoveDown, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
-  const attendableId = Paths.getCollectionObjectPath(parentAttendableId, object.id);
+  const attendableId = GraphPath.getCollectionObjectPath(parentAttendableId, object.id);
   const attentionAttrs = useAttentionAttributes(attendableId);
   const surfaceData = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
   const isCollapsed = collapsed.has(id);
@@ -219,7 +206,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
 
   const rail = (
     <div className='grid grid-rows-[min-content_1fr]'>
-      <div className='p-1 bg-toolbar-surface'>
+      <div className='p-1 dx-toolbar-surface'>
         <DropdownMenu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
           <DropdownMenu.Trigger asChild>
             <AttentionSigilButton size='md' attendableId={attendableId}>

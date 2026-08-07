@@ -1,0 +1,25 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { defineConfig } from '../../../vite.base.config.ts';
+
+export default defineConfig({
+  entry: {
+    index: 'src/index.ts',
+    CrmPlugin: 'src/CrmPlugin.ts',
+    skills: 'src/skills/index.ts',
+    capabilities: 'src/capabilities/index.ts',
+    meta: 'src/meta.ts',
+    operations: 'src/operations/index.ts',
+    plugin: 'src/plugin.ts',
+    sources: 'src/sources/index.ts',
+    testing: 'src/testing/index.ts',
+    translations: 'src/translations.ts',
+    CrmEvents: 'src/types/CrmEvents.ts',
+    CrmOperation: 'src/types/CrmOperation.ts',
+    ProfileOf: 'src/types/ProfileOf.ts',
+  },
+  jsx: 'react',
+  test: { node: true },
+});

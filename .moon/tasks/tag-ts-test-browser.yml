@@ -3,11 +3,11 @@ tasks:
   test-browser:
     command: pnpm exec dx-killorphans vitest run --passWithNoTests --project="browser-*"
     deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - vite-plugin-icons:compile
-      - vite-plugin-import-source:compile
-      - ^:compile
+      - esbuild-plugins:build
+      - node-std:build
+      - vite-plugin-icons:build
+      - vite-plugin-import-source:build
+      - ^:build
     inputs:
       - '@group(sources)'
       - /vitest.base.config.ts

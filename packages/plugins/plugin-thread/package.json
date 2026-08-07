@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-thread",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,34 +14,38 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "node": "./dist/lib/capabilities/node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/neutral/containers/index.mjs"
+      "default": "./dist/lib/containers.mjs"
     },
     "#hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
-      "default": "./dist/lib/neutral/hooks/index.mjs"
+      "default": "./dist/lib/hooks.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/neutral/operations/index.mjs"
+      "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
       "source": {
@@ -50,45 +54,72 @@
         "default": "./src/ThreadPlugin.tsx"
       },
       "types": "./dist/types/src/ThreadPlugin.d.ts",
-      "workerd": "./dist/lib/neutral/ThreadPlugin.workerd.mjs",
-      "node": "./dist/lib/neutral/ThreadPlugin.node.mjs",
-      "default": "./dist/lib/neutral/ThreadPlugin.mjs"
+      "workerd": "./dist/lib/ThreadPlugin.workerd.mjs",
+      "node": "./dist/lib/ThreadPlugin.node.mjs",
+      "default": "./dist/lib/ThreadPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/translations.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
+    },
+    "./ChannelBackend": {
+      "source": "./src/types/ChannelBackend.ts",
+      "types": "./dist/types/src/types/ChannelBackend.d.ts",
+      "import": "./dist/lib/ChannelBackend.mjs"
+    },
+    "./ThreadCapabilities": {
+      "source": "./src/types/ThreadCapabilities.ts",
+      "types": "./dist/types/src/types/ThreadCapabilities.d.ts",
+      "import": "./dist/lib/ThreadCapabilities.mjs"
+    },
+    "./ThreadEvents": {
+      "source": "./src/types/ThreadEvents.ts",
+      "types": "./dist/types/src/types/ThreadEvents.d.ts",
+      "import": "./dist/lib/ThreadEvents.mjs"
+    },
+    "./ThreadOperation": {
+      "source": "./src/types/ThreadOperation.ts",
+      "types": "./dist/types/src/types/ThreadOperation.d.ts",
+      "import": "./dist/lib/ThreadOperation.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ChannelBackend": [
+        "dist/types/src/types/ChannelBackend.d.ts"
+      ],
+      "ThreadCapabilities": [
+        "dist/types/src/types/ThreadCapabilities.d.ts"
+      ],
+      "ThreadEvents": [
+        "dist/types/src/types/ThreadEvents.d.ts"
+      ],
+      "ThreadOperation": [
+        "dist/types/src/types/ThreadOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -98,19 +129,16 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
+    "@dxos/halo": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -118,12 +146,15 @@
     "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

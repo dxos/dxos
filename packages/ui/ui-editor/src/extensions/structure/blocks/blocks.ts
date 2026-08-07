@@ -1,0 +1,219 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { syntaxTree } from '@codemirror/language';
+import { type EditorState, type Extension, type TransactionSpec } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
+
+import { createBlockDrag } from './drag';
+import { type BlockOps, createBlockSelection, createBlockSelectionHighlight, setBlockSelection } from './selection';
+import { type Block } from './types';
+
+export type BlockOptions = {
+  /**
+   * Pin the drag preview to the block's left edge so it only tracks vertically (default `true`).
+   * When `false`, the preview follows the pointer on both axes.
+   */
+  clampX?: boolean;
+};
+
+/**
+ * Whole-block editing over the top-level markdown blocks: click/shift-click the gutter grip to select,
+ * drag-to-reorder, cut/copy/paste, with a border/background behind the selection. Composes
+ * `blockSelectionHighlight` (the box behind selected blocks), `blockSelection` (selection state and
+ * clipboard), and `blockDrag` (the gutter grip that populates the selection and drag-to-move). The grip
+ * lives in `blockDrag` and drives the selection, so these are used together (or via this `blocks()`).
+ */
+export const blocks = ({ clampX }: BlockOptions = {}): Extension => [
+  blockSelectionHighlight(),
+  blockSelection(),
+  blockDrag({ clampX }),
+];
+
+/**
+ * Draws a border/background box behind each selected top-level markdown block. See
+ * `createBlockSelectionHighlight`.
+ */
+export const blockSelectionHighlight = (): Extension => createBlockSelectionHighlight(findBlocks);
+
+/**
+ * Whole-block selection state and block cut/copy/paste over the top-level markdown blocks. The gutter
+ * grip gesture that populates the selection is provided by `blockDrag` and the highlight by
+ * `blockSelectionHighlight`, so pair them (or use `blocks()`, which composes them). See
+ * `createBlockSelection`.
+ */
+export const blockSelection = (): Extension => createBlockSelection(markdownBlockOps);
+
+/**
+ * Adds a gutter drag grip to the active markdown block and moves the block (or the whole block
+ * selection) on drop. See `createBlockDrag`.
+ */
+export const blockDrag = ({ clampX }: Pick<BlockOptions, 'clampX'> = {}): Extension =>
+  createBlockDrag({ getBlocks: findBlocks, moveBlocks, clampX });
+
+/**
+ * Top-level markdown blocks (headings, paragraphs, lists, blockquotes, fenced code, …) from the
+ * syntax tree, so a list or code fence moves and boxes as a single unit. Memoized per state — the
+ * highlight layer, the gutter, and the drag plugin all query it on the same state.
+ */
+const blockCache = new WeakMap<EditorState, Block[]>();
+
+export const findBlocks = (state: EditorState): Block[] => {
+  const cached = blockCache.get(state);
+  if (cached) {
+    return cached;
+  }
+
+  const blocks: Block[] = [];
+  const cursor = syntaxTree(state).topNode.cursor();
+  if (cursor.firstChild()) {
+    do {
+      if (cursor.to > cursor.from) {
+        blocks.push({ from: cursor.from, to: cursor.to });
+      }
+    } while (cursor.nextSibling());
+  }
+
+  blockCache.set(state, blocks);
+  return blocks;
+};
+
+// Merges sorted ranges, combining any that overlap or touch.
+const mergeRanges = (ranges: { from: number; to: number }[]): { from: number; to: number }[] => {
+  const sorted = [...ranges].sort((a, b) => a.from - b.from);
+  const merged: { from: number; to: number }[] = [];
+  for (const range of sorted) {
+    const last = merged.at(-1);
+    if (last && range.from <= last.to) {
+      last.to = Math.max(last.to, range.to);
+    } else {
+      merged.push({ ...range });
+    }
+  }
+  return merged;
+};
+
+// Delete ranges for the given blocks: each block plus its blank-line separator (the one below it, down to
+// the next block; for the last block the one above it instead, so no trailing blank is orphaned), merged
+// so adjacent selections form one range.
+const deleteRanges = (state: EditorState, blocks: Block[], indices: number[]): { from: number; to: number }[] => {
+  const count = blocks.length;
+  return mergeRanges(
+    indices.map((index) => ({
+      from: index === count - 1 && index > 0 ? blocks[index - 1].to : blocks[index].from,
+      to: index + 1 < count ? blocks[index + 1].from : state.doc.length,
+    })),
+  );
+};
+
+/**
+ * Transaction that moves the blocks at `sourceIndices` to the slot before `dropIndex` (the end of the
+ * document when `dropIndex === blocks.length`), preserving their relative order and blank-line
+ * separation, as a single undo step. Places the caret at the end of the moved content and clears the
+ * block selection. Returns `null` for a no-op (empty/invalid sources, or a drop inside the moved region).
+ * Pure — exported for tests.
+ */
+export const moveBlocksSpec = (
+  state: EditorState,
+  sourceIndices: number[],
+  dropIndex: number,
+): TransactionSpec | null => {
+  const blocks = findBlocks(state);
+  const count = blocks.length;
+  const sources = [...new Set(sourceIndices)].filter((index) => index >= 0 && index < count).sort((a, b) => a - b);
+  // Dropping onto a selected block is a no-op.
+  if (sources.length === 0 || sources.includes(dropIndex)) {
+    return null;
+  }
+
+  const text = sources.map((index) => state.doc.sliceString(blocks[index].from, blocks[index].to)).join('\n\n');
+  const deletes = deleteRanges(state, blocks, sources);
+  const insertAt = dropIndex < count ? blocks[dropIndex].from : state.doc.length;
+  // Dropping inside the removed region is a no-op.
+  if (deletes.some((range) => insertAt > range.from && insertAt < range.to)) {
+    return null;
+  }
+
+  const insert = dropIndex < count ? `${text}\n\n` : `\n\n${text}`;
+  const changes = [...deletes.map((range) => ({ from: range.from, to: range.to })), { from: insertAt, insert }];
+  // The inserted text starts where `insertAt` maps to (dropping any deletes before it), then `text` sits
+  // at its start (or after the `\n\n` prefix when appending).
+  const changeSet = state.changes(changes);
+  const textStart = changeSet.mapPos(insertAt, -1) + (dropIndex < count ? 0 : 2);
+  // Keep the moved blocks selected: their new anchors are the start of each block within the inserted
+  // text, joined by `\n\n` (block length + 2). The caret lands at the end of the moved content.
+  const anchors: number[] = [];
+  let anchor = textStart;
+  for (const index of sources) {
+    anchors.push(anchor);
+    anchor += blocks[index].to - blocks[index].from + 2;
+  }
+  const caret = textStart + text.length;
+  return {
+    changes,
+    selection: { anchor: Math.min(caret, changeSet.newLength) },
+    effects: setBlockSelection.of(anchors),
+    userEvent: 'move.block',
+  };
+};
+
+const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number): void => {
+  const spec = moveBlocksSpec(view.state, sourceIndices, dropIndex);
+  if (spec) {
+    view.dispatch(spec);
+  }
+};
+
+/**
+ * Transaction that removes the blocks at `indices` and, when `text` is non-null, inserts it as block(s)
+ * at the first removed slot — a single edit. `null` is a pure delete (cut); non-null is a replace
+ * (paste). Returns `null` for a no-op. Pure — exported for tests.
+ */
+export const replaceBlocksSpec = (
+  state: EditorState,
+  indices: number[],
+  text: string | null,
+): TransactionSpec | null => {
+  const blocks = findBlocks(state);
+  const count = blocks.length;
+  const sources = [...new Set(indices)].filter((index) => index >= 0 && index < count).sort((a, b) => a - b);
+  if (sources.length === 0) {
+    return null;
+  }
+
+  const deletes = deleteRanges(state, blocks, sources);
+  const changes: { from: number; to: number; insert?: string }[] = deletes.map((range) => ({
+    from: range.from,
+    to: range.to,
+  }));
+  let anchor = deletes[0].from;
+  if (text != null && text.length > 0) {
+    // Replace the first removed range with the pasted text (keeping a trailing blank unless at doc end).
+    const insert = deletes[0].to >= state.doc.length ? text : `${text}\n\n`;
+    changes[0] = { from: deletes[0].from, to: deletes[0].to, insert };
+    anchor = deletes[0].from + text.length;
+  }
+
+  const changeSet = state.changes(changes);
+  return {
+    changes,
+    selection: { anchor: Math.min(anchor, changeSet.newLength) },
+    effects: setBlockSelection.of([]),
+    userEvent: text == null ? 'delete.block' : 'input.paste',
+  };
+};
+
+const replaceBlocks = (view: EditorView, indices: number[], text: string | null): void => {
+  const spec = replaceBlocksSpec(view.state, indices, text);
+  if (spec) {
+    view.dispatch(spec);
+  }
+};
+
+export const markdownBlockOps: BlockOps = {
+  getBlocks: findBlocks,
+  moveBlocks,
+  serialize: (state, blocks) => blocks.map((block) => state.doc.sliceString(block.from, block.to)).join('\n\n'),
+  replaceBlocks,
+};

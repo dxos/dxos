@@ -13,8 +13,9 @@ import type { ProjectionModel } from '@dxos/schema';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
 import { meta } from '#meta';
-import { type Kanban, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
 
+import type * as Kanban from '../../types/Kanban';
+import * as KanbanConstants from '../../types/KanbanConstants';
 import {
   KanbanBoardContext,
   type KanbanBoardContextValue,
@@ -77,8 +78,8 @@ export const KanbanBoardRoot = ({
 
   const getPivotAttributes = useCallback<KanbanBoardContextValue['getPivotAttributes']>(
     (columnValue) => {
-      if (columnValue === UNCATEGORIZED_VALUE) {
-        return UNCATEGORIZED_ATTRIBUTES;
+      if (columnValue === KanbanConstants.UNCATEGORIZED_VALUE) {
+        return KanbanConstants.UNCATEGORIZED_ATTRIBUTES;
       }
 
       const options = projection?.tryGetFieldProjection(pivotFieldId ?? '')?.props.options ?? [];
@@ -157,7 +158,5 @@ export const KanbanBoard = {
   Column: KanbanColumn,
   Card: KanbanCard,
 };
-
-export { useKanbanBoard };
 
 export type { KanbanBoardRootProps as KanbanBoardProps, KanbanCardProps, KanbanColumnProps };

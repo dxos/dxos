@@ -6,18 +6,21 @@
 
 import type * as EffectTypes from 'effect/Types';
 
+import type { QueryAST } from '@dxos/echo-protocol';
+
+import type * as Order from './Order';
 import type * as Query from './Query';
 
 /**
  * The aggregate spec sans name; the name is supplied by the `Query.aggregate` record key. A tagged
- * union per kind so `property`/`limit` are present exactly when the kind uses them (no unused
- * optional fields to guard against at read sites).
+ * union per kind so `property`/`limit`/`order` are present exactly when the kind uses them (no
+ * unused optional fields to guard against at read sites).
  */
 export type Spec =
   | { kind: 'group'; property: string }
   | { kind: 'max'; property: string }
   | { kind: 'min'; property: string }
-  | { kind: 'items'; limit?: number }
+  | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
   | { kind: 'count' };
 
 export const AggregateTypeId = '~@dxos/echo/Aggregate' as const;
@@ -83,11 +86,18 @@ export const min = <T, K extends keyof T & string>(property: K): Aggregate<T, T[
   new AggregateClass({ kind: 'min', property });
 
 /**
- * Collect the group's members, optionally capped to `limit` per group. Opt-in — groups carry no
- * members unless this aggregate is declared.
+ * Collect the group's members, optionally ordered by `order` and capped to `limit` per group.
+ * Opt-in — groups carry no members unless this aggregate is declared.
+ *
+ * `order` is this aggregate's own per-group ordering — independent of any `orderBy` elsewhere in
+ * the query, which orders the whole input stream (and, following `aggregate`, the resulting
+ * groups), not this aggregate's member selection. Without `order`, members keep whatever order
+ * they arrived in from a preceding `orderBy` (unspecified if there is none), so a per-group
+ * top-`limit` moved position in the chain would silently change; declaring `order` here makes the
+ * ordering explicit and local to this aggregate regardless of where it sits.
  */
-export const items = <T>(options?: { limit?: number }): Aggregate<T, T[]> =>
-  new AggregateClass({ kind: 'items', limit: options?.limit });
+export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Aggregate<T, T[]> =>
+  new AggregateClass({ kind: 'items', limit: options?.limit, order: options?.order?.map((order) => order.ast) });
 
 /**
  * Count the group's members. Opt-in — groups carry no count unless this aggregate is declared.

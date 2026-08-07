@@ -143,18 +143,18 @@ tasks:
 
     # Task dependencies
     deps:
-      - 'shared:build'        # Specific project
-      - '~:codegen'           # Same project
-      - '^:build'             # All upstream deps
+      - 'shared:build' # Specific project
+      - '~:codegen' # Same project
+      - '^:build' # All upstream deps
       - target: 'optional:task'
-        optional: true        # Don't fail if missing
+        optional: true # Don't fail if missing
 
     # Input files for hash calculation
     inputs:
       - 'src/**/*'
-      - '@group(sources)'     # File group
+      - '@group(sources)' # File group
       - '/tsconfig.base.json' # Workspace root
-      - '$NODE_ENV'           # Env variable
+      - '$NODE_ENV' # Env variable
 
     # Output files to cache
     outputs:
@@ -324,7 +324,7 @@ tasks:
 # apps/web/moon.yml (project)
 tasks:
   test-e2e:
-    extends: 'test'           # Extends the inherited 'test' task
+    extends: 'test' # Extends the inherited 'test' task
     args: '--project=e2e'
     options:
       timeout: 600
@@ -516,7 +516,7 @@ fileGroups:
 fileGroups:
   sources:
     - 'src/**/*'
-    - 'generated/**/*'   # Project-specific addition
+    - 'generated/**/*' # Project-specific addition
 ```
 
 ## Merge Strategies
@@ -665,14 +665,14 @@ tasks:
 
 # Local override
 fileGroups:
-  sources:         # Completely replaces remote 'sources'
+  sources: # Completely replaces remote 'sources'
     - 'lib/**/*'
-  tests:           # Added (not in remote)
+  tests: # Added (not in remote)
     - 'tests/**/*'
 tasks:
-  lint:            # Completely replaces remote 'lint'
+  lint: # Completely replaces remote 'lint'
     command: 'biome lint'
-  test:            # Added (not in remote)
+  test: # Added (not in remote)
     command: 'vitest'
 ```
 

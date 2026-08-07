@@ -13,10 +13,10 @@ export interface Messenger {
   /**
    * Register channel listener.
    */
-  listen: (channel: string, callback: (message: GossipMessage) => void) => CleanupFn;
+  listen(channel: string, callback: (message: GossipMessage) => void): CleanupFn;
 
   /**
    * Send message to channel.
    */
-  postMessage: (channel: string, message: any) => Promise<void>;
+  postMessage(channel: string, message: any): Promise<void>;
 }

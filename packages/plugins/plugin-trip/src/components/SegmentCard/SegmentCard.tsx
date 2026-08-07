@@ -13,7 +13,8 @@ import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Segment } from '#types';
+
+import * as Segment from '../../types/Segment';
 
 /**
  * Read-only layout for a flight `Segment.FlightDetails`. Rendered inside the tile
@@ -106,16 +107,11 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
           {flightDetails ? (
             <Card.Body>
               <Form.Root schema={Segment.FlightDetails} defaultValues={flightDetails} layout='static' readonly>
-                {/*
-                 * No `Form.Viewport`: it would nest its own full-bleed Column +
-                 * gutter, so the fields wouldn't line up with the header. Rendering
-                 * `Form.Content` directly lets `withColumn.center()` place the body
-                 * in the Card's content column — aligned under the title, matching
-                 * the `Card.Row` route/date branch.
-                 */}
-                <Form.Content>
-                  <Form.Layout template={FLIGHT_LAYOUT} />
-                </Form.Content>
+                <Form.Viewport>
+                  <Form.Content>
+                    <Form.Layout template={FLIGHT_LAYOUT} />
+                  </Form.Content>
+                </Form.Viewport>
               </Form.Root>
             </Card.Body>
           ) : (

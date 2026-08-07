@@ -7,14 +7,14 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';
-import { FeedOperation } from '#types';
-import { Subscription } from '#types';
 
+import * as FeedOperation from '../../types/FeedOperation';
+import * as Subscription from '../../types/Subscription';
 import { FeedToolbar } from './FeedToolbar';
 
 export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Subscription>;
@@ -53,7 +53,7 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
   }, [subject, invokePromise]);
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <FeedToolbar attendableId={attendableId} onSync={handleSync} />
       <Panel.Content asChild>
         <PostStack

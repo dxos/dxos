@@ -71,9 +71,20 @@ export const Block = Schema.Struct({
   timestamp: Schema.Number,
 
   /**
-   * Serialized application payload.
+   * Serialized application payload. Ciphertext when a cypher sealed the block (see `encryptionKeyId`).
    */
   data: Schema.Uint8Array,
+
+  /**
+   * Hex-encoded public key naming the key that sealed `data`, when the block is encrypted at rest.
+   * Absent on plaintext blocks.
+   */
+  encryptionKeyId: Schema.optional(Schema.String),
+
+  /**
+   * 96-bit GCM nonce used to seal `data`. Present iff `encryptionKeyId` is.
+   */
+  iv: Schema.optional(Schema.Uint8Array),
 
   /**
    * Local insertion ID.

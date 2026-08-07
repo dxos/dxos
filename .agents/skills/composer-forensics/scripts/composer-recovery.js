@@ -169,7 +169,7 @@ const waitForSessionConnect = (sessionId) => {
 
 const flushWaitersForSession = (sessionId) => {
   const queue = getQueue(sessionId);
-  for (let index = 0; index < waiters.length && queue.length > 0; ) {
+  for (let index = 0; index < waiters.length && queue.length > 0;) {
     const waiter = waiters[index];
     if (waiter.session !== sessionId) {
       index++;

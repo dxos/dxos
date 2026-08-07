@@ -9,12 +9,13 @@ import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback, UNCATEGORIZED_VALUE } from '#types';
+import * as KanbanConstants from '../types/KanbanConstants';
+import * as KanbanLayout from '../types/KanbanLayout';
 
 /**
  * Builds the column drag-and-drop handler for the kanban board (reorder columns).
  *
- * @template T - Item type (extends BaseKanbanItem).
+ * @template T - Item type (extends KanbanLayout.BaseKanbanItem).
  * @param id - Handler id.
  * @param model - Board model for getColumns / getColumnId.
  * @param projection - ProjectionModel for pivot field options (column order).
@@ -22,7 +23,7 @@ import { type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback, U
  * @param change - Callback to persist kanban.arrangement.order.
  * @returns DndContainerHandler for column tiles.
  */
-export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
+export function useKanbanColumnEventHandler<T extends KanbanLayout.BaseKanbanItem>({
   id,
   model,
   projection,
@@ -30,33 +31,33 @@ export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
   change,
 }: {
   id: string;
-  model: BoardModel<ColumnStructure, T>;
+  model: BoardModel<KanbanLayout.ColumnStructure, T>;
   projection: ProjectionModel | undefined;
   pivotFieldId: string | undefined;
-  change: KanbanChangeCallback<T>;
-}): DndContainerHandler<ColumnStructure> {
-  return useMemo<DndContainerHandler<ColumnStructure>>(
+  change: KanbanLayout.KanbanChangeCallback<T>;
+}): DndContainerHandler<KanbanLayout.ColumnStructure> {
+  return useMemo<DndContainerHandler<KanbanLayout.ColumnStructure>>(
     () => ({
       id,
       canDrop: ({ source }) => {
         if (!projection) {
           return false;
         }
-        const data = source.data as ColumnStructure;
+        const data = source.data as KanbanLayout.ColumnStructure;
         const columnValue = model.getColumnId(data);
         return (
           model.isColumn(source.data) &&
-          columnValue !== UNCATEGORIZED_VALUE &&
-          (source as DndTileData<ColumnStructure>).id !== UNCATEGORIZED_VALUE
+          columnValue !== KanbanConstants.UNCATEGORIZED_VALUE &&
+          (source as DndTileData<KanbanLayout.ColumnStructure>).id !== KanbanConstants.UNCATEGORIZED_VALUE
         );
       },
       onDrop: ({ source, target }) => {
         if (!projection || pivotFieldId === undefined) {
           return;
         }
-        const sourceColumnData = source.data as ColumnStructure;
+        const sourceColumnData = source.data as KanbanLayout.ColumnStructure;
         const sourceColumnId = model.getColumnId(sourceColumnData);
-        if (sourceColumnId === UNCATEGORIZED_VALUE) {
+        if (sourceColumnId === KanbanConstants.UNCATEGORIZED_VALUE) {
           return;
         }
 
@@ -98,7 +99,9 @@ export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
 
         // Persist column order to kanban.arrangement so the board UI reflects the new order.
         change.kanban((kanban) => {
-          kanban.arrangement.order = reorderedColumnIds.filter((columnId) => columnId !== UNCATEGORIZED_VALUE);
+          kanban.arrangement.order = reorderedColumnIds.filter(
+            (columnId) => columnId !== KanbanConstants.UNCATEGORIZED_VALUE,
+          );
         });
       },
     }),

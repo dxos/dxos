@@ -62,7 +62,11 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
     });
 
     ws.on('close', () => {
-      connection = undefined;
+      // During a reconnect the new connection may be admitted before the old
+      // socket's close event fires; only clear if this socket is still current.
+      if (connection?.ws === ws) {
+        connection = undefined;
+      }
       closeTrigger.wake();
     });
   });

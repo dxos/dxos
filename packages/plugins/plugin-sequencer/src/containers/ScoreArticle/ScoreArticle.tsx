@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Button, Icon, Input, Panel } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
@@ -14,9 +14,11 @@ import { Menu, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilde
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';
-import type { Score, Sequence, Track } from '#types';
 
 import { ScorePlayer } from '../../audio';
+import type * as Score from '../../types/Score';
+import type * as Sequence from '../../types/Sequence';
+import type * as Track from '../../types/Track';
 import { type LeadSheetDocument, formatLeadSheet, parseLeadSheet } from '../../util/lead-sheet';
 import { type MutableScore, applyLeadSheetToScore, scoreToLeadSheet } from '../../util/score-leadsheet';
 
@@ -449,6 +451,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Toolbar asChild>
           <Menu.Toolbar>
+            <Menu.Items />
             <Input.Root>
               <Input.Label classNames='text-xs mr-1'>BPM</Input.Label>
               <Input.TextInput

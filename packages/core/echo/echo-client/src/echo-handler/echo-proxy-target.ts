@@ -57,7 +57,7 @@ export type ProxyTarget = {
   [SchemaId]?: Schema.Schema.AnyNoContext;
 
   /**
-   * For modifications.
+   * For modifications. Fires on real changes.
    */
   [EventId]: Event<void>;
 } & ({ [key: keyof any]: any } | EchoArray<any>);

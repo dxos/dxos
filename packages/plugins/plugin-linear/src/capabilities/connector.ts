@@ -5,14 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants';
 import { LinearApi } from '../services';
-import { LinearOperation } from '../types';
+import * as LinearOperation from '../types/LinearOperation';
 
 /**
  * Service-specific token-created hook for Linear.
@@ -23,13 +25,14 @@ import { LinearOperation } from '../types';
  * defects from the runner and continues so a failed lookup cannot block the
  * Connection already created.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     if (accessToken.account) {
       return;
     }
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const viewer = yield* LinearApi.fetchViewer().pipe(
-      Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token: accessToken.token })),
+      Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token })),
     );
     Obj.update(accessToken, (accessToken) => {
       accessToken.account = viewer.email ?? viewer.name;
@@ -41,9 +44,10 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * rejected token or transport failure surfaces as a user-facing error so the
  * connection UI can offer to reauthenticate.
  */
-const testConnection: TestConnection = ({ accessToken }) =>
-  LinearApi.fetchViewer().pipe(
-    Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token: accessToken.token })),
+const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
+  Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
+    LinearApi.fetchViewer().pipe(Effect.provide(Layer.succeed(LinearApi.LinearCredentials, { token }))),
+  ).pipe(
     Effect.asVoid,
     Effect.mapError(
       () => new ConnectionTestError({ message: 'Linear rejected the credential. Reauthenticate to continue syncing.' }),
@@ -51,7 +55,7 @@ const testConnection: TestConnection = ({ accessToken }) =>
   );
 
 /**
- * Contributes a single `Connector` entry that wires Linear's discovery,
+ * Contributes a single `ConnectorSpec.Connector` entry that wires Linear's discovery,
  * materialization, and sync operations plus the token-created hook to the
  * `'linear.app'` source.
  *
@@ -71,7 +75,7 @@ const testConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: LINEAR_PROVIDER_ID,
         source: LINEAR_SOURCE,
@@ -80,10 +84,12 @@ export default Capability.makeModule(
           provider: OAuthProvider.LINEAR,
           scopes: ['read', 'write'],
         },
-        getSyncTargets: LinearOperation.GetLinearTeams,
-        materializeTarget: LinearOperation.MaterializeLinearTarget,
-        sync: LinearOperation.SyncLinearTeams,
-        optionsSchema: LinearOperation.SyncOptions,
+        sync: {
+          operation: LinearOperation.SyncLinearTeams,
+          getTargets: LinearOperation.GetLinearTeams,
+          materializeTarget: LinearOperation.MaterializeLinearTarget,
+          optionsSchema: LinearOperation.SyncOptions,
+        },
         onTokenCreated,
         testConnection,
       },

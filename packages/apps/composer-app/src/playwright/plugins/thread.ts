@@ -8,7 +8,7 @@ import { type Locator, type Page, expect } from '@playwright/test';
 export const Thread = {
   createComment: async (page: Page, plankLocator: Locator, comment: string) => {
     const addButton = plankLocator.getByTestId('comments.comment.add');
-    // The button's disabled state is driven by selectionAspect, which updates via a
+    // The button's disabled state is driven by aspect, which updates via a
     // debounce after a CodeMirror selection dispatch. Wait until it is enabled.
     await expect(addButton).toBeEnabled();
     await addButton.click();

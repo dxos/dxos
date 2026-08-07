@@ -2,48 +2,37 @@
 // Copyright 2022 DXOS.org
 //
 
-import { afterAll, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { type Awaited } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { runTestSignalServer } from '@dxos/signal';
 
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
 
 describe('SwarmMessenger', { timeout: 7000 }, () => {
   let topic: PublicKey;
-
-  let broker1: Awaited<ReturnType<typeof runTestSignalServer>>;
-
-  beforeAll(async () => {
-    broker1 = await runTestSignalServer();
-  });
+  // Shared in-memory signaling context connecting the peers in each test (replaces the KUBE server).
+  let context: MemorySignalManagerContext;
 
   beforeEach(() => {
     topic = PublicKey.random();
-  });
-
-  afterAll(() => {
-    void broker1.stop();
+    context = new MemorySignalManagerContext();
   });
 
   const createSignalClientAndMessageRouter = async ({
-    signalApiUrl,
     onSignal = (async () => {}) as any,
     onOffer = async () => ({ accept: true }),
     topic,
   }: {
-    signalApiUrl: string;
     onSignal?: (ctx: Context, msg: SignalMessage) => Promise<void>;
     onOffer?: (ctx: Context, msg: OfferMessage) => Promise<Answer>;
     topic: PublicKey;
   }) => {
     const peer = { peerKey: PublicKey.random().toHex() };
-    const signalManager = new WebsocketSignalManager([{ server: signalApiUrl }]);
+    const signalManager = new MemorySignalManager(context);
     await signalManager.open();
     onTestFinished(async () => {
       await signalManager.close();
@@ -77,7 +66,6 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       received.push(msg);
     };
     const { signalManager: signalManager1, peer: peer1 } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
       onSignal: signalMock1,
       topic,
     });
@@ -85,10 +73,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       signalManager: signalManager2,
       router: router2,
       peer: peer2,
-    } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
-      topic,
-    });
+    } = await createSignalClientAndMessageRouter({ topic });
 
     await signalManager1.join(Context.default(), { topic, peer: peer1 });
     await signalManager2.join(Context.default(), { topic, peer: peer2 });
@@ -114,13 +99,11 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       router: router1,
       peer: peer1,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,
     });
     const { signalManager: signalManager2, peer: peer2 } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,
@@ -148,7 +131,6 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       router: router1,
       peer: peer1,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
       onSignal: signalMock1,
       onOffer: async () => ({ accept: true }),
       topic,
@@ -162,7 +144,6 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       router: router2,
       peer: peer2,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
       onSignal: signalMock2,
       onOffer: async () => ({ accept: true }),
       topic,
@@ -176,7 +157,6 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       router: router3,
       peer: peer3,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
       onSignal: signalMock3,
       onOffer: async () => ({ accept: true }),
       topic,
@@ -226,7 +206,6 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       router: router1,
       peer: peer1,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,
@@ -236,7 +215,6 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       router: router2,
       peer: peer2,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
       topic,

@@ -4,11 +4,12 @@
 
 import { useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
 import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Connection, Connector, type ConnectorEntry, isCursorForTarget } from '@dxos/plugin-connector';
-import { useQuery } from '@dxos/react-client/echo';
+import { isCursorForTarget } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
  * Find the {@link Connection} bound to the given `target` object via an external-sync
@@ -41,11 +42,17 @@ export const useTargetConnection = <T extends Obj.Any>(
   return { connection: connections[0] };
 };
 
-/** The {@link ConnectorEntry} backing `connection`, resolved from the registered {@link Connector} capability list. */
-export const useConnectorEntry = (connection: Connection.Connection | undefined): ConnectorEntry | undefined => {
-  const connectorEntries = useCapabilities(Connector);
+/**
+ * The {@link ConnectorSpec.ConnectorEntry} backing `connection`, resolved from the registered `Connector` capability
+ * list. `connectors` is resolved by the container (this hook lives under `components/`, which must not
+ * call capability hooks) and threaded down via `useSyncTrigger` — see the properties-panel wiring.
+ */
+export const useConnectorEntry = (
+  connection: Connection.Connection | undefined,
+  connectors: readonly ConnectorSpec.ConnectorEntry[][] = [],
+): ConnectorSpec.ConnectorEntry | undefined => {
   return useMemo(
-    () => connectorEntries.flat().find((entry) => entry.id === connection?.connectorId),
-    [connectorEntries, connection],
+    () => connectors.flat().find((entry) => entry.id === connection?.connectorId),
+    [connectors, connection],
   );
 };

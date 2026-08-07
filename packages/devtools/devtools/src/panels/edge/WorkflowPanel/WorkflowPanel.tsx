@@ -10,11 +10,11 @@ import { Filter } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { EID } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { ControlledSelector, MasterDetailTable, PanelContainer } from '../../../components';
+import { ControlledSelector, MasterDetailTable } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel';
@@ -71,8 +71,8 @@ export const WorkflowPanel = (props: { space?: Space }) => {
   }, [loader, displayMode]);
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <ControlledSelector values={Object.values(DisplayMode)} value={displayMode} setValue={setDisplayMode} />
@@ -82,21 +82,22 @@ export const WorkflowPanel = (props: { space?: Space }) => {
             setValue={setExecutionMode}
           />
         </Toolbar.Root>
-      }
-    >
-      <div className={'h-full grid grid-rows-[4fr_3fr]'}>
-        <MasterDetailTable
-          properties={properties}
-          data={tableData}
-          detailsTransform={detailsTransform}
-          onSelectionChanged={setSelectedId}
-        />
+      </Panel.Toolbar>
+      <Panel.Content>
+        <div className={'h-full grid grid-rows-[4fr_3fr]'}>
+          <MasterDetailTable
+            properties={properties}
+            data={tableData}
+            detailsTransform={detailsTransform}
+            onSelectionChanged={setSelectedId}
+          />
 
-        <div className={mx('h-full')}>
-          {selected && <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />}
+          <div className={mx('h-full')}>
+            {selected && <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />}
+          </div>
         </div>
-      </div>
-    </PanelContainer>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

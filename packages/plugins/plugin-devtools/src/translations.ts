@@ -24,7 +24,7 @@ export const translations = [
         'config.label': 'Config',
         'storage.label': 'Storage',
         'sqlite.label': 'SQLite',
-        'logs.label': 'Logs',
+        'logging.label': 'Logging',
         'diagnostics.label': 'Diagnostics',
         'tracing.label': 'Tracing',
         'halo.label': 'HALO',

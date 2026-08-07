@@ -4,18 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Calendar } from '@dxos/plugin-inbox';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Event } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { TRIP_SKILL_KEY } from '../skills';
-import { TripOperation } from '../types';
+import * as TripOperation from '../types/TripOperation';
 import { buildTripFromEvents } from './events-to-segments';
 
 export default TripOperation.CreateTripFromEvents.pipe(
@@ -36,7 +37,7 @@ export default TripOperation.CreateTripFromEvents.pipe(
       // Navigate to the trip and kick off the planning skill in the background. Both are
       // side-effects that depend on app capabilities absent in headless/test runs, so failures are
       // logged rather than fatal — the trip is already created and returned.
-      yield* Operation.invoke(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(trip)] }).pipe(
+      yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(trip)] }).pipe(
         Effect.catchAll((error) => {
           log.catch(error);
           return Effect.void;

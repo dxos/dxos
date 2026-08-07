@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { type } from '@tauri-apps/plugin-os';
 import { relaunch } from '@tauri-apps/plugin-process';
 import * as Updater from '@tauri-apps/plugin-updater';
@@ -12,14 +12,16 @@ import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-import { NativeCapabilities, type Update } from '#types';
 
 import { TAURI_LOCALHOST_PORT } from '../constants';
+import * as NativeCapabilities from '../types/NativeCapabilities';
+import type * as Update from '../types/Update';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
@@ -64,8 +66,8 @@ export default Capability.makeModule(
     const isDevServer = window.location.port !== TAURI_LOCALHOST_PORT;
     const enabled = SUPPORTS_OTA.includes(platform) && !isDevServer;
 
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
+    const registry = yield* Capabilities.AtomRegistry;
+    const { invoke } = yield* Capabilities.OperationInvoker;
 
     const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : { kind: 'unsupported' }).pipe(
       Atom.keepAlive,
@@ -148,7 +150,7 @@ export default Capability.makeModule(
       },
     };
 
-    const managerContribution = Capability.contributes(NativeCapabilities.UpdateManager, manager);
+    const managerContribution = Capability.contribute(NativeCapabilities.UpdateManager, manager);
 
     if (!enabled) {
       log.info('updater disabled', { platform, port: window.location.port });
@@ -184,11 +186,10 @@ export default Capability.makeModule(
     const fiber = yield* backgroundAction.pipe(Effect.repeat(schedule), Effect.forkDaemon);
     log.info('updater module initialized, update check scheduled');
 
-    return [
-      managerContribution,
-      // Return the interruption effect directly; Fiber.interrupt is async and would throw
-      // AsyncFiberException if wrapped in Effect.runSync.
-      Capability.contributes(Capabilities.Null, null, () => Fiber.interrupt(fiber)),
-    ];
+    // Fiber.interrupt is async and would throw AsyncFiberException if wrapped in Effect.runSync,
+    // so the finalizer returns the interruption effect directly.
+    yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
+
+    return managerContribution;
   }),
 );

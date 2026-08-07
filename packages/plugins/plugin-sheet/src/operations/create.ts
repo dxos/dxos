@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CollectionModel } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { Sheet, SheetOperation } from '../types';
+import * as Sheet from '../types/Sheet';
+import * as SheetOperation from '../types/SheetOperation';
 
 const handler: Operation.WithHandler<typeof SheetOperation.Create> = SheetOperation.Create.pipe(
   Operation.withHandler(

@@ -3,6 +3,8 @@
 //
 
 export * from './api-key';
+export * from './atproto-record';
+export * from './atproto-visibility';
 export * from './card';
 export * from './collection-item';
 export * from './factory';

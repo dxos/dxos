@@ -74,7 +74,7 @@ export const PipelinePanel = ({
               </Select.Content>
             </Select.Portal>
           </Select.Root>
-          <div role='none' className='grow' />
+          <div className='grow' />
           <span className='text-sm text-description tabular-nums'>{processed} processed</span>
           <IconButton
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
@@ -93,7 +93,7 @@ export const PipelinePanel = ({
               <div
                 key={stage.id}
                 className={mx(
-                  'flex flex-col min-w-0 bg-card-surface border border-subdued-separator rounded-sm px-3 py-2',
+                  'flex flex-col min-w-0 dx-card-surface border border-subdued-separator rounded-sm px-3 py-2',
                   !stage.enabled && 'opacity-50',
                 )}
               >

@@ -7,14 +7,17 @@ import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Game } from '@dxos/plugin-game/types';
+import * as Game from '@dxos/plugin-game/Game';
 
 import * as positionIndexInternal from '../internal/position-index';
-import { Chess, ChessOperation, ChessPositionIndex, PlayerReview } from '../types';
+import * as Chess from '../types/Chess';
+import * as ChessOperation from '../types/ChessOperation';
+import * as ChessPositionIndex from '../types/ChessPositionIndex';
+import * as PlayerReview from '../types/PlayerReview';
 import { ChessOperationHandlerSet } from './index';
 
 EntityId.dangerouslyDisableRandomness();

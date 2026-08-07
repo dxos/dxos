@@ -7,12 +7,10 @@
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContextScope } from '@radix-ui/react-context';
-import type { Scope } from '@radix-ui/react-context';
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer';
 import { useId } from '@radix-ui/react-id';
 import * as PopperPrimitive from '@radix-ui/react-popper';
-import { type PopperAnchorProps, createPopperScope } from '@radix-ui/react-popper';
+import { type PopperAnchorProps } from '@radix-ui/react-popper';
 import { Portal as PortalPrimitive } from '@radix-ui/react-portal';
 import { Presence } from '@radix-ui/react-presence';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -36,35 +34,16 @@ import React, {
 } from 'react';
 
 import { useElevationContext, useThemeContext } from '../../hooks';
-
-type TooltipScopedProps<P = {}> = P & { __scopeTooltip?: Scope };
-const [createTooltipContext, createTooltipScope] = createContextScope('Tooltip', [createPopperScope]);
-const usePopperScope = createPopperScope();
-
-//
-// Tooltip
-//
-
-const DEFAULT_DELAY_DURATION = 700;
-const TOOLTIP_OPEN = 'tooltip.open';
-const TOOLTIP_NAME = 'Tooltip';
-
-type TooltipContextValue = {
-  contentId: string;
-  open: boolean;
-  stateAttribute: 'closed' | 'delayed-open' | 'instant-open';
-  trigger: TooltipTriggerElement | null;
-  onTriggerChange(trigger: TooltipTriggerElement | null, content?: ReactNode, side?: TooltipSide): void;
-  onTriggerEnter(): void;
-  onTriggerLeave(): void;
-  onOpen(): void;
-  onClose(): void;
-  onPointerInTransitChange(inTransit: boolean): void;
-  isPointerInTransitRef: RefObject<boolean>;
-  disableHoverableContent: boolean;
-};
-
-const [TooltipContextProvider, useTooltipContext] = createTooltipContext<TooltipContextValue>(TOOLTIP_NAME);
+import {
+  DEFAULT_DELAY_DURATION,
+  TOOLTIP_NAME,
+  TOOLTIP_OPEN,
+  TooltipContextProvider,
+  type TooltipScopedProps,
+  createTooltipContext,
+  usePopperScope,
+  useTooltipContext,
+} from './TooltipContext';
 
 type TooltipProviderProps = {
   children?: ReactNode;
@@ -763,6 +742,4 @@ export const Tooltip = {
   Trigger: TooltipTrigger,
 };
 
-export { createTooltipScope, useTooltipContext };
-
-export type { TooltipProviderProps, TooltipScopedProps, TooltipSide, TooltipTriggerProps };
+export type { TooltipProviderProps, TooltipSide, TooltipTriggerElement, TooltipTriggerProps };

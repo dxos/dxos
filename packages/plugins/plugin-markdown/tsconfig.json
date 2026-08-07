@@ -23,9 +23,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -41,16 +38,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/agent-runtime"
-    },
-    {
-      "path": "../../core/compute/ai"
     },
     {
       "path": "../../core/compute/assistant"
@@ -66,6 +57,15 @@
     },
     {
       "path": "../../core/echo/echo-doc"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -89,10 +89,16 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../sdk/versioning"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-dnd"
@@ -128,10 +134,10 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-preview"
+      "path": "../plugin-illustrator"
     },
     {
-      "path": "../plugin-sketch"
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-space"
@@ -140,7 +146,7 @@
       "path": "../plugin-testing"
     },
     {
-      "path": "../plugin-theme"
+      "path": "../plugin-tldraw"
     }
   ]
 }

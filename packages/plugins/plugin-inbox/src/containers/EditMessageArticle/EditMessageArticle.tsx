@@ -4,10 +4,10 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Message } from '@dxos/types';
@@ -16,7 +16,8 @@ import { EditMessage } from '#components';
 import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 
-import { InboxOperation, Mailbox } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 import { REPLY_REGEXP } from '../../util';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
@@ -24,8 +25,11 @@ export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Mess
 export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageArticleProps) => {
   const db = Obj.getDatabase(subject);
   const spaceId = db?.spaceId;
-  const extensions = useEmailComposerExtensions(subject);
-  const onSend = useSendEmail(subject);
+  // Resolve the runtime here (container) and pass it into the composer hooks — the hooks live under
+  // `components`/`hooks` and must not call capability hooks themselves.
+  const runtime = useProcessManagerRuntime();
+  const extensions = useEmailComposerExtensions(runtime, subject);
+  const onSend = useSendEmail(runtime, subject);
 
   // Generate: fill the reply draft's body from the message it replies to (thread + facts grounded).
   // Only offered for reply drafts scoped to a resolvable mailbox.
@@ -73,6 +77,7 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
                 {
                   label: ['draft-toolbar-generate.menu', { ns: meta.profile.key }],
                   icon: 'ph--sparkle--regular',
+                  testId: 'inbox.draft.generate',
                 },
                 handleGenerate,
               )),
@@ -82,10 +87,12 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   );
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Toolbar>
         <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

@@ -5,9 +5,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, Obj, Ref, type Registry } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { distinctBy } from '@dxos/util';
 
 export const useSkills = ({ registry, db }: { registry?: Registry.Registry; db?: Database.Database }) => {

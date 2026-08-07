@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { type ButtonProps, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { getSize, hues, osTranslations } from '@dxos/ui-theme';
+import { getSize, osTranslations } from '@dxos/ui-theme';
+import { hues } from '@dxos/ui-types';
 
 import { PickerButton, type PickerButtonProps } from '../PickerButton';
 

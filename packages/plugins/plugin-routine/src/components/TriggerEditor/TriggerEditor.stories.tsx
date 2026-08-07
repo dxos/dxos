@@ -6,14 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Trigger } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Feed, Filter, Obj } from '@dxos/echo';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { type Space } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Routine } from '#types';
 
 import { TriggerEditor } from './TriggerEditor';
 

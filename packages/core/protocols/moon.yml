@@ -1,10 +1,11 @@
 layer: library
 language: typescript
 tags:
+  - dist-runtime
   - ts-compile
   - ts-test
 tasks:
-  compile:
+  build:
     deps:
       - prebuild
   gen-buf:
@@ -21,8 +22,8 @@ tasks:
       - '--outDir="./src/proto/gen"'
       - '--substitutions="./src/proto/substitutions.ts"'
     deps:
-      - ^:compile
-      - protobuf-compiler:compile
+      - ^:build
+      - protobuf-compiler:build
       - gen-buf
     outputs:
       - src/proto/gen

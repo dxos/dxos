@@ -1,0 +1,24 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Obj } from '@dxos/echo';
+import { type Thread } from '@dxos/types';
+
+import * as CommentOperation from '../types/CommentOperation';
+
+const handler: Operation.WithHandler<typeof CommentOperation.SetAgentConfig> = CommentOperation.SetAgentConfig.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ thread: threadRef, config }) {
+      const thread = yield* Database.load(threadRef);
+      Obj.update(thread, (thread) => {
+        (thread as Obj.Mutable<Thread.Thread>).agent = config;
+      });
+    }),
+  ),
+);
+
+export default handler;

@@ -4,13 +4,13 @@
 
 import React, { type ChangeEvent, useCallback } from 'react';
 
-import { type Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import { getInvocationUrl } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 

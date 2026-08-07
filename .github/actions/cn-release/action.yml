@@ -11,6 +11,9 @@ inputs:
   application:
     description: 'Cloud Release application name'
     required: true
+  environment:
+    description: Target environment (labs | staging | production) — selects the channel.
+    required: true
   framework:
     description: 'Cloud Release framework'
     default: 'tauri'
@@ -22,11 +25,12 @@ runs:
   using: 'composite'
   steps:
     - uses: ./.github/actions/cn-channel
-      if: github.ref_name != 'production'
       id: release-channel
+      with:
+        environment: ${{ inputs.environment }}
 
     - uses: FabianLars-crabnebula/cloud-release@e0bb6ccebcb78f71883ebde2320f76aae6b9eb92
       with:
-        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }}${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
+        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }} --channel ${{ steps.release-channel.outputs.channel }}
         api-key: ${{ inputs.api-key }}
         working-directory: ${{ inputs.working-directory }}

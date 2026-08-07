@@ -2,28 +2,31 @@ layer: library
 language: typescript
 tags:
   - e2e
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/SheetPlugin.tsx'
-      - '--entryPoint=src/SheetPlugin.node.ts'
-      - '--entryPoint=src/SheetPlugin.workerd.ts'
-      - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/components/index.ts'
-      - '--entryPoint=src/containers/index.ts'
-      - '--entryPoint=src/meta.ts'
-      - '--entryPoint=src/operations/index.ts'
-      - '--entryPoint=src/plugin.ts'
-      - '--entryPoint=src/testing/index.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
-      - '--platform=neutral'
+  # Fail when the ./plugin export pulls in React. The node/workerd plugin variant must stay
+  # loadable outside a DOM, and neither `Capability.lazy` nor `OperationHandlerSet.lazy` stops a
+  # bundler walking into a React surface — only node-conditioned `#capabilities`/`#operations` do.
+  check-module-structure:
+    command: >-
+      pnpm exec dx-trace-imports
+      --export ./plugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker,node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
   e2e:
     inputs:
       - .storybook/*

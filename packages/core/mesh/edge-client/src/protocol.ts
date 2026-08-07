@@ -69,11 +69,14 @@ export class Protocol {
     {
       source,
       target,
+      tags,
       payload,
       serviceId,
     }: {
       source?: PeerData;
       target?: PeerData[];
+      // Broadcast tags (DX-1125). Set with no resolvable `target` to publish to the swarm.
+      tags?: string[];
       payload?: buf.MessageInitShape<Desc>;
       serviceId?: string;
     },
@@ -82,6 +85,7 @@ export class Protocol {
       timestamp: new Date().toISOString(),
       source,
       target,
+      tags,
       serviceId,
       payload: payload ? bufWkt.anyPack(type, buf.create(type, payload)) : undefined,
     });

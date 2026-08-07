@@ -7,7 +7,8 @@ import React, { Component, type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
-import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
+import { Client, Config, SystemStatus } from '@dxos/client';
+import { fromHost } from '@dxos/client/local';
 import { log } from '@dxos/log';
 
 import { useIdentity } from '../halo';

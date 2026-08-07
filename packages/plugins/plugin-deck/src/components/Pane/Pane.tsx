@@ -7,7 +7,7 @@ import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { DensityProvider, IconButton, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
-import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
+import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { iconSize, mx } from '@dxos/ui-theme';
 import type { Merge } from '@dxos/util';
 
@@ -33,8 +33,10 @@ const PaneRoot = forwardRef<HTMLDivElement, PaneRootProps>(({ children, ...props
   <div
     {...composableProps(props, {
       role: 'article',
-      classNames:
-        'dx-container flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-lg min-w-0',
+      // No `dx-density-*` here: the class sets `--dx-control` for the whole subtree, so a pane-wide
+      // `lg` reached the content body and rendered form labels and inputs at 40px. The toolbar gets
+      // `lg` from its own `DensityProvider` (see `Pane.Toolbar`); the body keeps the `md` default.
+      classNames: 'dx-container flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all min-w-0',
     })}
     ref={forwardedRef}
   >
@@ -54,7 +56,7 @@ const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
     <Comp
       {...composableProps(props, {
         style: iconSize(5),
-        classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) bg-header-surface',
+        classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
       })}
       ref={forwardedRef}
     >
@@ -84,7 +86,7 @@ PaneContent.displayName = 'Pane.Content';
 // Title
 //
 
-type PaneTitleProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
+type PaneTitleProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & Attention.AttendableId & Attention.Related;
 
 /** Attention-aware plank title; colors to the accent when the plank (or a related companion) is attended. */
 const PaneTitle = forwardRef<HTMLHeadingElement, PaneTitleProps>(
@@ -125,8 +127,8 @@ type PaneTabsProps = Merge<
     /** Collapse inactive tabs to icon-only once the tab count exceeds this. */
     maxTabs?: number;
   }>,
-  AttendableId,
-  Related
+  Attention.AttendableId,
+  Attention.Related
 >;
 
 /** Full-height tab strip for a companion plank's toolbar; selects among available companions. */

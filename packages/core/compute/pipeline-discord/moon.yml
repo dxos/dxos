@@ -1,7 +1,7 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
 tasks:
   # Replay the captured SQLite fixture (src/testing/fixtures/discord-crawl.db) through the
@@ -11,9 +11,3 @@ tasks:
     options:
       runInCI: false
       cache: false
-
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/testing/index.ts'
-      - '--platform=neutral'

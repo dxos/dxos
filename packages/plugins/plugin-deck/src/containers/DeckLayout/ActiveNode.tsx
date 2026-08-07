@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useNode } from '@dxos/plugin-graph';
+import { useNode } from '@dxos/plugin-graph/hooks';
 import { useAttended } from '@dxos/react-ui-attention';
 
 import { useNodeActionExpander } from '#hooks';

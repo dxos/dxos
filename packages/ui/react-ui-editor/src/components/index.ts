@@ -6,3 +6,4 @@ export * from './Editor';
 
 export * from './EditorMenuProvider';
 export * from './EditorPreviewProvider';
+export * from './EditorToolbar/view-mode';

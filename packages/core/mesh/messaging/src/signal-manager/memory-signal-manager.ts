@@ -13,8 +13,26 @@ import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type Message, type PeerInfo, PeerInfoHash, type SignalStatus, type SwarmEvent } from '../signal-methods';
+import {
+  type Message,
+  type PeerInfo,
+  PeerInfoHash,
+  type SignalStatus,
+  type SubscribeMessagesParams,
+  type SwarmEvent,
+  type UnsubscribeCallback,
+} from '../signal-methods';
 import { type SignalManager } from './signal-manager';
+
+/**
+ * A single message subscription registered on a {@link MemorySignalManager} (DX-1125). Point-to-point
+ * delivery matches `peerKey`; broadcast delivery matches any intersection with `tags`.
+ */
+type MessageSubscription = {
+  peerKey: string;
+  tags: Set<string>;
+  onMessage: (message: Message) => void;
+};
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.
@@ -37,7 +55,11 @@ export class MemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly swarmEvent = new Event<SwarmEvent>();
 
-  readonly onMessage = new Event<Message>();
+  /**
+   * Active message subscriptions on this manager. Routing is encapsulated here (DX-1125): a delivered
+   * message is dispatched to every subscription it matches.
+   */
+  private readonly _subscriptions = new Set<MessageSubscription>();
 
   /**  Will be used to emit SwarmEvents on .open() and .close() */
   private _joinedSwarms = new ComplexSet<{ topic: PublicKey; peer: PeerInfo }>(
@@ -144,61 +166,46 @@ export class MemorySignalManager implements SignalManager {
     throw new Error('Not implemented');
   }
 
-  async sendMessage(
-    _ctx: Context,
-    {
-      author,
-      recipient,
-      payload,
-    }: {
-      author: PeerInfo;
-      recipient: PeerInfo;
-      payload: Any;
-    },
-  ): Promise<void> {
-    log('send message', { author, recipient, ...dec(payload) });
-
-    invariant(recipient);
+  async sendMessage(_ctx: Context, message: Message): Promise<void> {
     invariant(!this._ctx.disposed, 'Closed');
+    const { author, recipient, tags, payload } = message;
+    // Exactly one of point-to-point (`recipient`) or broadcast (`tags`) delivery (DX-1125).
+    invariant((recipient == null) !== !tags?.length, 'Exactly one of `recipient` or `tags` must be set');
 
     await this._freezeTrigger.wait();
 
-    const remote = this._context.connections.get(recipient);
-    if (!remote) {
-      log.warn('recipient is not subscribed for messages', { author, recipient });
-      return;
+    if (recipient != null) {
+      log('send message', { author, recipient, ...dec(payload) });
+      const remote = this._context.connections.get(recipient);
+      if (!remote) {
+        log.warn('recipient is not subscribed for messages', { author, recipient });
+        return;
+      }
+      remote._deliver(message);
+    } else {
+      // Broadcast: fan out to every subscriber in the shared context whose tags intersect.
+      log('broadcast message', { author, tags, ...dec(payload) });
+      for (const manager of new Set(this._context.connections.values())) {
+        manager._deliver(message);
+      }
     }
-
-    if (remote._ctx.disposed) {
-      log.warn('recipient is disposed', { author, recipient });
-      return;
-    }
-
-    remote._freezeTrigger
-      .wait()
-      .then(() => {
-        if (remote._ctx.disposed) {
-          log.warn('recipient is disposed', { author, recipient });
-          return;
-        }
-
-        log('receive message', { author, recipient, ...dec(payload) });
-
-        remote.onMessage.emit({ author, recipient, payload });
-      })
-      .catch((err) => {
-        log.error('error while waiting for freeze', { err });
-      });
   }
 
-  async subscribeMessages(peerInfo: PeerInfo): Promise<void> {
-    log('subscribing', { peerInfo });
-    this._context.connections.set(peerInfo, this);
-  }
+  async subscribeMessages({ peer, tags = [], onMessage }: SubscribeMessagesParams): Promise<UnsubscribeCallback> {
+    invariant(!this._ctx.disposed, 'Closed');
+    log('subscribing', { peer, tags });
+    const subscription: MessageSubscription = { peerKey: peer.peerKey, tags: new Set(tags), onMessage };
+    this._subscriptions.add(subscription);
+    this._context.connections.set(peer, this);
 
-  async unsubscribeMessages(peerInfo: PeerInfo): Promise<void> {
-    log('unsubscribing', { peerInfo });
-    this._context.connections.delete(peerInfo);
+    return async () => {
+      log('unsubscribing', { peer, tags });
+      this._subscriptions.delete(subscription);
+      // Drop the shared-context connection entry only once no subscription for this peer remains.
+      if (![...this._subscriptions].some((sub) => sub.peerKey === peer.peerKey)) {
+        this._context.connections.delete(peer);
+      }
+    };
   }
 
   freeze(): void {
@@ -207,6 +214,39 @@ export class MemorySignalManager implements SignalManager {
 
   unfreeze(): void {
     this._freezeTrigger.wake();
+  }
+
+  /**
+   * Route a delivered message to this manager's matching subscriptions once it is unfrozen and open.
+   */
+  private _deliver(message: Message): void {
+    if (this._ctx.disposed) {
+      log.warn('recipient is disposed', { message });
+      return;
+    }
+
+    this._freezeTrigger
+      .wait()
+      .then(() => {
+        if (this._ctx.disposed) {
+          log.warn('recipient is disposed', { message });
+          return;
+        }
+
+        log('receive message', { author: message.author, recipient: message.recipient, ...dec(message.payload) });
+        for (const subscription of this._subscriptions) {
+          if (message.recipient != null) {
+            if (subscription.peerKey === message.recipient.peerKey) {
+              subscription.onMessage(message);
+            }
+          } else if (message.tags?.some((tag) => subscription.tags.has(tag))) {
+            subscription.onMessage(message);
+          }
+        }
+      })
+      .catch((err) => {
+        log.error('error while waiting for freeze', { err });
+      });
   }
 }
 const dec = (payload: Any) => {

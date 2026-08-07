@@ -2,15 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
-export const ChannelBackendFeed = Capability.lazy('ChannelBackendFeed', () => import('./channel-backend-feed'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import * as ThreadCapabilities from '../types/ThreadCapabilities';
+import * as ThreadEvents from '../types/ThreadEvents';
+
+// The graph builder reads the call manager OPTIONALLY (reactive atom with an absence guard),
+// so no spec-level require: a hard cross-plugin require would fail this plugin whenever
+// plugin-calls is disabled. Cross-feature requires are only valid with a plugin-level dependsOn.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const ChannelBackendFeed = Capability.lazyModule(
+  'ChannelBackendFeed',
+  { provides: [ThreadCapabilities.ChannelBackend], activatesOn: ThreadEvents.Start },
+  () => import('./channel-backend-feed'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});

@@ -4,39 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
-import { Instructions } from '@dxos/compute';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { TopicProps } from '@dxos/pipeline-email';
-import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
+import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
-
-/**
- * Foreign-key source for Gmail provider labels. A Gmail label maps to a {@link Tag} object carrying
- * a foreign key `{ source: GMAIL_TAG_SOURCE, id: <gmail-label-id> }`; "provider" tags are those with
- * such a key, "user" tags are those without.
- */
-export const GMAIL_TAG_SOURCE = 'com.google.gmail.label';
-
-/**
- * Foreign keys that mark a message as person-to-person ("personal") mail, used to tell it from
- * bulk/marketing when deciding how aggressively to restyle a message body (see the HTML viewer).
- * Each provider contributes its own signal: Gmail persists the "Personal"/Primary inbox category
- * (`CATEGORY_PERSONAL`) during label sync. JMAP contributes nothing — its mailbox roles
- * (inbox/archive/sent/…) don't distinguish person-to-person from bulk mail — so it has no equivalent.
- */
-export const PERSONAL_TAG_KEYS = [{ source: GMAIL_TAG_SOURCE, id: 'CATEGORY_PERSONAL' }] as const;
-
-/**
- * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag}
- * object carrying a foreign key `{ source: JMAP_TAG_SOURCE, id: <jmap-mailbox-id> }`; mirrors
- * {@link GMAIL_TAG_SOURCE}.
- */
-export const JMAP_TAG_SOURCE = 'org.ietf.jmap.mailbox';
 
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
@@ -97,15 +73,20 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
         filter: Schema.String,
       }),
     ).pipe(FormInputAnnotation.set(false)),
-    // Proposed topics the user has not yet accepted (see {@link TopicProps}). `AnalyzeTopics` writes
-    // these instead of materializing `Topic` objects; accepting one promotes it via `Obj.make(Topic, …)`.
-    topicSuggestions: Schema.optional(Schema.Array(TopicProps)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
+    // Reading a mailbox is a chain: the message replaces the message plank rather than growing the
+    // deck, and picking a different message drops the attachment that belonged to the last one.
+    AppAnnotation.DeckAnnotation.set({
+      levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
+    }),
     FeedAnnotation.set(true),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
-    ConnectorAuthAnnotation.set({ connectorIds: [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID], bindTarget: true }),
+    ConnectorAnnotations.ConnectorAuthAnnotation.set({
+      connectorIds: [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID],
+      bindTarget: true,
+    }),
   ),
 ) {}
 
@@ -143,25 +124,6 @@ export const make = (props: MailboxProps = {}) => {
 // Tag application API.
 //
 
-/**
- * Finds an existing Gmail provider {@link Tag} object by its Gmail label-id foreign key, or creates
- * one carrying that key. Keeps the label in sync with Gmail's dictionary on re-sync.
- */
-export const findOrCreateGmailTag = (
-  db: Database.Database,
-  { id, name }: { id: string; name: string },
-): Promise<Tag.Tag> => Tag.findOrCreate(db, { key: { source: GMAIL_TAG_SOURCE, id }, label: name });
-
-/**
- * Finds an existing JMAP provider {@link Tag} object by its JMAP mailbox-id foreign key, or creates
- * one carrying that key. Keeps the folder label in sync with the server on re-sync. Mirrors
- * {@link findOrCreateGmailTag}.
- */
-export const findOrCreateJmapTag = (
-  db: Database.Database,
-  { id, name }: { id: string; name: string },
-): Promise<Tag.Tag> => Tag.findOrCreate(db, { key: { source: JMAP_TAG_SOURCE, id }, label: name });
-
 /** Returns the URI used to index a {@link Tag} object on a Mailbox. */
 export const tagUri = (tag: Tag.Tag): string => Obj.getURI(tag).toString();
 
@@ -196,7 +158,12 @@ export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds:
     return;
   }
   Obj.update(mailbox, (mailbox) => {
-    const map = (mailbox.extracted ??= {});
+    if (!mailbox.extracted) {
+      mailbox.extracted = {};
+    }
+    // Re-read through the proxy: `??=` would evaluate to the plain right-hand object, and mutations
+    // of a detached record are not written through, silently dropping the first recorded entry.
+    const map = mailbox.extracted;
     const merged = [...(map[messageId] ?? [])];
     for (const id of objectIds) {
       if (!merged.includes(id)) {
@@ -383,5 +350,13 @@ export const deriveSubscriptions = (messages: readonly MessageLike[]): Subscript
       byEmail.set(email, { email, name: message.sender?.name, unsubscribe: target, count: 1 });
     }
   }
-  return [...byEmail.values()].sort((left, right) => right.count - left.count);
+  // Count ties break alphabetically (then by email, so case-insensitively equal names stay
+  // deterministic): Map insertion order follows message order, which is unstable across syncs and
+  // reads as an unsorted list.
+  return [...byEmail.values()].sort(
+    (left, right) =>
+      right.count - left.count ||
+      (left.name ?? left.email).localeCompare(right.name ?? right.email, undefined, { sensitivity: 'base' }) ||
+      left.email.localeCompare(right.email),
+  );
 };

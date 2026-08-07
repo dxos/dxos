@@ -3,7 +3,7 @@
 //
 
 import { type Thread, type TopicDraft, buildThreads, clusterThreads, deriveThreadId } from '@dxos/pipeline-email';
-import { Outline } from '@dxos/plugin-outliner';
+import { Outline } from '@dxos/types';
 import { type Message } from '@dxos/types';
 
 // Active Topics experiment (spec 2026-07-13): score clustered topics for how "active" they are, split
@@ -138,13 +138,13 @@ export const classifyTopics = (
 export const renderTasksMarkdown = (items: readonly string[]): string =>
   items.map((item) => `- [ ] ${item.trim()}`).join('\n');
 
-/** Builds a plugin-outliner `Outline` whose Text content is the checkbox task list. */
+/** Builds an `Outline` whose Text content is the checkbox task list. */
 export const makeTasksOutline = (name: string, items: readonly string[]): Outline.Outline =>
   Outline.make({ name, content: renderTasksMarkdown(items) });
 
 /** The fully-populated active-topic structure (experiment-local; informs the product `Topic`). */
 export type ActiveTopic = {
-  readonly label: string;
+  readonly name: string;
   readonly summary: string;
   readonly threadIds: readonly string[];
   readonly participants: readonly string[];
@@ -168,14 +168,14 @@ export type PopulatedParts = {
 
 /** Assembles an active `ActiveTopic` from its scored cluster + LLM parts. Pure (except `Outline.make`). */
 export const assembleActiveTopic = (candidate: ScoredCandidate, parts: PopulatedParts): ActiveTopic => ({
-  label: candidate.draft.label,
+  name: candidate.draft.name,
   summary: candidate.draft.summary,
   threadIds: candidate.draft.threadIds,
   participants: candidate.draft.participants,
   keywords: candidate.draft.keywords,
   status: parts.status,
   facts: parts.facts,
-  tasks: makeTasksOutline(`${candidate.draft.label} — tasks`, parts.tasks),
+  tasks: makeTasksOutline(`${candidate.draft.name} — tasks`, parts.tasks),
   drafts: parts.drafts,
   confidence: candidate.confidence,
   rationale: candidate.rationale,
@@ -184,7 +184,7 @@ export const assembleActiveTopic = (candidate: ScoredCandidate, parts: Populated
 
 /** A suggested (not-populated) topic — label/summary/counts + confidence only. */
 export type SuggestedTopic = {
-  readonly label: string;
+  readonly name: string;
   readonly summary: string;
   readonly threadCount: number;
   readonly participantCount: number;
@@ -201,7 +201,7 @@ export type ActiveTopicsResult = {
 
 /** Converts a scored candidate into its unpopulated `SuggestedTopic` (label/summary/counts + confidence). */
 export const toSuggestedTopic = (candidate: ScoredCandidate): SuggestedTopic => ({
-  label: candidate.draft.label,
+  name: candidate.draft.name,
   summary: candidate.draft.summary,
   threadCount: candidate.draft.threadIds.length,
   participantCount: candidate.draft.participants.length,

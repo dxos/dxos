@@ -2,23 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Routine from '@dxos/compute/Routine';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon, RoutineForm } from '#components';
+import { RoutineForm } from '#components';
 import { meta } from '#meta';
-import { Routine, RoutineCapabilities } from '#types';
 
+import * as RoutineCapabilities from '../../types/RoutineCapabilities';
 import { connectedRoutinesQuery } from '../../util';
 
 /** Association state of a row relative to the companion's object. */
@@ -108,7 +110,7 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
       return;
     }
 
-    // The draft is a fully-wired graph (see `Routine.make`); a single add cascades the owned trigger and
+    // The draft is a fully-wired graph (see `makeRoutine`); a single add cascades the owned trigger and
     // instructions, and the subject carried in the instructions' `objects` is the structural connection the
     // query finds.
     const persistedRoutine = db.add(draft);
@@ -189,9 +191,11 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root>
         <Panel.Toolbar>
-          <Menu.Toolbar className='dx-document' />
+          <Menu.Toolbar classNames='dx-document'>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
-        <Panel.Content asChild className='pt-trim-md'>
+        <Panel.Content asChild classNames='pt-trim-md'>
           <ScrollArea.Root>
             <ScrollArea.Viewport>
               <MasterDetail<Routine.Routine>

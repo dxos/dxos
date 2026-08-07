@@ -3,3 +3,4 @@
 //
 
 export * from './meta';
+export * as ConductorEvents from './types/ConductorEvents';

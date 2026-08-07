@@ -4,12 +4,14 @@
 
 import * as Reactivity from '@effect/experimental/Reactivity';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { EntityMetaIndex } from './entity-meta-index';
 import type { IndexerObject } from './interface';
@@ -22,11 +24,13 @@ const TYPE_WITH_UNDERSCORE = DXN.make('com.example.type.personextra', '0.1.0');
 const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.make('com.example.type.personextra');
 const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.make('com.example.type.personaextra', '0.1.0');
 
-const TestLayer = Layer.merge(
-  SqliteClient.layer({
-    filename: ':memory:',
-  }),
-  Reactivity.layer,
+const TestLayer = SqlTransaction.layer.pipe(
+  Layer.provideMerge(
+    SqliteClient.layer({
+      filename: ':memory:',
+    }),
+  ),
+  Layer.provideMerge(Reactivity.layer),
 );
 
 describe('EntityMetaIndex', () => {
@@ -63,6 +67,46 @@ describe('EntityMetaIndex', () => {
         typeDXN: DXN.make('com.example.type.other'),
       });
       expect(otherTypeResults).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('resolves a legacy single-slash type-identifier row when queried by the canonical form', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+      const sql = yield* SqlClient.SqlClient;
+
+      const spaceId = SpaceId.random();
+      const objectId = EntityId.random();
+      const schemaId = EntityId.random();
+
+      const item: IndexerObject = {
+        spaceId,
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: objectId,
+          [ATTR_TYPE]: EID.make({ entityId: schemaId }),
+          [ATTR_DELETED]: false,
+        },
+      };
+
+      yield* index.update([item]);
+
+      // The write path normalizes identifiers, so rewrite the row to the legacy single-slash form to
+      // simulate a pre-normalization on-disk row (parameterized to avoid SQL injection).
+      const legacyTypeDxn = `echo:/${schemaId}`;
+      yield* sql`UPDATE objectMeta SET typeDXN = ${legacyTypeDxn} WHERE objectId = ${objectId}`;
+      const [stored] = yield* sql<{ typeDXN: string }>`SELECT typeDXN FROM objectMeta WHERE objectId = ${objectId}`;
+      expect(stored.typeDXN).toBe(legacyTypeDxn);
+
+      // A canonical-form query must still resolve the legacy row without a reindex.
+      const results = yield* index.query({ spaceId, typeDXN: EID.make({ entityId: schemaId }) });
+      expect(results.map((meta) => meta.objectId)).toEqual([objectId]);
     }).pipe(Effect.provide(TestLayer)),
   );
 

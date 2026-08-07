@@ -21,9 +21,14 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import { LayerSpec, Process, ServiceResolver, Trace } from '@dxos/compute';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Cancellation from '@dxos/compute/Cancellation';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
+import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -348,6 +353,12 @@ export class ProcessManagerImpl implements Manager {
 
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
+  /**
+   * Manager-level ephemeral trace hub (DX-1125). Every process's ephemeral messages are fanned out
+   * here so {@link Process.Monitor.subscribeToTraceMessages} can stream them (filtered) without
+   * attaching to individual handles.
+   */
+  readonly #traceSubscribers: Queue.Queue<Trace.Message>[] = [];
   readonly #lifecycleSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   #shutDown = false;
 
@@ -365,7 +376,33 @@ export class ProcessManagerImpl implements Manager {
     this.#monitor = {
       processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
       processTreeAtom: this.#processTreeAtom,
+      subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
+        Stream.unwrapScoped(
+          Effect.gen(this, function* () {
+            const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message>(), (queue) =>
+              Effect.sync(() => {
+                const index = this.#traceSubscribers.indexOf(queue);
+                if (index !== -1) {
+                  this.#traceSubscribers.splice(index, 1);
+                }
+              }).pipe(Effect.zipRight(Queue.shutdown(queue))),
+            );
+            this.#traceSubscribers.push(queue);
+            return Stream.fromQueue(queue).pipe(
+              Stream.filter((message) => message.isEphemeral && Trace.matchesFilter(message, filter)),
+            );
+          }),
+        ),
     };
+  }
+
+  /**
+   * Fan an ephemeral trace message out to all local trace subscribers (DX-1125).
+   */
+  #pushEphemeralToHub(message: Trace.Message): void {
+    for (const queue of this.#traceSubscribers) {
+      Queue.unsafeOffer(queue, message);
+    }
   }
 
   get monitor(): Process.Monitor {
@@ -519,9 +556,13 @@ export class ProcessManagerImpl implements Manager {
         },
       };
 
+      // One controller per run, fired by {@link ProcessHandle.ProcessHandleImpl.terminate} — the
+      // local counterpart of the EDGE-provided Cancellation service.
+      const cancellation = new AbortController();
       let builtinCtx = Context.empty().pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
+        Context.add(Cancellation.Service, { signal: cancellation.signal }),
         Context.add(
           Trace.TraceService,
           createProcessTraceService({
@@ -532,7 +573,10 @@ export class ProcessManagerImpl implements Manager {
             runtimeName: this.#runtimeName,
             space: environment.space,
             sink: this.#traceSink,
-            onEphemeral: (message) => handleRef?.pushEphemeral(message),
+            onEphemeral: (message) => {
+              handleRef?.pushEphemeral(message);
+              this.#pushEphemeralToHub(message);
+            },
           }),
         ),
       );
@@ -554,6 +598,7 @@ export class ProcessManagerImpl implements Manager {
         Trace.TraceService.key,
         Operation.Service.key,
         ProcessOperationInvoker.Service.key,
+        Cancellation.Service.key,
       ]);
       const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
 
@@ -640,6 +685,7 @@ export class ProcessManagerImpl implements Manager {
         false,
         encodeInput,
         undefined,
+        cancellation,
       );
       handleRef = handle;
       this.#handles.set(id, handle);
@@ -724,9 +770,11 @@ export class ProcessManagerImpl implements Manager {
         },
       };
 
+      const cancellation = new AbortController();
       let builtinCtx = Context.empty().pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
+        Context.add(Cancellation.Service, { signal: cancellation.signal }),
         Context.add(
           Trace.TraceService,
           createProcessTraceService({
@@ -736,7 +784,10 @@ export class ProcessManagerImpl implements Manager {
             runtimeName: this.#runtimeName,
             space: environment.space,
             sink: this.#traceSink,
-            onEphemeral: (message) => handleRef?.pushEphemeral(message),
+            onEphemeral: (message) => {
+              handleRef?.pushEphemeral(message);
+              this.#pushEphemeralToHub(message);
+            },
           }),
         ),
       );
@@ -757,6 +808,7 @@ export class ProcessManagerImpl implements Manager {
         Trace.TraceService.key,
         Operation.Service.key,
         ProcessOperationInvoker.Service.key,
+        Cancellation.Service.key,
       ]);
       const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
 
@@ -825,6 +877,7 @@ export class ProcessManagerImpl implements Manager {
         true, // restoring — suppresses onSpawn
         encodeInput,
         record.state, // hydrate the persisted state instead of defaulting to RUNNING
+        cancellation,
       );
       handleRef = handle;
       this.#handles.set(id, handle);

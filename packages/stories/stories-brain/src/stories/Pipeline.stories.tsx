@@ -34,7 +34,7 @@ import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { stubParse } from '@dxos/nlp/testing';
@@ -48,10 +48,10 @@ import {
   TranscriptionPipeline,
   makeDatabaseLookup,
 } from '@dxos/pipeline-transcription';
+import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
-import { BrainCapabilities } from '@dxos/plugin-brain/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -60,7 +60,7 @@ import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/story-modules';
+import { ModuleContainer } from '@dxos/storybook-testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -74,7 +74,8 @@ import {
   type StatItem,
 } from '../components';
 import { PIPELINE_RUN, PipelineStoryContext } from '../modules';
-import { Module, StoryModulesPlugin } from '../testing/modules';
+import { StoryRole } from '../modules';
+import { StoryModulesPlugin } from '../testing/modules';
 
 const OWNER_EMAIL = 'alice@example.com';
 
@@ -394,7 +395,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         details,
       }}
     >
-      <ModuleContainer layout={[[Module.Input], [Module.Pipeline], [Module.Output]]} />
+      <ModuleContainer layout={[[StoryRole.Input], [StoryRole.Pipeline], [StoryRole.Output]]} />
     </PipelineStoryContext.Provider>
   );
 };
@@ -456,7 +457,7 @@ const MessageList = ({
       return (
         <div
           key={message.id}
-          className='flex flex-col bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+          className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
         >
           <span className='font-medium truncate'>{String(message.properties?.subject ?? '')}</span>
           <span className='text-sm text-description truncate'>{message.sender.email}</span>
@@ -472,7 +473,7 @@ const ThreadList = ({ result }: { result: { threads: readonly Thread[] } }) => (
     {result.threads.map((thread) => (
       <div
         key={thread.id}
-        className='flex flex-col bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+        className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
       >
         <span className='font-medium truncate'>{thread.subject}</span>
         <span className='text-sm text-description'>
@@ -508,7 +509,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

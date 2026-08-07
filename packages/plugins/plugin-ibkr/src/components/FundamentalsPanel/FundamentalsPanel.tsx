@@ -6,10 +6,11 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
 import { IconButton, Message, Status, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldProvider, formatForDisplay } from '@dxos/react-ui-form';
+import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
+import { formatForDisplay } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { Ibkr } from '../../types';
+import * as Ibkr from '../../types/Ibkr';
 
 export type FundamentalsPanelProps = {
   snapshot?: Ibkr.FundamentalsSnapshot;
@@ -118,13 +119,17 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
             <Status indeterminate aria-label={t('fundamentals.heading')} />
           ) : error ? (
             <Message.Root valence='error'>
-              <Message.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Message.Title>
-              <Message.Content>{error}</Message.Content>
+              <Message.Content>
+                <Message.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Message.Title>
+                <Message.Body>{error}</Message.Body>
+              </Message.Content>
             </Message.Root>
           ) : empty ? (
             <Message.Root valence='neutral'>
-              <Message.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Message.Title>
-              <Message.Content>{t('fundamentals.empty.label')}</Message.Content>
+              <Message.Content>
+                <Message.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Message.Title>
+                <Message.Body>{t('fundamentals.empty.label')}</Message.Body>
+              </Message.Content>
             </Message.Root>
           ) : (
             <Form.FieldSet readonly fieldProvider={fieldProvider} />

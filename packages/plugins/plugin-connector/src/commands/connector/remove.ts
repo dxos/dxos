@@ -16,7 +16,7 @@ import { Database, Filter, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 
-import { Connection } from '../../types';
+import * as Connection from '../../types/Connection';
 import { printConnectionRemoved } from './util';
 
 export const remove = Command.make(

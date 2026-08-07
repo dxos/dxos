@@ -171,7 +171,7 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.subscrip
     guid: Schema.String.pipe(Schema.optional),
   }).pipe(
     LabelAnnotation.set(['title']),
-    Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'orange' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'indigo' }),
   ),
 ) {}
 

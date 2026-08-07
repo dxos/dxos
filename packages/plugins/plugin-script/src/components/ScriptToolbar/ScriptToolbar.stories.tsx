@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Script } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 

@@ -5,22 +5,23 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 const { mergeField, snapshotField } = ConnectorSync;
-import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Project, Task } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 
 import { LINEAR_SOURCE } from '../constants';
 import { formatLinearSyncFailure } from '../errors';
 import { LinearApi } from '../services';
-import { LinearOperation } from '../types';
+import * as LinearOperation from '../types/LinearOperation';
 
 //
 // Direction: bidirectional (pull-then-push) for projects and tasks.
@@ -33,11 +34,11 @@ import { LinearOperation } from '../types';
 // subsequent passes know exactly which fields the user touched locally.
 //
 // Mapped fields per object:
-//   Project: name, description
+//   TaskSet: name, description
 //   Task:    title, description, status, priority, estimate
 //
 // Conflict policy is remote-wins (mirrors Trello). People are NOT synced and
-// `Task.assigned` is left untouched. Comments are NOT synced (see plugin-github
+// `Task.assignee` is left untouched. Comments are NOT synced (see plugin-github
 // for the chunking-required reason — same constraint applies here).
 //
 // New local objects (no Linear foreign key) are NOT pushed in this pass —
@@ -123,7 +124,7 @@ const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): str
  * through three-way merge against the snapshot at `binding.spec.snapshots[id]`,
  * then the snapshot is refreshed to remote-current so the next push knows
  * exactly which fields the user has edited locally. Non-mapped fields
- * (`Project.image`, etc.) are preserved.
+ * (`ExternalProject.image`, etc.) are preserved.
  */
 export const upsertProject = Effect.fn('upsertProject')(function* (
   binding: Cursor.ExternalCursor,
@@ -133,7 +134,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
     name: remote.name,
     description: remote.description ?? '',
   };
-  const existing = yield* findByForeignId<Project.Project>(Project.Project, remote.id);
+  const existing = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, remote.id);
 
   if (existing) {
     const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, remote.id);
@@ -163,7 +164,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
     return { project: existing, created: false };
   }
 
-  const created = Obj.make(Project.Project, {
+  const created = Obj.make(TaskSet.TaskSet, {
     [Obj.Meta]: { keys: [fkFor(remote.id)] },
     name: remote.name,
     description: remote.description ?? undefined,
@@ -183,7 +184,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
 export const upsertTask = Effect.fn('upsertTask')(function* (
   binding: Cursor.ExternalCursor,
   issue: LinearApi.Issue,
-  project: Project.Project | undefined,
+  project: TaskSet.TaskSet | undefined,
 ) {
   const status = LinearApi.stateTypeToTaskStatus(issue.state.type);
   const priority = LinearApi.priorityNumberToTaskPriority(issue.priority);
@@ -211,9 +212,9 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       snapshotField(snapshot, 'description'),
     );
     // Task.status is optional on the schema (may be `undefined` locally), but
-    // every snapshot writes a concrete status — so widen to include undefined
+    // every snapshot writes a concrete status — so widen to the full Task union
     // for the local side while the snapshot side stays narrow.
-    const statusResult = mergeField<TaskSnapshot['status'] | undefined>(
+    const statusResult = mergeField<Task.Task['status']>(
       existing.status,
       remoteFields.status,
       snapshotField(snapshot, 'status'),
@@ -252,14 +253,11 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       if (writeEstimate) {
         existing.estimate = estimateResult.value;
       }
-      if (project) {
-        const currentProjectId = existing.project ? EID.getEntityId(EID.tryParse(existing.project.uri)!) : undefined;
-        const projectId = EID.getEntityId(EID.tryParse(Ref.make(project).uri)!);
-        if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
-          existing.project = Ref.make(project);
-        }
-      }
     });
+    // Containment is the ECHO parent edge; re-parent when the issue moved projects.
+    if (project && Obj.getParent(existing)?.id !== project.id) {
+      Obj.setParent(existing, project);
+    }
     Cursor.writeSnapshot(binding, issue.id, remoteFields);
     return { task: existing, created: false };
   }
@@ -271,9 +269,11 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     status,
     priority,
     estimate: issue.estimate ?? undefined,
-    project: project ? Ref.make(project) : undefined,
   });
   const persisted = yield* Database.add(created);
+  if (project) {
+    Obj.setParent(persisted, project);
+  }
   Cursor.writeSnapshot(binding, issue.id, remoteFields);
   return { task: persisted, created: true };
 });
@@ -321,7 +321,7 @@ export const pushTeamUpdates: <E, R>(
     /** Wraps `LinearApi.updateIssue`. */
     updateIssue: (id: string, input: LinearApi.IssueUpdateInput) => Effect.Effect<void, E, R>;
     /** Resolve a desired Task status → Linear workflow-state id. Returns undefined when no mapping is known. */
-    resolveStateId: (issue: LinearApi.Issue, status: 'todo' | 'in-progress' | 'done') => string | undefined;
+    resolveStateId: (issue: LinearApi.Issue, status: NonNullable<Task.Task['status']>) => string | undefined;
   },
 ) => Effect.Effect<LinearPushResult, E, Database.Service | R> = Effect.fn('pushTeamUpdates')(
   function* (binding, remoteIssuesById, remoteProjectsById, push) {
@@ -333,7 +333,7 @@ export const pushTeamUpdates: <E, R>(
     // in the database — both yield the same set, and the by-fid query keeps
     // memory bounded for spaces with thousands of unrelated tasks.
     for (const [id] of remoteProjectsById) {
-      const local = yield* findByForeignId<Project.Project>(Project.Project, id);
+      const local = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, id);
       if (!local || Obj.isDeleted(local)) {
         continue;
       }
@@ -498,7 +498,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
               // the push pass below sees only fields the user has edited
               // locally since the last pull.
               const projects = yield* LinearApi.fetchTeamProjects(remoteTeam.id);
-              const projectByRemoteId = new Map<string, Project.Project>();
+              const projectByRemoteId = new Map<string, TaskSet.TaskSet>();
               const remoteProjectsById = new Map<string, LinearApi.Project>();
               let pulledProjects = 0;
               for (const project of projects) {
@@ -528,7 +528,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
               // one local Task status diverged — so read-only syncs don't pay
               // the round-trip.
               let workflowStates: ReadonlyArray<LinearApi.WorkflowState> | undefined;
-              const resolveStateId = (issue: LinearApi.Issue, status: 'todo' | 'in-progress' | 'done') => {
+              const resolveStateId = (issue: LinearApi.Issue, status: NonNullable<Task.Task['status']>) => {
                 const desiredType = LinearApi.taskStatusToStateType(status);
                 const states = workflowStates;
                 if (!states) {

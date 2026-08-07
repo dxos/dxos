@@ -7,17 +7,19 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Artifact, Variant } from '#types';
 
+import * as Artifact from '../../types/Artifact';
+import * as Variant from '../../types/Variant';
 import { ArtifactCard } from './ArtifactCard';
 
 const DefaultStory = () => {
@@ -37,7 +39,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='is-64'>
+    <div className='w-64'>
       <ArtifactCard subject={artifact} />
     </div>
   );

@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom';
 import { Chess as ChessJS } from 'chess.js';
 import { type FC, type SVGProps } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import * as Alpha from '../../gen/pieces/chess/alpha';
+import * as Alpha from '../../gen/pieces/chess/alpha/index';
 import {
   type GameboardModel,
   type Location,

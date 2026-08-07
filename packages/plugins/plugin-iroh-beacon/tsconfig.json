@@ -25,10 +25,10 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/log"
+      "path": "../../core/halo/halo"
     },
     {
       "path": "../../sdk/app-framework"

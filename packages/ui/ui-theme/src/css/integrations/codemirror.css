@@ -26,6 +26,21 @@
   --color-cm-comment-surface: light-dark(var(--color-teal-200), var(--color-teal-200));
   --color-cm-comment-current-surface: light-dark(var(--color-orange-200), var(--color-orange-200));
 
+  /* Branch diff: oriented as a preview of accepting the compare branch into the current branch —
+     the compare branch's content (what accepting adds) is shown as an addition, the current
+     branch's deviating content (what accepting removes) as a removal. */
+  --color-cm-diff-add-surface: light-dark(
+    oklch(from var(--color-green-500) l c h / 0.18),
+    oklch(from var(--color-green-400) l c h / 0.22)
+  );
+  --color-cm-diff-remove-surface: light-dark(
+    oklch(from var(--color-red-500) l c h / 0.16),
+    oklch(from var(--color-red-400) l c h / 0.22)
+  );
+  /* Saturated variants for the change-gutter markers (thin bars), kept aligned with the surfaces. */
+  --color-cm-diff-add-gutter: light-dark(var(--color-green-600), var(--color-green-400));
+  --color-cm-diff-remove-gutter: light-dark(var(--color-red-500), var(--color-red-400));
+
   /* Markdown syntax highlighting */
   --color-cm-code: light-dark(var(--color-stone-600), var(--color-stone-400));
   --color-cm-code-inline: light-dark(var(--color-green-500), var(--color-green-500));

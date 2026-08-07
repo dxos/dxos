@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Column, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
@@ -19,7 +19,8 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { SpaceHomeContent, SpaceHomePinBottom } from '#types';
+
+import * as SpaceSurface from '../../types/SpaceSurface';
 
 export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 
@@ -40,7 +41,9 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
     <Panel.Root role={role}>
       <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>
@@ -48,12 +51,12 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
               <div className='dx-document flex flex-col gap-4 pb-12'>
-                <Surface.Surface type={SpaceHomeContent} data={{ space }} />
+                <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
               </div>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <Column.Center classNames='dx-document pb-4'>
-            <Surface.Surface type={SpaceHomePinBottom} data={{ space }} limit={1} />
+            <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </Column.Center>
         </Column.Root>
       </Panel.Content>

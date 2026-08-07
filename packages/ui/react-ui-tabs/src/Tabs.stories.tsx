@@ -24,9 +24,9 @@ const DefaultStory = ({ orientation }: TabsRootProps) => {
       >
         <Tabs.Tablist>
           {Object.entries(content).map(([id, { title }]) => (
-            <Tabs.Tab key={id} value={id}>
+            <Tabs.Button key={id} value={id}>
               {title}
-            </Tabs.Tab>
+            </Tabs.Button>
           ))}
         </Tabs.Tablist>
         <div className='dx-container'>

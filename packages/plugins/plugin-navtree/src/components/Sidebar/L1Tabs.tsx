@@ -19,6 +19,10 @@ export type L1TabsProps = Pick<L1PanelProps, 'open' | 'onBack'> & {
  * Each workspace is an L1 tab.
  */
 export const L1Tabs = ({ topLevelItems, currentItemId, onBack, open, path }: L1TabsProps) => {
+  // The current tab can name a workspace that is not in the graph, in which case it gets an item-less
+  // panel carrying the unavailable message rather than no panel at all (a blank sidebar).
+  const hasCurrentPanel = topLevelItems.some((item) => item.id === currentItemId && l0ItemType(item) === 'tab');
+
   return (
     <>
       {topLevelItems.map((item) => {
@@ -27,6 +31,7 @@ export const L1Tabs = ({ topLevelItems, currentItemId, onBack, open, path }: L1T
           return (
             <L1Panel
               key={item.id}
+              id={item.id}
               item={item}
               path={path}
               open={open}
@@ -37,6 +42,7 @@ export const L1Tabs = ({ topLevelItems, currentItemId, onBack, open, path }: L1T
         }
         return null;
       })}
+      {!hasCurrentPanel && <L1Panel key={currentItemId} id={currentItemId} path={path} open={open} isCurrent />}
     </>
   );
 };

@@ -2,14 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 
 import type { Obj } from '@dxos/echo';
+import { ATTR_TYPE } from '@dxos/echo/internal';
 import type { EntityId, SpaceId } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
 import type { EntityMeta } from './entity-meta-index';
 import type { Index, IndexerObject } from './interface';
 
@@ -89,19 +93,20 @@ const escapeFts5Query = (text: string): string => {
 };
 
 export class FtsIndex implements Index {
-  migrate = Effect.fn('FtsIndex.migrate')(function* () {
-    const sql = yield* SqlClient.SqlClient;
-
-    // https://sqlite.org/fts5.html#the_trigram_tokenizer
-    // FTS5 tables are created as virtual tables; they implicitly have a `rowid`.
-    // Trigram tokenizer enables substring matching (e.g., "rog" matches "programming").
-    //
-    // Data structure: inverted index mapping trigrams to document IDs.
-    // "hello" → trigrams ["hel", "ell", "llo"] → B-tree entries: "hel"→[1], "ell"→[1], "llo"→[1].
-    // Query "ell" → O(log n) B-tree lookup → returns [1].
-    // Posting lists are compressed, so index size scales well with document count.
-    yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot, tokenize='trigram')`;
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  migrate = Effect.fn('FtsIndex.migrate')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+    ),
+  );
 
   query({
     query,
@@ -232,10 +237,27 @@ export class FtsIndex implements Index {
                 return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
               }
 
-              const snapshot = JSON.stringify(data);
-
               // FTS5 doesn't support UPDATE, need DELETE + INSERT for upsert.
-              const existing = yield* sql<{ rowid: number }>`SELECT rowid FROM ftsIndex WHERE rowid = ${recordId}`;
+              const existing = yield* sql<{
+                rowid: number;
+                snapshot: string;
+              }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid = ${recordId}`;
+
+              // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
+              // tombstone appended by `Feed.remove`. Feed blocks are stored wholesale, so merge the
+              // partial onto the prior snapshot to retain the body and type while layering the new
+              // marker; otherwise the DELETE+INSERT below would replace the full snapshot with the
+              // bare partial and the client could not hydrate the deleted object (`Obj.fromJSON`
+              // needs `@type` to decode). Full blocks (carrying `@type`) still replace wholesale.
+              // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
+              // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
+              const isPartialBlock = (data as Record<string, unknown>)[ATTR_TYPE] === undefined;
+              const merged =
+                isPartialBlock && existing.length > 0
+                  ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
+                  : data;
+              const snapshot = JSON.stringify(merged);
+
               if (existing.length > 0) {
                 yield* sql`DELETE FROM ftsIndex WHERE rowid = ${recordId}`;
               }

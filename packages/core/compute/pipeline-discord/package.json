@@ -1,6 +1,6 @@
 {
   "name": "@dxos/pipeline-discord",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Incremental chat-crawl pipeline: crawl → persist messages → extract facts → answer standing questions.",
   "homepage": "https://dxos.org",
@@ -17,12 +17,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -38,6 +38,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",

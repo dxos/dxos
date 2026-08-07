@@ -28,6 +28,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -35,9 +38,6 @@
     },
     {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -52,13 +52,16 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
-    },
-    {
       "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/halo/credentials"
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-adapter-client"
+    },
+    {
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -104,9 +107,6 @@
     },
     {
       "path": "../../ui/react-ui-pickers"
-    },
-    {
-      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/ui-theme"
