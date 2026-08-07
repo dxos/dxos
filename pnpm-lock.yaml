@@ -1551,6 +1551,12 @@ catalogs:
     three:
       specifier: ^0.178.0
       version: 0.178.0
+    todomvc-app-css:
+      specifier: ^2.4.2
+      version: 2.4.3
+    todomvc-common:
+      specifier: ^1.0.5
+      version: 1.0.5
     tone:
       specifier: ^15.1.22
       version: 15.1.22
@@ -3194,6 +3200,12 @@ importers:
       react-router-dom:
         specifier: 'catalog:'
         version: 6.30.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      todomvc-app-css:
+        specifier: 'catalog:'
+        version: 2.4.3
+      todomvc-common:
+        specifier: 'catalog:'
+        version: 1.0.5
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -40971,6 +40983,13 @@ packages:
     resolution: {integrity: sha512-5DXWzE4Vz7xNHsv+xQ+MGfJYyC78Aok3tEr0MNwHoRf7vZnga1mQXZ4/Nsodld4VR6Wd+VhfmqnNrsRJyYPfrQ==}
     engines: {node: '>=20'}
 
+  todomvc-app-css@2.4.3:
+    resolution: {integrity: sha512-mSnWZaKBWj9aQcFRsGguY/a8O8NR8GmecD48yU1rzwNemgZa/INLpIsxxMiToFGVth+uEKBrQ7IhWkaXZxwq5Q==}
+    engines: {node: '>=4'}
+
+  todomvc-common@1.0.5:
+    resolution: {integrity: sha512-D8kEJmxVMQIWwztEdH+WeiAfXRbbSCpgXq4NkYi+gduJ2tr8CNq7sYLfJvjpQ10KD9QxJwig57rvMbV2QAESwQ==}
+
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
@@ -65386,6 +65405,10 @@ snapshots:
       is-number: 7.0.0
 
   toad-cache@3.7.1: {}
+
+  todomvc-app-css@2.4.3: {}
+
+  todomvc-common@1.0.5: {}
 
   toidentifier@1.0.1: {}
 

@@ -326,6 +326,11 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+  // `index.html` links these by path (`node_modules/todomvc-app-css/index.css`) rather than
+  // importing them, so no module graph reaches them. Dropping them renders the app unstyled, which
+  // leaves `#spaces` a full-flow block over the todo list intercepting every click — 5 of 7 todomvc
+  // e2e tests failed that way on all three browsers in run 31134237965.
+  'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
 };
 
 const workspaces: KnipConfig['workspaces'] = {
