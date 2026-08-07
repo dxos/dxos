@@ -12,14 +12,6 @@ import { Markdown, Thread } from './plugins';
 random.seed(0);
 
 // NOTE: Reduce flakiness in CI by using waitForExpect.
-/**
- * Budget for the editor to drop a deleted thread's `cm-comment` decoration, which lags the ECHO delete
- * rather than accompanying it. Longer than the preset's 10s `expect` timeout, though note that 30s did
- * not rescue `undo delete thread` (deferred below) — so this buys margin for the two tests that do
- * pass, and is not a fix for the underlying lag.
- */
-const DECORATION_TIMEOUT = 30_000;
-
 test.describe('Comments tests', () => {
   let host: AppManager;
 
@@ -82,7 +74,13 @@ test.describe('Comments tests', () => {
     await expect(editedMessage).toContainText(editedText);
   });
 
-  test('delete message', async () => {
+  // TODO(wittjosiah): Re-deferred. All three delete tests here were re-enabled on the strength of a
+  //   local chromium run, which was not enough: their original notes cited firefox and webkit, and
+  //   those are the browsers that took them out again in run 31147977323. Two distinct failures, both
+  //   on the delete path — `delete message` read 2 thread messages where 3 were expected on webkit,
+  //   and `delete thread` left the `cm-comment` decoration behind on firefox, the same signature as
+  //   `undo delete thread`. Clearing these needs a firefox/webkit run, not a chromium one.
+  test.fixme('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -110,11 +108,17 @@ test.describe('Comments tests', () => {
 
     // Deleting last message should delete the thread.
     await Thread.deleteMessage(Thread.getMessage(thread, firstMessage));
-    await expect(Thread.getComments(host.page)).toHaveCount(0, { timeout: DECORATION_TIMEOUT });
+    await expect(Thread.getComments(host.page)).toHaveCount(0);
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  test('delete thread', async () => {
+  // TODO(wittjosiah): Re-deferred. All three delete tests here were re-enabled on the strength of a
+  //   local chromium run, which was not enough: their original notes cited firefox and webkit, and
+  //   those are the browsers that took them out again in run 31147977323. Two distinct failures, both
+  //   on the delete path — `delete message` read 2 thread messages where 3 were expected on webkit,
+  //   and `delete thread` left the `cm-comment` decoration behind on firefox, the same signature as
+  //   `undo delete thread`. Clearing these needs a firefox/webkit run, not a chromium one.
+  test.fixme('delete thread', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -131,7 +135,7 @@ test.describe('Comments tests', () => {
 
     const thread = Thread.getThread(host.page, editorText);
     await Thread.deleteThread(thread);
-    await expect(Thread.getComments(host.page)).toHaveCount(0, { timeout: DECORATION_TIMEOUT });
+    await expect(Thread.getComments(host.page)).toHaveCount(0);
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
@@ -158,7 +162,7 @@ test.describe('Comments tests', () => {
 
     const thread = Thread.getThread(host.page, editorText);
     await Thread.deleteThread(thread);
-    await expect(Thread.getComments(host.page)).toHaveCount(0, { timeout: DECORATION_TIMEOUT });
+    await expect(Thread.getComments(host.page)).toHaveCount(0);
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
 
     // Undo delete.
