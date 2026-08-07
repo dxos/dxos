@@ -57,9 +57,9 @@ describe('parquetSource', () => {
     const result = await EffectEx.runPromise(
       parquetSource([join(dir, 'missing.parquet')]).pipe(Stream.runCollect, Effect.result),
     );
-    expect(result._tag).toBe('Left');
-    if (result._tag === 'Left') {
-      expect(result.left).toBeInstanceOf(ParquetReadError);
+    expect(result._tag).toBe('Failure');
+    if (result._tag === 'Failure') {
+      expect(result.failure).toBeInstanceOf(ParquetReadError);
     }
   });
 });

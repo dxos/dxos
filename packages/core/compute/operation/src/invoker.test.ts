@@ -135,9 +135,9 @@ describe('OperationInvoker', () => {
       const invoker = OperationInvoker.make(() => Effect.succeed([]), testRuntime);
       const result = yield* invoker.invoke(Compute, { value: 1 }).pipe(Effect.result);
 
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') {
-        expect(result.left).toBeInstanceOf(NoHandlerError);
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        expect(result.failure).toBeInstanceOf(NoHandlerError);
       }
     }),
   );
@@ -158,7 +158,7 @@ describe('OperationInvoker', () => {
 
       // No handler registered.
       const error1 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.result);
-      expect(error1._tag).toBe('Left');
+      expect(error1._tag).toBe('Failure');
 
       // Add handler.
       handlers.push(toStringHandler);
@@ -168,7 +168,7 @@ describe('OperationInvoker', () => {
       // Remove handler.
       handlers.splice(handlers.indexOf(toStringHandler), 1);
       const error2 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.result);
-      expect(error2._tag).toBe('Left');
+      expect(error2._tag).toBe('Failure');
     }),
   );
 
@@ -202,7 +202,7 @@ describe('OperationInvoker', () => {
       // Advance clock enough for both (max is 5 * 10ms = 50ms).
       yield* TestClock.adjust('50 millis');
 
-      const [a, b] = yield* Fiber.join(Fiber.zip(fiberA, fiberB));
+      const [a, b] = yield* Effect.zip(Fiber.join(fiberA), Fiber.join(fiberB));
       expect(b.value - a.value).toBe(-6);
     }),
   );
@@ -253,7 +253,7 @@ describe('OperationInvoker', () => {
       yield* Effect.yieldNow;
 
       const result = yield* invoker.invoke(Fail, { value: 1 }).pipe(Effect.result);
-      expect(result._tag).toBe('Left');
+      expect(result._tag).toBe('Failure');
 
       // Give any (unexpected) event a chance to arrive, then assert none was published.
       yield* Effect.yieldNow;

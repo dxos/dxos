@@ -167,14 +167,15 @@ export const stream = (
       const volatile: Volatile = { cursors: new Map(), done: new Set() };
       const maxSteps = options.maxSteps ?? Number.POSITIVE_INFINITY;
       let taken = 0;
-      return Stream.repeatEffectChunkOption(
+      // v4 dropped the `Option`-encoded end signal: a pull ends by failing with `Cause.Done`.
+      return Stream.fromIterableEffectRepeat(
         Effect.gen(function* () {
           if (taken >= maxSteps) {
-            return yield* Effect.fail(Option.none<StateError>());
+            return yield* Cause.done();
           }
-          const step = yield* advance(config, volatile).pipe(Effect.mapError(Option.some));
+          const step = yield* advance(config, volatile);
           if (Option.isNone(step)) {
-            return yield* Effect.fail(Option.none<StateError>());
+            return yield* Cause.done();
           }
           taken++;
           if (options.steps) {

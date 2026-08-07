@@ -74,7 +74,7 @@ const createLivePrototype = (ast: SchemaAST.AST) => {
   }
 
   switch (ast._tag) {
-    case 'TypeLiteral': {
+    case 'Objects': {
       const properties: PropertyDescriptorMap = Object.fromEntries(
         ast.propertySignatures.map((prop) => {
           return [
@@ -105,7 +105,7 @@ const createLivePrototype = (ast: SchemaAST.AST) => {
       livePrototypeCache.set(ast, proto);
       return proto;
     }
-    case 'TupleType': {
+    case 'Arrays': {
       throw new Error('Not implemented');
     }
     default:

@@ -127,7 +127,7 @@ export const runFactPipeline = (options: {
       Pipeline.run({
         sink: (page) =>
           Effect.gen(function* () {
-            const units = Chunk.toReadonlyArray(page);
+            const units = page;
             if (units.length === 0) {
               return;
             }

@@ -248,8 +248,8 @@ class OperationInvokerImpl implements OperationInvokerInternal {
       // If the operation declares external services, use DynamicRuntime to resolve them.
       if (op.services && op.services.length > 0) {
         const dynamicRuntime = this._getDynamicRuntime(op.services);
-        const runtime = yield* dynamicRuntime.contextEffect;
-        output = yield* handlerEffect.pipe(Effect.provide(runtime.context));
+        const context = yield* dynamicRuntime.contextEffect;
+        output = yield* handlerEffect.pipe(Effect.provideContext(context));
       } else {
         output = yield* handlerEffect;
       }
