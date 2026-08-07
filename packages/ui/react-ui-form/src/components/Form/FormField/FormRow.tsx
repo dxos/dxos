@@ -95,6 +95,9 @@ export const FormFieldLabel = ({
             type='button'
             content={description}
             side='bottom'
+            // Reading a field's documentation is the point of the affordance, so it opens well ahead of the
+            // provider's default — but not instantly, or a cursor crossing the label row would flash it.
+            delayDuration={200}
             aria-label={t('field-description.label')}
             className='grid place-items-center text-description'
             // The affordance may sit in a header row whose click toggles collapse.

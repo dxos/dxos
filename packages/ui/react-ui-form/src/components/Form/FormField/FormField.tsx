@@ -19,7 +19,7 @@ import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps 
 
 import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
-import { getRefProps } from '../../../util';
+import { getFieldDescription, getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';
 import {
   ArrayField,
@@ -106,7 +106,7 @@ export const FormField = (props: FormFieldProps) => {
   } = props;
   const { t } = useTranslation(translationKey);
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
-  const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
+  const description = getFieldDescription(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
   const label = useMemo(

@@ -29,7 +29,8 @@ export type TooltipContextValue = {
   stateAttribute: 'closed' | 'delayed-open' | 'instant-open';
   trigger: TooltipTriggerElement | null;
   onTriggerChange(trigger: TooltipTriggerElement | null, content?: ReactNode, side?: TooltipSide): void;
-  onTriggerEnter(): void;
+  /** `delayDuration` overrides the provider's for this trigger (see `TooltipTrigger`). */
+  onTriggerEnter(delayDuration?: number): void;
   onTriggerLeave(): void;
   onOpen(): void;
   onClose(): void;
