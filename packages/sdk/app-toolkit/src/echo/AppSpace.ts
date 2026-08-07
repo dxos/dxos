@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { type Client } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -105,8 +105,11 @@ export const setDefaultSpaceId = (settingsSpace: Space, spaceId: string): void =
  * profiles that have not been migrated yet.
  */
 export const getDefaultSpace = (client: SpaceResolver): Space | undefined => {
+  // Resolvable from render paths that run before the space opens, and `readDefaultSpaceId` reads
+  // properties unguarded, so readiness is checked here rather than swallowed there.
   const settingsSpace = getSettingsSpace(client);
-  const configuredId = settingsSpace && readDefaultSpaceId(settingsSpace);
+  const configuredId =
+    settingsSpace?.state.get() === SpaceState.SPACE_READY ? readDefaultSpaceId(settingsSpace) : undefined;
   const configured = configuredId ? client.spaces.get(configuredId) : undefined;
   // The settings space is internal; designating it would hand app configuration out as the default
   // content target, so a stale or hand-edited designation falls through to the legacy space.

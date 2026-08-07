@@ -112,8 +112,30 @@ export default Capability.makeModule(
       initFiber = Effect.runFork(initSettingsSpace);
     };
 
+    // A profile that already has a settings space can reach the init before its legacy space
+    // resolves — the space list fills incrementally, and the `__DEFAULT__` marker is only readable
+    // once the space opens. Migration is idempotent, so re-running it until a designation exists is
+    // what recovers the ordering that would otherwise be lost.
+    const migrateLateLegacySpace = () => {
+      const settingsSpace = AppSpace.getSettingsSpace(client);
+      const legacySpace = AppSpace.resolveLegacyDefaultSpace(client);
+      if (
+        !settingsSpace ||
+        !legacySpace ||
+        settingsSpace.state.get() !== SpaceState.SPACE_READY ||
+        AppSpace.readDefaultSpaceId(settingsSpace)
+      ) {
+        return;
+      }
+
+      Effect.runFork(migrateToSettingsSpace({ settingsSpace, legacySpace }));
+    };
+
     start();
-    const spacesSub = client.spaces.subscribe(start);
+    const spacesSub = client.spaces.subscribe(() => {
+      start();
+      migrateLateLegacySpace();
+    });
     subscriptions.add(() => spacesSub.unsubscribe());
 
     //

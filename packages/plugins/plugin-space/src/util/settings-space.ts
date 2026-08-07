@@ -45,7 +45,7 @@ export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) 
  * Spaces are not typed objects and cannot be stored in a Collection, so the order is an array of
  * space ids.
  */
-export const ensureSpacesOrder = Effect.fnUntraced(function* (settingsSpace: Space, initialOrder: string[] = []) {
+export const ensureSpacesOrder = Effect.fnUntraced(function* (settingsSpace: Space) {
   const [existing] = yield* Effect.promise(() =>
     settingsSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).run(),
   );
@@ -54,7 +54,7 @@ export const ensureSpacesOrder = Effect.fnUntraced(function* (settingsSpace: Spa
   }
 
   return yield* Effect.try(() =>
-    settingsSpace.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: initialOrder })),
+    settingsSpace.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [] })),
   ).pipe(
     // The space may have been destroyed (e.g. during test teardown) between the query and the add.
     Effect.catchAll((err) =>

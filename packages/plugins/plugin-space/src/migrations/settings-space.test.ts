@@ -66,6 +66,32 @@ describe('settings space migration', () => {
       expect(legacySpace.properties.name).toBe('Renamed');
     }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 
+  it('recovers a legacy space discovered after the settings space', () =>
+    Effect.gen(function* () {
+      const client = yield* ClientService;
+      yield* Effect.tryPromise(() => client.halo.createIdentity());
+      yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
+
+      // First pass: the settings space exists but the legacy space has not resolved yet, so there
+      // is nothing to designate and the ordering starts empty.
+      const settingsSpace = yield* ensureSettingsSpace(client);
+      yield* migrateToSettingsSpace({ settingsSpace, legacySpace: undefined });
+      expect(AppSpace.readDefaultSpaceId(settingsSpace)).toBeUndefined();
+
+      // Second pass, once the legacy space turns up: its ordering and designation still transfer.
+      const legacySpace = yield* Effect.promise(() =>
+        client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),
+      );
+      yield* Effect.promise(() => legacySpace.waitUntilReady());
+      const order = ['space-a', 'space-b'];
+      legacySpace.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order }));
+
+      yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
+
+      expect(AppSpace.readDefaultSpaceId(settingsSpace)).toBe(legacySpace.id);
+      expect(yield* readSpacesOrder(settingsSpace)).toEqual(order);
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
+
   it('creates the ordering object for a profile with nothing to migrate', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;

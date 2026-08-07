@@ -25,13 +25,21 @@ export const migrateToSettingsSpace = Effect.fnUntraced(function* ({
   settingsSpace: Space;
   legacySpace?: Space;
 }) {
+  const ordering = yield* ensureSpacesOrder(settingsSpace);
   if (!legacySpace) {
-    yield* ensureSpacesOrder(settingsSpace);
     return;
   }
 
   yield* Effect.promise(() => legacySpace.waitUntilReady());
-  yield* ensureSpacesOrder(settingsSpace, yield* readSpacesOrder(legacySpace));
+
+  // An earlier pass may have created the ordering before the legacy space resolved, so transfer
+  // into an empty one rather than treating its existence as proof the migration already ran.
+  const legacyOrder = yield* readSpacesOrder(legacySpace);
+  if (ordering && legacyOrder.length > 0 && (yield* readSpacesOrder(settingsSpace)).length === 0) {
+    Obj.update(ordering, (ordering) => {
+      (ordering as unknown as Record<string, unknown>).order = legacyOrder;
+    });
+  }
 
   if (!AppSpace.readDefaultSpaceId(settingsSpace)) {
     AppSpace.setDefaultSpaceId(settingsSpace, legacySpace.id);
