@@ -17,7 +17,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
 
-    const { settingsSpace, defaultSpace } = yield* AppSpace.setupIdentitySpaces(client);
+    const { defaultSpace } = yield* AppSpace.setupIdentitySpaces(client);
     // Boot-waterfall milestone: the default space is usable from here (first-run path).
     performance.mark('milestone:default-space-ready');
 
@@ -29,9 +29,6 @@ export default Capability.makeModule(
       }
     });
 
-    return [
-      Capability.contribute(SpaceCapabilities.DefaultSpace, defaultSpace),
-      Capability.contribute(SpaceCapabilities.SettingsSpace, settingsSpace),
-    ];
+    return [Capability.contribute(SpaceCapabilities.DefaultSpace, defaultSpace)];
   }),
 );

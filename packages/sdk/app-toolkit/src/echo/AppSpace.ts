@@ -41,25 +41,19 @@ export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
 export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
 
 /** Name given to the first space created for a profile. The user is free to rename it. */
-export const DEFAULT_SPACE_NAME = 'Personal';
+export const DEFAULT_SPACE_NAME = 'My Space';
 
 /** Resolves spaces by id or in bulk; structural so callers can pass a `Client` or a stub. */
 type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefined } };
 
-/**
- * The slice of a space the tag predicates read. `properties` is `unknown` because they only probe
- * it for a legacy marker behind a guard — a closed space throws on access.
- */
-type TaggedSpace = Pick<Space, 'tags'> & { properties?: unknown };
-
 /** Check if a space has a specific tag. */
-export const hasTag = (space: Pick<Space, 'tags'>, tag: string): boolean => space.tags.includes(tag);
+export const hasTag = (space: Space, tag: string): boolean => space.tags.includes(tag);
 
 /** Check if a space is the exemplar/sample space. */
-export const isExemplarSpace = (space: Pick<Space, 'tags'>): boolean => hasTag(space, EXEMPLAR_SPACE_TAG);
+export const isExemplarSpace = (space: Space): boolean => hasTag(space, EXEMPLAR_SPACE_TAG);
 
 /** Check if a space is the settings space. */
-export const isSettingsSpace = (space: Pick<Space, 'tags'>): boolean => hasTag(space, SETTINGS_SPACE_TAG);
+export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
 
 /** Find the settings space. */
 export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined =>
@@ -72,7 +66,7 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
  * so anything tagged is internal, except the exemplar space and the legacy personal-space tag that
  * pre-migration profiles still carry.
  */
-export const isVisibleSpace = (space: TaggedSpace): boolean =>
+export const isVisibleSpace = (space: Space): boolean =>
   space.tags.length === 0 || isExemplarSpace(space) || isLegacyDefaultSpace(space);
 
 //
@@ -84,7 +78,7 @@ export const isVisibleSpace = (space: TaggedSpace): boolean =>
  * The settings space must be open; callers resolve it via {@link getSettingsSpace} after
  * `SpacesReady`, at which point its properties are readable.
  */
-export const getDefaultSpaceId = (settingsSpace: Pick<Space, 'properties'>): string | undefined =>
+export const getDefaultSpaceId = (settingsSpace: Space): string | undefined =>
   Annotation.get(settingsSpace.properties, AppAnnotation.DefaultSpaceAnnotation).pipe(Option.getOrUndefined);
 
 /** Designate `spaceId` as the default space. Pairs with {@link getDefaultSpaceId}. */
@@ -165,14 +159,15 @@ type LegacyCredential = { subject?: { assertion?: { spaceId?: unknown } } };
  * Reads the immutable tag, or the `__DEFAULT__` property older clients wrote before tags existed.
  * @deprecated Compare against {@link getDefaultSpace} instead; this only reads legacy markers.
  */
-export const isLegacyDefaultSpace = (space: TaggedSpace): boolean => {
+export const isLegacyDefaultSpace = (space: Space): boolean => {
   if (hasTag(space, PERSONAL_SPACE_TAG)) {
     return true;
   }
 
   // Closed spaces throw on property access, and this runs across the whole space list.
   try {
-    return (space.properties as Record<string, unknown> | undefined)?.[DEFAULT_SPACE_KEY] === true;
+    const properties: object = space.properties;
+    return DEFAULT_SPACE_KEY in properties && properties[DEFAULT_SPACE_KEY] === true;
   } catch {
     return false;
   }

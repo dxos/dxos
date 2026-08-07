@@ -162,7 +162,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/keys": "workspace:*",

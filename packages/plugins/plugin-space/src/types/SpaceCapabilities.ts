@@ -67,17 +67,14 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEpheme
 );
 
 /**
- * The spaces created by identity setup, for consumers that seed them on first run.
+ * The default space as created by identity setup, so first-run seeding can order itself after it.
  *
- * Contributed only by `IdentityCreated`, so they are absent on every boot that does not create an
- * identity, and they hold the spaces as created rather than the live designation. Anything asking
- * "which space is the default right now" must use {@link AppSpace.getDefaultSpace} /
- * {@link AppSpace.getSettingsSpace}, which read the designation the user can change in settings.
+ * Contributed only by `IdentityCreated`, so it is absent on every boot that does not create an
+ * identity, and it holds the space as created rather than the live designation. Anything asking
+ * "which space is the default right now" must use `AppSpace.getDefaultSpace`, which reads the
+ * designation the user can change in settings.
  */
 export const DefaultSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.defaultSpace`);
-
-/** The hidden, membership-locked space holding app configuration that replicates across devices. */
-export const SettingsSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.settingsSpace`);
 
 export type SettingsSection = { id: string; label: Label; position?: Position.Position };
 export const SettingsSection = Capability.makeSingleton<SettingsSection>()(
