@@ -281,11 +281,11 @@ describe('effect-to-json', () => {
     }
     const A: Schema.Codec<A> = Schema.Struct({
       kind: Schema.Literal('a'),
-      b: Schema.optional(Schema.suspend((): Schema.Schema<B> => B)),
+      b: Schema.optional(Schema.suspend((): Schema.Codec<B> => B)),
     });
     const B: Schema.Codec<B> = Schema.Struct({
       kind: Schema.Literal('b'),
-      a: Schema.optional(Schema.suspend((): Schema.Schema<A> => A)),
+      a: Schema.optional(Schema.suspend((): Schema.Codec<A> => A)),
     });
 
     const jsonSchema = toJsonSchema(A);
@@ -319,15 +319,9 @@ describe('effect-to-json', () => {
     const effectSchema = toEffectSchema(jsonSchema);
     // log.info('effect schema', { ast: effectSchema.ast });
 
-    expect(
-      effectSchema.pipe(
-        Schema.pluck('contact'),
-        Schema.typeSchema,
-        (s) => s.ast,
-        SchemaAST.getAnnotation(SchemaAST.TitleAnnotationId),
-        Option.getOrUndefined,
-      ),
-    ).to.eq('Custom Title');
+    // `Schema.pluck` has no v4 replacement; the property is read off the AST directly.
+    const contact = SchemaAST.getPropertySignatures(effectSchema.ast).find((property) => property.name === 'contact');
+    expect(SchemaAST.getAnnotation(contact!.type, SchemaAST.TitleAnnotationId)).to.eq('Custom Title');
   });
 
   test('relation schema', () => {

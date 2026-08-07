@@ -630,7 +630,13 @@ const inlineAllOf = (node: Record<string, any>): Record<string, any> => {
     return node;
   }
   const inlinable = node.allOf.filter(
-    (branch: any) => branch && typeof branch === 'object' && !('type' in branch) && !('$ref' in branch),
+    (branch: any) =>
+      branch &&
+      typeof branch === 'object' &&
+      !('type' in branch) &&
+      // ECHO's reference sentinel is not a JSON Schema pointer into a definitions map, so a branch
+      // carrying it is still a plain keyword contribution.
+      (!('$ref' in branch) || branch.$ref === JSON_SCHEMA_ECHO_REF_ID),
   );
   if (inlinable.length !== node.allOf.length) {
     return node;

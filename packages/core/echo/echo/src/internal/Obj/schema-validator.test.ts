@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { SchemaAST } from '@dxos/effect';
 import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
@@ -22,7 +23,7 @@ describe('schema-validator', () => {
 
   describe('hasPropertyAnnotation', () => {
     test('has annotation', () => {
-      const annotationId = Symbol('foo');
+      const annotationId = 'test.annotation.foo';
       const annotationValue = 'bar';
       const TestSchema: Schema.Codec<any, any> = Schema.Struct({
         name: Schema.String.annotate({ [annotationId]: annotationValue }),
@@ -35,7 +36,7 @@ describe('schema-validator', () => {
     });
 
     test('no annotation', () => {
-      const annotationId = Symbol('foo');
+      const annotationId = 'test.annotation.foo';
       const Person: Schema.Codec<any, any> = Schema.Struct({
         name: Schema.String,
         parent: Schema.optional(Schema.suspend(() => Person)),
@@ -81,18 +82,18 @@ describe('schema-validator', () => {
     });
 
     test('preserves annotations', () => {
-      const annotationId = Symbol('foo');
+      const annotationId = 'test.annotation.foo';
       const annotationValue = 'bar';
       const Person: Schema.Codec<any, any> = Schema.Struct({
         parent: Schema.optional(Schema.suspend(() => Person.annotate({ [annotationId]: annotationValue }))),
         friends: Schema.suspend(() => Schema.Array(Person.annotate({ [annotationId]: annotationValue }))),
       });
-      expect(SchemaValidator.getPropertySchema(Person, ['parent']).ast.annotations[annotationId]).to.eq(
+      expect(SchemaAST.getAnnotation(SchemaValidator.getPropertySchema(Person, ['parent']).ast, annotationId)).to.eq(
         annotationValue,
       );
-      expect(SchemaValidator.getPropertySchema(Person, ['friends', '0']).ast.annotations[annotationId]).to.eq(
-        annotationValue,
-      );
+      expect(
+        SchemaAST.getAnnotation(SchemaValidator.getPropertySchema(Person, ['friends', '0']).ast, annotationId),
+      ).to.eq(annotationValue);
     });
 
     test('discriminated union', () => {

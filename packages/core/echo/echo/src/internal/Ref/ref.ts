@@ -309,7 +309,10 @@ export type JsonSchemaReferenceInfo = {
  * a declared encoded side serializes to an opaque placeholder and the reference annotations on the
  * outer schema never reach the generated document.
  */
-const EncodedReferenceSchema = Schema.Struct({ '/': Schema.String });
+// The struct's field is a plain string while `EncodedReference` brands it as a `URI`; the values
+// this encodes are URIs by construction, and the brand carries no runtime representation.
+const EncodedReferenceSchema = Schema.Struct({ '/': Schema.String }) as unknown as Schema.Codec<EncodedReference> &
+  Schema.Struct<{ readonly '/': Schema.String }>;
 
 /**
  * @internal
