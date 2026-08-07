@@ -19,7 +19,8 @@ import * as NativeCapabilities from '../../types/NativeCapabilities';
 import * as Settings from '../../types/Settings';
 import type * as Update from '../../types/Update';
 
-const CHANNELS: Settings.UpdateChannel[] = ['stable', 'nightly'];
+const CHANNELS = Settings.UpdateChannel.literals;
+const isChannel = Schema.is(Settings.UpdateChannel);
 
 export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
@@ -74,7 +75,7 @@ export const NativeSettings = () => {
               <Select.Root
                 value={channel}
                 onValueChange={(next) =>
-                  void runAction('switch', () => manager.switchChannel(next as Settings.UpdateChannel))()
+                  isChannel(next) && void runAction('switch', () => manager.switchChannel(next))()
                 }
               >
                 <Select.TriggerButton disabled={pending !== null} />

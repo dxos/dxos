@@ -15,7 +15,9 @@ use url::Url;
 pub const PROGRESS_EVENT: &str = "composer://update-progress";
 
 #[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase", tag = "event", content = "data")]
+// `rename_all_fields`, NOT `rename_all`: the latter renames the variants, which are the `event` tag
+// the listener matches on. Only the payload fields are camelCased.
+#[serde(rename_all_fields = "camelCase", tag = "event", content = "data")]
 enum Progress {
     Started { content_length: Option<u64> },
     Progress { chunk_length: usize },
@@ -29,8 +31,9 @@ pub struct UpdateInfo {
     pub current_version: String,
 }
 
-/// The configured endpoint with its `channel` query swapped for `channel`. Read from the config
-/// rather than repeated here so the URL cannot drift from the one `cn-config` writes at build time.
+/// The configured endpoint with its `channel` query replaced by the requested one. Read from the
+/// config rather than repeated here so the URL cannot drift from the one `cn-config` writes at
+/// build time.
 fn endpoint<R: Runtime>(app: &AppHandle<R>, channel: &str) -> Result<Url, String> {
     let configured = app
         .config()
@@ -43,7 +46,11 @@ fn endpoint<R: Runtime>(app: &AppHandle<R>, channel: &str) -> Result<Url, String
         .and_then(|endpoint| endpoint.as_str())
         .ok_or("no updater endpoint is configured")?;
     let base = configured.split('?').next().unwrap_or(configured);
-    Url::parse(&format!("{base}?channel={channel}")).map_err(|err| err.to_string())
+    // Through the query API rather than by interpolation: `channel` crosses the IPC boundary as an
+    // arbitrary string, and a `&` or `#` in it would otherwise rewrite the rest of the URL.
+    let mut url = Url::parse(base).map_err(|err| err.to_string())?;
+    url.query_pairs_mut().clear().append_pair("channel", channel);
+    Ok(url)
 }
 
 fn updater<R: Runtime>(app: &AppHandle<R>, channel: &str, allow_downgrade: bool) -> Result<Updater, String> {

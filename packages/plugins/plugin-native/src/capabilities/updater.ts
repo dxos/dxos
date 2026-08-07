@@ -139,28 +139,33 @@ export default Capability.makeModule(
     };
 
     // Download progress is emitted from Rust rather than returned through a callback, since the
-    // install runs entirely inside the command. One listener for the module's lifetime.
+    // install runs entirely inside the command. One listener for the module's lifetime, registered
+    // only where the updater runs: outside a Tauri window there is no IPC bridge for `listen` to
+    // attach to, and a rejected `Effect.promise` is a defect that would fail activation outright
+    // rather than degrading to `unsupported`.
     let downloaded = 0;
     let contentLength = 0;
-    const unlisten = yield* Effect.promise(() =>
-      listen<ProgressEvent>(PROGRESS_EVENT, ({ payload }) => {
-        Match.value(payload).pipe(
-          Match.when({ event: 'Started' }, (event) => {
-            downloaded = 0;
-            contentLength = event.data.contentLength ?? 0;
-            registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
+    const unlisten = enabled
+      ? yield* Effect.tryPromise(() =>
+          listen<ProgressEvent>(PROGRESS_EVENT, ({ payload }) => {
+            Match.value(payload).pipe(
+              Match.when({ event: 'Started' }, (event) => {
+                downloaded = 0;
+                contentLength = event.data.contentLength ?? 0;
+                registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
+              }),
+              Match.when({ event: 'Progress' }, (event) => {
+                downloaded += event.data.chunkLength;
+                registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
+              }),
+              Match.when({ event: 'Finished' }, () => {
+                log.info('download completed');
+              }),
+              Match.exhaustive,
+            );
           }),
-          Match.when({ event: 'Progress' }, (event) => {
-            downloaded += event.data.chunkLength;
-            registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
-          }),
-          Match.when({ event: 'Finished' }, () => {
-            log.info('download completed');
-          }),
-          Match.exhaustive,
-        );
-      }),
-    );
+        ).pipe(Effect.orElseSucceed(() => () => {}))
+      : () => {};
 
     // Core: download + install the given channel's latest build, streaming progress to the status atom.
     const doInstall = async (channel = currentChannel(), allowDowngrade = false): Promise<boolean> => {
@@ -200,21 +205,30 @@ export default Capability.makeModule(
         if (channel === currentChannel()) {
           return;
         }
-        const key = `settings.channel.confirm.${channel}` as const;
-        const confirmed = await ask(t(`${key}.message`, { ns: meta.profile.key }), {
-          title: t(`${key}.title`, { ns: meta.profile.key }),
-          kind: 'warning',
-          okLabel: t(`${key}.label`, { ns: meta.profile.key }),
-        });
-        if (!confirmed) {
+        // `doInstall` reports its own failures; the confirm and the settings write do not, and an
+        // unhandled rejection here would leave the panel showing no error at all.
+        try {
+          const key = `settings.channel.confirm.${channel}` as const;
+          const confirmed = await ask(t(`${key}.message`, { ns: meta.profile.key }), {
+            title: t(`${key}.title`, { ns: meta.profile.key }),
+            kind: 'warning',
+            okLabel: t(`${key}.label`, { ns: meta.profile.key }),
+          });
+          if (!confirmed) {
+            return;
+          }
+
+          // Persist first so a failed install still leaves the user on the channel they chose, then
+          // force the move: the target channel's latest build is a downgrade whenever it trails the
+          // running one, which is the normal case going nightly -> stable, and no periodic check
+          // would ever offer it.
+          registry.set(settingsAtom, { ...registry.get(settingsAtom), updateChannel: channel });
+        } catch (error) {
+          log.error('failed to switch update channel', { channel, error });
+          registry.set(statusAtom, { kind: 'failed', error: formatError(error) });
           return;
         }
 
-        // Persist first so a failed install still leaves the user on the channel they chose, then
-        // force the move: the target channel's latest build is a downgrade whenever it trails the
-        // running one, which is the normal case going nightly -> stable, and no periodic check
-        // would ever offer it.
-        registry.set(settingsAtom, { ...registry.get(settingsAtom), updateChannel: channel });
         if (!enabled) {
           return;
         }

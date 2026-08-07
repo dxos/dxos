@@ -4,7 +4,7 @@ name: Composer Tauri Release
 # deploy, for every environment. Not standalone (no workflow_dispatch): to run it, dispatch
 # Deploy Apps with app=composer. Multi-job/multi-runner (ubuntu draft/publish + macOS desktop + macOS iOS),
 # so it's a reusable workflow, not a composite action. The CrabNebula channel is derived from the
-# `environment` input; the desktop version comes from composer-app's package.json.
+# `environment` input; the version is computed by deploy-apps and shared with the web bundle.
 on:
   workflow_call:
     inputs:
@@ -73,13 +73,25 @@ jobs:
 
       - name: Resolve build numbers
         id: bump-version
+        env:
+          # Through the environment, never interpolated into the script: an expression expanded into
+          # `run` is executed by the shell, and a newline in one can forge a second GITHUB_OUTPUT key.
+          VERSION: ${{ inputs.version }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
-          echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          echo "Tauri version: ${{ inputs.version }} (env=${{ inputs.environment }})"
+          # Reject anything that is not a plain semver (with an optional dot-separated prerelease)
+          # before it reaches a file the rest of the run trusts.
+          case "$VERSION" in
+            *[!0-9A-Za-z.-]* | '' | *' '*)
+              echo "::error::refusing a version with unexpected characters: $VERSION" && exit 1 ;;
+          esac
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Tauri version: $VERSION (env=$ENVIRONMENT)"
           # CFBundleVersion (Apple's build number) must be plain digits separated by dots — the
           # prerelease suffix (e.g. "-dev.7") fails that even after Tauri's own semver-prerelease
           # stripping, so override it separately with the always-numeric, always-increasing run number.
-          echo "ios_bundle_version=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          echo "ios_bundle_version=$RUN_NUMBER" >> "$GITHUB_OUTPUT"
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config

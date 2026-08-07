@@ -32,8 +32,8 @@
 // since the name can be renamed/retitled in 1Password but the UUID never changes.
 //
 // Examples:
-//   node scripts/secrets.mjs dev composer          # `dev` the MODE — writes .dev.vars for `wrangler dev`
-//   node scripts/secrets.mjs remote dev composer   # `dev` the ENVIRONMENT — pushes to the composer-dev Worker
+//   node scripts/secrets.mjs dev composer          # `dev` the MODE — writes .dev.vars for `wrangler dev`.
+//   node scripts/secrets.mjs remote dev composer   # `dev` the ENVIRONMENT — pushes to the composer-dev Worker.
 //   node scripts/secrets.mjs remote staging
 
 import JSON5 from 'json5';
