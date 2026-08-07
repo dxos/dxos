@@ -62,7 +62,6 @@ export default Capability.makeModule(
         ),
       );
 
-      // Add a welcome document to the default space root collection.
       const welcomeDoc = Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT });
       defaultSpace.db.add(welcomeDoc);
       Obj.update(rootCollection, (rootCollection) => {

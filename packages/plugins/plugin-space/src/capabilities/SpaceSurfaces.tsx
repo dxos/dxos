@@ -82,7 +82,6 @@ export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => 
   const { invokePromise } = useOperationInvoker();
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
 
-  // Subscribe to the settings space properties so the picker reflects changes from other devices.
   const settingsSpace = useSettingsSpace();
   const [settingsProperties] = useSettingsSpaceProperties();
   const defaultSpaceId = settingsProperties
