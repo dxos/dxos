@@ -11,6 +11,7 @@ import { type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import type * as internal from './internal';
+import { ReferenceAnnotationId } from './internal/Annotation';
 import * as refInternal from './internal/Ref';
 import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
@@ -112,9 +113,13 @@ export const hasEntityId = refInternal.Ref.hasEntityId;
 
 // TODO(wittjosiah): Factor out?
 export const isRefType = (ast: SchemaAST.AST): boolean => {
-  const jsonSchema = SchemaAST.getAnnotation<JsonSchema.JsonSchema>(ast, SchemaAST.JSONSchemaAnnotationId);
-  if (jsonSchema === undefined || !('$id' in jsonSchema)) {
-    return false;
+  // A reference declares its target twice: as a typed annotation on the declaration and as the JSON
+  // schema keys on the encoded node. Effect 4 dropped the merged `jsonSchema` annotation this used
+  // to read, so both are consulted -- a schema rebuilt from stored JSON only carries the latter.
+  const reference = SchemaAST.getAnnotation<{ typename?: string }>(ast, ReferenceAnnotationId);
+  if (reference?.typename) {
+    return true;
   }
-  return refInternal.getSchemaReference(jsonSchema)?.typename !== undefined;
+  const encoded = SchemaAST.resolveAnnotations(SchemaAST.toEncoded(ast));
+  return encoded !== undefined && refInternal.getSchemaReference(encoded as JsonSchema.JsonSchema) !== undefined;
 };

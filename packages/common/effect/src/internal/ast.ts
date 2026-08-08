@@ -53,8 +53,7 @@ export const getChecks = (ast: SchemaAST.AST): ReadonlyArray<SchemaAST.Check<any
 export const getBaseType = (
   type: SchemaAST.AST,
 ): { type: SchemaAST.AST; checks: ReadonlyArray<SchemaAST.Check<any>> } => {
-  const encoded = SchemaAST.toEncoded(type);
-  const unwrapped = isOption(encoded) ? (encoded as SchemaAST.Union).types[0] : encoded;
+  const unwrapped = unwrapOptional(SchemaAST.toEncoded(type));
   return { type: unwrapped, checks: getChecks(unwrapped) };
 };
 
@@ -349,9 +348,17 @@ export const getDiscriminatedType = (
 
 /**
  * If a property type is optional (T | undefined), return the inner non-undefined node.
+ *
+ * Applied until the type is no longer optional: v4's `Schema.optional` is not idempotent (it nests
+ * as `(T | undefined) | undefined`), which v3's `Schema.partial` over an already-optional field was.
  */
-export const unwrapOptional = (type: SchemaAST.AST): SchemaAST.AST =>
-  isOption(type) ? (type as SchemaAST.Union).types[0] : type;
+export const unwrapOptional = (type: SchemaAST.AST): SchemaAST.AST => {
+  let node = type;
+  while (isOption(node)) {
+    node = (node as SchemaAST.Union).types[0];
+  }
+  return node;
+};
 
 export const isNestedType = (node: SchemaAST.AST): boolean =>
   SchemaAST.isDeclaration(node) ||

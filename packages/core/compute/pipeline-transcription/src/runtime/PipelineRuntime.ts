@@ -173,9 +173,7 @@ const run = (options: RunOptions): Effect.Effect<void> =>
       // unbounded `Effect.forEach`, would interrupt the sibling branches). Log and drop instead.
       const sink: Pipeline.Sink<Enriched> = ({ write, window }) =>
         commit(write, window).pipe(Effect.catchCause((cause) => Effect.sync(() => log.catch(Cause.squash(cause)))));
-      const branches = yield* source.pipe(
-        Stream.broadcastN({ n: enabled.length, capacity: BROADCAST_BUFFER }),
-      );
+      const branches = yield* source.pipe(Stream.broadcastN({ n: enabled.length, capacity: BROADCAST_BUFFER }));
 
       yield* Effect.forEach(
         branches,

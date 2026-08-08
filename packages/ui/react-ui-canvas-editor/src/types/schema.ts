@@ -14,12 +14,14 @@ import { Graph } from '@dxos/graph';
 /**
  * Base type for all shapes.
  */
-export const Shape = Graph.Node.mapFields(Struct.omit(['type'])).pipe(Schema.fieldsAssign((Schema.Struct({
+export const Shape = Graph.Node.mapFields(Struct.omit(['type'])).pipe(
+  // TODO(burdon): Breaks graph contract?
+  Schema.fieldsAssign({
     type: Schema.String,
     text: Schema.optional(Schema.String),
     guide: Schema.optional(Schema.Boolean),
     classNames: Schema.optional(Schema.String),
-  })).fields))  }),
+  }),
 );
 
 export type Shape = Schema.Schema.Type<typeof Shape>;

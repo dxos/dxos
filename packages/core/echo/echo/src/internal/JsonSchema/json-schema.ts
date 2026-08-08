@@ -144,14 +144,15 @@ const ECHO_JSON_SCHEMA_KEYS = new Set([
 const isEchoJsonSchemaKey = (key: string): boolean =>
   ECHO_JSON_SCHEMA_KEYS.has(key) || Object.hasOwn(CustomAnnotations, key);
 
-const _toJsonSchemaAST = (
-  ast: SchemaAST.AST,
-  inProgress: Set<SchemaAST.AST> = new Set(),
-): Types.DeepMutable<JsonSchemaType> => {
-  const withRefinements = withEchoRefinements(ast, '#', new Map(), inProgress);
+const _toJsonSchemaAST = (ast: SchemaAST.AST): Types.DeepMutable<JsonSchemaType> => {
+  // `toCodecJson` first: it materializes the JSON encoding Effect 4 would otherwise apply *inside*
+  // the serializer, where the type-side annotations are dropped (a bare `Schema.Number` encodes to
+  // `number | "NaN" | ±"Infinity"` and loses its title, format and ECHO annotations). Materializing
+  // it here lets the encoding flattening below carry those annotations onto the encoded node.
+  const withRefinements = withEchoRefinements(Schema.toCodecJson(Schema.make(ast)).ast, new Map());
   // Effect 4 replaced `fromAST` with a document generator that returns the root schema and its
-  // definitions separately; `withEchoRefinements` inlines suspends as `#`-refs, so `definitions` is
-  // normally empty -- carried over as `$defs` rather than dropped so nothing can vanish silently.
+  // definitions separately; only a genuinely cyclic schema produces definitions (an acyclic suspend
+  // is inlined), and they are carried over as `$defs` rather than dropped.
   const { schema, definitions } = Schema.toJsonSchemaDocument(Schema.make(withRefinements), {
     includeAnnotationKey: isEchoJsonSchemaKey,
   });
@@ -178,77 +179,56 @@ const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
   if (defined.length === ast.types.length) {
     return ast;
   }
+  // Recursive: `Schema.optional` is not idempotent in v4, so an already-optional field made optional
+  // again nests as `(T | undefined) | undefined` and one pass would leave the inner union behind.
   return defined.length === 1
-    ? SchemaAST.annotate(defined[0], ast.annotations ?? {})
-    : new SchemaAST.Union(defined, ast.mode, ast.annotations, ast.checks, ast.encoding, ast.context);
+    ? SchemaAST.annotate(stripUndefinedMember(defined[0]), ast.annotations ?? {})
+    : new SchemaAST.Union(
+        defined.map(stripUndefinedMember),
+        ast.mode,
+        ast.annotations,
+        ast.checks,
+        ast.encoding,
+        ast.context,
+      );
 };
 
-const withEchoRefinements = (
-  ast: SchemaAST.AST,
-  path: string | undefined,
-  suspendCache = new Map<SchemaAST.AST, string>(),
-  // Suspended ASTs whose expansion is currently in flight — unlike `suspendCache`, this is shared
-  // across the fresh caches each new expansion starts with, so it also catches mutual cycles.
-  inProgress: Set<SchemaAST.AST> = new Set(),
-): SchemaAST.AST => {
+/**
+ * Rewrites an AST into the shape ECHO serializes.
+ *
+ * `expansions` memoizes the rewrite of every suspended body so that re-entering a cycle yields the
+ * *same* node object. Effect 4's serializer walks suspends eagerly and terminates on node identity;
+ * a thunk that rebuilt its body on each call would recurse until the stack blew.
+ */
+const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, SchemaAST.AST>): SchemaAST.AST => {
   // Generation describes the wire form, and Effect 4 serializes only the encoded side of a
   // transformed schema -- annotations left on the type side are silently dropped. Flattening to the
   // encoded node here, carrying the type-side annotations over, keeps them in the output. Safe
   // because this AST exists only to be serialized.
   if (ast.encoding !== undefined) {
-    const typeAnnotations = ast.annotations ?? {};
+    const typeAnnotations = SchemaAST.resolveAnnotations(ast) ?? {};
     ast =
       Object.keys(typeAnnotations).length > 0
         ? SchemaAST.annotate(SchemaAST.toEncoded(ast), typeAnnotations)
         : SchemaAST.toEncoded(ast);
   }
 
-  if (path) {
-    suspendCache.set(ast, path);
-  }
-
   let recursiveResult: SchemaAST.AST;
   if (SchemaAST.isSuspend(ast)) {
-    // Precompute JSON schema for suspended AST since effect serializer does not support it.
     const suspendedAst = ast.thunk();
-    const cachedPath = suspendCache.get(suspendedAst);
-    if (cachedPath) {
-      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
-        [SchemaAST.JSONSchemaAnnotationId]: {
-          $ref: cachedPath,
-        },
-      });
-    } else if (inProgress.has(suspendedAst)) {
-      // Reached via a *different* suspended type already being expanded (e.g. two mutually-recursive
-      // schemas, A embedding B and B embedding A) — `suspendCache` alone won't catch this, since each
-      // fresh expansion below starts from an empty one. Stop with a permissive "any" placeholder
-      // instead of expanding again. The `type` key is required: effect's JSONSchema.fromAST only
-      // treats this annotation as a full override (vs. merging it onto a recomputed, and for a bare
-      // Suspend unsupported, structural schema) when it sees type/oneOf/anyOf/$ref.
-      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
-        [SchemaAST.JSONSchemaAnnotationId]: {
-          $id: '/schemas/any',
-          type: ['string', 'number', 'boolean', 'object', 'array', 'null'],
-        },
-      });
-    } else {
-      inProgress.add(suspendedAst);
-      const jsonSchema = _toJsonSchemaAST(suspendedAst, inProgress);
-      inProgress.delete(suspendedAst);
-      recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
-        [SchemaAST.JSONSchemaAnnotationId]: jsonSchema,
-      });
-    }
+    const expand = () => {
+      const cached = expansions.get(suspendedAst);
+      if (cached) {
+        return cached;
+      }
+      const expanded = withEchoRefinements(suspendedAst, expansions);
+      expansions.set(suspendedAst, expanded);
+      return expanded;
+    };
+    recursiveResult = new SchemaAST.Suspend(expand, ast.annotations, undefined, ast.encoding, ast.context);
   } else if (SchemaAST.isTypeLiteral(ast)) {
     // Add property order annotations
-    recursiveResult = SchemaEx.mapAst(ast, (ast, key) =>
-      withEchoRefinements(
-        stripUndefinedMember(ast),
-        path && typeof key === 'string' ? `${path}/${key}` : undefined,
-        suspendCache,
-        inProgress,
-      ),
-    );
+    recursiveResult = SchemaEx.mapAst(ast, (ast) => withEchoRefinements(stripUndefinedMember(ast), expansions));
     // Not for a reference: its encoded side is a struct only so that v4 will serialize it, and the
     // `$ref` node it collapses to has no properties to order.
     if (SchemaAST.getAnnotation(ast, '$ref') !== JSON_SCHEMA_ECHO_REF_ID) {
@@ -260,17 +240,10 @@ const withEchoRefinements = (
     // Ignore undefined keyword that appears in the optional fields.
     return ast;
   } else {
-    recursiveResult = SchemaEx.mapAst(ast, (ast, key) =>
-      withEchoRefinements(
-        ast,
-        path && (typeof key === 'string' || typeof key === 'number') ? `${path}/${key}` : undefined,
-        suspendCache,
-        inProgress,
-      ),
-    );
+    recursiveResult = SchemaEx.mapAst(ast, (ast) => withEchoRefinements(ast, expansions));
   }
 
-  const annotationFields = annotations_toJsonSchemaFields(ast.annotations ?? {});
+  const annotationFields = annotations_toJsonSchemaFields(SchemaAST.resolveAnnotations(ast) ?? {});
   if (Object.keys(annotationFields).length === 0) {
     return recursiveResult;
   } else {
@@ -410,8 +383,8 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
       immutableIdField = toEffectSchema(value, defs);
     } else {
       // TODO(burdon): Mutable cast.
-      // `optionalKey`, not `optional`: the latter adds `| undefined` to the value type, and in v4
-      // that union is already carried by the serialized type -- wrapping again nests a second one.
+      // `optionalKey`, not `optional`: the latter unions the value with `undefined`, which would put
+      // every annotation one level below `PropertySignature.type` where the readers look for it.
       (fields as any)[key] = root.required?.includes(key)
         ? toEffectSchema(value, defs)
         : Schema.optionalKey(toEffectSchema(value, defs));
@@ -423,9 +396,10 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   }
 
   // The id field is folded into the struct fields rather than assigned afterwards: `mapFields` is a
-  // struct operation, and the record branches below produce schemas that do not carry it.
+  // struct operation, and the record branches below produce schemas that do not carry it. Appended
+  // last to match where `Type.makeObject` puts it, so a serialize/deserialize cycle is order-stable.
   const structFields: Record<string, Schema.Codec<any, any>> = immutableIdField
-    ? { id: immutableIdField, ...fields }
+    ? { ...fields, id: immutableIdField }
     : fields;
 
   let schema: Schema.Codec<any, any>;
@@ -678,7 +652,9 @@ const collapseNumberUnion = (node: Record<string, any>): Record<string, any> => 
     return node;
   }
   const [first, second] = node.anyOf as [Record<string, any>, Record<string, any>];
-  const isNumber = first?.type === 'number' && Object.keys(first).length === 1;
+  // The numeric branch carries the node's own keywords (`multipleOf`, `format`, ...) when the number
+  // is refined, so it is merged up rather than discarded -- dropping it would strip the constraints.
+  const isNumber = first?.type === 'number' || first?.type === 'integer';
   const isNonFinite =
     second?.type === 'string' &&
     Array.isArray(second.enum) &&
@@ -688,7 +664,29 @@ const collapseNumberUnion = (node: Record<string, any>): Record<string, any> => 
     return node;
   }
   const { anyOf, ...rest } = node;
-  return { ...rest, type: 'number' };
+  return { ...first, ...rest };
+};
+
+/**
+ * Restores the object form Effect 4 drops for a struct with no properties.
+ *
+ * v4 serializes an empty `Objects` node as `anyOf: [object, array]` -- the shape of the bare
+ * `object` keyword -- which reads back as a union rather than a struct. Keyed on `propertyOrder`,
+ * which ECHO writes for every struct and never for the keyword, so no other node is affected.
+ */
+const restoreEmptyObject = (node: Record<string, any>): Record<string, any> => {
+  if (!Array.isArray(node.anyOf) || node.anyOf.length !== 2 || !Array.isArray(node.propertyOrder)) {
+    return node;
+  }
+  const [first, second] = node.anyOf as [Record<string, any>, Record<string, any>];
+  if (first?.type !== 'object' || Object.keys(first).length !== 1) {
+    return node;
+  }
+  if (second?.type !== 'array' || Object.keys(second).length !== 1) {
+    return node;
+  }
+  const { anyOf, ...rest } = node;
+  return { type: 'object', properties: {}, additionalProperties: false, ...rest };
 };
 
 /** Applies {@link inlineAllOf} to a node and every nested schema position. */
@@ -699,7 +697,9 @@ const inlineAllOfDeep = (node: any): any => {
   if (!node || typeof node !== 'object') {
     return node;
   }
-  const inlined = collapseNumberUnion(collapseEchoRef(inlineAllOf(node)));
+  // `anyOf` collapses run first: they merge a branch up, and that branch carries the `allOf` wrapper
+  // `inlineAllOf` has to flatten.
+  const inlined = collapseEchoRef(inlineAllOf(collapseNumberUnion(restoreEmptyObject(node))));
   for (const [key, value] of Object.entries(inlined)) {
     if (value && typeof value === 'object') {
       inlined[key] = inlineAllOfDeep(value);

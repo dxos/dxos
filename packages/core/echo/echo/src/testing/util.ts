@@ -32,6 +32,40 @@ export const createEchoSchema = (schema: Schema.Schema<any>, version = '0.1.0'):
 };
 
 /**
+ * Drops the `| undefined` member Effect 4's `Schema.optional` adds to a property type.
+ *
+ * ECHO's wire form states an absent property as the bare type omitted from `required`, so a
+ * serialize/deserialize cycle cannot tell `Schema.optional` from `Schema.optionalKey` and always
+ * rebuilds the latter. Applied repeatedly because `optional` is not idempotent in v4.
+ */
+const collapseOptionalUnion = (value: any): any => {
+  let node = value;
+  while (
+    node?._tag === 'Union' &&
+    node.context?.isOptional &&
+    node.types?.length === 2 &&
+    node.types[1]?._tag === 'Undefined'
+  ) {
+    node = { ...node.types[0], context: node.context };
+  }
+  return node;
+};
+
+/**
+ * Clears the optionality Effect 4 also records on the last link of an encoding chain.
+ *
+ * Whether the flag lands there depends on which spelling declared the property, and ECHO's wire form
+ * carries optionality once, in `required` -- so it is compared on the node and ignored below it.
+ */
+const stripEncodingContext = (value: any): any =>
+  Array.isArray(value?.encoding)
+    ? {
+        ...value,
+        encoding: value.encoding.map((link: any) => ({ ...link, to: { ...link.to, context: undefined } })),
+      }
+    : value;
+
+/**
  * Converts AST to a format that can be compared with test matchers.
  */
 export const prepareAstForCompare = (obj: SchemaAST.AST): any =>
@@ -46,7 +80,7 @@ export const prepareAstForCompare = (obj: SchemaAST.AST): any =>
 
     // Convert symbols to strings.
     if (typeof value === 'object') {
-      const clone = { ...value };
+      const clone = { ...stripEncodingContext(collapseOptionalUnion(value)) };
       for (const sym of Object.getOwnPropertySymbols(clone as any)) {
         clone[sym.toString()] = clone[sym];
         delete clone[sym];

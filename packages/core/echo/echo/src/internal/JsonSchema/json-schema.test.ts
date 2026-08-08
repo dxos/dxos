@@ -212,19 +212,15 @@ describe('effect-to-json', () => {
           type: 'string',
         },
         organization: {
-          allOf: [
-            {
-              $id: '/schemas/echo/ref',
-              $ref: '/schemas/echo/ref',
-              reference: {
-                schema: {
-                  $ref: 'dxn:com.example.type.organization',
-                },
-                schemaVersion: '0.1.0',
-              },
-            },
-          ],
+          $id: '/schemas/echo/ref',
+          $ref: '/schemas/echo/ref',
           description: 'Contact organization',
+          reference: {
+            schema: {
+              $ref: 'dxn:com.example.type.organization',
+            },
+            schemaVersion: '0.1.0',
+          },
         },
       },
       required: ['name', 'organization', 'id'],
@@ -646,7 +642,6 @@ describe('json-to-effect', () => {
             "propertyOrder": [
               "foo",
             ],
-            "required": [],
             "type": "object",
           },
           "str": {
@@ -691,7 +686,6 @@ describe('json-to-effect', () => {
         "propertyOrder": [
           "contact",
         ],
-        "required": [],
         "type": "object",
       }
     `);
@@ -775,18 +769,14 @@ describe('reference', () => {
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      allOf: [
-        {
-          $id: '/schemas/echo/ref',
-          $ref: '/schemas/echo/ref',
-          reference: {
-            schema: {
-              $ref: 'dxn:com.example.type.person',
-            },
-            schemaVersion: '0.1.0',
-          },
+      $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
+      reference: {
+        schema: {
+          $ref: 'dxn:com.example.type.person',
         },
-      ],
+        schemaVersion: '0.1.0',
+      },
       title: 'My custom title',
     });
   });
@@ -796,19 +786,15 @@ describe('reference', () => {
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      allOf: [
-        {
-          $id: '/schemas/echo/ref',
-          $ref: '/schemas/echo/ref',
-          reference: {
-            schema: {
-              $ref: 'dxn:com.example.type.person',
-            },
-            schemaVersion: '0.1.0',
-          },
-        },
-      ],
+      $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
       description: 'My custom description',
+      reference: {
+        schema: {
+          $ref: 'dxn:com.example.type.person',
+        },
+        schemaVersion: '0.1.0',
+      },
     });
 
     const effectSchema = toEffectSchema(jsonSchema);
