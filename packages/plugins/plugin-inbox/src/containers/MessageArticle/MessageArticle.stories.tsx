@@ -8,12 +8,12 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -34,7 +34,7 @@ type StoryArgs = {
  * root (see `MessageArticle`'s `openDraft`) is picked up reactively.
  */
 const DefaultStory = () => {
-  const [space] = useSpaces();
+  const space = useDefaultSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = useResolveRef(mailbox?.feed);
   const messages = useQuery(

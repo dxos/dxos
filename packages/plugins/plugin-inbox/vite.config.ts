@@ -40,5 +40,8 @@ export default defineConfig({
   // re-instantiates that WASM module graph for every story file and exhausts the single headless
   // chromium's WASM memory partway through the suite (`RangeError: ... Out of memory: Cannot
   // allocate Wasm memory for new instance`). Share the module graph across files instead.
-  test: { node: true, storybook: { isolate: false } },
+  // The conversation stories step through reply drafts with a per-step bound of their own, totalling
+  // past the 15s default, so the test timeout has to clear them or they can never pass regardless of
+  // how fast the run actually is.
+  test: { node: true, storybook: { isolate: false, timeout: 60_000 } },
 });

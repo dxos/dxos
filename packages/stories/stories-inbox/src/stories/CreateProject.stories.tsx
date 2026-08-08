@@ -14,6 +14,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -25,7 +26,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -54,7 +55,7 @@ const MockAiServicePlugin = Plugin.define(
 );
 
 const Story = () => {
-  const [space] = useSpaces();
+  const space = useDefaultSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const projects = useQuery(space?.db, Filter.type(Project.Project));
   const { invokePromise } = useOperationInvoker();

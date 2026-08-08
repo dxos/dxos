@@ -28,5 +28,8 @@ export default defineConfig({
     'ReviewEvents': 'src/types/ReviewEvents.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  // Each versioning story boots a client and drives the editor through several UI round trips; the
+  // plays' own waitFor bounds already total past the 15s default, so the test timeout has to clear
+  // them or they can never pass regardless of how fast the run actually is.
+  test: { node: true, storybook: { timeout: 60_000 } },
 });

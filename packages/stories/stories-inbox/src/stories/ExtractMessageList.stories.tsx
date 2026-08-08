@@ -17,6 +17,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -33,7 +34,7 @@ import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import * as Trip from '@dxos/plugin-trip/Trip';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -116,7 +117,7 @@ const seedFeed = async (space: Space) => {
  * relations so the play function can assert the outcome from the DOM.
  */
 const DefaultStory = () => {
-  const [space] = useSpaces();
+  const space = useDefaultSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = mailbox?.feed?.target;
   const messages = useQuery(

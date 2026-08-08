@@ -8,6 +8,7 @@ import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
@@ -17,7 +18,7 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -53,7 +54,7 @@ const seedProject = (space: Space) => {
 };
 
 const DefaultStory = () => {
-  const [space] = useSpaces();
+  const space = useDefaultSpace();
   const projects = useQuery(space?.db, Filter.type(Project.Project));
   const project = projects.find((entry) => entry.name === PROJECT_NAME);
   if (!space?.db || !project) {

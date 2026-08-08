@@ -22,5 +22,7 @@ export default defineConfig({
     'ProjectsEvents': 'src/types/ProjectsEvents.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  // The article story walks five sections, each with its own 10s bound, so the test timeout has to
+  // clear their total or the story can never pass regardless of how fast the run actually is.
+  test: { node: true, storybook: { timeout: 60_000 } },
 });

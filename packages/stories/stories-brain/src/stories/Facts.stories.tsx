@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
 import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
@@ -15,7 +16,6 @@ import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
 
@@ -45,7 +45,7 @@ const VIEWER_LAYOUT: ModuleLayout = [[StoryRole.Facts], [StoryRole.Entities]];
  */
 const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fact[] }) => {
   const registry = useCapability(BrainCapabilities.FactStoreRegistry);
-  const [space] = useSpaces();
+  const space = useDefaultSpace();
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
 

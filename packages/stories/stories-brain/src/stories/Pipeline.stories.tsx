@@ -35,6 +35,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { stubParse } from '@dxos/nlp/testing';
@@ -57,7 +58,6 @@ import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
-import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
@@ -154,7 +154,7 @@ type AiConfig = { preset: 'edge-remote' | 'ollama'; model?: string };
 type StoryArgs = { ai: AiConfig };
 
 const DefaultStory = ({ ai }: StoryArgs) => {
-  const [space] = useSpaces();
+  const space = useDefaultSpace();
   const registry = useCapability(BrainCapabilities.FactStoreRegistry);
   const progress = useCapability(AppCapabilities.ProgressRegistry);
   // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).

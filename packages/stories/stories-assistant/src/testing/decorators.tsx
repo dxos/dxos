@@ -19,6 +19,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
@@ -61,7 +62,7 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -317,7 +318,7 @@ const PluginManagerHost = ({
 const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: ReactNode }) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const skillDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
-  const [space] = useSpaces();
+  const space = useDefaultSpace();
   // Reactive: the chat is created asynchronously (module.setup on SpacesReady), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.

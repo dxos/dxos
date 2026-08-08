@@ -14,6 +14,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -37,7 +38,7 @@ import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import * as Trip from '@dxos/plugin-trip/Trip';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -204,7 +205,7 @@ const seedMessage = (space: Space) => {
 };
 
 const DefaultStory = () => {
-  const [space] = useSpaces();
+  const space = useDefaultSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const [message] = useQuery(space?.db, Filter.type(MessageType.Message));
 

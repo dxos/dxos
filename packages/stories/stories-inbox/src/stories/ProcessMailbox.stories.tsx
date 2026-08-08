@@ -11,6 +11,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
@@ -24,7 +25,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -59,7 +60,7 @@ const seed = async (space: Space) => {
  * uses), and reports live counts so the play function can assert the outcome from the DOM.
  */
 const DefaultStory = () => {
-  const [space] = useSpaces();
+  const space = useDefaultSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = mailbox?.feed?.target;
   const messages = useQuery(

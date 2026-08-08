@@ -5,11 +5,10 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';
 
@@ -34,7 +33,9 @@ export type ReviewStoryLayoutProps = {
  * directly, so the stories exercise the same companion resolution the app uses.
  */
 export const ReviewStoryLayout = ({ panels = ['comments', 'history'], attendableId }: ReviewStoryLayoutProps) => {
-  const [space] = useSpaces();
+  // The seeded document lives in the profile's default space; the settings space sorts ahead of it
+  // in the space list, so picking the first space would query app configuration instead.
+  const space = useDefaultSpace();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const id = attendableId ?? (doc ? Obj.getURI(doc) : undefined);
 
