@@ -46,12 +46,21 @@ if (!mainPackage) {
 }
 
 const NPM_REGISTRY = 'https://registry.npmjs.org';
+const REGISTRY_TIMEOUT = 30_000;
 
 /** Whether npm already serves this exact version. */
 async function isPublished(name: string, version: string): Promise<boolean> {
-  const response = await fetch(`${NPM_REGISTRY}/${encodeURIComponent(name)}`, {
-    headers: { Accept: 'application/vnd.npm.install-v1+json' },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${NPM_REGISTRY}/${encodeURIComponent(name)}`, {
+      headers: { Accept: 'application/vnd.npm.install-v1+json' },
+      // Bounded so an unresponsive registry cannot stall the publish indefinitely.
+      signal: AbortSignal.timeout(REGISTRY_TIMEOUT),
+    });
+  } catch (error) {
+    throw new Error(`failed to query ${name}: ${error instanceof Error ? error.message : error}`);
+  }
+
   if (response.status === 404) {
     return false;
   }
@@ -59,8 +68,9 @@ async function isPublished(name: string, version: string): Promise<boolean> {
     throw new Error(`unexpected status ${response.status} querying ${name}`);
   }
 
-  const body = (await response.json()) as { versions?: Record<string, unknown> };
-  return Object.hasOwn(body.versions ?? {}, version);
+  const body: unknown = await response.json();
+  const versions = typeof body === 'object' && body !== null && 'versions' in body ? body.versions : undefined;
+  return typeof versions === 'object' && versions !== null && Object.hasOwn(versions, version);
 }
 
 // Helper function to publish a package.
