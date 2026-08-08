@@ -33,18 +33,14 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Deferred on a located product race in the shell's join machine, not a test
-  //   problem. `JoinPanel` snapshots `identity` into the machine context once at mount
-  //   (JoinPanel.tsx `useJoinMachine({ context: { identity, ... } })`), and the
-  //   `initiallyAcceptingHaloInvitation` guard (joinMachine.ts) requires `!identity`. After
-  //   `client.reset()` + reload, a `useIdentity()` that still reports the pre-reset identity when
-  //   the dialog mounts fails that guard, the machine falls back to the auth-method chooser, and
-  //   `halo-invitation-input` is never rendered — permanently, because the context is a one-time
-  //   snapshot. Matches every observation: healthy page, missing input, ~1 in 6 locally (CI runs
-  //   31131235658, 31271416331). The fix belongs in the shell (re-evaluate the disposition when
-  //   identity resolves, or gate the dialog on a settled post-reset identity) and needs a shell
-  //   owner. RULED OUT along the way: a welcome-screen/join-dialog update race (real, fixed in
-  //   `OnboardingManager`, but unreachable here because composer e2e runs `skipAuth`).
+  // TODO(wittjosiah): Still deferred. One real defect on this path IS fixed: `JoinPanel` takes
+  //   `identity` as a one-time machine context snapshot, so a panel mounting while
+  //   `client.reset()` was still settling went (in `halo-only` mode) to `resettingIdentity` — a
+  //   state with no automatic exit — and the panel now re-issues the requested disposition once
+  //   the live identity clears. It did NOT clear this test: `halo-invitation-input` still fails to
+  //   appear in 1 of 4 serialized runs afterwards, so the mount has at least one more cause.
+  //   Next probe: log the join machine's state transitions (`JoinPanel` already subscribes and
+  //   `log`s them) from a failing run to see which state it settles in, rather than inferring.
   test.fixme('join new identity', async () => {
     test.setTimeout(90_000);
 
@@ -78,9 +74,12 @@ test.describe('HALO tests', () => {
     // });
   });
 
-  // Shares the device-join flow (and its unresolved mount stall) with the test above. A second
-  // hazard is specific to this test: the invitation code submits but `halo-auth-code-input` stays
-  // disabled, so the handshake never reaches the auth stage (1 of 11 device invitations).
+  // TODO(wittjosiah): Deferred on TWO measured modes, both distinct from the join-mount stall the
+  //   test above tracks: (1) the invitation code submits but `halo-auth-code-input` stays disabled,
+  //   so the handshake never reaches the auth stage; (2) the join completes but the host's space
+  //   never replicates to the guest — `spacePlugin.space` stays at 1 of 2 for 60s (measured
+  //   2026-08-08, 1 of 4 serialized runs). Mode 2 is a replication-timing question for HALO, not a
+  //   UI race, and needs its own investigation.
   test.fixme('deleting a space replicates across devices', async () => {
     test.setTimeout(120_000);
 
