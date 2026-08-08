@@ -135,8 +135,11 @@ upgrades — `101 Switching Protocols` relays, and a Chromium `WebSocket` opened
 message. (`/root/.ccr/README.md` claims WebSocket upgrades are unsupported; that is outdated.)
 An unauthenticated `wss://dxos.network/ws/<identityKey>/<peerKey>` gets edge's own
 `401 WWW-Authenticate: VerifiablePresentation`, which means the handshake reached the worker.
-Two-peer EDGE-mediated replication demonstrably works end-to-end: todomvc's playwright invitation
-suite passes on firefox and webkit in the sandbox.
+Do NOT cite todomvc's green non-chromium playwright runs as proof that two-peer invitations work
+here — its beforeEach aliases `guest = host` off chromium, so those runs never open a second peer.
+Space invitations require a real WebRTC swarm connection (edge is signaling only, and
+`@dxos/network-manager` has no edge-relay data transport), so with no UDP they fail on EVERY
+browser; both peers log `connection.ts "timeout waiting 10s for transport to connect"`.
 
 Does not work:
 

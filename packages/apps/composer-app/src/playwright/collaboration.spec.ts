@@ -21,20 +21,17 @@ const navigateToNewDocument = async (app: AppManager) => {
   await app.navigateToObject(0); // New document.
 };
 
-// TODO(wittjosiah): The chromium-only gate below is NOT the playwright#2973 WebRTC limitation it
-//   used to cite. todomvc's two-peer replication suite passes on both other browsers locally —
-//   8 tests x3 on webkit, x2 on firefox, all green — using this same `ShellManager`, so peer
-//   connections work there. Measured on webkit with the gate lifted and the budget raised to 180s
-//   (60s expires during setup, since host and guest each boot composer): both tests get past setup
-//   and then fail at one point, the guest's `space-auth-code-input` staying disabled because the
-//   invitation never leaves `connectingSpaceInvitation`. So what to fix is composer's invitation
-//   connect step on non-chromium, and the gate can come off once that lands. Instrumenting both
-//   pages puts the next attempt's starting points at `network-manager/src/swarm/connection.ts:187`
-//   (logged by host and guest), `client-services` `notarization-plugin.ts:325` (likewise), and a
-//   guest-side error at `compute-runtime/src/ProcessOperationInvoker.ts:249`. Ignore the
-//   `'allow-presentation' is an invalid sandbox flag` errors that flood webkit's console during
-//   this flow — they come from `MediaPlayer`'s iframe sandbox and have nothing to do with
-//   invitations.
+// The chromium-only gate below is the real WebRTC limitation (playwright#2973) after all. A prior
+// revision of this comment claimed otherwise, citing todomvc's green non-chromium runs as proof
+// that peer connections work — but todomvc's own beforeEach aliases `guest = host` off chromium
+// (basic.spec.ts), so those runs never perform an invitation and prove nothing. Instrumented on
+// webkit with the gate lifted: BOTH peers log `connection.ts:187 "timeout waiting 10s for
+// transport to connect"` — the swarm's only data transport is WebRTC (`service-host.ts` always
+// uses `createRtcTransportFactory`; edge provides signaling, not transport), so the invitation
+// handshake cannot complete without it. In environments with no UDP (the Claude cloud sandbox)
+// this fails on every browser, chromium included. Lifting the gate requires an edge-relay data
+// transport in @dxos/network-manager, not a test change. Ignore webkit's `'allow-presentation'`
+// console flood during this flow — it comes from MediaPlayer's iframe sandbox, unrelated.
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
