@@ -247,7 +247,7 @@ Branch `claude/effect-4-migration-audit-pq2m8z` in `dxos/edge` (no PR — user a
 ### Tasks
 
 - [x] **Link edge against the local dxos build** — `node ./scripts/link-packages.mjs <DXOS> --all
-    --install` writes 315 `file:.local-pack/*.tgz` overrides into the root `package.json`. This is
+  --install` writes 315 `file:.local-pack/*.tgz` overrides into the root `package.json`. This is
       the stand-in for D7 below, not a replacement for it.
 - [x] **Fix moon execution under `/workspace`** — moon's WASM toolchain maps virtual `/workspace`
       to the real workspace root, so a checkout whose own path starts with `/workspace` doubles the
