@@ -194,18 +194,17 @@ const shouldRetry = (
   if (Cause.isTimeoutError(error)) {
     return true;
   }
-  if (error._tag === 'HttpBodyError') {
-    return false;
+  // Matched positively on the HTTP error: v4's tagged-error classes do not narrow a union from the
+  // negative side. The specific failure hangs off `reason` -- a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (HttpClientError.isHttpClientError(error)) {
+    if (error.reason._tag !== 'StatusCodeError') {
+      return true;
+    }
+    const status = error.reason.response.status;
+    return status === 429 || (status >= 500 && status <= 599);
   }
-  if (error._tag === 'RequestError') {
-    return true;
-  }
-  // ResponseError: only retry transient response failures.
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
-  return status === 429 || (status >= 500 && status <= 599);
+  return false;
 };
 
 /**

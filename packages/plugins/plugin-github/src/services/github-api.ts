@@ -260,7 +260,7 @@ const getNextLink = (header: string | undefined): string | undefined => {
 
 const githubPaginated = <T>(
   buildInitial: () => HttpClientRequest.HttpClientRequest,
-  itemSchema: Schema.Schema<T>,
+  itemSchema: Schema.Codec<T>,
 ): GitHubEffect<readonly T[]> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;

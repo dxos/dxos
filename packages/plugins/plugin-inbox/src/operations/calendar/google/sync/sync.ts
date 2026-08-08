@@ -88,8 +88,8 @@ export const syncCalendar = ({
   pageSize = CALENDAR_SYNC_CONFIG.listPageSize,
 }: SyncCalendarProps): Effect.Effect<
   { newEvents: number },
-  Effect.Effect.Error<CalendarPageEffect> | EntityNotFoundError,
-  Database.Service | Resolver | Effect.Effect.Context<CalendarPageEffect>
+  Effect.Error<CalendarPageEffect> | EntityNotFoundError,
+  Database.Service | Resolver | Effect.Services<CalendarPageEffect>
 > =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);

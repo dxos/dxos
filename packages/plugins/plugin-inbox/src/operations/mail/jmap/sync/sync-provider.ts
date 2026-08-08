@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -395,7 +394,7 @@ const jmapIds = (
         conditions: conditions.length,
       });
 
-      return Stream.paginateChunkEffect(0, (position: number) =>
+      return Stream.paginate(0, (position: number) =>
         Effect.gen(function* () {
           const { ids } = yield* api.emailQuery(target, {
             filter,
@@ -408,7 +407,7 @@ const jmapIds = (
           options.onEnumerated?.(ids.length);
           const next =
             ids.length < JMAP_SYNC_CONFIG.listPageSize ? Option.none<number>() : Option.some(position + ids.length);
-          return [Chunk.fromIterable(ids), next];
+          return [ids, next] as const;
         }),
       );
     }),

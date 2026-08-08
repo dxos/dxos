@@ -4,6 +4,7 @@
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
+import * as Result from 'effect/Result';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -66,7 +67,10 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
         event.attendees?.some((attendee) => contact.emails?.some((email) => email.value === attendee.email)) ||
         event.attendees?.some((attendee) => attendee.contact?.target === contact),
     ),
-    Array.partition((event) => new Date(event.startDate).getTime() > now),
+    // v4's `partition` takes a `Result`-returning filter; `[excluded, satisfying]` is unchanged.
+    Array.partition((event) =>
+      new Date(event.startDate).getTime() > now ? Result.succeed(event) : Result.fail(event),
+    ),
   );
   const sortedRecentEvents = recentEvents
     .toSorted((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())

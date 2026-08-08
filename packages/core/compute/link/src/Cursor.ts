@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -569,9 +568,9 @@ const recordCommitted = Effect.fn('cursor.commit.recordCommitted')(function* (
  * flushes were O(n²)); the caller flushes once at the end, so a crash only loses this run's in-memory
  * cursor advance + space mutations.
  */
-export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never, Service | Database.Service> =>
+export const commit = (page: ReadonlyArray<CommitUnit>): Effect.Effect<void, never, Service | Database.Service> =>
   Effect.gen(function* () {
-    const units = Chunk.toReadonlyArray(page);
+    const units = page;
     if (units.length === 0) {
       return;
     }
@@ -597,9 +596,9 @@ export type UpsertUnit<T> = { readonly item: T; readonly foreignId: string; read
  */
 export const upsertCommit =
   <T>(write: (item: T) => Effect.Effect<boolean, never, Database.Service>) =>
-  (page: Chunk.Chunk<UpsertUnit<T>>): Effect.Effect<void, never, Service | Database.Service> =>
+  (page: ReadonlyArray<UpsertUnit<T>>): Effect.Effect<void, never, Service | Database.Service> =>
     Effect.gen(function* () {
-      const units = Chunk.toReadonlyArray(page);
+      const units = page;
       if (units.length === 0) {
         return;
       }

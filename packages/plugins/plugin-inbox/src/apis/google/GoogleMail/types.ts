@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { BaseError } from '@dxos/errors';
 
@@ -89,7 +90,7 @@ const _Part = Schema.Struct({
   filename: Schema.optional(Schema.String),
   headers: Schema.optional(Schema.Array(Header)),
   body: MessagePartBody,
-  parts: Schema.optional(Schema.Array(Schema.suspend((): Schema.Schema<Part> => Part))),
+  parts: Schema.optional(Schema.Array(Schema.suspend((): Schema.Codec<Part> => Part))),
 });
 export interface Part extends Schema.Schema.Type<typeof _Part> {}
 export const Part: Schema.Codec<Part> = _Part;
@@ -118,7 +119,7 @@ export type Message = Schema.Schema.Type<typeof Message>;
 
 export const ListMessagesResponse = Schema.Struct({
   resultSizeEstimate: Schema.Number,
-  messages: Schema.Array(Message.pick('id', 'threadId')).pipe(Schema.optional),
+  messages: Schema.Array(Message.mapFields((fields) => Struct.pick(fields, ['id', 'threadId']))).pipe(Schema.optional),
   nextPageToken: Schema.String.pipe(Schema.optional),
 });
 

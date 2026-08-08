@@ -34,15 +34,9 @@ const DEFAULT_UNIT_KEYS = ['USD', 'USD/shares', 'shares'] as const;
 const isOption = (node: SchemaAST.AST): node is SchemaAST.Union =>
   SchemaAST.isUnion(node) && node.types.length === 2 && SchemaAST.isUndefinedKeyword(node.types[1]);
 
-const reduceRefinements = (type: SchemaAST.AST): SchemaAST.AST => {
-  if (SchemaAST.isRefinement(type)) {
-    return reduceRefinements({
-      ...type.from,
-      annotations: { ...type.from.annotations, ...type.annotations },
-    } as SchemaAST.AST);
-  }
-  return type;
-};
+// Effect 4 has no `Refinement` node: a refined type IS the node, carrying checks, so there is
+// nothing to reduce and the annotations are already in place.
+const reduceRefinements = (type: SchemaAST.AST): SchemaAST.AST => type;
 
 const unwrapOptionalType = (type: SchemaAST.AST): SchemaAST.AST => {
   if (isOption(type)) {

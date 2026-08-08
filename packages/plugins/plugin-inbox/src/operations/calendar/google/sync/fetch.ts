@@ -3,7 +3,6 @@
 //
 
 import { addDays } from 'date-fns';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
@@ -31,11 +30,7 @@ export const fetchEvents = (
   calendarId: string,
   cursorKey: number,
   opts: FetchEventsOptions,
-): Stream.Stream<
-  GoogleCalendar.Event,
-  Effect.Effect.Error<CalendarPageEffect>,
-  Effect.Effect.Context<CalendarPageEffect>
-> => {
+): Stream.Stream<GoogleCalendar.Event, Effect.Error<CalendarPageEffect>, Effect.Services<CalendarPageEffect>> => {
   const fetchPage = (pageToken: string | undefined) =>
     cursorKey === 0
       ? GoogleCalendar.listEventsByStartTime(
@@ -54,17 +49,10 @@ export const fetchEvents = (
           opts.searchFilter,
         );
 
-  return Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
+  return Stream.paginate(undefined as string | undefined, (pageToken: string | undefined) =>
     Effect.gen(function* () {
-      if (state.done) {
-        return Option.none();
-      }
-
-      const { items = [], nextPageToken } = yield* fetchPage(Option.getOrUndefined(state.pageToken));
-      return Option.some([
-        Chunk.fromIterable(items),
-        { pageToken: Option.fromNullishOr(nextPageToken), done: !nextPageToken },
-      ] as const);
+      const { items = [], nextPageToken } = yield* fetchPage(pageToken);
+      return [items, Option.fromNullishOr(nextPageToken)] as const;
     }),
   );
 };

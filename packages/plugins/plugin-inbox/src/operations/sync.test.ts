@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
@@ -213,7 +212,7 @@ describe('sync pipeline harness', () => {
 
     const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([makeUnit(RAWS[0]), makeUnit(RAWS[1])])).pipe(
+      Cursor.commit([makeUnit(RAWS[0]), makeUnit(RAWS[1])]).pipe(
         Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),
