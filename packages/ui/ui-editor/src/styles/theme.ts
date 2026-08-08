@@ -128,14 +128,16 @@ export const baseTheme = EditorView.baseTheme({
   // Matches the ScrollArea overlay thumb: a pill inset from the edge. The inset is a transparent
   // border with `background-clip: content-box`, since a scrollbar pseudo-element cannot be offset.
   '.cm-scroller::-webkit-scrollbar-thumb': {
-    background: 'transparent',
+    backgroundColor: 'transparent',
     borderRadius: 'var(--scrollbar-radius, 9999px)',
     border: 'var(--scrollbar-inset, 2px) solid transparent',
     backgroundClip: 'content-box',
-    transition: 'background 0.15s',
+    transition: 'background-color 0.15s',
   },
+  // `backgroundColor`, not the `background` shorthand, which would reset `background-clip` to
+  // `border-box` and paint over the inset exactly when the thumb becomes visible.
   '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
-    background: 'var(--color-scrollbar-thumb)',
+    backgroundColor: 'var(--color-scrollbar-thumb)',
   },
 
   /**
