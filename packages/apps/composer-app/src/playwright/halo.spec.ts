@@ -70,10 +70,13 @@ test.describe('HALO tests', () => {
     // });
   });
 
-  // TODO(wittjosiah): Failed on chromium in run 31131235658 — 30s timeout filling
-  //   `halo-invitation-input` (scoped-shell-manager.ts:28); the device-invitation shell never
-  //   mounted its input after `joinNewIdentity()` reset storage and reloaded. Distinct from the
-  //   `createSpace()` race fixed alongside this, so deferred on its own evidence.
+  // TODO(wittjosiah): Two distinct failure modes observed on the device-join path, neither yet
+  //   fixed: in CI the invitation input never mounts after `joinNewIdentity()` resets storage and
+  //   reloads (run 31131235658, 30s fill timeout at scoped-shell-manager.ts:28); locally the
+  //   invitation code submits but `halo-auth-code-input` stays disabled — the handshake never
+  //   reaches the auth stage (1 of 11 device invitations, 2026-08-08; also seen in todomvc's
+  //   space-invitation flow in the sandbox only). The sibling test above runs the same flow and
+  //   measured 8/8 — it stays enabled as the canary; fixing the join path re-enables this one.
   test.fixme('deleting a space replicates across devices', async () => {
     test.setTimeout(120_000);
 
