@@ -5,10 +5,11 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useDefaultSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading } from '@dxos/react-ui/testing';
 
 /**
@@ -20,7 +21,7 @@ import { Loading } from '@dxos/react-ui/testing';
  * mailbox's Facts companion.
  */
 export const MailboxModule = () => {
-  const space = useDefaultSpace();
+  const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   if (!mailbox) {
     return <Loading data={{ mailbox: false }} />;

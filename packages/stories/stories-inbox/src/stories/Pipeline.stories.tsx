@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useRef } from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
-import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { configPreset } from '@dxos/config';
 import { Database, Feed, Filter, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
@@ -25,7 +24,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
@@ -59,7 +58,7 @@ const SYNC_STORY_TYPES = [
  * redundant runs within a session. Renders nothing.
  */
 const SeedRunner = () => {
-  const space = useDefaultSpace();
+  const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = useResolveRef(mailbox?.feed);
   const seededRef = useRef(false);

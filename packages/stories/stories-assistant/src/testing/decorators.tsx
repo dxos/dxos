@@ -19,7 +19,6 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
@@ -54,6 +53,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
@@ -62,7 +62,7 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -203,11 +203,7 @@ const buildPluginManagerOptions = ({
               return;
             }
 
-            yield* Effect.promise(() => client.halo.createIdentity());
-
-            // Object-scoped actions (e.g. the comment toolbar) resolve a default space, so stories
-            // bootstrap the same pair of spaces the app creates on first run.
-            const { defaultSpace: space } = yield* AppSpace.setupIdentitySpaces(client);
+            const { defaultSpace: space } = yield* initializeIdentity(client);
 
             // Add tokens.
             for (const accessToken of accessTokens) {
@@ -318,7 +314,7 @@ const PluginManagerHost = ({
 const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: ReactNode }) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const skillDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
-  const space = useDefaultSpace();
+  const [space] = useSpaces();
   // Reactive: the chat is created asynchronously (module.setup on SpacesReady), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
@@ -489,8 +485,6 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capabilities.OperationInvoker;
       const client = yield* ClientCapabilities.Client;
-      // Not `spaces.get()[0]`: the settings space is created first, and story content belongs in
-      // the default space.
       const space = AppSpace.getDefaultSpace(client) ?? client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 

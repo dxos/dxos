@@ -28,7 +28,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -109,7 +108,7 @@ const StoryGraphPlugin = () =>
                 // removed while this reactive connector recomputes once more (use `getAll`, not the
                 // throwing `get`).
                 const [client] = capabilities.getAll(ClientCapabilities.Client);
-                const space = client && AppSpace.getDefaultSpace(client);
+                const [space] = client?.spaces.get() ?? [];
                 if (!space) {
                   return [];
                 }

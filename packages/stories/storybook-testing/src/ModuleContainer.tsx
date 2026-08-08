@@ -11,10 +11,10 @@ import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui'
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
-import { AppSurface, useAppGraph, useDefaultSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
@@ -191,9 +191,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const layoutState = useCapability(StorybookCapabilities.LayoutState);
   const { graph } = useAppGraph();
-  // The harness seeds into the profile's default space; the settings space sorts ahead of it in the
-  // space list, so picking the first space would drive the layout off app configuration.
-  const space = useDefaultSpace();
+  const [space] = useSpaces();
 
   // A harness may contribute a runtime layout (built by `onInit`); prefer it over the static prop.
   const [layoutAtom] = useCapabilities(StoryLayout.Atom);

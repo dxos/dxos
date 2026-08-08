@@ -15,7 +15,6 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
@@ -27,6 +26,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Connection from '@dxos/plugin-connector/Connection';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -84,7 +84,7 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ conversations }: StoryArgs) => {
-  const space = useDefaultSpace();
+  const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
 
   // Force the conversation-grouping setting per-variant, independent of any persisted value.
