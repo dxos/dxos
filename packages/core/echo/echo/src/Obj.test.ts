@@ -625,6 +625,14 @@ describe('Obj', () => {
       });
       expect(fires).toBe(baseline + 1);
       expect(registry.get(tasksAtom)).toHaveLength(1);
+
+      // Still silent for unrelated writes once the array holds refs: `Ref` mints a fresh wrapper
+      // per property read, so identity comparison would re-fire here every time (see
+      // `elementEquals`) — which is how `Thread.messages` kept storming after the array dedupe.
+      Obj.update(obj, (obj) => {
+        obj.name = 'Dana';
+      });
+      expect(fires).toBe(baseline + 1);
     });
   });
 

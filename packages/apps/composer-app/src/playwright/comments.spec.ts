@@ -86,14 +86,16 @@ test.describe('Comments tests', () => {
   //   the delete click itself: `thread.message.delete` resolves, then loops "element is not stable" /
   //   "detached from the DOM" until timeout — the message row is being re-rendered continuously.
   //   Likely the same family as `undo delete thread`'s cm-comment count flapping in run 31215927769.
-  //   Instrumentation refuted the comment-sync updateListener theory (zero thread.name writes) and
-  //   traced the storm to echo property atoms re-firing on every owner write; the array case is
-  //   fixed in core (snapshotEquals), record-valued atoms deliberately keep legacy always-fire
-  //   because kanban depends on nested-record notifications. Under that fix this test still fails
-  //   (3-sample runs split between the add step and the delete click), so a second churn source
-  //   remains — suspect record/block-level atoms on the message tiles. Measure with render
-  //   counters again before the next attempt; 3-sample verdicts on a ~27%-flaky test have misled
-  //   this session twice.
+  //   Three mechanisms found by instrumentation; two are fixed, one remains. Fixed: echo property
+  //   atoms over-firing (snapshotEquals, including ref-aware element comparison — Ref mints a
+  //   fresh wrapper per read), and the add-path remount — CommentsArticle keyed threads by URI,
+  //   which CHANGES when a draft thread persists, so the whole subtree remounted mid-typing and
+  //   Enter fired on a fresh empty composer (add-path failures 0/5 with the stable key). Open:
+  //   the delete-click stall. Measured during it: zero propertyFamily fires, zero message-tile
+  //   renders, yet CommentThread + the reply composer re-render ~12 cycles until timeout — no
+  //   echo fingerprint, so suspect the focus/attention path (Thread.Content onFocusCapture →
+  //   handleAttend → shared stateAtom) or hover-transition styling racing Playwright's stability
+  //   check. Instrument THAT before the next attempt.
   test.fixme('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });

@@ -440,7 +440,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
           const threadId = Obj.getURI(thread);
           return (
             <CommentThreadItem
-              key={threadId}
+              // Keyed by the stable object id, NOT the URI: a draft thread's URI changes when its
+              // first message persists it (`echo:///<id>` → `echo://<spaceId>/<id>`), and keying by
+              // URI remounted the whole thread subtree at exactly that moment — a reply being typed
+              // in the composer was destroyed and Enter fired on the fresh empty instance.
+              key={thread.id}
               space={space}
               threadUri={threadId}
               anchor={anchor}
