@@ -504,9 +504,9 @@ packages/plugins/plugin-inbox/src/
                                    Jmap{Api,SendMessageInvalid,SendIdentityNotFound}Error move;
                                    MailSyncError + the classification/summary errors stay
   components/ containers/ extensions/ skills/ util/ paths.ts translations.ts   = unchanged
-  moon.yml                       ✎ delete the stale `deploy-functions` task — it deploys
-                                   `src/functions/google/{gmail,calendar}/sync.ts`, paths that no
-                                   longer exist (dead before this refactor; dies with it)
+  moon.yml                       ✂ the stale `deploy-functions` task is deleted — it deployed
+                                   `src/functions/google/{gmail,calendar}/sync.ts`, paths that never
+                                   existed on this branch, and nothing invoked it
 ```
 
 Net: **~9200 LOC leaves** (apis + services + the four provider operation trees + fixtures),
@@ -716,13 +716,19 @@ Each step is independently green (`moon run <pkg>:build`, `moon run <pkg>:test`,
    findings above. Its `constants.ts` keeps `GMAIL_SOURCE = 'com.google.mail'` for messages while tags
    carry `com.google.gmail` — deliberate asymmetry, see `Tag.md`; JMAP could collapse both onto one
    `JMAP_DOMAIN` because its message source already _was_ the domain.
-5. **Sweep plugin-inbox** — mostly done inline with steps 3-4 (`capabilities/connector.ts`,
+5. ✅ **Sweep plugin-inbox** — mostly done inline with steps 3-4 (`capabilities/connector.ts`,
    `capabilities/mail-send.ts`, `apis/`, `services/`, the provider errors, and `testing/node.ts` are
-   all gone). Remaining: the stale `deploy-functions` moon task, and an audit for dead exports and
-   orphaned translation keys. **Still deliberately in `constants.ts`:** `GMAIL_CONNECTOR_ID`,
-   `GOOGLE_CALENDAR_CONNECTOR_ID`, `JMAP_MAIL_CONNECTOR_ID` and `GOOGLE_INTEGRATION_SOURCE`, each
-   duplicating a provider's own constant because `types/Mailbox|Calendar|DraftEvent` name their
-   providers — they disappear with the §3.1 inversion, not before.
+   all gone). This step finished it: deleted the `deploy-functions` moon task (it deployed
+   `src/functions/google/…`, paths that never existed on this branch, and nothing invoked it), and
+   dropped `@dxos/context`, `@dxos/async` and `@dxos/edge-compute` — unreferenced once the providers
+   left — along with their tsconfig references. `@dxos/protocols` and `@dxos/config` stay: `scripts/`
+   uses them, which a `src/`-only grep misses.
+
+   **Still deliberately in `constants.ts`:** `GMAIL_CONNECTOR_ID`, `GOOGLE_CALENDAR_CONNECTOR_ID`,
+   `JMAP_MAIL_CONNECTOR_ID` and `GOOGLE_INTEGRATION_SOURCE`, each duplicating a provider's own
+   constant because `types/Mailbox|Calendar|DraftEvent` name their providers — they disappear with the
+   §3.1 inversion, not before.
+
 6. **Then, unchanged:** roadmap 5 (§3.7 sync-infra hoist), 6 (§3.1 connector-id inversion —
    at which point the provider constants become canonical in the provider plugins), 7–8
    (domain split; each provider's `operations/{mail,calendar,contacts}` repoints from

@@ -12569,9 +12569,6 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -12581,9 +12578,6 @@ importers:
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -12762,9 +12756,6 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/edge-compute':
-        specifier: workspace:*
-        version: link:../../core/compute/edge-compute
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
