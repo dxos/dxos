@@ -182,11 +182,11 @@ export const createStructFieldsFromSchema = (
   schema: Schema.Codec<any, any>,
 ): Record<string, Schema.Codec<any, any>> => {
   switch (schema.ast._tag) {
-    case 'TypeLiteral':
+    case 'Objects':
       return Object.fromEntries(
         schema.ast.propertySignatures.map((prop) => [prop.name, Schema.make(mapSchemaTypeForLLM(prop.type))]),
       );
-    case 'VoidKeyword':
+    case 'Void':
       return {};
     default:
       return todo(`Unsupported schema AST: ${schema.ast._tag}`);
@@ -199,28 +199,23 @@ export const createStructFieldsFromSchema = (
  */
 const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
   if (Ref.isRefType(ast)) {
-    const description = ast.annotations.description
-      ? ast.annotations.description + '\n' + RefFromLLM.ast.annotations.description
-      : (RefFromLLM.ast.annotations.description as string);
+    // v4's element and property nodes carry their own modifiers, so the wrapper types are gone and
+    // the annotations record is optional.
+    const own = SchemaAST.resolveAnnotations(ast)?.description;
+    const fallback = SchemaAST.resolveAnnotations(RefFromLLM.ast)?.description as string;
+    const description = own ? `${own}\n${fallback}` : fallback;
     return RefFromLLM.annotate({ description }).ast;
   } else if (SchemaAST.isTupleType(ast)) {
-    return new SchemaAST.TupleType(
-      ast.elements.map((t) => new SchemaAST.OptionalType(mapSchemaTypeForLLM(t.type), t.isOptional, t.annotations)),
-      ast.rest.map((t) => new SchemaAST.Type(mapSchemaTypeForLLM(t.type), t.annotations)),
-      ast.isReadonly,
+    return new SchemaAST.Arrays(
+      ast.isMutable,
+      ast.elements.map((element) => mapSchemaTypeForLLM(element)),
+      ast.rest.map((element) => mapSchemaTypeForLLM(element)),
       ast.annotations,
     );
   } else if (SchemaAST.isTypeLiteral(ast)) {
-    return new SchemaAST.TypeLiteral(
+    return new SchemaAST.Objects(
       ast.propertySignatures.map(
-        (p) =>
-          new SchemaAST.PropertySignature(
-            p.name,
-            mapSchemaTypeForLLM(p.type),
-            p.isOptional,
-            p.isReadonly,
-            p.annotations,
-          ),
+        (property) => new SchemaAST.PropertySignature(property.name, mapSchemaTypeForLLM(property.type)),
       ),
       ast.indexSignatures,
       ast.annotations,
@@ -229,8 +224,9 @@ const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
     // `Schema.optional(Schema.Array(Ref(...)))` surfaces the value as a `T | undefined` union, so a
     // ref nested inside an optional/union field must be mapped through each member — otherwise it
     // keeps the raw `Ref` encoding and an LLM-supplied URI string is never coerced via `RefFromLLM`.
-    return SchemaAST.Union.make(
+    return new SchemaAST.Union(
       ast.types.map((member) => mapSchemaTypeForLLM(member)),
+      ast.mode,
       ast.annotations,
     );
   }

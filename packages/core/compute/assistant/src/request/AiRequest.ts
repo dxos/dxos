@@ -9,6 +9,7 @@ import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Result from 'effect/Result';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import type * as AiError from 'effect/unstable/ai/AiError';
@@ -248,11 +249,13 @@ export class Request {
       let currentMessageId: Obj.ID | null = null;
       let finishReason: ContentBlock.FinishReason | undefined;
 
-      const messages = yield* LanguageModel.streamText({
-        prompt,
-        toolkit,
-        disableToolCallResolution: true,
-      }).pipe(
+      // v4 overloads `streamText` on the presence of `toolkit`, so the two cases branch explicitly
+      // rather than passing a possibly-undefined key.
+      const stream = toolkit
+        ? LanguageModel.streamText({ prompt, toolkit, disableToolCallResolution: true })
+        : LanguageModel.streamText({ prompt, disableToolCallResolution: true });
+
+      const messages = yield* stream.pipe(
         withoutToolCallParising,
         AiParser.parseResponse({
           emitPartial: true,
@@ -293,7 +296,7 @@ export class Request {
             }),
           { concurrency: 1, unordered: false },
         ),
-        Stream.filterMap((_) => _),
+        Stream.filterMap((value) => (Option.isSome(value) ? Result.succeed(value.value) : Result.failVoid)),
         Stream.runCollect,
       );
       log('messages', { messages });

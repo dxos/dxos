@@ -33,7 +33,7 @@ export const createToolkit = ({
 > =>
   Effect.gen(function* () {
     const skillToolkit = yield* ToolResolverService.resolveToolkit(skills.flatMap(({ tools }) => tools));
-    const skillToolHandler = yield* skillToolkit.toContext(ToolExecutionService.handlersFor(skillToolkit));
+    const skillToolHandler = yield* skillToolkit.toHandlers(ToolExecutionService.handlersFor(skillToolkit));
     const opaqueToolkit = OpaqueToolkit.merge(...opaqueToolkits);
 
     const toolkitDefs = [toolkitProp?.toolkit, skillToolkit, opaqueToolkit.toolkit].filter(isTruthy);

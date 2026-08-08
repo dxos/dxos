@@ -5,10 +5,11 @@
 // @import-as-namespace
 
 import * as EArray from 'effect/Array';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
-import { Atom, Registry as AtomRegistry } from 'effect/unstable/reactivity';
+import { Atom, AtomRegistry } from 'effect/unstable/reactivity';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';

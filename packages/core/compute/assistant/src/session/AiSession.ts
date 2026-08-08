@@ -13,7 +13,7 @@ import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 import * as Result from 'effect/Result';
 import * as Runtime from 'effect/Runtime';
-import { type Registry as AtomRegistry } from 'effect/unstable/reactivity';
+import { type AtomRegistry } from 'effect/unstable/reactivity';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
@@ -317,8 +317,10 @@ const connectMcpServers = (
     Effect.forEach((options) =>
       McpToolkit.make(options).pipe(
         // NOTE: Type-inference fails here without explicit void return.
-        Effect.tap((toolkit): void =>
-          log.info('Connected to MCP server', { url: options.url, tools: Object.keys(toolkit.toolkit.tools).length }),
+        Effect.tap((toolkit) =>
+          Effect.sync(() =>
+            log.info('Connected to MCP server', { url: options.url, tools: Object.keys(toolkit.toolkit.tools).length }),
+          ),
         ),
         // Surface typed connection failures via ephemeral trace + warn log, then drop the server.
         Effect.tapError((error) =>
@@ -358,7 +360,7 @@ const connectMcpServers = (
         Effect.result,
       ),
     ),
-    Effect.map(Array.filterMap((_) => Result.getSuccess(_))),
+    Effect.map((results) => Array.filterMap(results, (result) => result)),
   );
 };
 

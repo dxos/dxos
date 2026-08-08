@@ -20,10 +20,10 @@ const AnthropicErrorResponse = Schema.Struct({
 // TODO(dmaretskyi): Needs rework.
 export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError> =>
   Effect.gen(function* () {
-    const cause = err.cause;
-    if (HttpClientError.isHttpClientError(cause) && cause.reason === 'StatusCode') {
-      const body = yield* cause.response.json.pipe(
-        Effect.flatMap(Schema.decodeUnknownEffect(AnthropicErrorResponse, { exact: false })),
+    const cause = err.reason;
+    if (cause._tag === 'UnknownError' && cause.http?.body !== undefined) {
+      const body = yield* Effect.succeed(JSON.parse(cause.http.body)).pipe(
+        Effect.flatMap(Schema.decodeUnknownEffect(AnthropicErrorResponse)),
       );
 
       const parsedCause = new AiModelError({
@@ -31,11 +31,13 @@ export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError>
         context: { model: 'anthropic', type: body.error.type },
       });
 
-      return AiError.UnknownError.make({
-        description: body.error.message,
+      return new AiError.AiError({
         module: err.module,
         method: err.method,
-        cause: parsedCause,
+        reason: new AiError.UnknownError({
+          description: body.error.message,
+          metadata: { type: body.error.type, cause: String(parsedCause) },
+        }),
       });
     }
     return err;
