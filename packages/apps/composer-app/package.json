@@ -89,6 +89,7 @@
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-iroh-beacon": "workspace:*",
+    "@dxos/plugin-jmap": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-library": "workspace:*",
     "@dxos/plugin-linear": "workspace:*",

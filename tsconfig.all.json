@@ -454,6 +454,9 @@
       "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-jmap/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {

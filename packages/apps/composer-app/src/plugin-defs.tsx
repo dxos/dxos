@@ -35,6 +35,7 @@ import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
 import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
+import { JmapPlugin } from '@dxos/plugin-jmap/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
 import { LibraryPlugin } from '@dxos/plugin-library/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
@@ -96,6 +97,8 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ReviewPlugin.meta.profile.key,
     FilePlugin.meta.profile.key,
     InboxPlugin.meta.profile.key,
+    // Mail providers for the Inbox: a mailbox is inert without one, so they default on with it.
+    JmapPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
@@ -175,6 +178,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     MagazinePlugin(),
     GamePlugin(),
     InboxPlugin(),
+    JmapPlugin(),
     KanbanPlugin(),
     LibraryPlugin(),
     MapPlugin(),

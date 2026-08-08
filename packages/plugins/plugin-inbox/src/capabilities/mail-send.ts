@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 
-import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
+import { GMAIL_CONNECTOR_ID } from '../constants';
 import { InboxCapabilities, InboxOperation } from '../types';
 
 /**
- * Send-operation routing for the built-in mail providers. Each entry moves to its own provider plugin
- * (`@dxos/plugin-google`, `@dxos/plugin-jmap`) when those are extracted; the composer resolves sends
- * through the capability, so that move leaves its consumer untouched.
+ * Send-operation routing for Gmail. Moves to `@dxos/plugin-google` when that is extracted, the way the
+ * JMAP entry already moved to `@dxos/plugin-jmap`; the composer resolves sends through the capability,
+ * so each move leaves its consumer untouched.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -20,10 +20,6 @@ export default Capability.makeModule(
       Capability.contributes(InboxCapabilities.MailSendOperation, {
         connectorId: GMAIL_CONNECTOR_ID,
         getOperation: () => InboxOperation.GmailSend,
-      }),
-      Capability.contributes(InboxCapabilities.MailSendOperation, {
-        connectorId: JMAP_MAIL_CONNECTOR_ID,
-        getOperation: () => InboxOperation.JmapSend,
       }),
     ];
   }),

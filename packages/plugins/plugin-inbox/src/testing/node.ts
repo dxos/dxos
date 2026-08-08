@@ -9,6 +9,4 @@
 // crash with `InboxPlugin.node.ts` too, not just the full `.tsx`). Node consumers get just the
 // provider fixtures plus the API contracts needed to build a faithful HTTP mock.
 export * from './gmail-fixtures';
-export * from './jmap-fixtures';
-export type { Jmap } from '../apis';
-export type { GmailDataset, JmapDataset } from '../services';
+export type { GmailDataset } from '../services';

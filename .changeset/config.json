@@ -262,6 +262,7 @@
       "@dxos/plugin-illustrator",
       "@dxos/plugin-inbox",
       "@dxos/plugin-iroh-beacon",
+      "@dxos/plugin-jmap",
       "@dxos/plugin-kanban",
       "@dxos/plugin-library",
       "@dxos/plugin-linear",

@@ -105,6 +105,11 @@
       "node": "./dist/lib/testing/node.mjs",
       "default": "./dist/lib/testing.mjs"
     },
+    "./testing/sync": {
+      "source": "./src/testing/sync-fixture.ts",
+      "types": "./dist/types/src/testing/sync-fixture.d.ts",
+      "import": "./dist/lib/testing/sync-fixture.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",

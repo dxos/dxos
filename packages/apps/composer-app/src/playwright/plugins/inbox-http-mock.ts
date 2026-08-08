@@ -2,13 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type GmailDataset,
-  type Jmap,
-  type JmapDataset,
-  generateGmailDataset,
-  generateJmapDataset,
-} from '@dxos/plugin-inbox/testing';
+import { type GmailDataset, generateGmailDataset } from '@dxos/plugin-inbox/testing';
+import { type Jmap, type JmapDataset, generateJmapDataset } from '@dxos/plugin-jmap/testing';
 
 // HTTP-level mock for the Gmail and JMAP provider APIs, driven by the same deterministic fixtures the
 // plugin-inbox unit suite uses. It answers the exact requests mailbox sync/send make, so a Playwright

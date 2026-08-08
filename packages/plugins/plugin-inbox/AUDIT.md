@@ -691,10 +691,31 @@ Each step is independently green (`moon run <pkg>:build`, `moon run <pkg>:test`,
 2. ✅ **Invert the two UI couplings in place** (§8e.2, §8e.3) — `MailSendOperation` capability +
    `types/MailSend.ts` contract, threaded through the containers; `useTags` de-Googled. Surfaced
    §8i. _(Done.)_
-3. **Extract `@dxos/plugin-jmap` first** (~2600 LOC, one domain, no OAuth) as the pilot:
-   scaffold from `plugin-trello`, move the tree, split `sync-fixture`, repoint composer-app /
-   CLI / story call sites. Everything learned here is reused verbatim by step 4.
-4. **Extract `@dxos/plugin-google`** (~6600 LOC, three domains) the same way.
+3. ✅ **Extract `@dxos/plugin-jmap`** (~4150 LOC moved, one domain, no OAuth) — scaffolded from
+   `plugin-trello`, tree moved with `git mv`, `sync-fixture` split, composer-app / CLI / http-mock
+   repointed. 65 tests moved with it (plugin-inbox 232 → 167, exactly the difference); the JMAP
+   Playwright spec passes against the extracted plugin (connect → sync → reply). **Six things step 4
+   inherits, four of them only findable by an integration run:**
+   - A new export subpath needs a **`vite.config.ts` entry**, not just a `package.json` entry. The
+     `source` condition makes dev and vitest work while `dist/lib/<name>.mjs` is never emitted — this
+     surfaced only in the Playwright run, as `Cannot find module .../dist/lib/sync.mjs`.
+   - A provider's `./testing` needs the **node-condition split** for the same reason plugin-inbox's
+     does: anything reaching `@dxos/compute` → `@dxos/ai` breaks Playwright's loader
+     (`parsimmon.regexp is not a function`). Fixtures in `testing/node.ts`, the sync runner only in
+     `testing/index.ts`.
+   - `testing/sync-fixture.ts` needed its **own export** (`@dxos/plugin-inbox/testing/sync`): the
+     provider's sync tests need `seedMailboxBinding`/`ambientSyncServices`, but `./testing`'s node
+     condition must stay free of `@dxos/compute`.
+   - `seedSenderOrganizations` was typed on `GmailDataset | JmapDataset`; the shared harness cannot
+     name a provider, so it now takes a **structural `SenderDataset`** that both satisfy.
+   - Exported test entry points need **explicit return types** (TS2883, "cannot be named without a
+     reference to …"), the same reason `runMailSync` writes its own out.
+   - `capabilities/operation-handler.ts` contributes `Capabilities.OperationHandler` (app-framework),
+     **not** `AppCapabilities.OperationHandler`.
+4. **Extract `@dxos/plugin-google`** (~6600 LOC, three domains) the same way, applying all six
+   findings above. Its `constants.ts` keeps `GMAIL_SOURCE = 'com.google.mail'` for messages while tags
+   carry `com.google.gmail` — deliberate asymmetry, see `Tag.md`; JMAP could collapse both onto one
+   `JMAP_DOMAIN` because its message source already _was_ the domain.
 5. **Sweep plugin-inbox** — delete `capabilities/connector.ts`, the provider errors and
    constants, the drained `services/` and `apis/` dirs, the stale `deploy-functions` moon
    task; audit for dead exports and orphaned translation keys.

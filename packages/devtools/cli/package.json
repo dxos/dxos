@@ -50,6 +50,7 @@
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-jmap": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

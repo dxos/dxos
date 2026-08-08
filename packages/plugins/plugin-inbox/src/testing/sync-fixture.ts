@@ -22,13 +22,14 @@ import { type RunMailSyncOptions, runMailSync } from '#sync';
 
 import { GMAIL_SOURCE } from '../constants';
 import { googleMailSyncProvider } from '../operations/mail/google/sync/sync-provider';
-import { jmapMailSyncProvider } from '../operations/mail/jmap/sync/sync-provider';
-import { type GmailDataset, GoogleCredentials, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
+import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '../services';
 import { Mailbox } from '../types';
 
-// Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded
-// with a mailbox binding, plus the ambient services `runGoogleSync`/`runJmapSync` require. Not exported
-// from `@dxos/plugin-inbox/testing` — it pulls app-framework/compute, so it stays a local test helper.
+// Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded with
+// a mailbox binding, plus the ambient services a provider's sync entry point requires. Published as
+// `@dxos/plugin-inbox/testing/sync` — a provider plugin's own sync tests build on it — but deliberately
+// NOT from `@dxos/plugin-inbox/testing`, whose `node` condition must stay free of `@dxos/compute`
+// (Playwright's loader; see `testing/node.ts`).
 
 /**
  * Test entry point for the Gmail sync — `runMailSync` with the Gmail provider layer, leaving the API
@@ -39,10 +40,6 @@ export const runGoogleSync = (options: RunMailSyncOptions) =>
     Effect.provide(googleMailSyncProvider({ userId: 'me', label: 'all' })),
     Effect.withSpan('google-sync'),
   );
-
-/** Test entry point for the JMAP sync — peer of {@link runGoogleSync}. */
-export const runJmapSync = (options: RunMailSyncOptions) =>
-  runMailSync(options).pipe(Effect.provide(jmapMailSyncProvider()), Effect.withSpan('jmap-sync'));
 
 /** The ECHO types the sync writes: messages, contacts, tags, tag index, connection + cursor. */
 export const SYNC_TEST_TYPES = [
@@ -99,10 +96,7 @@ export const seedMailboxBinding = async (
  * sync pipeline wiring contacts through call this so they exercise that wiring rather than the
  * extraction policy, which has its own tests in `@dxos/extractor-lib`.
  */
-export const seedSenderOrganizations = async (
-  db: Database.Database,
-  dataset: GmailDataset | JmapDataset,
-): Promise<void> => {
+export const seedSenderOrganizations = async (db: Database.Database, dataset: SenderDataset): Promise<void> => {
   const domains = new Set(senderDomainsOf(dataset));
   for (const domain of domains) {
     db.add(Organization.make({ name: domain, website: domain }));
@@ -110,14 +104,30 @@ export const seedSenderOrganizations = async (
   await db.flush({ indexes: true });
 };
 
+/**
+ * The shape {@link seedSenderOrganizations} reads, described structurally rather than as a union of the
+ * providers' dataset types: this harness is shared by every provider plugin and must not name any of
+ * them. Both `GmailDataset` (raw `payload.headers`) and `JmapDataset` (a structured `from` list) satisfy
+ * it, and a new provider's fixtures need only match one of the two branches.
+ */
+export type SenderDataset = {
+  readonly messages?: readonly {
+    readonly payload?: { readonly headers?: readonly { readonly name: string; readonly value: string }[] };
+  }[];
+  // `from` is nullable and optional in JMAP (RFC 8621 allows an email with no From).
+  readonly emails?: readonly { readonly from?: readonly { readonly email: string }[] | null }[];
+};
+
 /** Sender domains in a dataset — Gmail records the From header, JMAP a structured `from` list. */
-const senderDomainsOf = (dataset: GmailDataset | JmapDataset): string[] =>
+const senderDomainsOf = (dataset: SenderDataset): string[] =>
   [...(('messages' in dataset ? dataset.messages : dataset.emails) ?? [])]
     .map((message) => {
       const from =
         'payload' in message
           ? message.payload?.headers?.find((header) => header.name === 'From')?.value
-          : message.from?.[0]?.email;
+          : 'from' in message
+            ? message.from?.[0]?.email
+            : undefined;
       return from?.match(/[\w.+-]+@([\w.-]+)/)?.[1];
     })
     .filter((domain): domain is string => !!domain);
@@ -172,10 +182,3 @@ export const inboxSyncLiveServices = (db: Database.Database, connectionRef: Ref.
     ambientSyncServices(db),
   );
 };
-
-/** The ambient services `runJmapSync` requires, backed by a mock JMAP API + a real db. */
-export const inboxJmapSyncTestServices = (
-  db: Database.Database,
-  dataset: JmapDataset,
-  options?: { traceLayer?: Layer.Layer<Trace.TraceService> },
-) => Layer.mergeAll(JmapMailApi.mock(dataset), ambientSyncServices(db, options));

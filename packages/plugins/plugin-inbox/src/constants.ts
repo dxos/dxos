@@ -21,17 +21,12 @@ export const GOOGLE_CALENDAR_CONNECTOR_ID = 'google-calendar';
 /** `Connector.id` for Google Contacts OAuth / sync; stored as `Connection.connectorId`. */
 export const GOOGLE_CONTACTS_CONNECTOR_ID = 'google-contacts';
 
-/** `Connector.id` for the JMAP mail connector (RFC 8620/8621); stored as `Connection.connectorId`. */
-export const JMAP_MAIL_CONNECTOR_ID = 'jmap-mail';
-
 /**
- * Default JMAP server host pre-filled in the credential form. Fastmail is the canonical JMAP
- * provider; the session is discovered at `https://${host}/.well-known/jmap`.
+ * `Connector.id` for the JMAP mail connector, owned by `@dxos/plugin-jmap`. Duplicated here (rather
+ * than imported) because `types/Mailbox.ts` names its providers in `ConnectorAuthAnnotation` — the
+ * inversion AUDIT §3.1 tracks. Keep in step with that plugin's `JMAP_MAIL_CONNECTOR_ID`.
  */
-export const JMAP_DEFAULT_HOST = 'api.fastmail.com';
-
-/** Foreign-key `Meta.keys[].source` stamped on synced JMAP messages (dedup key; see jmap mapper). */
-export const JMAP_MESSAGE_SOURCE = 'org.ietf.jmap';
+export const JMAP_MAIL_CONNECTOR_ID = 'jmap-mail';
 
 export const POPOVER_SAVE_FILTER = DXN.make(`${meta.profile.key}.saveFilterPopover`);
 
