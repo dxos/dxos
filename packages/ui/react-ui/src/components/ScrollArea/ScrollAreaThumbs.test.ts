@@ -1,0 +1,39 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import { measure } from './ScrollAreaThumbs';
+
+// Viewport of 200 over content of 800, inset 10 at both ends: track 180, thumb 45, travel 135.
+// Sized so the proportional length clears MIN_THUMB, which the clamping case covers separately.
+const VIEWPORT = 200;
+const CONTENT = 800;
+const PADDING = 10;
+
+const at = (scrollOffset: number) => measure(scrollOffset, CONTENT, VIEWPORT, PADDING);
+
+describe('ScrollArea thumb geometry', () => {
+  test('hides the thumb when the content fits', ({ expect }) => {
+    expect(measure(0, VIEWPORT, VIEWPORT, PADDING).visible).toBe(false);
+    // Sub-pixel overflow is not worth a scrollbar.
+    expect(measure(0, VIEWPORT + 1, VIEWPORT, PADDING).visible).toBe(false);
+  });
+
+  test('scales the thumb to the visible fraction of the content', ({ expect }) => {
+    expect(at(0)).toEqual({ visible: true, offset: PADDING, length: 45 });
+  });
+
+  test('maps scroll offset onto the track, inset at both ends', ({ expect }) => {
+    // Fully scrolled: the thumb ends flush with the far inset rather than the viewport edge.
+    const end = at(CONTENT - VIEWPORT);
+    expect(end.offset + end.length).toBe(VIEWPORT - PADDING);
+    expect(at((CONTENT - VIEWPORT) / 2).offset).toBe(PADDING + 67.5);
+  });
+
+  test('never shrinks below the minimum grabbable length', ({ expect }) => {
+    const { length } = measure(0, 100_000, VIEWPORT, PADDING);
+    expect(length).toBe(24);
+  });
+});

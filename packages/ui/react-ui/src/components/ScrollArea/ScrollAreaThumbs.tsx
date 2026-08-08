@@ -23,7 +23,7 @@ const HIDDEN: ThumbGeometry = { visible: false, offset: 0, length: 0 };
 /**
  * Project scroll state onto a track of `viewportLength`, inset by `padding` at both ends.
  */
-const measure = (
+export const measure = (
   scrollOffset: number,
   scrollLength: number,
   viewportLength: number,

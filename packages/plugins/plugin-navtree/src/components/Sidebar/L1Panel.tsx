@@ -117,7 +117,7 @@ const L1PanelContent = ({
   return (
     <DensityProvider density='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
-      <ScrollArea.Root centered thin orientation='vertical'>
+      <ScrollArea.Root centered padding thin orientation='vertical'>
         <ScrollArea.Viewport>
           <Tree
             classNames='pt-[2px]'
