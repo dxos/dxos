@@ -273,9 +273,18 @@ export const isOption = (node: SchemaAST.AST): boolean =>
 export const isLiteralUnion = (node: SchemaAST.AST): node is SchemaAST.Union<SchemaAST.Literal> =>
   SchemaAST.isUnion(node) && node.types.length > 0 && node.types.every(SchemaAST.isLiteral);
 
-export const getLiteralValues = (schema: Schema.Top): ReadonlyArray<SchemaAST.LiteralValue> => {
+/**
+ * The literal values of a union of literals, or `[]` for any other schema.
+ *
+ * Narrowed to the schema's own type so `Schema.Union([Schema.Literal('a'), …])` yields `('a' | …)[]`
+ * rather than all of `LiteralValue` — callers key React lists by these. The AST erases the literal
+ * type, so re-attaching it here is the one place the two can be reconnected.
+ */
+export const getLiteralValues = <S extends Schema.Top>(
+  schema: S,
+): ReadonlyArray<S['Type'] & SchemaAST.LiteralValue> => {
   const ast = schema.ast;
-  return isLiteralUnion(ast) ? ast.types.map((node) => node.literal) : [];
+  return isLiteralUnion(ast) ? ast.types.map((node) => node.literal as S['Type'] & SchemaAST.LiteralValue) : [];
 };
 
 //

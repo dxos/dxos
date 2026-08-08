@@ -158,7 +158,7 @@ describe('getRootFormProperties', () => {
     expect,
   }) => {
     const kind = getRootFormProperties(Union.ast, { kind: 'feed' }).find((prop) => prop.name === 'kind');
-    expect(kind && SchemaEx.getLiteralValues(Schema.make(kind.type))).toEqual(['timer', 'feed']);
+    expect(kind && SchemaEx.getLiteralValues(Schema.make<Schema.Schema<string>>(kind.type))).toEqual(['timer', 'feed']);
   });
 
   test('falls back to the discriminator alone when no value selects a member', ({ expect }) => {

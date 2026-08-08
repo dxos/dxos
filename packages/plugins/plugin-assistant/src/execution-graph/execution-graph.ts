@@ -6,7 +6,6 @@ import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
-import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
@@ -203,9 +202,8 @@ type AgentRequestEndData = Schema.Schema.Type<typeof AgentRequestEnd.schema>;
  * Parses `AgentRequestEnd` payload, accepting legacy traces that omitted `status`.
  */
 const parseAgentRequestEnd = (data: unknown): AgentRequestEndData | undefined => {
-  const validated = Schema.validateEither(AgentRequestEnd.schema)(data);
-  if (Result.isSuccess(validated)) {
-    return validated.success;
+  if (Schema.is(AgentRequestEnd.schema)(data)) {
+    return data;
   }
   // Traces emitted before `status` was added wrote an empty object.
   if (data != null && typeof data === 'object' && Object.keys(data).length === 0) {
@@ -240,7 +238,7 @@ const presentAgentRequestEnd = (data: AgentRequestEndData): EventPresentation =>
 
 const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): EventPresentation | undefined => {
   if (Trace.isOfType(AgentRequestBegin, event)) {
-    if (Result.isFailure(Schema.validateEither(AgentRequestBegin.schema)(event.data))) {
+    if (!Schema.is(AgentRequestBegin.schema)(event.data)) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }
@@ -258,7 +256,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     return presentAgentRequestEnd(endData);
   }
   if (Trace.isOfType(CompleteBlock, event)) {
-    if (Result.isFailure(Schema.validateEither(CompleteBlock.schema)(event.data))) {
+    if (!Schema.is(CompleteBlock.schema)(event.data)) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }
@@ -318,7 +316,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     }
   }
   if (Trace.isOfType(Trace.OperationStart, event)) {
-    if (Result.isFailure(Schema.validateEither(Trace.OperationStart.schema)(event.data))) {
+    if (!Schema.is(Trace.OperationStart.schema)(event.data)) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }
@@ -330,7 +328,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     };
   }
   if (Trace.isOfType(Trace.OperationEnd, event)) {
-    if (Result.isFailure(Schema.validateEither(Trace.OperationEnd.schema)(event.data))) {
+    if (!Schema.is(Trace.OperationEnd.schema)(event.data)) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }

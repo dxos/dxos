@@ -180,10 +180,11 @@ export default Capability.makeModule(
       return false;
     });
 
-    const schedule = Schedule.fixed(Duration.hours(1)).pipe(
-      Schedule.whileInput((keepChecking: boolean) => keepChecking),
+    // v4 moved the output predicate off the schedule and onto `repeat`.
+    const fiber = yield* backgroundAction.pipe(
+      Effect.repeat({ schedule: Schedule.fixed(Duration.hours(1)), while: (keepChecking) => keepChecking }),
+      Effect.forkDetach,
     );
-    const fiber = yield* backgroundAction.pipe(Effect.repeat(schedule), Effect.forkDetach);
     log.info('updater module initialized, update check scheduled');
 
     // Fiber.interrupt is async and would throw AsyncFiberException if wrapped in Effect.runSync,

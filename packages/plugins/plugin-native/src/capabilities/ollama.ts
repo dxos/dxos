@@ -41,9 +41,7 @@ export default Capability.makeModule(
     const runtime = ManagedRuntime.make(OllamaSidecar.layerLive);
 
     // Layer for the sidecar but the lifecycle is managed by the runtime.
-    const sidecarLayer = Layer.effectContext(
-      runtime.contextEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(OllamaSidecar)))),
-    );
+    const sidecarLayer = Layer.effectContext(runtime.contextEffect.pipe(Effect.map(Context.pick(OllamaSidecar))));
 
     const admin = OllamaAdmin.make({ endpoint: OLLAMA_HOST });
     const stateAtom = Atom.make<Ollama.ModelsState>({
@@ -98,7 +96,7 @@ export default Capability.makeModule(
     const runAdmin = <A, E extends { readonly message: string }>(
       effect: Effect.Effect<A, E, HttpClient.HttpClient>,
     ): Effect.Effect<Result.Result<A, string>> =>
-      effect.pipe(Effect.provide(clientLayer), Effect.result, Effect.map(Result.mapLeft((error) => error.message)));
+      effect.pipe(Effect.provide(clientLayer), Effect.result, Effect.map(Result.mapError((error) => error.message)));
 
     // In-flight pull fibers, so a pull can be cancelled via interruption.
     const pullFibers = new Map<string, Fiber.Fiber<void>>();

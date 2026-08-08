@@ -121,13 +121,19 @@ const QUOTA_PATTERN = /\b429\b|rate.?limit|too many requests|usage quota|quota e
 /** Whether an error denotes an over-quota (HTTP 429) rejection, detected by typed status or message text. */
 const isQuotaError = (err: unknown): boolean => {
   if (AiError.isAiError(err)) {
-    if (err._tag === 'HttpResponseError' && err.response.status === 429) {
+    // v4 classifies the failure semantically on `reason` rather than by status; these are the two
+    // shapes a 429 arrives as.
+    if (err.reason._tag === 'RateLimitError' || err.reason._tag === 'QuotaExhaustedError') {
       return true;
     }
-    return QUOTA_PATTERN.test(err.description ?? err.message);
+    return QUOTA_PATTERN.test(describeAiError(err));
   }
   return typeof err === 'string' && QUOTA_PATTERN.test(err);
 };
+
+/** `description` is declared on only some reason variants; the wrapper's `message` is the fallback. */
+const describeAiError = (err: AiError.AiError): string =>
+  ('description' in err.reason ? err.reason.description : undefined) ?? err.message;
 
 /**
  * Maps a failure from the agent fiber to an error suitable for display.
@@ -147,7 +153,7 @@ export const parseError = (err: unknown): Error => {
 
   let message: string | undefined;
   if (AiError.isAiError(err)) {
-    message = err.description?.trim() || err.message;
+    message = describeAiError(err).trim();
   } else if (typeof err === 'string') {
     // TODO(burdon): This is brittle.
     // UnknownError: ChatCompletionsClient.streamText: model 'gemma3:27b' not found

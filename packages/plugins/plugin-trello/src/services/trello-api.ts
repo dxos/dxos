@@ -200,14 +200,12 @@ const shouldRetry = (
   if (Cause.isTimeoutError(error)) {
     return true;
   }
-  if (error._tag === 'RequestError') {
+  // v4 hangs the specific failure off `HttpClientError.reason`: a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (error.reason._tag !== 'StatusCodeError') {
     return true;
   }
-  // ResponseError: only retry transient response failures.
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
+  const status = error.reason.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
 

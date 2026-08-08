@@ -104,7 +104,7 @@ const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
     developmentTime: S.optional(S.String.pipe(S.annotate({ title: 'Dev Time' }))),
     dropTemp: S.optional(S.Number.pipe(S.annotate({ title: 'Drop (°C)' }))),
     roastLevel: S.optional(S.String.pipe(S.annotate({ title: 'Roast Level' }))),
-    status: S.Literal('planned', 'roasted', 'cupped', 'approved').pipe(
+    status: S.Literals(['planned', 'roasted', 'cupped', 'approved']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       S.annotate({
         title: 'Status',

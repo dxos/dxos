@@ -49,7 +49,7 @@ export type FieldPublishFlag = {
 
 /**
  * The visibility annotation set anywhere on a property's type, if any. Optional fields wrap the value
- * type in a `Union(X, undefined)` — and refinements/transforms nest it further — so an annotation
+ * type in a `Union(X, undefined)` — and transformations nest it further — so an annotation
  * applied to the value schema before `Schema.optional` sits below `property.type`, not on it. Search
  * through those wrappers so annotations on optional fields are recognized.
  */
@@ -66,16 +66,16 @@ const ownVisibility = (ast: SchemaAST.AST): AtprotoVisibility | undefined => {
       }
     }
   }
-  if (SchemaAST.isRefinement(ast)) {
-    return ownVisibility(ast.from);
-  }
+  // v4 folds refinements into checks on the node itself, so the encoded side is the only wrapper
+  // left to look through.
   if (SchemaAST.isTransformation(ast)) {
-    return ownVisibility(ast.to) ?? ownVisibility(ast.from);
+    const encoded = SchemaAST.toEncoded(ast);
+    return encoded === ast ? undefined : ownVisibility(encoded);
   }
   return undefined;
 };
 
-/** Unwrap an optional/refined/transformed struct field to its `TypeLiteral`, if it is one. */
+/** Unwrap an optional/transformed struct field to its `TypeLiteral`, if it is one. */
 const asStruct = (ast: SchemaAST.AST): SchemaAST.TypeLiteral | undefined => {
   if (SchemaAST.isTypeLiteral(ast)) {
     return ast;
@@ -88,11 +88,9 @@ const asStruct = (ast: SchemaAST.AST): SchemaAST.TypeLiteral | undefined => {
       }
     }
   }
-  if (SchemaAST.isRefinement(ast)) {
-    return asStruct(ast.from);
-  }
   if (SchemaAST.isTransformation(ast)) {
-    return asStruct(ast.to);
+    const encoded = SchemaAST.toEncoded(ast);
+    return encoded === ast ? undefined : asStruct(encoded);
   }
   return undefined;
 };

@@ -158,7 +158,7 @@ const ListRecordsResponse = Schema.Struct({
 
 const rkeyFromUri = (uri: string): string => uri.slice(uri.lastIndexOf('/') + 1);
 
-const getJson = <A>(client: HttpClient.HttpClient, url: string, schema: Schema.Schema<A>) =>
+const getJson = <A>(client: HttpClient.HttpClient, url: string, schema: Schema.Codec<A>) =>
   client.execute(HttpClientRequest.get(url)).pipe(
     Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema))),
     Effect.scoped,
@@ -233,7 +233,7 @@ const proxyWrite = <A>(
   creds: Credentials,
   nsid: string,
   body: Record<string, unknown>,
-  schema: Schema.Schema<A>,
+  schema: Schema.Codec<A>,
 ): Effect.Effect<A, AtprotoRepoError> => {
   const endpoint = `${creds.pdsBaseUrl.replace(/\/$/, '')}/xrpc/${nsid}`;
   const proxyUrl = new URL('/atproto/proxy', creds.edgeBaseUrl).toString();

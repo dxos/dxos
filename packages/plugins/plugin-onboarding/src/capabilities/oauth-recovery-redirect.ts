@@ -87,12 +87,12 @@ const deleteSnapshot = (accessTokenId: string | undefined): void => {
 };
 
 /**
- * `Effect.tryPromise` wraps a rejected promise in `UnknownException`, whose own `.message` is a
- * generic boilerplate string ("An unknown error occurred in Effect.tryPromise") — the real cause
- * lives in its `.error` property, so unwrap it before logging or it is silently lost.
+ * `Effect.tryPromise` wraps a rejected promise in `UnknownError`, whose own `.message` is a
+ * generic boilerplate string — the real cause lives in its `.cause` property, so unwrap it before
+ * logging or it is silently lost.
  */
 const describeError = (error: unknown): string => {
-  const cause = Cause.isUnknownError(error) ? error.error : error;
+  const cause = Cause.isUnknownError(error) ? error.cause : error;
   return cause instanceof Error ? cause.message : String(cause);
 };
 

@@ -39,7 +39,7 @@ export const FlightSearchQuery = FlightSearchFields.pipe(Schema.fieldsAssign(Sch
 export interface FlightSearchQuery extends Schema.Schema.Type<typeof FlightSearchQuery> {}
 
 /** Discriminated union of all query kinds. Today only `flight` is populated. */
-export const SearchQuery = Schema.Union(FlightSearchQuery);
+export const SearchQuery = Schema.Union([FlightSearchQuery]);
 export type SearchQuery = Schema.Schema.Type<typeof SearchQuery>;
 
 /** A single leg within an offer. */
@@ -70,7 +70,7 @@ export const FlightOffer = Schema.TaggedStruct('flight', {
 export interface FlightOffer extends Schema.Schema.Type<typeof FlightOffer> {}
 
 /** Discriminated union of all offer kinds. Today only `flight` is populated. */
-export const Offer = Schema.Union(FlightOffer);
+export const Offer = Schema.Union([FlightOffer]);
 export type Offer = Schema.Schema.Type<typeof Offer>;
 
 /**

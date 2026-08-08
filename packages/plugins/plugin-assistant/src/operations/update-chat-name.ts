@@ -46,7 +46,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
             system,
             cacheControl: 'ephemeral',
           });
-          namePrompt = Prompt.merge(historyPrompt, 'Suggest a name for this chat');
+          namePrompt = Prompt.concat(historyPrompt, 'Suggest a name for this chat');
         }
 
         const response = yield* LanguageModel.generateText({ prompt: namePrompt });

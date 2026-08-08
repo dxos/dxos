@@ -31,11 +31,10 @@ export default Capability.makeModule(
 
     const aiServiceMiddleware = options?.aiServiceMiddleware;
     if (aiServiceMiddleware) {
-      aiServiceLayer = aiServiceLayer.pipe(
-        Layer.map((context) => {
-          const aiService = Context.get(context, AiService.AiService);
-          return Context.make(AiService.AiService, aiServiceMiddleware(aiService));
-        }),
+      // Rebuilt rather than mapped in place: reading the service back out of its own layer would
+      // add `AiService` to the layer's own requirements.
+      aiServiceLayer = Layer.effect(AiService.AiService, Effect.map(AiService.AiService, aiServiceMiddleware)).pipe(
+        Layer.provide(aiServiceLayer),
       );
     }
 
