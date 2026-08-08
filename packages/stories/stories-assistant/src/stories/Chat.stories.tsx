@@ -312,6 +312,14 @@ export const WithSubAgentsTest2: Story = {
         turns: [{ parts: [text('Delegation Demo')] }],
       },
       {
+        // The delegated item is open when the supervisor finishes — the sub-agent owns closing it —
+        // so the planning skill's end-request reminder consults the model. Without its own route it
+        // falls through to the supervisor fallback and exhausts that script.
+        name: 'plan-reminder',
+        match: promptIncludes('whether an agent should stop or continue'),
+        turns: [{ parts: [text('stop')] }],
+      },
+      {
         name: 'supervisor',
         match: () => true,
         turns: [
