@@ -132,12 +132,7 @@ const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...pr
   };
 
   return (
-    <Comp
-      {...rest}
-      style={vars}
-      className={tx('scrollArea.viewport', options, className)}
-      ref={ref}
-    >
+    <Comp {...rest} style={vars} className={tx('scrollArea.viewport', options, className)} ref={ref}>
       {children}
     </Comp>
   );
