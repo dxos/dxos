@@ -289,15 +289,18 @@ export class ComputeGraphController extends Resource {
             ),
             Effect.flatMap(computeValueBag),
             Effect.withSpan('test'),
-            Effect.tap((values) => {
-              for (const [key, value] of Object.entries(values)) {
-                if (computingOutputs) {
-                  this._onOutputComputed(nodeId, key, value);
-                } else {
-                  this._onInputComputed(nodeId, key, value);
+            // v4's `tap` requires the callback to return an `Effect`.
+            Effect.tap((values) =>
+              Effect.sync(() => {
+                for (const [key, value] of Object.entries(values)) {
+                  if (computingOutputs) {
+                    this._onOutputComputed(nodeId, key, value);
+                  } else {
+                    this._onInputComputed(nodeId, key, value);
+                  }
                 }
-              }
-            }),
+              }),
+            ),
           );
 
           yield* effect;
@@ -357,15 +360,17 @@ export class ComputeGraphController extends Resource {
               ),
 
               Effect.withSpan('test'),
-              Effect.tap((values) => {
-                for (const [key, value] of Object.entries(values)) {
-                  if (computingOutputs) {
-                    this._onOutputComputed(node, key, value);
-                  } else {
-                    this._onInputComputed(node, key, value);
+              Effect.tap((values) =>
+                Effect.sync(() => {
+                  for (const [key, value] of Object.entries(values)) {
+                    if (computingOutputs) {
+                      this._onOutputComputed(node, key, value);
+                    } else {
+                      this._onInputComputed(node, key, value);
+                    }
                   }
-                }
-              }),
+                }),
+              ),
             );
 
             tasks.push(effect);
