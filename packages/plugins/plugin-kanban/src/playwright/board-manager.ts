@@ -4,18 +4,17 @@
 
 import { BoardManager as MosaicBoardManager } from '@dxos/react-ui-mosaic/playwright';
 
-/** Story render budget, over the preset's 30s `actionTimeout` but inside this suite's test timeout. */
-const READY_TIMEOUT = 90_000;
+/** Story render budget: passing boots paint in ~10-25s on every browser; see the note below. */
+const READY_TIMEOUT = 45_000;
 
 export class BoardManager extends MosaicBoardManager {
   async waitUntilReady(): Promise<void> {
-    // Explicit budget rather than the inherited `actionTimeout`: this waits on the story's first
-    // paint, which the config extends `timeout` for ("Stories are slow to start up"), and the two
-    // waits disagreeing is what surfaced. Webkit has now hit the ceiling at each value it was given —
-    // 30s in run 31140999737 (with `workers: 1`, so not worker contention) and 45s in 31146208557 —
-    // while every other browser paints in a fraction of it. Since each failure is exactly the budget,
-    // the evidence only ever says "at least this long"; 90s is high enough that a further failure
-    // means the story is stuck rather than slow, which is the distinction worth buying.
+    // The webkit "slow boot" failures this wait kept absorbing were never slowness: `storybook dev`
+    // module graphs evaluate in arrival order, and the losing order entered an import cycle
+    // mid-evaluation (`ReferenceError: Cannot access 'makeSpaceService' before initialization`),
+    // which storybook's error boundary swallows into an eternally "preparing" story. The
+    // `.storybook/preview.mts` preload pins the cycle's entry point, so a boot that misses this
+    // budget is genuinely stuck, not racing.
     await this.columns().first().waitFor({ state: 'visible', timeout: READY_TIMEOUT });
     await this.columns().nth(2).waitFor({ state: 'visible', timeout: READY_TIMEOUT });
     await this.column(1).items().first().waitFor({ state: 'visible', timeout: READY_TIMEOUT });

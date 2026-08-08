@@ -11401,6 +11401,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo-adapter-client':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-adapter-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
