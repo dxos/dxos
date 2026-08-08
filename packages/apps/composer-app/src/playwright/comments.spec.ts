@@ -108,7 +108,20 @@ test.describe('Comments tests', () => {
   //   thread when getSource throws) was implemented and measured 2/5 — the detach loop persists
   //   even when anchors cannot drop, and one run saw the message list resolve to 0 elements — so
   //   the component-level avenue is exhausted; do not retry it.
-  test.fixme('delete message', async () => {
+  // RESOLVED(wittjosiah): The operations-layer race, timed. Each nested `Operation.invoke` spawns a
+  // full process (~0.5-1.5s of pure ProcessManager/Effect-fiber scheduling per hop, no worker RPC
+  // involved), so the first message's persist (`AddObject` then `AddRelation`, sequential) took over
+  // 2s end to end. A reply typed during that window read the *same* still-listed draft entry — the
+  // first call only clears it after its own persist finishes — so the second `AddMessage` also saw
+  // `draft` truthy and re-ran the persist branch: a second `AddObject`/`AddRelation` pair for the same
+  // anchor, which then lost the `claimed` race and rolled itself back via `db.remove(relation)` +
+  // `db.remove(thread)` — deleting the very thread the first call (and the user's own messages)
+  // depended on. That is the "no echo fingerprint" render storm and the transient/zero-element anchor
+  // drop: real relation churn from a duplicate persist-then-rollback, not a query dedup gap. Fixed in
+  // `add-message.ts` by gating the persist branch on whether `thread` already has a database
+  // association (set by the first call's `AddObject`), not on the draft entry alone. 5/5 on webkit
+  // `--repeat-each=5`.
+  test('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
