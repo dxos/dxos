@@ -33,16 +33,16 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Deferred, and the stall is UPSTREAM of the join UI. DOM of a failing run
-  //   (1 in 6 serialized, 2026-08-08): the guest is still on the account/devices plank with no
-  //   shell dialog present at all — so `client.reset()` + the `onReset` reload never completed and
-  //   `JoinPanel` never mounted. `localStorage.clear()` runs in the same `onReset` callback as the
-  //   navigation, and the restored devices plank proves that callback did not run. Suspect
-  //   `client.reset()` hanging (or rejecting) after `join-new-identity.reset-identity-confirm`.
-  //   Two real UI defects were found and fixed while chasing this, neither sufficient: the
-  //   `OnboardingManager` welcome/join dialog race, and `JoinPanel` stranding in the exit-less
-  //   `resettingIdentity` state when a reset settles after mount. Next: instrument
-  //   `ResetDialog.handleReset` around `client.reset()` to see whether it resolves.
+  // TODO(wittjosiah): Deferred on a located defect: the reset confirm button is clickable before
+  //   its handler is wired. Instrumented `ResetDialog.handleReset` (probe verified present in the
+  //   e2e bundle) and a failing run logged NOTHING from it — so the click on
+  //   `join-new-identity.reset-identity-confirm` registers but `handleReset` never runs, which is
+  //   why the guest stays on the account/devices plank with no dialog and
+  //   `halo-invitation-input` never appears (1 in 6 serialized). Fix in the dialog: don't present
+  //   the confirm action until its handler is attached (or make the operation-driven dialog mount
+  //   atomically), then re-enable. Two adjacent defects were found and fixed while chasing this —
+  //   the `OnboardingManager` welcome/join dialog race and `JoinPanel` stranding in the exit-less
+  //   `resettingIdentity` state — neither is this one.
   test.fixme('join new identity', async () => {
     test.setTimeout(90_000);
 
