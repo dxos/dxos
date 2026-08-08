@@ -94,8 +94,9 @@ export const Spec: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Wait for the form to render.
-    await canvas.findByTestId('edit-email-form');
+    // Identity/space seeding gates the first render, which routinely exceeds testing-library's
+    // default 1s bound on a loaded runner.
+    await canvas.findByTestId('edit-email-form', undefined, { timeout: 12_000 });
 
     // Subject is a plain input (the To/Cc/Bcc fields are CodeMirror recipient editors).
     const subjectInput = canvas.getByLabelText('Subject');

@@ -12,6 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Project from '@dxos/compute/Project';
@@ -135,6 +136,9 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
   withTheme(),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
+    // Skill-definition modules ride the assistant's start event, and nothing here opens assistant UI
+    // or materializes a toolkit — without firing it the article's skill rows resolve to blank labels.
+    setupEvents: [AppActivationEvents.AssistantStart],
     plugins: [
       ...corePlugins(),
       ClientPlugin({

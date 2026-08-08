@@ -53,6 +53,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
@@ -202,11 +203,7 @@ const buildPluginManagerOptions = ({
               return;
             }
 
-            yield* Effect.promise(() => client.halo.createIdentity());
-
-            // Object-scoped actions (e.g. the comment toolbar) resolve a default space, so stories
-            // bootstrap the same pair of spaces the app creates on first run.
-            const { defaultSpace: space } = yield* AppSpace.setupIdentitySpaces(client);
+            const { defaultSpace: space } = yield* initializeIdentity(client);
 
             // Add tokens.
             for (const accessToken of accessTokens) {
@@ -488,8 +485,6 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capabilities.OperationInvoker;
       const client = yield* ClientCapabilities.Client;
-      // Not `spaces.get()[0]`: the settings space is created first, and story content belongs in
-      // the default space.
       const space = AppSpace.getDefaultSpace(client) ?? client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 

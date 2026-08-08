@@ -117,19 +117,22 @@ export const getDefaultSpace = (client: SpaceResolver): Space | undefined => {
  * Both are locked at genesis: the settings space holds configuration that must never be shared,
  * and the first space is private until the user decides otherwise. Both replicate through EDGE so
  * they follow the identity across devices.
+ *
+ * The content space is created first so it, not the internal settings space, is the first entry
+ * returned by `client.spaces.get()`.
  */
 export const setupIdentitySpaces = Effect.fnUntraced(function* (client: Client) {
-  const settingsSpace = yield* Effect.promise(() =>
-    client.spaces.create({}, { tags: [SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
-  );
-  yield* Effect.promise(() => settingsSpace.waitUntilReady());
-  yield* Effect.promise(() => settingsSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-
   const defaultSpace = yield* Effect.promise(() =>
     client.spaces.create({ name: DEFAULT_SPACE_NAME }, { membershipPolicy: MembershipPolicy.LOCKED }),
   );
   yield* Effect.promise(() => defaultSpace.waitUntilReady());
   yield* Effect.promise(() => defaultSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+
+  const settingsSpace = yield* Effect.promise(() =>
+    client.spaces.create({}, { tags: [SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+  );
+  yield* Effect.promise(() => settingsSpace.waitUntilReady());
+  yield* Effect.promise(() => settingsSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
 
   setDefaultSpaceId(settingsSpace, defaultSpace.id);
 
