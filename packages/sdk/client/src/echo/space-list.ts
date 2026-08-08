@@ -332,6 +332,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._serviceProvider.rpc['SpacesService.joinBySpaceKey']({ spaceKey }),
       { label: 'SpacesService.joinBySpaceKey' },
     );
+    // The proxy appears via the `querySpaces` stream, not the call's own response, so the two race —
+    // same wait `createSpace` and `import` do before resolving their proxy.
+    await this._spaceCreated.waitForCondition(() => {
+      return this.get().some(({ key }) => key.equals(response.space.spaceKey));
+    });
     return this._findProxy(response.space);
   }
 

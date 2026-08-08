@@ -197,25 +197,18 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
       (every method derived by `makeServicesFromRpc` was `undefined`); and `app-framework`'s
       per-role surface subscription lost its equality when `Data.array` was dropped, so one
       contribution re-rendered every Surface.
-- [x] **Close out the node test tail** — every failure chased to a root cause, all of them real:
-      - `app-framework`: a scoped dependency pass returned before its loads settled; a wave
-        re-loaded a module its plugin had just auto-disabled; `enable` and `disable` raced on the
-        same plugin, leaving it enabled with no modules.
-      - `compute-runtime`: `Scope.close` never settles when it interrupts a joined fiber from
-        inside that fiber's own run loop, which is exactly where a handler that wakes its caller
-        inline puts `suspend`.
-      - `@dxos/effect`: `SchemaAST.resolve` reads only the LAST check's annotations, so an
-        annotation set before a `Schema.check` vanished (plugin-ibkr lost a field mapping).
-      - `echo-client`: v4 hashes an unmarked object structurally, so `Atom.family(db)` walked the
-        whole entity graph and threw; `DatabaseImpl` is now marked by-reference.
-      - `cli`: `Command.runWith` takes the arguments, not raw argv; root flags must be
-        `withSharedFlags` to parse before a subcommand; `Command.provide` wraps only the handler it
-        is applied to, so it must come AFTER `withSubcommands` (or the service must be ambient).
-      - `assistant-toolkit`: `Schema.Void` now serializes to `{ type: 'null' }`, so the
-        undeclared-output check missed and `completeJob` rejected every real payload.
-      - Test-side: `FetchHttpClient.Fetch` caches `globalThis.fetch` for the life of the process
-        (new `TestHelpers.withStubbedFetch`); v4 does not memoize a layer across `Effect.provide`
-        calls (`Layer.build` + provide the context instead).
+- [x] **Close out the node test tail** — every failure chased to a root cause, all of them real: - `app-framework`: a scoped dependency pass returned before its loads settled; a wave
+      re-loaded a module its plugin had just auto-disabled; `enable` and `disable` raced on the
+      same plugin, leaving it enabled with no modules. - `compute-runtime`: `Scope.close` never settles when it interrupts a joined fiber from
+      inside that fiber's own run loop, which is exactly where a handler that wakes its caller
+      inline puts `suspend`. - `@dxos/effect`: `SchemaAST.resolve` reads only the LAST check's annotations, so an
+      annotation set before a `Schema.check` vanished (plugin-ibkr lost a field mapping). - `echo-client`: v4 hashes an unmarked object structurally, so `Atom.family(db)` walked the
+      whole entity graph and threw; `DatabaseImpl` is now marked by-reference. - `cli`: `Command.runWith` takes the arguments, not raw argv; root flags must be
+      `withSharedFlags` to parse before a subcommand; `Command.provide` wraps only the handler it
+      is applied to, so it must come AFTER `withSubcommands` (or the service must be ambient). - `assistant-toolkit`: `Schema.Void` now serializes to `{ type: 'null' }`, so the
+      undeclared-output check missed and `completeJob` rejected every real payload. - Test-side: `FetchHttpClient.Fetch` caches `globalThis.fetch` for the life of the process
+      (new `TestHelpers.withStubbedFetch`); v4 does not memoize a layer across `Effect.provide`
+      calls (`Layer.build` + provide the context instead).
 - [ ] **Close out the storybook/browser tail** — browser and workerd suites pass; the browser CLI
       host (`react-ui-terminal`, `plugin-devtools/CliPanel`) landed from main after the branch cut
       and needed porting off `@effect/cli`/`@effect/platform`. Form validation now runs against the
