@@ -216,6 +216,17 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
       failure). This branch's diff to `plugin-review`/`ui-editor`/`versioning` is mechanical renames.
       Not A/B-able locally: branch switching is off-limits and the sandbox runs a symlinked Chromium
       revision, so browser-tier timing differs from CI.
+  - Narrowing for whoever picks this up: `tableCellEditScenario` drives the SAME
+    `expect-clean-insert` step and PASSES, so neither the step nor the overlay pipeline is broken
+    outright. What separates the two failures from every passing scenario is that both change more
+    than one point: `boldWrap` types `**` at two positions that must MERGE into one hunk, and
+    `tableSuggest` types a multi-line block. Both also pass their earlier `expect-own-branch` step,
+    so the edit reaches the branch — only the overlay is empty. Suspect hunk merging/splitting at
+    the overlay boundary rather than the diff or the codec.
+  - `SuggestionWidget.toDOM` returns an element with NO `.cm-suggest-insert` child when the
+    proposal's text is newline-only (`core.length === 0`) — a plausible way to render "zero
+    widgets" that is worth eliminating first, though neither scenario's proposal looks newline-only
+    on paper.
 - [x] **Close out the storybook/browser tail** — browser and workerd suites pass; the browser CLI
       host (`react-ui-terminal`, `plugin-devtools/CliPanel`) landed from main after the branch cut
       and needed porting off `@effect/cli`/`@effect/platform`. Form validation now runs against the
