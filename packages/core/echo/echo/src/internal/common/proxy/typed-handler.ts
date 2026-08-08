@@ -38,7 +38,7 @@ import {
   symbolReactivePrototype,
 } from './proxy-utils';
 import { ReactiveArray } from './reactive-array';
-import { SchemaValidator } from './schema-validator';
+import { SchemaValidator, assertsWithDetail } from './schema-validator';
 import { ChangeId, EventId } from './symbols';
 
 // Re-export for external consumers.
@@ -571,7 +571,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Clearing an optional property is admitted here rather than by the property's own schema: v4
     // keeps optionality on the property's context instead of widening its type to `T | undefined`.
     if (value !== undefined || !SchemaValidator.isOptionalProperty(target, prop)) {
-      Schema.asserts(schema, value);
+      assertsWithDetail(schema, value);
     }
     SchemaValidator.assertExactProperties(schema, value, (path) => getDeep(value, path));
     if (isValidProxyTarget(value)) {
@@ -697,7 +697,7 @@ export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T>
   }
 
   SchemaValidator.validateSchema(schema);
-  Schema.asserts(schema, target);
+  assertsWithDetail(schema, target);
   SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path));
   makeArraysReactive(target);
 };

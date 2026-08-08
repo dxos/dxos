@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaIssue from 'effect/SchemaIssue';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -10,6 +11,32 @@ import { invariant } from '@dxos/invariant';
 import { SchemaId } from '../types';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
+
+/** Formats v4 schema issues; the thrown validation error carries the issue as its `cause`. */
+const formatIssue = SchemaIssue.makeFormatterStandardSchemaV1();
+
+/**
+ * Asserts a value against a schema, naming the offending field.
+ *
+ * v4's `Schema.asserts` throws the fixed message "Schema validation failed" and puts the detail on
+ * the error's `cause`, which leaves nothing actionable in a stack trace or a UI toast.
+ */
+export const assertsWithDetail = (schema: Schema.Top, value: unknown): void => {
+  try {
+    Schema.asserts(schema, value);
+  } catch (err) {
+    const issue = err instanceof Error ? err.cause : undefined;
+    if (!SchemaIssue.isIssue(issue)) {
+      throw err;
+    }
+    const detail = formatIssue(issue)
+      .issues.map(({ message, path }) => (path && path.length > 0 ? `${path.join('.')}: ${message}` : message))
+      .join('; ');
+    throw new Error(detail.length > 0 ? `Schema validation failed — ${detail}` : 'Schema validation failed', {
+      cause: issue,
+    });
+  }
+};
 
 export class SchemaValidator {
   /**
