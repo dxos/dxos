@@ -32,6 +32,11 @@ describe('ScrollArea thumb geometry', () => {
     expect(at((CONTENT - VIEWPORT) / 2).offset).toBe(PADDING + 67.5);
   });
 
+  test('hides the thumb when the track cannot seat the minimum length', ({ expect }) => {
+    // Track of 10 (30 - 2 x 10) is shorter than MIN_THUMB, which would overhang the far edge.
+    expect(measure(0, CONTENT, 30, PADDING).visible).toBe(false);
+  });
+
   test('never shrinks below the minimum grabbable length', ({ expect }) => {
     const { length } = measure(0, 100_000, VIEWPORT, PADDING);
     expect(length).toBe(24);

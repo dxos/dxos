@@ -22,6 +22,8 @@ export type ScrollAreaStyleProps = {
   snap?: boolean;
   /** Use the native scrollbar, which reserves layout width, instead of an overlay thumb. */
   native?: boolean;
+  /** Show a scrollbar at all. */
+  scrollbars?: boolean;
 };
 
 const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, native }, ...etc) =>
@@ -49,7 +51,7 @@ const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, native }, 
  * NOTE: The browser reserves space for scrollbars.
  */
 const viewport: ComponentFunction<ScrollAreaStyleProps> = (
-  { orientation, centered, padding, snap, autoHide, native },
+  { orientation, centered, padding, snap, autoHide, native, scrollbars = true },
   ...etc
 ) => {
   return mx(
@@ -64,8 +66,9 @@ const viewport: ComponentFunction<ScrollAreaStyleProps> = (
     orientation === 'all' && 'overflow-scroll',
 
     // A styled `::-webkit-scrollbar` is always a classic scrollbar and so consumes layout width;
-    // overlay mode removes it entirely and paints the thumb over the content instead.
-    !native
+    // overlay mode removes it entirely and paints the thumb over the content instead. Zeroing
+    // `--scroll-width` is not enough to suppress it: Firefox needs `scrollbar-width` explicitly.
+    !native || !scrollbars
       ? ['[scrollbar-width:none]', '[&::-webkit-scrollbar]:hidden']
       : [
           '[&::-webkit-scrollbar-corner]:bg-transparent',

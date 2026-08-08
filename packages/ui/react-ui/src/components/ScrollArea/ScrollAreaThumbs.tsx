@@ -35,7 +35,12 @@ export const measure = (
   }
 
   const track = viewportLength - padding * 2;
-  const length = Math.max(MIN_THUMB, (viewportLength / scrollLength) * track);
+  // A viewport too short to seat the minimum thumb would otherwise place it past the far edge.
+  if (track <= MIN_THUMB) {
+    return HIDDEN;
+  }
+
+  const length = Math.min(track, Math.max(MIN_THUMB, (viewportLength / scrollLength) * track));
   const offset = padding + (scrollOffset / overflow) * (track - length);
   return { visible: true, offset, length };
 };
@@ -142,8 +147,13 @@ export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: S
     [viewport, density.padding],
   );
 
+  // Also bound to pointercancel and lostpointercapture: without them an interrupted drag leaves
+  // `drag` set, and the next hover-move over the thumb would scroll with no button held.
   const handlePointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
     drag.current = undefined;
     setDragging(undefined);
   }, []);
@@ -180,6 +190,8 @@ export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: S
           onPointerDown={handlePointerDown('vertical')}
           onPointerMove={handlePointerMove('vertical')}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onLostPointerCapture={handlePointerUp}
         />
       )}
       {horizontal.visible && (
@@ -194,6 +206,8 @@ export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: S
           onPointerDown={handlePointerDown('horizontal')}
           onPointerMove={handlePointerMove('horizontal')}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onLostPointerCapture={handlePointerUp}
         />
       )}
     </>

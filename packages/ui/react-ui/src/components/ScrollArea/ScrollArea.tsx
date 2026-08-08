@@ -109,27 +109,32 @@ const SCROLLAREA_VIEWPORT_NAME = 'ScrollArea.Viewport';
 
 type ScrollAreaViewportProps = SlottableProps;
 
+/** The custom properties the viewport publishes for the theme to size padding against. */
+type ScrollAreaVars = CSSProperties & {
+  '--scroll-width': string;
+  '--scroll-padding': string;
+  '--scroll-strip': string;
+};
+
 const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
   const { density, setViewport } = options;
-  const { className, ...rest } = composableProps(props);
-  const { style, ...restWithoutStyle } = rest as { style?: CSSProperties; [key: string]: any };
+  const { className, style, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
   const ref = useComposedRefs(forwardedRef, setViewport);
+  const vars: ScrollAreaVars = {
+    '--scroll-width': options.scrollbars ? `${density.size}px` : '0px',
+    '--scroll-padding': options.scrollbars ? `${density.padding}px` : '0px',
+    // Width of the strip the overlay thumb occupies: its thickness inset at both ends.
+    '--scroll-strip': options.scrollbars ? `${density.size + density.padding * 2}px` : '0px',
+    ...style,
+  };
 
   return (
     <Comp
-      {...restWithoutStyle}
-      style={
-        {
-          '--scroll-width': options.scrollbars ? `${density.size}px` : '0px',
-          '--scroll-padding': options.scrollbars ? `${density.padding}px` : '0px',
-          // Width of the strip the overlay thumb occupies: its thickness inset at both ends.
-          '--scroll-strip': options.scrollbars ? `${density.size + density.padding * 2}px` : '0px',
-          ...style,
-        } as CSSProperties
-      }
+      {...rest}
+      style={vars}
       className={tx('scrollArea.viewport', options, className)}
       ref={ref}
     >
