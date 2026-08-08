@@ -28,8 +28,7 @@ export default defineConfig({
     'ReviewEvents': 'src/types/ReviewEvents.ts',
   },
   jsx: 'react',
-  // The story's first render waits on the demand-gated activation pass (the Idle wave plus every
-  // plugin's start event), which costs several seconds before the play can begin, so the 15s
-  // browser-mode default no longer clears it.
+  // The first story in a file pays the whole lazy module-load bill — tens of seconds, against a
+  // couple for each story after it — which the 15s browser-mode default cannot cover.
   test: { node: true, storybook: { timeout: 60_000 } },
 });
