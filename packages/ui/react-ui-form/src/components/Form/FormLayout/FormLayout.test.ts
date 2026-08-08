@@ -38,7 +38,10 @@ describe('resolveLayoutField', () => {
     expect(resolved!.leafName).toBe('origin');
     expect(resolved!.labelType).toBeDefined();
     // The flagged type literal computes the place's label.
-    const label = Annotation.getLabelWithSchema(Schema.make(resolved!.labelType!), { name: 'JFK', code: 'JFK' } as any);
+    const label = Annotation.getLabelWithSchema(Schema.make<Schema.Top>(resolved!.labelType!), {
+      name: 'JFK',
+      code: 'JFK',
+    } as any);
     expect(label).toBe('JFK');
   });
 

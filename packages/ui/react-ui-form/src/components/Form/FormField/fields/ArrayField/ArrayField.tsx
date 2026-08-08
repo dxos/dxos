@@ -104,10 +104,8 @@ export const ArrayField = ({
 
     return Object.fromEntries(
       getFormProperties(typeLiteral).map((prop) => {
-        const defaultValue = SchemaAST.getDefaultAnnotation(prop.type).pipe((annotation) =>
-          Option.getOrUndefined(annotation),
-        );
-        return [prop.name, defaultValue];
+        // v4 annotations are a plain record: the getter returns the value or `undefined` directly.
+        return [prop.name, SchemaAST.getDefaultAnnotation(prop.type)];
       }),
     );
   };

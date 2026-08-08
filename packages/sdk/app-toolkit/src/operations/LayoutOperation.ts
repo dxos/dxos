@@ -123,31 +123,36 @@ const PopoverBaseInput = Schema.Struct({
   ),
 });
 
-const PopoverBaseWithKind = Schema.Union([
-  PopoverBaseInput.pipe(
-    Schema.extend(
-      Schema.Struct({
-        kind: Schema.Literal('base').pipe(Schema.optional),
-      }),
-    ),
-  ),
-  PopoverBaseInput.pipe(
-    Schema.extend(
-      Schema.Struct({
-        kind: Schema.Literal('card'),
-        title: Schema.optional(Translations.Label.annotate({ description: 'The title of the card.' })),
-      }),
-    ),
-  ),
+// Effect 4 dropped `Schema.extend`; its replacement takes fields rather than schemas, so the
+// per-kind and per-variant additions are declared as field records and spread onto the base. The
+// union is written out because a popover is a kind *and* a variant -- v3's `extend` over a union
+// distributed the same six members.
+const popoverKindFields = {
+  base: {
+    kind: Schema.Literal('base').pipe(Schema.optional),
+  },
+  card: {
+    kind: Schema.Literal('card'),
+    title: Schema.optional(Translations.Label.annotate({ description: 'The title of the card.' })),
+  },
   // A modal, focused popover anchored to a navtree row for inline rename.
-  PopoverBaseInput.pipe(
-    Schema.extend(
-      Schema.Struct({
-        kind: Schema.Literal('rename'),
-      }),
-    ),
-  ),
-]);
+  rename: {
+    kind: Schema.Literal('rename'),
+  },
+} as const;
+
+const popoverVariantFields = {
+  virtual: {
+    variant: Schema.Literal('virtual'),
+    anchor: Schema.Any.annotate({ description: 'The DOM element to anchor the popover to.' }),
+  },
+  react: {
+    variant: Schema.optional(Schema.Literal('react')),
+    anchorId: Schema.String.annotate({
+      description: 'An id that can be used to determine whether to render the anchor subcomponent.',
+    }),
+  },
+} as const;
 
 export const UpdatePopover = Operation.make({
   meta: {
@@ -159,24 +164,12 @@ export const UpdatePopover = Operation.make({
   executionMode: 'sync',
   services: [Capability.Service],
   input: Schema.Union([
-    PopoverBaseWithKind.pipe(
-      Schema.extend(
-        Schema.Struct({
-          variant: Schema.Literal('virtual'),
-          anchor: Schema.Any.annotate({ description: 'The DOM element to anchor the popover to.' }),
-        }),
-      ),
-    ),
-    PopoverBaseWithKind.pipe(
-      Schema.extend(
-        Schema.Struct({
-          variant: Schema.optional(Schema.Literal('react')),
-          anchorId: Schema.String.annotate({
-            description: 'An id that can be used to determine whether to render the anchor subcomponent.',
-          }),
-        }),
-      ),
-    ),
+    Schema.Struct({ ...PopoverBaseInput.fields, ...popoverKindFields.base, ...popoverVariantFields.virtual }),
+    Schema.Struct({ ...PopoverBaseInput.fields, ...popoverKindFields.card, ...popoverVariantFields.virtual }),
+    Schema.Struct({ ...PopoverBaseInput.fields, ...popoverKindFields.rename, ...popoverVariantFields.virtual }),
+    Schema.Struct({ ...PopoverBaseInput.fields, ...popoverKindFields.base, ...popoverVariantFields.react }),
+    Schema.Struct({ ...PopoverBaseInput.fields, ...popoverKindFields.card, ...popoverVariantFields.react }),
+    Schema.Struct({ ...PopoverBaseInput.fields, ...popoverKindFields.rename, ...popoverVariantFields.react }),
   ]),
   output: Schema.Void,
 });

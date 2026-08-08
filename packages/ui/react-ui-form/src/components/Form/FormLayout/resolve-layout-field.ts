@@ -72,10 +72,12 @@ export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): Re
 
   // Normalized leaf type (optional unwrapped, refinements stripped, signature-level
   // annotations merged) — matches how `getProperties` feeds `FormField`.
-  const { type: baseType } = SchemaEx.getBaseType(prop);
+  const { type: baseType } = SchemaEx.getBaseType(prop.type);
+  // Key annotations (v3's `PropertySignature.annotations`) hang off the type's context in v4.
+  const keyAnnotations = prop.type.context?.annotations;
   const type =
-    prop.annotations && Reflect.ownKeys(prop.annotations).length > 0
-      ? ({ ...baseType, annotations: { ...baseType.annotations, ...prop.annotations } } as SchemaAST.AST)
+    keyAnnotations && Reflect.ownKeys(keyAnnotations).length > 0
+      ? SchemaAST.annotate(baseType, keyAnnotations)
       : baseType;
 
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);

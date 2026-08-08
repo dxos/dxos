@@ -50,20 +50,17 @@ export const ObjectTree = ObjectTreeImpl as unknown as <T>(
 ) => ReactElement | null;
 
 /**
- * Peel wrappers that don't affect the runtime shape: Refinements pass their
- * `from`, Suspends resolve via `f()`, and Transformations expose the encoded
- * (input) side. Repeated unwrapping handles chains like `Schema.suspend ->
- * Refinement -> TypeLiteral`.
+ * Peel wrappers that don't affect the runtime shape: Suspends resolve via `thunk()` and a
+ * transformed schema exposes its encoded (input) side. Repeated unwrapping handles chains like
+ * `Schema.suspend -> transformation -> TypeLiteral`. Effect 4 has no `Refinement` node — a refined
+ * type is the node itself carrying checks, so there is nothing to peel there.
  */
 const unwrap = (ast: SchemaAST.AST): SchemaAST.AST => {
-  if (SchemaAST.isRefinement(ast)) {
-    return unwrap(ast.from);
-  }
   if (SchemaAST.isSuspend(ast)) {
-    return unwrap(ast.f());
+    return unwrap(ast.thunk());
   }
   if (SchemaAST.isTransformation(ast)) {
-    return unwrap(ast.from);
+    return unwrap(SchemaAST.toEncoded(ast));
   }
   return ast;
 };
@@ -112,9 +109,9 @@ const Node = ({ ast, value, label, depth }: NodeProps) => {
     );
   }
 
-  // Array (`Schema.Array(X)` -> TupleType with single rest element).
+  // Array (`Schema.Array(X)` -> TupleType with single rest element; v4's `rest` holds the node itself).
   if (SchemaAST.isTupleType(inner) && Array.isArray(value)) {
-    const elemType = inner.rest[0]?.type;
+    const elemType = inner.rest[0];
     return (
       <>
         {label !== null && <Row label={label} value={`Array(${value.length})`} depth={depth} kind='group' />}

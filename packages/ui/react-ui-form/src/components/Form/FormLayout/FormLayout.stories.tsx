@@ -126,7 +126,7 @@ const JOURNEY_LAYOUT = trim`
 `;
 
 type StoryArgs = {
-  schema: Schema.Schema<any>;
+  schema: Schema.Codec<any, any>;
   template?: string;
 };
 
@@ -197,7 +197,7 @@ export const SchemaAnnotation: Story = {
  * layouts (`default` and `compact`) via a radio above the form.
  */
 const NamedAnnotationStory = () => {
-  const schema = useMemo(() => omitId(AnnotatedFlight) as unknown as Schema.Schema<any>, []);
+  const schema = useMemo(() => omitId(AnnotatedFlight) as unknown as Schema.Codec<any, any>, []);
   const [layoutName, setLayoutName] = useState<'default' | 'compact'>('default');
   const [values, setValues] = useState<Partial<FlightValues>>(flight);
 
@@ -240,7 +240,7 @@ export const NamedAnnotation: Story = {
  * `origin.code`/`destination.code` drill into the leaf sub-field.
  */
 const NestedLabelStory = ({ readonly = false }: { readonly?: boolean }) => {
-  const schema = useMemo(() => omitId(Type.getSchema(Journey)) as unknown as Schema.Schema<any>, []);
+  const schema = useMemo(() => omitId(Type.getSchema(Journey)) as unknown as Schema.Codec<any, any>, []);
   const [values, setValues] = useState<Partial<JourneyValues>>(journey);
 
   const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>((next) => {
@@ -290,7 +290,7 @@ type PlaygroundStoryProps = {
 };
 
 const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
-  const schema = useMemo(() => omitId(Type.getSchema(Flight)) as unknown as Schema.Schema<any>, []);
+  const schema = useMemo(() => omitId(Type.getSchema(Flight)) as unknown as Schema.Codec<any, any>, []);
   const [template, setTemplate] = useState(FLIGHT_LAYOUT);
   const [lastValid, setLastValid] = useState(FLIGHT_LAYOUT);
   const [error, setError] = useState<string | undefined>();

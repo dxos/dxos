@@ -1,6 +1,6 @@
 # effect-smol — Tasks
 
-_Resume: Stage 2b — clear the 9-package frontier (`effect` facade first, it gates most of the repo), then re-census. Uncommitted: none. Last: `@dxos/keys` ported (66 tests green) and the Tier 3 Schema codemod applied (1,539 rewrites)._
+_Resume: Stage 2b — `agent-runtime` (28 errors) is the next frontier package; re-census after it, since ~120 packages are still hidden behind the frontier. Uncommitted: none. Last: `echo` went green (493 tests) after six v4 JSON-schema regressions, then `react-ui-form` and `app-toolkit` were ported to a clean build._
 
 Migrate `dxos/dxos` from Effect 3 to Effect 4, then `dxos/edge`. The _why_, the decisions
 (D1–D7) and the findings (F1–F4) live in [DESIGN.md](./DESIGN.md) — this file is the ledger.
@@ -135,20 +135,45 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
       schemas are values rather than extensible classes.
 - [x] **Tier 3 codemod** — `tools/codemods/effect-4-schema.mjs`, 1,539 rewrites / 330 files
       (`4fa9dd1a`). Formatting verified clean.
-- [ ] **Variadic → array constructors** (~277 sites) — `Union(a,b)`→`Union([a,b])`,
-      `Literal`→`Literals`, `Tuple`. **Needs a TypeScript AST tool** (ts-morph/jscodeshift): a
-      hand-rolled paren scanner matched inside a commented-out block and relocated a closing
-      bracket ~180 lines away, corrupting two files. Comment/string masking fixed one failure
-      class but not the other, so the transform was removed rather than shipped.
-- [ ] **Clear the remaining frontier**: `effect` (the SchemaAST facade — 45 of its 60 symbols are
-      gone in v4, which is exactly the localized breakage Phase 1 bought), `graph`, `halo`,
-      `react-hooks`, `sql-sqlite`, `effect-zod`, `crx-protocol`, `effect-atom-solid`.
-- [ ] **Replace `effect/GlobalValue`** (removed in v4; 4 call sites) — a DXOS-owned helper over a
-      `globalThis` symbol map is the faithful drop-in.
-- [ ] **Absorbed-module imports**: `@effect/sql/*` (~23), `@effect/experimental/Reactivity` (4),
-      `@effect/opentelemetry/Tracer` — these moved under `effect/unstable/*` and need per-module
-      mapping, not a blanket rename.
-- [ ] **`effect/ConfigError`** (3) — folded into `effect/Config` in v4.
+- [x] **Variadic → array constructors** (~277 sites) — done by a TypeScript-parser codemod after a
+      hand-rolled paren scanner corrupted two files. Five of the nine codemods now parse with
+      `typescript` rather than regex, for exactly that reason.
+- [x] **Build the remaining codemods** — `tools/codemods/`, applied in order:
+      `effect-4-verified-renames` (194 rewrites / ~100 files, each pair mined from the official
+      guide and checked against the installed `.d.ts` before applying),
+      `effect-4-rpc-flat-tags` (66), `effect-4-context-service` (44),
+      `effect-4-mutable-struct` (41 structs + 7 records), `effect-4-default-runtime` (31),
+      `effect-4-die-message` (19), `effect-4-struct-ops` (18), `effect-4-tool-parameters` (14),
+      `effect-4-orelse-effect` (9).
+- [x] **Clear the `@dxos/effect` facade** — the SchemaAST compat layer now covers the v4 AST, and
+      `@dxos/keys`, `@dxos/echo` and their dependents build on it.
+- [x] **Replace `effect/GlobalValue`**, the absorbed-module imports (`@effect/sql/*`,
+      `@effect/experimental/Reactivity`, `@effect/opentelemetry/Tracer`, `@effect/ai/*`,
+      `@effect/cli/*`, `@effect/platform/KeyValueStore`) and `effect/ConfigError`.
+- [x] **`@dxos/echo` green** — the whole suite passes (493 tests). Six v4 regressions behind it,
+      all in the JSON-schema round-trip, all now covered by the existing tests:
+  - Cyclic schemas blew the stack. v4 walks `Suspend` eagerly and terminates on node identity, and
+    the `toJsonSchema` annotation the `$ref` short-circuit relied on is honoured only on _checks_,
+    never on a node. The rewrite is memoized per suspended AST; real cycles land in `$defs`.
+  - A bare `Schema.Number` lost every annotation — v4 encodes it to `number | "NaN" | ±"Infinity"`
+    inside the serializer, past where the type-side annotations are readable. `toCodecJson` now
+    runs first so the encoding is materialized where the existing flattening can carry them over.
+  - `Format.Currency` came back without `multipleOf`/`format`/`currency`; an empty struct
+    serialized as `anyOf: [object, array]` and read back as a union; `id` was prepended rather than
+    appended, reordering every ECHO object's properties on a round-trip.
+  - `Ref.isRefType` always returned `false` (it read the v3 merged `jsonSchema` annotation), which
+    silently disabled ref handling in `react-ui-form`, the assistant tool runtime, `sdk/schema` and
+    `plugin-routine`.
+  - `Schema.optional` is not idempotent in v4 — it nests `(T | undefined) | undefined`, which broke
+    `unwrapOptional`/`getBaseType` and left `Obj.setValue` unable to see an optional array.
+- [x] **Port `react-ui-form`** (33 errors → 0) and **`app-toolkit`** (18 → 0). Both needed
+      `Schema.extend`, which v4 dropped in favour of a fields-level `fieldsAssign`; the AST-level
+      `SchemaAST.assignFields` added to `@dxos/effect` covers the call sites that only hold a
+      `Codec`. Unit tests green in both. `react-ui-form`'s 10 storybook integration tests still
+      fail on `queryInvitations` / `ECONNREFUSED :3000` — the client stack behind them is not
+      ported yet, so they are frontier-blocked rather than a regression.
+- [ ] **Clear the remaining frontier** — `agent-runtime` (28 errors) next, then re-census: ~120
+      packages are still hidden behind the frontier.
 
 - [ ] **Tier 1 — mechanical rewrites** (~2–3 wks): module paths, API renames, the 433 atom files.
 - [ ] **Tier 2 — services and runtime** (~3–6 wks): `Context.Tag` → `ServiceMap.Service` (126 class

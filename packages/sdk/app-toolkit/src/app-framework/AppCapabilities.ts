@@ -159,7 +159,7 @@ export type Settings = {
   prefix: string;
   // Settings are persisted as plain atoms, so the schema is always context-free
   // (`R = never`); this lets a schema-driven form decode/validate it directly.
-  schema: Schema$.Schema.AnyNoContext;
+  schema: Schema$.Codec<any, any, never, never>;
   atom: Atom.Writable<any>;
 };
 

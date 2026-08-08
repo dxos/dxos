@@ -78,9 +78,13 @@ const resolveType = (
           base.pipe(
             Option.map((type) => SchemaAST.getPropertySignatures(Type.getSchema(type).ast)),
             Option.flatMap((properties) => Array.findFirst(properties, (p) => p.name === property)),
+            // v4 annotations are a plain record, so the getter returns the value or `undefined`.
             Option.flatMap((property) =>
-              SchemaAST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(
-                SchemaEx.unwrapOptional(property),
+              Option.fromNullishOr(
+                SchemaAST.getAnnotation<ReferenceAnnotationValue>(
+                  SchemaEx.unwrapOptional(property.type),
+                  ReferenceAnnotationId,
+                ),
               ),
             ),
             Option.map((annotation) => annotation.typename),

@@ -157,7 +157,8 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
         }).mapFields(Struct.map(Schema.mutableKey));
       }
 
-      return base.pipe(Schema.mutable);
+      // `Schema.mutable` is arrays-only in v4; a struct's fields are made mutable key by key.
+      return base.mapFields(Struct.map(Schema.mutableKey));
     }, [mode]);
 
     // TODO(burdon): Need to warn user of possible consequences of editing.

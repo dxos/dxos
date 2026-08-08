@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Ref, Tag } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 
 import { omitId } from '../../util';
 
@@ -27,7 +28,14 @@ export const META_TAGS_KEY = '_tags';
  */
 export const withMetaTags = (schema: Schema.Codec<any, any>) =>
   omitId(
-    Schema.Struct({
-      [META_TAGS_KEY]: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.annotate({ title: 'Tags' }), Schema.optional),
-    }).pipe(Schema.extend(schema)),
+    // `SchemaAST.assignFields`, not v4's `Schema.fieldsAssign`: the latter needs both sides' fields
+    // at the type level, which a schema known only as a `Codec` cannot supply.
+    Schema.make<Schema.Codec<any, any>>(
+      SchemaAST.assignFields(
+        Schema.Struct({
+          [META_TAGS_KEY]: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.annotate({ title: 'Tags' }), Schema.optional),
+        }).ast,
+        schema.ast,
+      ),
+    ),
   );

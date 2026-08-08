@@ -30,7 +30,7 @@ const InlineSchema = Schema.Struct({
   ),
 }).mapFields(Struct.map(Schema.mutableKey));
 
-const RefStory = ({ schema }: { schema: Schema.Schema<any> }) => {
+const RefStory = ({ schema }: { schema: Schema.Codec<any, any> }) => {
   const spaces = useSpaces();
   const space = spaces[0];
   const [values, setValues] = useState<Record<string, unknown>>({});

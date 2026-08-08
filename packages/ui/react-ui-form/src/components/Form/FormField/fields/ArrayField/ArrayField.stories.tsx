@@ -75,7 +75,7 @@ const stringColumns: PipelineValues = {
   columns: ['Contacts', 'Organizations', 'Tasks', 'Messages'],
 };
 
-const DefaultStory = ({ schema, values: initial }: { schema: Schema.Schema<any>; values: PipelineValues }) => {
+const DefaultStory = ({ schema, values: initial }: { schema: Schema.Codec<any, any>; values: PipelineValues }) => {
   const [values, setValues] = useState<PipelineValues>(initial);
 
   return (

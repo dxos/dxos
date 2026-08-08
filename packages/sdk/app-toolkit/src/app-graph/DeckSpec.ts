@@ -45,9 +45,12 @@ export const DeckSpec = Schema.Struct({
     Schema.Array(DeckLevel).pipe(
       // Keys must be unique: a duplicate would make two rungs share one plank name, so `levelOf` and
       // the below-pruning become ambiguous.
-      Schema.filter((levels) => new Set(levels.map((level) => level.key)).size === levels.length, {
-        message: () => 'level keys must be unique',
-      }),
+      Schema.check(
+        Schema.makeFilter(
+          (levels: ReadonlyArray<DeckLevel>) =>
+            new Set(levels.map((level) => level.key)).size === levels.length || 'level keys must be unique',
+        ),
+      ),
     ),
   ),
   initial: Schema.optional(DeckInitial),

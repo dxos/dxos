@@ -17,6 +17,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 export {
   Arrays,
   type AST,
+  type Check,
+  type Checks,
   Declaration,
   IndexSignature,
   Literal,
@@ -99,6 +101,31 @@ export const omit = (ast: SchemaAST.AST, names: ReadonlyArray<PropertyKey>): Sch
   return new SchemaAST.Objects(
     node.propertySignatures.filter((property) => !dropped.has(property.name)),
     node.indexSignatures,
+    node.annotations,
+    node.checks,
+    node.encoding,
+    node.context,
+    node.encodingChecks,
+  );
+};
+
+/**
+ * Merges another object node's properties in, the later declaration winning on a name clash.
+ *
+ * v4 removed `Schema.extend`; its replacement (`fieldsAssign`) needs both sides' fields at the type
+ * level, which a schema known only as a `Codec` cannot supply. Non-object nodes are returned as-is
+ * rather than throwing, matching {@link omit}.
+ */
+export const assignFields = (ast: SchemaAST.AST, other: SchemaAST.AST): SchemaAST.AST => {
+  const node = unwrapSuspend(ast);
+  const source = unwrapSuspend(other);
+  if (node._tag !== 'Objects' || source._tag !== 'Objects') {
+    return ast;
+  }
+  const added = new Set(source.propertySignatures.map((property) => property.name));
+  return new SchemaAST.Objects(
+    [...node.propertySignatures.filter((property) => !added.has(property.name)), ...source.propertySignatures],
+    [...node.indexSignatures, ...source.indexSignatures],
     node.annotations,
     node.checks,
     node.encoding,

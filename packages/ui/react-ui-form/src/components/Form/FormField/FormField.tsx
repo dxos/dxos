@@ -119,7 +119,10 @@ export const FormField = (props: FormFieldProps) => {
 
   // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so
   // we don't reconstruct it on every render.
-  const providerSchema = useMemo(() => (fieldProvider ? Schema.make(type) : undefined), [fieldProvider, type]);
+  const providerSchema = useMemo(
+    () => (fieldProvider ? Schema.make<Schema.Schema<any>>(type) : undefined),
+    [fieldProvider, type],
+  );
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const jsonPath = SchemaEx.createJsonPath(path ?? []);
@@ -277,7 +280,7 @@ export const FormField = (props: FormFieldProps) => {
       : SchemaEx.findNode(type, SchemaAST.isTypeLiteral);
 
     if (typeLiteral) {
-      const schema = Schema.make(typeLiteral);
+      const schema = Schema.make<Schema.Codec<any, any>>(typeLiteral);
       return (
         <FormFieldSet
           schema={schema}
