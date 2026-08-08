@@ -5,7 +5,7 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
 
@@ -63,9 +63,8 @@ export const DebugPortSettings = ({ controller = getDebugPortController() }: Deb
       {status.running && (
         <>
           <Form.Row standalone label={t('settings.debug-port.running.label')}>
-            <div role='status' className='flex items-center gap-2 text-sm text-warning-text'>
-              <Icon icon='ph--broadcast--regular' size={4} />
-              <span>{status.origin}</span>
+            <div role='status' className='font-mono text-sm'>
+              {status.origin}
             </div>
           </Form.Row>
 

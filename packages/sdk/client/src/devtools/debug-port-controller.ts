@@ -111,7 +111,12 @@ class DebugPortControllerImpl implements DebugPortController {
   }
 }
 
-const defaultScope = (): DebugPortScope => ({ dxos: (globalThis as any).__DXOS__ });
+// `composer` is the app-layer namespace (plugins, operations); it is absent on the recovery page
+// and until the app has mounted, which an agent probing it can see for itself.
+const defaultScope = (): DebugPortScope => ({
+  dxos: (globalThis as any).__DXOS__,
+  composer: (globalThis as any).composer,
+});
 
 const makeEvalCommand =
   (scope: () => DebugPortScope): DebugPortOptions['evalCommand'] =>
