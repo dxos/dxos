@@ -347,7 +347,101 @@ actionable "install/extend the app on repo X" prompt.
    `/webhook/:token` bearer-URL scheme is insufficient for provider webhooks; the Ghost
    handler in hub-service is the only HMAC precedent in edge).
 
-## 6. Open questions
+## 6. Personal credentials and shared spaces (the leak problem)
+
+Context: #12503 (2026-08-07) retired the personal space — app config moved to a hidden,
+locked-at-genesis **settings space**, and "default space" became a repointable setting.
+The default-space picker still restricts eligibility to `MembershipPolicy.LOCKED` spaces
+precisely because OAuth-registration credentials are stored in the default space
+(`SpaceSurfaces.tsx:96`, TODO to lift). The question: should individual-OAuth connections
+be blocked/warned from registration in non-locked spaces — and does that mechanism still
+make sense once credentials are custodied?
+
+### 6.1 The reframe: "personal" is a property of the credential, not the space
+
+A user-identity connection acts _as the connecting user_; its safe audience is
+{owner + owner's devices/agents} no matter where its object is stored. The leak risk
+exists because today **storage location, audience, and custody are fused**: the token
+lives in a space document, and space membership _is_ the ACL. The two-axis model splits
+these into three independent facts — metadata location (discoverability), grant list
+(authority), secret location (custody) — and the leak-prevention story falls out of that
+split. The invariant to enforce is: **warn or block whenever an action would widen a
+personal credential's audience beyond its owner** — whatever the action.
+
+### 6.2 Why the space-policy gate is right today, and where it's insufficient
+
+While secrets ride in space documents (§1.4 — all non-Google providers), registering
+into a shared or sharable space _is_ disclosure, so gating on membership policy is the
+correct interim control. But it has two holes:
+
+1. **`LOCKED` is a proxy, not the predicate.** The real predicate is "membership is and
+   will remain {owner}". A locked space that already has two members still shares the
+   token; post-#12503 the Private-at-genesis toggle makes LOCKED ≈ solo for _new_ spaces,
+   but not in general.
+2. **The registration moment is the wrong (or at least not the only) moment.** The common
+   leak path is temporal: register a token in a private space, months later invite
+   someone. Every object in the space — including tokens — goes with the invitation, and
+   no warning exists on that path. This is the CFOS "observer" insight: _sharing the
+   container reveals everything it ever contained_. Any interim control therefore needs
+   two hooks:
+   - **register-time**: creating a user-identity connection in a space that is shared or
+     sharable (policy ≠ LOCKED, or member count > 1) → warn/confirm;
+   - **invite-time**: `Space.share` / policy change on a space containing in-band
+     personal credentials → interstitial listing them, with "move / convert to managed /
+     proceed anyway".
+
+   The connector taxonomy (§5.4) earns its keep here immediately: the warning should key
+   on `ConnectorSpec` declaring a _user-identity_ connection — installation connections
+   are space-audience by design and should never trip it.
+
+### 6.3 Under custody, the gate moves from storage to audience
+
+The user-raised doubt is correct: once secrets aren't stored in the space, membership
+policy stops being the right trigger — but not because the concern disappears.
+C1/C2 custody turns registration-in-a-shared-space from _irreversible disclosure of
+bytes_ into _revocable grant of authority_ (space membership is still the authorization
+predicate on `/oauth/token`). The mechanism becomes:
+
+1. Every credential carries an **owner** (identity DID) and an explicit **audience**
+   (§3.2 grant list). User-identity connections default to audience = {owner}, wherever
+   their metadata lives. Metadata can sit in any space safely — it contains no secret.
+2. **Registering ≠ granting.** Placing a connection's metadata in a shared space no
+   longer implicitly widens its audience. Widening is a separate, deliberate act —
+   "share this connection with members of X" — and that dialog is where the significant
+   warning lives ("members of X will be able to act as you on GitHub").
+3. Invite-time checks soften from a security gate to a UX affordance ("this space uses
+   Josiah's GitHub connection; new members won't be able to use it") because admitting a
+   member no longer touches any credential's audience.
+4. The sanctioned way to give a _space_ service access is an installation connection
+   (§5.3) — shared by construction, owned by the org/space, no one's personal identity
+   on loan.
+
+### 6.4 Structural wrinkle: kms custody is space-scoped, personal credentials are not
+
+`SpaceSecretsObject` is one DO **per space**, membership-checked against that space, and
+edge function bindings are space-bound. A "personal credential granted to spaces" model
+inverts that: custody keyed by **owner identity**, with per-space/per-principal grants
+checked at release/mint time. Without this, "move your personal token out of the shared
+space" has no destination on the custodied path — the secret's home _is_ a space. (The
+settings space is the natural client-side vault for interim in-band storage — locked at
+genesis, never sharable, EDGE-replicated — but edge functions in space X cannot reach a
+token custodied under space Y's DO, so the identity-keyed KMS is the real fix.)
+
+### 6.5 Interim recommendations
+
+1. Now: register-time warning for user-identity connections in sharable spaces +
+   invite-time interstitial when a space contains in-band credentials (both keyed on the
+   connector taxonomy flag).
+2. Now-ish: flip providers to managed (`MANAGED_PROVIDERS` → all) so in-band secrets stop
+   accumulating; the invite-time warning then covers only legacy objects.
+3. With the grant model: audience defaults ({owner} for user-identity, space for
+   installation), explicit share-connection flow carrying the warning, and the
+   `SpaceSurfaces` LOCKED restriction on default-space eligibility can be lifted (its
+   TODO fulfilled) because the default space no longer implies credential exposure.
+4. Design the identity-keyed KMS store (§6.4) as part of the C2 tier work rather than
+   retrofitting it after.
+
+## 7. Open questions
 
 1. **Vault granularity** — one vault per space, per connector, or per credential? Per-
    credential maximizes gating and revocation precision but multiplies BeeKEM groups;
