@@ -44,7 +44,7 @@ export default PlanReminder.pipe(
         }
 
         const history = yield* Harness.history;
-        const prompt = Prompt.merge(
+        const prompt = Prompt.concat(
           yield* AiPreprocessor.preprocessPrompt(history, { system: checklistCompletionCheckSystem }),
           checklistCompletionCheckPrompt(text.content),
         );

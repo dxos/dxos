@@ -111,11 +111,11 @@ export default Capability.makeModule(
         return;
       }
       const before = (yield* getState).loaded.map((model) => model.name);
-      const after = result.right.map((model) => model.name);
+      const after = result.success.map((model) => model.name);
       if (before.join() !== after.join()) {
         yield* Effect.sync(() => log.info('ollama loaded models changed', { loaded: after }));
       }
-      yield* updateState((state) => ({ ...state, loaded: result.right }));
+      yield* updateState((state) => ({ ...state, loaded: result.success }));
     });
 
     const refresh: Effect.Effect<void> = Effect.gen(function* () {
@@ -130,10 +130,10 @@ export default Capability.makeModule(
         admin.list.pipe(Effect.retry({ schedule: Schedule.spaced(Duration.millis(300)), times: 29 })),
       );
       if (Result.isFailure(result)) {
-        return yield* fail(result.left);
+        return yield* fail(result.failure);
       }
-      yield* updateState((state) => ({ ...state, kind: 'ready', models: result.right, error: undefined }));
-      yield* Effect.sync(() => log.info('ollama models', { installed: result.right.map((model) => model.name) }));
+      yield* updateState((state) => ({ ...state, kind: 'ready', models: result.success, error: undefined }));
+      yield* Effect.sync(() => log.info('ollama models', { installed: result.success.map((model) => model.name) }));
       yield* refreshLoaded;
     });
 
@@ -214,8 +214,8 @@ export default Capability.makeModule(
         yield* Effect.sync(() => log.info('ollama load', { name }));
         const result = yield* runAdmin(admin.load(name));
         if (Result.isFailure(result)) {
-          yield* Effect.sync(() => log.warn('ollama load failed', { name, error: result.left }));
-          return yield* setError(name, result.left);
+          yield* Effect.sync(() => log.warn('ollama load failed', { name, error: result.failure }));
+          return yield* setError(name, result.failure);
         }
         yield* refreshLoaded;
       });
@@ -230,7 +230,7 @@ export default Capability.makeModule(
         yield* Effect.sync(() => log.info('ollama unload', { name }));
         const result = yield* runAdmin(admin.unload(name));
         if (Result.isFailure(result)) {
-          return yield* setError(name, result.left);
+          return yield* setError(name, result.failure);
         }
         yield* refreshLoaded;
       });
@@ -244,7 +244,7 @@ export default Capability.makeModule(
         }
         const result = yield* runAdmin(admin.remove(name));
         if (Result.isFailure(result)) {
-          return yield* setError(name, result.left);
+          return yield* setError(name, result.failure);
         }
         yield* refresh;
       });

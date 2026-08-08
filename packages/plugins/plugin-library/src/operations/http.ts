@@ -17,7 +17,8 @@ export class BookHiveFetchError extends Data.TaggedError('BookHiveFetchError')<{
   cause?: unknown;
 }> {}
 
-const retryPolicy = Schedule.exponential('500 millis').pipe(Schedule.compose(Schedule.recurs(2)));
+// v4 dropped `Schedule.compose`; `upTo` bounds an existing schedule in place.
+const retryPolicy = Schedule.exponential('500 millis').pipe(Schedule.upTo({ times: 2 }));
 
 /**
  * Fetch a URL and decode its JSON body against `schema`. Optionally routed through a CORS proxy.

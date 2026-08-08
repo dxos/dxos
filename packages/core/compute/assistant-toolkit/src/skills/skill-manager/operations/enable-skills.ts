@@ -24,10 +24,10 @@ export default EnableSkills.pipe(
           Effect.result,
         );
         if (Result.isFailure(result)) {
-          rejected.push(result.left);
+          rejected.push(result.failure);
           continue;
         }
-        if (!result.right.agentCanEnable) {
+        if (!result.success.agentCanEnable) {
           rejected.push({ key, reason: 'Skill does not allow agent auto-enable (agentCanEnable is not set).' });
           continue;
         }

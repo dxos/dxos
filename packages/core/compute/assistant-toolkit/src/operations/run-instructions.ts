@@ -136,7 +136,7 @@ export default RunInstructions.pipe(
           );
 
         return yield* Deferred.poll(resultSink).pipe(
-          Effect.flatten,
+          Effect.flatMap(Effect.fromOption),
           Effect.flatten,
           Effect.catchTag('NoSuchElementError', () =>
             Effect.gen(function* () {
@@ -153,7 +153,7 @@ export default RunInstructions.pipe(
                 );
 
               return yield* Deferred.poll(resultSink).pipe(
-                Effect.flatten,
+                Effect.flatMap(Effect.fromOption),
                 Effect.flatten,
                 Effect.catchTag('NoSuchElementError', () =>
                   Effect.fail(new PromptError('Agent did not signal task completion.', {})),
@@ -163,10 +163,8 @@ export default RunInstructions.pipe(
           ),
         );
       },
-      Effect.tapBoth({
-        onSuccess: () => Database.flush(),
-        onFailure: () => Database.flush(),
-      }),
+      // v4 dropped `tapBoth`; `onExit` runs the finalizer on either outcome.
+      Effect.onExit(() => Database.flush()),
       Effect.scoped,
     ),
   ),

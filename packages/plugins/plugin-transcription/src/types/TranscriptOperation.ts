@@ -11,6 +11,7 @@ import { AiService } from '@dxos/ai';
 import { SpaceSchema } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 // Message and Person are used via Type.getSchema(Message.Message); they also appear in emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Message, type Person, Transcript } from '@dxos/types';
@@ -30,12 +31,17 @@ export const Create = Operation.make({
   }),
 });
 
-export const MessageWithRangeId = Type.getSchema(Message.Message).mapFields(
-  Struct.assign({
-    rangeId: Schema.optional(Schema.Array(Schema.String)).annotate({
-      description: 'The IDs of the messages that contain the sentences.',
-    }),
-  }),
+// `SchemaAST.assignFields`, not `mapFields`: `Type.getSchema` returns a `Codec`, which carries no
+// field literals for a struct operation.
+export const MessageWithRangeId = Schema.make<Schema.Codec<any, any>>(
+  SchemaAST.assignFields(
+    Type.getSchema(Message.Message).ast,
+    Schema.Struct({
+      rangeId: Schema.optional(Schema.Array(Schema.String)).annotate({
+        description: 'The IDs of the messages that contain the sentences.',
+      }),
+    }).ast,
+  ),
 );
 
 export type MessageWithRangeIdType = Schema.Schema.Type<typeof MessageWithRangeId>;
@@ -106,7 +112,7 @@ export const SentenceNormalizationInput = Schema.Struct({
 export type SentenceNormalizationInputType = Schema.Schema.Type<typeof SentenceNormalizationInput>;
 
 export const SentenceNormalizationOutput = Schema.Struct({
-  sentences: Schema.Array(MessageWithRangeId.pipe(Schema.mutable)).pipe(Schema.mutable).annotate({
+  sentences: Schema.Array(MessageWithRangeId).pipe(Schema.mutable).annotate({
     description: 'The sentences of the transcript.',
   }),
 });

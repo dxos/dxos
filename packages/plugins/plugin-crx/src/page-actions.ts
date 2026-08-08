@@ -46,7 +46,7 @@ export const handleListEvent = (detail: unknown, getActions: () => PageAction.Pa
   }
   return {
     version: 1,
-    id: decoded.right.id,
+    id: decoded.success.id,
     ok: true,
     actions: getActions().map(PageAction.toDescriptor),
   };
@@ -64,7 +64,7 @@ export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Prom
     return { version: 1, id: '', ok: false, error: 'invalidPayload' };
   }
   // Best-effort id echo so the extension can correlate failure acks.
-  const envelopeId = envelope.right.id ?? '';
+  const envelopeId = envelope.success.id ?? '';
 
   // Master toggle: when off, the bridge acks (so the extension does not time
   // out) but ignores all extension-initiated actions.
@@ -73,8 +73,8 @@ export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Prom
     return { version: 1, id: envelopeId, ok: false, error: 'disabled' };
   }
 
-  if (envelope.right.version !== 1) {
-    log.info('rejected unsupported page-action version', { version: envelope.right.version });
+  if (envelope.success.version !== 1) {
+    log.info('rejected unsupported page-action version', { version: envelope.success.version });
     return { version: 1, id: envelopeId, ok: false, error: 'unsupportedVersion' };
   }
 
@@ -83,7 +83,7 @@ export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Prom
     log.info('rejected invalid page-action payload');
     return { version: 1, id: envelopeId, ok: false, error: 'invalidPayload' };
   }
-  const request = decoded.right;
+  const request = decoded.success;
 
   const action = deps.getActions().find((candidate) => candidate.id === request.actionId);
   if (!action) {

@@ -107,9 +107,7 @@ export const GenerateShape = Operation.make({
     world: Ref.Ref(Voxel.World).annotate({
       description: 'The voxel world to modify.',
     }),
-    shape: (
-      Schema.Union(...MODEL_TYPES.map((type) => Schema.Literal(type))) as unknown as Schema.Schema<ModelType>
-    ).annotate({
+    shape: (Schema.Literals(MODEL_TYPES) as unknown as Schema.Codec<ModelType>).annotate({
       description: `Shape type: ${MODEL_TYPES.join(', ')}.`,
     }),
     origin: Schema.Struct({

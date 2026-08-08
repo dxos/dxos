@@ -78,7 +78,7 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
 export type GameRef<_V> = Ref.Ref<Game>;
 
 export const GameRef = <S extends Type.AnyObj>(_variantType: S) =>
-  Ref.Ref(Game) as Schema.Schema<GameRef<Type.InstanceType<S>>, any, never>;
+  Ref.Ref(Game) as unknown as Schema.Codec<GameRef<Type.InstanceType<S>>, any>;
 
 /**
  * Build a base `Game` object referencing the given variant-state ECHO object.

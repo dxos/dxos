@@ -3,12 +3,11 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Struct from 'effect/Struct';
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
@@ -105,7 +104,10 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
 
   // The editable subset of the schema; catalog fields are omitted (read-only above).
   const activitySchema = useMemo(
-    () => omitId(Type.getSchema(Book.Book)).mapFields((fields) => Struct.pick(fields, [...ACTIVITY_FIELDS])),
+    // `SchemaAST.pick`, not `mapFields`: `omitId` returns a `Codec`, which carries no field
+    // literals for a struct operation.
+    () =>
+      Schema.make<Schema.Codec<any, any>>(SchemaAST.pick(omitId(Type.getSchema(Book.Book)).ast, [...ACTIVITY_FIELDS])),
     [],
   );
 

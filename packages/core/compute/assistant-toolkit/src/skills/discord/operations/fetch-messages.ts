@@ -113,7 +113,7 @@ export default FetchMessages.pipe(
               });
               const messages = yield* rest.listMessages(channel.id, options).pipe(
                 Effect.map(Array.map(makeMessage)),
-                Effect.map(Array.reverse),
+                Effect.map((messages) => Array.reverse(messages)),
                 Effect.catchTag('ErrorResponse', (err) =>
                   err.cause.code === 50001 ? Effect.succeed([]) : Effect.fail(err),
                 ),

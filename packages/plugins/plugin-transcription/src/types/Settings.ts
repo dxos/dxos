@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
@@ -16,7 +17,7 @@ export const Settings = Schema.Struct({
       description:
         'While transcribing, use the Assistant to detect and annotate mentions of known objects such as people or organizations.',
     }),
-  ).pipe(Schema.withConstructorDefault(() => true)),
+  ).pipe(Schema.withConstructorDefault(Effect.succeed(true))),
 
   recordMode: Schema.optional(
     Schema.Literals(['toggle', 'hold']).annotate({
@@ -24,7 +25,7 @@ export const Settings = Schema.Struct({
       description:
         'Whether the mic toggles recording on each click, or records only while the control is held (push-to-talk).',
     }),
-  ).pipe(Schema.withConstructorDefault(() => 'toggle' as const)),
+  ).pipe(Schema.withConstructorDefault(Effect.succeed('toggle' as const))),
 
   audioDeviceId: Schema.optional(
     Schema.String.annotate({
@@ -38,21 +39,21 @@ export const Settings = Schema.Struct({
       title: 'Initial buffering (ms)',
       description: 'How long to accumulate audio before producing the first transcription.',
     }),
-  ).pipe(Schema.withConstructorDefault(() => 4000)),
+  ).pipe(Schema.withConstructorDefault(Effect.succeed(4000))),
 
   streamMode: Schema.optional(
     Schema.Literals(['batch', 'word']).annotate({
       title: 'Reveal mode',
       description: 'Whether transcribed text appears in batches or streams word-by-word.',
     }),
-  ).pipe(Schema.withConstructorDefault(() => 'word' as const)),
+  ).pipe(Schema.withConstructorDefault(Effect.succeed('word' as const))),
 
   wordIntervalMs: Schema.optional(
     Schema.Number.annotate({
       title: 'Word interval (ms)',
       description: 'Pacing between words when streaming word-by-word.',
     }),
-  ).pipe(Schema.withConstructorDefault(() => 80)),
+  ).pipe(Schema.withConstructorDefault(Effect.succeed(80))),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

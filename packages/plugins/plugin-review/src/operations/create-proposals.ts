@@ -21,9 +21,10 @@ const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = 
       const content = yield* Effect.promise(() => object.content.load());
       const accessor = Doc.createAccessor(content, ['content']);
 
-      yield* Function.pipe(
-        computeDiffsWithCursors(accessor, diffs),
+      // v4 dropped `Effect.allWith`; `Effect.all` takes its options directly.
+      yield* Effect.all(
         Array.map(
+          computeDiffsWithCursors(accessor, diffs),
           Effect.fnUntraced(function* ({ cursor, text }) {
             const proposal = Obj.make(Message.Message, {
               created: new Date().toISOString(),
@@ -40,7 +41,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = 
             yield* Database.add(relation);
           }),
         ),
-        Effect.allWith({ concurrency: 'unbounded' }),
+        { concurrency: 'unbounded' },
       );
     }),
   ),

@@ -3,7 +3,6 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Struct from 'effect/Struct';
 
 import { SchemaAST } from '@dxos/effect';
 
@@ -43,10 +42,14 @@ export const buildChannelFormSchema = (
     return Schema.Struct({ name: Schema.optional(Schema.String) });
   }
 
+  // `SchemaAST.assignFields`, not `mapFields`: a provider's `createFields` is a `Codec`, which
+  // carries no field literals for a struct operation.
   const branches = providers.map((provider) =>
-    Schema.Struct({ kind: Schema.Literal(provider.kind) }).mapFields(Struct.assign(provider.createFields.fields)),
+    Schema.make<Schema.Codec<any, any>>(
+      SchemaAST.assignFields(Schema.Struct({ kind: Schema.Literal(provider.kind) }).ast, provider.createFields.ast),
+    ),
   );
-  const backend = branches.length === 1 ? branches[0] : Schema.Union(...branches);
+  const backend = branches.length === 1 ? branches[0] : Schema.Union(branches);
   return Schema.Struct({
     name: Schema.optional(Schema.String),
     backend,

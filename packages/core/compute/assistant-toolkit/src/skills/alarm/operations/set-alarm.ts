@@ -23,11 +23,11 @@ export default SetAlarm.pipe(
       const now = yield* Clock.currentTimeMillis;
       const resolved = resolveWakeAt({ in: inDuration, at }, now);
       if (Result.isFailure(resolved)) {
-        return resolved.left;
+        return resolved.failure;
       }
-      const wakeAt = DateTime.makeUnsafe(resolved.right);
+      const wakeAt = DateTime.makeUnsafe(resolved.success);
       yield* Harness.setAlarm({ at: wakeAt, message: message ?? null });
-      return `Alarm scheduled to wake you at ${new Date(resolved.right).toISOString()}.`;
+      return `Alarm scheduled to wake you at ${new Date(resolved.success).toISOString()}.`;
     }),
   ),
 );

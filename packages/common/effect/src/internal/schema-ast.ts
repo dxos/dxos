@@ -110,6 +110,29 @@ export const omit = (ast: SchemaAST.AST, names: ReadonlyArray<PropertyKey>): Sch
 };
 
 /**
+ * Keeps only the named properties of an object node.
+ *
+ * The mirror of {@link omit}, and needed for the same reason: `mapFields(Struct.pick(...))` wants
+ * the key literals at the type level, which a runtime name list cannot supply.
+ */
+export const pick = (ast: SchemaAST.AST, names: ReadonlyArray<PropertyKey>): SchemaAST.AST => {
+  const node = unwrapSuspend(ast);
+  if (node._tag !== 'Objects') {
+    return ast;
+  }
+  const kept = new Set(names);
+  return new SchemaAST.Objects(
+    node.propertySignatures.filter((property) => kept.has(property.name)),
+    node.indexSignatures,
+    node.annotations,
+    node.checks,
+    node.encoding,
+    node.context,
+    node.encodingChecks,
+  );
+};
+
+/**
  * Merges another object node's properties in, the later declaration winning on a name clash.
  *
  * v4 removed `Schema.extend`; its replacement (`fieldsAssign`) needs both sides' fields at the type
