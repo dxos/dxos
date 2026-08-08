@@ -13,7 +13,7 @@ import { Obj, Ref } from '@dxos/echo';
 
 import { blank } from '../templates';
 import { isRunInstructions, runInstructionsRef } from './run-instructions';
-import { makeRoutine } from './wire';
+import { makeRoutine, wireTriggers } from './wire';
 
 describe('wire', () => {
   test('makeRoutine produces a typed Routine', ({ expect }) => {
@@ -68,6 +68,21 @@ describe('wire', () => {
       trigger.runnable = preset;
     });
     makeRoutine({ name: 'R', trigger });
+    expect(trigger.runnable?.uri).toBe(preset.uri);
+  });
+
+  test('wireTriggers leaves an actionless routine alone rather than stranding its triggers', ({ expect }) => {
+    // Nulling `runnable` here leaves an enabled trigger dispatching nothing, which the runtime treats as a
+    // defect on every firing — a timer trigger then fails for its whole schedule.
+    const trigger = Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *') });
+    const preset = runInstructionsRef();
+    Obj.update(trigger, (trigger) => {
+      trigger.runnable = preset;
+    });
+    const routine = makeRoutine({ name: 'R', triggers: [Ref.make(trigger)] });
+    expect(routine.spec).toBeUndefined();
+
+    wireTriggers(routine);
     expect(trigger.runnable?.uri).toBe(preset.uri);
   });
 
