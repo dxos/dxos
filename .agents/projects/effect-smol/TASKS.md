@@ -283,9 +283,13 @@ Branch `claude/effect-4-migration-audit-pq2m8z` in `dxos/edge` (no PR — user a
       each tool's success schema.
 - [ ] **Decide whether MCP sessions need a Durable Object** — the session map is isolate-local, and
       Cloudflare does not guarantee an identity keeps landing on the same isolate.
-- [ ] **Consider dropping `createDoSqlTransactionLayer`** — v4's `@effect/sql-sqlite-do` backs
-      `withTransaction` with `ctx.storage.transaction()` natively when the client is built with
-      `storage`. Left alone here because it changes production transaction semantics.
+- [ ] **Consider simplifying `createDoSqlTransactionLayer`'s body** — v4's `@effect/sql-sqlite-do`
+      backs `SqlClient.withTransaction` with `ctx.storage.transaction()` when the client is built
+      with `storage`, which is the same thing this layer hand-rolls. The layer itself stays either
+      way: `SqlTransaction` is a DXOS service that exists so a platform runtime can supply its own
+      implementation, and only its body could delegate to `SqlTransaction.layer` instead. Left
+      alone here because it changes production transaction semantics. (3 call sites: `feed-space`,
+      `indexer`, `do-sedimentree-storage`.)
 
 ### Production defects the test run surfaced
 
