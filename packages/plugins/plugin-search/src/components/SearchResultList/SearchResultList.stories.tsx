@@ -49,8 +49,7 @@ const enrichResult = (result: SearchResult, query: string): SearchResult => {
 };
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const [space] = useSpaces();
   const [query, setQuery] = useState('');
 
   const objects = useQuery(space?.db, buildSearchQuery(query));

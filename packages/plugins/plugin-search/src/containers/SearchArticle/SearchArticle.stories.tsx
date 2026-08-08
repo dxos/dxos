@@ -26,8 +26,7 @@ import { SearchArticle } from './SearchArticle';
 random.seed(0);
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const [space] = useSpaces();
   if (!space) {
     return <Loading />;
   }

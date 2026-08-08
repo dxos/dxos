@@ -9,6 +9,7 @@ import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import { CapabilityManager } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -28,6 +29,7 @@ import {
   DelegationSkill,
   PlanningHandlers,
   PlanningSkill,
+  makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
@@ -59,6 +61,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
@@ -463,11 +466,23 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
   })),
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
-    provides: [AppCapabilities.SkillDefinition, Capabilities.OperationHandler],
+    // Startup, not the implicit Idle: `AgentServiceSpec` reads `AgentDelegationStrategy` through
+    // `Capability.getAll` once, when its layer materializes, so the contribution has to be in place
+    // before anything can build that layer rather than merely before the story asserts.
+    activatesOn: ActivationEvents.Startup,
+    provides: [
+      AppCapabilities.SkillDefinition,
+      Capabilities.OperationHandler,
+      RoutineCapabilities.AgentDelegationStrategy,
+    ],
     activate: () =>
       Effect.succeed([
         // TODO(burdon): Clean up.
         Capability.contributeAll(AppCapabilities.SkillDefinition, [MarkdownSkill, PlanningSkill, DelegationSkill]),
+        // Supervisor behaviour, so a delegating story spawns its sub-agent. The app's copy rides
+        // plugin-assistant's `AssistantStart`-gated skill-definition module, which loses the race
+        // against `AgentService`'s layer — that layer reads this capability once, at build time.
+        Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
         Capability.contributeAll(Capabilities.OperationHandler, [
           MarkdownOperationHandlerSet,
           PlanningHandlers,

@@ -30,10 +30,6 @@ import { OutlineArticle } from './OutlineArticle';
 const ITEM = 'Review pricing page';
 const RENAMED = 'Revise pricing tiers';
 
-/** A plain item the converted one is measured against; neither first nor nested, so neither the
- * editor's top padding nor indentation is in play. */
-const PLAIN_NEIGHBOUR = 'Schedule the retro';
-
 const CONTENT = trim`
   - [ ] Draft the launch announcement
   - [ ] ${ITEM}
@@ -208,19 +204,18 @@ export const ConvertToTask: Story = {
     await waitFor(() => expect(sourceText(canvasElement)).toMatch(new RegExp(`- \\[${ITEM}\\]\\(echo://`)));
 
     // A converted item carries an anchor chip; its line must stay the same height as its plain
-    // neighbours (the chip's vertical padding is cancelled by a negative margin). Compare the two
-    // lines directly rather than spanning min/max over every line: the editor's first line carries
-    // the content's top padding in its bounding box, so it measures 56px against the others' 32px
-    // and a min/max form fails on that alone, whatever the chip does.
+    // neighbours (the chip's vertical padding is cancelled by a negative margin).
     await waitFor(() => {
-      const lines = [...canvasElement.querySelectorAll('.cm-content')[0].querySelectorAll('.cm-line')];
-      const converted = lines.find((line) => line.textContent?.includes(ITEM));
-      const plain = lines.find((line) => line.textContent?.includes(PLAIN_NEIGHBOUR));
-      if (!converted || !plain) {
-        throw new Error(`missing lines: converted=${!!converted} plain=${!!plain}`);
-      }
-      const delta = converted.getBoundingClientRect().height - plain.getBoundingClientRect().height;
-      return expect(Math.abs(delta)).toBeLessThan(1);
+      const lines = [...canvasElement.querySelectorAll('.cm-content')][0].querySelectorAll('.cm-line');
+      const chipLine = [...lines].find((line) => line.querySelector('dx-anchor'));
+      invariant(chipLine, 'No line carries the anchor chip.');
+      // Against the shortest plain line, not the tallest: the longest item soft-wraps to two line
+      // boxes at this column width, which says nothing about the chip.
+      const plain = [...lines]
+        .filter((line) => line !== chipLine)
+        .map((line) => line.getBoundingClientRect().height)
+        .filter((height) => height > 0);
+      return expect(Math.abs(chipLine.getBoundingClientRect().height - Math.min(...plain))).toBeLessThan(1);
     });
 
     // The promoted task appears in the durable task list (third column), proving the outliner
