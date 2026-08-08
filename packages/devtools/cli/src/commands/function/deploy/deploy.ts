@@ -28,7 +28,7 @@ import { parseOptions } from './options';
 export const deploy = Command.make(
   'deploy',
   {
-    entryPoint: Args.file({ name: 'entryPoint' }).pipe(Args.withDescription('The file to deploy.')),
+    entryPoint: Args.file('entryPoint').pipe(Args.withDescription('The file to deploy.')),
     // TODO(burdon): Human readable name?
     name: Options.string('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
     version: Options.string('version').pipe(

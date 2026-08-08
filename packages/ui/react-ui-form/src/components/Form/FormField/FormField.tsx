@@ -120,7 +120,7 @@ export const FormField = (props: FormFieldProps) => {
   // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so
   // we don't reconstruct it on every render.
   const providerSchema = useMemo(
-    () => (fieldProvider ? Schema.make<Schema.Schema<any>>(type) : undefined),
+    () => (fieldProvider ? Schema.make<Schema.Codec<any, any>>(type) : undefined),
     [fieldProvider, type],
   );
 

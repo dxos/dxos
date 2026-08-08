@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as NodeContext from '@effect/platform-node/NodeContext';
+import * as NodeServices from '@effect/platform-node/NodeServices';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
@@ -17,7 +17,7 @@ import { EffectEx } from '@dxos/effect';
 import { type Format, handler as exportSpace } from '../export';
 import { handler as importSpace } from './import';
 
-const ImportTestLayer = Layer.mergeAll(TestLayer, NodeContext.layer);
+const ImportTestLayer = Layer.mergeAll(TestLayer, NodeServices.layer);
 
 describe('space import', () => {
   it('should import a json archive as a new space', () =>

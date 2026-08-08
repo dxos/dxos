@@ -75,7 +75,7 @@ export type FormFieldMap = Record<string, FormFieldRenderer>;
 
 export type FormFieldProvider = (props: {
   prop: string;
-  schema: Schema.Schema<any>;
+  schema: Schema.Codec<any, any>;
   fieldProps: FormFieldRendererProps;
 }) => ReactElement | null | undefined;
 
