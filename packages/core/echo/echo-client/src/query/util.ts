@@ -96,6 +96,23 @@ export const queryHasWindowing = (query: QueryAST.Query): boolean => {
 };
 
 /**
+ * The query's disposition toward deleted objects, defaulting to `'exclude'` when it carries no
+ * `options` clause.
+ *
+ * Read by an AST walk rather than through {@link isSimpleSelectionQuery} so it also answers for the
+ * windowed and complex queries that helper deliberately rejects.
+ */
+export const getQueryDeletedOption = (query: QueryAST.Query): 'exclude' | 'include' | 'only' => {
+  let deleted: QueryAST.QueryOptions['deleted'];
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'options' && node.options.deleted !== undefined) {
+      deleted = node.options.deleted;
+    }
+  });
+  return deleted ?? 'exclude';
+};
+
+/**
  * Extracts the filter and options from a query.
  * Supports Select(...), Options(Select(...)), and From(Select(...)) queries.
  *

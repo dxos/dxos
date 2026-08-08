@@ -65,7 +65,10 @@ export const FilterObject: Schema.Codec<FilterObject> = FilterObject_;
 const FilterCompare_ = Schema.Struct({
   type: Schema.Literal('compare'),
   operator: Schema.Literals(['eq', 'neq', 'gt', 'gte', 'lt', 'lte']),
-  value: Schema.Unknown,
+  // Optional because the wire format cannot say otherwise: `Filter.eq(undefined)` — which is how
+  // `Filter.type(T, { prop: undefined })` matches an absent property — serializes to JSON with the
+  // key dropped, so the host must decode its absence back to `undefined` rather than reject.
+  value: Schema.optional(Schema.Unknown),
 });
 export interface FilterCompare extends Schema.Schema.Type<typeof FilterCompare_> {}
 export const FilterCompare: Schema.Codec<FilterCompare> = FilterCompare_;

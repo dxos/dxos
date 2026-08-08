@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 import { type FeedHandle } from '../feed/feed-handle';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
-import { type QuerySource, type SourceEntry, getTargetSpacesForQuery } from '../query';
+import { type QuerySource, type SourceEntry, getQueryDeletedOption, getTargetSpacesForQuery } from '../query';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -471,6 +471,13 @@ export class IndexQuerySource implements QuerySource {
       return null;
     }
 
+    // The host's index lags a local delete: its in-flight response still lists the object, and
+    // because results are a union across sources any stale entry resurfaces it after the working
+    // set has already dropped it. The local flag is authoritative here.
+    if (!this._matchesDeletedOption(object)) {
+      return null;
+    }
+
     const queryResult: SourceEntry = {
       id: object.id,
       result: object,
@@ -479,6 +486,19 @@ export class IndexQuerySource implements QuerySource {
       group: _groupFromRemoteResult(result),
     };
     return queryResult;
+  }
+
+  /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
+  private _matchesDeletedOption(object: Entity.Unknown): boolean {
+    const deleted = Entity.isDeleted(object);
+    switch (this._query === undefined ? 'exclude' : getQueryDeletedOption(this._query)) {
+      case 'exclude':
+        return !deleted;
+      case 'only':
+        return deleted;
+      case 'include':
+        return true;
+    }
   }
 
   /**
