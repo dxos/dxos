@@ -102,7 +102,7 @@ const unwrapOptionalUnion = (ast: AnyAst, isOptional: boolean): AnyAst => {
   if (!isOptional || ast._tag !== 'Union') {
     return ast;
   }
-  const types = (ast.types as AnyAst[]).filter((t) => t._tag !== 'UndefinedKeyword');
+  const types = (ast.types as AnyAst[]).filter((t) => t._tag !== 'Undefined');
   if (types.length === 1) {
     return types[0];
   }
@@ -115,13 +115,13 @@ const unwrapOptionalUnion = (ast: AnyAst, isOptional: boolean): AnyAst => {
 const astToZod = (ast: AnyAst): z.ZodTypeAny => {
   let zod: z.ZodTypeAny;
   switch (ast._tag) {
-    case 'StringKeyword':
+    case 'String':
       zod = z.string();
       break;
-    case 'NumberKeyword':
+    case 'Number':
       zod = z.number();
       break;
-    case 'BooleanKeyword':
+    case 'Boolean':
       zod = z.boolean();
       break;
     case 'Literal':
@@ -145,7 +145,7 @@ const astToZod = (ast: AnyAst): z.ZodTypeAny => {
       zod = z.enum(values);
       break;
     }
-    case 'TupleType': {
+    case 'Arrays': {
       // `Schema.Array(X)` produces a TupleType with a single rest element of
       // type X. Fixed tuples (`Schema.Tuple(...)`) aren't currently used.
       const tuple = ast as { rest?: ReadonlyArray<{ type: AnyAst }>; elements?: ReadonlyArray<unknown> };

@@ -830,6 +830,6 @@ describe('reference', () => {
     const schema = Schema.Struct({});
     const jsonSchema = toJsonSchema(schema);
     const deserialized = toEffectSchema(jsonSchema);
-    expect(deserialized.ast._tag).toBe('TypeLiteral');
+    expect(deserialized.ast._tag).toBe('Objects');
   });
 });

@@ -35,7 +35,7 @@ describe('operation registry round-trip', () => {
   test('LayoutOperation.Open input survives serialization', ({ expect }) => {
     const record = Operation.serialize(LayoutOperation.Open);
     const restored = Operation.deserialize(record);
-    expect(restored.input.ast._tag).toBe('TypeLiteral');
+    expect(restored.input.ast._tag).toBe('Objects');
   });
 
   test('assistant plugin operation inputs deserialize to struct-like schemas', async ({ expect }) => {
@@ -45,7 +45,7 @@ describe('operation registry round-trip', () => {
       const record = Operation.serialize(operation);
       const restored = Operation.deserialize(record);
       const tag = restored.input.ast._tag;
-      if (tag !== 'TypeLiteral' && tag !== 'VoidKeyword') {
+      if (tag !== 'Objects' && tag !== 'Void') {
         failures.push(`${operation.meta.key}: ${tag}`);
       }
     }

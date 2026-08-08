@@ -14,7 +14,7 @@ const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
     return prop.type;
   }
   // Drop the `undefined` member, preserving the remaining union (don't collapse `A | B | undefined` to `A`).
-  const defined = prop.type.types.filter((type) => type._tag !== 'UndefinedKeyword');
+  const defined = prop.type.types.filter((type) => type._tag !== 'Undefined');
   if (defined.length === 0) {
     return prop.type;
   }

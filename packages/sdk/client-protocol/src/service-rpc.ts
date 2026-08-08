@@ -104,7 +104,7 @@ export type ClientServicesHandlers = {
 
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
 
-const isVoidSchema = (schema: { ast: { _tag: string } }): boolean => schema.ast._tag === 'VoidKeyword';
+const isVoidSchema = (schema: { ast: { _tag: string } }): boolean => schema.ast._tag === 'Void';
 
 /** Splits an rpc tag into the {@link ClientServices} key and the service method name. */
 const parseTag = (tag: string): [serviceKey: keyof ClientServices, methodName: string] => {

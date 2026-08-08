@@ -281,7 +281,7 @@ export const useFormHandler = <T extends AnyProperties>({
       const pathArray = path;
       let parsedValue = value as any;
       try {
-        if (type._tag === 'NumberKeyword') {
+        if (type._tag === 'Number') {
           parsedValue = parseFloat(value as string) || 0;
         }
       } catch (err) {

@@ -328,10 +328,8 @@ const getFormField = ({
   type,
   format,
 }: Pick<FormFieldRendererProps, 'type' | 'format'>): FormFieldRenderer | undefined => {
-  // Unwrap refinements (e.g. Schema.Number.pipe(Schema.between(...))) to their base type.
-  if (SchemaAST.isRefinement(type)) {
-    return getFormField({ type: type.from, format });
-  }
+  // v4 has no `Refinement` node: `Schema.Number.pipe(Schema.check(...))` IS a `Number` node
+  // carrying checks, so the base-type cases below already match it.
 
   //
   // Standard formats.
@@ -358,12 +356,12 @@ const getFormField = ({
 
   switch (type._tag) {
     // TODO(wittjosiah): Schema.Any is currently used to represent template inputs.
-    case 'AnyKeyword':
-    case 'StringKeyword':
+    case 'Any':
+    case 'String':
       return TextField;
-    case 'NumberKeyword':
+    case 'Number':
       return NumberField;
-    case 'BooleanKeyword':
+    case 'Boolean':
       return BooleanField;
   }
 

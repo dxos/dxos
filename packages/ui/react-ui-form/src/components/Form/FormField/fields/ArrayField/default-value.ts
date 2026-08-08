@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-
 import { SchemaAST, SchemaEx } from '@dxos/effect';
+
+import { getNumericConstraints } from '../NumberField';
 
 // Kept out of `ArrayField.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
@@ -16,26 +16,20 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 // TODO(wittjosiah): Factor out?
 export const getDefaultValue = (ast?: SchemaAST.AST): any => {
   switch (ast?._tag) {
-    case 'StringKeyword': {
+    case 'String': {
       return '';
     }
-    case 'NumberKeyword': {
-      return 0;
+    case 'Number': {
+      // v4 has no `Refinement` node: a refined number IS a `Number` node carrying checks, so the
+      // declared minimum (e.g. `Schema.isBetween(1, 31)`) is read from them and used as the default
+      // so new array items start within the valid range.
+      return getNumericConstraints(ast).min ?? 0;
     }
-    case 'BooleanKeyword': {
+    case 'Boolean': {
       return false;
     }
     case 'Suspend': {
-      return getDefaultValue(ast.f());
-    }
-    case 'Refinement': {
-      // Use minimum from JSON schema annotation (e.g. Schema.between(1, 31)) as the default
-      // so new array items start within the valid range.
-      const jsonSchema = Option.getOrUndefined(SchemaAST.getJSONSchemaAnnotation(ast));
-      if (jsonSchema != null && 'minimum' in jsonSchema && typeof jsonSchema.minimum === 'number') {
-        return jsonSchema.minimum;
-      }
-      return getDefaultValue(ast.from);
+      return getDefaultValue(ast.thunk());
     }
     default: {
       if (ast && SchemaEx.isNestedType(ast)) {

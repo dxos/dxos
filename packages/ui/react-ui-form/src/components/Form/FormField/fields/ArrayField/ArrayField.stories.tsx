@@ -22,18 +22,19 @@ import { Form } from '../../../Form';
 const Column = Schema.Struct({
   name: Schema.String.annotate({ title: 'Name' }),
   value: Schema.optional(Schema.Number.annotate({ title: 'Value' })),
-}).pipe(
-  Schema.mutable,
-  LabelAnnotation.set(['name']),
-  FormLayoutAnnotation.set({
-    default: trim`
+})
+  .mapFields(Struct.map(Schema.mutableKey))
+  .pipe(
+    LabelAnnotation.set(['name']),
+    FormLayoutAnnotation.set({
+      default: trim`
       <grid cols="2">
         <field name="name"/>
         <field name="value"/>
       </grid>
     `,
-  }),
-);
+    }),
+  );
 type Column = Schema.Schema.Type<typeof Column>;
 
 const columnsField = Schema.Array(Column).pipe(Schema.mutable, Schema.annotate({ title: 'Columns' }));

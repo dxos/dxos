@@ -14,7 +14,7 @@ const propertyNames = (ast: SchemaAST.AST): string[] => {
   while (current._tag === 'Transformation') {
     current = current.from;
   }
-  return current._tag === 'TypeLiteral' ? current.propertySignatures.map((sig) => String(sig.name)) : [];
+  return current._tag === 'Objects' ? current.propertySignatures.map((sig) => String(sig.name)) : [];
 };
 
 describe('mergeJsonSchemas', () => {

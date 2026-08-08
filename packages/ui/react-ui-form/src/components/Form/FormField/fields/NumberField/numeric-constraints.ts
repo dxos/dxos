@@ -2,43 +2,65 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-
 import { SchemaAST } from '@dxos/effect';
 
 // Kept out of `NumberField.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
 
+/** The `representation` annotation a v4 check carries, naming the filter and its payload. */
+type CheckRepresentation = { readonly id?: string; readonly payload?: Record<string, unknown> | null };
+
+const representationOf = (check: SchemaAST.Check<any>): CheckRepresentation | undefined =>
+  (check.annotations as { representation?: CheckRepresentation } | undefined)?.representation;
+
+const numberAt = (payload: CheckRepresentation['payload'], key: string): number | undefined => {
+  const value = payload?.[key];
+  return typeof value === 'number' ? value : undefined;
+};
+
 /**
  * Extracts numeric constraints (`minimum`/`maximum` bounds and whether the value must be an integer)
- * by walking the chain of Refinement ASTs and reading each one's JSON schema annotation (e.g. produced
- * by `Schema.between` / `Schema.int`). Returns empty constraints when none are declared.
+ * from the checks attached to the node (e.g. produced by `Schema.isBetween` / `Schema.isInt`).
+ * Returns empty constraints when none are declared.
+ *
+ * Effect 4 has no `Refinement` node: refinements are checks on the node itself, each carrying a
+ * `representation` annotation naming the filter and its payload.
  */
 export const getNumericConstraints = (ast: SchemaAST.AST): { min?: number; max?: number; integer: boolean } => {
-  let node: SchemaAST.AST | undefined = ast;
   let min: number | undefined;
   let max: number | undefined;
   let integer = false;
-  // Nested refinements (e.g. `Schema.int()` + `Schema.between()`) each carry their own JSON schema
-  // fragment, so accumulate across the chain rather than reading only the outermost node.
-  while (node && SchemaAST.isRefinement(node)) {
-    const jsonSchema = Option.getOrUndefined(SchemaAST.getJSONSchemaAnnotation(node));
-    if (jsonSchema != null) {
-      // Stacked refinements intersect: keep the strictest bound (largest min, smallest max).
-      if ('minimum' in jsonSchema && typeof jsonSchema.minimum === 'number') {
-        min = min === undefined ? jsonSchema.minimum : Math.max(min, jsonSchema.minimum);
-      }
-      if ('maximum' in jsonSchema && typeof jsonSchema.maximum === 'number') {
-        max = max === undefined ? jsonSchema.maximum : Math.min(max, jsonSchema.maximum);
-      }
-      if (
-        ('type' in jsonSchema && jsonSchema.type === 'integer') ||
-        ('multipleOf' in jsonSchema && jsonSchema.multipleOf === 1)
-      ) {
-        integer = true;
-      }
+
+  // Stacked checks intersect: keep the strictest bound (largest min, smallest max).
+  const tighten = (lower?: number, upper?: number) => {
+    if (lower !== undefined) {
+      min = min === undefined ? lower : Math.max(min, lower);
     }
-    node = node.from;
+    if (upper !== undefined) {
+      max = max === undefined ? upper : Math.min(max, upper);
+    }
+  };
+
+  for (const check of SchemaAST.getChecks(ast)) {
+    const representation = representationOf(check);
+    switch (representation?.id) {
+      case 'effect/schema/isBetween':
+        tighten(numberAt(representation.payload, 'minimum'), numberAt(representation.payload, 'maximum'));
+        break;
+      case 'effect/schema/isGreaterThanOrEqualTo':
+        tighten(numberAt(representation.payload, 'minimum'), undefined);
+        break;
+      case 'effect/schema/isLessThanOrEqualTo':
+        tighten(undefined, numberAt(representation.payload, 'maximum'));
+        break;
+      case 'effect/schema/isInt':
+        integer = true;
+        break;
+      case 'effect/schema/isMultipleOf':
+        integer ||= numberAt(representation.payload, 'divisor') === 1;
+        break;
+    }
   }
+
   return { min, max, integer };
 };
