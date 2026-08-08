@@ -1,6 +1,6 @@
 # effect-smol — Tasks
 
-_Resume: Phase 3 — **edge's build is green (83/83 moon tasks)** against a locally linked dxos. dxos itself is green on build, node `:test` (233 projects), browser (153 tests) and workerd; two `plugin-review` storybook scenarios remain. Next: edge's test suites. Uncommitted: none._
+_Resume: Phase 3 — edge's **build is green (83/83 moon tasks)** and its **test suites are green** against a locally linked dxos, after fixing two production defects the type-checker could not see (see "Production defects the test run surfaced"). dxos itself is green on build, node `:test` (233 projects), browser (153 tests) and workerd; two `plugin-review` storybook scenarios remain. Next: D7 — publish the dxos branch so edge's `catalog:dxos` pins can replace the local tarball overrides. Uncommitted: none._
 
 Migrate `dxos/dxos` from Effect 3 to Effect 4, then `dxos/edge`. The _why_, the decisions
 (D1–D7) and the findings (F1–F4) live in [DESIGN.md](./DESIGN.md) — this file is the ledger.
@@ -247,7 +247,7 @@ Branch `claude/effect-4-migration-audit-pq2m8z` in `dxos/edge` (no PR — user a
 ### Tasks
 
 - [x] **Link edge against the local dxos build** — `node ./scripts/link-packages.mjs <DXOS> --all
-  --install` writes 315 `file:.local-pack/*.tgz` overrides into the root `package.json`. This is
+--install` writes 315 `file:.local-pack/*.tgz` overrides into the root `package.json`. This is
       the stand-in for D7 below, not a replacement for it.
 - [x] **Fix moon execution under `/workspace`** — moon's WASM toolchain maps virtual `/workspace`
       to the real workspace root, so a checkout whose own path starts with `/workspace` doubles the
@@ -266,15 +266,62 @@ Branch `claude/effect-4-migration-audit-pq2m8z` in `dxos/edge` (no PR — user a
 - [x] **Bump `dfx` to 1.0.15** — 0.113 peer-depends on `effect ^3.13` and cannot type-check against
       v4 at all. The REST surface changed with the major:
       `getChannelMessages(...).pipe((x) => x.json)` is now `listMessages(...)`.
-- [ ] **Run the edge test suites** (`:test`, workerd, e2e) and fix what the migration broke.
+- [x] **Run the edge test suites** (`:test`, node + workerd) and fix what the migration broke.
+      First run: 100 projects green, 4 failing (`edge` 22/35 files, `mcp-space-service` 4/4,
+      `crawler-service` 2/6, `db-service` 1/15). Root causes and fixes below; the two under
+      "production defects" would have shipped broken.
 - [ ] **Repoint `catalog:dxos` at the dxos branch SHA** (`edge:pnpm-workspace.yaml:104`) — blocked
       on D7, and the reason the tarball overrides above are a WIP shim rather than the answer.
 - [ ] **Verify the ai-service tool-schema path** still passes its description check (F4).
+- [ ] **Decide the MCP tool-failure contract** — v4 gives a failed tool no `structuredContent`, so
+      the machine-readable `code` now rides `content[0].text` as a `code: message` prefix. Any
+      client parsing `structuredContent.code` needs updating, or the failures need remodelling into
+      each tool's success schema.
+- [ ] **Decide whether MCP sessions need a Durable Object** — the session map is isolate-local, and
+      Cloudflare does not guarantee an identity keeps landing on the same isolate.
+- [ ] **Consider dropping `createDoSqlTransactionLayer`** — v4's `@effect/sql-sqlite-do` backs
+      `withTransaction` with `ctx.storage.transaction()` natively when the client is built with
+      `storage`. Left alone here because it changes production transaction semantics.
+
+### Production defects the test run surfaced
+
+Both are v4 behaviour changes that the type-checker could not catch, so a green build said nothing
+about them.
+
+- **Every MCP session was dead on arrival.** `mcpHandler` built the server layer, served one
+  request and disposed it. The 2025-06-18 streamable-HTTP transport keeps its session map inside
+  that layer, so the `mcp-session-id` returned by `initialize` pointed at a map that no longer
+  existed and every follow-up call 404'd. Now cached per `(env, identity)` — the toolkits capture
+  both when their layers are built, and an identity is the only safe sharing boundary for a
+  session.
+- **Typed tool failures were swallowed.** `McpServer` forwards a declared failure's text only when
+  it is an `Error`, substituting a generic "internal server error" otherwise. `ToolFailure` was a
+  plain `Schema.Struct`, so `space_not_in_context` / `invalid_request` / `operation_failed` all
+  collapsed to that string. It is now a tagged error carrying its code in the message.
+
+### Other test-only fixes
+
+- **`ERR_MODULE_DYNAMIC_SPEC` across every workerd bundle** — see the dxos-side change below.
+- **`crawler-service`** reached the Hono validator through `@dxos/edge-platform`'s barrel, whose
+  `cloudflare:workers` import cannot resolve in the node pool; it now uses a new `./api` subpath.
+  The package also lacked the `vite.config.ts` its siblings have, so vitest was collecting the
+  compiled `dist/test/*.test.js` alongside the sources.
+- **`discord-api-types`** joined `vitest.shared.ts`'s CJS-interop lists: its `v10.mjs` re-exports a
+  CJS bundle member by member, and without interop every binding — including the
+  `PermissionFlagsBits` dfx reads at import time — is `undefined`.
+- **`db-service`** asserted on a `SqlError` message that v4 now derives from a structured `reason`.
 
 ### dxos-side changes this phase required
 
 - `plugin-space` now re-exports `SpaceOperationHandlerSet` from `./plugin`, matching
   `plugin-projects` and `plugin-tasks` (commit `b60667a6`).
+- `sql-sqlite` no longer star-re-exports `Migrator` (commit `5df45d61`). Effect 4 folded
+  `fromFileSystem` into `effect/unstable/sql/Migrator`, where v3 kept it in a separate
+  `Migrator/FileSystem` module. Its dynamic `import()` of a template-literal path is a specifier no static
+  module loader can resolve, and `export *` materializes the whole namespace, so the dynamic import
+  rode into every bundle and workerd rejected the entire worker. **This broke real deploys, not
+  just miniflare**; it cost 21 of the 22 `edge:test` failures and all 4 `mcp-space-service` node
+  tests.
 
 ## Phase 4: Ship
 
