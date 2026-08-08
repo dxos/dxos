@@ -114,9 +114,10 @@ export default FetchMessages.pipe(
               const messages = yield* rest.listMessages(channel.id, options).pipe(
                 Effect.map(Array.map(makeMessage)),
                 Effect.map((collected: ReadonlyArray<ReturnType<typeof makeMessage>>) => Array.reverse(collected)),
-                Effect.catchTag('ErrorResponse', (err) =>
-                  err.cause.code === 50001 ? Effect.succeed([]) : Effect.fail(err),
-                ),
+                // `dfx` is pinned to Effect 3, so its tagged errors do not type against a v4 error
+                // channel; Discord's "Missing Access" code is matched structurally instead. See the
+                // dfx note in the effect-smol project — the skill needs a v4-capable client.
+                Effect.catch((error) => (isMissingAccess(error) ? Effect.succeed([]) : Effect.fail(error))),
               );
               if (messages.length > 0) {
                 lastMessage = Option.fromNullishOr(messages.at(-1));
@@ -165,6 +166,18 @@ const generateSnowflake = (unixTimestamp: number): bigint => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)
   return (BigInt(unixTimestamp * 1000) - discordEpoch) << 22n;
 };
+
+/** Discord's "Missing Access" error code, reported on a channel the bot cannot read. */
+const MISSING_ACCESS_CODE = 50001;
+
+const isMissingAccess = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  'cause' in error &&
+  typeof error.cause === 'object' &&
+  error.cause !== null &&
+  'code' in error.cause &&
+  error.cause.code === MISSING_ACCESS_CODE;
 
 const parseSnowflake = (snowflake: string): Date => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)
