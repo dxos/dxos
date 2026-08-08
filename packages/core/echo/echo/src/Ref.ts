@@ -7,7 +7,7 @@
 import type * as Schema from 'effect/Schema';
 
 import { SchemaAST } from '@dxos/effect';
-import { type URI } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import type * as internal from './internal';
@@ -111,15 +111,21 @@ export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.f
 
 export const hasEntityId = refInternal.Ref.hasEntityId;
 
-// TODO(wittjosiah): Factor out?
-export const isRefType = (ast: SchemaAST.AST): boolean => {
-  // A reference declares its target twice: as a typed annotation on the declaration and as the JSON
-  // schema keys on the encoded node. Effect 4 dropped the merged `jsonSchema` annotation this used
-  // to read, so both are consulted -- a schema rebuilt from stored JSON only carries the latter.
-  const reference = SchemaAST.getAnnotation<{ typename?: string }>(ast, ReferenceAnnotationId);
+/**
+ * The DXN a reference property points at, or `undefined` when the node is not a reference.
+ *
+ * A reference declares its target twice: as a typed annotation on the declaration and as the JSON
+ * schema keys on the encoded node. Effect 4 dropped the merged `jsonSchema` annotation this used to
+ * read, so both are consulted -- a schema rebuilt from stored JSON only carries the latter.
+ */
+export const getReferenceTarget = (ast: SchemaAST.AST): DXN.DXN | undefined => {
+  const reference = SchemaAST.getAnnotation<{ typename?: string; version?: string }>(ast, ReferenceAnnotationId);
   if (reference?.typename) {
-    return true;
+    return DXN.make(reference.typename, reference.version);
   }
   const encoded = SchemaAST.resolveAnnotations(SchemaAST.toEncoded(ast));
-  return encoded !== undefined && refInternal.getSchemaReference(encoded as JsonSchema.JsonSchema) !== undefined;
+  return encoded === undefined ? undefined : refInternal.getSchemaReferenceDXN(encoded as JsonSchema.JsonSchema);
 };
+
+// TODO(wittjosiah): Factor out?
+export const isRefType = (ast: SchemaAST.AST): boolean => getReferenceTarget(ast) !== undefined;

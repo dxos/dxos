@@ -49,7 +49,7 @@ describe('validate', () => {
       expect(Result.isFailure(value)).to.be.true;
       if (Result.isFailure(value)) {
         const [{ message }] = formatIssue(value.failure.issue).issues;
-        expect(message).to.eq('Expected a number divisible by 0.01, actual 0.001');
+        expect(message).to.eq('Expected a value that is a multiple of 0.01');
       }
     }
   });

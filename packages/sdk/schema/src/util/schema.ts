@@ -50,19 +50,22 @@ export const createDefaultSchema = () => {
 };
 
 export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Promise<Type.AnyEntity | undefined> => {
-  if (!DXN.isDXN(dxn)) {
+  if (!DXN.isDXN(dxn) || !registry) {
     return;
   }
 
-  const version = DXN.getVersion(dxn);
-  if (!version || !registry) {
-    return;
-  }
-  // `dxn` is already a canonical `dxn:<typename>:<version>` DXN; pass it through
-  // directly rather than rebuilding a DXN string.
-  const entity = registry.getByURI(dxn);
+  // `dxn` is already a canonical DXN; pass it through directly rather than rebuilding a DXN string.
+  // The registry indexes types by their versioned typename DXN, but a reference stored in JSON
+  // schema carries only the typename (`createSchemaReference` writes no version), so an unversioned
+  // target falls back to matching on typename alone.
+  const entity =
+    registry.getByURI(dxn) ??
+    (DXN.getVersion(dxn) === undefined ? findTypeByTypename(registry, DXN.getName(dxn)) : undefined);
   return entity != null && Type.isType(entity) ? entity : undefined;
 };
+
+const findTypeByTypename = (registry: Registry.Registry, typename: string) =>
+  registry.list().find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
 
 // TODO(burdon): Factor out.
 export const getSchemaFromPropertyDefinitions = (

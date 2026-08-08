@@ -152,13 +152,9 @@ export const makeWithReferences = async ({
     await Effect.gen(function* () {
       // v4's `Effect.gen` no longer yields an `Option` directly; absence becomes a
       // `NoSuchElementError` failure, which the recovery below already handles.
-      const referenceDXN = yield* Effect.fromOption(
-        Function.pipe(
-          SchemaEx.findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
-          Option.fromNullishOr,
-          Option.map((ref) => DXN.make(ref.typename, ref.version)),
-        ),
-      );
+      // The target is read through `Ref.getReferenceTarget` rather than the typed annotation: this
+      // schema was rebuilt from JSON, which carries the reference only as encoded `$ref` keys.
+      const referenceDXN = yield* Effect.fromOption(Option.fromNullishOr(Ref.getReferenceTarget(property.type)));
 
       const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDXN, registry));
 

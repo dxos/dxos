@@ -1030,7 +1030,8 @@ describe('ProjectionModel', () => {
 
     // Verify Format.Email has validation
     expect(() => Schema.decodeSync(Schema.toType(Format.Email))('valid@example.com')).not.toThrow();
-    expect(() => Schema.decodeSync(Schema.toType(Format.Email))('invalid-email')).toThrow(/Email/);
+    // v4 reports the check's own message (the email pattern) rather than the format's title.
+    expect(() => Schema.decodeSync(Schema.toType(Format.Email))('invalid-email')).toThrow(/matching the RegExp/);
 
     // Create and register schema using Format.Email
     const schema = Type.makeObject(DXN.make('com.example.type.emailTest', '0.1.0'))(

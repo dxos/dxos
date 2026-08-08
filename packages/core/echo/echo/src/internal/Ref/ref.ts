@@ -46,6 +46,14 @@ export const getSchemaReference = (property: JsonSchemaType): { typename: string
   }
 };
 
+/**
+ * The reference target as a DXN, preserving the version that {@link getSchemaReference} drops.
+ */
+export const getSchemaReferenceDXN = (property: JsonSchemaType): DXN.DXN | undefined => {
+  const { $id, reference: { schema: { $ref } = {} } = {} } = property;
+  return $id === JSON_SCHEMA_ECHO_REF_ID && $ref ? DXN.tryMake($ref) : undefined;
+};
+
 export const createSchemaReference = (typename: string): Types.DeepMutable<JsonSchemaType> => {
   return {
     $id: JSON_SCHEMA_ECHO_REF_ID,
