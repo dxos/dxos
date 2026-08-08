@@ -686,6 +686,7 @@ catalog:
   vitest: 4.1.10
   wait-on: ^8.0.3
   wavefile: ^11.0.0
+  web-ext: ^10.5.0
   web-tree-sitter: ^0.25.10
   webdriverio: ^8.32.4
   webext-bridge: ^6.0.1
