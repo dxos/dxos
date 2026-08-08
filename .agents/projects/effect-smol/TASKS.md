@@ -272,7 +272,11 @@ Branch `claude/effect-4-migration-audit-pq2m8z` in `dxos/edge` (no PR — user a
       "production defects" would have shipped broken.
 - [ ] **Repoint `catalog:dxos` at the dxos branch SHA** (`edge:pnpm-workspace.yaml:104`) — blocked
       on D7, and the reason the tarball overrides above are a WIP shim rather than the answer.
-- [ ] **Verify the ai-service tool-schema path** still passes its description check (F4).
+- [x] **Verify the ai-service tool-schema path** still passes its description check (F4) —
+      unchanged: `description` sits on the property itself, `required` lists the non-optional
+      fields, no `$ref`/`definitions`. Pinned by
+      `edge:ai-service/src/generation/tools/tool-schema.test.ts` so a regression shows up as a test
+      failure rather than a model quietly losing parameter guidance.
 - [ ] **Decide the MCP tool-failure contract** — v4 gives a failed tool no `structuredContent`, so
       the machine-readable `code` now rides `content[0].text` as a `code: message` prefix. Any
       client parsing `structuredContent.code` needs updating, or the failures need remodelling into
