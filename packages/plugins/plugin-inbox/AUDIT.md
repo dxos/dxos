@@ -320,8 +320,11 @@ flags as the one real code change (vs. mechanical file moves).
    is there a shared `plugin-connector`-level sync abstraction to promote?
    _(Interim answer: §8d publishes it as `@dxos/plugin-inbox/sync`; the promotion question
    is unchanged and belongs to the §3.7 hoist.)_
-4. **Provider-plugin registry visibility** — §8h D5: user-installable entries, or hidden
-   plugins activated implicitly with plugin-inbox?
+
+**Resolved for the provider split (2026-08-08):** all five §8h decisions — `apis/` inside the
+provider plugin, harness published as `./sync`, send routing inverted via a capability, one
+`plugin-google` covering all three domains, and both provider plugins user-installable +
+default-on. Open Q2 (`react-ui-card` packaging) and Q3's promotion half are untouched by it.
 
 ## 7. Provider-first split — `@dxos/plugin-google` / `@dxos/plugin-jmap` (headless)
 
@@ -507,7 +510,8 @@ service, one shared `google-api.ts` transport.
 
 ```
 packages/plugins/plugin-google/
-  dx.config.ts       key `org.dxos.plugin.google`, icon ph--google-logo--regular, tags ['labs','connector']
+  dx.config.ts       key `org.dxos.plugin.google`, icon ph--google-logo--regular,
+                     tags ['alpha','connector'] — matches plugin-inbox (§8h D5)
   PLUGIN.mdl         spec (Trello ships one; inbox's provider sections seed it)
   moon.yml           layer: library · tags: ts-vite-build, ts-test, pack
                      + check-module-structure: dx-trace-imports --export ./plugin --to "@dxos/react-ui"
@@ -552,7 +556,8 @@ Same shape, single domain, no OAuth (host + email + Bearer token via the credent
 
 ```
 packages/plugins/plugin-jmap/
-  dx.config.ts       key `org.dxos.plugin.jmap`, icon ph--envelope--regular, tags ['labs','connector']
+  dx.config.ts       key `org.dxos.plugin.jmap`, icon ph--envelope--regular,
+                     tags ['alpha','connector'] (§8h D5)
   PLUGIN.mdl  moon.yml (as above)  package.json ("private": true)
   src/
     JmapPlugin.ts    headless: addOperationHandlerModule + SetupConnectors + translations
@@ -634,13 +639,13 @@ which is why it becomes `src/sync/` rather than staying under `operations/`.
 
 ### 8f. Call sites outside the three packages
 
-| File                                                              | Change                                                                                      |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `packages/apps/composer-app/src/plugin-defs.tsx`                  | import + register `GooglePlugin()` / `JmapPlugin()` next to `InboxPlugin()` and `TrelloPlugin()` |
-| `packages/apps/composer-app/{package.json,tsconfig.json}`         | add both `workspace:*` deps + project references                                            |
+| File                                                                   | Change                                                                                                                                                  |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/apps/composer-app/src/plugin-defs.tsx`                       | register `GooglePlugin()` / `JmapPlugin()` in `getPlugins` **and** add both keys to `getDefaults` next to `InboxPlugin.meta.profile.key` (§8h D5)       |
+| `packages/apps/composer-app/{package.json,tsconfig.json}`              | add both `workspace:*` deps + project references                                                                                                        |
 | `packages/apps/composer-app/src/playwright/plugins/inbox-http-mock.ts` | repoint `GmailDataset`/`generateGmailDataset` → `@dxos/plugin-google/testing`, `Jmap`/`JmapDataset`/`generateJmapDataset` → `@dxos/plugin-jmap/testing` |
-| `packages/devtools/cli/src/util/skills.ts`                        | merge `GoogleOperationHandlerSet` + `JmapOperationHandlerSet` into `operationHandlers` (§8e.4) |
-| `packages/stories/stories-inbox/src/stories/MailboxSync.stories.tsx` | register both provider plugins so the connectors resolve                                  |
+| `packages/devtools/cli/src/util/skills.ts`                             | merge `GoogleOperationHandlerSet` + `JmapOperationHandlerSet` into `operationHandlers` (§8e.4)                                                          |
+| `packages/stories/stories-inbox/src/stories/MailboxSync.stories.tsx`   | register both provider plugins so the connectors resolve                                                                                                |
 
 No other consumer touches a provider symbol: the 17 packages importing `@dxos/plugin-inbox`
 pull `Mailbox` (28×), `InboxOperation` (6×), `Calendar` (4×), `ExtractedFrom` (3×) — all of
@@ -672,22 +677,28 @@ JMAP-before-Google is deliberate: it is a third the size, single-domain, and has
 helpers, so the packaging problems (headless `moon.yml` guard, `./sync` export shape,
 fixture split, registration sites) get solved on the cheaper package.
 
-### 8h. New decisions
+### 8h. Decisions (all resolved 2026-08-08)
 
-1. **`apis/` inside the provider plugin, not its own package.** → **Recommend inside**
-   (`plugin-google/src/apis/`, framework-free, README rule intact). It keeps roadmap step 2
-   from standing up two packages with exactly one consumer each; promote to
+1. **`apis/` inside the provider plugin, not its own package.** ✅ `plugin-google/src/apis/`,
+   `plugin-jmap/src/apis/` — framework-free, `apis/README.md` rule intact. Keeps roadmap
+   step 2 from standing up two packages with exactly one consumer each; promote to
    `@dxos/google-apis` only when something outside the plugin wants them. Also settles §6
    open Q1 (naming) by deferring it.
-2. **Harness location.** → **`@dxos/plugin-inbox/sync` now** (§8d), promotion to
+2. **Harness location.** ✅ **`@dxos/plugin-inbox/sync` now** (§8d); promotion to
    `@dxos/plugin-connector` deferred to the §3.7 hoist, per §7.3.
-3. **Send routing.** → **Capability registry now** (§8e.2), even though Option A makes the
-   ternary survive compilation.
-4. **One `plugin-google`, not three.** → **Recommend one** — the three Google connectors
-   share OAuth scopes, `google-api.ts`, `GoogleCredentials`, and `GoogleApiError`; splitting
-   by domain would triplicate all of it. Revisit only if Calendar/Contacts ship
-   independently.
-5. **Registry visibility — open.** Both plugins are UI-less and a Mailbox is inert without
-   one. Do they appear as user-installable entries in the registry (like `plugin-trello`,
-   `tags: ['labs','connector']`), or are they hidden and activated implicitly with
-   plugin-inbox? Affects `dx.config.ts` tags and whether each needs a `PLUGIN.mdl`.
+3. **Send routing.** ✅ **Capability registry now** (§8e.2), even though Option A makes the
+   ternary survive compilation — the inversion is ~20 LOC, lands in step 2 of §8g while the
+   provider code is still local to test against, and is the same shape §3.1 needs later.
+4. **One `plugin-google`, not three.** ✅ The three Google connectors share OAuth scopes,
+   `google-api.ts`, `GoogleCredentials`, and `GoogleApiError`; splitting by domain would
+   triplicate all of it (or force the `@dxos/google-apis` package that D1 just avoided).
+   Revisit only if Calendar/Contacts ever ship independently.
+5. **Registry visibility.** ✅ **Both are user-installable and on by default** — registered in
+   `getPlugins` _and_ keyed into `getDefaults`, `tags: ['alpha', 'connector']` matching
+   plugin-inbox's own tags, each with a `PLUGIN.mdl` for its registry card.
+   - Rejected: the `plugin-trello` treatment (`getPlugins` only, opt-in) — a default Inbox
+     install would then offer no mail providers at all, so "Add mailbox" dead-ends until the
+     user discovers plugin-google. That is a broken default, not a preference.
+   - Rejected: `getCorePlugins` — near-zero cost (both are `Plugin.lazy` and only contribute
+     on `SetupConnectors`), but provider integrations are not infrastructure, and it would
+     remove the user's ability to turn a provider off.
