@@ -21,26 +21,20 @@ const navigateToNewDocument = async (app: AppManager) => {
   await app.navigateToObject(0); // New document.
 };
 
-// The chromium-only gate below is the real WebRTC limitation (playwright#2973) after all. A prior
-// revision of this comment claimed otherwise, citing todomvc's green non-chromium runs as proof
-// that peer connections work — but todomvc's own beforeEach aliases `guest = host` off chromium
-// (basic.spec.ts), so those runs never perform an invitation and prove nothing. Instrumented on
-// webkit with the gate lifted: BOTH peers log `connection.ts:187 "timeout waiting 10s for
-// transport to connect"` — the swarm's only data transport is WebRTC (`service-host.ts` always
-// uses `createRtcTransportFactory`; edge provides signaling, not transport), so the invitation
-// handshake cannot complete without it. CORRECTION (2026-08-08): same-host peers CAN complete
-// ICE on host candidates even where external STUN/TURN is blocked — measured working on chromium
-// in the Claude cloud sandbox with the e2ePreset launch fixes — so chromium two-peer runs are
-// locally testable after all; webkit was measured failing (both peers time out waiting for the
-// transport), cause not yet isolated. Ignore webkit's `'allow-presentation'` console flood during
-// this flow — it comes from MediaPlayer's iframe sandbox, unrelated.
+// Two-peer WebRTC runs on ALL browsers in CI: todomvc's de-aliased suite measured every
+// invitation connecting there (run 31263921597 — chromium 8/8, firefox 8/8, webkit 7/8, the one
+// failure an app-boot stall, not transport), which retired this suite's firefox/webkit skip. The
+// remaining limitation is the Claude cloud sandbox only: chromium two-peer works locally with the
+// e2ePreset launch fixes, while sandbox webkit peers time out waiting for the transport
+// (`connection.ts "timeout waiting 10s"`), so cross-browser results come from CI, not local runs.
+// Ignore webkit's `'allow-presentation'` console flood during this flow — it comes from
+// MediaPlayer's iframe sandbox, unrelated.
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
 
-  test.beforeEach(async ({ browser, browserName }) => {
-    test.setTimeout(60_000);
-    test.skip(browserName === 'firefox' || browserName === 'webkit');
+  test.beforeEach(async ({ browser }) => {
+    test.setTimeout(90_000);
 
     host = new AppManager(browser, false);
     guest = new AppManager(browser, false);
