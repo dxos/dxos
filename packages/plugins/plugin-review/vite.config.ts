@@ -28,8 +28,8 @@ export default defineConfig({
     'ReviewEvents': 'src/types/ReviewEvents.ts',
   },
   jsx: 'react',
-  // Each versioning story boots a client and drives the editor through several UI round trips; the
-  // plays' own waitFor bounds already total past the 15s default, so the test timeout has to clear
-  // them or they can never pass regardless of how fast the run actually is.
+  // The story's first render waits on the demand-gated activation pass (the Idle wave plus every
+  // plugin's start event), which costs several seconds before the play can begin, so the 15s
+  // browser-mode default no longer clears it.
   test: { node: true, storybook: { timeout: 60_000 } },
 });

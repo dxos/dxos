@@ -40,8 +40,8 @@ export default defineConfig({
   // re-instantiates that WASM module graph for every story file and exhausts the single headless
   // chromium's WASM memory partway through the suite (`RangeError: ... Out of memory: Cannot
   // allocate Wasm memory for new instance`). Share the module graph across files instead.
-  // The conversation stories step through reply drafts with a per-step bound of their own, totalling
-  // past the 15s default, so the test timeout has to clear them or they can never pass regardless of
-  // how fast the run actually is.
+  // The story's first render waits on the demand-gated activation pass (the Idle wave plus every
+  // plugin's start event), which costs several seconds before the play can begin, so the 15s
+  // browser-mode default no longer clears it.
   test: { node: true, storybook: { isolate: false, timeout: 60_000 } },
 });

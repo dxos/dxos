@@ -8,13 +8,10 @@ import { useCallback } from 'react';
 
 import { Capabilities } from '../../common';
 import { type Capability } from '../../core';
-import { useOptionalPluginManager, usePluginManager } from '../components';
+import { usePluginManager } from '../components';
 
 /** Stable atom yielding `undefined`, used as the fallback for optional atom-capability lookups. */
 const emptyAtomValue = Atom.make(() => undefined);
-
-/** Stable atom yielding no capabilities, used when there is no plugin manager to read from. */
-const emptyCapabilitiesAtom = Atom.make((): never[] => []);
 
 /**
  * Hook to request capabilities from the plugin context.
@@ -48,16 +45,11 @@ export const useCapability = <T>(interfaceDef: Capability.InterfaceDef<T>) => {
 
 /**
  * Hook to request capabilities that a plugin may or may not contribute.
- *
- * Tolerates a missing manager as well as a missing contribution — a component rendered standalone
- * (a settings story, a unit test) has no `PluginManagerProvider` above it, and an optional lookup
- * must not be what blanks it.
- *
  * @returns An array of capabilities, empty when none is registered.
  */
 export const useOptionalCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>): readonly T[] => {
-  const manager = useOptionalPluginManager();
-  return useAtomValue(manager ? manager.capabilities.atom(interfaceDef) : emptyCapabilitiesAtom);
+  const manager = usePluginManager();
+  return useAtomValue(manager.capabilities.atom(interfaceDef));
 };
 
 /**

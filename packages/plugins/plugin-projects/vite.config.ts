@@ -22,7 +22,8 @@ export default defineConfig({
     'ProjectsEvents': 'src/types/ProjectsEvents.ts',
   },
   jsx: 'react',
-  // The article story walks five sections, each with its own 10s bound, so the test timeout has to
-  // clear their total or the story can never pass regardless of how fast the run actually is.
+  // The story's first render waits on the demand-gated activation pass (the Idle wave plus every
+  // plugin's start event), which costs several seconds before the play can begin, so the 15s
+  // browser-mode default no longer clears it.
   test: { node: true, storybook: { timeout: 60_000 } },
 });
