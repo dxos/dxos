@@ -38,6 +38,10 @@ export const indexByRole = (definitions: Definition[]): Map<string, Definition[]
   return index;
 };
 
+/** Definitions are stable objects, so a bucket is unchanged when it holds the same ones in order. */
+const sameCandidates = (left: ReadonlyArray<Definition>, right: ReadonlyArray<Definition>): boolean =>
+  left.length === right.length && left.every((definition, index) => definition === right[index]);
+
 /**
  * Owns the per-manager surface memoization: one derived index atom plus a per-role
  * family of candidate atoms. A single instance is provided via
@@ -54,14 +58,14 @@ export class SurfaceManager {
     return indexByRole(this.#dropInvalid(definitions));
   }).pipe(Atom.keepAlive);
 
-  // Per-role candidate atoms. `Data.array` gives the result structural equality, so a
-  // contribution to a different role recomputes to an equal value and is dropped —
-  // that role's subscribers never re-render.
+  // Per-role candidate atoms. The atom carries the equality, so a contribution to a different role
+  // recomputes this bucket to an equal value and is dropped — that role's subscribers never
+  // re-render. (v4 removed `Data.array`, which used to supply that equality structurally.)
   readonly #candidates = Atom.family<string, Atom.Atom<ReadonlyArray<Definition>>>((role) =>
     Atom.make((get) => {
       const bucket = get(this.#index).get(role);
       return bucket ? [...bucket] : EMPTY_CANDIDATES;
-    }).pipe(Atom.keepAlive),
+    }).pipe(Atom.withEquality(sameCandidates), Atom.keepAlive),
   );
 
   // Ids already reported as invalid on this manager, so a persistently-malformed
