@@ -33,15 +33,18 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Still deferred, cause narrowed: after `joinNewIdentity()` resets storage and
-  //   reloads, `halo-invitation-input` never mounts (1 of 6 serialized local runs; CI runs
-  //   31131235658, 31271416331). RULED OUT: a welcome-screen/join-dialog update race — real, and
-  //   now fixed in `OnboardingManager`, but composer e2e runs without a hubUrl, so `skipAuth`
-  //   means the welcome screen never opens on this path. What remains is inside the post-reset
-  //   join flow itself: `onReset` reloads with an EMPTY `?deviceInvitationCode=` (the guest never
-  //   had one in its URL), so onboarding opens the join dialog with an empty initial code — the
-  //   suspect is that empty-code path racing the shell's own mount. Instrument JOIN_DIALOG mount
-  //   vs. `_openJoinIdentity` next.
+  // TODO(wittjosiah): Deferred on a located product race in the shell's join machine, not a test
+  //   problem. `JoinPanel` snapshots `identity` into the machine context once at mount
+  //   (JoinPanel.tsx `useJoinMachine({ context: { identity, ... } })`), and the
+  //   `initiallyAcceptingHaloInvitation` guard (joinMachine.ts) requires `!identity`. After
+  //   `client.reset()` + reload, a `useIdentity()` that still reports the pre-reset identity when
+  //   the dialog mounts fails that guard, the machine falls back to the auth-method chooser, and
+  //   `halo-invitation-input` is never rendered — permanently, because the context is a one-time
+  //   snapshot. Matches every observation: healthy page, missing input, ~1 in 6 locally (CI runs
+  //   31131235658, 31271416331). The fix belongs in the shell (re-evaluate the disposition when
+  //   identity resolves, or gate the dialog on a settled post-reset identity) and needs a shell
+  //   owner. RULED OUT along the way: a welcome-screen/join-dialog update race (real, fixed in
+  //   `OnboardingManager`, but unreachable here because composer e2e runs `skipAuth`).
   test.fixme('join new identity', async () => {
     test.setTimeout(90_000);
 
