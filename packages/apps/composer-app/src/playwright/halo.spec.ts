@@ -47,7 +47,7 @@ test.describe('HALO tests', () => {
   //   have `handleConfirm` re-validate instead of gating via `disabled`). Two adjacent defects were
   //   found and fixed while chasing this — the `OnboardingManager` welcome/join dialog race and
   //   `JoinPanel` stranding in the exit-less `resettingIdentity` state — neither is this one.
-  test.fixme('join new identity', async () => {
+  test('join new identity', async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();

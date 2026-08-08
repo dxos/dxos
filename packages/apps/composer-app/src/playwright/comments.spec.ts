@@ -200,15 +200,12 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  // TODO(wittjosiah): 1-in-5 race, measured with the strict-mode anchor collision fixed and
-  //   `onSelect` writing the selection atom synchronously (both landed): after clicking the FIRST
-  //   comment, its thread sometimes never gets `aria-current` — the state the click set is
-  //   overwritten when the just-created third thread's composer restores focus and
-  //   `CommentsArticle.handleAttend` re-records it as current (the exact hazard the handleAttend
-  //   comment describes). Product fix needed: a passive focus restoration must not override a
-  //   deliberate editor selection. The earlier attention-gating diagnosis here was stale —
-  //   `isRelated` covers the editor plank, and the test passes 4/5.
-  test.fixme('selecting comment highlights thread and vice versa', async () => {
+  // Re-enabled with the attention gate made sticky (see `CommentsArticle`'s `currentId`): clicking
+  // a comment attends the EDITOR plank, so the comments companion's gate briefly closed and dropped
+  // the selection it had just recorded — permanently, since nothing re-fires. Two test-side bugs
+  // were fixed alongside: lorem slices collided under strict-mode locators (unique anchor tokens
+  // now), and `onSelect` routed through an async operation whose completions could reorder.
+  test('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 

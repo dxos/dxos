@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -226,7 +226,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
   const isAttended = hasAttention || isAncestor || isRelated;
-  const currentId = isAttended ? state.current : undefined;
+  // Sticky across attention transit. The gate exists so an unrelated plank never shows a stale
+  // current thread, but attention moving between the editor and this companion is one logical unit
+  // passing through a moment where neither `hasAttention` nor `isRelated` holds. Recomputing from
+  // scratch in that window dropped the marker permanently (nothing re-fires afterward), which is
+  // what made `selecting comment highlights thread` fail 1 in 5: clicking a comment attends the
+  // EDITOR, so this plank's gate briefly closed and the selection it had just recorded was lost.
+  const lastCurrentId = useRef<string | undefined>(undefined);
+  if (isAttended) {
+    lastCurrentId.current = state.current;
+  }
+  const currentId = isAttended ? state.current : lastCurrentId.current;
 
   // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
   // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
