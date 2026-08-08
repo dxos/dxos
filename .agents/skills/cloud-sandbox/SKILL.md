@@ -112,9 +112,17 @@ Playwright:
 
 ```ts
 const browser = await chromium.launch({
+  // The image ships an older Chromium than Playwright's pin, which otherwise refuses to launch.
   executablePath: '/opt/pw-browsers/chromium',
-  args: ['--no-sandbox', '--ssl-version-max=tls1.2'],
-  proxy: { server: process.env.HTTPS_PROXY!, bypass: '127.0.0.1,localhost' },
+  args: [
+    '--no-sandbox',
+    // Args form, NOT Playwright's `proxy:` option — that option drops its `bypass` list for pages
+    // in a non-default context, sending the app's own localhost URL through the proxy (405, the
+    // page renders the proxy's error text instead of the app).
+    `--proxy-server=${process.env.HTTPS_PROXY}`,
+    '--proxy-bypass-list=127.0.0.1;localhost',
+    '--ssl-version-max=tls1.2',
+  ],
 });
 ```
 
@@ -138,14 +146,20 @@ An unauthenticated `wss://dxos.network/ws/<identityKey>/<peerKey>` gets edge's o
 Do NOT cite todomvc's green non-chromium playwright runs as proof that two-peer invitations work
 here — its beforeEach aliases `guest = host` off chromium, so those runs never open a second peer.
 Space invitations require a real WebRTC swarm connection (edge is signaling only, and
-`@dxos/network-manager` has no edge-relay data transport), so with no UDP they fail on EVERY
-browser; both peers log `connection.ts "timeout waiting 10s for transport to connect"`.
+`@dxos/network-manager` has no edge-relay data transport). Same-host peers CAN connect on host
+candidates (see above) — measured working on chromium with the launch fixes; webkit was measured
+failing with both peers logging `connection.ts "timeout waiting 10s for transport to connect"`,
+cause not yet isolated (webkit-side WebRTC vs. environment).
 
 Does not work:
 
-- **WebRTC / anything over UDP.** The sandbox offers only an HTTP CONNECT proxy, so STUN and TURN
-  cannot work. Peer-to-peer swarm connections and device invitations will fail. Edge-mediated
-  signaling and replication over WSS is the path that works.
+- **External UDP only** (measured 2026-08-08, superseding an earlier blanket "no WebRTC" claim):
+  STUN binding to public servers times out, and `calls.dxos.network` TURN is policy-blocked — but
+  **same-host WebRTC works**: two peers in the same browser on this host complete ICE on host
+  candidates over the container's own interface, with the real `https://dxos.network/ice` config
+  and its unreachable STUN/TURN listed. Two-peer playwright tests (invitation → WebRTC connect →
+  replication) can therefore pass locally on chromium. Only flows needing NAT traversal to an
+  external peer are impossible.
 - **`calls.dxos.network`** — the egress gateway answers 502 to the CONNECT (policy denial). Calls
   and transcription features are unavailable.
 - **`api.ipfs.dxos.network`, `gateway.ipfs.dxos.network`** — CONNECT is allowed but the origin

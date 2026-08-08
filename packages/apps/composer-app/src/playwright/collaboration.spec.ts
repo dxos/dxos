@@ -28,10 +28,12 @@ const navigateToNewDocument = async (app: AppManager) => {
 // webkit with the gate lifted: BOTH peers log `connection.ts:187 "timeout waiting 10s for
 // transport to connect"` — the swarm's only data transport is WebRTC (`service-host.ts` always
 // uses `createRtcTransportFactory`; edge provides signaling, not transport), so the invitation
-// handshake cannot complete without it. In environments with no UDP (the Claude cloud sandbox)
-// this fails on every browser, chromium included. Lifting the gate requires an edge-relay data
-// transport in @dxos/network-manager, not a test change. Ignore webkit's `'allow-presentation'`
-// console flood during this flow — it comes from MediaPlayer's iframe sandbox, unrelated.
+// handshake cannot complete without it. CORRECTION (2026-08-08): same-host peers CAN complete
+// ICE on host candidates even where external STUN/TURN is blocked — measured working on chromium
+// in the Claude cloud sandbox with the e2ePreset launch fixes — so chromium two-peer runs are
+// locally testable after all; webkit was measured failing (both peers time out waiting for the
+// transport), cause not yet isolated. Ignore webkit's `'allow-presentation'` console flood during
+// this flow — it comes from MediaPlayer's iframe sandbox, unrelated.
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;

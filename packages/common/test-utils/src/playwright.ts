@@ -58,15 +58,24 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
   const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${packageDirName}.json`);
 
   const browser = process.env.PLAYWRIGHT_BROWSER || (process.env.CI ? 'all' : 'chromium');
-  // In the Claude Code cloud sandbox chromium has no route to HTTPS on its own: it ignores
-  // $HTTPS_PROXY, and the egress proxy resets its TLS 1.3 ClientHello, so it must be pointed at
-  // the proxy AND capped at TLS 1.2 (a proxy-side defect — see the cloud-sandbox skill). Gated so
-  // real dev and CI runs are never silently downgraded; firefox/webkit need nothing.
+  // In the Claude Code cloud sandbox chromium needs three launch fixes (see the cloud-sandbox
+  // skill): the pinned executable (the image ships an older build than Playwright's pin, which
+  // otherwise refuses to launch), the egress proxy via ARGS — Playwright's `proxy:` option drops
+  // its bypass list for pages in a non-default context, sending the app's own localhost URL
+  // through the proxy — and a TLS 1.2 cap (the proxy resets chromium's TLS 1.3 ClientHello).
+  // Gated so real dev and CI runs are never silently downgraded; firefox/webkit need nothing.
   const sandboxProxy = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
   const sandboxChromium = sandboxProxy
     ? {
-        launchOptions: { args: ['--ssl-version-max=tls1.2'] },
-        proxy: { server: sandboxProxy, bypass: '127.0.0.1,localhost' },
+        launchOptions: {
+          executablePath: '/opt/pw-browsers/chromium',
+          args: [
+            '--no-sandbox',
+            `--proxy-server=${sandboxProxy}`,
+            '--proxy-bypass-list=127.0.0.1;localhost',
+            '--ssl-version-max=tls1.2',
+          ],
+        },
       }
     : {};
   const projects = [
