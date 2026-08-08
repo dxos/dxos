@@ -59,11 +59,11 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
         types: [TestItem, Person.Person, Organization.Organization],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            const { personalSpace } = yield* initializeIdentity(client);
+            const { defaultSpace } = yield* initializeIdentity(client);
             if (enableVectorIndex) {
               yield* enableQueryIndexes(client.services.services);
             }
-            yield* Effect.promise(() => seedTestData(personalSpace));
+            yield* Effect.promise(() => seedTestData(defaultSpace));
           }),
       }),
       PreviewPlugin(),

@@ -16,11 +16,7 @@ const meta = {
   title: 'plugins/plugin-assistant/containers/AssistantSettings',
   tags: ['settings'],
   component: AssistantSettings,
-  // `AssistantSettings` reads `AssistantCapabilities.OllamaManager` through `useOptionalCapability`,
-  // which resolves via `PluginManagerContext` — without a manager the hook raises rather than
-  // returning undefined, so the story cannot render at all. No capabilities are registered: the
-  // absent-Ollama branch is the one this story exercises.
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ capabilities: [] })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({})],
   parameters: {
     layout: 'fullscreen',
     translations,

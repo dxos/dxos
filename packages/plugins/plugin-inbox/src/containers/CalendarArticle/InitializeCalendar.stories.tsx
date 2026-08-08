@@ -47,10 +47,10 @@ const meta = {
           types: [AccessToken.AccessToken, Feed.Feed, Calendar.Calendar],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(Calendar.make({ name: 'My Calendar' }));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              defaultSpace.db.add(Calendar.make({ name: 'My Calendar' }));
               if (withToken) {
-                personalSpace.db.add(
+                defaultSpace.db.add(
                   Obj.make(AccessToken.AccessToken, {
                     source: 'google.com',
                     account: 'user@example.com',
@@ -58,7 +58,7 @@ const meta = {
                   }),
                 );
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         StorybookPlugin({}),

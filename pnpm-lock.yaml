@@ -15500,9 +15500,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -15515,6 +15512,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
@@ -15582,9 +15582,6 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -17541,6 +17538,9 @@ importers:
       '@dxos/progress':
         specifier: workspace:*
         version: link:../../core/compute/progress
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client

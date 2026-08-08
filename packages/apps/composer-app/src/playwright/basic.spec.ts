@@ -109,7 +109,7 @@ test.describe('Basic tests', () => {
     await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
     // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
     // 30s gives ~3x headroom over the observed worst case.
-    // After reset the exemplar space is re-seeded alongside the personal space.
+    // After reset the exemplar space is re-seeded alongside the default space.
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
   });
 });

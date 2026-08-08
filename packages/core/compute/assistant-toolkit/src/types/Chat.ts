@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Harness } from '@dxos/assistant';
+import type { Harness } from '@dxos/assistant';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -132,7 +132,11 @@ export const getFromContext: Effect.Effect<
   HarnessContextError | Harness.NotSupportedError,
   Harness.HarnessService
 > = Effect.gen(function* () {
-  const chats = yield* Harness.queryContext(Filter.type(Chat));
+  // Loaded here rather than imported: `@dxos/assistant` pulls the AI session runtime (MCP SDK,
+  // Anthropic client, ~280 KB), and this module carries the Chat *schema*, which core plugins
+  // reference for their operation definitions.
+  const { Harness: HarnessRuntime } = yield* Effect.promise(() => import('@dxos/assistant'));
+  const chats = yield* HarnessRuntime.queryContext(Filter.type(Chat));
   if (chats.length !== 1) {
     return yield* Effect.fail(new HarnessContextError({ type: 'chat', count: chats.length }));
   }

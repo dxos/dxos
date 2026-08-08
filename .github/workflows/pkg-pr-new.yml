@@ -8,7 +8,10 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Queue rather than cancel: a cancelled run uploads nothing, so the commit it was building stays
+  # permanently un-installable for anything pinning pkg.pr.new — which is how the composer plugins
+  # repo tracks the SDK, and its nightly 404s when it lands on such a commit.
+  cancel-in-progress: false
 
 env:
   # Bound once here rather than at every setup call site: a composite action cannot read the

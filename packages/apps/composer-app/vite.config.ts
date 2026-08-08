@@ -34,6 +34,7 @@ const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 // DX_PLUGIN_SET=minimal (serve-min task) swaps the full plugin registry for
 // plugin-defs.minimal.tsx without touching main.tsx.
 const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
+const pluginSetFile = isMinimalPluginSet ? 'src/plugin-defs.minimal.tsx' : 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -57,7 +58,7 @@ const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as con
  */
 const minimalPluginEntries = () => {
   const names = new Set<string>();
-  for (const file of ['src/plugin-defs.minimal.tsx', 'src/plugin-defs.core.tsx']) {
+  for (const file of [pluginSetFile, 'src/plugin-defs.core.tsx']) {
     const source = readFileSync(path.join(dirname, file), 'utf8');
     for (const [, name] of source.matchAll(/@dxos\/plugin-([a-z0-9-]+)/g)) {
       names.add(name);
@@ -162,7 +163,7 @@ export default defineConfig((env) => ({
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
         './src/workers/coordinator-worker.ts',
-        isMinimalPluginSet ? './src/plugin-defs.minimal.tsx' : './src/plugin-defs.tsx',
+        `./${pluginSetFile}`,
       ],
     },
   },
@@ -357,9 +358,7 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
-      ...(isMinimalPluginSet
-        ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, 'src/plugin-defs.minimal.tsx') }]
-        : []),
+      ...(isMinimalPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },

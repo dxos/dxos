@@ -132,7 +132,7 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
     const result = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
 
     if (result.needsIdentity) {
-      // `CreateIdentity` fires `IdentityCreated`, which is what provisions the personal space.
+      // `CreateIdentity` fires `IdentityCreated`, which is what provisions the identity's spaces.
       yield* invoke(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] });
       const identity = client.halo.identity.get();
       invariant(identity, 'identity should exist after create');

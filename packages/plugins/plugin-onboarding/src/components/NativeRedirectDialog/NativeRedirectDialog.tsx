@@ -8,8 +8,6 @@ import { Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-export const NATIVE_REDIRECT_DIALOG = `${meta.profile.key}.component.native-redirect-dialog`;
-
 /**
  * Shown after the native app has been successfully opened via custom scheme.
  * Gives the user the option to stay in the browser instead.

@@ -71,9 +71,9 @@ const DECORATORS = [
               return;
             }
 
-            const { personalSpace } = yield* initializeIdentity(client);
-            personalSpace.db.add(Mailbox.make());
-            yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+            const { defaultSpace } = yield* initializeIdentity(client);
+            defaultSpace.db.add(Mailbox.make());
+            yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
           }),
       }),
       SpacePlugin({}),

@@ -12,6 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Project from '@dxos/compute/Project';
@@ -125,7 +126,7 @@ const StoryAiPlugin = (kind: StoryAiService) =>
   )();
 
 /**
- * Story decorators for a project template scenario: a personal space seeded with one mailbox, the
+ * Story decorators for a project template scenario: a default space seeded with one mailbox, the
  * plugin set that owns the project machinery, and this package's module surfaces.
  *
  * The plugin list is what populates the skill-definition registry that resolves a skill ref to a
@@ -135,6 +136,9 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
   withTheme(),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
+    // Skill-definition modules ride the assistant's start event, and nothing here opens assistant UI
+    // or materializes a toolkit — without firing it the article's skill rows resolve to blank labels.
+    setupEvents: [AppActivationEvents.AssistantStart],
     plugins: [
       ...corePlugins(),
       ClientPlugin({
@@ -159,19 +163,19 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
         ],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            const { personalSpace } = yield* initializeIdentity(client);
+            const { defaultSpace } = yield* initializeIdentity(client);
             yield* Effect.promise(async () => {
-              const mailbox = personalSpace.db.add(Mailbox.make({ name: mailboxName }));
+              const mailbox = defaultSpace.db.add(Mailbox.make({ name: mailboxName }));
               if (messages && messages.count > 0) {
                 const feed = await mailbox.feed.tryLoad();
                 const built = new Builder()
-                  .createMessages(messages.count, { links: { db: personalSpace.db }, threads: messages.threads ?? 3 })
+                  .createMessages(messages.count, { links: { db: defaultSpace.db }, threads: messages.threads ?? 3 })
                   .build();
                 await EffectEx.runAndForwardErrors(
-                  Feed.append(feed!, built.messages).pipe(Effect.provide(Database.layer(personalSpace.db))),
+                  Feed.append(feed!, built.messages).pipe(Effect.provide(Database.layer(defaultSpace.db))),
                 );
               }
-              await personalSpace.db.flush({ indexes: true });
+              await defaultSpace.db.flush({ indexes: true });
             });
           }),
       }),

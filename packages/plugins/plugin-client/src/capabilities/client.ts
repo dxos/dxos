@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -111,7 +113,7 @@ export default Capability.makeModule(
           spacesReadyFired = true;
           // Boot-waterfall milestone: ECHO spaces observable from here (both entry paths).
           performance.mark('milestone:spaces-ready');
-          await Effect.gen(function* () {
+          const exit = await Effect.gen(function* () {
             yield* Plugin.activate(ClientEvents.SpacesReady);
             if (onSpacesReady) {
               yield* onSpacesReady({ client });
@@ -119,8 +121,14 @@ export default Capability.makeModule(
           }).pipe(
             Effect.provideService(Capability.Service, capabilityManager),
             Effect.provideService(Plugin.Service, pluginManager),
-            EffectEx.runAndForwardErrors,
+            Effect.runPromiseExit,
           );
+          // Shutting the manager down mid-activation interrupts this fiber, which is the subscription
+          // ending rather than a failure — and rethrowing it from this floating promise surfaces as an
+          // unhandled rejection. Real failures still propagate.
+          if (Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause)) {
+            EffectEx.throwCause(exit.cause);
+          }
         }
       });
     }).pipe(
