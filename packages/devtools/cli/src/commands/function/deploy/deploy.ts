@@ -30,8 +30,8 @@ export const deploy = Command.make(
   {
     entryPoint: Args.file({ name: 'entryPoint' }).pipe(Args.withDescription('The file to deploy.')),
     // TODO(burdon): Human readable name?
-    name: Options.text('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
-    version: Options.text('version').pipe(
+    name: Options.string('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
+    version: Options.string('version').pipe(
       Options.withDescription('The version of the function to deploy.'),
       Options.optional,
     ),
@@ -39,7 +39,7 @@ export const deploy = Command.make(
       Options.withDescription('Loads the script into composer.'),
       Options.withDefault(false),
     ),
-    functionId: Options.text('function-id').pipe(
+    functionId: Options.string('function-id').pipe(
       Options.withDescription('Existing UserFunction ID to update.'),
       Options.optional,
     ),

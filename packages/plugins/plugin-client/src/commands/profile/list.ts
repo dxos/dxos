@@ -31,7 +31,7 @@ export const list = Command.make(
         const configPath = path.join(profileDir, filename);
         const configContent = yield* fs
           .readFileString(configPath)
-          .pipe(Effect.catchTag('SystemError', () => Effect.succeed('{}')));
+          .pipe(Effect.catchTag('PlatformError', () => Effect.succeed('{}')));
         const configValues = Yaml.parse(configContent) ?? {};
         const config = new Config(configValues);
         return {

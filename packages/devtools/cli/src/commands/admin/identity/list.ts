@@ -26,7 +26,7 @@ export const list = Command.make(
   'list',
   {
     limit: Options.integer('limit').pipe(Options.withDescription('Max results per page.'), Options.optional),
-    cursor: Options.text('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
+    cursor: Options.string('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
   },
   Effect.fn(function* ({ limit, cursor }) {
     const query: Record<string, string> = {};

@@ -26,19 +26,19 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveHandle, resolveSessio
 export const verify = Command.make(
   'verify',
   {
-    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.text('app-password').pipe(
+    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.string('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    subject: Options.text('subject').pipe(Options.withDescription('Handle or DID of the publisher being verified.')),
-    subjectHandle: Options.text('subject-handle').pipe(
+    subject: Options.string('subject').pipe(Options.withDescription('Handle or DID of the publisher being verified.')),
+    subjectHandle: Options.string('subject-handle').pipe(
       Options.withDescription(
         'Optional human-readable handle to record for the verified subject (defaults to --subject if it is a handle).',
       ),
       Options.optional,
     ),
-    displayName: Options.text('display-name').pipe(
+    displayName: Options.string('display-name').pipe(
       Options.withDescription('Display name to record for the verified subject.'),
     ),
   },

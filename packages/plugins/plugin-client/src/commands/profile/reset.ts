@@ -18,7 +18,7 @@ import { printProfileReset } from './util';
 export const reset = Command.make(
   'reset',
   {
-    force: Options.boolean('force', { ifPresent: true }).pipe(Options.withDescription('Skip confirmation prompt')),
+    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt')),
   },
   Effect.fnUntraced(function* ({ force }) {
     const fs = yield* FileSystem.FileSystem;

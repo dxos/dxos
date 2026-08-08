@@ -27,7 +27,7 @@ export const loadEnabledPlugins = Effect.fn(function* ({ profile }: { profile: s
 
   const content = yield* fs
     .readFileString(pluginsPath)
-    .pipe(Effect.catchTag('SystemError', () => Effect.succeed('[]')));
+    .pipe(Effect.catchTag('PlatformError', () => Effect.succeed('[]')));
 
   const raw = Yaml.parse(content);
   const parsed = yield* Schema.decodeUnknownEffect(PluginsSchema)(raw ?? []).pipe(

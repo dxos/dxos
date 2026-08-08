@@ -74,7 +74,7 @@ const collectPathsToDelete = (profile: string): string[] => {
 export const reset = Command.make(
   'reset',
   {
-    hard: Options.boolean('hard', { ifPresent: true }).pipe(
+    hard: Options.boolean('hard').pipe(
       Options.withDescription('Required — deletes ALL local data for the current profile. No remote state is touched.'),
     ),
   },

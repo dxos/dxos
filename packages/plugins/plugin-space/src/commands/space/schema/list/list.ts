@@ -51,7 +51,7 @@ export const list = Command.make(
   'list',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.text('typename').pipe(Options.withDescription('Filter schemas by typename.'), Options.optional),
+    typename: Options.string('typename').pipe(Options.withDescription('Filter schemas by typename.'), Options.optional),
   },
   handler,
 ).pipe(Command.withDescription('List space schemas.'));

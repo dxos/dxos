@@ -25,7 +25,7 @@ export const list = Command.make(
       Options.withDescription('Max results per page (capped at 200).'),
       Options.withDefault(50),
     ),
-    cursor: Options.text('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
+    cursor: Options.string('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
     order: Options.choice('order', ['asc', 'desc']).pipe(
       Options.withDescription('Sort order by last activity.'),
       Options.withDefault('desc' as const),

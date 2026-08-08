@@ -50,7 +50,7 @@ export const create = Command.make(
       Options.withDescription('Template to use'),
       Options.withDefault('default'),
     ),
-    name: Options.text('name').pipe(Options.withDescription('Profile name'), Options.optional),
+    name: Options.string('name').pipe(Options.withDescription('Profile name'), Options.optional),
   },
   Effect.fnUntraced(function* ({ template, name }) {
     const { json } = yield* CommandConfig;

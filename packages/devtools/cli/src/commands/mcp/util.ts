@@ -17,7 +17,7 @@ export class McpSessionError extends BaseError.extend('McpSessionError', 'MCP se
  * Server to act on. Optional: with a single stored session the commands pick it up automatically,
  * which keeps the common case to `dx mcp tools` / `dx mcp call <tool>`.
  */
-export const serverUrlOption = Options.text('url').pipe(
+export const serverUrlOption = Options.string('url').pipe(
   Options.withDescription('MCP server URL. Defaults to the most recently connected server.'),
   Options.optional,
 );

@@ -25,12 +25,12 @@ const rkeyOf = (uri: string): string => uri.split('/').pop() ?? '';
 export const unpublish = Command.make(
   'unpublish',
   {
-    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.text('app-password').pipe(
+    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.string('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    key: Options.text('key').pipe(
+    key: Options.string('key').pipe(
       Options.withDescription('Plugin key (the profile rkey). Removes its profile and all releases.'),
     ),
   },

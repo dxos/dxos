@@ -17,17 +17,17 @@ export const dx = Command.make('dx', {
     Options.optional,
   ),
   // TODO(burdon): CommandConfig layer should throw if profile doesn't exist.
-  profile: Options.text('profile').pipe(
+  profile: Options.string('profile').pipe(
     Options.withDescription('Profile for the config file.'),
     Options.withAlias('p'),
     Options.withFallbackConfig(Config.string(DXEnv.PROFILE).pipe(Config.withDefault(DEFAULT_PROFILE))),
     Options.withDefault(DXEnv.get(DXEnv.PROFILE, DEFAULT_PROFILE)),
   ),
-  json: Options.boolean('json', { ifPresent: true }).pipe(
+  json: Options.boolean('json').pipe(
     Options.withDescription('JSON output.'),
     Options.withFallbackConfig(Config.boolean('JSON').pipe(Config.withDefault(false))),
   ),
-  verbose: Options.boolean('verbose', { ifPresent: true }).pipe(
+  verbose: Options.boolean('verbose').pipe(
     Options.withDescription('Verbose logging.'),
     Options.withAlias('v'),
     Options.withFallbackConfig(Config.boolean('VERBOSE').pipe(Config.withDefault(false))),

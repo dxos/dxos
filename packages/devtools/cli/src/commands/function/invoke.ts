@@ -21,8 +21,8 @@ import { printInvokeResult } from './util';
 export const invoke = Command.make(
   'invoke',
   {
-    key: Args.text({ name: 'key' }).pipe(Args.withDescription('The key of the function to invoke.')),
-    data: Args.text({ name: 'data' }).pipe(
+    key: Args.string('key').pipe(Args.withDescription('The key of the function to invoke.')),
+    data: Args.string('data').pipe(
       Args.withDescription('The data to pass to the function.'),
       Args.withSchema(Schema.fromJsonString(Schema.Unknown)),
     ),

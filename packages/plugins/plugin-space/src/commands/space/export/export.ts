@@ -95,7 +95,7 @@ export const exportSpace = Command.make(
       ),
       Options.withDefault('binary' as const),
     ),
-    output: Options.text('output').pipe(
+    output: Options.string('output').pipe(
       Options.withAlias('o'),
       Options.withDescription('Output file, or a directory to write the generated filename into.'),
       Options.optional,

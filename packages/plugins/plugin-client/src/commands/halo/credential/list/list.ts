@@ -101,7 +101,7 @@ export const handler = Effect.fn(function* ({
 export const list = Command.make(
   'list',
   {
-    type: Options.text('type').pipe(Options.withDescription('Filter by credential type.'), Options.optional),
+    type: Options.string('type').pipe(Options.withDescription('Filter by credential type.'), Options.optional),
     spaceId: Common.spaceId.pipe(Options.withDescription('Space ID to show credentials from.'), Options.optional),
     timeout: Options.integer('timeout').pipe(
       Options.withDescription('Time in milliseconds to wait for at least one credential before listing.'),

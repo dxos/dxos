@@ -56,9 +56,9 @@ export const importSpace = Command.make(
   'import',
   {
     file: Args.file({ name: 'file' }).pipe(Args.withDescription('Archive to import, in either binary or json format.')),
-    tags: Options.text('tag').pipe(
+    tags: Options.string('tag').pipe(
       Options.withDescription('Immutable tag to set on the new space. Repeat to set several.'),
-      Options.repeated,
+      Options.atLeast(0),
     ),
   },
   (args) => handler(args).pipe(withTimeout),

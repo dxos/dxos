@@ -38,7 +38,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
 export const enable = Command.make(
   'enable',
   {
-    id: Args.text({ name: 'id' }).pipe(Args.withDescription('The ID of the plugin to enable.')),
+    id: Args.string('id').pipe(Args.withDescription('The ID of the plugin to enable.')),
   },
   handler,
 ).pipe(Command.withDescription('Enable a plugin.'));

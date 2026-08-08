@@ -13,12 +13,12 @@ import { identity } from './identity';
 import { space } from './space';
 
 export const admin = Command.make('admin', {
-  adminKey: Options.text('admin-key').pipe(
+  adminKey: Options.string('admin-key').pipe(
     Options.withDescription('Edge admin key (or DX_HUB_API_KEY env var).'),
     Options.withAlias('k'),
     Options.optional,
   ),
-  edgeUrl: Options.text('edge-url').pipe(
+  edgeUrl: Options.string('edge-url').pipe(
     Options.withDescription('Edge worker base URL (or DX_EDGE_BASE_URL env var).'),
     Options.withAlias('u'),
     Options.optional,

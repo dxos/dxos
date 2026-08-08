@@ -71,10 +71,10 @@ export const handler = Effect.fn(function* ({
 export const create = Command.make(
   'create',
   {
-    agent: Options.boolean('noAgent', { ifPresent: false }).pipe(
-      Options.withDescription('Do not create an EDGE agent for the identity.'),
-    ),
-    displayName: Options.text('displayName').pipe(
+    agent: Options.boolean('noAgent')
+      .pipe(Options.map((value) => !value))
+      .pipe(Options.withDescription('Do not create an EDGE agent for the identity.')),
+    displayName: Options.string('displayName').pipe(
       Options.withDescription('The display name of the identity.'),
       Options.optional,
     ),

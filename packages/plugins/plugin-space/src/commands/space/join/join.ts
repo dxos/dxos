@@ -115,8 +115,8 @@ export const handler = Effect.fn(function* ({
 export const join = Command.make(
   'join',
   {
-    invitationCode: Args.text({ name: 'invitationCode' }).pipe(Args.withDescription('The invitation code.')),
-    authCode: Options.text('authCode').pipe(Options.withDescription('The authentication code.'), Options.optional),
+    invitationCode: Args.string('invitationCode').pipe(Args.withDescription('The invitation code.')),
+    authCode: Options.string('authCode').pipe(Options.withDescription('The authentication code.'), Options.optional),
   },
   handler,
 ).pipe(Command.withDescription('Join a space via invitation.'));

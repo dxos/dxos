@@ -36,7 +36,7 @@ export const add: Command.Command<
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.text('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
+    typename: Options.string('typename').pipe(Options.withDescription('The typename to create.'), Options.optional),
   },
   ({ typename }) =>
     Effect.gen(function* () {

@@ -61,7 +61,7 @@ export const handler = Effect.fn(function* ({ displayName }: { displayName: stri
 export const update = Command.make(
   'update',
   {
-    displayName: Options.text('displayName').pipe(Options.withDescription('The display name of the identity.')),
+    displayName: Options.string('displayName').pipe(Options.withDescription('The display name of the identity.')),
   },
   handler,
 ).pipe(Command.withDescription('Update identity profile.'));

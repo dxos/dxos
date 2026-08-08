@@ -17,7 +17,7 @@ import { printQueueObject } from './util';
 export const query = Command.make(
   'query',
   {
-    dxn: Options.text('dxn').pipe(Options.withDescription('DXN of the queue.')),
+    dxn: Options.string('dxn').pipe(Options.withDescription('DXN of the queue.')),
   },
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;

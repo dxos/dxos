@@ -24,20 +24,23 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 export const publishPublisher = Command.make(
   'publish-publisher',
   {
-    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.text('app-password').pipe(
+    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.string('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    displayName: Options.text('display-name').pipe(
+    displayName: Options.string('display-name').pipe(
       Options.withDescription('Publisher display name (the human/org name shown in UIs).'),
     ),
-    bio: Options.text('bio').pipe(Options.withDescription('Short bio.'), Options.optional),
-    homepageUrl: Options.text('homepage-url').pipe(
+    bio: Options.string('bio').pipe(Options.withDescription('Short bio.'), Options.optional),
+    homepageUrl: Options.string('homepage-url').pipe(
       Options.withDescription('Publisher homepage URL.'),
       Options.optional,
     ),
-    contact: Options.text('contact').pipe(Options.withDescription('Contact (email, handle, etc.).'), Options.optional),
+    contact: Options.string('contact').pipe(
+      Options.withDescription('Contact (email, handle, etc.).'),
+      Options.optional,
+    ),
   },
   (options) =>
     Function.pipe(

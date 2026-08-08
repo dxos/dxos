@@ -99,11 +99,9 @@ export const share = Command.make(
   'share',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    multiple: Options.boolean('multiple', { ifPresent: true }).pipe(
-      Options.withDescription('Create a multi-use invitation.'),
-    ),
-    open: Options.boolean('open', { ifPresent: true }).pipe(Options.withDescription('Open browser with invitation.')),
-    host: Options.text('host').pipe(
+    multiple: Options.boolean('multiple').pipe(Options.withDescription('Create a multi-use invitation.')),
+    open: Options.boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
+    host: Options.string('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),
     ),

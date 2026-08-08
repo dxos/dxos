@@ -17,7 +17,7 @@ import { ConfigService } from '@dxos/config';
 export const logout = Command.make(
   'logout',
   {
-    force: Options.boolean('force', { ifPresent: true }).pipe(Options.withDescription('Skip confirmation prompt.')),
+    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
   },
   Effect.fnUntraced(function* ({ force }) {
     const fs = yield* FileSystem.FileSystem;
@@ -35,8 +35,10 @@ export const logout = Command.make(
     }
 
     yield* fs.remove(path, { recursive: true }).pipe(
+      // v4 wraps the platform's error kinds in a single `PlatformError`, with the normalized tag on
+      // its `reason` rather than on the error itself.
       Effect.catchIf(
-        (e): e is Error.SystemError => e._tag === 'SystemError' && e.reason === 'NotFound',
+        (error) => error._tag === 'PlatformError' && error.reason._tag === 'NotFound',
         () => Effect.void,
       ),
     );

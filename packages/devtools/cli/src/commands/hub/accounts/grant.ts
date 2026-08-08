@@ -15,7 +15,7 @@ import { formatHubError, hubApiRequest } from '../util';
 export const grant = Command.make(
   'grant',
   {
-    identityDid: Args.text({ name: 'identity-did' }).pipe(Args.withDescription('Account identity DID.')),
+    identityDid: Args.string('identity-did').pipe(Args.withDescription('Account identity DID.')),
     count: Options.integer('count').pipe(
       Options.withDescription('Number of invitations to add.'),
       Options.withAlias('n'),

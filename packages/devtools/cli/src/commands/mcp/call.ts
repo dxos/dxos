@@ -18,8 +18,8 @@ import { requireSession, serverUrlOption } from './util';
 export const call = Command.make(
   'call',
   {
-    tool: Args.text({ name: 'tool' }).pipe(Args.withDescription('Tool name (see `dx mcp tools`).')),
-    input: Options.text('input').pipe(
+    tool: Args.string('tool').pipe(Args.withDescription('Tool name (see `dx mcp tools`).')),
+    input: Options.string('input').pipe(
       Options.withDescription('Tool arguments as JSON.'),
       Options.withSchema(Schema.fromJsonString(Schema.Unknown)),
       Options.optional,

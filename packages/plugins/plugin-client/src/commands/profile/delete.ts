@@ -17,7 +17,7 @@ import { printProfileDeleted } from './util';
 export const del = Command.make(
   'delete',
   {
-    name: Options.text('name').pipe(Options.withDescription('Profile name'), Options.optional),
+    name: Options.string('name').pipe(Options.withDescription('Profile name'), Options.optional),
   },
   Effect.fnUntraced(function* ({ name }) {
     const { json } = yield* CommandConfig;

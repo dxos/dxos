@@ -21,7 +21,7 @@ const printSection = function* (title: string, lines: string[]) {
 
 export const inspect = Command.make(
   'inspect',
-  { spaceId: Args.text({ name: 'spaceId' }) },
+  { spaceId: Args.string('spaceId') },
   Effect.fn(function* ({ spaceId }) {
     const result = yield* adminRequest<InspectSpaceResponse | LegacyInspectSpaceResponse>(
       'GET',

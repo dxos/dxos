@@ -16,7 +16,7 @@ import { adminRequest, formatAdminError } from '../util';
 export const del = Command.make(
   'delete',
   {
-    spaceId: Args.text({ name: 'spaceId' }),
+    spaceId: Args.string('spaceId'),
     force: Options.boolean('force').pipe(
       Options.withDescription('Confirm irreversible deletion.'),
       Options.withDefault(false),

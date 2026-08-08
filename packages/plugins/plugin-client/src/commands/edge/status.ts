@@ -30,14 +30,11 @@ export const getStatus = () =>
     }
   }).pipe(
     // TODO(wittjosiah): Tagged error.
-    Effect.catchIf((error) => {
-      if (error instanceof Error && error.message === 'Identity not available') {
-        // TODO(wittjosiah): Error coloring for logs.
-        return Option.some(Console.error(error.message));
-      } else {
-        return Option.none();
-      }
-    }),
+    // TODO(wittjosiah): Error coloring for logs.
+    Effect.catchIf(
+      (error) => error instanceof Error && error.message === 'Identity not available',
+      (error) => Console.error((error as Error).message),
+    ),
   );
 
 // TODO(wittjosiah): Admin functionality to provide to specify an identity.

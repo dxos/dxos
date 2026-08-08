@@ -20,14 +20,14 @@ class McpConnectError extends BaseError.extend('McpConnectError', 'MCP connect f
 export const connect = Command.make(
   'connect',
   {
-    url: Args.text({ name: 'url' }).pipe(
+    url: Args.string('url').pipe(
       Args.withDescription('MCP server URL (e.g. https://mcp-space-service.dxos.workers.dev).'),
     ),
-    spaceId: Options.text('space-id').pipe(
+    spaceId: Options.string('space-id').pipe(
       Options.withDescription('Space(s) to bring into the session context; repeatable. Defaults to the first space.'),
-      Options.repeated,
+      Options.atLeast(0),
     ),
-    haloSpaceId: Options.text('halo-space-id').pipe(
+    haloSpaceId: Options.string('halo-space-id').pipe(
       Options.withDescription('HALO space id. Only needed when the identity has no registered agent.'),
       Options.optional,
     ),

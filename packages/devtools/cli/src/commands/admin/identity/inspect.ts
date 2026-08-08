@@ -14,7 +14,7 @@ import { adminRequest, formatAdminError, readIdentityDid } from '../util';
 
 export const inspect = Command.make(
   'inspect',
-  { identityKey: Args.text({ name: 'identityKey' }) },
+  { identityKey: Args.string('identityKey') },
   Effect.fn(function* ({ identityKey }) {
     const result = yield* adminRequest<InspectIdentityResponse | LegacyInspectIdentityResponse>(
       'GET',

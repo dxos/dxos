@@ -15,7 +15,7 @@ import { status } from './status';
 import { user } from './user';
 
 export const hub = Command.make('hub', {
-  apiKey: Options.text('api-key').pipe(Options.withDescription('API key.'), Options.optional),
+  apiKey: Options.string('api-key').pipe(Options.withDescription('API key.'), Options.optional),
 }).pipe(
   Command.withDescription('Manage Hub.'),
   Command.withSubcommands([status, user, account, code]),

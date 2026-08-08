@@ -20,7 +20,7 @@ export const create = Command.make(
       Options.withAlias('n'),
       Options.withDefault(1),
     ),
-    note: Options.text('note').pipe(Options.withDescription('Optional note for these codes.'), Options.optional),
+    note: Options.string('note').pipe(Options.withDescription('Optional note for these codes.'), Options.optional),
   },
   Effect.fn(function* ({ count, note }) {
     const body: { count: number; note?: string } = { count };

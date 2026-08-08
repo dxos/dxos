@@ -266,7 +266,10 @@ export const pluginAsset = (
  * command registered in the idle wave is simply absent — `dx space list` falls through to the root
  * help and exits non-zero rather than failing anywhere near the cause.
  */
-export const commands = (values: ReadonlyArray<Command$.Command<any, any, any, any>>, options?: { name?: string }) =>
+export const commands = (
+  values: ReadonlyArray<Command$.Command<any, any, any, any, any>>,
+  options?: { name?: string },
+) =>
   Capability$.inlineModule(
     options?.name ?? 'cli-commands',
     { activatesOn: ActivationEvents.Startup, provides: [Capabilities.Command] },

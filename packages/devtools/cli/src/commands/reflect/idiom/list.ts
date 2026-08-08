@@ -50,7 +50,7 @@ const handler = Effect.fn(function* ({ root }: { root: string }) {
 export const list = Command.make(
   'list',
   {
-    root: Options.text('root').pipe(
+    root: Options.string('root').pipe(
       Options.withDescription('Monorepo root (defaults to nearest pnpm-workspace.yaml ancestor of cwd).'),
       Options.withDefault(process.cwd()),
     ),

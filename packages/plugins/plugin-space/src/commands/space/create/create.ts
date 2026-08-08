@@ -55,7 +55,7 @@ export const handler = Effect.fn(function* ({ name }: { name: Option.Option<stri
 export const create = Command.make(
   'create',
   {
-    name: Options.text('name').pipe(Options.withDescription('The name of the space.'), Options.optional),
+    name: Options.string('name').pipe(Options.withDescription('The name of the space.'), Options.optional),
   },
   handler,
 ).pipe(Command.withDescription('Create a new space.'));

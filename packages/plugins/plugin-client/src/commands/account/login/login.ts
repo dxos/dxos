@@ -52,7 +52,7 @@ export const login = Command.make(
       ),
       Options.optional,
     ),
-    input: Args.text({ name: 'input' }).pipe(
+    input: Args.string('input').pipe(
       Args.withDescription('Method input: email address / atproto handle / invitation code / recovery code.'),
       Args.optional,
     ),

@@ -88,10 +88,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
 export const add = Command.make(
   'add',
   {
-    credential: Args.text({ name: 'credential' }).pipe(
-      Args.withDescription('Credential as hex string.'),
-      Args.optional,
-    ),
+    credential: Args.string('credential').pipe(Args.withDescription('Credential as hex string.'), Args.optional),
   },
   handler,
 ).pipe(Command.withDescription('Import credential into HALO.'));

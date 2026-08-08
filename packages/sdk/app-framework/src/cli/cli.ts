@@ -20,10 +20,10 @@ const defaultPluginLoader =
       return { plugin };
     });
 
-type SubCommands = [Command.Command<any, any, any, any>, ...Array<Command.Command<any, any, any, any>>];
+type SubCommands = [Command.Command<any, any, any, any, any>, ...Array<Command.Command<any, any, any, any, any>>];
 
 export type CreateCliAppOptions = {
-  rootCommand: Command.Command<any, any, any, any>;
+  rootCommand: Command.Command<any, any, any, any, any>;
   subCommands?: SubCommands;
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];

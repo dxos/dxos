@@ -18,8 +18,8 @@ export const remove = Command.make(
   'remove',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.text('typename').pipe(Options.withDescription('The typename to query.'), Options.optional),
-    id: Options.text('id').pipe(Options.withDescription('The object ID.'), Options.optional),
+    typename: Options.string('typename').pipe(Options.withDescription('The typename to query.'), Options.optional),
+    id: Options.string('id').pipe(Options.withDescription('The object ID.'), Options.optional),
   },
   ({ typename, id }) =>
     Effect.gen(function* () {

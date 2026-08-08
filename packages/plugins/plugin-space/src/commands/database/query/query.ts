@@ -36,7 +36,7 @@ export const query = Command.make(
   'query',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.text('typename').pipe(Options.optional, Options.withDescription('The typename to query.')),
+    typename: Options.string('typename').pipe(Options.optional, Options.withDescription('The typename to query.')),
   },
   handler,
 ).pipe(

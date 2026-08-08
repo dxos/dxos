@@ -23,13 +23,16 @@ export const add = Command.make(
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    preset: Options.text('preset').pipe(Options.withDescription('OAuth preset name (e.g., google)'), Options.optional),
-    source: Options.text('source').pipe(Options.withDescription('Token source'), Options.optional),
-    account: Options.text('account').pipe(
+    preset: Options.string('preset').pipe(
+      Options.withDescription('OAuth preset name (e.g., google)'),
+      Options.optional,
+    ),
+    source: Options.string('source').pipe(Options.withDescription('Token source'), Options.optional),
+    account: Options.string('account').pipe(
       Options.withDescription('Account associated with the token'),
       Options.optional,
     ),
-    token: Options.text('token').pipe(Options.withDescription('Token value'), Options.optional),
+    token: Options.string('token').pipe(Options.withDescription('Token value'), Options.optional),
   },
   ({ preset, source, account, token }) =>
     Effect.gen(function* () {

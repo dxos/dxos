@@ -23,7 +23,7 @@ export const remove = Command.make(
   'remove',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    id: Options.text('id').pipe(Options.withDescription('The connection ID.'), Options.optional),
+    id: Options.string('id').pipe(Options.withDescription('The connection ID.'), Options.optional),
   },
   ({ id }) =>
     Effect.gen(function* () {

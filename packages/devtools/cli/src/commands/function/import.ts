@@ -22,7 +22,7 @@ export const importCommand = Command.make(
   'import',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    key: Args.text({ name: 'key' }).pipe(Args.withDescription('Function key'), Args.optional),
+    key: Args.string('key').pipe(Args.withDescription('Function key'), Args.optional),
   },
   ({ key }) =>
     Effect.gen(function* () {

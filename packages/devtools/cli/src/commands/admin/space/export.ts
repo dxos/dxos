@@ -19,12 +19,12 @@ type ExportTriggerResponse = SpaceExportResult & { downloadUrl: string };
 export const exportSpace = Command.make(
   'export',
   {
-    spaceId: Args.text({ name: 'spaceId' }),
+    spaceId: Args.string('spaceId'),
     download: Options.boolean('download').pipe(
       Options.withDescription('Download the export after triggering it.'),
       Options.withDefault(false),
     ),
-    output: Options.text('output').pipe(
+    output: Options.string('output').pipe(
       Options.withDescription('Output file path for download.'),
       Options.withAlias('o'),
       Options.optional,

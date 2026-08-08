@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
+import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -46,10 +46,11 @@ export default Capability.makeModule(
                 return client.services.rpc['NetworkService.subscribeMessages']({ peer, tags }).pipe(
                   // Carry the envelope tags with the payload — the wire payload drops ref meta
                   // (`trigger`), and decode restores it from the tags for cancel addressing.
+                  // v4's `filterMap` signals the drop through a `Result`, not an `Option`.
                   Stream.filterMap((message) =>
                     message.payload?.value
-                      ? Option.some({ payload: message.payload.value, tags: message.tags })
-                      : Option.none(),
+                      ? Result.succeed({ payload: message.payload.value, tags: message.tags })
+                      : Result.failVoid,
                   ),
                   // Never fail the aggregate monitor stream on a transient network error.
                   Stream.catch(() => Stream.empty),
