@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { SchemaId } from '../types';
@@ -288,14 +288,24 @@ const getPropertyType = (
   return null;
 };
 
+/**
+ * Unwraps the shapes a tag takes on after a JSON schema round-trip: optional (its constructor
+ * default leaves it out of `required`) and single-member union (a one-entry `anyOf`).
+ */
+const unwrapDiscriminator = (ast: SchemaAST.AST): SchemaAST.AST => {
+  const unwrapped = SchemaEx.unwrapOptional(ast);
+  return SchemaAST.isUnion(unwrapped) && unwrapped.types.length === 1
+    ? unwrapDiscriminator(unwrapped.types[0])
+    : unwrapped;
+};
+
 const getTypeDiscriminators = (typeAstList: SchemaAST.TypeLiteral[]): SchemaAST.PropertySignature[] => {
   const discriminatorPropCandidates = typeAstList
     .flatMap(SchemaAST.getPropertySignatures)
-    .filter((p) => SchemaAST.isLiteral(p.type));
-  const propertyName = discriminatorPropCandidates[0].name;
-  const isValidDiscriminator = discriminatorPropCandidates.every(
-    (p) => p.name === propertyName && !SchemaAST.isOptional(p.type),
-  );
+    .filter((p) => SchemaAST.isLiteral(unwrapDiscriminator(p.type)));
+  const propertyName = discriminatorPropCandidates[0]?.name;
+  const isValidDiscriminator =
+    propertyName !== undefined && discriminatorPropCandidates.every((p) => p.name === propertyName);
   const everyTypeHasDiscriminator = discriminatorPropCandidates.length === typeAstList.length;
   const isDiscriminatedUnion = isValidDiscriminator && everyTypeHasDiscriminator;
   invariant(isDiscriminatedUnion, 'type ambiguity: every type in a union must have a single unique-literal field');
