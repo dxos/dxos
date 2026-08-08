@@ -31,7 +31,7 @@ describe('LoggingService', () => {
    * v4 does not run a forked fiber before its parent's next step, so a single emission can land
    * before the forked subscription has registered its log handler and be lost.
    */
-  const readWhileEmitting = <A>(read: Effect.Effect<Option.Option<A>>, emit: () => void) =>
+  const readWhileEmitting = <A, E>(read: Effect.Effect<Option.Option<A>, E>, emit: () => void) =>
     Effect.gen(function* () {
       const reader = yield* Effect.forkChild(read);
       const emitter = yield* Effect.forkChild(
