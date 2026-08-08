@@ -218,7 +218,7 @@ const SoftRef = Schema.Struct({
 // TODO(burdon): Move to @dxos/echo.
 const mapSchemaRefs = (schema: Schema.Codec<any, any>): Schema.Codec<any, any> => {
   const go = (ast: SchemaAST.AST): SchemaAST.AST => {
-    if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
+    if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId) !== undefined) {
       return SoftRef.ast;
     }
 

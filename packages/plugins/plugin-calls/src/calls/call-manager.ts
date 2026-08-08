@@ -207,7 +207,7 @@ export class CallManager extends Resource {
   constructor(
     private readonly _client: Client,
     private readonly _registry: Registry.AtomRegistry,
-    private readonly _haloIdentity: Context.Tag.Service<Identity.Service>,
+    private readonly _haloIdentity: Context.Service.Shape<typeof Identity.Service>,
   ) {
     super();
     this._client.config.getOrThrow('runtime.services.edge.url');
