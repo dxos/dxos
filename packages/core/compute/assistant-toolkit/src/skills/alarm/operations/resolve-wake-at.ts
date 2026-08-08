@@ -36,7 +36,7 @@ export const resolveWakeAt = (input: ResolveAlarmInput, now: number): Result.Res
     if (!match) {
       return Result.fail(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
     }
-    const duration = Duration.fromInput(inDuration.trim());
+    const duration = Duration.fromInput(`${Number(match[1])} ${match[2]}` as Duration.Input);
     if (Option.isNone(duration)) {
       return Result.fail(`Invalid "in" duration: "${inDuration}". Use a value like "30 seconds" or "5 minutes".`);
     }
