@@ -54,45 +54,49 @@ export const TransportFields = Schema.Struct({
 });
 export interface TransportFields extends Schema.Schema.Type<typeof TransportFields> {}
 
-export const FlightDetails = Schema.extend(
-  TransportFields,
-  Schema.TaggedStruct('flight', {
-    terminalFrom: Schema.optional(Schema.String).annotate({ title: 'Departure terminal' }),
-    terminalTo: Schema.optional(Schema.String).annotate({ title: 'Arrival terminal' }),
-    gateFrom: Schema.optional(Schema.String).annotate({ title: 'Departure gate' }),
-    gateTo: Schema.optional(Schema.String).annotate({ title: 'Arrival gate' }),
-  }),
+export const FlightDetails = TransportFields.pipe(
+  Schema.fieldsAssign(
+    Schema.TaggedStruct('flight', {
+      terminalFrom: Schema.optional(Schema.String).annotate({ title: 'Departure terminal' }),
+      terminalTo: Schema.optional(Schema.String).annotate({ title: 'Arrival terminal' }),
+      gateFrom: Schema.optional(Schema.String).annotate({ title: 'Departure gate' }),
+      gateTo: Schema.optional(Schema.String).annotate({ title: 'Arrival gate' }),
+    }).fields,
+  ),
 );
 export interface FlightDetails extends Schema.Schema.Type<typeof FlightDetails> {}
 
-export const TrainDetails = Schema.extend(
-  TransportFields,
-  Schema.TaggedStruct('train', {
-    platform: Schema.optional(Schema.String).annotate({ title: 'Platform' }),
-    coach: Schema.optional(Schema.String).annotate({ title: 'Coach' }),
-  }),
+export const TrainDetails = TransportFields.pipe(
+  Schema.fieldsAssign(
+    Schema.TaggedStruct('train', {
+      platform: Schema.optional(Schema.String).annotate({ title: 'Platform' }),
+      coach: Schema.optional(Schema.String).annotate({ title: 'Coach' }),
+    }).fields,
+  ),
 );
 export interface TrainDetails extends Schema.Schema.Type<typeof TrainDetails> {}
 
-export const BoatDetails = Schema.extend(
-  TransportFields,
-  Schema.TaggedStruct('boat', {
-    vessel: Schema.optional(Schema.String).annotate({ title: 'Vessel' }),
-  }),
+export const BoatDetails = TransportFields.pipe(
+  Schema.fieldsAssign(
+    Schema.TaggedStruct('boat', {
+      vessel: Schema.optional(Schema.String).annotate({ title: 'Vessel' }),
+    }).fields,
+  ),
 );
 export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
 
-export const RoadDetails = Schema.extend(
-  TransportFields,
-  Schema.TaggedStruct('road', {
-    subKind: Schema.optional(RoadSubKind).annotate({ title: 'Mode' }),
-    /**
-     * Computed driving route(s) for this leg, populated by `PlanRoute` (the primary route is
-     * `routes[0]`; additional entries are alternatives). Each route carries distance, duration, the
-     * decoded geometry, and per-leg detail. Rendered on the map.
-     */
-    routes: Schema.optional(Schema.Array(Routing.Route)),
-  }),
+export const RoadDetails = TransportFields.pipe(
+  Schema.fieldsAssign(
+    Schema.TaggedStruct('road', {
+      subKind: Schema.optional(RoadSubKind).annotate({ title: 'Mode' }),
+      /**
+       * Computed driving route(s) for this leg, populated by `PlanRoute` (the primary route is
+       * `routes[0]`; additional entries are alternatives). Each route carries distance, duration, the
+       * decoded geometry, and per-leg detail. Rendered on the map.
+       */
+      routes: Schema.optional(Schema.Array(Routing.Route)),
+    }).fields,
+  ),
 );
 export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}
 

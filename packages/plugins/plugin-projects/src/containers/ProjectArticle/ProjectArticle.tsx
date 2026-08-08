@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -25,7 +26,7 @@ import { meta } from '#meta';
 import * as ProjectOperation from '../../types/ProjectOperation';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them.
-const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
+const HeaderValues = Type.getSchema(Project.Project).mapFields(Struct.pick(['name', 'description']));
 type HeaderValues = Schema.Schema.Type<typeof HeaderValues>;
 
 // The Context section edits only the instructions' standing context objects.

@@ -35,7 +35,7 @@ export const FlightSearchFields = Schema.Struct({
 });
 export interface FlightSearchFields extends Schema.Schema.Type<typeof FlightSearchFields> {}
 
-export const FlightSearchQuery = Schema.extend(FlightSearchFields, Schema.TaggedStruct('flight', {}));
+export const FlightSearchQuery = FlightSearchFields.pipe(Schema.fieldsAssign(Schema.TaggedStruct('flight', {}).fields));
 export interface FlightSearchQuery extends Schema.Schema.Type<typeof FlightSearchQuery> {}
 
 /** Discriminated union of all query kinds. Today only `flight` is populated. */

@@ -33,7 +33,7 @@ import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
 
 // `enabled` is extended onto every spec form so it renders inline with the kind's fields.
-const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 'remote'));
+const EnabledForm = Type.getSchema(Trigger.Trigger).mapFields(Struct.pick(['enabled', 'remote']));
 
 // Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
@@ -44,17 +44,14 @@ const TimerSpecForm = Schema.Struct({
   cron: Schema.String.pipe(Schema.annotate({ title: 'Schedule (cron)' }), Schema.optional),
 }).mapFields(Struct.assign(EnabledForm.fields));
 
-const SubscriptionSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('subscription'),
-    // The object type to watch; converted to a `Filter.type` query. `typename` renders via a custom select of
-    // the space/registry types (see `TypeSelectField`); `deep`/`delay` map to the subscription's options.
-    typename: Schema.String.pipe(Schema.annotate({ title: 'Type' }), Schema.optional),
-    deep: Schema.Boolean.pipe(Schema.annotate({ title: 'Nested' }), Schema.optional),
-    delay: Schema.Number.pipe(Schema.annotate({ title: 'Delay (ms)' }), Schema.optional),
-  }),
-  EnabledForm,
-);
+const SubscriptionSpecForm = Schema.Struct({
+  kind: Schema.Literal('subscription'),
+  // The object type to watch; converted to a `Filter.type` query. `typename` renders via a custom select of
+  // the space/registry types (see `TypeSelectField`); `deep`/`delay` map to the subscription's options.
+  typename: Schema.String.pipe(Schema.annotate({ title: 'Type' }), Schema.optional),
+  deep: Schema.Boolean.pipe(Schema.annotate({ title: 'Nested' }), Schema.optional),
+  delay: Schema.Number.pipe(Schema.annotate({ title: 'Delay (ms)' }), Schema.optional),
+}).pipe(Schema.fieldsAssign(EnabledForm.fields));
 
 const WebhookSpecForm = Schema.Struct({
   kind: Schema.Literal('webhook'),

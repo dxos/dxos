@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
@@ -103,7 +104,10 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   const showDescriptionToggle = descriptionOverflows || expanded;
 
   // The editable subset of the schema; catalog fields are omitted (read-only above).
-  const activitySchema = useMemo(() => omitId(Type.getSchema(Book.Book)).pipe(Schema.pick(...ACTIVITY_FIELDS)), []);
+  const activitySchema = useMemo(
+    () => omitId(Type.getSchema(Book.Book)).mapFields(Struct.pick([...ACTIVITY_FIELDS])),
+    [],
+  );
 
   // The activity form is uncontrolled — seeded once from the object, then each change written straight
   // back to it — mirroring ObjectProperties. A controlled `values` form re-seeds on every reactive

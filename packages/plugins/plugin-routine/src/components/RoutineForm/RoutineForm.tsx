@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import * as Instructions from '@dxos/compute/Instructions';
@@ -25,7 +26,7 @@ import { TriggerEditor } from '../TriggerEditor';
 //
 
 // Pick the editable general fields from the Routine schema rather than redeclaring them.
-const GeneralForm = Type.getSchema(Routine.Routine).pipe(Schema.pick('name', 'description'));
+const GeneralForm = Type.getSchema(Routine.Routine).mapFields(Struct.pick(['name', 'description']));
 type GeneralForm = Schema.Schema.Type<typeof GeneralForm>;
 
 export type RoutineFormProps = {

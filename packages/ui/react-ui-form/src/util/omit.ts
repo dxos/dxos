@@ -4,6 +4,7 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { Annotation, Type } from '@dxos/echo';
 import { SchemaAST } from '@dxos/effect';
@@ -39,7 +40,7 @@ const omitIdFromSchema = (schema: Schema.Codec<any, any>): Schema.Codec<any, any
     return Schema.Union(...ast.types.map((type) => omitIdFromSchema(Schema.make(type))));
   }
   const hasId = SchemaAST.getPropertySignatures(ast).some((prop) => prop.name === 'id');
-  return hasId ? schema.pipe(Schema.omit('id')) : schema;
+  return hasId ? schema.mapFields(Struct.omit(['id'])) : schema;
 };
 
 /**
@@ -55,5 +56,5 @@ export const omitHiddenFormFields = <S extends Schema.Codec<any, any>>(schema: S
     .map((prop) => prop.name as string);
   // Cast: omitting a dynamically-computed set of keys can't be expressed as the original `S`, but
   // the result is structurally a subset of `S` and callers treat it as `S`.
-  return hidden.length === 0 ? schema : (schema.pipe(Schema.omit(...(hidden as [string, ...string[]]))) as any);
+  return hidden.length === 0 ? schema : (schema.mapFields(Struct.omit([...(hidden as [string, ...string[]])])) as any);
 };
