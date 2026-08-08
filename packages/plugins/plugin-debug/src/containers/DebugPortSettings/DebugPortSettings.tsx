@@ -55,19 +55,16 @@ export const DebugPortSettings = ({ controller = getDebugPortController() }: Deb
       description={t('settings.debug-port.section.description')}
     >
       <Form.Row label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
-        <Input.Root>
-          <Input.Switch checked={status.running} onCheckedChange={handleToggle} />
-        </Input.Root>
+        <div className='flex items-center gap-3'>
+          <Input.Root>
+            {status.running ? status.origin : ''}
+            <Input.Switch checked={status.running} onCheckedChange={handleToggle} />
+          </Input.Root>
+        </div>
       </Form.Row>
 
       {status.running && (
         <>
-          <Form.Row standalone label={t('settings.debug-port.running.label')}>
-            <div role='status' className='font-mono text-sm'>
-              {status.origin}
-            </div>
-          </Form.Row>
-
           <Form.Row
             standalone
             label={t('settings.debug-port.session.label')}
@@ -93,7 +90,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController() }: Deb
           >
             {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter. */}
             <Logger.Root rowFilter={isDebugPortRow}>
-              <Logger.Content classNames='max-h-[32lh]'>
+              <Logger.Content classNames='max-h-[16lh]'>
                 <Logger.List />
               </Logger.Content>
             </Logger.Root>
