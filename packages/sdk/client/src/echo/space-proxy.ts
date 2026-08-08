@@ -465,7 +465,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       const unsubscribe = this._db.query(Filter.type(SpaceProperties)).subscribe(
         (query) => {
           // Object ids are time-ordered, so the lowest is the one written at creation and a
-          // duplicate healed by {@link _awaitProperties} always loses. Requiring exactly one
+          // duplicate healed by {@link SpaceProxy.#awaitProperties} always loses. Requiring exactly one
           // would leave a space that somehow acquired two permanently uninitialized.
           const [properties] = [...query.results].sort((left, right) => (left.id < right.id ? -1 : 1));
           if (properties) {
@@ -480,7 +480,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         { fire: true },
       );
     }
-    await cancelWithContext(this._ctx, this._awaitProperties(propertiesAvailable));
+    await cancelWithContext(this._ctx, this.#awaitProperties(propertiesAvailable));
   }
 
   /**
@@ -496,7 +496,7 @@ export class SpaceProxy implements Space, CustomInspectable {
    * timeout rather than by an empty query result because a query returning nothing only means the
    * document has not loaded yet.
    */
-  private async _awaitProperties(propertiesAvailable: Trigger): Promise<void> {
+  async #awaitProperties(propertiesAvailable: Trigger): Promise<void> {
     try {
       await warnAfterTimeout(PROPERTIES_WARN_TIMEOUT, 'Finding properties for a space', () =>
         asyncTimeout(propertiesAvailable.wait(), PROPERTIES_HEAL_TIMEOUT),
