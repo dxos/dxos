@@ -21,6 +21,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "dependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "effect": "catalog:"
