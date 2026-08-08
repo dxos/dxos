@@ -9,11 +9,8 @@ import { SchemaAST } from '@dxos/effect';
 import { buildUnionFormSchema, mergeJsonSchemas } from './unionSchema';
 
 const propertyNames = (ast: SchemaAST.AST): string[] => {
-  let current: SchemaAST.AST = ast;
-  // Unwrap transformations/refinements to reach the underlying type literal.
-  while (current._tag === 'Transformation') {
-    current = current.from;
-  }
+  // v4 has no `Transformation` node: a transformed schema carries an encoding chain instead.
+  const current: SchemaAST.AST = SchemaAST.toEncoded(ast);
   return current._tag === 'Objects' ? current.propertySignatures.map((sig) => String(sig.name)) : [];
 };
 

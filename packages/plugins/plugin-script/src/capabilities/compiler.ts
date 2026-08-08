@@ -88,7 +88,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
     Effect.fnUntraced(
       function* (filename) {
         const response = yield* HttpClient.get(new URL(filename, SCRIPT_PACKAGES_BUCKET)).pipe(
-          Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+          Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
         );
         const content = yield* response.text;
         const moduleName = filename.replace(/\.d\.(ts|mts)$/, '');
@@ -100,7 +100,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
           content,
         };
       },
-      Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+      Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
     ),
     { concurrency: 20 },
   );

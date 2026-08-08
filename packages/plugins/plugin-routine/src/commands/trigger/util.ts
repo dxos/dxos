@@ -9,10 +9,10 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as Prompt from 'effect/unstable/cli/Prompt';
 
-import { Ansi, FormBuilder } from '@dxos/cli-util';
+import { Ansi, Doc, FormBuilder } from '@dxos/cli-util';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Annotation, Database, Entity, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Annotation, Database, Entity, type Err, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { FeedAnnotation } from '@dxos/schema';
@@ -33,7 +33,14 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
 /**
  * Pretty prints a trigger with ANSI colors.
  */
-export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remoteStatus?: TriggerRemoteStatus) {
+// Annotated: the inferred `Doc` resolves through a path `@dxos/cli-util` does not export (TS2883).
+export const printTrigger: (
+  trigger: Trigger.Trigger,
+  remoteStatus?: TriggerRemoteStatus,
+) => Effect.Effect<Doc.Doc<any>, Err.EntityNotFoundError> = Effect.fn(function* (
+  trigger: Trigger.Trigger,
+  remoteStatus?: TriggerRemoteStatus,
+) {
   const fn = trigger.runnable && (yield* Database.load(trigger.runnable));
 
   return FormBuilder.make({
@@ -205,7 +212,7 @@ export const promptForSchemaInput = Effect.fn(function* (
 
     const key = info.key;
     const propType = info.prop.type;
-    const schemaDefault = Option.getOrUndefined(SchemaAST.getDefaultAnnotation(propType));
+    const schemaDefault = SchemaAST.getDefaultAnnotation(propType);
     const defaultValue = defaults?.[key] ?? schemaDefault;
 
     if (SchemaAST.isBooleanKeyword(propType)) {
@@ -406,5 +413,5 @@ export const selectFeed = Effect.fn(function* () {
 /**
  * Pretty prints trigger removal result with ANSI colors.
  */
-export const printTriggerRemoved = (id: string) =>
+export const printTriggerRemoved = (id: string): Doc.Doc<any> =>
   FormBuilder.make({ title: 'Trigger removed' }).pipe(FormBuilder.set('id', id), FormBuilder.build);

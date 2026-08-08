@@ -60,7 +60,7 @@ export default defineFunction({
           HttpClient.execute,
           Effect.flatMap((res: any) => res.json),
           Effect.timeout('1 second'),
-          Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
+          Effect.retry(Schedule.exponential(1000).pipe(Schedule.upTo({ times: 3 }))),
           Effect.scoped,
         );
 

@@ -104,7 +104,7 @@ const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
       Effect.scoped,
       Effect.timeout('10 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('1 second').pipe(Schedule.compose(Schedule.recurs(2))),
+        schedule: Schedule.exponential('1 second').pipe(Schedule.upTo({ times: 2 })),
         while: (error) => !isGoogleAuthRejection(error),
       }),
     );

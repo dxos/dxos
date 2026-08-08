@@ -11,11 +11,11 @@ import type * as Result from '../../types/Result';
 import { ResultCard } from '../ResultCard';
 
 export type ResultTileProps = {
-  result: Result.AsyncResult;
+  result: Result.Result;
   current?: boolean;
   starred?: boolean;
   onSelect?: (id: string) => void;
-  onToggleStar?: (result: Result.AsyncResult) => void;
+  onToggleStar?: (result: Result.Result) => void;
 };
 
 /** Selectable masonry tile wrapping a {@link ResultCard}. */

@@ -34,7 +34,7 @@ export default ForexEffect.pipe(
         HttpClient.execute,
         Effect.flatMap((response) => response.json),
         Effect.timeout('5 seconds'),
-        Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+        Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
         Effect.scoped,
       );
 

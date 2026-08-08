@@ -8,7 +8,7 @@ export const TriggerId = Options.string('id').pipe(Options.withDescription('The 
 
 export const Enabled = Options.boolean('enabled').pipe(Options.withDescription('Whether the trigger is enabled.'));
 
-export const Input = Options.keyValueMap('input').pipe(
+export const Input = Options.keyValuePair('input').pipe(
   Options.withDescription("Input data to pass to the function. Must match the function's input schema."),
 );
 

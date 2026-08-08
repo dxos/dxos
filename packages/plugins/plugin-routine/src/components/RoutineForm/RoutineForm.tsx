@@ -12,6 +12,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { SchemaAST } from '@dxos/effect';
 import { ToggleGroup, ToggleGroupItem, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
 
@@ -26,7 +27,9 @@ import { TriggerEditor } from '../TriggerEditor';
 //
 
 // Pick the editable general fields from the Routine schema rather than redeclaring them.
-const GeneralForm = Type.getSchema(Routine.Routine).mapFields((fields) => Struct.pick(fields, ['name', 'description']));
+const GeneralForm = Schema.make<Schema.Codec<any, any>>(
+  SchemaAST.pick(Type.getSchema(Routine.Routine).ast, ['name', 'description']),
+);
 type GeneralForm = Schema.Schema.Type<typeof GeneralForm>;
 
 export type RoutineFormProps = {

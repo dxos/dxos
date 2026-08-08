@@ -65,7 +65,7 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
     // empty body, which parses to `{}`.
     Effect.flatMap((res) => res.text.pipe(Effect.map((text) => ({ status: res.status, body: parseJsonBody(text) })))),
     Effect.timeout('10 second'),
-    Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+    Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
     Effect.scoped,
     Effect.withSpan('GoogleApiRequest'),
   );

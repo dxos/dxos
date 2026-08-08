@@ -86,11 +86,11 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       const db = Obj.getDatabase(search);
       invariant(db, 'Search is not in a space.');
       const databaseLayer = Database.layer(db);
-      const existing = yield* Feed.query(feed, Filter.type(Result.AsyncResult)).run.pipe(Effect.provide(databaseLayer));
+      const existing = yield* Feed.query(feed, Filter.type(Result.Result)).run.pipe(Effect.provide(databaseLayer));
       const seen = new Set(existing.map((result) => result.url));
 
       const now = new Date().toISOString();
-      const fresh: Result.AsyncResult[] = [];
+      const fresh: Result.Result[] = [];
       for (const row of rows) {
         if (seen.has(row.url)) {
           continue;

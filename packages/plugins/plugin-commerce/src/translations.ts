@@ -31,7 +31,7 @@ export const translations = [
         'rename-object.label': 'Rename provider',
         'delete-object.label': 'Delete provider',
       },
-      [Type.getTypename(Result.AsyncResult)]: {
+      [Type.getTypename(Result.Result)]: {
         'typename.label': 'Result',
         'typename.label_other': 'Results',
       },

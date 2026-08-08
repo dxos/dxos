@@ -17,7 +17,7 @@ import { MethodError, Response, Session } from './types';
 
 /** Shared per-attempt timeout/retry policy for JMAP HTTP requests (session, batched API, blob download). */
 export const REQUEST_TIMEOUT = '10 seconds';
-export const REQUEST_RETRY = Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)));
+export const REQUEST_RETRY = Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }));
 
 // Retry transient failures (network, 5xx, timeout) but not 4xx — a bad host/token or malformed
 // request will fail identically on retry, so retrying only adds latency.

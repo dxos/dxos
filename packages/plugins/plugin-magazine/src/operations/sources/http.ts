@@ -13,7 +13,7 @@ import { applyCorsProxy } from './cors';
 import { FeedFetchError } from './feed-fetcher';
 
 // Short, bounded retry so a transient hiccup doesn't fail a fetch, without stalling the form.
-const retryPolicy = Schedule.exponential('500 millis').pipe(Schedule.compose(Schedule.recurs(2)));
+const retryPolicy = Schedule.exponential('500 millis').pipe(Schedule.upTo({ times: 2 }));
 
 /** GETs a URL (through the optional CORS proxy) and decodes the JSON body against `schema`. */
 export const getJson = <A, I>(

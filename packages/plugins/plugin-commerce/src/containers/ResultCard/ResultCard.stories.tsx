@@ -28,7 +28,7 @@ import { ResultCard } from './ResultCard';
 const DefaultStory = ({ current }: { current?: boolean }) => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const results = useQuery(space?.db, Filter.type(Result.AsyncResult));
+  const results = useQuery(space?.db, Filter.type(Result.Result));
   const result = results[0];
   if (!result) {
     return <Loading />;
@@ -58,7 +58,7 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Provider.Provider, Result.AsyncResult],
+          types: [Provider.Provider, Result.Result],
           onClientInitialized: seedSpace,
         }),
         SpacePlugin({}),

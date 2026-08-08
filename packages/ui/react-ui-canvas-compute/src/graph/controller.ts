@@ -450,13 +450,13 @@ const computeValueBag = (bag: ValueBag<any>): Effect.Effect<Record<string, Runti
       Effect.result(eff).pipe(
         Effect.map((value) => {
           if (Result.isFailure(value)) {
-            if (isNotExecuted(value.left)) {
+            if (isNotExecuted(value.failure)) {
               return [key, { type: 'not-executed' }] as const;
             } else {
-              return [key, { type: 'error', error: value.left }] as const;
+              return [key, { type: 'error', error: value.failure }] as const;
             }
           } else {
-            return [key, { type: 'executed', value: value.right }] as const;
+            return [key, { type: 'executed', value: value.success }] as const;
           }
         }),
       ),

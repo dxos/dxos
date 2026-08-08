@@ -27,7 +27,7 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
     Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-routine.useTriggerRuntimeControls'),
   );
 
-  const [dispatcher, setDispatcher] = useState<Context.Tag.Service<TriggerDispatcher> | undefined>(undefined);
+  const [dispatcher, setDispatcher] = useState<Context.Service.Shape<typeof TriggerDispatcher> | undefined>(undefined);
 
   const init = useSpaceCallback(
     db?.spaceId,
