@@ -15,8 +15,9 @@ import { Calendar, type SyncStreamConfig } from '@dxos/plugin-inbox/types';
 
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
+import { type GoogleCalendarApi, type GoogleCalendarApiError } from '../../../services';
 import { mapEvent } from '../mapper';
-import { type CalendarPageEffect, fetchEvents } from './fetch';
+import { fetchEvents } from './fetch';
 
 /** Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
 const CALENDAR_SYNC_CONFIG = {
@@ -87,8 +88,8 @@ export const syncCalendar = ({
   pageSize = CALENDAR_SYNC_CONFIG.listPageSize,
 }: SyncCalendarProps): Effect.Effect<
   { newEvents: number },
-  Effect.Effect.Error<CalendarPageEffect> | EntityNotFoundError,
-  Database.Service | Resolver | Effect.Effect.Context<CalendarPageEffect>
+  GoogleCalendarApiError | EntityNotFoundError,
+  Database.Service | Resolver | GoogleCalendarApi
 > =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);

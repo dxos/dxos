@@ -12,7 +12,7 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { InboxOperation } from '@dxos/plugin-inbox/types';
 
-import { GoogleCredentials } from '../../../services';
+import { GoogleCalendarApi, GoogleCredentials } from '../../../services';
 import { type SyncCalendarProps, syncCalendar } from './sync';
 
 const handler = InboxOperation.GoogleCalendarSync.pipe(
@@ -27,12 +27,14 @@ const handler = InboxOperation.GoogleCalendarSync.pipe(
       const accessTokenRef = bindingObj.spec.source;
       // Composer's invoker is wired without a `databaseResolver`, so derive the db from the binding's
       // target and provide `Database.layer(db)` ourselves (alongside the Google Calendar credentials).
+      // `GoogleCalendarApi.Live` absorbs the HTTP client + credentials, so `syncCalendar` itself
+      // requires only the service (which a test swaps for `GoogleCalendarApi.mock`).
+      const credentials = Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromAccessToken(accessTokenRef));
       return yield* syncCalendar(props).pipe(
         Effect.provide(
           Layer.mergeAll(
-            FetchHttpClient.layer,
+            GoogleCalendarApi.Live.pipe(Layer.provide(credentials)),
             InboxResolver.Live,
-            GoogleCredentials.fromAccessToken(accessTokenRef),
             Database.layer(db),
           ),
         ),

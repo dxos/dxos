@@ -8,16 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { GoogleCalendar } from '../../../apis';
-
-/**
- * The page-fetch effect's error + requirements (references `CredentialsService` via the Google API);
- * reused as the source stream's error/context so the exported type is nameable without a phantom
- * import (TS2883).
- */
-export type CalendarPageEffect =
-  | ReturnType<typeof GoogleCalendar.listEventsByStartTime>
-  | ReturnType<typeof GoogleCalendar.listEventsByUpdated>;
+import { type GoogleCalendar } from '../../../apis';
+import { GoogleCalendarApi, type GoogleCalendarApiError, type GoogleCalendarApiService } from '../../../services';
 
 export type FetchEventsOptions = {
   syncBackDays: number;
@@ -31,14 +23,10 @@ export const fetchEvents = (
   calendarId: string,
   cursorKey: number,
   opts: FetchEventsOptions,
-): Stream.Stream<
-  GoogleCalendar.Event,
-  Effect.Effect.Error<CalendarPageEffect>,
-  Effect.Effect.Context<CalendarPageEffect>
-> => {
-  const fetchPage = (pageToken: string | undefined) =>
+): Stream.Stream<GoogleCalendar.Event, GoogleCalendarApiError, GoogleCalendarApi> => {
+  const fetchPage = (api: GoogleCalendarApiService, pageToken: string | undefined) =>
     cursorKey === 0
-      ? GoogleCalendar.listEventsByStartTime(
+      ? api.listEventsByStartTime(
           calendarId,
           addDays(new Date(), -opts.syncBackDays).toISOString(),
           addDays(new Date(), opts.syncForwardDays).toISOString(),
@@ -46,7 +34,7 @@ export const fetchEvents = (
           pageToken,
           opts.searchFilter,
         )
-      : GoogleCalendar.listEventsByUpdated(
+      : api.listEventsByUpdated(
           calendarId,
           new Date(cursorKey).toISOString(),
           opts.pageSize,
@@ -60,7 +48,8 @@ export const fetchEvents = (
         return Option.none();
       }
 
-      const { items = [], nextPageToken } = yield* fetchPage(Option.getOrUndefined(state.pageToken));
+      const api = yield* GoogleCalendarApi;
+      const { items = [], nextPageToken } = yield* fetchPage(api, Option.getOrUndefined(state.pageToken));
       return Option.some([
         Chunk.fromIterable(items),
         { pageToken: Option.fromNullable(nextPageToken), done: !nextPageToken },
