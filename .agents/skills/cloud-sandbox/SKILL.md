@@ -165,6 +165,10 @@ Does not work:
 - **`api.ipfs.dxos.network`, `gateway.ipfs.dxos.network`** — CONNECT is allowed but the origin
   resets; these look decommissioned rather than blocked.
 
+The client logs recurring `EdgeConnectionClosedError` from the dedicated worker. Unexplained, and
+it does NOT prevent invitations or replication from succeeding — do not mistake it for a proxy
+problem or spend time on it when something else is failing.
+
 Diagnose any blocked host with `curl -sS "$HTTPS_PROXY/__agentproxy/status"`, which lists recent
 relay failures and the reason for each.
 
