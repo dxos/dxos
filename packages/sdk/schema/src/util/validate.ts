@@ -4,6 +4,7 @@
 
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import * as SchemaIssue from 'effect/SchemaIssue';
 
 export type ValidationError = { path: string; message: string };
@@ -15,7 +16,13 @@ export type ValidationError = { path: string; message: string };
 const formatIssue = SchemaIssue.makeFormatterStandardSchemaV1();
 
 export const validateSchema = <T>(schema: Schema.Codec<T, any>, values: any): ValidationError[] | undefined => {
-  const validator = Schema.decodeUnknownResult(schema, { errors: 'all', onExcessProperty: 'preserve' });
+  // Validate against the TYPE side: callers hold decoded values (a form's `Ref` is a materialized
+  // `Ref`, not its `{ '/': dxn }` encoding), so decoding the codec would report every such field as
+  // malformed at a path — `_tags[0]['/']` — that is not even addressable as a form field.
+  const validator = Schema.decodeUnknownResult(Schema.make<Schema.Codec<T, any>>(SchemaAST.toType(schema.ast)), {
+    errors: 'all',
+    onExcessProperty: 'preserve',
+  });
   const result = validator(values);
   if (Result.isFailure(result)) {
     return formatIssue(result.failure.issue).issues.map(({ message, path }) => {

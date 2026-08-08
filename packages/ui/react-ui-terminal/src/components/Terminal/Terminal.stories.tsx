@@ -103,9 +103,10 @@ export const Spec: Story = {
     await runCommand(canvasElement, 'greet ada --loud', keyboard);
     await waitForTerminal(canvasElement, 'HELLO, ADA!');
 
-    // An unknown command is reported once, by the CLI itself.
+    // An unknown command is reported once, by the CLI itself — which answers with the command's
+    // help rather than a one-line message.
     await runCommand(canvasElement, 'bogus', keyboard);
-    await waitForTerminal(canvasElement, 'Invalid subcommand');
+    await waitForTerminal(canvasElement, 'USAGE');
 
     // The shell survives the failure and keeps accepting commands.
     await runCommand(canvasElement, 'greet again', keyboard);

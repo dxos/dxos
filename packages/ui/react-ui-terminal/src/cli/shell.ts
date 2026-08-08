@@ -82,6 +82,8 @@ export const runShell = <Name extends string, Input, ContextInput, E, R>(
             return Effect.void;
           }
 
+          // A CLI error has already been rendered to stdout by the runner (help, usage), so
+          // repeating it as a stack would only be noise.
           const error = Cause.findErrorOption(cause);
           if (Option.isSome(error) && CliError.isCliError(error.value)) {
             return Effect.void;
