@@ -74,13 +74,13 @@ export namespace TestConsole {
   const testConsole = Layer.effect(
     TestConsole,
     Effect.gen(function* () {
-      return new TestConsoleService(yield* Effect.console);
+      return new TestConsoleService(yield* Console.Console);
     }),
   );
 
   const setConsole = Effect.gen(function* () {
     const { console } = yield* TestConsole;
-    return Console.setConsole(console);
+    return Layer.succeed(Console.Console, console);
   }).pipe(Layer.unwrap);
 
   export const layer = Layer.provideMerge(setConsole, testConsole);

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+export * as Ansi from './ansi';
+export * as Doc from './doc';
 export * as FormBuilder from './form-builder';
 export * from './format';
 export * from './options';

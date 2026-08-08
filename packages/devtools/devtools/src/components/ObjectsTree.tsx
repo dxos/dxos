@@ -209,13 +209,13 @@ export type ObjectsTreeItem = {
   entity: Entity.Snapshot;
 };
 
-const ExpandedKeySchema = Schema.TemplateLiteralParser(
+const ExpandedKeySchema = Schema.TemplateLiteralParser([
   // id
   Schema.String,
   '-',
   // level
   Schema.Number,
-);
+]);
 
 class ObjectsTreeModel {
   #onSelect: (entity: Entity.Snapshot) => void;

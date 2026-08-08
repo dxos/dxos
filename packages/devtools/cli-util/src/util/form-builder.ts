@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Ansi from '@effect/printer-ansi/Ansi';
-import * as Doc from '@effect/printer/Doc';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+
+import * as Ansi from './ansi';
+import * as Doc from './doc';
 
 export type FormBuilderOptions = {
   title?: string;

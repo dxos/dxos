@@ -19,8 +19,10 @@ import { isBun } from '@dxos/util';
 export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFoundError, ClientService> =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    return yield* Option.fromNullishOr(client.spaces.get(spaceId));
-  }).pipe(Effect.catchTag('NoSuchElementError', () => Effect.fail(new SpaceNotFoundError(spaceId))));
+    // v4 no longer yields an `Option` as an `Effect`, so the miss fails directly.
+    const space = client.spaces.get(spaceId);
+    return space ?? (yield* Effect.fail(new SpaceNotFoundError(spaceId)));
+  });
 
 export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {

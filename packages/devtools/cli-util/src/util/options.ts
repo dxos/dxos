@@ -12,6 +12,6 @@ import { Key } from '@dxos/echo';
 //
 
 export const Common = {
-  functionId: Options.text('function-id').pipe(Options.withDescription('EDGE Function ID.')),
-  spaceId: Options.text('space-id').pipe(Options.withSchema(Key.SpaceId), Options.withDescription('Space ID.')),
+  functionId: Options.string('function-id').pipe(Options.withDescription('EDGE Function ID.')),
+  spaceId: Options.string('space-id').pipe(Options.withSchema(Key.SpaceId), Options.withDescription('Space ID.')),
 };

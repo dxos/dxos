@@ -74,25 +74,29 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
     // req.url is only the path + query, so reconstruct a full URL to parse the query string.
     const parseUrl = (rawUrl: string) => new URL(rawUrl.startsWith('http') ? rawUrl : `http://localhost${rawUrl}`);
 
-    const router = HttpRouter.empty.pipe(
-      HttpRouter.get(
+    // v4's router is a service: routes are declared as `Route` values and installed by a layer,
+    // rather than folded into an immutable router value.
+    const routes = HttpRouter.addAll([
+      HttpRouter.route(
+        'GET',
         '/oauth-relay',
         Effect.gen(function* () {
           const request = yield* HttpServerRequest.HttpServerRequest;
           const authUrl = parseUrl(request.url).searchParams.get('authUrl');
           if (!authUrl) {
-            return yield* HttpServerResponse.text('Missing authUrl parameter', { status: 400 });
+            return HttpServerResponse.text('Missing authUrl parameter', { status: 400 });
           }
-          return yield* HttpServerResponse.text(getRelayPageHtml(authUrl), {
+          return HttpServerResponse.text(getRelayPageHtml(authUrl), {
             headers: { 'Content-Type': 'text/html' },
           });
         }),
       ),
-      HttpRouter.get(
+      HttpRouter.route(
+        'GET',
         callbackPath,
         Effect.gen(function* () {
           if (Option.isSome(yield* Ref.get(outcome))) {
-            return yield* HttpServerResponse.text('Already received.', { status: 400 });
+            return HttpServerResponse.text('Already received.', { status: 400 });
           }
 
           const request = yield* HttpServerRequest.HttpServerRequest;
@@ -101,10 +105,10 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
           if (error) {
             yield* Ref.set(outcome, Option.some({ success: false, reason: error }));
             yield* Ref.set(received, true);
-            return yield* HttpServerResponse.text(
-              `<html><body><h1>Authentication failed</h1><p>${error}</p></body></html>`,
-              { status: 400, headers: { 'Content-Type': 'text/html' } },
-            );
+            return HttpServerResponse.text(`<html><body><h1>Authentication failed</h1><p>${error}</p></body></html>`, {
+              status: 400,
+              headers: { 'Content-Type': 'text/html' },
+            });
           }
 
           const captured: Record<string, string> = {};
@@ -113,16 +117,15 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
           }
           yield* Ref.set(outcome, Option.some({ success: true, params: captured }));
           yield* Ref.set(received, true);
-          return yield* HttpServerResponse.text(
+          return HttpServerResponse.text(
             '<html><body><h1>Authentication successful! You can close this window.</h1></body></html>',
             { headers: { 'Content-Type': 'text/html' } },
           );
         }),
       ),
-    );
+    ]);
 
-    const app = router.pipe(HttpServer.serve());
-    const serverLayer = app.pipe(Layer.provide(BunHttpServer.layer({ port })));
+    const serverLayer = HttpRouter.serve(routes).pipe(Layer.provide(BunHttpServer.layer({ port })));
     const scope = yield* Scope.make();
     yield* Layer.build(serverLayer).pipe(Scope.provide(scope));
 

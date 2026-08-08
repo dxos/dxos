@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DXN, Entity, Format, Type } from '@dxos/echo';
@@ -28,8 +27,8 @@ const textFilter = (text?: string) => {
     const schema = Type.getSchema(item);
     let match = false;
     match ||= !!Type.getURI(item)?.toString().match(matcher);
-    match ||= !!SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrUndefined)?.match(matcher);
-    match ||= !!SchemaAST.getDescriptionAnnotation(schema.ast).pipe(Option.getOrUndefined)?.match(matcher);
+    match ||= !!SchemaAST.getTitleAnnotation(schema.ast)?.toString().match(matcher);
+    match ||= !!SchemaAST.getDescriptionAnnotation(schema.ast)?.toString().match(matcher);
     return match;
   };
 };

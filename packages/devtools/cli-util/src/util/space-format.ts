@@ -39,7 +39,7 @@ const tryWithFallback = <T>(label: string, run: () => Promise<T>, fallback: T) =
   Effect.tryPromise(run).pipe(
     Effect.timeoutOrElse({
       duration: Duration.seconds(READ_TIMEOUT_SECONDS),
-      orElse: () => new Error(`${label} timed out`),
+      orElse: () => Effect.fail(new Error(`${label} timed out`)),
     }),
     Effect.catch(() => Effect.succeed(fallback)),
   );
