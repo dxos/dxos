@@ -33,14 +33,16 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Still deferred. One real defect on this path IS fixed: `JoinPanel` takes
-  //   `identity` as a one-time machine context snapshot, so a panel mounting while
-  //   `client.reset()` was still settling went (in `halo-only` mode) to `resettingIdentity` — a
-  //   state with no automatic exit — and the panel now re-issues the requested disposition once
-  //   the live identity clears. It did NOT clear this test: `halo-invitation-input` still fails to
-  //   appear in 1 of 4 serialized runs afterwards, so the mount has at least one more cause.
-  //   Next probe: log the join machine's state transitions (`JoinPanel` already subscribes and
-  //   `log`s them) from a failing run to see which state it settles in, rather than inferring.
+  // TODO(wittjosiah): Deferred, and the stall is UPSTREAM of the join UI. DOM of a failing run
+  //   (1 in 6 serialized, 2026-08-08): the guest is still on the account/devices plank with no
+  //   shell dialog present at all — so `client.reset()` + the `onReset` reload never completed and
+  //   `JoinPanel` never mounted. `localStorage.clear()` runs in the same `onReset` callback as the
+  //   navigation, and the restored devices plank proves that callback did not run. Suspect
+  //   `client.reset()` hanging (or rejecting) after `join-new-identity.reset-identity-confirm`.
+  //   Two real UI defects were found and fixed while chasing this, neither sufficient: the
+  //   `OnboardingManager` welcome/join dialog race, and `JoinPanel` stranding in the exit-less
+  //   `resettingIdentity` state when a reset settles after mount. Next: instrument
+  //   `ResetDialog.handleReset` around `client.reset()` to see whether it resolves.
   test.fixme('join new identity', async () => {
     test.setTimeout(90_000);
 

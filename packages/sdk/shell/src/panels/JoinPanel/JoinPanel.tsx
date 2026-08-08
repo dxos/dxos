@@ -220,12 +220,19 @@ export const JoinPanel = ({
   // reset it was opened for completed (composer's `join new identity` e2e, ~1 in 6). Re-issue the
   // requested disposition once the live identity clears.
   useEffect(() => {
-    if (identity || initialDisposition !== 'accept-halo-invitation' || !joinState.matches('resettingIdentity')) {
+    if (identity || initialDisposition !== 'accept-halo-invitation') {
       return;
     }
 
-    joinSend({ type: 'resetIdentity' });
-    joinSend({ type: 'acceptHaloInvitation' });
+    // `resettingIdentity` has no automatic exit; the auth-method chooser is where the machine lands
+    // when the snapshot was already null but the initial routing had been consumed. Both leave the
+    // panel without the invitation input the caller asked for.
+    if (joinState.matches('resettingIdentity')) {
+      joinSend({ type: 'resetIdentity' });
+      joinSend({ type: 'acceptHaloInvitation' });
+    } else if (joinState.matches({ choosingIdentity: 'choosingAuthMethod' })) {
+      joinSend({ type: 'acceptHaloInvitation' });
+    }
   }, [identity, initialDisposition, joinState, joinSend]);
 
   useEffect(() => {
