@@ -33,9 +33,16 @@ import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
 
+/** `Instructions.make` defaults `output` to `Schema.Void`; this is what that serializes to. */
+const UNDECLARED_OUTPUT = JsonSchema.toJsonSchema(Schema.Void);
+
 const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Top => {
-  // Routines default to Void output; completeJob still needs to accept arbitrary success payloads.
-  if ('$id' in output && output.$id === '/schemas/unknown') {
+  // A routine that declares no output still has to let `completeJob` carry an arbitrary success
+  // payload — decoding against the default would reject one with `Expected null | undefined`.
+  const undeclared =
+    ('$id' in output && output.$id === '/schemas/unknown') ||
+    ('type' in output && output.type === (UNDECLARED_OUTPUT as { type?: unknown }).type);
+  if (undeclared) {
     return Schema.Any;
   }
   return JsonSchema.toEffectSchema(output);
