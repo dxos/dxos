@@ -138,7 +138,7 @@ test.describe.serial('Startup timing harness', () => {
   //   NOTE: `check-startup-budget` greps this scenario and reads the samples it writes, so that task
   //   exits 1 with a "no startup samples" error while this stays deferred. It is a manual task, not
   //   wired into CI, so nothing is silently green — but re-enabling this restores that gate too.
-  test.fixme('warm-cold start (persisted identity, fresh tab)', async ({ playwright, browserName }, testInfo) => {
+  test('warm-cold start (persisted identity, fresh tab)', async ({ playwright, browserName }, testInfo) => {
     test.skip(browserName !== 'chromium', 'persistent context flow currently exercised only on chromium');
 
     // Closer to a real returning user — IDB persists in `userDataDir` across
