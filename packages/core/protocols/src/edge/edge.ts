@@ -398,7 +398,7 @@ export type GetAccessTokenResponseBody = {
 
 /**
  * Completes OAuth recovery registration for an existing identity: routes the OAuth refresh token
- * into the personal space and writes the recovery binding.
+ * into the default space and writes the recovery binding.
  */
 export type CompleteOAuthRegistrationRequest = {
   registrationToken: string;

@@ -23,7 +23,7 @@ import * as SpaceSchema from '../../types/SpaceSchema';
 export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
 type FormValues = Schema.Schema.Type<typeof SpaceSchema.SpaceForm>;
-const initialValues: FormValues = { edgeReplication: true };
+const initialValues: FormValues = { private: false, edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);

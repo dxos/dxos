@@ -32,7 +32,7 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
 
       const provider = data.provider as OAuthProvider;
       const edgeClient = createEdgeHttpClient(client);
-      // The recovery finalizer creates an AccessToken ECHO object in the personal space under this
+      // The recovery finalizer creates an AccessToken ECHO object in the default space under this
       // id, so it must be a valid object id.
       const accessTokenId = EntityId.random();
 

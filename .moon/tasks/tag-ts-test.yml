@@ -14,9 +14,11 @@ tasks:
       - ^:build
     inputs:
       - '@group(sources)'
+      - /vite.base.config.ts
       - /vitest.base.config.ts
       - /vitest.tags.ts # Ensure cache is invalidated when tag definitions change.
       - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
+      - vite.config.ts # Combined build + test config; most packages use this rather than `vitest.config.ts`.
       - vitest.config.ts
       - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
       - $VITEST_COVERAGE

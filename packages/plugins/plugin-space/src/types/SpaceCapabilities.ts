@@ -65,8 +65,15 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEpheme
   `${meta.profile.key}.capability.ephemeralState`,
 );
 
-/** The personal space, contributed once the `IdentityCreated` module has created it. */
-export const PersonalSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.personalSpace`);
+/**
+ * The default space as created by identity setup, so first-run seeding can order itself after it.
+ *
+ * Contributed only by `IdentityCreated`, so it is absent on every boot that does not create an
+ * identity, and it holds the space as created rather than the live designation. Anything asking
+ * "which space is the default right now" must use `AppSpace.getDefaultSpace`, which reads the
+ * designation the user can change in settings.
+ */
+export const DefaultSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.defaultSpace`);
 
 export type SettingsSection = { id: string; label: Label; position?: Position.Position };
 export const SettingsSection = Capability.makeSingleton<SettingsSection>()(

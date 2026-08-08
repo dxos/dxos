@@ -26,7 +26,7 @@ const RECENT_LIMIT = 20;
 const MAX_PROMPTS = 3;
 
 // Onboarding documents added by the system at identity creation — exclude them so a
-// brand-new personal space (containing only the welcome doc) still uses fallback prompts.
+// brand-new default space (containing only the welcome doc) still uses fallback prompts.
 const ONBOARDING_DOCUMENT_LABELS = new Set(['Welcome to Composer']);
 
 const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSuggestions> =

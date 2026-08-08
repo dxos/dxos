@@ -40,5 +40,7 @@ export default defineConfig({
   // re-instantiates that WASM module graph for every story file and exhausts the single headless
   // chromium's WASM memory partway through the suite (`RangeError: ... Out of memory: Cannot
   // allocate Wasm memory for new instance`). Share the module graph across files instead.
-  test: { node: true, storybook: { isolate: false } },
+  // The first story in a file pays the whole lazy module-load bill — tens of seconds, against a
+  // couple for each story after it — which the 15s browser-mode default cannot cover.
+  test: { node: true, storybook: { isolate: false, timeout: 60_000 } },
 });

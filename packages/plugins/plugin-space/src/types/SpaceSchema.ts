@@ -161,5 +161,6 @@ export const SpaceForm = Schema.Struct({
   name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
   icon: Schema.optional(Schema.String.annotate({ title: 'Icon', [IconAnnotationId]: true })),
   hue: Schema.optional(Schema.String.annotate({ title: 'Color', [HueAnnotationId]: true })),
+  private: Schema.optional(Schema.Boolean.annotate({ title: 'Private space' })),
   edgeReplication: Schema.optional(Schema.Boolean.annotate({ title: 'Enable EDGE Replication' })),
 });

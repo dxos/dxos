@@ -9,5 +9,6 @@ export * from './useLayout';
 export * from './useObjectMenuItems';
 export * from './useProgress';
 export * from './useSchemaFilter';
+export * from './useSettingsSpace';
 export * from './useShowItem';
 export * from './useTypeOptions';

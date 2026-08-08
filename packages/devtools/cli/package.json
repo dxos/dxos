@@ -75,6 +75,11 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@opentui/core-darwin-arm64": "catalog:",
+    "@opentui/core-darwin-x64": "catalog:",
+    "@opentui/core-linux-arm64": "catalog:",
+    "@opentui/core-linux-x64": "catalog:",
+    "@opentui/core-win32-x64": "catalog:",
     "@types/node": "catalog:",
     "@types/wtfnode": "catalog:",
     "typescript": "catalog:"

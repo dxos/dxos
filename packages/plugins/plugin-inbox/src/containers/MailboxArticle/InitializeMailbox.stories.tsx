@@ -50,10 +50,10 @@ const meta = {
           types: [AccessToken.AccessToken, Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => initializeMailbox(personalSpace.db));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => initializeMailbox(defaultSpace.db));
               if (withToken) {
-                personalSpace.db.add(
+                defaultSpace.db.add(
                   Obj.make(AccessToken.AccessToken, {
                     source: 'google.com',
                     account: 'user@example.com',
@@ -61,7 +61,7 @@ const meta = {
                   }),
                 );
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         StorybookPlugin({}),

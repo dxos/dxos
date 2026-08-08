@@ -53,6 +53,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
@@ -202,16 +203,7 @@ const buildPluginManagerOptions = ({
               return;
             }
 
-            yield* Effect.promise(() => client.halo.createIdentity());
-
-            // Tag the space as personal: plugin-space only contributes space graph nodes (and thus
-            // the collection/object nodes that back object-scoped actions like the comment toolbar)
-            // when a personal space exists. Tags cannot be added retroactively, so set it at creation
-            // — the `options` (2nd) argument carries tags, distinct from the space's properties.
-            const space = yield* Effect.promise(() =>
-              client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),
-            );
-            yield* Effect.promise(() => space.waitUntilReady());
+            const { defaultSpace: space } = yield* initializeIdentity(client);
 
             // Add tokens.
             for (const accessToken of accessTokens) {
@@ -493,7 +485,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capabilities.OperationInvoker;
       const client = yield* ClientCapabilities.Client;
-      const space = client.spaces.get()[0];
+      const space = AppSpace.getDefaultSpace(client) ?? client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 
       // Ensure workspace is set. NOTE: the active workspace that surfaces read via

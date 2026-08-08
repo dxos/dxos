@@ -49,20 +49,20 @@ const meta = {
           types: [Feed.Feed, Calendar.Calendar],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
               // Create calendar with backing feed.
-              const calendar = personalSpace.db.add(Calendar.make({ name: 'My Calendar' }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              const calendar = defaultSpace.db.add(Calendar.make({ name: 'My Calendar' }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               // Populate the calendar's feed with events.
               const feed = yield* Effect.tryPromise(() => calendar.feed!.tryLoad());
               if (feed) {
                 const { events } = new Builder().createEvents(count).build();
-                yield* Feed.append(feed, events).pipe(Effect.provide(Database.layer(personalSpace.db)));
+                yield* Feed.append(feed, events).pipe(Effect.provide(Database.layer(defaultSpace.db)));
               }
 
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
 

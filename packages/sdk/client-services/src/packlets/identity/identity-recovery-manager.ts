@@ -71,8 +71,8 @@ export class EdgeIdentityRecoveryManager {
       lookupKey = data.lookupKey;
       algorithm = data.algorithm;
     } else {
-      recoveryCode = generateSeedPhrase();
-      const keypair = keyPairFromSeedPhrase(recoveryCode);
+      recoveryCode = await generateSeedPhrase();
+      const keypair = await keyPairFromSeedPhrase(recoveryCode);
       recoveryKey = PublicKey.from(keypair.publicKey);
       lookupKey = PublicKey.from(keypair.publicKey);
       algorithm = 'ED25519';
@@ -196,7 +196,7 @@ export class EdgeIdentityRecoveryManager {
   public async recoverIdentity(ctx: Context, { recoveryCode }: { recoveryCode: string }): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
-    const recoveryKeypair = keyPairFromSeedPhrase(recoveryCode);
+    const recoveryKeypair = await keyPairFromSeedPhrase(recoveryCode);
     const recoveryKey = PublicKey.from(recoveryKeypair.publicKey);
     const deviceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();

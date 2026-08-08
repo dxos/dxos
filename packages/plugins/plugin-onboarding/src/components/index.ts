@@ -4,4 +4,3 @@
 
 export * from './AboutDialog';
 export * from './NativeRedirectDialog';
-export * from './WelcomeScreen';

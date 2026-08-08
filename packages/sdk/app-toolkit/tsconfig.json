@@ -48,6 +48,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

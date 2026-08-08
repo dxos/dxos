@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AiContext, Harness } from '@dxos/assistant';
+import type { Harness } from '@dxos/assistant';
 import * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
@@ -24,6 +24,14 @@ import * as Chat from './Chat';
  * it runs as by a `CompanionTo` relation, and durable work products live on a Project
  * (plugin-projects DESIGN.md, "Agent ↔ Project convergence").
  */
+
+/**
+ * `@dxos/assistant` carries the AI session runtime (MCP SDK, Anthropic client, ~280 KB). This
+ * module holds the Agent *schema*, which core plugins reference for operation definitions, so the
+ * runtime loads only when an agent operation actually runs.
+ */
+const assistantRuntime = () => import('@dxos/assistant');
+
 export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent', '0.2.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -115,6 +123,10 @@ export const makeInitialized = (
   Effect.gen(function* () {
     const { skills: propsSkills, contextObjects, ...agentProps } = props;
 
+    // Loaded before anything is persisted: a rejected chunk after the first `Database.add` would
+    // leave a half-built agent graph behind with nothing to clean it up.
+    const { AiContext: AiContextRuntime } = yield* Effect.promise(assistantRuntime);
+
     // Persist any inline (transient) skills so their refs are resolvable from feed bindings later.
     // Refs created with Ref.make(obj) carry an inline target, but when stored in ECHO and read back
     // by a new AiSession, the target is lost and must be found in the DB via tryLoad().
@@ -144,7 +156,7 @@ export const makeInitialized = (
     Obj.setParent(instructions, agent);
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.context<Database.Service>();
-    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
     // TODO(dmaretskyi): Skill registry.
     const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
 
@@ -190,9 +202,10 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
 
     const existingFeed = yield* Database.load(existingChat.feed);
     const runtime = yield* Effect.context<Database.Service>();
+    const { AiContext: AiContextRuntime } = yield* Effect.promise(assistantRuntime);
     const existingContextBinder = yield* EffectEx.acquireReleaseResource(
       () =>
-        new AiContext.Binder({
+        new AiContextRuntime.Binder({
           feed: existingFeed,
           runtime,
         }),
@@ -204,7 +217,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
       .map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
-    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
 
     const chat = yield* Database.add(
       Chat.make({
@@ -244,7 +257,8 @@ export const getFromChatContext: Effect.Effect<
   HarnessContextError | Harness.NotSupportedError,
   Harness.HarnessService
 > = Effect.gen(function* () {
-  const agents = yield* Harness.queryContext(Filter.type(Agent));
+  const { Harness: HarnessRuntime } = yield* Effect.promise(assistantRuntime);
+  const agents = yield* HarnessRuntime.queryContext(Filter.type(Agent));
   if (agents.length !== 1) {
     return yield* Effect.fail(new HarnessContextError({ type: 'agent', count: agents.length }));
   }

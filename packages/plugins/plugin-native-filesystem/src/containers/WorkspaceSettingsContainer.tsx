@@ -91,10 +91,10 @@ export const WorkspaceSettingsContainer = () => {
     }
 
     await invokePromise(NativeFilesystemOperation.CloseDirectory, { id: workspace.id });
-    const personalSpaceId = AppSpace.getPersonalSpace(client)?.id;
-    if (personalSpaceId) {
+    const defaultSpaceId = AppSpace.getDefaultSpace(client)?.id;
+    if (defaultSpaceId) {
       await invokePromise(LayoutOperation.SwitchWorkspace, {
-        subject: GraphPath.getSpacePath(personalSpaceId),
+        subject: GraphPath.getSpacePath(defaultSpaceId),
       });
     }
   }, [workspace, invokePromise, client]);

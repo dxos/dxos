@@ -5,7 +5,7 @@
 import React, { memo, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/react-client/echo';
 import { Carousel, useTranslation } from '@dxos/react-ui';
 
@@ -23,14 +23,15 @@ type SpaceScopedProps = {
 };
 
 /**
- * Home content contributor: the Welcome carousel on the personal space. Kept mounted (toggled
+ * Home content contributor: the Welcome carousel on the default space. Kept mounted (toggled
  * `hidden` when dismissed) so the cross-origin Stream iframe is not torn down and re-created on
- * every show/hide — that remount froze the UI. Renders nothing on non-personal spaces.
+ * every show/hide — that remount froze the UI. Renders nothing on other spaces.
  */
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
-  const isPersonal = !!space && AppSpace.isPersonalSpace(space);
-  const [dismissed] = useWelcomeDismissed(space);
-  if (!isPersonal) {
+  const defaultSpace = useDefaultSpace();
+  const isDefault = !!space && space.id === defaultSpace?.id;
+  const [dismissed] = useWelcomeDismissed();
+  if (!isDefault) {
     return null;
   }
 
@@ -42,7 +43,7 @@ export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
 };
 
 /**
- * Welcome content (personal space): plugin showcase carousel. The guided-tour and dismiss actions
+ * Welcome content (default space): plugin showcase carousel. The guided-tour and dismiss actions
  * live in the article toolbar (contributed as graph actions; see plugin-support app-graph-builder).
  *
  * Memoized (no props) so the home article's ongoing reactive re-renders (recent-objects query,

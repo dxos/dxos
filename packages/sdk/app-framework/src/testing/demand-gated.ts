@@ -11,7 +11,8 @@ import { ActivationEvent, type PluginManager } from '../core';
 
 /**
  * Fires every activation event that a running app fires in response to demand: the
- * {@link ActivationEvents.Idle} wave, then each core and enabled plugin's start event.
+ * {@link ActivationEvents.Idle} wave, {@link ActivationEvents.CommandsRequested}, then each core
+ * and enabled plugin's start event.
  *
  * Testing only, which is why it lives here rather than in the public `ActivationEvents` module.
  * A plugin's start fires when one of its surfaces renders, and that signal does not exist here: a
@@ -36,6 +37,9 @@ export const activateDemandGatedModules = (
   Effect.forEach(
     [
       ActivationEvents.Idle,
+      // Demanded by a host building a command tree — a CLI binary or a terminal panel — and
+      // nothing here is either.
+      ActivationEvents.CommandsRequested,
       ...new Set([...manager.getCore(), ...manager.getEnabled()].map(ActivationEvent.pluginStart)),
     ],
     (event) =>

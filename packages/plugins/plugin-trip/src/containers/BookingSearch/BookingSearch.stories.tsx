@@ -83,9 +83,9 @@ const meta = {
           types: [Trip.Trip, Segment.Segment, Booking.Booking],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(Segment.makeDefault('flight'));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              defaultSpace.db.add(Segment.makeDefault('flight'));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         StorybookPlugin({}),

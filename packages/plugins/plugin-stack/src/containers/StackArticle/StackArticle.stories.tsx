@@ -64,7 +64,7 @@ const meta: Meta<typeof StackArticle> = {
           types: [Collection.Collection, Markdown.Document, Drawing.Drawing, Drawing.Canvas],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
 
               const documents = Array.from({ length: 5 }).map(() =>
                 Ref.make(

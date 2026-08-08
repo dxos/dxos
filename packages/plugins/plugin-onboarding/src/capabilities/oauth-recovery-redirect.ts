@@ -206,7 +206,7 @@ const finalizeRedirect = Effect.fnUntraced(function* (
     }
     invariant(identity, 'identity should exist after create');
 
-    // Route the stashed OAuth refresh token to the personal space + write the IdentityRecovery row.
+    // Route the stashed OAuth refresh token to the default space + write the IdentityRecovery row.
     const completeResult = yield* invoker.invoke(OnboardingOperation.CompleteOAuthRegistration, {
       registrationToken: params.registrationToken,
     });

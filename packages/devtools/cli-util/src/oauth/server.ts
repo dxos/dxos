@@ -15,7 +15,7 @@ import * as HttpServerRequest from 'effect/unstable/http/HttpServerRequest';
 import * as HttpServerResponse from 'effect/unstable/http/HttpServerResponse';
 import { getPort } from 'get-port-please';
 
-import { openBrowser } from '../util/platform';
+import { openBrowser } from '#platform';
 
 /** Default timeout for a full OAuth browser round-trip. */
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000;
