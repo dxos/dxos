@@ -156,8 +156,13 @@ const ControlsModuleContainer = ({ space }: { space: Space }) => {
             setAnalyzing(false);
           }
           void refreshFacts();
-          if (Exit.isFailure(exit) && !Exit.hasInterrupts(exit)) {
-            log.warn('pipeline failed', { cause: exit.cause });
+          if (Exit.isFailure(exit)) {
+            // Read first: v4 types `hasInterrupts` as a guard to `Failure`, so negating it on an
+            // already-narrowed `Failure` leaves `never`.
+            const { cause } = exit;
+            if (!Exit.hasInterrupts(exit)) {
+              log.warn('pipeline failed', { cause });
+            }
           }
         },
       },

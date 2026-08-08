@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 // Bounded exponential backoff before degrading — absorbs transient failures (chiefly remote rate
 // limits) during a long unattended run, so a 429 burst doesn't silently poison a whole tier's
 // results. Permanent failures (e.g. an unresolved model) just cost three quick retries then degrade.
-const RETRY = Schedule.intersect(Schedule.exponential('2 seconds'), Schedule.recurs(3));
+const RETRY = Schedule.exponential('2 seconds').pipe(Schedule.upTo({ times: 3 }));
 
 // Per-call timeout. Must be GENEROUS: a slow model (a 30B or a reasoning model on a long prompt) that
 // times out degrades to empty and scores as *inaccurate*, conflating "slow" with "bad". Give it room

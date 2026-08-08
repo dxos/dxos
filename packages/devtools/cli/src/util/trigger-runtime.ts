@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
 import type * as ConfigError from 'effect/Config';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
 import type * as PlatformError from 'effect/PlatformError';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
@@ -54,7 +54,8 @@ export const triggerRuntimeLayer = ({
 }: TriggerRuntimeLayerOptions): Layer.Layer<
   TriggerRuntimeServices,
   ConfigError.ConfigError | PlatformError.PlatformError,
-  ClientService | ConfigService | FileSystem.FileSystem
+  // `Path` comes from `KeyValueStore.layerFileSystem`, which v4 moved into core effect.
+  ClientService | ConfigService | FileSystem.FileSystem | Path.Path
 > => {
   // Set up KeyValueStore for trigger state storage
   const kvStoreLayer = Layer.unwrap(
@@ -65,7 +66,7 @@ export const triggerRuntimeLayer = ({
       // Ensure directory exists
       yield* fs.makeDirectory(storagePath, { recursive: true });
 
-      return BunKeyValueStore.layerFileSystem(storagePath);
+      return KeyValueStore.layerFileSystem(storagePath);
     }),
   );
 

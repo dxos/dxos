@@ -3,8 +3,6 @@
 //
 
 import * as ConfigProvider from 'effect/ConfigProvider';
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
@@ -18,19 +16,16 @@ export const hub = Command.make('hub', {
   apiKey: Options.string('api-key').pipe(Options.withDescription('API key.'), Options.optional),
 }).pipe(
   Command.withDescription('Manage Hub.'),
-  Command.withSubcommands([status, user, account, code]),
-  Command.provide(
-    Effect.fnUntraced(function* ({ apiKey }) {
-      const parentProvider = yield* Effect.configProviderWith(Effect.succeed);
-
-      const childProvider = Option.match(apiKey, {
-        onNone: () => ConfigProvider.fromUnknown({}),
-        onSome: (apiKey) => ConfigProvider.fromUnknown({ DX_HUB_API_KEY: apiKey }),
-      });
-
-      const provider = childProvider.pipe(ConfigProvider.orElse(() => parentProvider));
-
-      return Layer.setConfigProvider(provider);
-    }, Layer.unwrap),
+  Command.provide(({ apiKey }) =>
+    // `asPrimary` layers the flag over the ambient env provider rather than replacing it.
+    ConfigProvider.layerAdd(
+      ConfigProvider.fromUnknown(
+        Option.match(apiKey, { onNone: () => ({}), onSome: (apiKey) => ({ DX_HUB_API_KEY: apiKey }) }),
+      ),
+      { asPrimary: true },
+    ),
   ),
+  // After `provide`: `withSubcommands` widens `Input` to the union of this command's flags and every
+  // subcommand's, which the provider callback cannot destructure.
+  Command.withSubcommands([status, user, account, code]),
 );

@@ -11,7 +11,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 
 export const dx = Command.make('dx', {
-  config: Options.file('config', { exists: 'yes' }).pipe(
+  config: Options.file('config', { mustExist: true }).pipe(
     Options.withDescription('Config file path.'),
     Options.withAlias('c'),
     Options.optional,

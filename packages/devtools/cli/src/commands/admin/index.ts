@@ -3,8 +3,6 @@
 //
 
 import * as ConfigProvider from 'effect/ConfigProvider';
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
@@ -25,19 +23,16 @@ export const admin = Command.make('admin', {
   ),
 }).pipe(
   Command.withDescription('Edge admin commands.'),
+  Command.provide(({ adminKey, edgeUrl }) => {
+    const overrides: Record<string, string> = {};
+    Option.map(adminKey, (value) => (overrides.DX_HUB_API_KEY = value));
+    Option.map(edgeUrl, (value) => (overrides.DX_EDGE_BASE_URL = value));
+
+    // `asPrimary` layers the flags over the ambient env provider rather than replacing it, which is
+    // what the explicit `orElse(parentProvider)` chain used to do by hand.
+    return ConfigProvider.layerAdd(ConfigProvider.fromUnknown(overrides), { asPrimary: true });
+  }),
+  // After `provide`: `withSubcommands` widens `Input` to the union of this command's flags and every
+  // subcommand's, which the provider callback cannot destructure.
   Command.withSubcommands([space, identity]),
-  Command.provide(
-    Effect.fnUntraced(function* ({ adminKey, edgeUrl }) {
-      const parentProvider = yield* Effect.configProviderWith(Effect.succeed);
-
-      const overrides: Record<string, string> = {};
-      Option.map(adminKey, (value) => (overrides.DX_HUB_API_KEY = value));
-      Option.map(edgeUrl, (value) => (overrides.DX_EDGE_BASE_URL = value));
-
-      const childProvider = ConfigProvider.fromUnknown(overrides);
-      const provider = childProvider.pipe(ConfigProvider.orElse(() => parentProvider));
-
-      return Layer.setConfigProvider(provider);
-    }, Layer.unwrap),
-  ),
 );
