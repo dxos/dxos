@@ -68,9 +68,21 @@ export function useKanbanColumnEventHandler<T extends KanbanLayout.BaseKanbanIte
           return;
         }
 
-        // 2. Resolve drop target to an index in the column list.
+        // 2. Resolve drop target to an index in the column list. For a tile target the index is
+        // derived from the tile's id against the CURRENT column list, never from its `location`
+        // payload: that number is captured at the last dragover, and when a release beats the
+        // post-drag-start re-render it still holds the pre-reflow position — one too high once the
+        // dragged column left `useVisibleItems`. That off-by-one landed the column one slot too far
+        // in 3 of 20 instrumented webkit drags (drop target verified correct in `Root.onDrop`, only
+        // the stale location wrong) and is what deferred `rearrange columns`.
         let targetIndex: number;
-        if (target?.type === 'tile' || target?.type === 'placeholder') {
+        if (target?.type === 'tile') {
+          // Insert after the hovered column, in post-removal index space (`arrayMove` inserts after
+          // splicing the source out).
+          const withoutSource = currentColumns.filter((c) => model.getColumnId(c) !== sourceColumnId);
+          const tileIndex = withoutSource.findIndex((c) => model.getColumnId(c) === target.id);
+          targetIndex = tileIndex === -1 ? -1 : tileIndex + 1;
+        } else if (target?.type === 'placeholder') {
           targetIndex = typeof target.location === 'number' ? Math.floor(target.location) : -1;
         } else if (target?.type === 'container') {
           targetIndex = currentColumns.length;

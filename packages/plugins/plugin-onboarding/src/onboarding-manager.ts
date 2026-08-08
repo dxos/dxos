@@ -155,8 +155,12 @@ export class OnboardingManager {
       // Ensure that agent is present.
       await this._createAgent();
       return;
-    } else if (!this._skipAuth) {
-      // No identity yet: show welcome screen.
+    } else if (!this._skipAuth && this._deviceInvitationCode === undefined) {
+      // No identity yet: show welcome screen. Skipped when a device invitation is pending — the
+      // join dialog opened immediately below replaces it, and opening both means two dialog
+      // updates racing through the operation layer: when the welcome one lands second it hides
+      // the join dialog, so `halo-invitation-input` never appears and the device-join flow stalls
+      // with a healthy page (composer e2e `join new identity`, CI runs 31131235658/31271416331).
       await this._showWelcome();
       if (aborted()) {
         return;

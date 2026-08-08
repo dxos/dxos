@@ -10,6 +10,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
@@ -66,6 +68,18 @@ export default Capability.makeModule(
       Obj.update(rootCollection, (rootCollection) => {
         rootCollection.objects.push(Ref.make(welcomeDoc));
       });
+
+      // First run lands on the README itself: the Home node's welcome panel resolves the default
+      // space through the settings-space designation, which is not readable at this point in the
+      // bootstrap, so landing there greets a new user with an empty Home.
+      const readmePath = GraphPath.getObjectPathFromObject(welcomeDoc);
+      yield* Operation.invoke(LayoutOperation.Set, { subject: [readmePath] }).pipe(
+        Effect.provideService(Operation.Service, operationInvoker),
+      );
+      // Expose is scheduled because the navtree may not have rendered yet at this point.
+      yield* Operation.schedule(LayoutOperation.Expose, { subject: readmePath }).pipe(
+        Effect.provideService(Operation.Service, operationInvoker),
+      );
     }
 
     if (generateExemplarSpace) {

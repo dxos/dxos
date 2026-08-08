@@ -35,6 +35,25 @@ const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/$
 // localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
 
+/**
+ * Budget for `joinNewIdentity()` to come back up on the join dialog. It spans a storage reset, a full
+ * page load and an app boot — post-reset boot alone measures ~8-11s — so it is sized well above the
+ * 30s `actionTimeout` a single interaction gets. Both callers set a test timeout above this.
+ */
+const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
+
+/**
+ * Typenames behind the friendly names the specs pass to `createObject()`. The type-picker option's
+ * testid is keyed by typename because its label is localized, so a spec cannot name it directly.
+ * A name missing here yields `…type.undefined`, which fails on the locator rather than silently.
+ */
+const OBJECT_TYPENAMES: Record<string, string> = {
+  Collection: 'org.dxos.type.collection',
+  Document: 'org.dxos.type.document',
+  Mailbox: 'org.dxos.type.mailbox',
+  Table: 'org.dxos.type.table',
+};
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -138,6 +157,16 @@ export class AppManager {
     await this.page.getByTestId('devicesContainer.joinExisting').click();
     await this.page.getByTestId('join-new-identity.reset-identity-input').fill(confirmInput);
     await this.page.getByTestId('join-new-identity.reset-identity-confirm').click();
+
+    // Confirming runs `client.reset()` and reloads into the join dialog, so this returns mid-boot.
+    // Leaving that to the caller's first action hides a whole reset + page load + app boot inside a
+    // `fill()`, which is bounded by the preset's 30s `actionTimeout` — a fixed deadline, despite the
+    // note this replaces claiming otherwise. That is what timed out on `halo-invitation-input` in
+    // runs 31131235658 and 31137756950. Wait for the input the reload is supposed to produce, with a
+    // budget sized to the boot rather than to a single interaction.
+    await this.shell.shell
+      .getByTestId('halo-invitation-input')
+      .waitFor({ state: 'visible', timeout: JOIN_IDENTITY_BOOT_TIMEOUT });
   }
 
   async shareSpace(): Promise<void> {
@@ -192,11 +221,74 @@ export class AppManager {
   //
 
   async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
-    await this.page.getByTestId('spacePlugin.addSpace').click();
-    await this.page.getByTestId('spacePlugin.createSpace').click();
-    await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
+    // Wait for the rail before counting it. The baseline has to describe a state the app has actually
+    // reached: `init()` only waits for `treeView.userAccount`, so the space list is still empty for a
+    // moment after boot, and a baseline of 0 taken there made every attempt look like it had created
+    // nothing — three of them ran and left four spaces in run 31144928080.
+    await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
+    const initialCount = await this.getSpaceItems().count();
+
+    // A closed dialog does not prove a space was created, and `waitForSpaceReady()` cannot tell the
+    // difference: it only requires the selected workspace to match the URL, which the space the app
+    // is already in satisfies on entry. So a submit that silently did not take returned success here
+    // and surfaced much later as a bare count mismatch in whichever test called this — `reset device`
+    // in run 31143471056, `create space, which is displayed in tree` in 31140999737. The new rail item
+    // is the first condition that cannot be met by pre-existing state, which is also what makes
+    // re-submitting safe: an unchanged count is proof the previous attempt created nothing.
+    // TODO(wittjosiah): Re-submitting is a workaround — find why the first submit intermittently
+    //   does not take on chromium and drop the retry.
+    for (let attempt = 1; ; attempt++) {
+      await this.#submitCreateSpaceForm();
+      try {
+        await expect(this.getSpaceItems()).toHaveCount(initialCount + 1, { timeout });
+        break;
+      } catch (err) {
+        // One retry, not three: if the baseline is ever wrong again the cost is a single extra space
+        // rather than a suite-wide cascade.
+        if (attempt === 2) {
+          throw err;
+        }
+      }
+    }
 
     await this.waitForSpaceReady(timeout);
+  }
+
+  /** Opens the add-space dialog, submits it, and waits for it to close. */
+  async #submitCreateSpaceForm(): Promise<void> {
+    await this.page.getByTestId('spacePlugin.addSpace').click();
+    await this.page.getByTestId('spacePlugin.createSpace').click();
+
+    const form = this.page.getByTestId('create-space-form');
+    const save = form.getByTestId('save-button');
+    // Wait for the dialog to mount before touching it, so that a later `isHidden` can only mean the
+    // submit landed. Skipping this is what broke run 31132403723: an unmounted form reads as hidden,
+    // the click was skipped as redundant, and the helper returned having created no space at all.
+    await expect(save).toBeVisible({ timeout: 10_000 });
+
+    // Retry only a click that *threw*. `Form.Root`'s fields resolve through a Surface lookup, so the
+    // button can detach mid-click ("element is not stable", then "element was detached from the DOM")
+    // — that took out `create space` in run 31130465200 and `create document` in 31131235658.
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await save.click({ timeout: 10_000 });
+        break;
+      } catch (err) {
+        if (await form.isHidden()) {
+          break; // The submit landed even though the click reported a detached element.
+        }
+        if (attempt === 3) {
+          throw err;
+        }
+      }
+    }
+
+    // The caller may re-submit, and reopening the dialog while the old one is still up would target
+    // the wrong tree. 30s rather than 10s: closing the dialog waits on the space actually being
+    // created, which took longer than 10s on firefox in run 31149685264. This wait is not the test's
+    // assertion — the caller's count check is — so being generous here costs nothing but delays a
+    // genuine "dialog never closed" failure.
+    await form.waitFor({ state: 'detached', timeout: 30_000 });
   }
 
   async joinSpace(): Promise<void> {
@@ -299,7 +391,8 @@ export class AppManager {
       await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
     }
 
-    await this.page.getByRole('listbox').getByText(type).first().click();
+    const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
+    await option.click({ timeout: 15_000 });
 
     const objectForm = this.page.getByTestId('create-object-form');
     if (!(await objectForm.isVisible())) {

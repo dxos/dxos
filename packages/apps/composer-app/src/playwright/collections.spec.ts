@@ -22,7 +22,10 @@ test.describe('Collection tests', () => {
     await host.createSpace();
     await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
-    await expect(host.getObject()).toContainText('New collection');
+    // By name rather than `getObject()`: the space seeds a README, and asserting on whichever object
+    // sorts first assumed the new collection precedes it — it read "Click to openREADME" on chromium
+    // in run 31142577692. Placement is not what this test is about.
+    await expect(host.getObjectByName('New collection')).toHaveCount(1);
   });
 
   test('re-order collections', async ({ browserName }) => {

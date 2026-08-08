@@ -19,26 +19,31 @@ test.describe('Basic test', () => {
   let host: AppManager;
   let guest: AppManager;
 
-  test.beforeEach(async ({ browser, browserName }) => {
+  test.beforeEach(async ({ browser }) => {
     host = new AppManager(browser);
 
     await host.init();
-    // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
-    //  https://github.com/microsoft/playwright/issues/2973
-    guest = browserName === 'chromium' ? new AppManager(browser) : host;
-    if (browserName === 'chromium') {
-      await guest.init();
-      await host.openShareSpace();
-      const invitationCode = await host.shell.createSpaceInvitation();
-      const authCode = await host.shell.getAuthCode();
+    // A real second peer on EVERY browser. This used to alias `guest = host` off chromium (citing
+    // playwright#2973), which silently reduced the non-chromium runs of this suite to single-page
+    // no-ops — green results that proved nothing about two-peer replication. Playwright has since
+    // shipped WebRTC support in its webkit build, so the genuine invitation runs everywhere and CI
+    // measures it; if a browser's transport still cannot connect, that failure is the finding and
+    // should be recorded here rather than re-aliased away. Measured (CI run 31263921597,
+    // 2026-08-08): chromium 8/8, firefox 8/8, webkit 7/8 — every invitation connected on all three
+    // browsers; webkit's one failure was the guest's app boot stalling before the shell, not
+    // transport.
+    guest = new AppManager(browser);
+    await guest.init();
+    await host.openShareSpace();
+    const invitationCode = await host.shell.createSpaceInvitation();
+    const authCode = await host.shell.getAuthCode();
 
-      await guest.openJoinSpace();
-      await guest.shell.acceptSpaceInvitation(invitationCode);
-      await guest.shell.authenticate(authCode);
-      await host.shell.closeShell();
+    await guest.openJoinSpace();
+    await guest.shell.acceptSpaceInvitation(invitationCode);
+    await guest.shell.authenticate(authCode);
+    await host.shell.closeShell();
 
-      await guest.page.waitForURL(await host.page.url());
-    }
+    await guest.page.waitForURL(await host.page.url());
   });
 
   test.afterEach(async () => {

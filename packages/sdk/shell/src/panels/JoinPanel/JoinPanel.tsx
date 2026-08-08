@@ -213,6 +213,28 @@ export const JoinPanel = ({
     return subscription.unsubscribe;
   }, [joinService]);
 
+  // `identity` enters the machine as a one-time context snapshot, so a panel that mounts while a
+  // just-issued `client.reset()` is still settling sees the outgoing identity, and `halo-only`
+  // mode sends it straight to `resettingIdentity` — a state with no automatic exit. The panel then
+  // sits on the reset confirmation forever and never renders the invitation input, even though the
+  // reset it was opened for completed (composer's `join new identity` e2e, ~1 in 6). Re-issue the
+  // requested disposition once the live identity clears.
+  useEffect(() => {
+    if (identity || initialDisposition !== 'accept-halo-invitation') {
+      return;
+    }
+
+    // `resettingIdentity` has no automatic exit; the auth-method chooser is where the machine lands
+    // when the snapshot was already null but the initial routing had been consumed. Both leave the
+    // panel without the invitation input the caller asked for.
+    if (joinState.matches('resettingIdentity')) {
+      joinSend({ type: 'resetIdentity' });
+      joinSend({ type: 'acceptHaloInvitation' });
+    } else if (joinState.matches({ choosingIdentity: 'choosingAuthMethod' })) {
+      joinSend({ type: 'acceptHaloInvitation' });
+    }
+  }, [identity, initialDisposition, joinState, joinSend]);
+
   useEffect(() => {
     const stateStack = joinState.configuration[0].id.split('.');
     const innermostState = stateStack[stateStack.length - 1];

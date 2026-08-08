@@ -40,7 +40,11 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
 
       const state = registry.get(stateAtom);
       const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
-      if (draft) {
+      // A reply sent while the thread's own persist is still in flight reads the same not-yet-cleared
+      // draft entry, so a database association (set by that persist's own `AddObject`) — not the draft
+      // entry alone — is the signal this call still needs to persist rather than just append.
+      const alreadyPersisted = Obj.getDatabase(thread) !== undefined;
+      if (draft && !alreadyPersisted) {
         Obj.update(thread, (thread) => {
           thread.status = 'active';
         });

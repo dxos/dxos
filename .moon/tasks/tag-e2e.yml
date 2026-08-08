@@ -13,26 +13,47 @@ tasks:
       - vite-plugin-icons:build
       - target: ^:build
         optional: true
-      - target: bundle
+      # `bundle-e2e` rather than `bundle` with an `env` override: the override is hashed into the
+      # dependency, so it produced a bundle no other invocation could hydrate. Only the two apps that
+      # serve a production bundle define it, hence optional.
+      - target: bundle-e2e
         optional: true
-        env:
-          DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-          DX_TELEMETRY_TAG: e2e
-          # Read at bundle time by `vite.config.ts` (VitePWA `selfDestroying`), so it belongs on the
-          # bundle as well as on the test process above.
-          DX_PWA: 'false'
     inputs:
       - src/playwright/playwright.config.ts
       - '@group(sources)'
       - '@group(tests)'
       - $CI
       - $CONFIG_DYNAMIC
+      # Set to a unique value (run id) to force execution without disabling the cache wholesale:
+      # MOON_CACHE=off would also re-run every cached bundle/build dependency in each shard.
+      - $DX_E2E_RUN_ID
       - $DX_ENVIRONMENT
       - $DX_HOST
       - $DX_HUB_URL
       - $DX_IPDATA_API_KEY
       - $DX_SHARED_WORKER
+      # The browser rides an env var rather than being baked into per-browser task variants
+      # (`e2e-chromium`, …). Both shapes shard equally well, but keeping the browser out of the task
+      # namespace stops it multiplying with the shard dimension: a suite that outgrows one cell then
+      # needs two task definitions (`e2e-ci-1of2`/`-2of2`), not six. Being a hash input already gives
+      # each browser its own remote-cache entry.
       - $PLAYWRIGHT_BROWSER
+
+  # Deliberately identical to `e2e` — it adds nothing, and it is NOT where sharding lives. It exists
+  # only so the CI pool has a task-name prefix of its own (`moon exec ':e2e-ci*'`), which is what lets
+  # a suite too big for one cell withhold its whole-suite target from the pool
+  # (`workspace.inheritedTasks.exclude`) and register halves in its place — see composer-app's
+  # `e2e-ci-1of2`/`-2of2`. Without the separate name the pool would have to glob `:e2e`, and that suite
+  # would contribute both its full suite and its halves, running every one of its tests twice.
+  #
+  # Sharding is not defined here because the useful shard count is per-suite: composer-app is the only
+  # suite whose runtime exceeds the ~160s a cell costs to stand up. Splitting the rest would make each
+  # storybook-backed suite pay its ~30s story compile twice to divide ~7s of tests.
+  #
+  # (`moon exec` cannot union a `--query` with explicit targets — the targets silently win — so the
+  # pool has to be expressible as globs rather than as "every `e2e` except composer's".)
+  e2e-ci:
+    extends: e2e
 
 inheritedBy:
   tags: e2e

@@ -17,9 +17,7 @@ export const Thread = {
     // After the click, there is a brief window where React has not yet re-rendered
     // the new draft thread into the DOM, so the locator resolves to nothing.
     await currentThread.waitFor({ state: 'visible' });
-    // Use .last() because message body editors also render as textboxes (via CodeMirror),
-    // and the reply input is always the last textbox in the thread.
-    const input = currentThread.getByRole('textbox').last();
+    const input = Thread.getReplyInput(currentThread);
     await input.fill(comment);
     await input.press('Enter');
   },
@@ -41,8 +39,15 @@ export const Thread = {
 
   getMessage: (thread: Locator, current: string) => thread.getByTestId('thread.message').filter({ hasText: current }),
 
+  /**
+   * The thread's reply composer. Scoped by `thread.reply` rather than picking the last
+   * `role=textbox`: message bodies are CodeMirror editors too, so ordering decided which editor was
+   * typed into, and getting it wrong edited an existing message instead of adding one.
+   */
+  getReplyInput: (thread: Locator) => thread.getByTestId('thread.reply').getByRole('textbox'),
+
   addMessage: async (thread: Locator, message: string) => {
-    const input = thread.getByRole('textbox').last();
+    const input = Thread.getReplyInput(thread);
     await input.fill(message);
     await input.press('Enter');
   },

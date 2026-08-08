@@ -69,9 +69,27 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
     [containerId, location],
   );
 
+  // Scrolling suspends a placeholder, it does not unregister it. Tearing the drop target down
+  // mid-drag erases the pointer's aim: pragmatic drops the element from
+  // `location.current.dropTargets`, so a release inside the container's 500ms scroll window
+  // resolves to the container and the drop becomes "move to end" instead of landing in the gap
+  // under the cursor. That is what destroyed a card in `rearrange within column` on firefox —
+  // expanding this placeholder scrolls the viewport, and the scroll then unregistered every
+  // placeholder one frame after the aim was acquired.
+  //
+  // Suspension is per-placeholder rather than blanket, because registration alone is too permissive
+  // the other way: an idle placeholder is ~8px of collapsed padding, and letting one accept a drop
+  // mid-scroll lets it steal a release that used to fall through to the container. Only the
+  // placeholder already aimed at stays droppable — it is the expanded one under the cursor, and
+  // pragmatic evaluates `canDrop` on entry, so a target the pointer is already inside keeps it.
+  const scrollingRef = useRef(scrolling);
+  scrollingRef.current = scrolling;
+  const activeLocationRef = useRef(activeLocation);
+  activeLocationRef.current = activeLocation;
+
   useLayoutEffect(() => {
     const root = rootRef.current;
-    if (!root || scrolling) {
+    if (!root) {
       return;
     }
 
@@ -79,22 +97,29 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
       element: root,
       getData: () => data,
       canDrop: ({ source }) => {
-        const data = getSourceData(source);
-        return (data && eventHandler.canDrop?.({ source: data })) || false;
+        if (scrollingRef.current && activeLocationRef.current !== data.location) {
+          return false;
+        }
+        const sourceData = getSourceData(source);
+        return (sourceData && eventHandler.canDrop?.({ source: sourceData })) || false;
       },
       // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
       getDropEffect: () => 'move',
       onDragEnter: () => {
-        setActiveLocation(data.location);
+        if (!scrollingRef.current) {
+          setActiveLocation(data.location);
+        }
       },
       onDragLeave: () => {
-        setActiveLocation(undefined);
+        if (!scrollingRef.current) {
+          setActiveLocation(undefined);
+        }
       },
       onDrop: () => {
         setActiveLocation(undefined);
       },
     });
-  }, [rootRef, data, scrolling, setActiveLocation]);
+  }, [rootRef, data, setActiveLocation]);
 
   return (
     <Comp
