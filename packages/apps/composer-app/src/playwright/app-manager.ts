@@ -155,8 +155,19 @@ export class AppManager {
 
   async joinNewIdentity(confirmInput = 'RESET'): Promise<void> {
     await this.page.getByTestId('devicesContainer.joinExisting').click();
-    await this.page.getByTestId('join-new-identity.reset-identity-input').fill(confirmInput);
-    await this.page.getByTestId('join-new-identity.reset-identity-confirm').click();
+    // Type the confirmation the way a user does, then wait for the confirm action to actually open
+    // before clicking it. The button gates on `inputValue === confirmationValue` via the native
+    // `disabled` attribute (shell `steps/ConfirmReset.tsx`), and that gate is the product's
+    // intended guard — but `fill()` sets the value in one event, so the enabled state can still be
+    // settling when Playwright's actionability check passes, and a click that lands while the
+    // attribute is re-asserted is swallowed by the browser with no handler run. Asserting enabled
+    // first satisfies every step of the guard instead of racing it.
+    const confirmInputLocator = this.page.getByTestId('join-new-identity.reset-identity-input');
+    await confirmInputLocator.click();
+    await confirmInputLocator.pressSequentially(confirmInput);
+    const confirmButton = this.page.getByTestId('join-new-identity.reset-identity-confirm');
+    await expect(confirmButton).toBeEnabled();
+    await confirmButton.click();
 
     // Confirming runs `client.reset()` and reloads into the join dialog, so this returns mid-boot.
     // Leaving that to the caller's first action hides a whole reset + page load + app boot inside a

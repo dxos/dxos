@@ -33,21 +33,19 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Deferred on a located defect in the reset confirmation, one step before
-  //   anything this test asserts. Instrumented `ResetDialog.handleReset` (probe verified compiled
-  //   into the e2e bundle) and a failing run logged NOTHING from it: the click on
-  //   `join-new-identity.reset-identity-confirm` registers but no handler runs, so no reset, no
-  //   reload, and the guest sits on the account/devices plank while `halo-invitation-input` never
-  //   appears (1 in 6 serialized). Mechanism: that button is
-  //   `disabled={disabled || pending || inputValue !== confirmationValue}` (shell
-  //   `steps/ConfirmReset.tsx`), and `inputValue` only lands after React commits the `fill()`'s
-  //   onChange — so the gate can re-assert between Playwright's actionability check and event
-  //   dispatch, and a click on a disabled Action is silently dropped. Fix in the shell: keep the
-  //   confirm action mounted with a stable enabled state once the confirmation text matches (or
-  //   have `handleConfirm` re-validate instead of gating via `disabled`). Two adjacent defects were
-  //   found and fixed while chasing this — the `OnboardingManager` welcome/join dialog race and
-  //   `JoinPanel` stranding in the exit-less `resettingIdentity` state — neither is this one.
-  test('join new identity', async () => {
+  // TODO(wittjosiah): Deferred. THREE theories tried and disproven — do not repeat them: (a) the
+  //   `OnboardingManager` welcome/join dialog race (real defect, fixed, but composer e2e runs
+  //   `skipAuth` so that path never opens); (b) `JoinPanel` stranding in the exit-less
+  //   `resettingIdentity` state (real defect, fixed, still 5/6); (c) the confirm button's native
+  //   `disabled` gate re-asserting inside Playwright's click-dispatch window — the helper now types
+  //   the confirmation key by key and asserts `toBeEnabled()` before clicking, and it still fails
+  //   1 in 4. What stays measured: the guest ends on the account/devices plank with no shell dialog,
+  //   and an instrumented `handleReset` in plugin-client's `ResetDialog` (the component
+  //   `RESET_DIALOG` renders; probe verified in the e2e bundle) logs nothing — so the reset never
+  //   starts even though the click completes on an enabled button. Next: a capture-phase click
+  //   listener on the dialog plus logging of `pending`/`inputValue` inside `ConfirmReset`, to prove
+  //   whether the event reaches React at all. Do not guess a fourth mechanism without that data.
+  test.fixme('join new identity', async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
