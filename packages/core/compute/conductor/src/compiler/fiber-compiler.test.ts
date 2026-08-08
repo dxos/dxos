@@ -49,7 +49,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe('Graph as a fiber runtime', () => {
-  it.scoped(
+  it.effect(
     'simple adder node',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -70,7 +70,7 @@ describe('Graph as a fiber runtime', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'composition',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -90,7 +90,7 @@ describe('Graph as a fiber runtime', () => {
   );
 
   // TODO(burdon): Is the DXN part of the runtime registration of the graph or persistent?
-  it.scoped.skip(
+  it.effect.skip(
     'composition (with shortcut)',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -110,7 +110,7 @@ describe('Graph as a fiber runtime', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'runFromInput',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -131,7 +131,7 @@ describe('Graph as a fiber runtime', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'if-else',
     Effect.fnUntraced(
       function* ({ expect }) {

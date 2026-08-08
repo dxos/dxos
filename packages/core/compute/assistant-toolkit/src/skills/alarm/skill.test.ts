@@ -68,7 +68,7 @@ describe('Alarm skill', () => {
   // an AgentProcess stamped as the harness host, so invoking the operation against that conversation
   // dispatches over the process RPC loopback to the host's AlarmManager (no LLM turn required).
   describe('set-alarm operation (Tier B)', () => {
-    it.scoped(
+    it.effect(
       'arms a self-wake on the owning host for a relative duration',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -89,7 +89,7 @@ describe('Alarm skill', () => {
       ),
     );
 
-    it.scoped(
+    it.effect(
       'arms a self-wake on the owning host for an absolute time',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -108,7 +108,7 @@ describe('Alarm skill', () => {
       ),
     );
 
-    it.scoped(
+    it.effect(
       'reports invalid input without arming an alarm',
       Effect.fnUntraced(
         function* ({ expect }) {

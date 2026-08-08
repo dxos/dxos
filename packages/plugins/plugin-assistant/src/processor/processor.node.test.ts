@@ -24,7 +24,7 @@ import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor';
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 
 describe('Chat processor', () => {
-  it.scoped(
+  it.effect(
     'basic',
     Effect.fn(
       function* ({ expect }) {

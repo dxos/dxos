@@ -31,7 +31,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('UpdateTasks', () => {
-  it.scoped(
+  it.effect(
     'adds items to the checklist',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -58,7 +58,7 @@ describe('UpdateTasks', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'adds items to the checklist without an agent, and checks off completed ones',
     Effect.fnUntraced(
       function* ({ expect }) {

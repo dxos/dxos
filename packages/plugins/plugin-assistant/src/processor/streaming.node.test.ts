@@ -101,7 +101,7 @@ const makeTestRuntime = Effect.gen(function* () {
 });
 
 describe('AiChatProcessor streaming', () => {
-  it.scoped(
+  it.effect(
     'upserts partials, finalizes complete blocks, ignores late partials, and flushes on completion',
     Effect.fn(
       function* ({ expect }) {

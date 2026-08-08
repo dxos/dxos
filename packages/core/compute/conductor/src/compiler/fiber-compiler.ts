@@ -31,6 +31,7 @@ import {
   type Executable,
   NotExecuted,
   ValueBag,
+  type ValueEffect,
   isNotExecuted,
 } from '../types';
 import { createDefectLogger } from '../util';
@@ -464,9 +465,9 @@ export class GraphExecutor {
           }),
         );
 
-        const res: ValueBag<any>['values'] = {};
+        const res: Record<string, ValueEffect<any>> = {};
         for (const key of Object.keys(outputBag.values)) {
-          res[key] = yield* Effect.cached(outputBag.values[key]).pipe(
+          res[key] = yield* Effect.cached((outputBag.values as Record<string, ValueEffect<any>>)[key]).pipe(
             Effect.withSpan('cached-output', { attributes: { key } }),
           );
         }

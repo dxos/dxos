@@ -45,7 +45,7 @@ const invokeDelegateTask = (input: { title: string }, chatFeed: Feed.Feed) =>
   );
 
 describe('DelegateTask', () => {
-  it.scoped(
+  it.effect(
     'promotes delegated work to a durable in-progress agent task',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -84,7 +84,7 @@ describe('DelegateTask', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'reuses the outline task set across delegations',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -114,7 +114,7 @@ describe('DelegateTask', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'fails on an empty title',
     Effect.fnUntraced(
       function* ({ expect }) {

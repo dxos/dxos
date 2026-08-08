@@ -7,6 +7,7 @@ import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
@@ -40,7 +41,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
-  it.scoped(
+  it.effect(
     'text output',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -63,7 +64,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
 
   // (Template + Chat) ==(systemPrompt + prompt)==> GPT ===> output.
   // The chat input maps to the graph input node in headless execution; the template supplies the system prompt.
-  it.scoped(
+  it.effect(
     'template system prompt + chat prompt -> gpt -> output',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -85,7 +86,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'stream output',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -105,7 +106,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
           [
             Effect.flatMap(output.values.tokenStream, (tokenStream) =>
               tokenStream.pipe(
-                Stream.filterMap((part) => (part.type === 'text-delta' ? Option.some(part.delta) : Option.none())),
+                Stream.filterMap((part) => (part.type === 'text-delta' ? Result.succeed(part.delta) : Result.failVoid)),
                 Stream.runCollect,
               ),
             ),
@@ -173,7 +174,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //
   //       const tokens = yield* outputs.values.tokenStream.pipe(
   //         Stream.unwrap,
-  //         Stream.filterMap((part) => (part.type === 'text-delta' ? Option.some(part.delta) : Option.none())),
+  //         Stream.filterMap((part) => (part.type === 'text-delta' ? Result.succeed(part.delta) : Result.failVoid)),
   //         Stream.tap((token) => Console.log(token)),
   //         Stream.runCollect,
   //         Effect.map(Chunk.toArray),

@@ -143,7 +143,7 @@ export type Executable<Input extends Schema.Top = Schema.Top, Output extends Sch
   meta: ComputeNodeMeta;
 
   /** Undefined for meta nodes like input/output. */
-  exec?: ComputeFunction<Schema.Schema.Type<Input>, Schema.Schema.Type<Output>>;
+  exec?: ComputeFunction<Schema.Schema.Type<Input> & ValueRecord, Schema.Schema.Type<Output> & ValueRecord>;
 };
 
 /**

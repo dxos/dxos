@@ -170,7 +170,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'tool call',
     Effect.fnUntraced(
       function* (_) {
@@ -188,7 +188,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'can be stopped while waiting for a tool call',
     Effect.fnUntraced(
       function* (_) {
@@ -205,7 +205,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'restart during tool call',
     Effect.fnUntraced(
       function* (_) {
@@ -234,7 +234,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'recovers queued tool results after reload',
     Effect.fnUntraced(
       function* (_) {
@@ -267,7 +267,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'rehydrates an idle session and replays conversation history',
     Effect.fnUntraced(
       function* (_) {
@@ -298,7 +298,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'hydrate is a no-op when there are no persisted agents',
     Effect.fnUntraced(
       function* (_) {
@@ -314,7 +314,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
@@ -363,7 +363,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
   // in place until this file's memoized fixtures are next regenerated, since removing it would
   // shift the shared deterministic ID stream the later fixtures depend on.
   describe('delegation (stub)', () => {
-    it.scoped(
+    it.effect(
       'delegates work to a sub-agent and folds the result back on completion',
       Effect.fnUntraced(
         function* (_) {
@@ -399,7 +399,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
   // Placed last so it does not perturb the shared deterministic ID stream of the tests above
   // (memoized conversations are keyed per file and depend on prior execution order).
-  it.scoped(
+  it.effect(
     'forks a conversation into a new feed and replays source history via a SessionLink',
     Effect.fnUntraced(
       function* (_) {
@@ -445,7 +445,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
   // Placed last (like the fork test) so it does not perturb the shared deterministic ID stream of
   // the memoized tests above.
-  it.scoped(
+  it.effect(
     'agent process succeeds when idle and respawns for a follow-up turn',
     Effect.fnUntraced(
       function* (_) {
@@ -487,7 +487,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
   // Drives the process control plane directly (no LLM turn), so it is placed after the memoized
   // tests above to avoid perturbing their shared deterministic ID stream.
-  it.scoped(
+  it.effect(
     'setAlarm over the process control surface reaches the live agent and arms a self-wake',
     Effect.fnUntraced(
       function* (_) {
@@ -527,7 +527,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 describe('Agent Service (control plane)', () => {
   // Exercises the instruction-aware reuse identity on both paths — the session cache and the
   // remount (rediscovered process) path.
-  it.scoped(
+  it.effect(
     'session reuse tracks the steering-instructions ref',
     Effect.fnUntraced(
       function* (_) {
