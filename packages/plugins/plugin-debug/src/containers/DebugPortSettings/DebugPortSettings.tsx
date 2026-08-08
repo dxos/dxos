@@ -6,9 +6,16 @@ import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
 import { Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Logger } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+
+/**
+ * Scopes the log panel to the controller's own entries. `parseFilter` matches the pattern as a
+ * substring of the emitting file path, and an empty base level admits nothing else.
+ */
+const LOG_FILTER = 'debug-port-controller:debug';
 
 export type DebugPortSettingsProps = {
   /** Injectable for stories/tests; defaults to the page-wide controller. */
@@ -74,10 +81,19 @@ export const DebugPortSettings = ({ controller = getDebugPortController() }: Deb
             </div>
           </Form.Row>
 
-          <Form.Row standalone label={t('settings.debug-port.log.label')}>
-            <pre data-surface='well' className='max-bs-52 overflow-auto rounded p-2 text-xs whitespace-pre-wrap'>
-              {status.log.join('\n')}
-            </pre>
+          {/* The settings variant puts the control in a right-hand column; log rows need the full
+              width, so this row collapses to a single column. */}
+          <Form.Row
+            standalone
+            label={t('settings.debug-port.log.label')}
+            classNames='md:grid-cols-1 md:[grid-template-areas:"header""description""control""validation"]'
+          >
+            {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter. */}
+            <Logger.Root initialFilter={LOG_FILTER}>
+              <Logger.Content classNames='max-bs-52'>
+                <Logger.List />
+              </Logger.Content>
+            </Logger.Root>
           </Form.Row>
         </>
       )}

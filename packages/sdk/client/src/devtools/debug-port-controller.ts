@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { log as logger } from '@dxos/log';
+
 import { type DebugPortOptions, resolveDebugPortOrigin, runDebugPortLoop } from './debug-port';
 
 /** Bindings in scope for evaluated snippets. */
@@ -12,13 +14,13 @@ export type DebugPortStatus = {
   /** Fresh per activation; the agent must pass it to `composer-recovery.js --session`. */
   session?: string;
   origin?: string;
-  log: readonly string[];
 };
 
 export type DebugPortStartOptions = {
   /** Resolved at each command so a late-booting client is picked up; defaults to the mounted devtools hook. */
   scope?: () => DebugPortScope;
   origin?: string;
+  /** Additional sink for the loop's lines, for hosts with no log surface of their own (the recovery page). */
   onLog?: (line: string) => void;
 };
 
@@ -37,14 +39,10 @@ export interface DebugPortController {
   stop(): void;
 }
 
-/** Bounded so a long-lived session cannot grow the log without limit. */
-const MAX_LOG_LINES = 500;
-
-const STOPPED: DebugPortStatus = { running: false, log: [] };
+const STOPPED: DebugPortStatus = { running: false };
 
 class DebugPortControllerImpl implements DebugPortController {
   #status: DebugPortStatus = STOPPED;
-  #log: string[] = [];
   #abort?: AbortController;
   readonly #listeners = new Set<() => void>();
 
@@ -65,11 +63,13 @@ class DebugPortControllerImpl implements DebugPortController {
     const session = crypto.randomUUID();
     const abort = new AbortController();
     this.#abort = abort;
-    this.#log = [];
     this.#update({ running: true, session, origin });
 
+    // Every line goes through @dxos/log: it is the record of what an agent evaluated in this page,
+    // so it belongs in the buffer the log panel reads and the log bundle the user can download —
+    // not in a private array that dies with the session.
     const log = (line: string) => {
-      this.#append(line);
+      logger.info(line, { session });
       onLog?.(line);
     };
 
@@ -100,18 +100,13 @@ class DebugPortControllerImpl implements DebugPortController {
     this.#abort?.abort();
     this.#abort = undefined;
     if (this.#status.running) {
-      this.#append('Debug port stopped.');
+      logger.info('Debug port stopped.', { session: this.#status.session });
       this.#update({ running: false });
     }
   }
 
-  #append(line: string): void {
-    this.#log = [...this.#log, line].slice(-MAX_LOG_LINES);
-    this.#update({});
-  }
-
-  #update(patch: Partial<Omit<DebugPortStatus, 'log'>>): void {
-    this.#status = { ...this.#status, ...patch, log: this.#log };
+  #update(patch: Partial<DebugPortStatus>): void {
+    this.#status = { ...this.#status, ...patch };
     this.#listeners.forEach((listener) => listener());
   }
 }
