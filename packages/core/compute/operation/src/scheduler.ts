@@ -141,8 +141,19 @@ class FollowupSchedulerImpl implements FollowupScheduler {
 
   get awaitAll(): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
-      const { fibers } = yield* Ref.get(this._state);
-      yield* Effect.forEach(fibers, (fiber) => Fiber.await(fiber), { concurrency: 'unbounded' });
+      // Untracks each fiber here rather than leaving it to the observer fork, so `pending` is
+      // settled the moment this returns; the observer's own removal is idempotent. Loops because a
+      // followup may schedule further followups while this is awaiting.
+      while (true) {
+        const { fibers } = yield* Ref.get(this._state);
+        if (HashSet.size(fibers) === 0) {
+          return;
+        }
+        yield* Effect.forEach(fibers, (fiber) => Fiber.await(fiber).pipe(Effect.andThen(this._removeFiber(fiber))), {
+          concurrency: 'unbounded',
+          discard: true,
+        });
+      }
     });
   }
 }

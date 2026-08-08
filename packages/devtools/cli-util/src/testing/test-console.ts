@@ -34,7 +34,9 @@ class TestConsoleService {
 
     this.console = {
       ...console,
-      log: (...args: readonly any[]) => Effect.sync(() => pusher('log')(...args)),
+      // v4 calls the console's methods for their side effect and discards the return value, so the
+      // capture happens inline rather than in an effect nobody runs.
+      log: (...args: readonly any[]) => pusher('log')(...args),
     };
   }
 
