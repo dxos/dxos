@@ -34,10 +34,10 @@ type ScrollAreaOptions = {
   padding: boolean;
   /** Use thin scrollbars. */
   thin: boolean;
-  /** Enable snap scrolling. */
+  /** Enable snap scrolling; the content must carry its own snap alignment (e.g. `snap-start`). */
   snap: boolean;
-  /** Paint the thumb over the content instead of reserving layout space for a native scrollbar. */
-  overlay: boolean;
+  /** Use the native scrollbar, which reserves layout width, instead of an overlay thumb. */
+  native: boolean;
 };
 
 type ScrollAreaContextType = ScrollAreaOptions & {
@@ -70,7 +70,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
       padding = false,
       thin = false,
       snap = false,
-      overlay = true,
+      native = false,
       ...props
     },
     forwardedRef,
@@ -81,8 +81,8 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
     const density = thin ? scrollbar.md : scrollbar.lg;
     const options = useMemo(
-      () => ({ orientation, autoHide, scrollbars, centered, padding, thin, snap, overlay }),
-      [orientation, autoHide, scrollbars, centered, padding, thin, snap, overlay],
+      () => ({ orientation, autoHide, scrollbars, centered, padding, thin, snap, native }),
+      [orientation, autoHide, scrollbars, centered, padding, thin, snap, native],
     );
 
     return (
@@ -90,7 +90,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
         <Comp {...rest} className={tx('scrollArea.root', options, className)} ref={forwardedRef}>
           {/* Slottable marks the merge target so the thumbs render alongside `children` under `asChild`. */}
           <Slottable>{children}</Slottable>
-          {overlay && scrollbars && viewport && (
+          {!native && scrollbars && viewport && (
             <ScrollAreaThumbs viewport={viewport} orientation={orientation} density={density} autoHide={autoHide} />
           )}
         </Comp>
@@ -123,9 +123,10 @@ const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...pr
       {...restWithoutStyle}
       style={
         {
-          // In overlay mode the native scrollbar is hidden, so it reserves no width.
-          '--scroll-width': options.scrollbars && !options.overlay ? `${density.size}px` : '0px',
+          '--scroll-width': options.scrollbars ? `${density.size}px` : '0px',
           '--scroll-padding': options.scrollbars ? `${density.padding}px` : '0px',
+          // Width of the strip the overlay thumb occupies: its thickness inset at both ends.
+          '--scroll-strip': options.scrollbars ? `${density.size + density.padding * 2}px` : '0px',
           ...style,
         } as CSSProperties
       }

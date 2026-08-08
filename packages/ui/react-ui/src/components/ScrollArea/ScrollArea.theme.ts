@@ -20,17 +20,17 @@ export type ScrollAreaStyleProps = {
   thin?: boolean;
   /** Enable snap scrolling. */
   snap?: boolean;
-  /** Paint the thumb over the content instead of reserving layout space. */
-  overlay?: boolean;
+  /** Use the native scrollbar, which reserves layout width, instead of an overlay thumb. */
+  native?: boolean;
 };
 
-const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, overlay }, ...etc) =>
+const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, native }, ...etc) =>
   mx(
     // Expand
     'dx-container',
 
     // Positioning context for the absolutely positioned overlay thumbs.
-    overlay && 'relative',
+    !native && 'relative',
 
     orientation === 'vertical' && 'group/scroll-v flex flex-col',
     orientation === 'horizontal' && 'group/scroll-h flex',
@@ -49,7 +49,7 @@ const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, overlay },
  * NOTE: The browser reserves space for scrollbars.
  */
 const viewport: ComponentFunction<ScrollAreaStyleProps> = (
-  { orientation, centered, padding, snap, autoHide, overlay },
+  { orientation, centered, padding, snap, autoHide, native },
   ...etc
 ) => {
   return mx(
@@ -65,7 +65,7 @@ const viewport: ComponentFunction<ScrollAreaStyleProps> = (
 
     // A styled `::-webkit-scrollbar` is always a classic scrollbar and so consumes layout width;
     // overlay mode removes it entirely and paints the thumb over the content instead.
-    overlay
+    !native
       ? ['[scrollbar-width:none]', '[&::-webkit-scrollbar]:hidden']
       : [
           '[&::-webkit-scrollbar-corner]:bg-transparent',
@@ -75,19 +75,29 @@ const viewport: ComponentFunction<ScrollAreaStyleProps> = (
         ],
 
     // If contained within Column.Root grid the gutter is set by that component (--gutter CSS variable).
-    // If centered, left padding compensates for scrollbar width so content is visually centered.
+    // If centered, the opposite side is padded to match so content is visually centered.
+    // The overlay thumb sits outside the flow, so `padding` must reserve the whole strip it occupies
+    // (its thickness plus its inset at both ends); the native bar already consumes its own width, so
+    // that branch subtracts it back out.
     (orientation === 'vertical' || orientation === 'all') &&
       (padding
-        ? [
-            centered ? 'pl-[var(--gutter,calc(var(--scroll-width)+var(--scroll-padding)))]' : 'pl-[var(--gutter,0)]',
-            'pr-[calc(var(--gutter,calc(var(--scroll-width)+var(--scroll-padding)))-var(--scroll-width))]',
-          ]
-        : centered && 'pl-[var(--scroll-width)]'),
+        ? !native
+          ? [
+              centered ? 'pl-[var(--gutter,var(--scroll-strip))]' : 'pl-[var(--gutter,0)]',
+              'pr-[var(--gutter,var(--scroll-strip))]',
+            ]
+          : [
+              centered ? 'pl-[var(--gutter,calc(var(--scroll-width)+var(--scroll-padding)))]' : 'pl-[var(--gutter,0)]',
+              'pr-[calc(var(--gutter,calc(var(--scroll-width)+var(--scroll-padding)))-var(--scroll-width))]',
+            ]
+        : native && centered && 'pl-[var(--scroll-width)]'),
 
     (orientation === 'horizontal' || orientation === 'all') &&
       (padding
-        ? [centered && 'pt-[calc(var(--scroll-width)+var(--scroll-padding))]', 'pb-[var(--scroll-padding)]']
-        : centered && 'pt-[var(--scroll-width)]'),
+        ? !native
+          ? [centered && 'pt-[var(--gutter,var(--scroll-strip))]', 'pb-[var(--gutter,var(--scroll-strip))]']
+          : [centered && 'pt-[calc(var(--scroll-width)+var(--scroll-padding))]', 'pb-[var(--scroll-padding)]']
+        : native && centered && 'pt-[var(--scroll-width)]'),
 
     snap && [
       orientation === 'vertical' && 'snap-y snap-mandatory',
@@ -95,7 +105,7 @@ const viewport: ComponentFunction<ScrollAreaStyleProps> = (
       orientation === 'all' && 'snap-both snap-mandatory',
     ],
 
-    !overlay &&
+    native &&
       (autoHide
         ? [
             orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',

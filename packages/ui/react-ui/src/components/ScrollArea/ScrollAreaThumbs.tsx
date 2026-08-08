@@ -158,11 +158,19 @@ export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: S
         )
       : 'opacity-100';
 
+  // A captured pointer keeps `:active` on the thumb only while the cursor stays over it, so the
+  // dragged state is driven by `dragging` instead.
+  const appearance = (axis: AllowedAxis) =>
+    mx(
+      'absolute z-10 rounded-full touch-none cursor-default transition-colors',
+      dragging === axis ? 'bg-scrollbar-thumb-active' : 'bg-scrollbar-thumb hover:bg-scrollbar-thumb-hover',
+    );
+
   return (
     <>
       {vertical.visible && (
         <div
-          className={mx('absolute z-10 rounded-full bg-scrollbar-thumb touch-none cursor-default', visibility)}
+          className={mx(appearance('vertical'), visibility)}
           style={{
             width: density.size,
             height: vertical.length,
@@ -176,7 +184,7 @@ export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: S
       )}
       {horizontal.visible && (
         <div
-          className={mx('absolute z-10 rounded-full bg-scrollbar-thumb touch-none cursor-default', visibility)}
+          className={mx(appearance('horizontal'), visibility)}
           style={{
             height: density.size,
             width: horizontal.length,
