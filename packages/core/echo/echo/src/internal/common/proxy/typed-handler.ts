@@ -568,7 +568,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return value;
     }
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
-    Schema.asserts(schema, value);
+    // Clearing an optional property is admitted here rather than by the property's own schema: v4
+    // keeps optionality on the property's context instead of widening its type to `T | undefined`.
+    if (value !== undefined || !SchemaValidator.isOptionalProperty(target, prop)) {
+      Schema.asserts(schema, value);
+    }
     SchemaValidator.assertExactProperties(schema, value, (path) => getDeep(value, path));
     if (isValidProxyTarget(value)) {
       setSchemaProperties(value, schema);

@@ -141,6 +141,21 @@ export class SchemaValidator {
     return null;
   }
 
+  /**
+   * Whether the property may be cleared.
+   *
+   * v4 records optionality as `context.isOptional` on the property's own type rather than widening
+   * it to `T | undefined`, so the property's schema alone no longer admits `undefined`.
+   */
+  public static isOptionalProperty(target: any, prop: string | symbol): boolean {
+    const schema: Schema.Top | undefined = (target as any)[SchemaId];
+    if (!schema || typeof prop === 'symbol') {
+      return false;
+    }
+    const property = SchemaAST.getPropertySignatures(schema.ast).find((candidate) => candidate.name === prop);
+    return property != null && SchemaAST.isOptional(property.type);
+  }
+
   public static getTargetPropertySchema(target: any, prop: string | symbol): Schema.Top {
     const schema: Schema.Top | undefined = (target as any)[SchemaId];
     invariant(schema, 'target has no schema');
