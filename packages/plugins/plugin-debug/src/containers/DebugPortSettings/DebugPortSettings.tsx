@@ -94,7 +94,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController() }: Deb
           >
             {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter. */}
             <Logger.Root rowFilter={isDebugPortRow}>
-              <Logger.Content classNames='max-bs-52'>
+              <Logger.Content classNames='max-h-[32lh]'>
                 <Logger.List />
               </Logger.Content>
             </Logger.Root>
