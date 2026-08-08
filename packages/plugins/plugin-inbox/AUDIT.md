@@ -707,7 +707,7 @@ JMAP-before-Google is deliberate: it is a third the size, single-domain, and has
 helpers, so the packaging problems (headless `moon.yml` guard, `./sync` export shape,
 fixture split, registration sites) get solved on the cheaper package.
 
-### 8i. Found during step 2 — system tags render as chips (needs a product call)
+### 8i. Found during step 2 — system tags render as chips
 
 `useVisibleTags` was _intended_ to hide provider system labels (Inbox, Starred, Sent, Important,
 Unread, the CATEGORY_* set) from the message tag row, but the guard has been inert since tags became
@@ -717,11 +717,22 @@ canonical system tag a message carries renders as a chip alongside its user tags
 `useTags(db)` map and `ConversationStack`'s `useQuery(db, Filter.type(Tag.Tag))` both return the full
 tag set.
 
-Restoring the intent is one line — drop tags carrying a `SystemTags.SYSTEM_TAG_SOURCE` foreign key —
-but it removes chips users currently see, so it is a **product decision, not a refactor**, and is
-kept out of the extraction. Note the intent is also no longer obviously right: sync now maps Gmail
-labels _and_ JMAP roles/keywords onto the same canonical tags, and "Starred" already has a dedicated
-`Row.Star` affordance, so a blanket hide, a per-tag opt-out, or leaving it as-is are all defensible.
+**Superseded by the tag-origin design** — see [`Tag.md`](../../core/echo/echo/src/Tag.md) §"Tag
+origin" (decided 2026-08-08). Rather than a local predicate in plugin-inbox, a tag's origin becomes a
+first-class, queryable property derived from the foreign key it already carries: user (no key),
+canonical DXOS (`org.dxos.tag`), or foreign provider (`com.google.gmail`, `org.ietf.jmap`).
+Foreign-provider tags become read-only and are excluded from pickers by default; canonical DXOS tags
+stay locally toggleable, which is what keeps the star / draft / sent flows working. That work spans
+`@dxos/echo`, `react-ui-form`, and the provider plugins, so it is tracked there rather than here.
+
+Two touchpoints for this extraction:
+
+- The origin-domain capability (rollout step 2) is contributed by `plugin-google` / `plugin-jmap`, so
+  it lands naturally in §8g steps 3-4 — one more `capabilities/*.ts` per provider, same shape as
+  `mail-send.ts`.
+- `GMAIL_TAG_SOURCE` / `JMAP_TAG_SOURCE` move with their providers as planned; do **not** rename them
+  to fit a domain convention (a persisted `Meta.keys[].source` rename orphans every existing tag and
+  makes sync re-create duplicates — see `Tag.md`).
 
 ### 8h. Decisions (all resolved 2026-08-08)
 
