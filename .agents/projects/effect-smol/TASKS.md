@@ -1,6 +1,6 @@
 # effect-smol — Tasks
 
-_Resume: Stage 2b — `agent-runtime` (28 errors) is the next frontier package; re-census after it, since ~120 packages are still hidden behind the frontier. Uncommitted: none. Last: `echo` went green (493 tests) after six v4 JSON-schema regressions, then `react-ui-form` and `app-toolkit` were ported to a clean build._
+_Resume: Stage 2b — the build is at **263/324 tasks passing** (51 skipped behind the frontier). The frontier is now wide and shallow: 49 errors across 10 packages, led by `assistant-toolkit` (18) and `plugin-transcription` (8). Uncommitted: none._
 
 Migrate `dxos/dxos` from Effect 3 to Effect 4, then `dxos/edge`. The _why_, the decisions
 (D1–D7) and the findings (F1–F4) live in [DESIGN.md](./DESIGN.md) — this file is the ledger.
@@ -172,8 +172,26 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
       `Codec`. Unit tests green in both. `react-ui-form`'s 10 storybook integration tests still
       fail on `queryInvitations` / `ECONNREFUSED :3000` — the client stack behind them is not
       ported yet, so they are frontier-blocked rather than a regression.
-- [ ] **Clear the remaining frontier** — `agent-runtime` (28 errors) next, then re-census: ~120
-      packages are still hidden behind the frontier.
+- [x] **Port the frontier down to 263/324 passing build tasks** — `agent-runtime`, `react-ui-form`,
+      `app-toolkit`, `react-ui-canvas-editor`, `plugin-deck`, `react-ui-table`, `plugin-doctor`,
+      `cli-util`, `devtools`, `plugin-client`, `plugin-registry`, `plugin-space`, `plugin-calls`,
+      `plugin-search`, `plugin-preview`. Two systematic codemod mistakes accounted for most of it:
+  - `X.mapFields(Struct.omit(['k']))` cannot infer the struct from a bare key list, so the result
+    collapses to `{}`. The data-first `mapFields((fields) => Struct.omit(fields, ['k']))` infers.
+  - `Schema.mutable` is arrays-only in v4; on a struct or a record it collapses the same way.
+    Structs go through `mapFields(Struct.map(Schema.mutableKey))`, records through `mutableKey`.
+- [x] **Vendor the CLI printer** — `@effect/printer`/`@effect/printer-ansi` have no v4 release and
+      the CLI never declared them (they arrived through `@effect/cli`, which v4 absorbed).
+      `cli-util` now carries a `Doc`/`Ansi` pair covering the 19 members in use. There is no
+      reflow — nothing built a `group` or a soft line — so the renderer is a line-by-line walk
+      rather than a Wadler layout engine. **Worth a human look at the CLI's rendered output.**
+- [ ] **Clear the remaining frontier** — 49 errors across 10 packages: `assistant-toolkit` (18),
+      `plugin-transcription` (8), `plugin-crx` (5), `storybook-testing`/`plugin-video`/
+      `plugin-thread`/`plugin-review`/`plugin-library` (3 each), `plugin-voxel` (2),
+      `plugin-game` (1). 51 tasks still skipped behind them.
+- [ ] **Run the test suites** — only `echo` (493), `effect` (52) and `react-ui-form`'s unit tests
+      have been run since the port. `react-ui-form`'s 10 storybook integration tests fail on
+      `queryInvitations` / `ECONNREFUSED :3000`, which needs the client stack up.
 
 - [ ] **Tier 1 — mechanical rewrites** (~2–3 wks): module paths, API renames, the 433 atom files.
 - [ ] **Tier 2 — services and runtime** (~3–6 wks): `Context.Tag` → `ServiceMap.Service` (126 class
