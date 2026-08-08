@@ -19,10 +19,10 @@ export const scrollbar: Record<'sm' | 'md' | 'lg', ScrollbarDensity> = {
   },
   md: {
     size: 4,
-    padding: 4,
+    padding: 2,
   },
   lg: {
     size: 8,
-    padding: 8,
+    padding: 2,
   },
 };

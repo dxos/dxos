@@ -54,7 +54,7 @@ const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>)
 export const Vertical = {
   render: () => (
     <Container classNames='h-72 w-48'>
-      <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Root orientation='vertical' padding={false}>
         <ScrollArea.Viewport>
           <List />
         </ScrollArea.Viewport>
@@ -156,7 +156,7 @@ export const Both = {
 export const Fullscreen = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   render: () => (
-    <ScrollArea.Root orientation='all' thin>
+    <ScrollArea.Root orientation='all'>
       <ScrollArea.Viewport>
         <div className='flex flex-col gap-2'>
           {Array.from({ length: 50 }).map((_, rowIndex) => (
