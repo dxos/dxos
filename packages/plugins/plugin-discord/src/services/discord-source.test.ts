@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { MessageResponse } from 'dfx/types';
 import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -21,6 +20,7 @@ import {
   listFacts,
 } from '@dxos/crawler';
 import { coreLayer, deterministicAiService } from '@dxos/crawler/testing';
+import { type MessageResponse } from '@dxos/discord-client';
 import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
 

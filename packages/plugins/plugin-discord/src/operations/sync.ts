@@ -2,13 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DiscordREST } from 'dfx';
-import type { MessageResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
+import { DiscordREST, type MessageResponse } from '@dxos/discord-client';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';

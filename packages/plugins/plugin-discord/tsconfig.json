@@ -49,6 +49,9 @@
       "path": "../../core/compute/crawler"
     },
     {
+      "path": "../../core/compute/discord-client"
+    },
+    {
       "path": "../../core/compute/link"
     },
     {

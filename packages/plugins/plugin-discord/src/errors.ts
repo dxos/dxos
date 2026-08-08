@@ -5,65 +5,14 @@
 import * as Predicate from 'effect/Predicate';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import { isErrorResponse, isRatelimited } from '@dxos/discord-client';
 import { BaseError } from '@dxos/errors';
-
-/**
- * Discord returned a non-2xx response. dfx surfaces these as
- * `DiscordRestError<'ErrorResponse', ErrorResponse>` (4xx other than 429) or
- * `DiscordRestError<'RatelimitedResponse', RatelimitedResponse>` (429).
- * `cause` carries the parsed Discord body `{ code, message }` and `response`
- * exposes the HTTP status. We pattern-match on `_tag` rather than reaching
- * for `instanceof` because dfx's tag is the stable identity surfaced through
- * `Effect.catchTag`.
- */
-type DfxErrorResponseShape = {
-  readonly _tag: 'ErrorResponse';
-  readonly cause: { readonly code?: number; readonly message?: string };
-  readonly response: { readonly status: number };
-};
-
-type DfxRatelimitedResponseShape = {
-  readonly _tag: 'RatelimitedResponse';
-  readonly cause: { readonly code?: number; readonly message?: string; readonly retry_after?: number };
-  readonly response: { readonly status: number };
-};
-
-/**
- * dfx errors always carry `cause` (the parsed Discord body) and `response`
- * (the HttpClient response). Validate both before claiming the shape so an
- * incomplete `{ _tag: 'ErrorResponse' }` falls through to the generic
- * formatter branch instead of crashing on a missing `error.cause`.
- */
-const hasDiscordErrorFields = (
-  error: Record<string, unknown>,
-): error is { cause: { code?: number; message?: string }; response: { status: number } } =>
-  Predicate.isObject(error.cause) &&
-  Predicate.isObject(error.response) &&
-  typeof (error.response as { status?: unknown }).status === 'number';
-
-export const isDiscordErrorResponse = (error: unknown): error is DfxErrorResponseShape =>
-  Predicate.isObject(error) && error._tag === 'ErrorResponse' && hasDiscordErrorFields(error);
-
-export const isDiscordRatelimited = (error: unknown): error is DfxRatelimitedResponseShape =>
-  Predicate.isObject(error) && error._tag === 'RatelimitedResponse' && hasDiscordErrorFields(error);
-
-/** Read the HTTP status from a dfx Discord error if present. */
-export const discordErrorStatus = (error: unknown): number | undefined => {
-  if (
-    Predicate.isObject(error) &&
-    Predicate.isObject((error as { response?: unknown }).response) &&
-    typeof (error as { response: { status?: unknown } }).response.status === 'number'
-  ) {
-    return (error as { response: { status: number } }).response.status;
-  }
-  return undefined;
-};
 
 /**
  * User-facing / persisted diagnostic string for failures from Discord sync paths.
  */
 export const formatDiscordSyncFailure = (error: unknown): string => {
-  if (isDiscordErrorResponse(error) || isDiscordRatelimited(error)) {
+  if (isErrorResponse(error) || isRatelimited(error)) {
     const { code, message } = error.cause;
     if (typeof message === 'string' && message.length > 0) {
       return typeof code === 'number' ? `Discord API error ${code}: ${message}` : `Discord API error: ${message}`;

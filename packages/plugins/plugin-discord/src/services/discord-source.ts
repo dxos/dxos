@@ -2,12 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DiscordREST } from 'dfx';
-import type { GuildChannelResponse, MessageResponse, MyGuildResponse, UserResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { CrawlError, Source, type SourceApi, type ThreadRef, type Type } from '@dxos/crawler';
+import {
+  DiscordREST,
+  type GuildChannelResponse,
+  type MessageResponse,
+  type MyGuildResponse,
+  type UserResponse,
+} from '@dxos/discord-client';
 import { type Err, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import type * as Connection from '@dxos/plugin-connector/Connection';
@@ -160,8 +165,8 @@ const makeSource: Effect.Effect<SourceApi, never, DiscordREST> = Effect.gen(func
 
 /**
  * Live {@link Source} over the Discord REST API, authenticated with a raw bot token (stories,
- * demo scripts, tests). `fetchMessages` drains every page newer than the cursor in one call (dfx
- * handles 429 retry + pagination); the crawler then calls again with the advanced cursor to
+ * demo scripts, tests). `fetchMessages` drains every page newer than the cursor in one call (the
+ * client handles 429 retry); the crawler then calls again with the advanced cursor to
  * confirm the target is drained. Threads are returned as refs for the crawler to descend
  * depth-first.
  */

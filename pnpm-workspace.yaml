@@ -401,7 +401,6 @@ catalog:
   defuddle: ^0.18.1
   del: ^5.1.0
   depcheck: ^1.4.7
-  dfx: ^0.127.0
   diff: ^8.0.3
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
@@ -804,7 +803,6 @@ peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
     '@effect/vitest>vitest': '>=3.2.0'
-    dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
     partyserver>@cloudflare/workers-types: '>=5.0.0'
     vite-plugin-pwa>vite: '>=7.0.0'
