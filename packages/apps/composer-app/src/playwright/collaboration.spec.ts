@@ -59,7 +59,7 @@ test.describe('Collaboration tests', () => {
   // TODO(wittjosiah): Failed on chromium in run 31126663421 at 35.3s, and again in 31111016212 — this
   //   time at 2 workers rather than 4, so it is not boot contention. Shares `perfomInvitation` with the
   //   test below, which fails the same way, so both are likely one cause in the invitation path.
-  test.fixme("guest joins host's space", async () => {
+  test("guest joins host's space", async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
     await host.createObject({ type: 'Document' });
@@ -143,7 +143,7 @@ test.describe('Collaboration tests', () => {
   //   the test above fixme'd this file has no running tests left, so composer has no e2e collaboration
   //   coverage until the shared `perfomInvitation` failure is root-caused — worth prioritising over the
   //   other deferrals for that reason.
-  test.fixme("host and guest can see each others' changes in same document", async () => {
+  test("host and guest can see each others' changes in same document", async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
