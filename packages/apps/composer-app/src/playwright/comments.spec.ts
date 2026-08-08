@@ -200,14 +200,14 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  // TODO(wittjosiah): Not a flake, and not the decoration race the other three shared. The comments
-  //   article computes `currentId = isAttended ? state.current : undefined`
-  //   (CommentsArticle.tsx:229), so a thread is only marked current while the comments plank itself
-  //   has attention. Clicking a *comment* attends the editor plank, so no thread gets
-  //   `aria-current='location'` — while clicking a thread attends the comments plank, which is why
-  //   the other direction passes. Whether the marker should survive attention moving to the editor
-  //   is a product call about attention gating, so this stays deferred rather than being papered
-  //   over in the test.
+  // TODO(wittjosiah): 1-in-5 race, measured with the strict-mode anchor collision fixed and
+  //   `onSelect` writing the selection atom synchronously (both landed): after clicking the FIRST
+  //   comment, its thread sometimes never gets `aria-current` — the state the click set is
+  //   overwritten when the just-created third thread's composer restores focus and
+  //   `CommentsArticle.handleAttend` re-records it as current (the exact hazard the handleAttend
+  //   comment describes). Product fix needed: a passive focus restoration must not override a
+  //   deliberate editor selection. The earlier attention-gating diagnosis here was stale —
+  //   `isRelated` covers the editor plank, and the test passes 4/5.
   test.fixme('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
@@ -215,13 +215,16 @@ test.describe('Comments tests', () => {
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    const editorText = random.lorem.paragraphs(3);
-    // Split into paragraphs so each slice stays within a single line;
-    // cm-comment decorations are per-line and cannot match text spanning newlines.
-    const [firstParagraph, secondParagraph, thirdParagraph] = editorText.split('\n');
-    const firstMessage = firstParagraph.slice(0, 10);
-    const secondMessage = secondParagraph.slice(0, 15);
-    const thirdMessage = thirdParagraph.slice(-20);
+    // Unique tokens rather than lorem slices: faker repeats words across paragraphs, so a slice
+    // can match two cm-comment decorations and fail the strict-mode locators below (measured
+    // locally: 'Consequatur pra' resolved to 2 elements). One paragraph per anchor — cm-comment
+    // decorations are per-line and cannot match text spanning newlines.
+    const firstMessage = 'anchor-alpha';
+    const secondMessage = 'anchor-bravo';
+    const thirdMessage = 'anchor-charlie';
+    const editorText = [firstMessage, secondMessage, thirdMessage]
+      .map((anchor) => `${anchor} ${random.lorem.sentence()}`)
+      .join('\n');
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, firstMessage);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());

@@ -212,7 +212,10 @@ export const commentSync = (
       onSelect: ({ selection }) => {
         const current = selection.current ?? selection.closest;
         if (current) {
-          void invokePromise(CommentOperation.Select, { current });
+          // Direct atom write, not an operation: proximity fires on every caret move, and async
+          // invocations complete out of order — a click's selection was overwritten by an earlier,
+          // slower invocation, leaving the wrong thread current (comments e2e, 1-in-5).
+          registry.set(stateAtom, { ...registry.get(stateAtom), current });
         }
       },
       // A deliberate click reveals the thread in the comments companion; `reveal` routes the companion
