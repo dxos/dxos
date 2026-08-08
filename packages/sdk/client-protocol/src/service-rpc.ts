@@ -326,12 +326,14 @@ export const makeInProcessClientServicesRpc = (
  * corresponding client method.
  */
 export const makeHandlersFromRpc = (rpc: ClientServicesRpc): Partial<ClientServicesHandlers> => {
-  const rpcRecord = rpc as unknown as Record<string, Record<string, (...args: any[]) => unknown>>;
+  // The rpc client is a flat record keyed by the prefixed tag (`InvitationsService.queryInvitations`),
+  // not a per-service object; the handler shape it is being reshaped into *is* nested by service.
+  const rpcRecord = rpc as unknown as Record<string, (...args: any[]) => unknown>;
   const handlers: Partial<Record<keyof ClientServices, Record<string, unknown>>> = {};
   for (const [tag] of ClientServicesRpcs.requests) {
-    const [serviceKey, methodName] = parseTag(tag);
+    const [serviceKey] = parseTag(tag);
     const service = (handlers[serviceKey] ??= {});
-    service[tag] = (payload: unknown) => rpcRecord[serviceKey][methodName](payload);
+    service[tag] = (payload: unknown) => rpcRecord[tag](payload);
   }
   return handlers as Partial<ClientServicesHandlers>;
 };
@@ -344,15 +346,15 @@ export const makeServicesFromRpc = (
   rpc: ClientServicesRpc,
   runtime: Context.Context<never>,
 ): Partial<ClientServices> => {
-  // The rpc client is nested by service; methods are addressed dynamically from the rpc groups,
-  // so the per-method types cannot be expressed statically.
-  const rpcRecord = rpc as unknown as Record<string, Record<string, (...args: any[]) => unknown>>;
+  // The rpc client is a flat record keyed by the prefixed tag; methods are addressed dynamically
+  // from the rpc groups, so the per-method types cannot be expressed statically.
+  const rpcRecord = rpc as unknown as Record<string, (...args: any[]) => unknown>;
   const services: Partial<Record<keyof ClientServices, Record<string, unknown>>> = {};
   for (const [tag, rpcDef] of ClientServicesRpcs.requests) {
     const [serviceKey, methodName] = parseTag(tag);
     const service = (services[serviceKey] ??= {});
     const hasPayload = !isVoidSchema(rpcDef.payloadSchema);
-    const invoke = (request?: unknown) => rpcRecord[serviceKey][methodName](hasPayload ? (request ?? {}) : undefined);
+    const invoke = (request?: unknown) => rpcRecord[tag](hasPayload ? (request ?? {}) : undefined);
 
     if (RpcSchema.isStreamSchema(rpcDef.successSchema)) {
       service[methodName] = (request?: unknown) =>

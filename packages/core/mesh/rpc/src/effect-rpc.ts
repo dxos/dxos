@@ -65,9 +65,33 @@ export const makeProtocolRpcPortClient = (
 ): Effect.Effect<RpcClient.Protocol['Service'], never, Scope.Scope> =>
   RpcClient.Protocol.make(
     Effect.fnUntraced(function* (writeResponse) {
-      const clientId = 0;
       const parser = RpcSerialization.msgPack.makeUnsafe();
       const queue = yield* subscribePort(port);
+
+      /**
+       * Id of the single client this port carries, learned from its first outgoing request.
+       *
+       * `RpcClient.make` draws its id from a process-global counter, so it is 0 only for the very
+       * first client built in a process; addressing responses to a hard-coded 0 silently buffers
+       * every response of every later client. The id is latched from `send` rather than read off
+       * the protocol's `clientIds` set, which is only populated once the client's receive loop has
+       * been forked — after the first response can already have arrived.
+       */
+      let boundClientId: number | undefined;
+
+      /** Responses that arrived before the client identified itself; only the handshake can do that. */
+      const pending: RpcMessage.FromServerEncoded[] = [];
+      const deliver = (response: RpcMessage.FromServerEncoded): Effect.Effect<void> =>
+        Effect.suspend(() => {
+          if (boundClientId === undefined) {
+            pending.push(response);
+            return Effect.void;
+          }
+          const backlog = pending.splice(0);
+          return Effect.forEach([...backlog, response], (message) => writeResponse(boundClientId!, message), {
+            discard: true,
+          });
+        });
 
       const decodeFrame = (frame: Uint8Array) =>
         Effect.try({
@@ -107,7 +131,7 @@ export const makeProtocolRpcPortClient = (
             if (response._tag === 'Pong') {
               connected = true;
             } else {
-              yield* writeResponse(clientId, response);
+              yield* deliver(response);
             }
           }
         }
@@ -115,9 +139,7 @@ export const makeProtocolRpcPortClient = (
 
       yield* Queue.take(queue).pipe(
         Effect.flatMap(decodeFrame),
-        Effect.flatMap((responses) =>
-          Effect.forEach(responses, (response) => writeResponse(clientId, response), { discard: true }),
-        ),
+        Effect.flatMap((responses) => Effect.forEach(responses, deliver, { discard: true })),
         Effect.forever,
         Effect.orDie,
         Effect.interruptible,
@@ -125,7 +147,10 @@ export const makeProtocolRpcPortClient = (
       );
 
       return {
-        send: (_clientId: number, request: RpcMessage.FromClientEncoded) => send(request),
+        send: (clientId: number, request: RpcMessage.FromClientEncoded) => {
+          boundClientId = clientId;
+          return send(request);
+        },
         supportsAck: true,
         supportsTransferables: false,
       };
