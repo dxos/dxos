@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
+import type * as SchemaError from 'effect/SchemaError';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import * as Credential from '@dxos/compute/Credential';
@@ -26,7 +26,7 @@ const decodeAndHandleErrors =
   <S extends Schema.Top>(schema: S) =>
   (
     data: unknown,
-  ): Effect.Effect<Schema.Schema.Type<S>, GoogleError | ParseResult.ParseError, Schema.Schema.Context<S>> =>
+  ): Effect.Effect<Schema.Schema.Type<S>, GoogleError | SchemaError.SchemaError, Schema.Schema.Context<S>> =>
     Schema.decodeUnknownEffect(Schema.Union([schema, ErrorResponse]))(data).pipe(
       Effect.flatMap((response) => {
         if ('error' in response) {

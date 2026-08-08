@@ -452,11 +452,11 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
       //   the caller to preload `binding.target` so we can derive the db.
       const bindingTarget = bindingRef.target;
       if (!bindingTarget) {
-        return yield* Effect.dieMessage('Binding ref must be preloaded by caller (cursor not resolved).');
+        return yield* Effect.die(new Error('Binding ref must be preloaded by caller (cursor not resolved).'));
       }
       const db = Obj.getDatabase(bindingTarget);
       if (!db) {
-        return yield* Effect.dieMessage('Binding ref must be preloaded by caller (no database derivable).');
+        return yield* Effect.die(new Error('Binding ref must be preloaded by caller (no database derivable).'));
       }
 
       const bindingId = EID.getEntityId(EID.tryParse(bindingRef.uri)!) ?? 'unknown';
@@ -478,7 +478,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
         Effect.gen(function* () {
           const externalId = binding.spec.externalId;
           if (!externalId) {
-            return yield* Effect.dieMessage('Cursor has no externalId; cannot resolve a Linear team.');
+            return yield* Effect.die(new Error('Cursor has no externalId; cannot resolve a Linear team.'));
           }
           // `binding.spec.options` is an opaque provider-defined record in the
           // shared contract; this connector owns and validates its shape.
@@ -571,23 +571,23 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
           if (syncResult._tag === 'Success') {
             Cursor.advance(binding);
           } else {
-            Cursor.recordError(binding, formatLinearSyncFailure(syncResult.left));
+            Cursor.recordError(binding, formatLinearSyncFailure(syncResult.failure));
           }
 
           if (syncResult._tag === 'Failure') {
-            log.warn('linear sync: binding failed', { error: syncResult.left });
-            return yield* Effect.fail(syncResult.left);
+            log.warn('linear sync: binding failed', { error: syncResult.failure });
+            return yield* Effect.fail(syncResult.failure);
           }
 
           return {
             pulled: {
               teams: 1,
-              projects: syncResult.right.pulledProjects,
-              tasks: syncResult.right.pulledTasks,
+              projects: syncResult.success.pulledProjects,
+              tasks: syncResult.success.pulledTasks,
             },
             pushed: {
-              projects: syncResult.right.pushedProjects,
-              tasks: syncResult.right.pushedTasks,
+              projects: syncResult.success.pushedProjects,
+              tasks: syncResult.success.pushedTasks,
             },
           };
         }).pipe(

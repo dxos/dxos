@@ -11,9 +11,9 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as SchemaError from 'effect/SchemaError';
 import * as HttpBody from 'effect/unstable/http/HttpBody';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
@@ -171,7 +171,7 @@ export const toSubscriptionPostInput = (item: FeedViewPost) => {
 
 type RequestEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutError,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | SchemaError.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient
 >;
 
@@ -186,9 +186,9 @@ type RequestEffect<T> = Effect.Effect<
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutError,
+  error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | SchemaError.SchemaError | Cause.TimeoutError,
 ): boolean => {
-  if (error instanceof ParseResult.ParseError) {
+  if (error instanceof SchemaError.SchemaError) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {
@@ -211,19 +211,19 @@ const shouldRetry = (
 /**
  * Common pipeline for outbound requests:
  *  - execute via the injected HttpClient
- *  - decode JSON body with Effect Schema (invalid shapes fail as {@link ParseResult.ParseError})
+ *  - decode JSON body with Effect Schema (invalid shapes fail as {@link SchemaError.SchemaError})
  *  - 15s timeout
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
  *  - scope the response so its body stream is released even on failure
  */
-const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): RequestEffect<T> =>
+const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): RequestEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     return yield* httpClient.execute(request).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -397,7 +397,7 @@ const packageCredentials = (accessToken: AccessToken.AccessToken, db: Database.D
 
 type AuthedEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutError,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | SchemaError.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | Credentials
 >;
 
@@ -407,7 +407,7 @@ type PublicEffect<T> = RequestEffect<T>;
 const publicGet = <T>(
   path: string,
   query: Record<string, string | number | undefined>,
-  schema: Schema.Schema<T>,
+  schema: Schema.Codec<T>,
 ): PublicEffect<T> =>
   runRequest(
     HttpClientRequest.get(`${BSKY_PUBLIC_API}/${path}`).pipe(HttpClientRequest.setUrlParams(queryParams(query))),
@@ -424,7 +424,7 @@ const publicGet = <T>(
 const authedGet = <T>(input: {
   path: string;
   query: Record<string, string | number | undefined>;
-  schema: Schema.Schema<T>;
+  schema: Schema.Codec<T>;
 }): AuthedEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* Credentials;

@@ -8,9 +8,9 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as SchemaError from 'effect/SchemaError';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -141,27 +141,24 @@ export class LinearCredentials extends Context.Service<LinearCredentials, Linear
 
 type LinearEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | LinearGraphQLError,
+  HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | LinearGraphQLError,
   HttpClient.HttpClient | LinearCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | LinearGraphQLError,
+  error: HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | LinearGraphQLError,
 ): boolean => {
-  if (error instanceof ParseResult.ParseError || LinearGraphQLError.is(error)) {
-    return false;
+  // Matched positively on the HTTP error: v4's tagged-error classes do not narrow a union from the
+  // negative side. The specific failure hangs off `reason` -- a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (HttpClientError.isHttpClientError(error)) {
+    if (error.reason._tag !== 'StatusCodeError') {
+      return true;
+    }
+    const status = error.reason.response.status;
+    return status === 429 || (status >= 500 && status <= 599);
   }
-  if (Cause.isTimeoutError(error)) {
-    return true;
-  }
-  if (error._tag === 'RequestError') {
-    return true;
-  }
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
-  return status === 429 || (status >= 500 && status <= 599);
+  return Cause.isTimeoutError(error);
 };
 
 const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: LinearCredentialsValue) =>
@@ -171,7 +168,7 @@ const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: LinearCredent
     HttpClientRequest.setHeader('User-Agent', USER_AGENT),
   );
 
-const GraphQLEnvelope = <T>(dataSchema: Schema.Schema<T>) =>
+const GraphQLEnvelope = <T>(dataSchema: Schema.Codec<T>) =>
   Schema.Struct({
     data: Schema.NullOr(dataSchema).pipe(Schema.optional),
     errors: Schema.Array(Schema.Struct({ message: Schema.String })).pipe(Schema.optional),
@@ -186,7 +183,7 @@ const GraphQLEnvelope = <T>(dataSchema: Schema.Schema<T>) =>
 const linearGraphQL = <T>(
   query: string,
   variables: Record<string, unknown>,
-  dataSchema: Schema.Schema<T>,
+  dataSchema: Schema.Codec<T>,
 ): LinearEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
@@ -211,7 +208,7 @@ const linearGraphQL = <T>(
       }),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -246,7 +243,7 @@ const paginate = <T>(
       const data = yield* linearGraphQL(
         query,
         { ...baseVariables, first: PAGE_SIZE, after },
-        dataSchema as Schema.Schema<any>,
+        dataSchema as Schema.Codec<any>,
       );
       const conn = selectConnection(data);
       out.push(...conn.nodes);

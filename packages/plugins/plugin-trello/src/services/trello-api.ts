@@ -8,9 +8,9 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as SchemaError from 'effect/SchemaError';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -178,7 +178,7 @@ const authParams = (
 
 type TrelloEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError,
+  HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | TrelloCredentials
 >;
 
@@ -191,8 +191,10 @@ type TrelloEffect<T> = Effect.Effect<
  *  - TimeoutException (the request didn't complete in the allotted window): yes.
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError): boolean => {
-  if (error instanceof ParseResult.ParseError) {
+const shouldRetry = (
+  error: HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError,
+): boolean => {
+  if (error instanceof SchemaError.SchemaError) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {
@@ -216,13 +218,13 @@ const shouldRetry = (error: HttpClientError.HttpClientError | ParseResult.ParseE
  *    api.trello.com — Trello answers the GET fine but doesn't handle the
  *    preflight OPTIONS, so the browser blocks the response. Same workaround
  *    we use for Google's userinfo endpoint).
- *  - parse JSON body with Effect Schema (invalid shapes fail as {@link ParseResult.ParseError})
+ *  - parse JSON body with Effect Schema (invalid shapes fail as {@link SchemaError.SchemaError})
  *  - 15s timeout
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
  *    (transport errors, 429, 5xx) — never on 4xx auth/validation errors.
  *  - scope the response so its body stream is released even on failure
  */
-const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): TrelloEffect<T> =>
+const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): TrelloEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(
@@ -232,7 +234,7 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Sch
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -247,7 +249,7 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Sch
  */
 const trelloRequest = <T>(
   build: (creds: TrelloCredentialsValue) => HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
+  schema: Schema.Codec<T>,
 ): TrelloEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* TrelloCredentials;

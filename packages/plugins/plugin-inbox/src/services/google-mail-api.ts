@@ -6,7 +6,7 @@ import type * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as ParseResult from 'effect/ParseResult';
+import type * as SchemaError from 'effect/SchemaError';
 import type * as HttpClient from 'effect/unstable/http/HttpClient';
 import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
 
@@ -33,7 +33,7 @@ export type GoogleMailApiError =
   | HttpClientError.HttpClientError
   | Cause.TimeoutError
   | GoogleMail.GoogleError
-  | ParseResult.ParseError;
+  | SchemaError.SchemaError;
 
 /**
  * Swappable Gmail API surface. `Live` delegates to the real {@link GoogleMail} request functions;

@@ -6,9 +6,9 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as SchemaError from 'effect/SchemaError';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
@@ -122,26 +122,25 @@ const toDraftBody = (input: Publisher.PublisherDraftInput): Record<string, unkno
 
 type TypefullyEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | Publisher.PublisherError,
+  HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
   HttpClient.HttpClient | TypefullyCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | Publisher.PublisherError,
+  error: HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
 ): boolean => {
-  if (error instanceof ParseResult.ParseError || error instanceof Publisher.PublisherError) {
+  if (error instanceof SchemaError.SchemaError || error instanceof Publisher.PublisherError) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {
     return true;
   }
-  if (error._tag === 'RequestError') {
+  // v4 hangs the specific failure off `HttpClientError.reason`: a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (error.reason._tag !== 'StatusCodeError') {
     return true;
   }
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
+  const status = error.reason.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
 
@@ -155,7 +154,7 @@ const withAuth = (request: HttpClientRequest.HttpClientRequest, creds: Typefully
 
 /** Retry transient failures (429/5xx, network, timeout); never retry a decode/publisher error. */
 const TYPEFULLY_RETRY = {
-  schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+  schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
   while: shouldRetry,
 };
 
@@ -163,7 +162,7 @@ const TYPEFULLY_RETRY = {
  * Authenticate, issue, decode, time out and retry a Typefully request. Retries
  * transient failures (429/5xx, network, timeout); never retries a decode error.
  */
-const execute = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): TypefullyEffect<T> =>
+const execute = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): TypefullyEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* TypefullyCredentials;

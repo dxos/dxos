@@ -85,12 +85,12 @@ export type ListRecordsEntry = Schema.Schema.Type<typeof ListRecordsEntrySchema>
 // ---------------------------------------------------------------------------
 
 const decodeJson =
-  <T>(schema: Schema.Schema<T>) =>
+  <T>(schema: Schema.Codec<T>) =>
   (response: HttpClientResponse.HttpClientResponse) =>
     Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema));
 
 /** GET an XRPC endpoint and decode the JSON response. */
-const xrpcGet = <T>(url: string, query: Record<string, string>, schema: Schema.Schema<T>) =>
+const xrpcGet = <T>(url: string, query: Record<string, string>, schema: Schema.Codec<T>) =>
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
     return yield* HttpClientRequest.get(url).pipe(
@@ -105,7 +105,7 @@ const xrpcGet = <T>(url: string, query: Record<string, string>, schema: Schema.S
 const xrpcPost = <T>(
   url: string,
   body: Record<string, unknown>,
-  schema: Schema.Schema<T> | undefined,
+  schema: Schema.Codec<T> | undefined,
   headers: Record<string, string> = {},
 ) =>
   Effect.gen(function* () {
@@ -305,7 +305,7 @@ const proxyCall = <T>(
     query?: Record<string, string>;
     jsonBody?: Record<string, unknown>;
   },
-  schema: Schema.Schema<T> | undefined,
+  schema: Schema.Codec<T> | undefined,
 ) => {
   const query = params.query ? `?${new URLSearchParams(params.query).toString()}` : '';
   const innerHeaders: Record<string, string> = { Accept: 'application/json', Authorization: `DPoP ${session.token}` };

@@ -205,7 +205,7 @@ type AgentRequestEndData = Schema.Schema.Type<typeof AgentRequestEnd.schema>;
 const parseAgentRequestEnd = (data: unknown): AgentRequestEndData | undefined => {
   const validated = Schema.validateEither(AgentRequestEnd.schema)(data);
   if (Result.isSuccess(validated)) {
-    return validated.right;
+    return validated.success;
   }
   // Traces emitted before `status` was added wrote an empty object.
   if (data != null && typeof data === 'object' && Object.keys(data).length === 0) {

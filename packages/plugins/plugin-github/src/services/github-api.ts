@@ -8,9 +8,9 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as SchemaError from 'effect/SchemaError';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -160,7 +160,7 @@ export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHub
 
 type GitHubEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError,
+  HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | GitHubCredentials
 >;
 
@@ -173,20 +173,21 @@ type GitHubEffect<T> = Effect.Effect<
  *  - TimeoutException: yes.
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError): boolean => {
-  if (error instanceof ParseResult.ParseError) {
+const shouldRetry = (
+  error: HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError,
+): boolean => {
+  if (error instanceof SchemaError.SchemaError) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {
     return true;
   }
-  if (error._tag === 'RequestError') {
+  // v4 hangs the specific failure off `HttpClientError.reason`: a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (error.reason._tag !== 'StatusCodeError') {
     return true;
   }
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
+  const status = error.reason.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
 
@@ -209,10 +210,7 @@ const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredent
  * blow up against the success schema with a `ParseError`, masking the real
  * cause (e.g. a 403 from an integration token that lacks issue write).
  */
-const githubRequest = <T>(
-  build: () => HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
-): GitHubEffect<T> =>
+const githubRequest = <T>(build: () => HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): GitHubEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
@@ -224,7 +222,7 @@ const githubRequest = <T>(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -288,7 +286,7 @@ const githubPaginated = <T>(
         ),
         Effect.timeout('15 seconds'),
         Effect.retry({
-          schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+          schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
           while: shouldRetry,
         }),
         Effect.scoped,
@@ -400,7 +398,7 @@ export const fetchIssueComments = (
 const githubPatch = <T>(
   build: () => HttpClientRequest.HttpClientRequest,
   body: Record<string, unknown>,
-  schema: Schema.Schema<T>,
+  schema: Schema.Codec<T>,
 ): GitHubEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
@@ -414,7 +412,7 @@ const githubPatch = <T>(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,

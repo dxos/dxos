@@ -510,13 +510,13 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
         //   db from the binding's endpoints (which the caller preloads).
         const binding = yield* Database.load(bindingRef);
         if (!Cursor.isExternal(binding)) {
-          return yield* Effect.dieMessage('GitHub sync requires an external-sync cursor.');
+          return yield* Effect.die(new Error('GitHub sync requires an external-sync cursor.'));
         }
 
         const project = yield* Database.load(binding.spec.target);
         const db = Obj.getDatabase(binding) ?? Obj.getDatabase(project);
         if (!db) {
-          return yield* Effect.dieMessage('Binding ref must be preloaded by caller (no database derivable).');
+          return yield* Effect.die(new Error('Binding ref must be preloaded by caller (no database derivable).'));
         }
 
         // The repo's foreign id: prefer the binding's `externalId`, falling back
@@ -529,7 +529,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
         const outcome = yield* Effect.result(
           Effect.gen(function* () {
             if (externalId === undefined) {
-              return yield* Effect.dieMessage('Cursor has no externalId and the target has no GitHub foreign key.');
+              return yield* Effect.die(new Error('Cursor has no externalId and the target has no GitHub foreign key.'));
             }
 
             // Fetch all repos visible to the token once so the binding can
@@ -541,7 +541,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             const allRepos = yield* GitHubApi.fetchUserRepos();
             const remoteRepo = allRepos.find((repo) => String(repo.id) === externalId);
             if (!remoteRepo) {
-              return yield* Effect.dieMessage('Repository not accessible to connection token');
+              return yield* Effect.die(new Error('Repository not accessible to connection token'));
             }
 
             const options = (binding.spec.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
@@ -578,7 +578,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             const owner = remoteRepo.owner.login;
             const orgResult = yield* Effect.result(GitHubApi.fetchOrg(owner));
             if (orgResult._tag === 'Success') {
-              const organization = yield* upsertOrganization(orgResult.right);
+              const organization = yield* upsertOrganization(orgResult.success);
               pulledOrganizations++;
               const members = yield* GitHubApi.fetchOrgMembers(owner);
               for (const member of members) {
@@ -592,7 +592,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             // pushes operate on the persisted record.
             const localProject = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, remoteRepo.id);
             if (!localProject) {
-              return yield* Effect.dieMessage('Local Project missing after upsert.');
+              return yield* Effect.die(new Error('Local Project missing after upsert.'));
             }
 
             let pulledTasks = 0;

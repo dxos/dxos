@@ -176,7 +176,7 @@ const resolveUsers = (
 ): Effect.Effect<
   Map<string, SlackApi.SlackUser>,
   never,
-  import('@effect/platform/HttpClient').HttpClient | SlackApi.SlackCredentials
+  import('effect/unstable/http/HttpClient').HttpClient | SlackApi.SlackCredentials
 > =>
   Effect.gen(function* () {
     const ids = new Set<string>();
@@ -213,7 +213,7 @@ const resolveBots = (
 ): Effect.Effect<
   Map<string, SlackApi.SlackBot>,
   never,
-  import('@effect/platform/HttpClient').HttpClient | SlackApi.SlackCredentials
+  import('effect/unstable/http/HttpClient').HttpClient | SlackApi.SlackCredentials
 > =>
   Effect.gen(function* () {
     const ids = new Set<string>();
@@ -360,15 +360,15 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           if (syncResult._tag === 'Success') {
             Cursor.advance(binding, newestTs);
           } else {
-            Cursor.recordError(binding, formatSlackSyncFailure(syncResult.left));
+            Cursor.recordError(binding, formatSlackSyncFailure(syncResult.failure));
           }
 
           if (syncResult._tag === 'Failure') {
-            log.warn('slack sync: binding failed', { error: syncResult.left });
-            return yield* Effect.fail(syncResult.left);
+            log.warn('slack sync: binding failed', { error: syncResult.failure });
+            return yield* Effect.fail(syncResult.failure);
           }
 
-          return { pulled: syncResult.right };
+          return { pulled: syncResult.success };
         }).pipe(
           Effect.provide(Database.layer(db)),
           Effect.provide(SlackApi.SlackCredentials.fromAccessToken(accessTokenRef)),
