@@ -109,11 +109,13 @@ export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.Op
 
 /**
  * Returns true when the error (or its wrapped cause) contains a 405 status code.
- * `Effect.tryPromise` wraps thrown errors in `UnknownException`, so we unwrap first.
+ *
+ * `Effect.tryPromise` wraps thrown errors in `Cause.UnknownError`, which in v4 carries the original
+ * on `cause` (it was `error` in v3) and leaves its own `message` unset — so it must be unwrapped.
  */
 export const is405 = (error: unknown): boolean => {
-  const cause = error != null && typeof error === 'object' && 'error' in error ? (error as any).error : error;
-  return cause instanceof Error && cause.message.includes('405');
+  const cause = Cause.isUnknownError(error) ? error.cause : error;
+  return cause instanceof Error && typeof cause.message === 'string' && cause.message.includes('405');
 };
 
 /**

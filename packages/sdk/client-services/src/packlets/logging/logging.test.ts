@@ -25,16 +25,27 @@ describe('LoggingService', () => {
     await loggingService.close();
   });
 
+  /**
+   * Repeats `emit` until the reader completes.
+   *
+   * v4 does not run a forked fiber before its parent's next step, so a single emission can land
+   * before the forked subscription has registered its log handler and be lost.
+   */
+  const readWhileEmitting = <A>(read: Effect.Effect<Option.Option<A>>, emit: () => void) =>
+    Effect.gen(function* () {
+      const reader = yield* Effect.forkChild(read);
+      const emitter = yield* Effect.forkChild(
+        Effect.sync(emit).pipe(Effect.andThen(Effect.sleep('5 millis')), Effect.forever),
+      );
+      const entry = Option.getOrThrow(yield* Fiber.join(reader));
+      yield* Fiber.interrupt(emitter);
+      return entry;
+    });
+
   test('queryLogs streams logs', async () => {
     const message = 'Hello World!';
     const entry = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const fiber = yield* Effect.forkChild(Stream.runHead(loggingService['LoggingService.queryLogs']({})));
-        // Yield so the forked subscription registers its log handler before emitting.
-        yield* Effect.yieldNow;
-        yield* Effect.sync(() => log(message));
-        return Option.getOrThrow(yield* Fiber.join(fiber));
-      }),
+      readWhileEmitting(Stream.runHead(loggingService['LoggingService.queryLogs']({})), () => log(message)),
     );
     expect(entry.message).to.eq(message);
     expect(entry.level).to.eq(LogLevel.DEBUG);
@@ -43,18 +54,13 @@ describe('LoggingService', () => {
   test('queryLogs filters logs', async () => {
     const message = 'This is a failure';
     const entry = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const fiber = yield* Effect.forkChild(
-          Stream.runHead(loggingService['LoggingService.queryLogs']({ filters: [{ level: LogLevel.ERROR }] })),
-        );
-        // Yield so the forked subscription registers its log handler before emitting.
-        yield* Effect.yieldNow;
-        yield* Effect.sync(() => {
+      readWhileEmitting(
+        Stream.runHead(loggingService['LoggingService.queryLogs']({ filters: [{ level: LogLevel.ERROR }] })),
+        () => {
           log('debugging something');
           log.error(message);
-        });
-        return Option.getOrThrow(yield* Fiber.join(fiber));
-      }),
+        },
+      ),
     );
     expect(entry.message).to.eq(message);
     expect(entry.level).to.eq(LogLevel.ERROR);
