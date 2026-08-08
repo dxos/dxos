@@ -22,7 +22,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'plugin.workerd': 'src/plugin.workerd.ts',
     'testing': 'src/testing/index.ts',
-    'testing/node': 'src/testing/node.ts',
     'testing/sync-fixture': 'src/testing/sync-fixture.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',

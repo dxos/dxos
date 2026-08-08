@@ -29,6 +29,7 @@ import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
+import { GooglePlugin } from '@dxos/plugin-google/plugin';
 import { HeyGenPlugin } from '@dxos/plugin-heygen/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
 import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
@@ -98,6 +99,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     FilePlugin.meta.profile.key,
     InboxPlugin.meta.profile.key,
     // Mail providers for the Inbox: a mailbox is inert without one, so they default on with it.
+    GooglePlugin.meta.profile.key,
     JmapPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
@@ -177,6 +179,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ExplorerPlugin(),
     MagazinePlugin(),
     GamePlugin(),
+    GooglePlugin(),
     InboxPlugin(),
     JmapPlugin(),
     KanbanPlugin(),

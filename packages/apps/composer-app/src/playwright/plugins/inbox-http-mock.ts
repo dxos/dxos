@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type GmailDataset, generateGmailDataset } from '@dxos/plugin-inbox/testing';
+import { type GmailDataset, generateGmailDataset } from '@dxos/plugin-google/testing';
 import { type Jmap, type JmapDataset, generateJmapDataset } from '@dxos/plugin-jmap/testing';
 
 // HTTP-level mock for the Gmail and JMAP provider APIs, driven by the same deterministic fixtures the

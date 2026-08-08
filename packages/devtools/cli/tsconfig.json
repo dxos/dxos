@@ -98,6 +98,9 @@
       "path": "../../plugins/plugin-game"
     },
     {
+      "path": "../../plugins/plugin-google"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {

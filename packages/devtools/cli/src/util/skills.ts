@@ -21,6 +21,7 @@ import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
 import { ChessSkill } from '@dxos/plugin-chess/skills';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Game } from '@dxos/plugin-game/types';
+import { GoogleOperationHandlerSet } from '@dxos/plugin-google/plugin';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
 import { CalendarSkill, InboxSendSkill, InboxSkill } from '@dxos/plugin-inbox/skills';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
@@ -87,6 +88,7 @@ export const operationHandlers = OperationHandlerSet.merge(
   InboxOperationHandlerSet,
   // Mail-provider handlers: InboxSendSkill / CalendarSkill reference provider ops, and a missing
   // handler set surfaces only at runtime as "tool not found".
+  GoogleOperationHandlerSet,
   JmapOperationHandlerSet,
   KanbanOperationHandlerSet,
   MapOperationHandlerSet,

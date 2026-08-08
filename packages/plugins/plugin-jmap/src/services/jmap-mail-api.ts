@@ -85,7 +85,7 @@ export interface JmapMailApiService {
 /**
  * An in-memory JMAP dataset a {@link JmapMailApi.mock} serves — the session (account discovery), the
  * folders (mailboxes), and the full emails the sync would fetch. Build one with `generateJmapDataset`
- * from `@dxos/plugin-inbox/testing`.
+ * from this plugin's `./testing`.
  */
 export interface JmapDataset {
   readonly session: Jmap.Session;

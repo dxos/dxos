@@ -255,6 +255,7 @@
       "@dxos/plugin-freeq",
       "@dxos/plugin-game",
       "@dxos/plugin-github",
+      "@dxos/plugin-google",
       "@dxos/plugin-graph",
       "@dxos/plugin-heygen",
       "@dxos/plugin-ibkr",

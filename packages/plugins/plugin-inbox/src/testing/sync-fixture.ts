@@ -3,13 +3,11 @@
 //
 
 import { Registry } from '@effect-atom/atom';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Credential, Operation, Trace } from '@dxos/compute';
-import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import { Operation, Trace } from '@dxos/compute';
 import { Blob, Database, Ref, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as InboxResolver from '@dxos/extractor-lib';
@@ -18,28 +16,13 @@ import { Connection } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { type RunMailSyncOptions, runMailSync } from '#sync';
-
-import { GMAIL_SOURCE } from '../constants';
-import { googleMailSyncProvider } from '../operations/mail/google/sync/sync-provider';
-import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '../services';
 import { Mailbox } from '../types';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded with
 // a mailbox binding, plus the ambient services a provider's sync entry point requires. Published as
-// `@dxos/plugin-inbox/testing/sync` — a provider plugin's own sync tests build on it — but deliberately
-// NOT from `@dxos/plugin-inbox/testing`, whose `node` condition must stay free of `@dxos/compute`
-// (Playwright's loader; see `testing/node.ts`).
-
-/**
- * Test entry point for the Gmail sync — `runMailSync` with the Gmail provider layer, leaving the API
- * for the test to supply (mock, counting, fault, or Live). Production inlines this in the handler.
- */
-export const runGoogleSync = (options: RunMailSyncOptions) =>
-  runMailSync(options).pipe(
-    Effect.provide(googleMailSyncProvider({ userId: 'me', label: 'all' })),
-    Effect.withSpan('google-sync'),
-  );
+// `@dxos/plugin-inbox/testing/sync` on its own subpath — a provider plugin's own sync tests build on it,
+// while `./testing` stays free of `@dxos/compute` for consumers (e.g. Playwright) that only want the
+// lighter helpers.
 
 /** The ECHO types the sync writes: messages, contacts, tags, tag index, connection + cursor. */
 export const SYNC_TEST_TYPES = [
@@ -59,15 +42,17 @@ export const SYNC_TEST_TYPES = [
 export const seedMailboxBinding = async (
   builder: EchoTestBuilder,
   {
-    source = GMAIL_SOURCE,
-    connectorId = 'gmail',
+    source,
+    connectorId,
     token = 'token',
     max,
     min,
     options,
   }: {
-    source?: string;
-    connectorId?: string;
+    /** Foreign-key source the seeded cursor commits under; must match the provider's own. */
+    source: string;
+    /** The binding connection's `connectorId`; the provider's own `Connector.id`. */
+    connectorId: string;
     token?: string;
     /** Seeds the cursor's `max` watermark, as if a prior run already synced up to this key. */
     max?: string;
@@ -75,7 +60,7 @@ export const seedMailboxBinding = async (
     min?: string;
     /** Seeds `spec.options` (e.g. `syncBackDays`, `filter`) — read via `readBindingOptions`. */
     options?: Record<string, unknown>;
-  } = {},
+  },
 ) => {
   const { db } = await builder.createDatabase({ types: SYNC_TEST_TYPES });
   const mailbox = db.add(Mailbox.make({ name: 'Test' }));
@@ -154,31 +139,3 @@ export const ambientSyncServices = (
       invokePromise: async () => ({ error: new Error('Operation.Service unused') }),
     }),
   );
-
-/** The ambient services `runGoogleSync` requires, backed by a mock Gmail API + a real db. */
-export const inboxSyncTestServices = (
-  db: Database.Database,
-  dataset: GmailDataset,
-  options?: { traceLayer?: Layer.Layer<Trace.TraceService> },
-) => Layer.mergeAll(GoogleMailApi.mock(dataset), ambientSyncServices(db, options));
-
-/**
- * The ambient services `runGoogleSync` requires, backed by the REAL Gmail HTTP API authenticated from
- * the given connection's `AccessToken`. Used by the fixture-fetch tool to sync a real account in-process
- * (no EDGE / function deployment). The connection's access token must carry a valid Gmail OAuth token.
- */
-export const inboxSyncLiveServices = (db: Database.Database, connectionRef: Ref.Ref<Connection.Connection>) => {
-  // The fixture connection carries a real token on the object, so no credential resolves through EDGE.
-  const credentials = credentialsLayerFromDatabase().pipe(
-    Layer.provide(Database.layer(db)),
-    Layer.provide(Credential.AccessTokenResolver.notAvailable),
-  );
-  return Layer.mergeAll(
-    GoogleMailApi.Live.pipe(
-      Layer.provide(FetchHttpClient.layer),
-      Layer.provide(GoogleCredentials.fromConnection(connectionRef).pipe(Layer.provide(Database.layer(db)))),
-      Layer.provide(credentials),
-    ),
-    ambientSyncServices(db),
-  );
-};

@@ -82,6 +82,7 @@
     "@dxos/plugin-freeq": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-github": "workspace:*",
+    "@dxos/plugin-google": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-heygen": "workspace:*",
     "@dxos/plugin-ibkr": "workspace:*",

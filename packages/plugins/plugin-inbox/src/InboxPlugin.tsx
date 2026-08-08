@@ -14,11 +14,9 @@ import { Event, Message } from '@dxos/types';
 
 import {
   AppGraphBuilder,
-  Connector,
   CreateObject,
   IdentitySpecs,
   InboxSettings,
-  MailSend,
   NavigationTargetResolver,
   OperationHandler,
   ReactSurface,
@@ -56,15 +54,6 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activatesOn: AppActivationEvents.SetupSettings,
     firesAfterActivation: [InboxEvents.SettingsReady],
     activate: InboxSettings,
-  }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupConnectors,
-    activate: Connector,
-  }),
-  Plugin.addModule({
-    id: 'mail-send',
-    activatesOn: ActivationEvents.Startup,
-    activate: MailSend,
   }),
   Plugin.addModule({
     id: 'identity-specs',

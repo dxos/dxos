@@ -716,9 +716,13 @@ Each step is independently green (`moon run <pkg>:build`, `moon run <pkg>:test`,
    findings above. Its `constants.ts` keeps `GMAIL_SOURCE = 'com.google.mail'` for messages while tags
    carry `com.google.gmail` — deliberate asymmetry, see `Tag.md`; JMAP could collapse both onto one
    `JMAP_DOMAIN` because its message source already _was_ the domain.
-5. **Sweep plugin-inbox** — delete `capabilities/connector.ts`, the provider errors and
-   constants, the drained `services/` and `apis/` dirs, the stale `deploy-functions` moon
-   task; audit for dead exports and orphaned translation keys.
+5. **Sweep plugin-inbox** — mostly done inline with steps 3-4 (`capabilities/connector.ts`,
+   `capabilities/mail-send.ts`, `apis/`, `services/`, the provider errors, and `testing/node.ts` are
+   all gone). Remaining: the stale `deploy-functions` moon task, and an audit for dead exports and
+   orphaned translation keys. **Still deliberately in `constants.ts`:** `GMAIL_CONNECTOR_ID`,
+   `GOOGLE_CALENDAR_CONNECTOR_ID`, `JMAP_MAIL_CONNECTOR_ID` and `GOOGLE_INTEGRATION_SOURCE`, each
+   duplicating a provider's own constant because `types/Mailbox|Calendar|DraftEvent` name their
+   providers — they disappear with the §3.1 inversion, not before.
 6. **Then, unchanged:** roadmap 5 (§3.7 sync-infra hoist), 6 (§3.1 connector-id inversion —
    at which point the provider constants become canonical in the provider plugins), 7–8
    (domain split; each provider's `operations/{mail,calendar,contacts}` repoints from

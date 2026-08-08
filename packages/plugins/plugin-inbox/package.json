@@ -97,13 +97,9 @@
       "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
-      "source": {
-        "node": "./src/testing/node.ts",
-        "default": "./src/testing/index.ts"
-      },
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "node": "./dist/lib/testing/node.mjs",
-      "default": "./dist/lib/testing.mjs"
+      "import": "./dist/lib/testing.mjs"
     },
     "./testing/sync": {
       "source": "./src/testing/sync-fixture.ts",

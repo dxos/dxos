@@ -310,6 +310,9 @@
       "path": "../../plugins/plugin-github"
     },
     {
+      "path": "../../plugins/plugin-google"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
