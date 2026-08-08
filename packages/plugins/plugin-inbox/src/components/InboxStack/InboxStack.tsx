@@ -233,7 +233,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                 pagination={pagination}
               />
               {loading && (
-                <div role='status' className='grid place-items-center pli-2 plb-3'>
+                <div role='status' className='grid place-items-center px-2 py-3'>
                   <Icon
                     icon='ph--spinner-gap--regular'
                     size={5}
