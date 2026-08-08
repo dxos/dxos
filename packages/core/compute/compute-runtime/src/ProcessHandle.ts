@@ -485,7 +485,13 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     return Effect.void;
   }
   /**
-   * Completes when the process becomes IDLE or SUCCEEDED (interrupt output stream). Defects on FAILED or TERMINATED.
+   * Ends the output stream once the process reaches IDLE or SUCCEEDED; cuts it on FAILED or
+   * TERMINATED.
+   *
+   * A successful finish ends the stream by offering the queue's end sentinel rather than
+   * interrupting: the sentinel queues behind outputs already emitted, whereas an interrupt cuts
+   * them off — a process that finishes before its consumer starts draining would yield nothing. A
+   * failure still interrupts, since its outputs are not wanted.
    */
   #runAndExitInterruptEffect(): Effect.Effect<void, never, never> {
     return Effect.gen({ self: this }, function* () {
@@ -496,7 +502,8 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           switch (state.state) {
             case Process.State.IDLE:
             case Process.State.SUCCEEDED:
-              return Effect.runSync(Deferred.succeed(deferred, undefined));
+              Queue.offerUnsafe(this.#outputQueue, Option.none());
+              return Effect.void;
             case Process.State.FAILED: {
               const error = state.exit.pipe(
                 Option.flatMap(Exit.getCause),

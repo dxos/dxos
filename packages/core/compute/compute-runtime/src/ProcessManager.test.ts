@@ -15,6 +15,7 @@ import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
@@ -606,7 +607,9 @@ describe('ManagerImpl', () => {
       const handle = yield* manager.spawn(Process.fromOperation(Failing, handlers));
       const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
-      expect(exit).toEqual(Exit.die('Test Error'));
+      // Compared by defect rather than by deep-equal Exit: v4 annotates causes with a stack trace,
+      // which a freshly-constructed `Exit.die` does not carry.
+      expect(Result.getOrUndefined(Exit.findDefect(exit))).toEqual('Test Error');
       expect(handle.status.state).toEqual(Process.State.FAILED);
     }, Effect.provide(TestLayer)),
   );
@@ -727,7 +730,7 @@ describe('ProcessOperationInvoker', () => {
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       const fiber = yield* invoker.invokeFiber(Failing, undefined);
       const output = yield* fiber.await;
-      expect(output).toEqual(Exit.die('Test Error'));
+      expect(Result.getOrUndefined(Exit.findDefect(output))).toEqual('Test Error');
     }, Effect.provide(TestLayer)),
   );
 });
