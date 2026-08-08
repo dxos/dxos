@@ -95,7 +95,16 @@ test.describe('Comments tests', () => {
   //   renders, yet CommentThread + the reply composer re-render ~12 cycles until timeout — no
   //   echo fingerprint, so suspect the focus/attention path (Thread.Content onFocusCapture →
   //   handleAttend → shared stateAtom) or hover-transition styling racing Playwright's stability
-  //   check. Instrument THAT before the next attempt.
+  //   check. Instrument THAT before the next attempt. UPDATE: instrumented and DISPROVED — during
+  //   the stall handleAttend bails immediately (state.current already set) and the attention
+  //   snapshot is byte-identical across the storm. The real mechanism is an async operation/query
+  //   race: the earlier AddMessage completion resolves conspicuously late, a ~10-15x re-render
+  //   burst follows with no logged trigger, and the thread ANCHOR transiently drops out of
+  //   CommentsArticle's filteredAnchors — whose try/catch silently drops an anchor whenever
+  //   Relation.getSource throws mid-mutation — sometimes unmounting the whole thread while the
+  //   delete button is mid-click. DeleteMessage itself was instrumented and is correct. The fix
+  //   belongs in the operations/query layer (late invocation completion + query re-fire), not in
+  //   any component.
   test.fixme('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });

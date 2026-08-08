@@ -60,9 +60,12 @@ budget for it.
 
 One trap this creates: a task whose inputs have not changed replays its cached result, so after
 editing a library, e2e bundles pick the edit up only after the library actually rebuilds. When a
-fix "doesn't work", first force the rebuild (`moon run <lib>:build --force`, then the app's
-`bundle-e2e`) before concluding anything — a stale bundle has already produced one false verdict
-on a good fix.
+fix "doesn't work", first make sure the library rebuilt (plain `moon run <lib>:build` — file-hash
+caching picks up source edits) and then rebuild the app's `bundle-e2e` before concluding anything —
+a stale bundle has already produced one false verdict on a good fix. Do NOT reach for `--force`:
+it cascades cache-bypass through the whole action graph and has raced one package's type-check
+against another's concurrent rebuild (`Cannot find module '@dxos/app-framework/Capability'` on an
+untouched checkout).
 
 ## One checkout, no worktrees
 
