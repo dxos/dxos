@@ -7,8 +7,11 @@
 /**
  * Minimal stand-in for `@effect/printer-ansi/Ansi`.
  *
- * That package has no Effect 4 release — its peer range is `effect: ^3.21.0` — so keeping it would
- * mean keeping a second copy of Effect in the CLI bundle. Only the styles the CLI uses are kept.
+ * Vendored alongside {@link ./doc.ts}, which carries the full rationale; in short, the package is
+ * staying on the Effect 3 line and v4 has no counterpart. Only the styles the CLI uses are kept.
+ *
+ * `chalk` would cover this file (it is already a catalog dependency of `@dxos/log`), but not
+ * `doc.ts`'s layout — so a swap would leave the vendoring in place and add a dependency.
  */
 
 /** An ANSI style: the escape written before the text and the one that restores the default. */

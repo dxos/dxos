@@ -124,6 +124,35 @@ step and the wait-for-publish step from the plan.
 Wrinkle: `pkg-pr-new.yml` triggers on `push: [main]` + `workflow_dispatch`, so a feature branch
 needs a manual dispatch (or a trigger change).
 
+### D8 — Vendor the CLI printer; do not carry `effect@3` for rendering
+
+Agent, 2026-08-08, confirmed against the registry and the v4 CLI source. `@effect/printer` /
+`@effect/printer-ansi` were catalog-pinned dependencies of `cli-util`, `cli`, `plugin-client` and
+`plugin-routine` (not, as first recorded, transitive via `@effect/cli`).
+
+They are **staying on the Effect 3 line rather than lagging**: latest `0.51.0`, published
+2026-07-30, still peers `effect: ^3.22.1`. v4 ships no `unstable/printer`. Effect's own v4 CLI
+dropped the `AnsiDoc` layer and concatenates escape sequences directly in
+`unstable/cli/internal/ansi`, which the exports map seals (`"./unstable/cli/internal/*": null`); the
+one public seam, `CliOutput.Formatter`, is typed to `formatHelpDoc` / `formatCliError` /
+`formatVersion` and cannot lay out a key/value form.
+
+Decision: vendor the used subset into `cli-util/src/util/{doc,ansi}.ts` (~140 lines). Alternatives
+weighed and rejected —
+
+1. Peer-override the package back in: no code change, but reinstates `effect@3` in the CLI bundle
+   purely for rendering. Unlike `dfx` there is no two-runtime hazard (the printer is a pure
+   `Doc -> string` renderer), so this stays available if the vendoring becomes a burden.
+2. `chalk` (already catalog-pinned for `@dxos/log`): covers `ansi.ts` only. `doc.ts`'s
+   concat/indent/fill has no equivalent at that size, so the vendoring would remain _and_ gain a
+   dependency.
+
+Only 11 `Doc` and 11 `Ansi` members were ever used, and nothing constructs a `group` or soft line —
+the Wadler layout was never exercised, which is why the replacement is a line-by-line walk.
+
+**Open**: the rendered output has not been eyeballed since the swap. `dx fn list` and `dx trigger`
+are the surfaces that go through it.
+
 ## Findings that shape the work
 
 Full evidence: [`agents/superpowers/spikes/effect-4-schema-ast/REPORT.md`](../../../agents/superpowers/spikes/effect-4-schema-ast/REPORT.md).

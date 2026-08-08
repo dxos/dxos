@@ -180,18 +180,27 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
     collapses to `{}`. The data-first `mapFields((fields) => Struct.omit(fields, ['k']))` infers.
   - `Schema.mutable` is arrays-only in v4; on a struct or a record it collapses the same way.
     Structs go through `mapFields(Struct.map(Schema.mutableKey))`, records through `mutableKey`.
-- [x] **Vendor the CLI printer** — `@effect/printer`/`@effect/printer-ansi` have no v4 release and
-      the CLI never declared them (they arrived through `@effect/cli`, which v4 absorbed).
-      `cli-util` now carries a `Doc`/`Ansi` pair covering the 19 members in use. There is no
-      reflow — nothing built a `group` or a soft line — so the renderer is a line-by-line walk
-      rather than a Wadler layout engine. **Worth a human look at the CLI's rendered output.**
-- [ ] **Clear the remaining frontier** — 49 errors across 10 packages: `assistant-toolkit` (18),
-      `plugin-transcription` (8), `plugin-crx` (5), `storybook-testing`/`plugin-video`/
-      `plugin-thread`/`plugin-review`/`plugin-library` (3 each), `plugin-voxel` (2),
-      `plugin-game` (1). 51 tasks still skipped behind them.
-- [ ] **Run the test suites** — only `echo` (493), `effect` (52) and `react-ui-form`'s unit tests
-      have been run since the port. `react-ui-form`'s 10 storybook integration tests fail on
-      `queryInvitations` / `ECONNREFUSED :3000`, which needs the client stack up.
+- [x] **Vendor the CLI printer** — see [D8](./DESIGN.md#d8--vendor-the-cli-printer-do-not-carry-effect3-for-rendering).
+      `@effect/printer`/`@effect/printer-ansi` are staying on the Effect 3 line (0.51.0, 2026-07-30,
+      peers `effect: ^3.22.1`) and v4 ships no counterpart; they were catalog-pinned dependencies of
+      four packages, not transitive via `@effect/cli`. `cli-util` now carries a `Doc`/`Ansi` pair
+      covering the 18 members in use — the same escape-string approach Effect's own v4 CLI took. No
+      reflow, since nothing built a `group` or a soft line.
+      **Worth a human look at the CLI's rendered output (`dx fn list`, `dx trigger`).**
+- [x] **Clear the remaining frontier** — the workspace builds: 325/325 moon build tasks, none
+      failing and none skipped. Clearing it also required replacing `dfx` (no v4 release, peers
+      `effect@3.21.4`) with `@dxos/discord-client`, which retired the last `effect@3` in the tree.
+- [x] **Run the test suites** — first full pass since the port; it surfaced 13 real product bugs,
+      not test noise. The three widest: `RpcClient.make` takes its client id from a process-global
+      counter (the RpcPort protocol hard-coded `0`, so only the first client in a process ever
+      received responses); the v4 rpc client is flat-keyed by prefixed tag, not nested per service
+      (every method derived by `makeServicesFromRpc` was `undefined`); and `app-framework`'s
+      per-role surface subscription lost its equality when `Data.array` was dropped, so one
+      contribution re-rendered every Surface.
+- [ ] **Close out the test tail** — ~11 failures left: `echo-client-e2e/query.test.ts` (5, query
+      reactivity — needs real investigation), `app-framework` (4, TestClock/fork ordering),
+      `echo-client` `repo-proxy` sync ordering (1), `compute-runtime` alarm-hydration durability
+      (1). Several others fail only under parallel census load and pass in isolation.
 
 - [ ] **Tier 1 — mechanical rewrites** (~2–3 wks): module paths, API renames, the 433 atom files.
 - [ ] **Tier 2 — services and runtime** (~3–6 wks): `Context.Tag` → `ServiceMap.Service` (126 class
