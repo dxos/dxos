@@ -21,7 +21,7 @@ import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry';
 
-import { admin, chat, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
+import { admin, chat, commandConfigLayer, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
 import { getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
 import { installStderrFilter } from './util';
@@ -76,6 +76,7 @@ const readRootFlag = (name: string, alias: string): string | undefined => {
 };
 
 const program = Effect.gen(function* () {
+  const argv = process.argv.slice(2);
   const profile = readRootFlag('profile', 'p') ?? DEFAULT_PROFILE;
   const configPath = readRootFlag('config', 'c');
   const config = yield* ConfigService.load({ config: Option.fromNullishOr(configPath), profile });
@@ -111,7 +112,9 @@ const program = Effect.gen(function* () {
   // Built once in the program scope, so each `Effect.provide(layer)` — both the top-level command
   // and every REPL dispatch — reuses the already-constructed services (ClientPlugin, Config, etc.)
   // instead of rebuilding them per invocation.
-  const context = yield* Layer.build(Layer.merge(pluginLayer, ConfigService.fromConfig(config)));
+  const context = yield* Layer.build(
+    Layer.mergeAll(pluginLayer, ConfigService.fromConfig(config), commandConfigLayer(argv)),
+  );
   const layer = Layer.succeedContext(context);
 
   // Register in-process dispatcher so `repl` can reuse the already-built
@@ -126,7 +129,9 @@ const program = Effect.gen(function* () {
       Command.runWith(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer)) as Effect.Effect<void, unknown, never>,
   );
 
-  return yield* Command.runWith(command, CLI_CONFIG)(process.argv).pipe(Effect.provide(layer));
+  // `runWith` takes the ARGUMENTS, not the raw argv — passing `process.argv` makes the interpreter
+  // path the first token, which parses as an unknown subcommand.
+  return yield* Command.runWith(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer));
 }).pipe(
   Effect.provide(Layer.mergeAll(BunServices.layer, Logger.layer([Logger.consolePretty()]))),
   Effect.scoped,
