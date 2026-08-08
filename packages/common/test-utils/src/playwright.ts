@@ -38,6 +38,25 @@ const findWorkspaceRoot = (startDir: string): string => {
   throw new Error('Could not find pnpm workspace root');
 };
 
+/**
+ * Launch overrides for the Claude Code cloud sandbox, where the image ships a single Chromium build
+ * that rarely matches the revision Playwright pins, and outbound HTTPS is only reachable through a
+ * local proxy that resets Chromium's TLS 1.3 ClientHello.
+ */
+const sandboxUse = (): PlaywrightTestConfig['use'] => {
+  if (!process.env.CLAUDE_CODE_REMOTE) {
+    return {};
+  }
+
+  return {
+    launchOptions: {
+      executablePath: '/opt/pw-browsers/chromium',
+      args: ['--no-sandbox', '--ssl-version-max=tls1.2', '--proxy-bypass-list=127.0.0.1;localhost'],
+      proxy: { server: 'http://127.0.0.1:34301', bypass: '127.0.0.1,localhost' },
+    },
+  };
+};
+
 export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
   const packageJson = pkgUp.sync({ cwd: testDir });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
@@ -103,6 +122,7 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
       // Playwright's default is no limit, so a stuck locator would absorb the whole per-test budget and
       // report a bare `Test timeout` naming nothing.
       actionTimeout: 30_000,
+      ...sandboxUse(),
     },
     projects,
   };
