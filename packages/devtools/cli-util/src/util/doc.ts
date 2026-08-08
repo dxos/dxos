@@ -9,10 +9,11 @@ import { type Ansi } from './ansi';
 /**
  * Minimal stand-in for `@effect/printer/Doc` (and `AnsiDoc`'s renderer).
  *
- * That package has no Effect 4 release, and the CLI only ever reached it transitively through
- * `@effect/cli` — which v4 absorbed into `effect/unstable/cli`. The API kept here is exactly the
- * subset the CLI uses. There is no reflow: nothing constructs a `group` or a soft line, so every
- * line break is mandatory and rendering is a straight line-by-line walk.
+ * That package has no Effect 4 release — its peer range is `effect: ^3.21.0`, and v4 has no
+ * `unstable/printer` counterpart — so keeping it would mean keeping a second copy of Effect in the
+ * CLI bundle. The API kept here is exactly the subset the CLI uses. There is no reflow: nothing
+ * constructs a `group` or a soft line, so every line break is mandatory and rendering is a straight
+ * line-by-line walk — which is why the layout engine this replaces was never earning its keep.
  */
 
 /** A rendered line: the styled text, plus the column width its escape sequences do not occupy. */

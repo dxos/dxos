@@ -7,9 +7,8 @@
 /**
  * Minimal stand-in for `@effect/printer-ansi/Ansi`.
  *
- * That package has no Effect 4 release, and the CLI only ever reached it transitively through
- * `@effect/cli` — which v4 absorbed into `effect/unstable/cli`. Only the styles the CLI uses are
- * kept.
+ * That package has no Effect 4 release — its peer range is `effect: ^3.21.0` — so keeping it would
+ * mean keeping a second copy of Effect in the CLI bundle. Only the styles the CLI uses are kept.
  */
 
 /** An ANSI style: the escape written before the text and the one that restores the default. */
