@@ -336,7 +336,6 @@ export class ActivationScheduler {
       // Modules resolve their requires on demand: inactive providers of unsatisfied singleton
       // requires are activated first (transitively).
       yield* this.#pullDependencyProviders(modules, key);
-
       const activated = yield* this.#activateModulesForEvent(key, modules, opts);
 
       // Follow-up pass: contributions made by this event may unlock modules that were waiting
@@ -395,6 +394,23 @@ export class ActivationScheduler {
         // Follow-up rounds consider everything that might have been unlocked — unless scoped:
         // a demand pull draining the full pool would block its event wave on unrelated work.
         scoped = options?.scopedToCandidates ? options?.candidateModules : undefined;
+      }
+
+      // A round filters out anything a concurrent round started loading (awaiting it inside the
+      // round could deadlock), so the loop can end while those loads are still settling. Every
+      // caller reads the registry straight after and relies on "pass resolved => candidates
+      // contributed", so join them here. Bounded: each load settles under the activation timeout.
+      const candidates = options?.candidateModules;
+      if (candidates !== undefined) {
+        const settling = (yield* this.#notActivatingHere(candidates)).filter((module) =>
+          this.#loader.isLoading(module.id),
+        );
+        if (settling.length > 0) {
+          yield* Effect.all(
+            settling.map((module) => this.#loader.awaitSettled(module.id)),
+            { concurrency: 'unbounded', discard: true },
+          );
+        }
       }
       return ranAny && allSucceeded;
     });
@@ -491,7 +507,6 @@ export class ActivationScheduler {
           { concurrency: 'unbounded', discard: true },
         );
       }
-
       this.#state.markEventFired(key);
 
       performance.mark(`event:${key}:end`);
@@ -659,9 +674,14 @@ export class ActivationScheduler {
       // events already fired.
       const explicit = new Set((candidateModules ?? []).map((module) => module.id));
       const pool = candidateModules ? [...candidateModules, ...reactivations] : allModules;
+      // Explicit candidates are a snapshot taken when the wave started, so a plugin disabled
+      // mid-wave (auto-disable after a module failure is the common case) leaves de-registered
+      // modules in it; re-loading one would restart the very activation that just failed.
+      const registered = new Set(allModules.map((module) => module.id));
       const seen = new Set<string>();
       const candidates = pool.filter((module) => {
         if (
+          !registered.has(module.id) ||
           active.includes(module.id) ||
           seen.has(module.id) ||
           this.#state.structurallyFailed.has(module.id) ||

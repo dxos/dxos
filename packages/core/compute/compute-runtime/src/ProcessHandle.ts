@@ -346,6 +346,11 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         Queue.offerUnsafe(queue, Option.none());
       }
       this.#ephemeralSubscribers.length = 0;
+      // A handler that wakes its caller (a deferred, a queue) resumes that fiber inline, so
+      // `suspend` can be running nested inside the very handler fiber the close must interrupt.
+      // Interrupting a fiber from inside its own run loop while another fiber joins it never
+      // settles, so step out first.
+      yield* Effect.yieldNow;
       yield* Scope.close(this.#scope, Exit.void);
     });
   }

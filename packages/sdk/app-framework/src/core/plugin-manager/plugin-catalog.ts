@@ -6,6 +6,7 @@ import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
+import * as Semaphore from 'effect/Semaphore';
 
 import { log } from '@dxos/log';
 
@@ -34,6 +35,8 @@ export type PluginCatalogOptions = {
 export class PluginCatalog {
   /** Coalesces concurrent lazy-plugin resolutions per plugin id. */
   readonly #resolving = new Map<string, Deferred.Deferred<Plugin.Plugin, Plugin.LazyPluginError>>();
+  /** Serializes enable/disable per plugin id — see {@link PluginCatalog.#lifecycle}. */
+  readonly #lifecycles = new Map<string, Semaphore.Semaphore>();
   /** Dev-sourced plugin ids, with the shadowed original (if any) for restoration on remove. */
   readonly #devPlugins = new Map<string, { shadow?: { plugin: Plugin.Plugin; wasEnabled: boolean } }>();
   readonly #state: ManagerState;
@@ -73,6 +76,23 @@ export class PluginCatalog {
         ),
       );
     }
+  }
+
+  /**
+   * The per-plugin enable/disable lock.
+   *
+   * `#disableOne` flips the `enabled` atom before it tears anything down, so without this an
+   * `enable` reacting to that atom re-registers the plugin's modules and the in-flight disable
+   * then de-registers them again — the plugin ends up enabled with no modules. Auto-disable
+   * forks precisely so taking this lock cannot deadlock an activation chain.
+   */
+  #lifecycle(id: string): Semaphore.Semaphore {
+    let semaphore = this.#lifecycles.get(id);
+    if (!semaphore) {
+      semaphore = Effect.runSync(Semaphore.make(1));
+      this.#lifecycles.set(id, semaphore);
+    }
+    return semaphore;
   }
 
   /** Whether the id is currently dev-sourced. */
@@ -345,7 +365,7 @@ export class PluginCatalog {
       }
 
       return true;
-    });
+    }).pipe(this.#lifecycle(id).withPermits(1));
   }
 
   /**
@@ -525,7 +545,7 @@ export class PluginCatalog {
         });
       }
       return true;
-    });
+    }).pipe(this.#lifecycle(id).withPermits(1));
   }
 
   /** Entries of the cached registry catalog. */

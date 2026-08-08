@@ -3239,6 +3239,9 @@ describe('PluginManager', () => {
         const manager = PluginManager.make({ pluginLoader, plugins });
 
         yield* manager.activate(ActivationEvents.Startup);
+        // Un-annotated modules are idle-gated and `start()` only forks the idle wave, so settle it
+        // here: otherwise whether `eager` is eligible at enable time depends on the daemon's timing.
+        yield* manager.activate(ActivationEvents.Idle);
         yield* manager.activate(DemandEvent);
         assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
 
