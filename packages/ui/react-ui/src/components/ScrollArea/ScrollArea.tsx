@@ -70,7 +70,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
       padding = false,
       thin = false,
       snap = false,
-      overlay = false,
+      overlay = true,
       ...props
     },
     forwardedRef,
