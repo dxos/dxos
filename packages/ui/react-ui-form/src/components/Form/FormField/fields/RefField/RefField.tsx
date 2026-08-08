@@ -19,6 +19,7 @@ import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps
 
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';
+import { filterTagCandidates } from '../../../meta-tags';
 import { FormFieldLabel } from '../../FormRow';
 import { presentationFor } from '../../presentation';
 import { findRefOption } from './find-ref-option';
@@ -44,8 +45,8 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
       return { id, label };
     });
 
-const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) =>
-  useQuery(
+const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) => {
+  const results = useQuery(
     db,
     !typename
       ? Query.select(Filter.nothing())
@@ -55,6 +56,11 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
         : // Include registry scope so keyed entities (skills, operations) appear as options.
           Query.select(Filter.type(DXN.make(typename))).from(Scope.space(), Scope.registry()),
   );
+
+  // Tag candidates are narrowed to user tags; pass an explicit `useResults` to offer a given origin
+  // domain. See `filterTagCandidates`.
+  return useMemo(() => filterTagCandidates(results), [results]);
+};
 
 export type RefFieldProps = FormFieldRendererProps & RefFieldDataProps & CreateOptions;
 

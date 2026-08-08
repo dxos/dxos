@@ -75,7 +75,7 @@ Use when: never, for new code. Existing data is being migrated to one of the two
 
 Always store the Tailwind colour name (e.g. `'amber'`), not a hex. Surfaces translate via `data-hue` on the chip, which the design system maps to the right shade. See [`getHashStyles`](../../ui/react-ui-components) for the fallback hash when `hue` is unset.
 
-## Tag origin (design — decided 2026-08-08, not yet implemented)
+## Tag origin (decided 2026-08-08; rollout step 1 implemented)
 
 A tag's **origin** says who owns it, and therefore who may change it. Three cases, all derivable
 from data that already exists — `Obj.getMeta(tag).keys[].source`:
@@ -85,6 +85,11 @@ from data that already exists — `Obj.getMeta(tag).keys[].source`:
 | **User**             | none                                      | the user             | fully — rename, recolour, apply, remove               |
 | **Canonical DXOS**   | `org.dxos.tag`                            | DXOS                 | apply/remove locally; label + hue are fixed           |
 | **Foreign provider** | any other domain, e.g. `com.google.gmail` | the syncing provider | read-only — sync owns both the tag and its membership |
+
+Read it with `Tag.getOrigin(tag)` (the domain, or `undefined` for a user tag), `Tag.isUserTag(tag)`,
+and `Tag.isProviderTag(tag)` — the last is false for canonical tags, which is what keeps them
+locally toggleable. All three require a live entity or snapshot; a spread copy (as `createTagList`
+produces) has no metadata and throws rather than reporting a false `undefined`.
 
 `findOrCreate` already splits keyed from unkeyed on exactly this basis (a keyed tag matches by key, an
 unkeyed one matches by label among unkeyed tags only, "so it never collides with a keyed
@@ -108,10 +113,16 @@ third-party provider needs no change here to get correct read-only behaviour.
    flow) and must keep working. `SystemTags.ts` exists precisely so a Gmail star, a JMAP `$flagged`
    keyword and a local star resolve to the _same_ `Tag` object; treating "has a foreign key" as
    "immutable" would break that.
-3. **Pickers default to user tags.** The `_tags` field spliced onto property/create forms
-   (`withMetaTags`) resolves candidates through `RefField`'s `defaultUseResults`, i.e. every `Tag` in
-   the space. It must instead offer user-origin tags only, with non-user domains shown on explicit
-   opt-in. `ViewEditor` and `QueryForm` query all tags the same way and inherit the same fix.
+3. **Pickers default to user tags.** Implemented as `filterTagCandidates` in
+   `react-ui-form`'s `meta-tags.ts`, applied by `RefField`'s `defaultUseResults`: a tag field offers
+   user-origin tags only. Pass an explicit `useResults` to offer a given origin domain. Non-tag ref
+   fields are untouched.
+
+   **Open:** canonical tags are excluded from the picker along with provider tags, on the grounds that
+   `sent`/`draft` are nonsense to apply by hand and `starred` has `Row.Star`. That reading is
+   defensible for mail but may be wrong for a generic object, where picking "Starred" from the
+   properties form is reasonable. Revisit if a non-mail surface wants it — the predicate to relax to is
+   `!isProviderTag`.
 
 ### Origin domain vs. key source
 
@@ -136,8 +147,9 @@ source over renaming sources to fit a rule.
 
 Two steps, so the filtering behaviour can land before the provider plugins exist:
 
-1. **No registry** — `Tag.getOrigin(tag)` returns the raw source and pickers group by it verbatim.
-   Zero new machinery; user-visible reverse-DNS strings are the cost.
+1. ✅ **No registry** — `Tag.getOrigin(tag)` returns the raw source; pickers simply exclude
+   non-user tags, so no domain is displayed yet and the reverse-DNS strings never reach the user.
+   _(Done: the three accessors, `legacyKeys`, the two source renames, and `filterTagCandidates`.)_
 2. **Then a capability** — each provider plugin contributes `{ domain, label, icon? }`
    (`plugin-google` → "Gmail"), resolved by the container rendering the form and threaded down, since
    `react-ui-form` components must not call capability hooks. Same shape as

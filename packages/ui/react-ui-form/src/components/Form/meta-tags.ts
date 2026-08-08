@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref, Tag } from '@dxos/echo';
+import { Obj, Ref, Tag } from '@dxos/echo';
 
 import { omitId } from '../../util';
 
@@ -31,3 +31,21 @@ export const withMetaTags = (schema: Schema.Schema.AnyNoContext) =>
       [META_TAGS_KEY]: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.annotations({ title: 'Tags' }), Schema.optional),
     }).pipe(Schema.extend(schema)),
   );
+
+const isTag = Obj.instanceOf(Tag.Tag);
+
+/**
+ * Narrows a tag picker's candidates to the tags a user may apply by hand: those with no origin.
+ *
+ * A tag that carries an origin is owned by whoever put it there — a Gmail label or a JMAP folder is
+ * sync's to apply, and a canonical DXOS tag (`starred`, `sent`, `draft`) is applied by a purpose-built
+ * affordance such as the star button or the draft lifecycle. Offering either in a generic picker
+ * invites an attribution that nothing maintains: on a synced object the next delta silently strips it,
+ * and on an unsynced one it never gets corrected at all. See `Tag.md` §"Tag origin".
+ *
+ * Non-tag candidates pass through untouched, so this is safe to apply to any ref field's results —
+ * hence generic in the element type rather than narrowed to `Entity.Any`, which concrete instances are
+ * deliberately not assignable to.
+ */
+export const filterTagCandidates = <T>(results: readonly T[]): T[] =>
+  results.filter((result) => !isTag(result) || Tag.isUserTag(result));
