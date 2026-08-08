@@ -1,5 +1,11 @@
 # @dxos/solid-ui
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/node-std@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

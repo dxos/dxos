@@ -1,5 +1,76 @@
 # @dxos/plugin-onboarding
 
+## 0.12.0
+
+### Patch Changes
+
+- 0a01ff7: Deferred ~1.7 MB of the minified JavaScript a tab loads at startup (measured on a fully activated tab, from 13.7 MB to 12.0 MB). The onboarding hero image is now an asset rather than an inlined base64 module, and emoji-mart, the mermaid grammar, bip39, the AI session runtime, the ML runtime, the EVM client, the welcome screen and the devtools chart panel all load on first use.
+- 093a736: Reject a signup email that already has an account before creating a local identity.
+
+  Both signup paths — the welcome dialog's invitation-code flow and the URL-driven
+  `?accountInvitationCode=…&email=…` flow — created the local identity first and only
+  then called `/account/invitation-code/redeem`. Hub correctly rejects a duplicate
+  email with `email_already_registered`, but the client discarded the typed error and
+  reported it as `'email'` ("Failed to send verification email."), leaving behind an
+  identity that can never be bound to an account. Because the welcome dialog dismisses
+  on identity-presence and its signup handlers are gated on `!identity`, the user was
+  left with no account, no error, and no way to retry short of a storage reset.
+
+  Signup now probes `/account/email/exists` first and stops before any identity is
+  created, reporting a new `account-exists` error with a link through to email login.
+
+  The probe is tri-state: a rate-limited or failed check reports `unavailable` rather
+  than "free", and that also stops before identity creation with a retriable error —
+  so no signup path can strand an unbindable identity. The URL-driven flow leaves its
+  `accountInvitationCode`/`email` params intact in that case so a reload retries.
+  Redemption failures are additionally mapped by `data.type`, so a collision reaching
+  the server surfaces the same message rather than the misleading delivery error.
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [3958355]
+- Updated dependencies [557e243]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [557e243]
+- Updated dependencies [7c426d4]
+- Updated dependencies [0280a6a]
+- Updated dependencies [678ba58]
+- Updated dependencies [0280a6a]
+  - @dxos/app-framework@1.0.0
+  - @dxos/app-toolkit@1.0.0
+  - @dxos/plugin-markdown@0.12.0
+  - @dxos/echo@1.0.0
+  - @dxos/react-ui@1.0.0
+  - @dxos/compute@1.0.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/client@1.0.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/plugin-connector@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/plugin-support@0.12.0
+  - @dxos/link@1.0.0
+  - @dxos/app-graph@1.0.0
+  - @dxos/migrations@1.0.0
+  - @dxos/react-client@1.0.0
+  - @dxos/react-ui-form@1.0.0
+  - @dxos/brand@1.0.0
+  - @dxos/react-ui-tabs@1.0.0
+  - @dxos/credentials@1.0.0
+  - @dxos/edge-client@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/context@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/protocols@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

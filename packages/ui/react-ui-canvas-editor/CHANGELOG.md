@@ -1,5 +1,31 @@
 # @dxos/react-ui-canvas-editor
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [3958355]
+- Updated dependencies [557e243]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [557e243]
+  - @dxos/echo@1.0.0
+  - @dxos/react-ui@1.0.0
+  - @dxos/conductor@1.0.0
+  - @dxos/react-ui-editor@1.0.0
+  - @dxos/ui-editor@1.0.0
+  - @dxos/react-ui-attention@1.0.0
+  - @dxos/react-ui-canvas@1.0.0
+  - @dxos/react-ui-syntax-highlighter@1.0.0
+  - @dxos/debug@1.0.0
+  - @dxos/graph@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

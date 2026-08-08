@@ -1,5 +1,16 @@
 # @dxos/react-ui-dashboard
 
+## 1.0.0
+
+### Patch Changes
+
+- 5a0fc35: `Dashboard.Activity` no longer scrolls horizontally: when the weeks overflow the available width, the oldest weeks are clipped on the left so the most recent weeks stay pinned to the right, with day labels always visible.
+- Updated dependencies [557e243]
+- Updated dependencies [557e243]
+  - @dxos/react-ui@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

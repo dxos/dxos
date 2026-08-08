@@ -1,5 +1,80 @@
 # @dxos/plugin-assistant
 
+## 0.12.0
+
+### Patch Changes
+
+- 7c426d4: Present operations that yield via `Operation.runAgain()` (`RunAgainError`) as a distinct "incomplete" state in the trace graph and routine run list, rather than a hard error, since the run will be re-invoked. The `operation.end` trace event now carries the failing error's `errorCode` so consumers can distinguish a run-again yield from a genuine failure.
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [3958355]
+- Updated dependencies [557e243]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+- Updated dependencies [7c426d4]
+- Updated dependencies [0280a6a]
+- Updated dependencies [678ba58]
+- Updated dependencies [0280a6a]
+  - @dxos/app-framework@1.0.0
+  - @dxos/app-toolkit@1.0.0
+  - @dxos/plugin-markdown@0.12.0
+  - @dxos/echo@1.0.0
+  - @dxos/react-ui@1.0.0
+  - @dxos/react-ui-menu@1.0.0
+  - @dxos/compute@1.0.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/client@1.0.0
+  - @dxos/assistant-toolkit@1.0.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/plugin-connector@0.12.0
+  - @dxos/plugin-deck@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/plugin-routine@0.12.0
+  - @dxos/plugin-status-bar@0.12.0
+  - @dxos/plugin-transcription@0.12.0
+  - @dxos/agent-runtime@1.0.0
+  - @dxos/ai@1.0.0
+  - @dxos/assistant@1.0.0
+  - @dxos/compute-runtime@1.0.0
+  - @dxos/conductor@1.0.0
+  - @dxos/link@1.0.0
+  - @dxos/echo-client@1.0.0
+  - @dxos/echo-react@1.0.0
+  - @dxos/devtools@1.0.0
+  - @dxos/app-graph@1.0.0
+  - @dxos/react-client@1.0.0
+  - @dxos/schema@1.0.0
+  - @dxos/types@1.0.0
+  - @dxos/react-ui-components@1.0.0
+  - @dxos/react-ui-form@1.0.0
+  - @dxos/react-ui-list@1.0.0
+  - @dxos/react-ui-markdown@1.0.0
+  - @dxos/react-ui-search@1.0.0
+  - @dxos/react-ui-transcription@1.0.0
+  - @dxos/ui-editor@1.0.0
+  - @dxos/react-ui-attention@1.0.0
+  - @dxos/react-ui-chat@1.0.0
+  - @dxos/react-ui-syntax-highlighter@1.0.0
+  - @dxos/react-ui-tabs@1.0.0
+  - @dxos/edge-client@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/halo@1.0.0
+  - @dxos/halo-react@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/react-list@1.0.0
+  - @dxos/ui@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

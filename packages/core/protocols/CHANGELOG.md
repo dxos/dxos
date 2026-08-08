@@ -1,5 +1,16 @@
 # @dxos/protocols
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/codec-protobuf@1.0.0
+- @dxos/effect@1.0.0
+- @dxos/errors@1.0.0
+- @dxos/invariant@1.0.0
+- @dxos/keys@1.0.0
+- @dxos/timeframe@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

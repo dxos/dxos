@@ -1,5 +1,23 @@
 # @dxos/edge-client
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/keyring@1.0.0
+- @dxos/credentials@1.0.0
+- @dxos/async@1.0.0
+- @dxos/context@1.0.0
+- @dxos/crypto@1.0.0
+- @dxos/effect@1.0.0
+- @dxos/errors@1.0.0
+- @dxos/invariant@1.0.0
+- @dxos/keys@1.0.0
+- @dxos/log@1.0.0
+- @dxos/node-std@1.0.0
+- @dxos/protocols@1.0.0
+- @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

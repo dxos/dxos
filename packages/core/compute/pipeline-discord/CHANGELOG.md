@@ -1,5 +1,26 @@
 # @dxos/pipeline-discord
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [3958355]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [df93cc2]
+  - @dxos/echo@1.0.0
+  - @dxos/sql-sqlite@1.0.0
+  - @dxos/ai@1.0.0
+  - @dxos/types@1.0.0
+  - @dxos/crawler@1.0.0
+  - @dxos/pipeline-rdf@1.0.0
+  - @dxos/errors@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/pipeline@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

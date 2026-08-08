@@ -1,5 +1,34 @@
 # @dxos/client-e2e
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [3958355]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [2c5aaf0]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [0280a6a]
+  - @dxos/echo@1.0.0
+  - @dxos/client-services@1.0.0
+  - @dxos/client@1.0.0
+  - @dxos/echo-client@1.0.0
+  - @dxos/client-protocol@1.0.0
+  - @dxos/config@1.0.0
+  - @dxos/credentials@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/context@1.0.0
+  - @dxos/echo-protocol@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/protocols@1.0.0
+  - @dxos/random-access-storage@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

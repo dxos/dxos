@@ -1,5 +1,57 @@
 # @dxos/client-services
 
+## 1.0.0
+
+### Patch Changes
+
+- 2c5aaf0: Packages whose sources are not safe to bundle for the browser no longer publish a `source` export condition: `@dxos/client-services`, `@dxos/config`, `@dxos/lock-file`, `@dxos/network-manager`, `@dxos/observability`, `@dxos/random-access-storage` and `@dxos/teleport`.
+
+  Default resolution is unchanged — these packages already resolved to their built `dist` for ordinary consumers, and their entry points, types and runtime behaviour are the same. Only resolution under `--conditions=source` changes: it now yields the built output instead of the TypeScript sources in the published `src` directory, so node, bun and Vite all agree on which packages are consumed from source.
+
+- Updated dependencies [3958355]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [34e4fb7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [df93cc2]
+  - @dxos/echo@1.0.0
+  - @dxos/feed@1.0.0
+  - @dxos/sql-sqlite@1.0.0
+  - @dxos/echo-client@1.0.0
+  - @dxos/echo-host@1.0.0
+  - @dxos/client-protocol@1.0.0
+  - @dxos/keyring@1.0.0
+  - @dxos/teleport-extension-object-sync@1.0.0
+  - @dxos/config@1.0.0
+  - @dxos/feed-store@1.0.0
+  - @dxos/credentials@1.0.0
+  - @dxos/edge-client@1.0.0
+  - @dxos/teleport-extension-replicator@1.0.0
+  - @dxos/messaging@1.0.0
+  - @dxos/network-manager@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/codec-protobuf@1.0.0
+  - @dxos/context@1.0.0
+  - @dxos/crypto@1.0.0
+  - @dxos/debug@1.0.0
+  - @dxos/echo-protocol@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/hypercore@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/lock-file@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/node-std@1.0.0
+  - @dxos/protocols@1.0.0
+  - @dxos/random-access-storage@1.0.0
+  - @dxos/teleport@1.0.0
+  - @dxos/teleport-extension-gossip@1.0.0
+  - @dxos/timeframe@1.0.0
+  - @dxos/tracing@1.0.0
+  - @dxos/util@1.0.0
+  - @dxos/websocket-rpc@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

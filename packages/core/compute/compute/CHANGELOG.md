@@ -1,5 +1,27 @@
 # @dxos/compute
 
+## 1.0.0
+
+### Patch Changes
+
+- 7c426d4: Present operations that yield via `Operation.runAgain()` (`RunAgainError`) as a distinct "incomplete" state in the trace graph and routine run list, rather than a hard error, since the run will be re-invoked. The `operation.end` trace event now carries the failing error's `errorCode` so consumers can distinguish a run-again yield from a genuine failure.
+- Updated dependencies [3958355]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+  - @dxos/echo@1.0.0
+  - @dxos/ai@1.0.0
+  - @dxos/schema@1.0.0
+  - @dxos/types@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/errors@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/protocols@1.0.0
+  - @dxos/vendor-kbn-handlebars@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

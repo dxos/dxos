@@ -1,5 +1,20 @@
 # @dxos/pipeline-rdf
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [df93cc2]
+  - @dxos/sql-sqlite@1.0.0
+  - @dxos/ai@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/errors@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/pipeline@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @dxos/assistant-evals
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [678ba58]
+  - @dxos/app-toolkit@1.0.0
+  - @dxos/keys@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

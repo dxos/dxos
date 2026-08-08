@@ -1,5 +1,20 @@
 # @dxos/teleport
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/async@1.0.0
+- @dxos/context@1.0.0
+- @dxos/debug@1.0.0
+- @dxos/invariant@1.0.0
+- @dxos/keys@1.0.0
+- @dxos/log@1.0.0
+- @dxos/node-std@1.0.0
+- @dxos/protocols@1.0.0
+- @dxos/rpc@1.0.0
+- @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @dxos/feed
 
+## 1.0.0
+
+### Minor Changes
+
+- 34e4fb7: Add optional at-rest encryption for feed blocks. `FeedStore` accepts a `Cypher` that decides per feed whether to seal block payloads and provides encrypt/decrypt; without one, blocks are stored as plaintext (no encryption by default). Blocks gain `encryptionKeyId` + `iv` envelope fields, and a reference `WebCryptoCypher` (AES-256-GCM) ships for the browser, Node, and Cloudflare Workers.
+
+### Patch Changes
+
+- Updated dependencies [df93cc2]
+  - @dxos/sql-sqlite@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/context@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/errors@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/protocols@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

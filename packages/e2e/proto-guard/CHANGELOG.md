@@ -1,5 +1,15 @@
 # @dxos/proto-guard
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+  - @dxos/client@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/debug@1.0.0
+  - @dxos/node-std@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

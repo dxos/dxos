@@ -1,5 +1,28 @@
 # @dxos/examples
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [34a8433]
+- Updated dependencies [3958355]
+- Updated dependencies [557e243]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [557e243]
+- Updated dependencies [0280a6a]
+  - @dxos/plugin-markdown@0.12.0
+  - @dxos/echo@1.0.0
+  - @dxos/react-ui@1.0.0
+  - @dxos/react-client@1.0.0
+  - @dxos/schema@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/random@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

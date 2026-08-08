@@ -1,5 +1,29 @@
 # @dxos/plugin-testing
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [557e243]
+- Updated dependencies [557e243]
+- Updated dependencies [7c426d4]
+- Updated dependencies [678ba58]
+  - @dxos/app-framework@1.0.0
+  - @dxos/app-toolkit@1.0.0
+  - @dxos/react-ui@1.0.0
+  - @dxos/compute@1.0.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/plugin-settings@0.12.0
+  - @dxos/plugin-theme@0.12.0
+  - @dxos/react-ui-dnd@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes
