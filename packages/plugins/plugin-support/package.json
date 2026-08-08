@@ -157,7 +157,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/brand": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
