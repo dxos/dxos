@@ -8,4 +8,6 @@ Three cases: a **user** tag (no key) is fully the user's; a **canonical DXOS** t
 
 Consequently, tag pickers — including the tags field on property and create forms — now offer **user tags only**. Previously they listed every tag in the space, so a Gmail label could be hand-applied to any object: on a synced object the next delta silently strips it, and on an unsynced one nothing ever corrects it. Pass an explicit `useResults` to a `RefField` to offer a specific origin domain.
 
+An object's provider tags are also no longer editable in property and create forms: they are held out of the tags field and merged back untouched on save, so a Gmail label can be neither added nor removed by hand. They remain visible wherever the owning plugin renders them.
+
 `Tag.findOrCreate` also accepts `legacyKeys`, tried when the primary key misses and rewritten to the current key in place, so a provider can rename its key source without orphaning existing tags. Used by the two renames this ships: `com.google.gmail.label` → `com.google.gmail` and `org.ietf.jmap.mailbox` → `org.ietf.jmap` (the key sits on a `Tag`, so the object's type already said "label"). The foreign key on synced _messages_, `com.google.mail`, is deliberately unchanged.

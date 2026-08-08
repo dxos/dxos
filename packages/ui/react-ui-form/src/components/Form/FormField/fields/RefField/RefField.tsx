@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
-import { Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
@@ -58,8 +58,11 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
   );
 
   // Tag candidates are narrowed to user tags; pass an explicit `useResults` to offer a given origin
-  // domain. See `filterTagCandidates`.
-  return useMemo(() => filterTagCandidates(results), [results]);
+  // domain. See `filterTagCandidates`. Gated on the field's own type so no other field's candidates are
+  // walked — under `Scope.registry()` those include entities an object instance check has no business
+  // being handed.
+  const isTagField = typename === Type.getTypename(Tag.Tag);
+  return useMemo(() => (isTagField ? filterTagCandidates(results) : results), [isTagField, results]);
 };
 
 export type RefFieldProps = FormFieldRendererProps & RefFieldDataProps & CreateOptions;

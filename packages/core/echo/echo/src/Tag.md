@@ -118,6 +118,16 @@ third-party provider needs no change here to get correct read-only behaviour.
    user-origin tags only. Pass an explicit `useResults` to offer a given origin domain. Non-tag ref
    fields are untouched.
 
+4. **Provider tags are held out of the tags field, not shown disabled.** `partitionMetaTags` splits an
+   object's `meta.tags` into `editable` and `preserved`; the form is given only `editable`, and the save
+   handler writes `[...preserved, ...edited]` back. Two reasons for this shape rather than a read-only
+   chip: the tags field is a generic `ArrayField` of `RefField`s whose delete button knows nothing about
+   tags, so a per-item read-only state would mean threading tag policy through a type-agnostic renderer;
+   and `meta.tags` is replaced wholesale on save, so anything withheld from the form **must** be merged
+   back or the first unrelated tag edit deletes it. Enforcement deliberately does **not** live in
+   `Tagging.set` — sync applies provider tags through that same API, so the rule belongs where the actor
+   is a user, not in the shared mechanism.
+
    **Open:** canonical tags are excluded from the picker along with provider tags, on the grounds that
    `sent`/`draft` are nonsense to apply by hand and `starred` has `Row.Star`. That reading is
    defensible for mail but may be wrong for a generic object, where picking "Starred" from the
