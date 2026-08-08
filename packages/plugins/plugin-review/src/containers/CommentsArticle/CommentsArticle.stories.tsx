@@ -13,6 +13,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
@@ -134,7 +135,7 @@ const StoryAppGraphBuilder = Capability.inlineModule(
           if (!client.initialized) {
             return [];
           }
-          const [space] = client.spaces.get();
+          const space = AppSpace.getDefaultSpace(client);
           if (!space) {
             return [];
           }
