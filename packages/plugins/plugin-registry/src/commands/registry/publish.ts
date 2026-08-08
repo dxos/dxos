@@ -8,6 +8,7 @@ import * as PlatformCommand from '@effect/platform/Command';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as FileSystem from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
+import * as Config from 'effect/Config';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -135,8 +136,15 @@ export const publish = Command.make(
           // When --edge-url is provided we bypass the profile's edge config and post directly
           // with auth: false — relies on WORKER_ENV=dev skipAuth on the server (local dev only).
           const explicitEdgeUrl = Option.getOrUndefined(options.edgeUrl);
+          const apiKey = Option.getOrUndefined(yield* Config.option(Config.string('DX_HUB_API_KEY')));
           if (explicitEdgeUrl) {
             const http = new EdgeHttpClient(explicitEdgeUrl);
+            moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
+          } else if (apiKey) {
+            // Headless callers (CI) hold no HALO identity, so the VP flow cannot run; the admin
+            // API key authenticates the upload instead.
+            const client = yield* ClientService;
+            const http = new EdgeHttpClient(client.edge.http.baseUrl, { apiKey });
             moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
           } else {
             const client = yield* ClientService;
