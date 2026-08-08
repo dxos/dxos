@@ -5,7 +5,7 @@
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { Slot, Slottable } from '@radix-ui/react-slot';
 import React, { CSSProperties, useMemo, useState } from 'react';
 
 import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
@@ -13,7 +13,7 @@ import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 import { useThemeContext } from '../../hooks';
 import { composableProps, slottable } from '../../util';
 import { ScrollAreaThumbs } from './ScrollAreaThumbs';
-import { scrollbar, type ScrollbarDensity } from './scrollbar';
+import { type ScrollbarDensity, scrollbar } from './scrollbar';
 
 //
 // Context
@@ -88,9 +88,9 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
     return (
       <ScrollAreaProvider {...options} density={density} setViewport={setViewport}>
         <Comp {...rest} className={tx('scrollArea.root', options, className)} ref={forwardedRef}>
-          {children}
-          {/* Slot forwards to a single child, so overlay thumbs are only available on a real element. */}
-          {overlay && scrollbars && !asChild && viewport && (
+          {/* Slottable marks the merge target so the thumbs render alongside `children` under `asChild`. */}
+          <Slottable>{children}</Slottable>
+          {overlay && scrollbars && viewport && (
             <ScrollAreaThumbs viewport={viewport} orientation={orientation} density={density} autoHide={autoHide} />
           )}
         </Comp>

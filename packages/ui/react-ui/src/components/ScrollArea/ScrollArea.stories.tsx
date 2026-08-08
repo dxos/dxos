@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { PropsWithChildren, useMemo } from 'react';
+import React, { PropsWithChildren, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { mx } from '@dxos/ui-theme';
@@ -238,6 +238,44 @@ export const OverlayVisible = {
       </ScrollArea.Root>
     </Container>
   ),
+};
+
+export const OverlayAsChild = {
+  render: () => (
+    <ScrollArea.Root orientation='vertical' overlay autoHide={false} asChild>
+      <div className='border border-separator rounded-md overflow-hidden h-72 w-48'>
+        <ScrollArea.Viewport>
+          <List />
+        </ScrollArea.Viewport>
+      </div>
+    </ScrollArea.Root>
+  ),
+};
+
+/** Content appended after mount must re-measure the thumb without an intervening scroll. */
+export const OverlayDynamic = {
+  render: () => {
+    const [items, setItems] = useState(12);
+    return (
+      <div className='flex flex-col gap-2'>
+        <Container classNames='h-72 w-48'>
+          <ScrollArea.Root orientation='vertical' overlay autoHide={false}>
+            {/* Items are direct children so that appending them is a childList mutation. */}
+            <ScrollArea.Viewport>
+              {Array.from({ length: items }).map((_, index) => (
+                <div key={index} className='px-1'>
+                  Item {index + 1}
+                </div>
+              ))}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Container>
+        <button className='p-1 border border-separator rounded-md' onClick={() => setItems((count) => count + 20)}>
+          Add 20 items ({items})
+        </button>
+      </div>
+    );
+  },
 };
 
 export const OverlayPadded = {

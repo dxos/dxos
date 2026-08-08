@@ -74,15 +74,24 @@ export const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide }: S
   }, [viewport, showVertical, showHorizontal, density.padding]);
 
   useEffect(() => {
-    update();
+    // Observe the scrolled content too, since content growth does not resize the viewport; the
+    // set of children is re-synced on mutation so appended content is measured as it arrives.
+    const resize = new ResizeObserver(update);
+    const observeContent = () => {
+      resize.disconnect();
+      resize.observe(viewport);
+      Array.from(viewport.children).forEach((child) => resize.observe(child));
+      update();
+    };
+
+    observeContent();
+    const mutation = new MutationObserver(observeContent);
+    mutation.observe(viewport, { childList: true });
     viewport.addEventListener('scroll', update, { passive: true });
-    // Observe the scrolled content too, since content growth does not resize the viewport.
-    const observer = new ResizeObserver(update);
-    observer.observe(viewport);
-    Array.from(viewport.children).forEach((child) => observer.observe(child));
     return () => {
       viewport.removeEventListener('scroll', update);
-      observer.disconnect();
+      mutation.disconnect();
+      resize.disconnect();
     };
   }, [viewport, update]);
 
