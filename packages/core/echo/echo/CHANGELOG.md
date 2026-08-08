@@ -1,5 +1,28 @@
 # @dxos/echo
 
+## 1.0.0
+
+### Minor Changes
+
+- b600f72: Remove LevelDB and the `@dxos/kv-store` package. Automerge document storage, heads, and the query index are now backed exclusively by SQLite. Profile export/import no longer reads or writes a LevelDB store — legacy `KEY_VALUE` archive entries are skipped on import.
+
+### Patch Changes
+
+- 3958355: Import `dx.config.ts` directly instead of transpiling it, so `dx registry publish` can read a plugin config from the compiled CLI.
+- da37a13: `AppSpace.setupIdentitySpaces` now creates the content space before the settings space, so a new profile's default space is the first entry returned by `client.spaces.get()` rather than the internal settings space.
+- 0a01ff7: Deferred ~1.7 MB of the minified JavaScript a tab loads at startup (measured on a fully activated tab, from 13.7 MB to 12.0 MB). The onboarding hero image is now an asset rather than an inlined base64 module, and emoji-mart, the mermaid grammar, bip39, the AI session runtime, the ML runtime, the EVM client, the welcome screen and the devtools chart panel all load on first use.
+- bcfe4c5: Drop unused dependencies from several common packages, and align the `storybook` dependency of `@dxos/storybook-utils` with the version the rest of the repo resolves.
+  - @dxos/async@1.0.0
+  - @dxos/debug@1.0.0
+  - @dxos/echo-protocol@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/errors@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/node-std@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @dxos/introspect
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/introspect-tools@1.0.0
+- @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

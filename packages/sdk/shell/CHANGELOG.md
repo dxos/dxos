@@ -1,5 +1,23 @@
 # @dxos/shell
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/client-protocol@1.0.0
+- @dxos/react-client@1.0.0
+- @dxos/react-ui-list@1.0.0
+- @dxos/react-ui-pickers@1.0.0
+- @dxos/async@1.0.0
+- @dxos/display-name@1.0.0
+- @dxos/invariant@1.0.0
+- @dxos/keys@1.0.0
+- @dxos/log@1.0.0
+- @dxos/protocols@1.0.0
+- @dxos/rpc@1.0.0
+- @dxos/rpc-tunnel@1.0.0
+- @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

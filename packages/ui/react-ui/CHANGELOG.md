@@ -1,5 +1,26 @@
 # @dxos/react-ui
 
+## 1.0.0
+
+### Minor Changes
+
+- 557e243: `Column.Root` (and `Card.Root`) gain a `gap` prop (`sm` | `md` | `lg`) controlling the vertical gap between all rows of the grid. The card's default spacing is unchanged (`sm` equals the previous `gap-1`).
+- 557e243: `Message.Root` is now headless — it renders no DOM element, only the shared message context (ids, valence, icon). The message's element moved to `Message.Content`, which is now required inside every `Message.Root`: a `Column` grid carrying the alert/paragraph role, the aria wiring, the valence CSS variables and the valence surface. Hosts that rendered `Message.Title`/`Message.Body` directly under `Message.Root` must wrap them in `Message.Content`, and any `classNames`/`data-*`/`ref` previously on `Message.Root` moves to `Message.Content`.
+
+### Patch Changes
+
+- @dxos/async@1.0.0
+- @dxos/i18n@1.0.0
+- @dxos/invariant@1.0.0
+- @dxos/lit-ui@1.0.0
+- @dxos/log@1.0.0
+- @dxos/react-error-boundary@1.0.0
+- @dxos/react-hooks@1.0.0
+- @dxos/react-input@1.0.0
+- @dxos/ui-theme@1.0.0
+- @dxos/ui-types@1.0.0
+- @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

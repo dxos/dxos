@@ -1,5 +1,15 @@
 # @dxos/react-ui-pickers
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [557e243]
+- Updated dependencies [557e243]
+  - @dxos/react-ui@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/ui-types@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,109 @@
 # @dxos/plugin-markdown
 
+## 0.12.0
+
+### Minor Changes
+
+- 0280a6a: Retire the `/types` aggregate entrypoint in favour of the per-namespace subpaths.
+
+  `@dxos/plugin-*/types` re-exported every namespace of a plugin from one module, so a
+  single import statically pulled in all of them. These are Effect/ECHO schemas — runtime
+  values rather than erased types — so the aggregate defeated the per-namespace subpaths
+  it sat alongside and kept the plugin's whole schema graph in the eager module graph.
+
+  Breaking: the `./types` export is removed from every plugin that published it. Import the
+  namespace you need instead — `@dxos/plugin-chess/Chess` rather than
+  `@dxos/plugin-chess/types`. The `dxos-subpath-imports` lint rule autofixes call sites.
+
+  Plugins whose barrel mixed namespaces with flat exports gained real modules for those
+  exports (`ConnectorAnnotations`, `SettingsPath`, `AssistantOptions`, `SpaceSchema`, and
+  others); plugin-client and plugin-space additionally had their `export namespace X` wrappers
+  unwrapped, so `X.X.member` becomes `X.member`.
+
+### Patch Changes
+
+- 34a8433: Order module activation by capability dependencies instead of hand-wired events.
+  A module declares the capabilities it `requires` and `provides` (or a runtime
+  `activatesOn` event) and the plugin manager topologically orders activation from
+  that graph. Capabilities are yieldable Effect services, so accessing an undeclared
+  capability or omitting a declared one is now a type error, and missing providers,
+  dependency cycles, and duplicate providers fail fast with tagged errors instead of
+  runtime assertions. Plugins compose as a flat chain of `Plugin.addModule` over
+  module bodies authored with `Capability.lazyModule` (code-split) or
+  `Capability.inlineModule` (eager), or with a per-capability maker from the new
+  `AppCapability` namespace (`surface`, `settings`, `appGraphBuilder`, `translations`,
+  `schema`, ...) that bakes in the module name and default provides. A module is an
+  opaque `Capability.Module<Options>`, parameterized only by its options type, so a
+  module export never leaks a foreign capability's type into declaration emit.
+
+  Every plugin in the repository is migrated to this API. The plugins gain no
+  behaviour of their own from the change, but any plugin defined outside the
+  repository must be migrated too — the legacy API is removed, not deprecated.
+
+  Breaking: the legacy event-wiring API is removed — `AppPlugin` and its
+  `addXModule` helpers, `firesBeforeActivation`/`firesAfterActivation`, `compatFires`,
+  and the ordering-only `Setup*`/`*Ready` activation events (genuine runtime events
+  remain). `Capability.provide`/`provideAll` are renamed to
+  `Capability.contribute`/`contributeAll`, and the untyped raw builder
+  `Capability.contributes` is removed. Multi is now the default capability arity:
+  `Capability.make` defines a multi (registry) capability and
+  `Capability.makeSingleton` the single-provider case, both curried
+  (`make<T>()(nsid)`) so the NSID literal brands the identifier. The
+  `withPluginManager` `capabilities` test option now accepts `Contribution[]`.
+
+- 3958355: Import `dx.config.ts` directly instead of transpiling it, so `dx registry publish` can read a plugin config from the compiled CLI.
+- b600f72: Remove LevelDB and the `@dxos/kv-store` package. Automerge document storage, heads, and the query index are now backed exclusively by SQLite. Profile export/import no longer reads or writes a LevelDB store — legacy `KEY_VALUE` archive entries are skipped on import.
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [3958355]
+- Updated dependencies [557e243]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+- Updated dependencies [7c426d4]
+- Updated dependencies [678ba58]
+- Updated dependencies [0280a6a]
+  - @dxos/app-framework@1.0.0
+  - @dxos/app-toolkit@1.0.0
+  - @dxos/echo@1.0.0
+  - @dxos/react-ui@1.0.0
+  - @dxos/react-ui-menu@1.0.0
+  - @dxos/compute@1.0.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/client@1.0.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/assistant@1.0.0
+  - @dxos/echo-client@1.0.0
+  - @dxos/echo-doc@1.0.0
+  - @dxos/echo-react@1.0.0
+  - @dxos/client-protocol@1.0.0
+  - @dxos/react-client@1.0.0
+  - @dxos/schema@1.0.0
+  - @dxos/types@1.0.0
+  - @dxos/versioning@1.0.0
+  - @dxos/react-ui-components@1.0.0
+  - @dxos/react-ui-editor@1.0.0
+  - @dxos/react-ui-form@1.0.0
+  - @dxos/ui-editor@1.0.0
+  - @dxos/react-ui-attention@1.0.0
+  - @dxos/react-ui-dnd@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/halo@1.0.0
+  - @dxos/halo-react@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/ui@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

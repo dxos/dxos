@@ -1,5 +1,21 @@
 # @dxos/messaging
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/edge-client@1.0.0
+- @dxos/async@1.0.0
+- @dxos/codec-protobuf@1.0.0
+- @dxos/context@1.0.0
+- @dxos/invariant@1.0.0
+- @dxos/keys@1.0.0
+- @dxos/log@1.0.0
+- @dxos/node-std@1.0.0
+- @dxos/protocols@1.0.0
+- @dxos/tracing@1.0.0
+- @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

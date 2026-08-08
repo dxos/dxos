@@ -1,5 +1,19 @@
 # @dxos/app-solid
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [678ba58]
+  - @dxos/app-framework@1.0.0
+  - @dxos/app-toolkit@1.0.0
+  - @dxos/effect-atom-solid@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/web-context-solid@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

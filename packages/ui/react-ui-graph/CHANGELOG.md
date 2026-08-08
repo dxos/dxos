@@ -1,5 +1,20 @@
 # @dxos/react-ui-graph
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [557e243]
+- Updated dependencies [557e243]
+  - @dxos/react-ui@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/debug@1.0.0
+  - @dxos/graph@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/node-std@1.0.0
+  - @dxos/ui-theme@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

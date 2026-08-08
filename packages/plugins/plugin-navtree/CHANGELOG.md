@@ -1,5 +1,39 @@
 # @dxos/plugin-navtree
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [557e243]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+- Updated dependencies [7c426d4]
+- Updated dependencies [678ba58]
+  - @dxos/app-framework@1.0.0
+  - @dxos/app-toolkit@1.0.0
+  - @dxos/react-ui@1.0.0
+  - @dxos/react-ui-menu@1.0.0
+  - @dxos/compute@1.0.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/plugin-deck@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/app-graph@1.0.0
+  - @dxos/react-ui-list@1.0.0
+  - @dxos/react-ui-search@1.0.0
+  - @dxos/keyboard@1.0.0
+  - @dxos/react-ui-attention@1.0.0
+  - @dxos/react-ui-tabs@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/debug@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/lit-ui@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

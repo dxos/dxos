@@ -1,5 +1,67 @@
 # @dxos/cli
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [3958355]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [7c426d4]
+- Updated dependencies [0280a6a]
+- Updated dependencies [678ba58]
+- Updated dependencies [0280a6a]
+  - @dxos/app-framework@1.0.0
+  - @dxos/plugin-markdown@0.12.0
+  - @dxos/echo@1.0.0
+  - @dxos/compute@1.0.0
+  - @dxos/plugin-assistant@0.12.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/client@1.0.0
+  - @dxos/assistant-toolkit@1.0.0
+  - @dxos/cli-util@1.0.0
+  - @dxos/plugin-chess@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/plugin-connector@0.12.0
+  - @dxos/plugin-game@0.12.0
+  - @dxos/plugin-inbox@0.12.0
+  - @dxos/plugin-kanban@0.12.0
+  - @dxos/plugin-map@0.12.0
+  - @dxos/plugin-observability@0.12.0
+  - @dxos/plugin-registry@0.12.0
+  - @dxos/plugin-review@0.12.0
+  - @dxos/plugin-routine@0.12.0
+  - @dxos/plugin-sample@0.12.0
+  - @dxos/plugin-script@0.12.0
+  - @dxos/plugin-table@0.12.0
+  - @dxos/plugin-transcription@0.12.0
+  - @dxos/ai@1.0.0
+  - @dxos/assistant@1.0.0
+  - @dxos/compute-runtime@1.0.0
+  - @dxos/edge-compute@1.0.0
+  - @dxos/echo-client@1.0.0
+  - @dxos/introspect@1.0.0
+  - @dxos/client-protocol@1.0.0
+  - @dxos/schema@1.0.0
+  - @dxos/types@1.0.0
+  - @dxos/edge-client@1.0.0
+  - @dxos/async@1.0.0
+  - @dxos/context@1.0.0
+  - @dxos/effect@1.0.0
+  - @dxos/effect-atom-solid@1.0.0
+  - @dxos/errors@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+  - @dxos/log@1.0.0
+  - @dxos/protocols@1.0.0
+  - @dxos/random@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

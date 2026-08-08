@@ -1,5 +1,15 @@
 # @dxos/echo-protocol
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/crypto@1.0.0
+- @dxos/invariant@1.0.0
+- @dxos/keys@1.0.0
+- @dxos/protocols@1.0.0
+- @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

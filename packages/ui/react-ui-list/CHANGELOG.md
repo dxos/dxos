@@ -1,5 +1,20 @@
 # @dxos/react-ui-list
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [557e243]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+  - @dxos/react-ui@1.0.0
+  - @dxos/react-ui-menu@1.0.0
+  - @dxos/debug@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/react-list@1.0.0
+  - @dxos/ui-theme@1.0.0
+  - @dxos/ui-types@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

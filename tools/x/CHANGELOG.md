@@ -1,5 +1,7 @@
 # @dxos/x
 
+## 1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @dxos/halo-e2e
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+  - @dxos/client@1.0.0
+  - @dxos/halo-adapter-client@1.0.0
+  - @dxos/halo@1.0.0
+  - @dxos/keys@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

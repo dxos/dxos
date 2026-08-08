@@ -1,5 +1,11 @@
 # @dxos/log-store-idb
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/log@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,20 @@
 # @dxos/hypercore
 
+## 1.0.0
+
+### Patch Changes
+
+- @dxos/async@1.0.0
+- @dxos/codec-protobuf@1.0.0
+- @dxos/crypto@1.0.0
+- @dxos/invariant@1.0.0
+- @dxos/keys@1.0.0
+- @dxos/node-std@1.0.0
+- @dxos/random-access-storage@1.0.0
+- @dxos/typings@1.0.0
+- @dxos/util@1.0.0
+- @dxos/vendor-hypercore@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

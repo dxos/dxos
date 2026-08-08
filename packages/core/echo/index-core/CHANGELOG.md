@@ -1,5 +1,22 @@
 # @dxos/index-core
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [3958355]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [b600f72]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [df93cc2]
+  - @dxos/echo@1.0.0
+  - @dxos/sql-sqlite@1.0.0
+  - @dxos/context@1.0.0
+  - @dxos/echo-protocol@1.0.0
+  - @dxos/invariant@1.0.0
+  - @dxos/keys@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes

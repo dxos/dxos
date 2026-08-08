@@ -1,5 +1,17 @@
 # @dxos/plugin-osrm
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+  - @dxos/app-framework@1.0.0
+  - @dxos/plugin-trip@0.12.0
+  - @dxos/log@1.0.0
+  - @dxos/util@1.0.0
+
 ## 0.11.1
 
 ### Patch Changes
