@@ -13,19 +13,20 @@ import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 import { Person } from '@dxos/types';
 
-import { GoogleMail } from '../../../../apis';
-import { GMAIL_SOURCE } from '../../../../constants';
-import { GoogleApiError, MailSyncError } from '../../../../errors';
-import { GoogleMailApi, type GoogleMailApiError } from '../../../../services';
-import { Mailbox, SystemTags } from '../../../../types';
-import { parseFromHeader } from '../../../util';
 import {
   type MailSyncItem,
   MailSyncProvider,
   type MailSyncSource,
   type ReconcileItem,
+  parseFromHeader,
   reconcileToChanges,
-} from '../../mail-sync';
+} from '#sync';
+
+import { GoogleMail } from '../../../../apis';
+import { GMAIL_SOURCE } from '../../../../constants';
+import { GoogleApiError, MailSyncError } from '../../../../errors';
+import { GoogleMailApi, type GoogleMailApiError } from '../../../../services';
+import { Mailbox, SystemTags } from '../../../../types';
 import { decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateGmailTag } from '../tags';
 import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';

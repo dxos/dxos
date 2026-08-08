@@ -18,6 +18,11 @@
       "types": "./dist/types/src/skills/index.d.ts",
       "default": "./dist/lib/skills.mjs"
     },
+    "#sync": {
+      "source": "./src/sync/index.ts",
+      "types": "./dist/types/src/sync/index.d.ts",
+      "default": "./dist/lib/sync.mjs"
+    },
     "#capabilities": {
       "source": {
         "node": "./src/capabilities/node.ts",
@@ -109,6 +114,11 @@
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
       "import": "./dist/lib/containers.mjs"
+    },
+    "./sync": {
+      "source": "./src/sync/index.ts",
+      "types": "./dist/types/src/sync/index.d.ts",
+      "import": "./dist/lib/sync.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",

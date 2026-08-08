@@ -10,10 +10,11 @@ import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import { ContentBlock, Message, Person } from '@dxos/types';
 
+import { parseFromHeader } from '#sync';
+
 import { type GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
 import { Mailbox } from '../../../types';
-import { parseFromHeader } from '../../util';
 
 /**
  * Recursively searches a message's MIME part tree for the first part matching `mimeType`, depth-first

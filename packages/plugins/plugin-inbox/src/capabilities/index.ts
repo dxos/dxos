@@ -10,6 +10,7 @@ export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const Connector = Capability.lazy('Connector', () => import('./connector'));
 export const IdentitySpecs = Capability.lazy('IdentitySpecs', () => import('./identity-specs'));
+export const MailSend = Capability.lazy('MailSend', () => import('./mail-send'));
 export const NavigationTargetResolver = Capability.lazy(
   'NavigationTargetResolver',
   () => import('./navigation-target-resolver'),

@@ -19,9 +19,9 @@ import { EmailStage } from '@dxos/pipeline-email';
 import { type TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { MailSyncError } from '../../errors';
-import { Mailbox, type SyncStreamConfig } from '../../types';
-import { readBindingOptions } from '../../util';
+import { MailSyncError } from '../errors';
+import { Mailbox, type SyncStreamConfig } from '../types';
+import { readBindingOptions } from './binding';
 
 /**
  * Provider-agnostic harness for a bidirectional, capped, resumable mail sync. The provider is an Effect

@@ -18,6 +18,7 @@ import {
   CreateObject,
   IdentitySpecs,
   InboxSettings,
+  MailSend,
   NavigationTargetResolver,
   OperationHandler,
   ReactSurface,
@@ -59,6 +60,11 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupConnectors,
     activate: Connector,
+  }),
+  Plugin.addModule({
+    id: 'mail-send',
+    activatesOn: ActivationEvents.Startup,
+    activate: MailSend,
   }),
   Plugin.addModule({
     id: 'identity-specs',

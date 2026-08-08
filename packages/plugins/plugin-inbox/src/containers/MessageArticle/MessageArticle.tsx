@@ -138,6 +138,7 @@ export const MessageArticle = ({
   const runtime = useProcessManagerRuntime();
   const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
   const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
   const getExtractActions = useCallback(
     (message: Mailbox.MessageLike) => buildExtractActions(message, extractors, invoker),
     [extractors, invoker],
@@ -210,6 +211,7 @@ export const MessageArticle = ({
       expanded={expanded}
       graph={graph}
       runtime={runtime}
+      sendOperations={sendOperations}
       getExtractActions={getExtractActions}
       onExpandedChange={onExpandedChange}
       onCollapseAll={onCollapseAll}

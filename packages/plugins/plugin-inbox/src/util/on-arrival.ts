@@ -3,15 +3,8 @@
 //
 
 /**
- * Shared helpers used by both Gmail and JMAP Mail sync operations.
- *
- * Each sync follows the same high-level structure:
- *   1. Load the feed + resolve the tag index.
- *   2. Build a dedup set of already-synced foreign ids.
- *   3. Fetch new messages from the provider.
- *   4. Append each batch: write to feed, apply provider tags, run on-arrival extractors.
- *
- * The provider-specific parts (session discovery, query API, mapper) stay in each sync file.
+ * On-arrival extraction hooks for freshly-synced mail. Provider-agnostic: the sync harness
+ * (`#sync`) owns the pipeline, this owns the config-gated AI step it runs over each batch.
  */
 
 import * as Effect from 'effect/Effect';
@@ -20,29 +13,12 @@ import * as Stream from 'effect/Stream';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { type Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
 import { isAiServiceUnavailable } from '../operations/extractor';
 import { InboxCapabilities, InboxOperation, type Mailbox } from '../types';
-
-/** Read `syncBackDays` and `filter` from the binding options (opaque record). */
-export const readBindingOptions = (binding: Cursor.ExternalCursor) => {
-  const raw = binding.spec.options;
-  if (!raw || typeof raw !== 'object') {
-    return { syncBackDays: undefined as undefined | number, filter: undefined as undefined | string };
-  }
-
-  // Reject NaN/Infinity/negative — these feed `subDays`, which would otherwise yield an invalid date.
-  const syncBackDays = raw.syncBackDays;
-  return {
-    syncBackDays:
-      typeof syncBackDays === 'number' && Number.isFinite(syncBackDays) && syncBackDays >= 0 ? syncBackDays : undefined,
-    filter: typeof raw.filter === 'string' ? raw.filter : undefined,
-  };
-};
 
 /**
  * Runs configured auto-on-arrival extractors for a batch of just-synced messages. Selects the

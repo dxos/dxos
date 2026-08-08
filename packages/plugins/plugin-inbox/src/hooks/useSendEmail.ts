@@ -17,19 +17,21 @@ import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
 import { meta } from '#meta';
-import { InboxOperation, Mailbox, SystemTags } from '#types';
-
-import { JMAP_MAIL_CONNECTOR_ID } from '../constants';
+import { type InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 /**
  * The send callback for the composer: routes the draft to its mailbox's provider, records the provider
  * message id (the reconcile match key), and flags the draft sent via a tag so it locks read-only
  * reactively. Success/failure of the send itself is surfaced by the invocation's `notify` option (the
  * built-in toast mechanism); post-send bookkeeping failures are logged, not toasted.
+ *
+ * `sendOperations` is resolved by the container (this hook is called from `components/`, which must not
+ * call capability hooks) — one entry per installed mail provider, keyed by its connector id.
  */
 export const useSendEmail = (
   runtime: Capabilities.ProcessManagerRuntime | undefined,
   message: Message.Message,
+  sendOperations: readonly InboxCapabilities.MailSendOperation[] = [],
 ): NonNullable<EditMessageProps['onSend']> => {
   const db = Obj.getDatabase(message);
   const spaceId = db?.spaceId;
@@ -73,6 +75,13 @@ export const useSendEmail = (
           }
           const connection = Ref.make(connectionObj);
           const { connectorId } = connectionObj;
+          // The provider plugin that owns this connector contributes its send operation, so nothing
+          // here names Gmail or JMAP.
+          const sendOperation = sendOperations.find((entry) => entry.connectorId === connectorId);
+          if (!sendOperation) {
+            log.warn('no send operation registered for connector', { connectorId });
+            return undefined;
+          }
           // `spaceId` scopes the spawned send process so its space-affinity credentials service
           // (CredentialsService) materializes.
           const invokeOptions = {
@@ -82,9 +91,7 @@ export const useSendEmail = (
               error: ['send-email-error.title', { ns: meta.profile.key }],
             },
           } satisfies Operation.InvokeOptions;
-          return connectorId === JMAP_MAIL_CONNECTOR_ID
-            ? yield* Operation.invoke(InboxOperation.JmapSend, { message: draft, connection }, invokeOptions)
-            : yield* Operation.invoke(InboxOperation.GmailSend, { message: draft, connection }, invokeOptions);
+          return yield* Operation.invoke(sendOperation.getOperation(), { message: draft, connection }, invokeOptions);
         }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))),
       );
       if (!sent) {
@@ -120,6 +127,6 @@ export const useSendEmail = (
         log.catch(err);
       }
     },
-    [runtime, spaceId, db, mailbox],
+    [runtime, spaceId, db, mailbox, sendOperations],
   );
 };

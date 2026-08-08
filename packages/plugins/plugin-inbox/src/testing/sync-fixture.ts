@@ -18,10 +18,11 @@ import { Connection } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
+import { type RunMailSyncOptions, runMailSync } from '#sync';
+
 import { GMAIL_SOURCE } from '../constants';
 import { googleMailSyncProvider } from '../operations/mail/google/sync/sync-provider';
 import { jmapMailSyncProvider } from '../operations/mail/jmap/sync/sync-provider';
-import { type RunMailSyncOptions, runMailSync } from '../operations/mail/mail-sync';
 import { type GmailDataset, GoogleCredentials, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
 import { Mailbox } from '../types';
 

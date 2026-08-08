@@ -17,6 +17,8 @@ import { Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
+import { createSyncProgressKey } from '#sync';
+
 import { JMAP_MAIL_CONNECTOR_ID, JMAP_MESSAGE_SOURCE } from '../../../../constants';
 import { type JmapDataset, JmapMailApi } from '../../../../services';
 import { generateJmapDataset } from '../../../../testing/jmap-fixtures';
@@ -28,7 +30,6 @@ import {
   seedSenderOrganizations,
 } from '../../../../testing/sync-fixture';
 import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
-import { createSyncProgressKey } from '../../mail-sync';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
 
 /** Reads all synced messages from a seeded mailbox's feed. */

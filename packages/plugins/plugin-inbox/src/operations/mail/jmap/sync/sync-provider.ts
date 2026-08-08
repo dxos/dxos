@@ -17,12 +17,13 @@ import { EmailStage } from '@dxos/pipeline-email';
 import { TagIndex } from '@dxos/schema';
 import { Person } from '@dxos/types';
 
+import { type MailSyncItem, MailSyncProvider, type MailSyncSource } from '#sync';
+
 import { Jmap, JmapMail } from '../../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../../constants';
 import { type JmapApiError, MailSyncError } from '../../../../errors';
 import { JmapMailApi } from '../../../../services';
 import { Mailbox, type SyncStreamConfig, SystemTags } from '../../../../types';
-import { type MailSyncItem, MailSyncProvider, type MailSyncSource } from '../../mail-sync';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateJmapTag } from '../tags';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';

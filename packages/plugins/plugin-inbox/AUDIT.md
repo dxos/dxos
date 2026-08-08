@@ -461,24 +461,34 @@ packages/plugins/plugin-inbox/src/
     calendar/google/             ✂ → plugin-google/src/operations/calendar  (667 LOC)
     contacts/google/             ✂ → plugin-google/src/operations/contacts  (364 LOC)
     index.ts                     ✎ InboxOperationHandlerSet loses its 9 provider entries
-    util.ts                      ✄ parseFromHeader → src/sync/headers.ts (its only consumers are Google mappers)
+    util.ts                      ✂ deleted — parseFromHeader (its only export) → src/sync/headers.ts
     …                            = add-mailbox, analyze/, classify-email, draft-email*, extractor/,
                                    read-email, rename-filter, unsubscribe-sender
   sync/                          ✚ the provider-facing contract, published as ./sync (§8d)
-    index.ts                     ✚ barrel
+    index.ts                     ✚ barrel (+ re-exports MailSyncError from ../errors)
     mail-sync.ts                 ← operations/mail/mail-sync.ts (harness + MailSyncProvider + MailSyncSource)
-    binding.ts                   ← readBindingOptions (+ on-arrival extractor hooks) from util/mailbox-sync.ts
+    binding.ts                   ← readBindingOptions from util/mailbox-sync.ts
     headers.ts                   ← parseFromHeader from operations/util.ts
     policy.ts                    ← MAIL_SYNC_CRON / MAIL_AUTO_SYNC from capabilities/connector.ts
+  util/
+    on-arrival.ts                ← util/mailbox-sync.ts, renamed once readBindingOptions left: the
+                                   on-arrival extractor hooks are all that remained, and they are
+                                   plugin-internal AI wiring that must stay OUT of the ./sync surface
+  capabilities/
+    mail-send.ts                 ✚ contributes both built-in providers' send ops; each entry moves to
+                                   its provider plugin in steps 3-4 (§8e.2)
   types/
     InboxCapabilities.ts         ✎ + MailSendOperation registry (§8e.2)
+    MailSend.ts                  ✚ the shared send contract (Input / Output / SentTag schemas) both
+                                   send ops now declare — lets the capability be typed without a cast
     InboxOperation.ts            = unchanged — every provider op def stays here (§7.1 Option A)
     Mailbox.ts                   = unchanged — still names GMAIL/JMAP connector ids (§7.2, deferred)
     …                            = Calendar, DraftEvent, ExtractedFrom, Settings, SyncOptions,
                                    SyncStreamConfig, SystemTags (canonical, provider-agnostic)
   hooks/
     useSendEmail.ts              ✎ resolve the send op from the capability, drop the JMAP-vs-Gmail ternary (§8e.2)
-    useTags.ts                   ✎ drop `GoogleMail.isSystemLabel` — the last apis import from UI (§8e.3)
+    useTags.ts                   ✎ drop `GoogleMail.isSystemLabel` — the last apis import from UI (§8e.3);
+                                   `useGmailTags` → `useVisibleTags`
   testing/
     gmail-fixtures.ts(+test)     ✂ → plugin-google/src/testing
     jmap-fixtures.ts(+test)      ✂ → plugin-jmap/src/testing
@@ -588,9 +598,13 @@ which is why it becomes `src/sync/` rather than staying under `operations/`.
 - `package.json`: add `"#sync"` to `imports` and `"./sync"` to `exports`, both →
   `src/sync/index.ts` (same shape as the existing `./types` / `./translations` entries).
 - Exports: `runMailSync`, `MailSyncProvider`(+`Service`), `MailSyncSource`,
-  `MailSyncSourceOptions`, `MailSyncStreams`, `MailSyncItem`, `ReconcileItem`,
-  `reconcileToChanges`, `createSyncProgressKey`, `readBindingOptions`, `parseFromHeader`,
-  `MAIL_SYNC_CRON`, `MAIL_AUTO_SYNC`, and `MailSyncError` (re-exported from `errors.ts`).
+  `MailSyncSourceOptions`, `MailSyncStreams`, `MailSyncItem`, `MailSyncPreparation`,
+  `ReconcileItem`, `reconcileToChanges`, `createSyncProgressKey`, `RunMailSyncOptions`,
+  `readBindingOptions`, `parseFromHeader`, `MAIL_SYNC_CRON`, `MAIL_AUTO_SYNC`, and
+  `MailSyncError` (re-exported from `errors.ts`).
+- The on-arrival extractor hooks deliberately stay OUT of this barrel (they live in
+  `util/on-arrival.ts`): they reach `Capability.Service` and `InboxOperation.ExtractMessage`, which no
+  provider needs and which would drag the plugin's AI layer into the provider-facing surface.
 - **Providers must import narrow subpaths, never the root barrel.** `@dxos/plugin-inbox`
   (`.`) transitively reaches React components; `@dxos/plugin-inbox/{types,sync}` do not.
   The CLI already documents exactly this hazard in `packages/devtools/cli/src/util/skills.ts`,
@@ -609,20 +623,34 @@ which is why it becomes `src/sync/` rather than staying under `operations/`.
    (`src/sync/policy.ts`), read by both providers so they can't drift apart.
 2. **Send routing → a capability.** `hooks/useSendEmail.ts` hardcodes
    `connectorId === JMAP_MAIL_CONNECTOR_ID ? JmapSend : GmailSend`. Add
-   `InboxCapabilities.MailSendOperation` (`{ connectorId, operation }`), contributed by each
-   provider's `capabilities/mail-send.ts`, and resolve by the connection's `connectorId`.
-   _Not a hard blocker_ — under §7.1 Option A both op defs and both connector ids stay in
-   plugin-inbox, so the ternary would still compile — but it is the same inversion §3.1 needs
-   later, it is ~20 LOC, and it removes the last place plugin-inbox decides which providers
-   exist.
+   `InboxCapabilities.MailSendOperation`, contributed by each provider's
+   `capabilities/mail-send.ts`, and resolve by the connection's `connectorId`. Two shape constraints
+   found while building it:
+   - The op must be returned from a **closure** (`getOperation: () => …`), not held as a value
+     property — `MailboxAction`'s doc records that an `Operation.Definition` on a capability value
+     makes the capability atom read recurse.
+   - Typing it as `Operation.Definition.Any` would force a cast at the result site
+     (`sent.sentTag.source`), so the send input/output schemas are extracted to `types/MailSend.ts`
+     and both send ops declare them; the capability is typed `Definition<MailSend.Input,
+MailSend.Output>`. A provider that returns the wrong shape now fails to compile.
+   - `useSendEmail` is called from `components/`, which must not call capability hooks, so the list is
+     resolved by the containers (`MessageArticle`, `EditMessageArticle`) and threaded through
+     `ConversationStack`'s context — the same pattern `MailboxAction` already uses.
+     _Not a hard blocker_ — under §7.1 Option A both op defs and both connector ids stay in
+     plugin-inbox, so the ternary would still compile — but it is the same inversion §3.1 needs
+     later, it is ~20 LOC, and it removes the last place plugin-inbox decides which providers
+     exist.
 3. **`useTags` provider-agnostic label filter — a genuine blocker.**
    `hooks/useTags.ts` calls `GoogleMail.isSystemLabel` from `apis/google`; after the move that
-   becomes plugin-inbox → plugin-google, the forbidden direction (§5). Fix: filter on the
-   canonical foreign key instead — a provider system label already maps onto a
-   `SYSTEM_TAG_SOURCE` tag, and a custom Gmail label carries `GMAIL_TAG_SOURCE`, so
-   "hide system tags" is `Obj.getMeta(tag).keys.some(key => key.source === SYSTEM_TAG_SOURCE)`
-   with no provider import. Rename `useGmailTags` → `useVisibleTags` (one other consumer,
-   `InboxStack`).
+   becomes plugin-inbox → plugin-google, the forbidden direction (§5). Removed, and
+   `useGmailTags` → `useVisibleTags` (one other consumer, `InboxStack`).
+
+   **This uncovered a latent bug, deliberately NOT fixed here — see §8i.** The call was already
+   dead: `isSystemLabel` expects a Gmail label id, but both call paths pass an **ECHO tag URI**
+   (`useMessageTags` builds `{ id: uri, … }`; `MailboxArticle`'s atom family does the same), so the
+   predicate was always `false`. Dropping it is exactly behaviour-preserving; making it _work_ is a
+   visible UI change and is filed separately.
+
 4. **Handler-set partition.** `InboxOperationHandlerSet` drops its 9 provider entries;
    `GoogleOperationHandlerSet` / `JmapOperationHandlerSet` take them. **The CLI must merge
    both** — `packages/devtools/cli/src/util/skills.ts` registers `InboxSendSkill` (tools:
@@ -656,11 +684,13 @@ which stay (§7.1 Option A).
 Each step is independently green (`moon run <pkg>:build`, `moon run <pkg>:test`, and
 `moon run plugin-inbox:check-module-structure`).
 
-1. **Prepare in place** — create `src/sync/` + the `./sync` export; move `mail-sync.ts`,
-   `readBindingOptions`, `parseFromHeader`, and the sync policy constants into it; repoint
-   ~10 imports. One package, no new packages, fully reversible.
-2. **Invert the two UI couplings in place** (§8e.2, §8e.3) — still one package, so both are
-   plain refactors with the provider code still local to test against.
+1. ✅ **Prepare in place** — created `src/sync/` + the `#sync` / `./sync` exports; moved
+   `mail-sync.ts`, `readBindingOptions`, `parseFromHeader`, and the sync policy constants into it;
+   repointed 11 imports; deleted the drained `operations/util.ts` and renamed the drained
+   `util/mailbox-sync.ts` → `util/on-arrival.ts`. _(Done.)_
+2. ✅ **Invert the two UI couplings in place** (§8e.2, §8e.3) — `MailSendOperation` capability +
+   `types/MailSend.ts` contract, threaded through the containers; `useTags` de-Googled. Surfaced
+   §8i. _(Done.)_
 3. **Extract `@dxos/plugin-jmap` first** (~2600 LOC, one domain, no OAuth) as the pilot:
    scaffold from `plugin-trello`, move the tree, split `sync-fixture`, repoint composer-app /
    CLI / story call sites. Everything learned here is reused verbatim by step 4.
@@ -676,6 +706,22 @@ Each step is independently green (`moon run <pkg>:build`, `moon run <pkg>:test`,
 JMAP-before-Google is deliberate: it is a third the size, single-domain, and has no OAuth
 helpers, so the packaging problems (headless `moon.yml` guard, `./sync` export shape,
 fixture split, registration sites) get solved on the cheaper package.
+
+### 8i. Found during step 2 — system tags render as chips (needs a product call)
+
+`useVisibleTags` was _intended_ to hide provider system labels (Inbox, Starred, Sent, Important,
+Unread, the CATEGORY_* set) from the message tag row, but the guard has been inert since tags became
+ECHO objects addressed by uri — `GoogleMail.isSystemLabel(<echo uri>)` never matched. So today every
+canonical system tag a message carries renders as a chip alongside its user tags, in both
+`InboxStack` rows and the `ConversationStack` tag row. Nothing else filters them: `MailboxArticle`'s
+`useTags(db)` map and `ConversationStack`'s `useQuery(db, Filter.type(Tag.Tag))` both return the full
+tag set.
+
+Restoring the intent is one line — drop tags carrying a `SystemTags.SYSTEM_TAG_SOURCE` foreign key —
+but it removes chips users currently see, so it is a **product decision, not a refactor**, and is
+kept out of the extraction. Note the intent is also no longer obviously right: sync now maps Gmail
+labels _and_ JMAP roles/keywords onto the same canonical tags, and "Starred" already has a dedicated
+`Row.Star` affordance, so a blanket hide, a per-tag opt-out, or leaving it as-is are all defensible.
 
 ### 8h. Decisions (all resolved 2026-08-08)
 

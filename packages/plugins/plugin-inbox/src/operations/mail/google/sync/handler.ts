@@ -12,9 +12,10 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
+import { runMailSync } from '#sync';
+
 import { GoogleCredentials, GoogleMailApi } from '../../../../services';
 import { InboxOperation } from '../../../../types';
-import { runMailSync } from '../../mail-sync';
 import { googleMailSyncProvider } from './sync-provider';
 
 const handler = InboxOperation.GoogleMailSync.pipe(

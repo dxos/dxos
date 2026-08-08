@@ -17,6 +17,8 @@ import { Obj } from '@dxos/echo';
 import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { MAIL_AUTO_SYNC, MAIL_SYNC_CRON } from '#sync';
+
 import {
   GMAIL_CONNECTOR_ID,
   GOOGLE_CALENDAR_CONNECTOR_ID,
@@ -27,12 +29,6 @@ import {
 } from '../constants';
 import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
 import { jmapCredentialForm } from './jmap-credential-form';
-
-/** How often a mailbox's sync Routine polls for new mail. */
-const MAIL_SYNC_CRON = '*/10 * * * *';
-
-/** Whether a newly bound mailbox syncs itself instead of waiting for the user to ask. */
-const MAIL_AUTO_SYNC = false;
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),

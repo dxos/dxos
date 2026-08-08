@@ -18,6 +18,8 @@ import { Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
+import { createSyncProgressKey } from '#sync';
+
 import { GMAIL_SOURCE } from '../../../../constants';
 import { type GmailDataset, GoogleMailApi } from '../../../../services';
 import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
@@ -29,7 +31,6 @@ import {
   seedSenderOrganizations,
 } from '../../../../testing/sync-fixture';
 import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
-import { createSyncProgressKey } from '../../mail-sync';
 import { GMAIL_TAG_SOURCE } from '../tags';
 import { GMAIL_SYSTEM_TAGS } from './system-tags';
 

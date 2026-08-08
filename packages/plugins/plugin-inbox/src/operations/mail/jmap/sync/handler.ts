@@ -12,9 +12,10 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
+import { runMailSync } from '#sync';
+
 import { JmapCredentials, JmapMailApi } from '../../../../services';
 import { InboxOperation } from '../../../../types';
-import { runMailSync } from '../../mail-sync';
 import { jmapMailSyncProvider } from './sync-provider';
 
 const handler = InboxOperation.JmapSync.pipe(
