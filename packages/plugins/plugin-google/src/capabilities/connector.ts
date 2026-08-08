@@ -13,10 +13,10 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Trigger } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { MAIL_AUTO_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
-import { CalendarSyncOptions, InboxOperation, SyncOptions } from '@dxos/plugin-inbox/types';
+import { Calendar, CalendarSyncOptions, InboxOperation, Mailbox, SyncOptions } from '@dxos/plugin-inbox/types';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -132,6 +132,8 @@ export default Capability.makeModule(
         },
         sync: {
           operation: InboxOperation.GoogleMailSync,
+          // What this connector binds — how `Mailbox` discovers it without naming Gmail.
+          targetTypename: Type.getTypename(Mailbox.Mailbox),
           // Single-target connector: no `getTargets`. The coordinator calls `materializeTarget`
           // (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: InboxOperation.MaterializeGmailTarget,
@@ -158,6 +160,7 @@ export default Capability.makeModule(
         },
         sync: {
           operation: InboxOperation.GoogleCalendarSync,
+          targetTypename: Type.getTypename(Calendar.Calendar),
           getTargets: InboxOperation.GetGoogleCalendars,
           materializeTarget: InboxOperation.MaterializeCalendarTarget,
           optionsSchema: CalendarSyncOptions,
@@ -177,6 +180,8 @@ export default Capability.makeModule(
           ],
         },
         sync: {
+          // Targetless: no `targetTypename`, since synced `Person` objects land directly in the space
+          // rather than under a bound root.
           operation: InboxOperation.GoogleContactsSync,
           getTargets: InboxOperation.GetGoogleContactGroups,
           // Targetless connector: no dedicated local root type, so no `materializeTarget`.

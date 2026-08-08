@@ -30,10 +30,12 @@ details it.
    plugin-inbox. Defer the connector-id inversion (providers import ids from
    plugin-inbox `constants.ts`). See §7 for upstream deps + the three ownership
    decisions this defers.
-5. **Hoist shared sync infra to `@dxos/plugin-connector`** (§3.7):
-   `findBindingForTarget` / `createSyncRoutine` / `syncTarget` from `util/`.
-6. **Invert the connector-id coupling** (§3.1): providers _contribute_ their ids to
-   the schema annotation at registration; `types/Mailbox|Calendar` stop naming them.
+5. ✅ **Hoist shared sync infra to `@dxos/plugin-connector`** (§3.7) — already done before this
+   pass: `findBindingForTarget` / `createSyncRoutine` / `syncTarget` all live in
+   `plugin-connector/src/util/` and are re-exported from its root.
+6. ✅ **Invert the connector-id coupling** (§3.1) — `ConnectorSync` gains `targetTypename`, each
+   provider declares what it binds, and `connectorIdsForTarget` resolves a bindable type's providers
+   from the registry. `types/Mailbox|Calendar` name none, and the duplicated ids are deleted.
 7. **Move Calendar out → `@dxos/plugin-calendar`** (§4a). Repoint `plugin-google`'s
    calendar dep from plugin-inbox to plugin-calendar; update the ~4 `Calendar`
    consumers.
@@ -95,14 +97,22 @@ The hard seams already exist; this is a lift, not a redesign.
 
 ## 3. Coupling that resists a split (the seams to cut)
 
-1. **`constants.ts` is a cross-domain hub.** Connector ids
-   (`GMAIL_CONNECTOR_ID`, `JMAP_MAIL_CONNECTOR_ID`, `GOOGLE_CALENDAR_CONNECTOR_ID`,
-   `GOOGLE_CONTACTS_CONNECTOR_ID`) are imported by `types/Mailbox.ts` and
-   `types/Calendar.ts` (via `ConnectorAuthAnnotation`). So the **domain schema
-   currently names its providers** — the schema→provider direction is backwards
-   for a clean split. Needs the connector-id list to be contributed to the schema
-   annotation at plugin-registration time, or the annotation to accept ids
-   resolved from a registry, so `Mailbox` need not import Gmail/JMAP ids.
+1. ✅ **`constants.ts` is a cross-domain hub — RESOLVED.** Connector ids were imported by
+   `types/Mailbox.ts` and `types/Calendar.ts` via `ConnectorAuthAnnotation`, so the domain schema
+   named its providers. Now inverted, reusing a pattern `plugin-studio` and `plugin-blogger` already
+   used: `ConnectorAuthAnnotation.connectorIds` accepts a **resolver**, not just a literal array.
+   `ConnectorSync` gained `targetTypename`; each provider declares the local type it binds; and
+   `connectorIdsForTarget` (in `plugin-connector`) resolves a type's providers from the `Connector`
+   registry. Both annotations now read
+   `ConnectorAuthAnnotation.set({ connectorIds: connectorIdsForTarget, bindTarget: true })`, and the
+   three duplicated ids are gone from plugin-inbox. Registering a provider is now the _only_ step —
+   no edit to the type it binds, and a third-party provider can bind `Mailbox` without plugin-inbox
+   knowing it exists.
+
+   `GOOGLE_INTEGRATION_SOURCE` still remains, read by `types/DraftEvent.ts` to distinguish a local
+   draft event from a synced one. It is a foreign-key source, not a connector id, so it has no
+   registry to resolve through — a separate (smaller) inversion if it is ever worth doing.
+
 2. **`react-surface.tsx` mixes all domains** in one capability module — mailbox,
    message, calendar, event, subscriptions, contact/org "related" surfaces.
    Splits cleanly by surface id, but it's one file today.

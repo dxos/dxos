@@ -8,6 +8,7 @@ export { ConnectionTestError } from './errors';
 export * from './meta';
 export * from './types';
 export {
+  connectorIdsForTarget,
   createSyncRoutine,
   ensureSyncTrigger,
   findBindingForTarget,
