@@ -209,10 +209,19 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
       undeclared-output check missed and `completeJob` rejected every real payload. - Test-side: `FetchHttpClient.Fetch` caches `globalThis.fetch` for the life of the process
       (new `TestHelpers.withStubbedFetch`); v4 does not memoize a layer across `Effect.provide`
       calls (`Layer.build` + provide the context instead).
-- [ ] **Close out the storybook/browser tail** — browser and workerd suites pass; the browser CLI
+- [ ] **Two `plugin-review` storybook scenarios** — `Scenario Bold Wrap` and `Scenario Table Suggest`
+      render zero `.cm-suggest-insert` overlay widgets in the browser tier. Ruled out: the diff logic
+      (the same scenario definitions pass headless, 60/60), the migrated `viewAspect` codec (probed
+      directly — round-trips), and the `doc-handle-proxy` change-event gate (removed, rebuilt, same
+      failure). This branch's diff to `plugin-review`/`ui-editor`/`versioning` is mechanical renames.
+      Not A/B-able locally: branch switching is off-limits and the sandbox runs a symlinked Chromium
+      revision, so browser-tier timing differs from CI.
+- [x] **Close out the storybook/browser tail** — browser and workerd suites pass; the browser CLI
       host (`react-ui-terminal`, `plugin-devtools/CliPanel`) landed from main after the branch cut
       and needed porting off `@effect/cli`/`@effect/platform`. Form validation now runs against the
-      schema's TYPE side (callers hold decoded values).
+      schema's TYPE side (callers hold decoded values). `AgentDelegationStrategy` was declared a
+      singleton while its only consumer reads it with `getAll` — two legitimate providers collided
+      once the scheduler fixes let both activate; it is a registry capability now.
 
 - [ ] **Tier 1 — mechanical rewrites** (~2–3 wks): module paths, API renames, the 433 atom files.
 - [ ] **Tier 2 — services and runtime** (~3–6 wks): `Context.Tag` → `ServiceMap.Service` (126 class
