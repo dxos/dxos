@@ -21,10 +21,10 @@ export type InitializeIdentityOptions = {
   /** Profile display name for the generated identity, so stories show a real name (not a raw DID). */
   displayName?: string;
   /**
-   * Also create the hidden settings space, matching the shape the app gives a profile on first run.
+   * Create the settings space first and designate the content space, as the app does on first run.
    * Opt in only when the subject under test reads app configuration or resolves the *designated*
-   * default space, because the settings space sorts ahead of the content space in `client.spaces` —
-   * so `useSpaces()[0]` stops being the seeded space — and costs another create + readiness wait.
+   * default space: doing it the app's way puts the settings space ahead of the content space in
+   * `client.spaces`, so `useSpaces()[0]` is no longer the space the story seeded.
    */
   settingsSpace?: boolean;
 };
@@ -51,9 +51,9 @@ export const initializeIdentity = (
       return { identity, ...spaces };
     }
 
-    // Untagged on purpose: the legacy default-space tag marks a profile as predating the settings
-    // space, which makes plugin-space run the settings-space migration on `SpacesReady` and rebuild
-    // the pair this branch exists to avoid.
+    // Created before anything else so it is `client.spaces[0]`: plugin-space still adds a settings
+    // space of its own on `SpacesReady`, and a story's `useSpaces()[0]` is only the seeded space
+    // while that one lands second.
     const defaultSpace = yield* Effect.promise(() => client.spaces.create());
     yield* Effect.promise(() => defaultSpace.waitUntilReady());
 
