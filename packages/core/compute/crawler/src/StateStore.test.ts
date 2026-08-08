@@ -104,25 +104,28 @@ describe('StateStore', () => {
   it.effect(
     'sql state survives a fresh layer over the same database',
     Effect.fnUntraced(function* () {
-      // Two StateStore layers over ONE client layer: the second sees the first's writes. v4
-      // memoizes layers automatically across `Effect.provide` calls within a run, so passing the
-      // same layer value twice is what shares it -- `Layer.memoize` is gone.
-      const memoized = SqlTransaction.layer.pipe(
+      // Two StateStore layers over ONE client: the second must see the first's writes. Each
+      // `Effect.provide` builds with its own memo map, so passing the same layer value twice would
+      // open two `:memory:` databases -- build the client once and provide the resulting context
+      // (`Layer.memoize` is gone in v4).
+      const client = SqlTransaction.layer.pipe(
         Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
       );
       yield* Effect.scoped(
         Effect.gen(function* () {
+          const shared = yield* Layer.build(client);
+
           yield* Effect.gen(function* () {
             const store = yield* StateStore;
             yield* store.pushTargets([target('chan-1')]);
             yield* store.setCursor('chan-1', '42');
-          }).pipe(Effect.provide(StateStore.layerSql.pipe(Layer.provide(memoized))));
+          }).pipe(Effect.provide(StateStore.layerSql), Effect.provide(shared));
 
           yield* Effect.gen(function* () {
             const store = yield* StateStore;
             const [entry] = yield* store.listTargets();
             expect(entry.cursor).toBe('42');
-          }).pipe(Effect.provide(StateStore.layerSql.pipe(Layer.provide(memoized))));
+          }).pipe(Effect.provide(StateStore.layerSql), Effect.provide(shared));
         }),
       );
     }),

@@ -4,6 +4,7 @@
 
 import { type Heads } from '@automerge/automerge';
 import * as EffectContext from 'effect/Context';
+import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
@@ -299,6 +300,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+
+    // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
+    // that recurses through the whole entity graph and throws on the first strict-mode function it
+    // reaches. Identity is the only sensible equality here, and it is what `Atom.family(db)` wants.
+    Equal.byReferenceUnsafe(this);
   }
 
   [inspect.custom]() {

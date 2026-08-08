@@ -385,7 +385,7 @@ describe('GoogleMail.Message schema', () => {
       },
     };
     const decoded = Schema.decodeUnknownResult(GoogleMail.Message)(raw);
-    expect(decoded._tag).toBe('Right');
+    expect(decoded._tag).toBe('Success');
     expect(decoded._tag === 'Success' && decoded.success.labelIds).toBeUndefined();
   });
 });

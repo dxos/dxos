@@ -79,8 +79,17 @@ export const JSONSchemaAnnotationId = 'toJsonSchema';
  * Annotating a node that carries checks attaches to the last check rather than the node, and the
  * resolver reads back only that check, so every read must go through here or annotations on
  * refined types silently vanish.
+ *
+ * The node's own annotations are layered underneath for the mirror-image case — annotated first,
+ * `Schema.check`ed after — which `SchemaAST.resolve` drops entirely.
  */
-export const resolveAnnotations = (ast: SchemaAST.AST): Annotations | undefined => SchemaAST.resolve(ast);
+export const resolveAnnotations = (ast: SchemaAST.AST): Annotations | undefined => {
+  const resolved = SchemaAST.resolve(ast);
+  if (resolved === undefined || resolved === ast.annotations || ast.annotations === undefined) {
+    return resolved ?? ast.annotations;
+  }
+  return { ...ast.annotations, ...resolved };
+};
 
 /** `SchemaAST.annotate(ast, ...)` is internal in v4; the `Schema` wrapper is public. */
 export const annotate = (ast: SchemaAST.AST, annotations: Annotations): SchemaAST.AST =>
