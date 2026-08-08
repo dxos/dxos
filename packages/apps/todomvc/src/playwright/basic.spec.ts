@@ -28,7 +28,10 @@ test.describe('Basic test', () => {
     // no-ops — green results that proved nothing about two-peer replication. Playwright has since
     // shipped WebRTC support in its webkit build, so the genuine invitation runs everywhere and CI
     // measures it; if a browser's transport still cannot connect, that failure is the finding and
-    // should be recorded here rather than re-aliased away.
+    // should be recorded here rather than re-aliased away. Measured (CI run 31263921597,
+    // 2026-08-08): chromium 8/8, firefox 8/8, webkit 7/8 — every invitation connected on all three
+    // browsers; webkit's one failure was the guest's app boot stalling before the shell, not
+    // transport.
     guest = new AppManager(browser);
     await guest.init();
     await host.openShareSpace();
