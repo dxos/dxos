@@ -44,15 +44,24 @@ const findWorkspaceRoot = (startDir: string): string => {
  * local proxy that resets Chromium's TLS 1.3 ClientHello.
  */
 const sandboxUse = (): PlaywrightTestConfig['use'] => {
-  if (!process.env.CLAUDE_CODE_REMOTE) {
+  const proxyServer = process.env.HTTPS_PROXY;
+  if (!process.env.CLAUDE_CODE_REMOTE || !proxyServer) {
     return {};
   }
 
   return {
     launchOptions: {
       executablePath: '/opt/pw-browsers/chromium',
-      args: ['--no-sandbox', '--ssl-version-max=tls1.2', '--proxy-bypass-list=127.0.0.1;localhost'],
-      proxy: { server: 'http://127.0.0.1:34301', bypass: '127.0.0.1,localhost' },
+      args: [
+        '--no-sandbox',
+        // Playwright's `proxy` launch option drops its `bypass` list for pages opened in a
+        // non-default context, which sends the app's own localhost URL through the proxy and
+        // yields a 405 — passing the switches directly keeps the bypass in effect everywhere.
+        `--proxy-server=${proxyServer}`,
+        '--proxy-bypass-list=127.0.0.1;localhost',
+        // The proxy resets Chromium's TLS 1.3 ClientHello; curl negotiates 1.3 through it fine.
+        '--ssl-version-max=tls1.2',
+      ],
     },
   };
 };
