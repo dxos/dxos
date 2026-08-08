@@ -16,6 +16,12 @@ export default defineConfig({
   // `init()` is shared by all six. The suite costs 37-42s serialized and lands on the lightest cell,
   // well under the ~230s critical path, so the concurrency was buying nothing here.
   workers: 1,
+  // The preset's 60s budget assumes one app boot per test; every test here pays two (host + guest)
+  // plus a live invitation before its body starts. In run 31263921597 a webkit guest boot under CI
+  // load ate the budget mid-`waitFor` ("Target page ... closed" in `init`), failing `delete a task`
+  // in `beforeEach` — the same class the workers comment below describes, bounded by test timeout
+  // rather than the action bound.
+  timeout: 90_000,
   // Almost every assertion here waits on a change replicating from the host peer to the guest over
   // WebRTC, and Playwright's default `expect` timeout is 5s — which is what "eggnog never appeared
   // within 5s" was in run 31058008287. The two tests that failed are the two carrying the most state
