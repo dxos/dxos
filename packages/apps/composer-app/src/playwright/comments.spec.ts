@@ -104,7 +104,10 @@ test.describe('Comments tests', () => {
   //   Relation.getSource throws mid-mutation — sometimes unmounting the whole thread while the
   //   delete button is mid-click. DeleteMessage itself was instrumented and is correct. The fix
   //   belongs in the operations/query layer (late invocation completion + query re-fire), not in
-  //   any component.
+  //   any component. A consumer-side anchor-resolution cache (fall back to the last resolved
+  //   thread when getSource throws) was implemented and measured 2/5 — the detach loop persists
+  //   even when anchors cannot drop, and one run saw the message list resolve to 0 elements — so
+  //   the component-level avenue is exhausted; do not retry it.
   test.fixme('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
