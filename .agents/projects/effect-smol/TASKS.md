@@ -1,6 +1,6 @@
 # effect-smol — Tasks
 
-_Resume: Stage 2b — the build is at **263/324 tasks passing** (51 skipped behind the frontier). The frontier is now wide and shallow: 49 errors across 10 packages, led by `assistant-toolkit` (18) and `plugin-transcription` (8). Uncommitted: none._
+_Resume: Phase 3 — **edge's build is green (83/83 moon tasks)** against a locally linked dxos. dxos itself is green on build, node `:test` (233 projects), browser (153 tests) and workerd; two `plugin-review` storybook scenarios remain. Next: edge's test suites. Uncommitted: none._
 
 Migrate `dxos/dxos` from Effect 3 to Effect 4, then `dxos/edge`. The _why_, the decisions
 (D1–D7) and the findings (F1–F4) live in [DESIGN.md](./DESIGN.md) — this file is the ledger.
@@ -242,11 +242,39 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
 
 ## Phase 3: Migrate dxos/edge
 
+Branch `claude/effect-4-migration-audit-pq2m8z` in `dxos/edge` (no PR — user asked for none).
+
 ### Tasks
 
-- [ ] **Repoint `catalog:dxos` at the dxos branch SHA** (`edge:pnpm-workspace.yaml:104`).
-- [ ] **Migrate EDGE to v4** — no compat decoder needed (D6).
+- [x] **Link edge against the local dxos build** — `node ./scripts/link-packages.mjs <DXOS> --all
+    --install` writes 315 `file:.local-pack/*.tgz` overrides into the root `package.json`. This is
+      the stand-in for D7 below, not a replacement for it.
+- [x] **Fix moon execution under `/workspace`** — moon's WASM toolchain maps virtual `/workspace`
+      to the real workspace root, so a checkout whose own path starts with `/workspace` doubles the
+      prefix (WASI errno 44). Moved to `/home/user/edge`; documented in edge's `TROUBLESHOOTING.md`.
+- [x] **Migrate EDGE to v4** — no compat decoder needed (D6). `moon exec :build` is green at 83/83.
+      Cleared, in frontier order: `edge-protocol`, `edge-platform`, `edge-trace`,
+      `mcp-space-service`, `mcp-introspect-service`, `crawler-service`, `discord-service`,
+      `operation-service`, `transcription-service`, `hub-protocol`, `ai-service`,
+      `registry-service`, `db-service`, `functions-service`, `kms-service`, `agents`,
+      `hub-service`, `edge`.
+- [x] **Scope the `effect` override away from v3-only dependents** — a blanket `effect: 'catalog:'`
+      drags `@prisma/config` onto v4, where its variadic `Schema.Union(a, b)` throws at load and
+      every `:prisma` task dies. Pinned back with `'@prisma/config>effect': 3.21.4`, which must
+      live in the root `package.json` as well: pnpm ignores `pnpm-workspace.yaml`'s `overrides`
+      whenever the root manifest declares its own.
+- [x] **Bump `dfx` to 1.0.15** — 0.113 peer-depends on `effect ^3.13` and cannot type-check against
+      v4 at all. The REST surface changed with the major:
+      `getChannelMessages(...).pipe((x) => x.json)` is now `listMessages(...)`.
+- [ ] **Run the edge test suites** (`:test`, workerd, e2e) and fix what the migration broke.
+- [ ] **Repoint `catalog:dxos` at the dxos branch SHA** (`edge:pnpm-workspace.yaml:104`) — blocked
+      on D7, and the reason the tarball overrides above are a WIP shim rather than the answer.
 - [ ] **Verify the ai-service tool-schema path** still passes its description check (F4).
+
+### dxos-side changes this phase required
+
+- `plugin-space` now re-exports `SpaceOperationHandlerSet` from `./plugin`, matching
+  `plugin-projects` and `plugin-tasks` (commit `b60667a6`).
 
 ## Phase 4: Ship
 
