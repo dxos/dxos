@@ -374,20 +374,22 @@ While secrets ride in space documents (§1.4 — all non-Google providers), regi
 into a shared or sharable space _is_ disclosure, so gating on membership policy is the
 correct interim control. But it has two holes:
 
-1. **`LOCKED` is a proxy, not the predicate.** The real predicate is "membership is and
-   will remain {owner}". A locked space that already has two members still shares the
-   token; post-#12503 the Private-at-genesis toggle makes LOCKED ≈ solo for _new_ spaces,
-   but not in general.
-2. **The registration moment is the wrong (or at least not the only) moment.** The common
-   leak path is temporal: register a token in a private space, months later invite
-   someone. Every object in the space — including tokens — goes with the invitation, and
-   no warning exists on that path. This is the CFOS "observer" insight: _sharing the
-   container reveals everything it ever contained_. Any interim control therefore needs
-   two hooks:
-   - **register-time**: creating a user-identity connection in a space that is shared or
-     sharable (policy ≠ LOCKED, or member count > 1) → warn/confirm;
-   - **invite-time**: `Space.share` / policy change on a space containing in-band
-     personal credentials → interstitial listing them, with "move / convert to managed /
+1. **`LOCKED` is genesis-only and immutable — which makes it a strong predicate.**
+   Membership policy is set at space creation and can never change, so a LOCKED space's
+   membership is frozen at {creator}: it can never be shared later, and a token stored
+   there is safe for the space's lifetime. The flip side: privacy is an irreversible
+   creation-time choice, so a user who wants to later share a space must have chosen
+   INVITE at genesis — and every INVITE space is _permanently_ sharable.
+2. **For INVITE spaces, registration is the wrong (or at least not the only) moment.**
+   The common leak path is temporal: register a token in a not-yet-shared INVITE space,
+   months later invite someone. Every object in the space — including tokens — goes with
+   the invitation, and no warning exists on that path. This is the CFOS "observer"
+   insight: _sharing the container reveals everything it ever contained_. Any interim
+   control therefore needs two hooks:
+   - **register-time**: creating a user-identity connection in any INVITE space →
+     warn/confirm (it is sharable forever, regardless of current membership);
+   - **invite-time**: `Space.share` on an INVITE space containing in-band personal
+     credentials → interstitial listing them, with "move / convert to managed /
      proceed anyway".
 
    The connector taxonomy (§5.4) earns its keep here immediately: the warning should key
@@ -427,7 +429,86 @@ settings space is the natural client-side vault for interim in-band storage — 
 genesis, never sharable, EDGE-replicated — but edge functions in space X cannot reach a
 token custodied under space Y's DO, so the identity-keyed KMS is the real fix.)
 
-### 6.5 Interim recommendations
+### 6.5 Custody follows the identity the credential extends
+
+The current ontology has exactly two custody/storage roots — a **space** and an
+**identity** (HALO space) — and both map to Keyhive groups: an identity is a group of
+devices representing a person; a space is a group of people. That yields a clean
+placement principle:
+
+> A third-party credential represents some internal principal _in an external system_.
+> It should be custodied by the group whose identity it extends.
+
+- A personal OAuth token is _your_ identity in Gmail/GitHub → custodied under the
+  **identity group** (its Keyhive form: a vault Document owned by the identity group,
+  readable by your devices).
+- An installation connection (§5.4) is _the space's_ identity in the external service —
+  a space is also a group identity, and that is exactly the case where group-owned
+  custody makes sense → custodied under the **space group**.
+- Storing a personal token in a space is a category error the current model forces on us
+  because the space is the only custody root that EDGE execution can reach.
+
+### 6.6 Operations need an (optional) actor context beyond the space
+
+The blocker for identity-level custody is that EDGE operations always execute in the
+context of a space (space-bound bindings, space-scoped kms DO). Locally the identity
+context exists implicitly — the device runs as you, keys at hand. Remotely
+(trigger/cron-invoked) there is no personal principal at all; the invocation effectively
+runs "as the space".
+
+The evolution is to make the actor explicit: an operation invocation carries **(space
+context, actor principal, presented grants)**, where the actor defaults to the space's
+own (group) identity — able to use space-custodied credentials — and personal-credential
+access requires an _actor delegated by the person_, never ambient inheritance:
+
+- **Near-term shape**: identity-keyed KMS store (§6.4) + standing grants. The owner
+  issues a durable, scoped grant ("the email-sync function in space X may `use` my Gmail
+  credential for read+send"). The trigger fires in space X; kms checks the grant against
+  (owner identity → subject function/space) before releasing (C1) or exercising (C2) the
+  token. The operation never "has" the identity — it has a narrow delegation from it.
+- **Keyhive-era shape**: the actor is an `agent-managed` device — a real principal
+  (Individual key, EDGE-custodied per MIGRATION.md §5.1) delegated into exactly the
+  vault documents it needs. A trigger configured to use personal credentials runs under
+  a personal agent principal; one that doesn't runs under the space's agent. Every
+  invocation is attributable to that principal.
+
+### 6.7 Worked example: executive, assistant, email sync
+
+Space S is shared by an executive and their assistant. The assistant should see synced
+email in S and may send mail _on the executive's behalf_, but must never hold the
+executive's Gmail OAuth token.
+
+- **Today**: not expressible. If email-sync runs in S, the token must be reachable from
+  S's context — in-band or via S's kms DO — and the assistant, as a member, passes the
+  only check that exists (`isSpaceMember`) and can fetch it. The only safe configuration
+  is sync running in a LOCKED private space holding the token — which means the synced
+  mail lands there too, and the assistant sees nothing. Privacy and collaboration are
+  mutually exclusive because custody, execution context, and audience are all the same
+  thing: the space.
+- **Interim (identity-keyed KMS + grants + C2)**: token lives in the executive's
+  identity-keyed kms store. Executive issues two grants: (1) sync function in S may
+  `use` the credential for fetch — kms proxies the Gmail API calls
+  (`makeAuthorizedCall`, today an unimplemented stub, is precisely this hole), writing
+  results into S; (2) the assistant's identity may `use` it for `gmail.send` only — the
+  send Operation's handler routes through kms mediation, so the assistant triggers sends
+  without ever seeing token bytes. `read` (obtain bytes) is granted to no one but the
+  owner. The assistant's sends are attributable: their principal presented the grant.
+- **Keyhive-era**: the token sits in a vault Document owned by the executive's identity
+  group; `read` membership = {executive's devices, the EDGE sync agent — an
+  `agent-managed` Individual the executive delegated}. The assistant is a member of S's
+  Document group (sees the synced mail) but not of the vault — _cryptographically_
+  cannot read the token, not policy-cannot. "Send on my behalf" remains an invocation
+  credential (HALO/UCAN-style, per §3.2: Keyhive gates data, credentials gate
+  invocation) issued by the executive to the assistant, exercised through the mediation
+  operation. Revoking the assistant's send right or the sync agent is an ordinary
+  revocation; rotating the upstream token after revocation gives PCS for the secret.
+
+The example shows the invariant crisply: the _data plane_ (synced mail) is shared at the
+space; the _credential plane_ (token) is scoped to the identity; the _invocation plane_
+(send-on-behalf) is a per-principal, attenuated, revocable grant. Today all three planes
+are collapsed into space membership.
+
+### 6.8 Interim recommendations
 
 1. Now: register-time warning for user-identity connections in sharable spaces +
    invite-time interstitial when a space contains in-band credentials (both keyed on the
