@@ -43,7 +43,7 @@ export type BaseHttpClientOptions = {
    */
   clientTag?: string;
   /**
-   * Admin API key, sent as `X-Admin-Key` on every request in place of the identity
+   * Admin API key, sent as `Authorization: Bearer` on every request in place of the identity
    * verifiable-presentation flow — for headless callers (CI) that hold no HALO identity.
    */
   apiKey?: string;
@@ -274,11 +274,10 @@ const createRequest = (
 
   if (authHeader) {
     headers['Authorization'] = authHeader;
-  }
-
-  // Same header the Edge Admin API authenticates with (see the CLI's adminRequest).
-  if (apiKey) {
-    headers['X-Admin-Key'] = apiKey;
+  } else if (apiKey) {
+    // Canonical edgeAuth admin-key form; never collides with the VP header, since the
+    // api-key path skips the auth flow that would populate it.
+    headers['Authorization'] = `Bearer ${apiKey}`;
   }
 
   if (traceHeaders) {
