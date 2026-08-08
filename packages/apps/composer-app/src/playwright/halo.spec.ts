@@ -33,21 +33,15 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Deferred on a ROOT-CAUSED client defect, not a test problem. Instrumented
-  //   `ResetDialog.handleReset` around `client.reset()` (sessionStorage recorder, so it survives the
-  //   navigation) and captured the failing run directly: `client.reset()` REJECTS with
-  //   `Error: Service handler not available: FeedService.getSyncState` — an in-flight sync-status
-  //   RPC outliving the services it depends on during teardown. The rejection propagates out of
-  //   `handleReset`, so `onReset` (localStorage.clear() + the reload) never runs, the guest stays on
-  //   the account/devices plank, and `halo-invitation-input` never appears. Passing runs show a clean
-  //   `reset:before` -> `reset:after` pair. Rate ~12% bare, ~40% with instrumentation (timing-
-  //   sensitive, as a teardown race should be). Fix belongs in the client reset path: stop the
-  //   sync-status poll (`useFeedSyncState`, 5s interval) before services tear down, or have
-  //   `reset()` treat handler-unavailable rejections from in-flight calls as expected during
-  //   shutdown. RULED OUT along the way, all with measurements: the `OnboardingManager` welcome/join
-  //   dialog race, `JoinPanel`'s exit-less `resettingIdentity` state, the confirm-button
-  //   click-dispatch window, and a detached-node click.
-  test.fixme('join new identity', async () => {
+  // Re-enabled with the transport defect fixed. `client.reset()` was rejecting with
+  // `Service handler not available: FeedService.getSyncState`: a background sync-status poll
+  // hitting torn-down services threw a DEFECT in the rpc dispatch, and the worker-pool client
+  // treats a defect as a crashed connection — failing every in-flight call with it, including the
+  // unrelated reset (so `onReset` never reloaded into the join dialog). Missing-handler dispatch
+  // is now a typed per-request failure (`service-rpc.ts` makeClientServicesHandlers; regression
+  // test in client-services effect-rpc.test.ts). Measured 20/20 across both device-join tests
+  // after the fix, against 4-in-10 failures before it.
+  test('join new identity', async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
@@ -80,13 +74,10 @@ test.describe('HALO tests', () => {
     // });
   });
 
-  // TODO(wittjosiah): Deferred on TWO measured modes, both distinct from the join-mount stall the
-  //   test above tracks: (1) the invitation code submits but `halo-auth-code-input` stays disabled,
-  //   so the handshake never reaches the auth stage; (2) the join completes but the host's space
-  //   never replicates to the guest — `spacePlugin.space` stays at 1 of 2 for 60s (measured
-  //   2026-08-08, 1 of 4 serialized runs). Mode 2 is a replication-timing question for HALO, not a
-  //   UI race, and needs its own investigation.
-  test.fixme('deleting a space replicates across devices', async () => {
+  // Re-enabled together with the test above (same transport defect; see its note). Historical
+  // watch item if this flakes again: one pre-fix run saw the join complete but the host's space
+  // never replicate to the guest within 60s — not reproduced in 10/10 post-fix runs.
+  test('deleting a space replicates across devices', async () => {
     test.setTimeout(120_000);
 
     // Host creates a space; guest joins the host's identity and inherits it.
