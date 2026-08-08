@@ -118,7 +118,8 @@ export const getDefaultSpace = (client: SpaceResolver): Space | undefined => {
  * and the first space is private until the user decides otherwise. Both replicate through EDGE so
  * they follow the identity across devices.
  *
- * The content space is created first so it, not the internal settings space, is `client.spaces[0]`.
+ * The content space is created first so it, not the internal settings space, is the first entry
+ * returned by `client.spaces.get()`.
  */
 export const setupIdentitySpaces = Effect.fnUntraced(function* (client: Client) {
   const defaultSpace = yield* Effect.promise(() =>

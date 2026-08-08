@@ -11,7 +11,7 @@ import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 
 export type InitializeIdentityResult = {
   identity: Identity;
-  /** The space designated as the default target for unscoped content, and `client.spaces[0]`. */
+  /** The space designated as the default target for unscoped content, and first in `client.spaces.get()`. */
   defaultSpace: Space;
   settingsSpace: Space;
 };
