@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
+import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -22,10 +23,22 @@ export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) 
     return existing;
   }
 
-  const space = yield* Effect.promise(() =>
+  const created = yield* Effect.promise(() =>
     client.spaces.create({}, { tags: [AppSpace.SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
   );
-  yield* Effect.promise(() => space.waitUntilReady());
-  yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-  return space;
+  yield* Effect.promise(() => created.waitUntilReady());
+
+  // Two clients — a second tab, a reload racing the first — can both observe no settings space and
+  // both create one. `getSettingsSpace` picks the same winner everywhere, so whoever lost discards
+  // the space it just created, which is still empty. Each client only ever deletes its own.
+  const canonical = AppSpace.getSettingsSpace(client) ?? created;
+  if (canonical.id !== created.id) {
+    log.warn('discarding duplicate settings space', { created: created.id, canonical: canonical.id });
+    yield* Effect.promise(() => created.delete());
+    yield* Effect.promise(() => canonical.waitUntilReady());
+    return canonical;
+  }
+
+  yield* Effect.promise(() => created.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+  return created;
 });

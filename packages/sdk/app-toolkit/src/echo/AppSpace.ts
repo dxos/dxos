@@ -47,9 +47,24 @@ export const isExemplarSpace = (space: Space): boolean => hasTag(space, EXEMPLAR
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
 
-/** Find the settings space. */
-export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined =>
-  client.spaces.get().find((space) => isSettingsSpace(space));
+/**
+ * Find the settings space.
+ *
+ * A profile is only ever meant to have one, but two clients that both observe none can both create
+ * one, so the choice has to be deterministic — every device and every boot must agree, or app
+ * configuration would appear to change on its own. The space carrying the default-space
+ * designation is the one that has been used; failing that, ids sort stably.
+ */
+export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
+  const settingsSpaces = client.spaces
+    .get()
+    .filter((space) => isSettingsSpace(space))
+    .sort((left, right) => (left.id < right.id ? -1 : 1));
+  const designated = settingsSpaces.find(
+    (space) => space.state.get() === SpaceState.SPACE_READY && getDefaultSpaceId(space),
+  );
+  return designated ?? settingsSpaces[0];
+};
 
 /**
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
