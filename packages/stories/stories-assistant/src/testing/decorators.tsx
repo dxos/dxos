@@ -9,6 +9,7 @@ import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import { CapabilityManager } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -465,6 +466,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
   })),
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
+    // Startup, not the implicit Idle: `AgentServiceSpec` reads `AgentDelegationStrategy` through
+    // `Capability.getAll` once, when its layer materializes, so the contribution has to be in place
+    // before anything can build that layer rather than merely before the story asserts.
+    activatesOn: ActivationEvents.Startup,
     provides: [
       AppCapabilities.SkillDefinition,
       Capabilities.OperationHandler,
