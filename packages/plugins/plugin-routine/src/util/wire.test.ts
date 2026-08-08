@@ -72,8 +72,8 @@ describe('wire', () => {
   });
 
   test('wireTriggers leaves an actionless routine alone rather than stranding its triggers', ({ expect }) => {
-    // Nulling `runnable` here leaves an enabled trigger dispatching nothing, which the runtime treats as a
-    // defect on every firing — a timer trigger then fails for its whole schedule.
+    // Clearing this binding would leave an enabled trigger dispatching nothing, which the runtime treats as
+    // a defect on every firing — a timer trigger then fails for its whole schedule.
     const trigger = Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *') });
     const preset = runInstructionsRef();
     Obj.update(trigger, (trigger) => {

@@ -26,13 +26,22 @@ describe('SpaceProxy properties', () => {
 
     const space = await asyncTimeout(
       new Promise<Space>((resolve) => {
-        const subscription = client.spaces.subscribe((spaces) => {
+        // The space list replays on subscribe, so the callback can run before `subscribe` returns;
+        // unsubscribing through the handle it returns would read it in its TDZ.
+        let subscription: { unsubscribe: () => void } | undefined;
+        let resolved = false;
+        const onSpaces = (spaces: Space[]) => {
           const match = spaces.find(({ key }) => key.equals(spaceKey));
           if (match) {
-            subscription.unsubscribe();
+            resolved = true;
+            subscription?.unsubscribe();
             resolve(match);
           }
-        });
+        };
+        subscription = client.spaces.subscribe(onSpaces);
+        if (resolved) {
+          subscription.unsubscribe();
+        }
       }),
       5_000,
       'space proxy published',
