@@ -216,6 +216,124 @@ export const NestedScrollAreas = {
   },
 };
 
+export const Overlay = {
+  render: () => (
+    <Container classNames='h-72 w-48'>
+      <ScrollArea.Root orientation='vertical' overlay>
+        <ScrollArea.Viewport>
+          <List />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Container>
+  ),
+};
+
+export const OverlayVisible = {
+  render: () => (
+    <Container classNames='h-72 w-48'>
+      <ScrollArea.Root orientation='vertical' overlay autoHide={false}>
+        <ScrollArea.Viewport>
+          <List />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Container>
+  ),
+};
+
+export const OverlayPadded = {
+  render: () => (
+    <Container classNames='h-72 w-48'>
+      <ScrollArea.Root orientation='vertical' overlay centered padding thin>
+        <ScrollArea.Viewport>
+          <List />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Container>
+  ),
+};
+
+export const OverlayColumn = {
+  render: () => (
+    <Container classNames='h-72 w-48'>
+      <Column.Root gutter='sm' classNames='h-full overflow-hidden'>
+        <ScrollArea.Root orientation='vertical' overlay padding thin>
+          <ScrollArea.Viewport classNames='py-2'>
+            <Input.Root>
+              <Input.TextInput classNames='p-1' />
+            </Input.Root>
+            <List />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Column.Root>
+    </Container>
+  ),
+};
+
+export const OverlayBoth = {
+  render: () => (
+    <Container classNames='w-96 h-96'>
+      <ScrollArea.Root orientation='all' overlay>
+        <ScrollArea.Viewport>
+          <div className='flex flex-col gap-2'>
+            {Array.from({ length: 50 }).map((_, rowIndex) => (
+              <div key={rowIndex} className='flex gap-2'>
+                {Array.from({ length: 50 }).map((_, colIndex) => (
+                  <div
+                    key={colIndex}
+                    className='shrink-0 h-20 w-20 flex items-center justify-center text-sm border border-separator font-mono'
+                  >
+                    [{colIndex}:{rowIndex}]
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Container>
+  ),
+};
+
+/** The case Radix handled badly: a vertical overlay scroller inside a horizontal overlay scroller. */
+export const OverlayNested = {
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  render: () => {
+    const columns = useMemo(
+      () =>
+        Array.from({ length: 8 }).map((_, index) => ({
+          id: String(index),
+          count: random.number.int({ min: 5, max: 20 }),
+        })),
+      [],
+    );
+
+    return (
+      <ScrollArea.Root orientation='horizontal' overlay thin padding>
+        <ScrollArea.Viewport classNames='gap-4'>
+          {columns.map((column) => (
+            <section
+              key={column.id}
+              className='shrink-0 h-full w-[16rem] grid grid-rows-[min-content_1fr_min-content] border border-separator'
+            >
+              <header className='flex shrink-0 p-2 border-b border-separator'>Column {column.id}</header>
+              <ScrollArea.Root orientation='vertical' overlay thin>
+                <ScrollArea.Viewport classNames='py-2 px-2 gap-2'>
+                  {Array.from({ length: column.count }, (_, i) => (
+                    <div key={i} role='listitem' className='shrink-0 p-2 text-sm border border-separator rounded-xs'>
+                      Item {i + 1}
+                    </div>
+                  ))}
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+              <footer className='p-2 text-subdued border-t border-separator'>{column.count}</footer>
+            </section>
+          ))}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+};
+
 export const NativeScroll = {
   render: () => (
     <div className='group h-48 w-48 border border-separator'>

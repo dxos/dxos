@@ -20,12 +20,17 @@ export type ScrollAreaStyleProps = {
   thin?: boolean;
   /** Enable snap scrolling. */
   snap?: boolean;
+  /** Paint the thumb over the content instead of reserving layout space. */
+  overlay?: boolean;
 };
 
-const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
+const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, overlay }, ...etc) =>
   mx(
     // Expand
     'dx-container',
+
+    // Positioning context for the absolutely positioned overlay thumbs.
+    overlay && 'relative',
 
     orientation === 'vertical' && 'group/scroll-v flex flex-col',
     orientation === 'horizontal' && 'group/scroll-h flex',
@@ -44,7 +49,7 @@ const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) 
  * NOTE: The browser reserves space for scrollbars.
  */
 const viewport: ComponentFunction<ScrollAreaStyleProps> = (
-  { orientation, centered, padding, snap, autoHide },
+  { orientation, centered, padding, snap, autoHide, overlay },
   ...etc
 ) => {
   return mx(
@@ -58,11 +63,16 @@ const viewport: ComponentFunction<ScrollAreaStyleProps> = (
     orientation === 'horizontal' && 'flex overflow-x-scroll overscroll-x-contain',
     orientation === 'all' && 'overflow-scroll',
 
-    '[&::-webkit-scrollbar-corner]:bg-transparent',
-    '[&::-webkit-scrollbar-track]:bg-transparent',
-    '[&::-webkit-scrollbar-thumb]:rounded-none',
-
-    '[&::-webkit-scrollbar]:w-[var(--scroll-width)] [&::-webkit-scrollbar]:h-[var(--scroll-width)]',
+    // A styled `::-webkit-scrollbar` is always a classic scrollbar and so consumes layout width;
+    // overlay mode removes it entirely and paints the thumb over the content instead.
+    overlay
+      ? ['[scrollbar-width:none]', '[&::-webkit-scrollbar]:hidden']
+      : [
+          '[&::-webkit-scrollbar-corner]:bg-transparent',
+          '[&::-webkit-scrollbar-track]:bg-transparent',
+          '[&::-webkit-scrollbar-thumb]:rounded-none',
+          '[&::-webkit-scrollbar]:w-[var(--scroll-width)] [&::-webkit-scrollbar]:h-[var(--scroll-width)]',
+        ],
 
     // If contained within Column.Root grid the gutter is set by that component (--gutter CSS variable).
     // If centered, left padding compensates for scrollbar width so content is visually centered.
@@ -85,17 +95,14 @@ const viewport: ComponentFunction<ScrollAreaStyleProps> = (
       orientation === 'all' && 'snap-both snap-mandatory',
     ],
 
-    autoHide
-      ? [
-          orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
-          orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
-          orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
-        ]
-      : [
-          orientation === 'vertical' && '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
-          orientation === 'horizontal' && '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
-          orientation === 'all' && '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
-        ],
+    !overlay &&
+      (autoHide
+        ? [
+            orientation === 'vertical' && 'group-hover/scroll-v:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
+            orientation === 'horizontal' && 'group-hover/scroll-h:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
+            orientation === 'all' && 'group-hover/scroll-all:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
+          ]
+        : ['[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb']),
 
     ...etc,
   );
