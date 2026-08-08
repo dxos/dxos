@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Stream from 'effect/Stream';
-import { Registry as AtomRegistry } from 'effect/unstable/reactivity';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiService, OpaqueToolkit } from '@dxos/ai';

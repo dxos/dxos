@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
@@ -20,7 +21,9 @@ import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
 
-const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
+const ColumnFormSchema = Pipeline.Column.mapFields((fields) => Struct.pick(fields, ['name'])).mapFields(
+  Struct.map(Schema.mutableKey),
+);
 
 export type PipelinePropertiesProps = AppSurface.ObjectPropertiesProps<Pipeline.Pipeline>;
 

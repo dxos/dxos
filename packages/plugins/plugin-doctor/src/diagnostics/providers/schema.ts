@@ -46,12 +46,12 @@ export const schemaDiagnostic: DiagnosticProvider = {
           });
           continue;
         }
-        const result = Schema.validateEither(Type.getSchema(type))(obj);
+        const result = Schema.decodeUnknownResult(Schema.toType(Type.getSchema(type)))(obj);
         if (Result.isFailure(result)) {
           issues.push({
             id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:schema-mismatch`,
             severity: 'error',
-            message: `Schema mismatch: ${result.left.message}`,
+            message: `Schema mismatch: ${result.failure.message}`,
             subjectLabel: labelObject(obj),
             spaceId: space.id,
           });

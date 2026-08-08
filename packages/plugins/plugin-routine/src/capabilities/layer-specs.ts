@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { Registry as AtomRegistry } from 'effect/unstable/reactivity';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';

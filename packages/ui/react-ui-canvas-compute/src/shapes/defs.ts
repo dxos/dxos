@@ -37,8 +37,8 @@ export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'id' | 's
 export const ComputeShape = Polygon.mapFields(
   Struct.assign({
     // TODO(burdon): Rename computeNode?
-    node: Schema.optional(Obj.ID.annotate({ description: 'Compute node id' })),
-  }).pipe(Schema.mutable),
+    node: Schema.mutableKey(Schema.optional(Obj.ID.annotate({ description: 'Compute node id' }))),
+  }),
 );
 
 export type ComputeShape = Schema.Schema.Type<typeof ComputeShape>;

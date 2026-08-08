@@ -56,7 +56,7 @@ describe('json-schema', () => {
         .mapFields(Struct.map(Schema.mutableKey));
 
       const schema4 = schema1
-        .mapFields(Struct.omit(['y']))
+        .mapFields((fields) => Struct.omit(fields, ['y']))
         .pipe(Schema.fieldsAssign({ y: Schema.mutableKey(Schema.optional(Schema.String)) }));
 
       expect(schema2.ast).toEqual(schema1.ast);

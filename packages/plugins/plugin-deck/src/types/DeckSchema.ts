@@ -29,7 +29,7 @@ export const DeckState = Schema.Struct({
    * Absolute widths in rem, keyed by item id — a plank keeps its width wherever it sits. The companion's
    * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
    */
-  plankSizing: Schema.mutable(PlankSizing),
+  plankSizing: Schema.mutableKey(PlankSizing),
   /**
    * Planks showing their companion, by id. Per plank rather than per deck so moving between planks
    * restores what each was left in — a plank you closed the companion on stays closed when you come
@@ -82,7 +82,7 @@ export const StoredDeckState = Schema.Struct({
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutable(DeckState))),
+  decks: Schema.mutableKey(Schema.Record(Schema.String, DeckState.mapFields(Struct.map(Schema.mutableKey)))),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 

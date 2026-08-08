@@ -14,7 +14,7 @@ import { Graph } from '@dxos/graph';
 /**
  * Base type for all shapes.
  */
-export const Shape = Graph.Node.mapFields(Struct.omit(['type'])).pipe(
+export const Shape = Graph.Node.mapFields((fields) => Struct.omit(fields, ['type'])).pipe(
   // TODO(burdon): Breaks graph contract?
   Schema.fieldsAssign({
     type: Schema.String,

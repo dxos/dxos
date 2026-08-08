@@ -33,14 +33,13 @@ export const isPath = Schema.is(PathShape);
  * Closed shape.
  * Common handling via Frame.
  */
-export const Polygon = Schema.mutable(
-  Shape.mapFields(
-    Struct.assign({
-      center: Point,
-      size: Schema.mutable(Dimension),
-    }),
-  ),
-);
+// `Schema.mutable` is arrays-only in v4, so a struct's fields are made mutable key by key.
+export const Polygon = Shape.mapFields(
+  Struct.assign({
+    center: Point,
+    size: Dimension.mapFields(Struct.map(Schema.mutableKey)),
+  }),
+).mapFields(Struct.map(Schema.mutableKey));
 
 export type Polygon = Schema.Schema.Type<typeof Polygon>;
 export const isPolygon = Schema.is(Polygon);

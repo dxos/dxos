@@ -26,7 +26,7 @@ import { TriggerEditor } from '../TriggerEditor';
 //
 
 // Pick the editable general fields from the Routine schema rather than redeclaring them.
-const GeneralForm = Type.getSchema(Routine.Routine).mapFields(Struct.pick(['name', 'description']));
+const GeneralForm = Type.getSchema(Routine.Routine).mapFields((fields) => Struct.pick(fields, ['name', 'description']));
 type GeneralForm = Schema.Schema.Type<typeof GeneralForm>;
 
 export type RoutineFormProps = {

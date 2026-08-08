@@ -10,7 +10,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 import * as AiError from 'effect/unstable/ai/AiError';
-import { Atom, Registry as AtomRegistry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';

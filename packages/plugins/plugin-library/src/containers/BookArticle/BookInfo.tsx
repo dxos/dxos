@@ -105,7 +105,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
 
   // The editable subset of the schema; catalog fields are omitted (read-only above).
   const activitySchema = useMemo(
-    () => omitId(Type.getSchema(Book.Book)).mapFields(Struct.pick([...ACTIVITY_FIELDS])),
+    () => omitId(Type.getSchema(Book.Book)).mapFields((fields) => Struct.pick(fields, [...ACTIVITY_FIELDS])),
     [],
   );
 

@@ -37,7 +37,7 @@ import { type FieldSortType, tableSortAspect } from './table-view-state';
  */
 export type TableChangeCallback<T extends TableRow> = {
   /** Callback to wrap table object mutations. */
-  table: (mutate: (mutableTable: Table.Table) => void) => void;
+  table: (mutate: (mutableTable: Mutable<Table.Table>) => void) => void;
   /** Callback to wrap row mutations. */
   row: (row: T, mutate: (mutableRow: T) => void) => void;
 };

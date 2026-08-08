@@ -33,7 +33,7 @@ import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
 
 // `enabled` is extended onto every spec form so it renders inline with the kind's fields.
-const EnabledForm = Type.getSchema(Trigger.Trigger).mapFields(Struct.pick(['enabled', 'remote']));
+const EnabledForm = Type.getSchema(Trigger.Trigger).mapFields((fields) => Struct.pick(fields, ['enabled', 'remote']));
 
 // Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind

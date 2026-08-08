@@ -26,7 +26,9 @@ import { meta } from '#meta';
 import * as ProjectOperation from '../../types/ProjectOperation';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them.
-const HeaderValues = Type.getSchema(Project.Project).mapFields(Struct.pick(['name', 'description']));
+const HeaderValues = Type.getSchema(Project.Project).mapFields((fields) =>
+  Struct.pick(fields, ['name', 'description']),
+);
 type HeaderValues = Schema.Schema.Type<typeof HeaderValues>;
 
 // The Context section edits only the instructions' standing context objects.

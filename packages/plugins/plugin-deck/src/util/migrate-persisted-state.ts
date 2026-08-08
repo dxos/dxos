@@ -20,11 +20,11 @@ import * as DeckSchema from '../types/DeckSchema';
 const LegacyDeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  plankSizing: Schema.mutable(DeckSchema.PlankSizing),
+  plankSizing: Schema.mutableKey(DeckSchema.PlankSizing),
   companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   companionOpen: Schema.optional(Schema.Boolean),
   tilingSizing: Schema.optional(Schema.Number),
-  companionFrameSizing: Schema.optional(Schema.mutable(DeckSchema.PlankSizing)),
+  companionFrameSizing: Schema.optional(Schema.mutableKey(DeckSchema.PlankSizing)),
   solo: Schema.optional(Schema.String),
   initialized: Schema.optional(Schema.Boolean),
   fullscreen: Schema.optional(Schema.Boolean),
@@ -38,7 +38,7 @@ const LegacyStoredDeckState = Schema.Struct({
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutable(LegacyDeckState))),
+  decks: Schema.mutableKey(Schema.Record(Schema.String, LegacyDeckState.mapFields(Struct.map(Schema.mutableKey)))),
   previousMode: Schema.optional(Schema.mutableKey(Schema.Record(Schema.String, Schema.Any))),
 }).mapFields(Struct.map(Schema.mutableKey));
 type LegacyStoredDeckState = Schema.Schema.Type<typeof LegacyStoredDeckState>;
@@ -105,12 +105,12 @@ export const migratePersistedState = (
 
   const decoded = decodeLegacyState(parsed);
   if (Result.isFailure(decoded)) {
-    log.warn('failed to decode persisted deck state; removing', { key, error: decoded.left.message });
+    log.warn('failed to decode persisted deck state; removing', { key, error: decoded.failure.message });
     storage.removeItem(key);
     return;
   }
 
-  const state = decoded.right;
+  const state = decoded.success;
   if (!hasLegacyFields(state)) {
     return;
   }

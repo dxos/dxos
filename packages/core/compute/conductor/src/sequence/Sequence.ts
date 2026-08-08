@@ -18,7 +18,7 @@ export const Step = Schema.Struct({
 
 export type Step = Schema.Schema.Type<typeof Step>;
 export const Definition = Schema.Struct({
-  steps: Schema.Array(Step.mapFields(Struct.omit(['id']))),
+  steps: Schema.Array(Step.mapFields((fields) => Struct.omit(fields, ['id']))),
 });
 
 export type Definition = Schema.Schema.Type<typeof Definition>;

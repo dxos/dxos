@@ -51,7 +51,7 @@ export class PluginManifestError extends BaseError.extend('PluginManifestError',
 export const Manifest = Schema.Struct({
   // Reuse the build manifest field definitions from `@dxos/protocols` (the shape `composerPlugin`
   // emits), minus `assets` which we relax below, plus the dev-only `devEntry`.
-  ...PluginManifestSchema.mapFields(Struct.omit(['assets'])).fields,
+  ...PluginManifestSchema.mapFields((fields) => Struct.omit(fields, ['assets'])).fields,
   /**
    * Relative asset paths. Relaxed vs the build `PluginManifestSchema` (which requires >= 1) because
    * dev-server manifests list no assets — chunks/styles flow through the dev server on demand.
