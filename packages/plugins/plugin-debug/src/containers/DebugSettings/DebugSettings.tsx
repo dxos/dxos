@@ -19,6 +19,7 @@ import { setDeep } from '@dxos/util';
 import { meta } from '#meta';
 
 import * as Settings from '../../types/Settings';
+import { DebugPortSettings } from '../DebugPortSettings';
 
 type Toast = {
   title: string;
@@ -246,6 +247,8 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
               </Select.Root>
             </Form.Row>
           </Form.Section>
+
+          <DebugPortSettings />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

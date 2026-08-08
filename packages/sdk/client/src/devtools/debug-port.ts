@@ -2,7 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RECOVERY_DEBUG_RECONNECT_MS, resolveRecoveryDebugOrigin } from './constants';
+/** Default port for `composer-recovery.js` — keep in sync with that script. */
+export const DEBUG_PORT = 9321;
+
+/** Browser retry interval when the debug server is unreachable — keep in sync with `composer-recovery.js`. */
+export const DEBUG_PORT_RECONNECT_MS = 2_000;
+
+/**
+ * Debug server origin matching the page scheme.
+ * HTTPS pages must use an HTTPS debug server (mixed content blocks http://127.0.0.1).
+ */
+export const resolveDebugPortOrigin = (port = DEBUG_PORT): string => {
+  const scheme = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'https' : 'http';
+  return `${scheme}://127.0.0.1:${port}`;
+};
 
 export type DebugCommand = {
   id: number;
@@ -30,7 +43,7 @@ export type DebugPortOptions = {
  */
 export const runDebugPortLoop = async ({
   session,
-  origin = resolveRecoveryDebugOrigin(),
+  origin = resolveDebugPortOrigin(),
   evalCommand,
   onLog,
   signal,
@@ -56,7 +69,7 @@ export const runDebugPortLoop = async ({
         log('Waiting for debug server…');
         waitingLogged = true;
       }
-      await sleep(RECONNECT_MS, signal);
+      await sleep(DEBUG_PORT_RECONNECT_MS, signal);
       continue;
     }
 
@@ -90,13 +103,11 @@ export const runDebugPortLoop = async ({
       if (signal?.aborted) {
         break;
       }
-      log(`Debug server unreachable posting result — retrying…`);
-      await sleep(RECONNECT_MS, signal);
+      log('Debug server unreachable posting result — retrying…');
+      await sleep(DEBUG_PORT_RECONNECT_MS, signal);
     }
   }
 };
-
-const RECONNECT_MS = RECOVERY_DEBUG_RECONNECT_MS;
 
 const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
   new Promise((resolve, reject) => {
