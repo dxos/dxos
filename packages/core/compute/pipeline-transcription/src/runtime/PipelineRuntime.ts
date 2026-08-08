@@ -104,12 +104,14 @@ const windowTrigger = (
   const blocks = config?.window?.blocks ?? stage.window?.blocks;
   return (input) =>
     input.pipe(
-      Stream.mapAccum([] as Slice, (window, event) => {
-        const next = event.kind === 'block' ? [...window, event.block].slice(-MAX_WINDOW) : window;
-        const slice = triggerMatches(stage, event.kind) ? (blocks ? next.slice(-blocks) : next) : undefined;
-        return [next, slice];
-      }),
-      Stream.filter((slice): slice is Slice => slice !== undefined),
+      Stream.mapAccum(
+        () => [] as Slice,
+        (window, event) => {
+          const next = event.kind === 'block' ? [...window, event.block].slice(-MAX_WINDOW) : window;
+          const slice = triggerMatches(stage, event.kind) ? (blocks ? next.slice(-blocks) : next) : undefined;
+          return [next, slice === undefined ? [] : [slice]] as const;
+        },
+      ),
     );
 };
 
@@ -171,7 +173,9 @@ const run = (options: RunOptions): Effect.Effect<void> =>
       // unbounded `Effect.forEach`, would interrupt the sibling branches). Log and drop instead.
       const sink: Pipeline.Sink<Enriched> = ({ write, window }) =>
         commit(write, window).pipe(Effect.catchCause((cause) => Effect.sync(() => log.catch(Cause.squash(cause)))));
-      const branches = yield* source.pipe(Stream.broadcast(enabled.length, BROADCAST_BUFFER));
+      const branches = yield* source.pipe(
+        Stream.broadcastN({ n: enabled.length, capacity: BROADCAST_BUFFER }),
+      );
 
       yield* Effect.forEach(
         branches,
