@@ -15,7 +15,7 @@ import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
-import { PartialBlock, SessionLink } from '@dxos/assistant';
+import { type HarnessControlRpcs, PartialBlock, SessionLink } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -496,7 +496,13 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         // Spawns the agent process (no LLM turn yet) bound to a stamped host marker.
         const session = yield* AgentService.createSession();
         const target = Obj.getURI(session.feed);
-        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
+        // on every call; naming the group restores it.
+        const handles: readonly ProcessManager.Handle<any, any, HarnessControlRpcs>[] = yield* processManager.list({
+          target,
+          key: AGENT_PROCESS_KEY,
+        });
+        const [handle] = handles;
 
         // The spawn stamped the harness-host annotation so the process is discoverable as the owner.
         expect(

@@ -3,6 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -134,11 +135,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // Read time from the ambient Effect Clock so alarm scheduling and the due-check stay
         // consistent (and both honor a TestClock under tests).
-        const clock = yield* Effect.clock;
+        const clock = yield* Clock.Clock;
         const alarmManager = new AlarmManager({
           storageService,
           setAlarm: (timeout) => ctx.setAlarm(timeout),
-          now: () => clock.unsafeCurrentTimeMillis(),
+          now: () => clock.currentTimeMillisUnsafe(),
         });
         yield* alarmManager.load();
         // Queued tool results were never consumed by onAlarm — reported flags from the synchronous
@@ -207,7 +208,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         return {
           // Control plane (§4.3): handlers run on the host process's server fiber, closing over the
           // live `alarmManager`/`inputQueue` and persisting their durable effect inline.
-          rpcHandlers: yield* HarnessControl.toHandlersContext({
+          rpcHandlers: yield* HarnessControl.toHandlers({
             setAlarm: Effect.fn(function* ({ at, message }) {
               yield* alarmManager.setWakeAt(DateTime.toEpochMillis(at), message);
               alarmManager.reconcile(inputQueue.length > 0);
@@ -469,13 +470,13 @@ const ToolCallState = Schema.Struct({
       // Whether the result was reported to the agent.
       reported: Schema.Boolean,
     }).mapFields(Struct.map(Schema.mutableKey)),
-  ).mapFields(Struct.map(Schema.mutableKey)),
+  ).pipe(Schema.mutable),
 });
 interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
 
 // Id's of processes who's results were already submitted to the agent.
 const ToolCallStateCell = StorageService.cell(
-  Schema.fromJsonString(ToolCallState.pipe(Schema.mutable)),
+  Schema.fromJsonString(ToolCallState.mapFields(Struct.map(Schema.mutableKey))),
   'toolCallState',
 ).pipe(StorageService.withDefault(() => ({ activeCalls: [] })));
 
@@ -741,7 +742,7 @@ const ToolExecutionService = ({
             const result = enableBackgrounding
               ? yield* awaitWithReport.pipe(
                   Effect.timeout(backgroundThreshold),
-                  Effect.catchTag('TimeoutException', () =>
+                  Effect.catchTag('TimeoutError', () =>
                     Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
                   ),
                 )
@@ -797,7 +798,7 @@ const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
                 }),
               ),
               Effect.catchTag('ProcessNotFoundError', () => Effect.succeed(`Process not found: ${pid}`)),
-              Effect.catchTag('TimeoutException', () => Effect.succeed(`Process still running: ${pid}`)),
+              Effect.catchTag('TimeoutError', () => Effect.succeed(`Process still running: ${pid}`)),
             ),
           );
         }),
