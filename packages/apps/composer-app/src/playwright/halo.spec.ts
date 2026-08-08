@@ -33,12 +33,11 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Failed on chromium in run 31137756950 — 30s timeout filling
-  //   `halo-invitation-input` (scoped-shell-manager.ts:28). Identical to the failure that deferred
-  //   `deleting a space replicates across devices` below, so both are one cause: after
-  //   `joinNewIdentity()` resets storage and reloads, the device-invitation shell sometimes never
-  //   mounts its input. Fixing that re-enables both — this file has no other live tests.
-  test.fixme('join new identity', async () => {
+  // Re-enabled: the failure that deferred this (run 31137756950, 30s timeout filling
+  // `halo-invitation-input` after `joinNewIdentity()` resets storage and reloads) did not
+  // reproduce in 8/8 serialized local runs after this branch's fixes. If it recurs, the signature
+  // to look for is the device-invitation shell never mounting its input after the reload.
+  test('join new identity', async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
