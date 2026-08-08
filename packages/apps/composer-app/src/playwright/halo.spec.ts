@@ -33,11 +33,15 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): The device-invitation shell sometimes never mounts `halo-invitation-input`
-  //   after `joinNewIdentity()` resets storage and reloads — run 31271416331 hit it again at a
-  //   dedicated 60s boot budget, immediately after 8/8 serialized local passes, so it is
-  //   CI-environment-specific and a budget cannot fix it. The shell page reload after the storage
-  //   reset is the suspect window. Fixing that mount races re-enables this and the test below.
+  // TODO(wittjosiah): Still deferred, cause narrowed: after `joinNewIdentity()` resets storage and
+  //   reloads, `halo-invitation-input` never mounts (1 of 6 serialized local runs; CI runs
+  //   31131235658, 31271416331). RULED OUT: a welcome-screen/join-dialog update race — real, and
+  //   now fixed in `OnboardingManager`, but composer e2e runs without a hubUrl, so `skipAuth`
+  //   means the welcome screen never opens on this path. What remains is inside the post-reset
+  //   join flow itself: `onReset` reloads with an EMPTY `?deviceInvitationCode=` (the guest never
+  //   had one in its URL), so onboarding opens the join dialog with an empty initial code — the
+  //   suspect is that empty-code path racing the shell's own mount. Instrument JOIN_DIALOG mount
+  //   vs. `_openJoinIdentity` next.
   test.fixme('join new identity', async () => {
     test.setTimeout(90_000);
 
@@ -71,13 +75,9 @@ test.describe('HALO tests', () => {
     // });
   });
 
-  // TODO(wittjosiah): Two distinct failure modes observed on the device-join path, neither yet
-  //   fixed: in CI the invitation input never mounts after `joinNewIdentity()` resets storage and
-  //   reloads (run 31131235658, 30s fill timeout at scoped-shell-manager.ts:28); locally the
-  //   invitation code submits but `halo-auth-code-input` stays disabled — the handshake never
-  //   reaches the auth stage (1 of 11 device invitations, 2026-08-08; also seen in todomvc's
-  //   space-invitation flow in the sandbox only). The sibling test above runs the same flow and
-  //   measured 8/8 — it stays enabled as the canary; fixing the join path re-enables this one.
+  // Shares the device-join flow (and its unresolved mount stall) with the test above. A second
+  // hazard is specific to this test: the invitation code submits but `halo-auth-code-input` stays
+  // disabled, so the handshake never reaches the auth stage (1 of 11 device invitations).
   test.fixme('deleting a space replicates across devices', async () => {
     test.setTimeout(120_000);
 
