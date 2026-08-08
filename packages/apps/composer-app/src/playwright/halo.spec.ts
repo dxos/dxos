@@ -33,18 +33,20 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Deferred. THREE theories tried and disproven — do not repeat them: (a) the
-  //   `OnboardingManager` welcome/join dialog race (real defect, fixed, but composer e2e runs
-  //   `skipAuth` so that path never opens); (b) `JoinPanel` stranding in the exit-less
-  //   `resettingIdentity` state (real defect, fixed, still 5/6); (c) the confirm button's native
-  //   `disabled` gate re-asserting inside Playwright's click-dispatch window — the helper now types
-  //   the confirmation key by key and asserts `toBeEnabled()` before clicking, and it still fails
-  //   1 in 4. What stays measured: the guest ends on the account/devices plank with no shell dialog,
-  //   and an instrumented `handleReset` in plugin-client's `ResetDialog` (the component
-  //   `RESET_DIALOG` renders; probe verified in the e2e bundle) logs nothing — so the reset never
-  //   starts even though the click completes on an enabled button. Next: a capture-phase click
-  //   listener on the dialog plus logging of `pending`/`inputValue` inside `ConfirmReset`, to prove
-  //   whether the event reaches React at all. Do not guess a fourth mechanism without that data.
+  // TODO(wittjosiah): Deferred on a ROOT-CAUSED client defect, not a test problem. Instrumented
+  //   `ResetDialog.handleReset` around `client.reset()` (sessionStorage recorder, so it survives the
+  //   navigation) and captured the failing run directly: `client.reset()` REJECTS with
+  //   `Error: Service handler not available: FeedService.getSyncState` — an in-flight sync-status
+  //   RPC outliving the services it depends on during teardown. The rejection propagates out of
+  //   `handleReset`, so `onReset` (localStorage.clear() + the reload) never runs, the guest stays on
+  //   the account/devices plank, and `halo-invitation-input` never appears. Passing runs show a clean
+  //   `reset:before` -> `reset:after` pair. Rate ~12% bare, ~40% with instrumentation (timing-
+  //   sensitive, as a teardown race should be). Fix belongs in the client reset path: stop the
+  //   sync-status poll (`useFeedSyncState`, 5s interval) before services tear down, or have
+  //   `reset()` treat handler-unavailable rejections from in-flight calls as expected during
+  //   shutdown. RULED OUT along the way, all with measurements: the `OnboardingManager` welcome/join
+  //   dialog race, `JoinPanel`'s exit-less `resettingIdentity` state, the confirm-button
+  //   click-dispatch window, and a detached-node click.
   test.fixme('join new identity', async () => {
     test.setTimeout(90_000);
 
