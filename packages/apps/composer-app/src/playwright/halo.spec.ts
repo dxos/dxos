@@ -33,16 +33,20 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Deferred on a located defect: the reset confirm button is clickable before
-  //   its handler is wired. Instrumented `ResetDialog.handleReset` (probe verified present in the
-  //   e2e bundle) and a failing run logged NOTHING from it — so the click on
-  //   `join-new-identity.reset-identity-confirm` registers but `handleReset` never runs, which is
-  //   why the guest stays on the account/devices plank with no dialog and
-  //   `halo-invitation-input` never appears (1 in 6 serialized). Fix in the dialog: don't present
-  //   the confirm action until its handler is attached (or make the operation-driven dialog mount
-  //   atomically), then re-enable. Two adjacent defects were found and fixed while chasing this —
-  //   the `OnboardingManager` welcome/join dialog race and `JoinPanel` stranding in the exit-less
-  //   `resettingIdentity` state — neither is this one.
+  // TODO(wittjosiah): Deferred on a located defect in the reset confirmation, one step before
+  //   anything this test asserts. Instrumented `ResetDialog.handleReset` (probe verified compiled
+  //   into the e2e bundle) and a failing run logged NOTHING from it: the click on
+  //   `join-new-identity.reset-identity-confirm` registers but no handler runs, so no reset, no
+  //   reload, and the guest sits on the account/devices plank while `halo-invitation-input` never
+  //   appears (1 in 6 serialized). Mechanism: that button is
+  //   `disabled={disabled || pending || inputValue !== confirmationValue}` (shell
+  //   `steps/ConfirmReset.tsx`), and `inputValue` only lands after React commits the `fill()`'s
+  //   onChange — so the gate can re-assert between Playwright's actionability check and event
+  //   dispatch, and a click on a disabled Action is silently dropped. Fix in the shell: keep the
+  //   confirm action mounted with a stable enabled state once the confirmation text matches (or
+  //   have `handleConfirm` re-validate instead of gating via `disabled`). Two adjacent defects were
+  //   found and fixed while chasing this — the `OnboardingManager` welcome/join dialog race and
+  //   `JoinPanel` stranding in the exit-less `resettingIdentity` state — neither is this one.
   test.fixme('join new identity', async () => {
     test.setTimeout(90_000);
 
