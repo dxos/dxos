@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { timed } from '@dxos/debug';
+import { Event, timed } from '@dxos/async';
 import { type FeedIndex } from '@dxos/feed-store';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

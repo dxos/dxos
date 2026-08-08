@@ -5,11 +5,10 @@
 import { save } from '@automerge/automerge';
 import { type AutomergeUrl, type DocHandle } from '@automerge/automerge-repo';
 
-import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, Mutex, scheduleTask, sleep, synchronized, timed, trackLeaks, warnAfterTimeout } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
-import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type DatabaseRoot, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
@@ -500,14 +499,19 @@ export class DataSpace {
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
-        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
-          handle = await cancelWithContext(
-            this._ctx,
-            this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
-              fetchFromNetwork: true,
-            }),
-          );
-        });
+        await warnAfterTimeout(
+          5_000,
+          'Automerge root doc load timeout (DataSpace)',
+          async () => {
+            handle = await cancelWithContext(
+              this._ctx,
+              this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
+                fetchFromNetwork: true,
+              }),
+            );
+          },
+          { spaceId: this.id, spaceKey: this.key, rootUrl },
+        );
         if (this._ctx.disposed) {
           return;
         }

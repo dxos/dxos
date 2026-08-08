@@ -8,12 +8,12 @@
  * captured text won't silently break suppression.
  *
  * Sources:
- *  - `warnAfterTimeout` in @dxos/debug, fired e.g. during eager space
- *    initialisation in ClientPlugin when there's prior data on disk that
- *    takes >5s to load.
  *  - Node's `TimeoutNegativeWarning` (and the follow-up "Timeout duration
  *    was set to 1." continuation line), fired by automerge-repo's throttle
  *    helper when it computes a negative setTimeout delay.
+ *  - Any dependency that still writes the `Action \`…\`` shape directly to
+ *    the console; `warnAfterTimeout` itself now routes through @dxos/log,
+ *    which the CLI already filters to ERROR.
  */
 const TIMEOUT_WARNING_PREFIX_RE =
   /^(?:Action `[^`]+` is taking more|TimeoutNegativeWarning:|Timeout duration was set to)/;
@@ -79,9 +79,8 @@ export const filterStderrBuffer = (buffer: string): string => {
 const SWALLOWED_WARNING_NAMES = new Set(['TimeoutNegativeWarning']);
 
 /**
- * Wrap BOTH `console.warn`/`console.error` (where `warnAfterTimeout` from
- * @dxos/debug actually writes) AND `process.stderr.write` (defence in depth
- * for callers that bypass console). In Bun, `console.warn` writes to fd 2
+ * Wrap BOTH `console.warn`/`console.error` AND `process.stderr.write` (defence
+ * in depth for callers that bypass console). In Bun, `console.warn` writes to fd 2
  * directly — overriding `process.stderr.write` alone is NOT enough. Verified
  * empirically: a `process.stderr.write` wrapper sees zero `console.warn`
  * traffic in bun. See stderr-filter.console.test.ts for the regression

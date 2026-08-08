@@ -18,6 +18,7 @@ export * from './stream-to-array';
 export * from './task-scheduling';
 export * from './testing';
 export * from './timeout';
+export * from './timeout-warning';
 export * from './timer';
 export * from './track-leaks';
 export * from './trigger';

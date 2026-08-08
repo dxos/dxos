@@ -4,7 +4,8 @@
 
 // Import explicit resource management polyfill.
 import '@dxos/util';
-import { warnAfterTimeout } from '@dxos/debug';
+
+import { warnAfterTimeout } from './timeout-warning';
 
 /**
  * A locking mechanism to ensure that a given section of the code is executed by only one single "thread" at a time.

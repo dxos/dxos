@@ -15,6 +15,7 @@ import {
   scheduleTask,
   scheduleTaskInterval,
   synchronized,
+  warnAfterTimeout,
 } from '@dxos/async';
 import {
   type ClientServicesProvider,
@@ -32,7 +33,6 @@ import {
   inspectCustom,
   loadashEqualityFn,
   todo,
-  warnAfterTimeout,
 } from '@dxos/debug';
 import { Filter, Obj } from '@dxos/echo';
 import { type DatabaseImpl, type EchoClient, type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
@@ -465,8 +465,11 @@ export class SpaceProxy implements Space, CustomInspectable {
         { fire: true },
       );
     }
-    await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
-      cancelWithContext(this._ctx, propertiesAvailable.wait()),
+    await warnAfterTimeout(
+      5_000,
+      'Finding properties for a space',
+      () => cancelWithContext(this._ctx, propertiesAvailable.wait()),
+      this._diagnosticContext(),
     );
   }
 
@@ -666,11 +669,15 @@ export class SpaceProxy implements Space, CustomInspectable {
     );
 
     if (targetTimeframe) {
-      await warnAfterTimeout(5_000, 'Waiting for the created epoch to be applied', () =>
-        this._anySpaceUpdate.waitForCondition(() => {
-          const currentTimeframe = this._data.pipeline?.currentControlTimeframe;
-          return (currentTimeframe && Timeframe.dependencies(targetTimeframe, currentTimeframe).isEmpty()) ?? false;
-        }),
+      await warnAfterTimeout(
+        5_000,
+        'Waiting for the created epoch to be applied',
+        () =>
+          this._anySpaceUpdate.waitForCondition(() => {
+            const currentTimeframe = this._data.pipeline?.currentControlTimeframe;
+            return (currentTimeframe && Timeframe.dependencies(targetTimeframe, currentTimeframe).isEmpty()) ?? false;
+          }),
+        this._diagnosticContext(),
       );
     }
   }
@@ -786,6 +793,21 @@ export class SpaceProxy implements Space, CustomInspectable {
     if (!this._initialized) {
       throw new Error('Space is not initialized.');
     }
+  }
+
+  /**
+   * Identifies the space in warnings raised before it is initialized, so it reads only from
+   * {@link _data} — `properties` is exactly what a stalled initialization is still waiting on.
+   */
+  private _diagnosticContext(): Record<string, unknown> {
+    return {
+      spaceId: this.id,
+      spaceKey: this.key,
+      tags: this.tags,
+      state: SpaceState[this._data.state],
+      edgeReplication: this._data.edgeReplication,
+      spaceRootUrl: this._data.pipeline?.spaceRootUrl,
+    };
   }
 
   private async _export(options?: ExportSpaceOptions): Promise<SpaceArchive> {

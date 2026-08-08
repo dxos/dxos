@@ -18,9 +18,10 @@ import {
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
+  warnAfterTimeout,
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
-import { raise, warnAfterTimeout } from '@dxos/debug';
+import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
 import {
   type BranchRecord,
@@ -1393,9 +1394,14 @@ export class EntityManager implements IDatabaseBinding {
 
   private async _initDocHandle(ctx: Context, url: string): Promise<DocHandleProxy<DatabaseDirectory>> {
     const docHandle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
-    await warnAfterTimeout(5_000, 'Automerge root doc load timeout (EntityManager)', async () => {
-      await cancelWithContext(ctx, docHandle.whenReady());
-    });
+    await warnAfterTimeout(
+      5_000,
+      'Automerge root doc load timeout (EntityManager)',
+      async () => {
+        await cancelWithContext(ctx, docHandle.whenReady());
+      },
+      { spaceId: this._spaceId, url },
+    );
 
     return docHandle;
   }

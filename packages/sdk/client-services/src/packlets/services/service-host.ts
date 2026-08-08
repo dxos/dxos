@@ -13,7 +13,7 @@ import * as Option from 'effect/Option';
 import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 
-import { Event, Mutex, Trigger, synchronized } from '@dxos/async';
+import { Event, Mutex, Trigger, synchronized, warnAfterTimeout } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesHandlers,
@@ -22,7 +22,7 @@ import {
 } from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { failUndefined, warnAfterTimeout } from '@dxos/debug';
+import { failUndefined } from '@dxos/debug';
 import {
   type AutomergeReplicator,
   type EchoHost,

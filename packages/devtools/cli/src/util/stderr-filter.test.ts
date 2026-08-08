@@ -7,9 +7,8 @@ import { describe, test } from '@effect/vitest';
 import { decideStderrChunk, filterStderrBuffer } from './stderr-filter';
 
 /**
- * The exact warning shape produced by `warnAfterTimeout` in @dxos/debug.
- * Captured here as a literal so the unit test catches a regression even if
- * the formatter ever changes the prefix.
+ * Captured as a literal so the unit test catches a regression even if the
+ * formatter ever changes the prefix.
  */
 const WARNING_FIXTURE = `Action \`Finding properties for a space\` is taking more then 5,000ms to complete. This might be a bug.
     at <anonymous> (/abs/path/packages/common/debug/dist/lib/node-esm/index.mjs:208:17)
