@@ -54,7 +54,11 @@ export const initializeIdentity = (
     // Created before anything else so it is `client.spaces[0]`: plugin-space still adds a settings
     // space of its own on `SpacesReady`, and a story's `useSpaces()[0]` is only the seeded space
     // while that one lands second.
-    const defaultSpace = yield* Effect.promise(() => client.spaces.create());
+    //
+    // Tagged as the pre-settings-space default, which is exactly this profile's shape: without a
+    // designation `resolveDefaultSpace` parks forever, so the `SpacesReady` activation never
+    // completes and is always interrupted at teardown.
+    const defaultSpace = yield* Effect.promise(() => client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }));
     yield* Effect.promise(() => defaultSpace.waitUntilReady());
 
     return { identity, defaultSpace };
