@@ -37,7 +37,7 @@ describe('CapabilityManager', () => {
         Effect.result,
       );
 
-      expect(result._tag).toEqual('Left');
+      expect(result._tag).toEqual('Failure');
       if (result._tag === 'Failure') {
         expect(result.failure).toBeInstanceOf(CapabilityNotFoundError);
         expect(result.failure.context.identifier).toEqual(interfaceDef.identifier);

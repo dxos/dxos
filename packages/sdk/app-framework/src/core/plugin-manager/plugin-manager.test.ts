@@ -64,6 +64,19 @@ const atomCounter = (registry: Registry.AtomRegistry, atom: Atom.Atom<any>) => {
   };
 };
 
+/**
+ * Advances the test clock in slices, yielding to other fibers between them.
+ *
+ * v4 does not run a forked fiber before its parent's next step, and a forked activation takes
+ * several steps to reach its sleep — a single `adjust` would pass a sleep nobody is waiting on yet.
+ */
+const advance = (duration: Duration.Duration, slices = 8): Effect.Effect<void> =>
+  Effect.forEach(
+    Array.from({ length: slices }),
+    () => Effect.andThen(Effect.yieldNow, TestClock.adjust(Duration.millis(Duration.toMillis(duration) / slices))),
+    { discard: true },
+  );
+
 describe('PluginManager', () => {
   let plugins: Plugin.Plugin[] = [];
   const pluginLoader = Effect.fn(function* (id: string) {
@@ -960,7 +973,7 @@ describe('PluginManager', () => {
       const activationFiber = yield* Effect.forkChild(manager.activate(SlowEvent));
 
       // Advance time past the 10 second warning threshold.
-      yield* TestClock.adjust(Duration.seconds(11));
+      yield* advance(Duration.seconds(11));
 
       // Check that the warning was logged.
       assert.isTrue(
@@ -1018,7 +1031,7 @@ describe('PluginManager', () => {
       const fiber2 = yield* Effect.forkChild(manager.activate(EventB));
 
       // Advance time to let both activations complete.
-      yield* TestClock.adjust(Duration.seconds(6));
+      yield* advance(Duration.seconds(6));
 
       yield* Fiber.join(fiber1);
       yield* Fiber.join(fiber2);
@@ -1844,7 +1857,7 @@ describe('PluginManager', () => {
         const fiber = yield* Effect.forkChild(manager.activate(SlowEvent));
         // Push past the 2s activation timeout. The forked module fiber is on
         // TestClock too, so the timeout fires deterministically.
-        yield* TestClock.adjust(Duration.seconds(3));
+        yield* advance(Duration.seconds(3));
         const exit = yield* Fiber.await(fiber);
         // The timeout is isolated to the owning plugin — recorded via `getFailed`, not thrown
         // from `activate(event)`.
@@ -1880,7 +1893,7 @@ describe('PluginManager', () => {
         yield* manager.add(lazyMeta.profile.key);
 
         const enableFiber = yield* Effect.forkChild(manager.enable(lazyMeta.profile.key));
-        yield* TestClock.adjust(Duration.seconds(2));
+        yield* advance(Duration.seconds(2));
         const exit = yield* Fiber.await(enableFiber);
         assert.isTrue(Exit.isFailure(exit));
 

@@ -100,7 +100,7 @@ describe('ExtractMessage operation handler', () => {
       .pipe(Effect.result)
       .pipe(Effect.runPromise);
 
-    expect(result._tag).toBe('Left');
+    expect(result._tag).toBe('Failure');
   });
 
   test('selects highest-confidence extractor', async ({ expect }) => {

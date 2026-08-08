@@ -200,7 +200,7 @@ describe('HistoryTracker', () => {
       );
 
       const result = yield* tracker.undo().pipe(Effect.result);
-      expect(result._tag).toBe('Left');
+      expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
         expect(result.failure.message).toContain('empty');
       }

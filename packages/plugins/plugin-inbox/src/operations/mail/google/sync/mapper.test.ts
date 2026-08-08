@@ -69,7 +69,7 @@ describe('mapMessage', () => {
       // This reproduces the ParseError that QueueImpl hits during refresh:
       //   Schema.decodeUnknownEffect rejects null for optional Ref<Person> (expects undefined).
       const decoded = Schema.decodeUnknownResult(Type.getSchema(Message.Message))(rawData);
-      expect(decoded._tag).toBe('Left');
+      expect(decoded._tag).toBe('Failure');
     }, Effect.provide(InboxResolver.Mock())),
   );
 
