@@ -47,6 +47,9 @@ export class DataServiceImpl implements DataService.Handlers {
           void emit.single(msg);
         };
         this.dataSubscriptions.set(request.subscriptionId, { spaceId: request.spaceId, next });
+        // Ready beacon: `RepoProxy` gates every `updateSubscription` on the subscription's first
+        // batch, so without it document loads wait forever (mirrors the echo-host `DataService`).
+        next({ updates: [] });
         return Effect.sync(() => {
           this.dataSubscriptions.delete(request.subscriptionId);
         });
