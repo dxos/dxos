@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Ref, Type } from '@dxos/echo';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { Message } from '@dxos/types';
 
 /**

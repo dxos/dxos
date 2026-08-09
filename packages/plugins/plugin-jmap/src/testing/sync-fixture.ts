@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type Capability } from '@dxos/app-framework';
-import { type Operation, type Trace } from '@dxos/compute';
+import type * as Capability from '@dxos/app-framework/Capability';
+import type * as Operation from '@dxos/compute/Operation';
+import type * as Trace from '@dxos/compute/Trace';
 import { type Database } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver } from '@dxos/extractor';

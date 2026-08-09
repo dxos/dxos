@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { CapabilityManager } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 

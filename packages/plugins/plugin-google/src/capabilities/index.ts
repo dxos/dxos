@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';

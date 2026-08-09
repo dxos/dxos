@@ -6,13 +6,15 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type Capability } from '@dxos/app-framework';
-import { Credential, type Operation, type Trace } from '@dxos/compute';
+import type * as Capability from '@dxos/app-framework/Capability';
 import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import type * as Operation from '@dxos/compute/Operation';
+import type * as Trace from '@dxos/compute/Trace';
 import { Database, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver } from '@dxos/extractor';
-import { type Connection } from '@dxos/plugin-connector';
+import type * as Connection from '@dxos/plugin-connector/Connection';
 import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 

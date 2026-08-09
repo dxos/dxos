@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 
 import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Ref, Tag } from '@dxos/echo';

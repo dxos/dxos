@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Trigger } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Type } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
