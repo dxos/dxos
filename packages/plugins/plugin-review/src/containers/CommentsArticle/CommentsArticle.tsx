@@ -233,19 +233,25 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // just-set marker (chromium ~1 in 5, worse on webkit, where CI caught it). Keying on thread
   // membership instead recomputes purely from `anchors` + `state.current`, both reactive, so no
   // timing is involved; a thread from another document simply is not in this set.
-  const currentThreadUris = useMemo(() => {
-    const uris = new Set<string>();
+  // Keyed by object id, not URI: a draft thread's URI gains its space on persist
+  // (`echo:///<id>` → `echo://<spaceId>/<id>`), so the selection and the rendered thread can hold
+  // different URI spellings of the same object and an exact match silently drops the marker
+  // (observed in CI: the thread rendered with the persisted URI while `aria-current` stayed null).
+  const currentThreadIds = useMemo(() => {
+    const ids = new Map<string, string>();
     for (const anchor of anchors) {
       try {
         const thread = Relation.getSource(anchor);
         if (thread) {
-          uris.add(Obj.getURI(thread as Obj.Any));
+          ids.set(thread.id, Obj.getURI(thread as Obj.Any));
         }
       } catch {}
     }
-    return uris;
+    return ids;
   }, [anchors]);
-  const currentId = state.current && currentThreadUris.has(state.current) ? state.current : undefined;
+  // Both spellings end in the object id (`echo:///<id>` and `echo://<spaceId>/<id>`), so the last
+  // path segment identifies the thread regardless of whether the selection predates the persist.
+  const currentId = state.current ? currentThreadIds.get(state.current.split('/').pop() ?? '') : undefined;
 
   // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
   // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
