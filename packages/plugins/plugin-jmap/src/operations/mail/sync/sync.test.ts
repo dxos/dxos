@@ -9,14 +9,18 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Operation, RunAgainError, Trace } from '@dxos/compute';
+import { RunAgainError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { createSyncProgressKey } from '@dxos/plugin-inbox/sync';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { ambientSyncServices, seedMailboxBinding, seedSenderOrganizations } from '@dxos/plugin-inbox/testing/sync';
-import { InboxOperation, Mailbox, SystemTags } from '@dxos/plugin-inbox/types';
 import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 

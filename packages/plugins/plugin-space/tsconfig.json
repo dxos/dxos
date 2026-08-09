@@ -47,9 +47,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -108,9 +105,6 @@
     },
     {
       "path": "../../sdk/types"
-    },
-    {
-      "path": "../../ui/lit-ui"
     },
     {
       "path": "../../ui/react-ui"

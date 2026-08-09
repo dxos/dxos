@@ -4,20 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { ViewModel } from '@dxos/schema';
 
-import { CreateKanbanSchema, Kanban } from '#types';
+import * as Kanban from '../types/Kanban';
+import * as KanbanSchema from '../types/KanbanSchema';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Kanban.Kanban),
-      inputSchema: CreateKanbanSchema,
+      inputSchema: KanbanSchema.CreateKanbanSchema,
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {

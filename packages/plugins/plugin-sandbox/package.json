@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sandbox",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "DXOS Sandbox plugin for running isolated shell environments",
   "homepage": "https://dxos.org",
@@ -33,11 +33,6 @@
       "source": "./src/SandboxPlugin.ts",
       "types": "./dist/types/src/SandboxPlugin.d.ts",
       "default": "./dist/lib/SandboxPlugin.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -52,13 +47,29 @@
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    }
+    "./Sandbox": {
+      "source": "./src/types/Sandbox.ts",
+      "types": "./dist/types/src/types/Sandbox.d.ts",
+      "import": "./dist/lib/Sandbox.mjs"
+    },
+    "./SandboxEvents": {
+      "source": "./src/types/SandboxEvents.ts",
+      "types": "./dist/types/src/types/SandboxEvents.d.ts",
+      "import": "./dist/lib/SandboxEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Sandbox": [
+        "dist/types/src/types/Sandbox.d.ts"
+      ],
+      "SandboxEvents": [
+        "dist/types/src/types/SandboxEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -71,11 +82,8 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

@@ -5,8 +5,9 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -17,7 +18,7 @@ import { meta } from '#meta';
 import { GITHUB_SOURCE } from '../constants';
 import { formatGitHubSyncFailure } from '../errors';
 import { GitHubApi } from '../services';
-import { GitHubOperation } from '../types';
+import * as GitHubOperation from '../types/GitHubOperation';
 
 const { mergeField, snapshotField } = ConnectorSync;
 

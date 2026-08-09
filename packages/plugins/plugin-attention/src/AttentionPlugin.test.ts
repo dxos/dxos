@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents, ProcessManagerPlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 
@@ -15,18 +15,19 @@ import { meta } from './meta';
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('AttentionPlugin', () => {
-  test('modules activate on the expected events', async ({ expect }) => {
+  test('modules activate on startup', async ({ expect }) => {
     await using harness = await createTestApp({
       plugins: [GraphPlugin(), ProcessManagerPlugin(), AttentionPlugin()],
     });
 
-    // Modules expected to be active after a normal startup.
+    // All modules are dependency-mode and activate during the startup dependency pass.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('attention'), moduleId('ReactContext'), moduleId('Keyboard')]),
+      expect.arrayContaining([
+        moduleId('attention'),
+        moduleId('ReactContext'),
+        moduleId('Keyboard'),
+        moduleId('OperationHandler'),
+      ]),
     );
-
-    // OperationHandler fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

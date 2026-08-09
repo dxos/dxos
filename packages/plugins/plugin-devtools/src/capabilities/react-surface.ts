@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
@@ -34,9 +35,9 @@ import {
 import { type Graph } from '@dxos/plugin-graph';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
-import { DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
-import { Devtools } from '#types';
+import { CliPanel, DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
 
+import * as Devtools from '../types/Devtools';
 import {
   ActiveSpacePanel,
   EdgeTestingSurface,
@@ -69,7 +70,7 @@ const isGraphDebug = (data: unknown): data is GraphDebug => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'appGraph',
         filter: AppSurface.subject(AppSurface.Article, isGraphDebug),
@@ -81,6 +82,11 @@ export default Capability.makeModule(
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
         component: ToolsExplorer,
         props: () => ({ serverUrl: MCP_SERVER_URL }),
+      }),
+      Surface.create({
+        id: 'cli',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Cli),
+        component: CliPanel,
       }),
       Surface.create({
         id: 'registry',

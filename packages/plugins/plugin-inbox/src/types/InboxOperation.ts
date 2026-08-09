@@ -7,18 +7,15 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Capability } from '@dxos/app-framework';
-import { Credential, Operation, Trace } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { FactStore } from '@dxos/pipeline-rdf';
-import {
-  Connection,
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
+import { FactStore } from '@dxos/pipeline-rdf/fact-store';
+import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -41,8 +38,8 @@ export const GetGoogleCalendars = Operation.make({
     description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
     icon: 'ph--calendar--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 export const AddMailbox = Operation.make({
@@ -166,8 +163,8 @@ export const MaterializeGmailTarget = Operation.make({
     description: 'Create the local Mailbox bound to a Gmail connection.',
     icon: 'ph--envelope--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 export const JmapSync = Operation.make({
@@ -203,8 +200,8 @@ export const MaterializeJmapTarget = Operation.make({
     description: 'Create the local Mailbox bound to a JMAP connection.',
     icon: 'ph--envelope--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 export const JmapSend = Operation.make({
@@ -253,8 +250,8 @@ export const MaterializeCalendarTarget = Operation.make({
     description: 'Create the local Calendar bound to a selected Google calendar.',
     icon: 'ph--calendar--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**
@@ -302,8 +299,8 @@ export const GetGoogleContactGroups = Operation.make({
     description: 'Discover Google Contact Groups reachable from a connection.',
     icon: 'ph--users--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 export const GoogleContactsSync = Operation.make({

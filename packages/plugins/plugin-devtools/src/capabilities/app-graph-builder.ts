@@ -4,17 +4,26 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Devtools } from '#types';
+
+import * as Devtools from '../types/Devtools';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Read the app graph through its atom so the extension establishes a reactive dependency
+    // and re-evaluates once the capability lands (dependency modules contribute individually,
+    // not batched per wave).
+    const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
+
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'root',
@@ -40,7 +49,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system)),
         connector: (_nodeOrSpace: Node.Node | Space, get) =>
           Effect.gen(function* () {
-            const [graph] = get(yield* Capability.atom(AppCapabilities.AppGraph));
+            const [graph] = get(appGraphAtom);
 
             return [
               Node.make({
@@ -69,6 +78,15 @@ export default Capability.makeModule(
                     properties: {
                       label: ['debug-tools-explorer.label', { ns: meta.profile.key }],
                       icon: 'ph--toolbox--regular',
+                    },
+                  }),
+                  Node.make({
+                    id: Devtools.nodeId(Devtools.Cli),
+                    data: Devtools.Cli,
+                    type: Devtools.id,
+                    properties: {
+                      label: ['cli.label', { ns: meta.profile.key }],
+                      icon: 'ph--terminal-window--regular',
                     },
                   }),
                   Node.make({
@@ -383,6 +401,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

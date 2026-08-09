@@ -5,9 +5,9 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
-import { InboxOperation } from '@dxos/plugin-inbox/types';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
 import { GoogleCalendar } from '../../../apis';
 import { GoogleCredentials } from '../../../services/google-credentials';

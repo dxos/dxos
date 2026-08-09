@@ -7,16 +7,18 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Trigger } from '@dxos/compute';
 import { Type } from '@dxos/echo';
-import { Connector } from '@dxos/plugin-connector';
-import { MAIL_AUTO_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
-import { InboxOperation, Mailbox, SyncOptions } from '@dxos/plugin-inbox/types';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
+import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 
 import { JMAP_DEFAULT_HOST, JMAP_MAIL_CONNECTOR_ID } from '../constants';
 import { jmapCredentialForm } from './credential-form';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: JMAP_MAIL_CONNECTOR_ID,
         // Nominal default; the real `AccessToken.source` (host) is captured by the credential form.
@@ -31,9 +33,10 @@ export default Capability.makeModule(
           // Single-target connector (the account inbox): no `getTargets`. The coordinator calls
           // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: InboxOperation.MaterializeJmapTarget,
-          optionsSchema: SyncOptions,
+          optionsSchema: SyncOptions.SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
+          remote: MAIL_REMOTE_SYNC,
         },
       },
     ]);

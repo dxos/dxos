@@ -20,6 +20,12 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -44,9 +50,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -60,6 +63,9 @@
     },
     {
       "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/compute/extractor"
@@ -122,9 +128,6 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {
@@ -161,9 +164,6 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-rdf"
-    },
-    {
       "path": "../../ui/react-ui-search"
     },
     {
@@ -174,9 +174,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
@@ -197,9 +194,6 @@
       "path": "../plugin-preview"
     },
     {
-      "path": "../plugin-routine"
-    },
-    {
       "path": "../plugin-settings"
     },
     {
@@ -207,9 +201,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

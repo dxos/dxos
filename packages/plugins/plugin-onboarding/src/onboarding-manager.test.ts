@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, onTestFinished, test } from 'vitest';
+import { describe, onTestFinished, test, vi } from 'vitest';
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { ClientOperation } from '@dxos/plugin-client';
 
 import { OnboardingManager } from './onboarding-manager';
@@ -45,6 +45,35 @@ describe('OnboardingManager', () => {
       }),
     ]);
   });
+
+  test('url-driven signup with an already-registered email creates no identity', async ({ expect }) => {
+    const { manager, getCalls } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      email: 'existing@example.com',
+      accountInvitationCode: 'XK4F9P2A',
+      emailProbe: 'exists',
+    });
+    await manager.initialize();
+
+    // Redemption would reject the duplicate email, stranding this identity unbindable.
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
+    expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
+  });
+
+  test('url-driven signup creates no identity when the email probe is rate-limited', async ({ expect }) => {
+    const { manager, getCalls } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      email: 'unknown@example.com',
+      accountInvitationCode: 'XK4F9P2A',
+      emailProbe: 'unavailable',
+    });
+    await manager.initialize();
+
+    // An inconclusive probe says nothing about the address, so proceeding could still
+    // strand an identity that redemption refuses to bind.
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
+    expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
+  });
 });
 
 const createClient = async () => {
@@ -69,13 +98,55 @@ const createInvoker = () => {
   return { invokePromise, getCalls, calls };
 };
 
-const createManager = async (options: { identity?: boolean; deviceInvitationCode?: string }) => {
+/**
+ * Stubs the `/account/email/exists` probe. Any other hub request throws so a test can't
+ * pass off the back of a silently-failing fetch. `'unavailable'` simulates the rate-limit
+ * response, which must not be read as "this email is free".
+ */
+const stubEmailProbe = (outcome: 'exists' | 'available' | 'unavailable') => {
+  vi.stubGlobal('fetch', async (input: unknown) => {
+    if (!(input instanceof URL) || input.pathname !== '/account/email/exists') {
+      throw new Error(`Unexpected hub request: ${String(input)}`);
+    }
+    if (outcome === 'unavailable') {
+      return new Response(JSON.stringify({ success: false, message: 'Too many requests' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return new Response(JSON.stringify({ success: true, data: { exists: outcome === 'exists' } }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+  onTestFinished(() => {
+    vi.unstubAllGlobals();
+  });
+};
+
+const createManager = async (options: {
+  identity?: boolean;
+  deviceInvitationCode?: string;
+  hubUrl?: string;
+  email?: string;
+  accountInvitationCode?: string;
+  emailProbe?: 'exists' | 'available' | 'unavailable';
+}) => {
   const client = await createClient();
   if (options.identity) {
     await client.halo.createIdentity();
   }
+  if (options.emailProbe !== undefined) {
+    stubEmailProbe(options.emailProbe);
+  }
   const { invokePromise, getCalls, calls } = createInvoker();
-  const manager = new OnboardingManager({ invokePromise, client, deviceInvitationCode: options.deviceInvitationCode });
+  const manager = new OnboardingManager({
+    invokePromise,
+    client,
+    deviceInvitationCode: options.deviceInvitationCode,
+    hubUrl: options.hubUrl,
+    email: options.email,
+    accountInvitationCode: options.accountInvitationCode,
+  });
   onTestFinished(() => manager.destroy());
   return { manager, getCalls, calls };
 };

@@ -14,8 +14,10 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { MailSyncError, type MailSyncItem, MailSyncProvider, type MailSyncSource } from '@dxos/plugin-inbox/sync';
-import { Mailbox, type SyncStreamConfig, SystemTags } from '@dxos/plugin-inbox/types';
+import type * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
 import { Person } from '@dxos/types';
 
@@ -37,13 +39,13 @@ type DeltaPlan = {
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
-/** JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
+/** JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
 const JMAP_SYNC_CONFIG = {
   listPageSize: 50,
   fetchConcurrency: 5,
   commitPageSize: 10,
   maxItemsPerRun: 500,
-} as const satisfies SyncStreamConfig;
+} as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 /**
  * JMAP's {@link MailSyncProvider}: session/account discovery, the email source, the folder→tag map, and

@@ -6,17 +6,20 @@ import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation, Trace } from '@dxos/compute';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Ref, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { AccessToken, Cursor } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { Mailbox } from '../types';
+import * as Mailbox from '../types/Mailbox';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded with
 // a mailbox binding, plus the ambient services a provider's sync entry point requires. Published as

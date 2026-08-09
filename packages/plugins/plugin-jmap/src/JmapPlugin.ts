@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { Connector, MailSend, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
@@ -15,17 +15,10 @@ import { translations } from '#translations';
  * against belong to `@dxos/plugin-inbox`.
  */
 export const JmapPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupConnectors,
-    activate: Connector,
-  }),
-  Plugin.addModule({
-    id: 'mail-send',
-    activatesOn: ActivationEvents.Startup,
-    activate: MailSend,
-  }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Connector),
+  Plugin.addModule(MailSend),
   Plugin.make,
 );
 

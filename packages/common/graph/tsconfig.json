@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../async"
     },
     {
@@ -29,9 +26,6 @@
     },
     {
       "path": "../invariant"
-    },
-    {
-      "path": "../random"
     },
     {
       "path": "../util"

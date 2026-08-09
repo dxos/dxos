@@ -11,6 +11,7 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import {
   MailSyncError,
   type MailSyncItem,
@@ -20,7 +21,7 @@ import {
   parseFromHeader,
   reconcileToChanges,
 } from '@dxos/plugin-inbox/sync';
-import { Mailbox, SystemTags } from '@dxos/plugin-inbox/types';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { Person } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';

@@ -11,7 +11,7 @@ import { Operation } from '@dxos/compute';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
-import { Connector, type ConnectorEntry } from '../types';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { connectorIdsForTarget } from './target-connectors';
 
 class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.test.targetConnectors.mailbox', '0.1.0'))(
@@ -28,16 +28,16 @@ const TestSync = Operation.make({
   output: Schema.Any,
 });
 
-const makeConnector = (id: string, targetTypename?: string): ConnectorEntry => ({
+const makeConnector = (id: string, targetTypename?: string): ConnectorSpec.ConnectorEntry => ({
   id,
   source: `${id}.example`,
   sync: { operation: TestSync, ...(targetTypename ? { targetTypename } : {}) },
 });
 
 /** A capability manager holding the given connectors, as the annotation resolver receives it. */
-const withConnectors = (...connectors: ConnectorEntry[]) => {
+const withConnectors = (...connectors: ConnectorSpec.ConnectorEntry[]) => {
   const capabilities = CapabilityManager.make({ registry: Registry.make() });
-  capabilities.contribute({ module: 'test', interface: Connector, implementation: connectors });
+  capabilities.contribute({ module: 'test', interface: ConnectorSpec.Connector, implementation: connectors });
   return capabilities;
 };
 

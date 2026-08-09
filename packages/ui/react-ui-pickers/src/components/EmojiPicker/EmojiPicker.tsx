@@ -4,10 +4,8 @@
 
 import './emoji.css';
 
-import emojiData from '@emoji-mart/data';
-import EmojiMart from '@emoji-mart/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 
 import {
   Button,
@@ -23,6 +21,12 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
+
+/**
+ * emoji-mart plus its emoji database is ~480 KB; loading it with the barrel put it in every
+ * tab's boot graph, so the panel loads on first open instead.
+ */
+const EmojiMartPanel = lazy(() => import('./EmojiMartPanel'));
 
 export type EmojiPickerProps = ThemedClassName<{
   disabled?: boolean;
@@ -80,20 +84,17 @@ export const EmojiPickerToolbarButton = ({
             }
           }}
         >
-          {/* https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props */}
-          <EmojiMart
-            data={emojiData}
-            onEmojiSelect={({ native }: { native?: string }) => {
-              if (native) {
-                setEmojiValue(native);
-                setEmojiPickerOpen(false);
-              }
-            }}
-            autoFocus={true}
-            maxFrequentRows={0}
-            noCountryFlags={true}
-            theme={themeMode}
-          />
+          <Suspense fallback={null}>
+            <EmojiMartPanel
+              onEmojiSelect={({ native }: { native?: string }) => {
+                if (native) {
+                  setEmojiValue(native);
+                  setEmojiPickerOpen(false);
+                }
+              }}
+              themeMode={themeMode}
+            />
+          </Suspense>
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
@@ -144,18 +145,16 @@ export const EmojiPickerBlock = ({
             }
           }}
         >
-          <EmojiMart
-            data={emojiData}
-            onEmojiSelect={({ native }: { native?: string }) => {
-              if (native) {
-                setEmojiValue(native);
-                setEmojiPickerOpen(false);
-              }
-            }}
-            autoFocus={true}
-            maxFrequentRows={0}
-            noCountryFlags={true}
-          />
+          <Suspense fallback={null}>
+            <EmojiMartPanel
+              onEmojiSelect={({ native }: { native?: string }) => {
+                if (native) {
+                  setEmojiValue(native);
+                  setEmojiPickerOpen(false);
+                }
+              }}
+            />
+          </Suspense>
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Root>

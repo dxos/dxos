@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Routine } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
@@ -19,8 +19,8 @@ import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/
 
 import { RoutineForm } from '#components';
 import { meta } from '#meta';
-import { RoutineCapabilities } from '#types';
 
+import * as RoutineCapabilities from '../../types/RoutineCapabilities';
 import { connectedRoutinesQuery } from '../../util';
 
 /** Association state of a row relative to the companion's object. */
@@ -191,7 +191,9 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root>
         <Panel.Toolbar>
-          <Menu.Toolbar classNames='dx-document' />
+          <Menu.Toolbar classNames='dx-document'>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content asChild classNames='pt-trim-md'>
           <ScrollArea.Root>

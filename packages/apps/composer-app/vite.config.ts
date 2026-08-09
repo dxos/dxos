@@ -25,6 +25,8 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
+import { bootChunking } from './src/vite/boot-chunking';
+import { traceBootLeak } from './src/vite/trace-boot-leak';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -32,6 +34,7 @@ const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 // DX_PLUGIN_SET=minimal (serve-min task) swaps the full plugin registry for
 // plugin-defs.minimal.tsx without touching main.tsx.
 const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
+const pluginSetFile = isMinimalPluginSet ? 'src/plugin-defs.minimal.tsx' : 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -39,10 +42,30 @@ const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
+// Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
+const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
  */
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
+
+/**
+ * Glob matching the entry of every plugin the minimal registry can reach, for optimize-deps
+ * scanning. Derived from the registry sources so adding a plugin to `plugin-defs.minimal.tsx`
+ * needs no edit here; a specifier scan is enough because a missed plugin costs a
+ * "discovered new dependencies" reload rather than a wrong build.
+ */
+const minimalPluginEntries = () => {
+  const names = new Set<string>();
+  for (const file of [pluginSetFile, 'src/plugin-defs.core.tsx']) {
+    const source = readFileSync(path.join(dirname, file), 'utf8');
+    for (const [, name] of source.matchAll(/@dxos\/plugin-([a-z0-9-]+)/g)) {
+      names.add(name);
+    }
+  }
+  return path.resolve(rootDir, `packages/plugins/plugin-{${[...names].sort().join(',')}}/src/index.{ts,tsx}`);
+};
 
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
@@ -60,19 +83,13 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // forcing is skipped, where build speed wins over correctness for unchanged source.
   // Package-internal `#*` subpath imports must still resolve to source, or they fall
   // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
+  // Packages whose source is not vite-safe publish no `source` condition at all, so they resolve
+  // to dist here exactly as they do under node/bun — no app-local exclude list, and no divergence
+  // between runtimes. The `dist-runtime` moon tag keeps their dist built for `serve-min`. The same
+  // holds per-export for bundler-plugin entrypoints (`./vite-plugin`, `./plugin`) of packages whose
+  // remaining exports are vite-safe; the `vite-plugin` tag builds their dist.
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
-    exclude: [
-      '@dxos/random-access-storage',
-      '@dxos/lock-file',
-      '@dxos/network-manager',
-      '@dxos/teleport',
-      '@dxos/config',
-      '@dxos/client-services',
-      '@dxos/observability',
-      // TODO(dmaretskyi): Decorators break in lit.
-      '@dxos/lit-*',
-    ],
   }),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
@@ -146,10 +163,24 @@ export default defineConfig((env) => ({
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
         './src/workers/coordinator-worker.ts',
-        isMinimalPluginSet ? './src/plugin-defs.minimal.tsx' : './src/plugin-defs.tsx',
+        `./${pluginSetFile}`,
       ],
     },
   },
+  preview: {
+    // With https enabled (and no proxy) vite serves preview over HTTP/2, whose stream
+    // multiplexing removes the ~6-connection HTTP/1.1 request serialization across the
+    // ~500-chunk boot preload wave — the dominant pre-main cost when previewing locally.
+    // Same opt-in as `server`: HTTPS=true with key/cert at the repo root.
+    https:
+      process.env.HTTPS === 'true'
+        ? {
+            key: '../../../key.pem',
+            cert: '../../../cert.pem',
+          }
+        : undefined,
+  },
+
   oxc: {
     target: [...browserTargets],
   },
@@ -159,9 +190,7 @@ export default defineConfig((env) => ({
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
     target: [...browserTargets],
-    rollupOptions: {
-      // NOTE: Set cache to `false` to help debug flaky builds.
-      // cache: false,
+    rolldownOptions: {
       input: {
         internal: path.resolve(dirname, './internal.html'),
         main: path.resolve(dirname, './index.html'),
@@ -176,12 +205,24 @@ export default defineConfig((env) => ({
       external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
-        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
-        // record form that worked in Rollup is rejected at runtime.
-        manualChunks: (id: string) => {
-          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
-            return 'react';
-          }
+        // Chunk grouping: React pinned, and the boot path collapsed from ~520 default-split
+        // chunks into a handful via `bootChunking`. Coarser inference was measured and
+        // rejected (2026-08): per-package groups welded each package's eager and lazy halves
+        // (boot 4.03->10.07MB), and `$initial` tags span all five HTML entries plus their
+        // recursive dependencies (boot ->19MB).
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+            // Naive maxSize splitting cuts through module cycles and breaks evaluation
+            // order (rolldown#8803); the fix rolldown offers (strictExecutionOrder) costs
+            // ~+1.8MB of inhibited treeshaking. Instead the manifest carries a cycle-safe
+            // partition (see `boot-chunking.ts`) and each bucket becomes its own chunk.
+            {
+              name: boot.groupName,
+              includeDependenciesRecursively: false,
+              priority: 5,
+            },
+          ],
         },
       },
     },
@@ -305,14 +346,10 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
-      // Under DX_PLUGIN_SET=minimal only the plugins registered in
-      // plugin-defs.minimal.tsx are scanned — keep the brace list in sync.
-      isMinimalPluginSet
-        ? path.resolve(
-            rootDir,
-            'packages/plugins/plugin-{assistant,attention,client,connector,debug,deck,devtools,graph,inbox,markdown,navtree,observability,onboarding,outliner,preview,projects,registry,review,routine,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
-          )
-        : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      // Under DX_PLUGIN_SET=minimal, scan only the plugins the minimal registry can reach,
+      // read from the registry sources themselves — the hand-maintained list this replaces
+      // had drifted from them (missing `tasks`/`progress`, still naming a removed `outliner`).
+      isMinimalPluginSet ? minimalPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
@@ -321,9 +358,7 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
-      ...(isMinimalPluginSet
-        ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, 'src/plugin-defs.minimal.tsx') }]
-        : []),
+      ...(isMinimalPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },
@@ -358,6 +393,7 @@ export default defineConfig((env) => ({
     plugins: () => [...sharedPlugins(env)],
   },
   plugins: [
+    traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
     ...sharedPlugins(env),
 
@@ -460,6 +496,7 @@ export default defineConfig((env) => ({
     // on the plugin definition (it raced with Vite's optimize-deps and produced
     // a chunk-content drift + partial-batch crash cascade).
     importMapPlugin(),
+    boot.plugin,
 
     // Hand the boot loader the Composer brand mark so the visual identity
     // is established before any JS bundle parses. The SVG carries its own

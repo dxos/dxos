@@ -4,11 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
-import { Instructions } from '@dxos/compute';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { ConnectorAuthAnnotation, connectorIdsForTarget } from '@dxos/plugin-connector';
+import { connectorIdsForTarget } from '@dxos/plugin-connector';
+import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -83,7 +84,10 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
     // Providers are resolved from the registry (any connector whose `sync.targetTypename` is this
     // type), so a mail provider registers itself rather than being named here.
-    ConnectorAuthAnnotation.set({ connectorIds: connectorIdsForTarget, bindTarget: true }),
+    ConnectorAnnotations.ConnectorAuthAnnotation.set({
+      connectorIds: connectorIdsForTarget,
+      bindTarget: true,
+    }),
   ),
 ) {}
 
@@ -155,7 +159,12 @@ export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds:
     return;
   }
   Obj.update(mailbox, (mailbox) => {
-    const map = (mailbox.extracted ??= {});
+    if (!mailbox.extracted) {
+      mailbox.extracted = {};
+    }
+    // Re-read through the proxy: `??=` would evaluate to the plain right-hand object, and mutations
+    // of a detached record are not written through, silently dropping the first recorded entry.
+    const map = mailbox.extracted;
     const merged = [...(map[messageId] ?? [])];
     for (const id of objectIds) {
       if (!merged.includes(id)) {
@@ -342,5 +351,13 @@ export const deriveSubscriptions = (messages: readonly MessageLike[]): Subscript
       byEmail.set(email, { email, name: message.sender?.name, unsubscribe: target, count: 1 });
     }
   }
-  return [...byEmail.values()].sort((left, right) => right.count - left.count);
+  // Count ties break alphabetically (then by email, so case-insensitively equal names stay
+  // deterministic): Map insertion order follows message order, which is unstable across syncs and
+  // reads as an unsorted list.
+  return [...byEmail.values()].sort(
+    (left, right) =>
+      right.count - left.count ||
+      (left.name ?? left.email).localeCompare(right.name ?? right.email, undefined, { sensitivity: 'base' }) ||
+      left.email.localeCompare(right.email),
+  );
 };

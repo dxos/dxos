@@ -12,10 +12,13 @@ import { Card, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { InboxOperation, Mailbox } from '#types';
+
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 
 type SubscriptionTileData = {
   readonly subscription: Mailbox.Subscription;
@@ -127,42 +130,61 @@ export const SubscriptionsArticle = ({ role, subject: mailbox, attendableId }: S
   }, [subscriptions, selected, db, mailbox, invokePromise]);
 
   const menuActions = useSubscriptionsActions(selected.size, removeSelected);
+  // Substring match (not fuzzy): fuzzy re-orders by score, which would defeat the noisiest-first sort.
+  const { results, handleSearch } = useSearchListResults({
+    items: subscriptions,
+    fuzzy: false,
+    extract: (subscription) => `${subscription.name ?? ''} ${subscription.email}`,
+  });
   const items = useMemo(
     () =>
-      subscriptions.map((subscription) => ({
+      results.map((subscription) => ({
         subscription,
         selected: selected.has(subscription.email),
         onToggle: toggle,
       })),
-    [subscriptions, selected, toggle],
+    [results, selected, toggle],
   );
 
+  // A mailbox with no subscriptions has nothing to filter; past that an empty list means no matches.
+  const empty =
+    subscriptions.length === 0
+      ? t('subscriptions.empty.message')
+      : results.length === 0
+        ? t('subscriptions.no-results.message')
+        : undefined;
+
   return (
-    <Panel.Root role={role}>
-      <Menu.Root {...menuActions} attendableId={id}>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root role={role}>
         <Panel.Toolbar>
-          <Menu.Toolbar classNames='dx-document' />
+          <Menu.Root {...menuActions} attendableId={id}>
+            <Menu.Toolbar classNames='dx-document'>
+              <SearchList.Input classNames='grow' placeholder={t('subscriptions.filter.placeholder')} />
+              <Menu.Items />
+            </Menu.Toolbar>
+          </Menu.Root>
         </Panel.Toolbar>
-      </Menu.Root>
-      <Panel.Content asChild>
-        {subscriptions.length === 0 ? (
-          <Empty label={t('subscriptions.empty.message')} />
-        ) : (
-          <ScrollArea.Root orientation='vertical' padding thin>
-            <ScrollArea.Viewport classNames='dx-document'>
-              <Mosaic.Container asChild>
-                <Mosaic.Stack
-                  Tile={SubscriptionTile}
-                  items={items}
-                  draggable={false}
-                  getId={(item) => item.subscription.email}
-                />
-              </Mosaic.Container>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        )}
-      </Panel.Content>
-    </Panel.Root>
+        <Panel.Content asChild>
+          {empty ? (
+            <Empty label={empty} />
+          ) : (
+            <ScrollArea.Root orientation='vertical' padding thin>
+              <ScrollArea.Viewport classNames='dx-document'>
+                <Mosaic.Container asChild>
+                  <Mosaic.Stack
+                    Tile={SubscriptionTile}
+                    items={items}
+                    draggable={false}
+                    getId={(item) => item.subscription.email}
+                  />
+                </Mosaic.Container>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          )}
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 

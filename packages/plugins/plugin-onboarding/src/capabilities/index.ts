@@ -2,23 +2,60 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { type OperationHandlerSet } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import { type OnboardingOptions } from './capabilities';
+import { OnboardingCapabilities } from './capabilities';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const DefaultContent = Capability.lazy<OnboardingOptions>('DefaultContent', () => import('./default-content'));
-export const Settings = Capability.lazy('Settings', () => import('./settings'));
-export const OAuthRecoveryRedirect = Capability.lazy(
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const DefaultContent = Capability.lazyModule(
+  'DefaultContent',
+  {
+    requires: [
+      Capabilities.OperationInvoker,
+      AppCapabilities.AppGraph,
+      ClientCapabilities.Client,
+      SpaceCapabilities.OnCreateSpace,
+      SpaceCapabilities.DefaultSpace,
+    ],
+    provides: [],
+    // Runtime event: the default space exists once identity is created, not at startup.
+    // `requires: [SpaceCapabilities.DefaultSpace]` orders this after plugin-space's
+    // `IdentityCreated` module within the same event wave.
+    activatesOn: ClientEvents.IdentityCreated,
+  },
+  () => import('./default-content'),
+);
+export const Settings = AppCapability.settings(() => import('./settings'));
+export const OAuthRecoveryRedirect = Capability.lazyModule(
   'OAuthRecoveryRedirect',
+  { provides: [] },
   () => import('./oauth-recovery-redirect'),
 );
-export const Onboarding = Capability.lazy('Onboarding', () => import('./onboarding'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const Onboarding = Capability.lazyModule(
+  'Onboarding',
+  {
+    requires: [
+      AppCapabilities.AppGraph,
+      Capabilities.OperationInvoker,
+      AppCapabilities.Layout,
+      ClientCapabilities.Client,
+    ],
+    provides: [OnboardingCapabilities.Onboarding],
+    // The manager reads `client.halo` synchronously at construction, so it needs the forked
+    // client initialization to have completed.
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./onboarding'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+});
 
 export * from './capabilities';

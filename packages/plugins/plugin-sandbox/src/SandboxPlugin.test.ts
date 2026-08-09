@@ -5,18 +5,20 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { Operation, ServiceResolver } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { configPreset } from '@dxos/config';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SandboxPlugin } from '#plugin';
-import { Sandbox } from '#types';
 
 import { CreateSandbox, Exec } from './skills/functions';
+import * as Sandbox from './types/Sandbox';
 
 /**
  * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).
@@ -34,7 +36,7 @@ describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => 
       ],
     });
 
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
     await harness.waitForEvent(ClientEvents.SpacesReady);
@@ -44,7 +46,7 @@ describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => 
         const { sandboxId } = yield* Operation.invoke(
           CreateSandbox,
           { name: 'composer-harness-test' },
-          { spaceId: personalSpace.id },
+          { spaceId: defaultSpace.id },
         );
         expect(sandboxId).toBeTruthy();
 
@@ -57,13 +59,13 @@ describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => 
             sandbox: Ref.make(sandbox),
             command: 'echo hello world',
           },
-          { spaceId: personalSpace.id },
+          { spaceId: defaultSpace.id },
         );
 
         expect(result.exitCode).toBe(0);
         expect(result.success).toBe(true);
         expect(result.stdout.trim()).toBe('hello world');
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
       { timeout: 30_000 },
     );
   });

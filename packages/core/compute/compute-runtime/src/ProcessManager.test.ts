@@ -23,17 +23,14 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/TestClock';
 
-import {
-  Cancellation,
-  Operation,
-  OperationHandlerSet,
-  Process,
-  RunAgainError,
-  ServiceNotAvailableError,
-  ServiceResolver,
-  Trace,
-} from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RunAgainError, ServiceNotAvailableError } from '@dxos/compute';
+import * as Cancellation from '@dxos/compute/Cancellation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
+import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, DXN } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -304,6 +301,23 @@ const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, P
   Layer.provide(OperationHandlerSet.provide(handlers)),
   Layer.provideMerge(Registry.layer),
   Layer.provide(Trace.layerNoop),
+);
+
+// Trace messages captured by {@link CapturingTraceTestLayer}. Cleared at the start of each test that
+// uses it (the sink closure holds this stable reference, so it must be mutated in place, not reassigned).
+const capturedTraceMessages: Trace.Message[] = [];
+
+// Variant of {@link TestLayer} whose {@link Trace.TraceSink} records every message for assertions.
+const CapturingTraceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
+  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provideMerge(RemoteProcessManager.layerNoop),
+  Layer.provideMerge(RemoteTraceMonitor.layerNoop),
+  Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
+  Layer.provide(TestDatabaseLayer({ types: [Organization.Organization] })),
+  Layer.provide(KeyValueStore.layerMemory),
+  Layer.provide(OperationHandlerSet.provide(handlers)),
+  Layer.provideMerge(Registry.layer),
+  Layer.provide(Layer.succeed(Trace.TraceSink, { write: (message) => capturedTraceMessages.push(message) })),
 );
 
 describe('ManagerImpl', () => {
@@ -619,6 +633,24 @@ describe('ManagerImpl', () => {
       const processCause = handle.status.exit.pipe(Option.flatMap(Exit.causeOption), Option.getOrUndefined);
       expect(processCause).toEqual(cause);
     }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAgain tags the OperationEnd failure with the run-again error code',
+    Effect.fn(function* ({ expect }) {
+      capturedTraceMessages.length = 0;
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(Process.fromOperation(RunAgain, handlers));
+      yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
+
+      // `isOfType` inside the map narrows `event.data` to the OperationEnd payload without a cast.
+      const ends = capturedTraceMessages
+        .flatMap((message) => Trace.flatten(message))
+        .flatMap((event) => (Trace.isOfType(Trace.OperationEnd, event) ? [event.data] : []));
+      expect(ends).toHaveLength(1);
+      expect(ends[0].outcome).toBe('failure');
+      expect(ends[0].errorCode).toBe(RUN_AGAIN_ERROR_CODE);
+    }, Effect.provide(CapturingTraceTestLayer)),
   );
 
   it.effect(

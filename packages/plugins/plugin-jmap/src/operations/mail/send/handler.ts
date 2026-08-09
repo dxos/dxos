@@ -5,9 +5,10 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
-import { InboxOperation, SystemTags } from '@dxos/plugin-inbox/types';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors';

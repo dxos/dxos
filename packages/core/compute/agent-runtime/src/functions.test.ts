@@ -8,15 +8,17 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { LanguageModelFixture } from '@dxos/ai/testing';
 import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
-import { Operation, OperationHandlerSet, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
-import { AssistantTestLayer, runMemoizedTests } from './testing';
+import { AssistantTestLayer } from './testing';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -60,7 +62,7 @@ const TestLayer = Layer.empty.pipe(
   ),
 );
 
-describe.skipIf(!runMemoizedTests())('Research', () => {
+describe('Research', { tags: ['model-fixture'] }, () => {
   it.effect(
     'call a function with a ref input',
     Effect.fnUntraced(
@@ -82,6 +84,6 @@ describe.skipIf(!runMemoizedTests())('Research', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+    LanguageModelFixture.isUpdateEnabled() ? 240_000 : 30_000,
   );
 });

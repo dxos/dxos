@@ -15,12 +15,12 @@ import { AccessToken, Cursor } from '@dxos/link';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import { captureSink } from '@dxos/pipeline/testing';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 
 import { seedMailboxBinding } from '../testing/sync-fixture';
-import { type Mailbox } from '../types';
+import type * as Mailbox from '../types/Mailbox';
 
 const TEST_SOURCE = 'test.mail';
 

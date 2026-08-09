@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -13,7 +13,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { ChessPlugin } from '#plugin';
 
 import { meta } from './meta';
-import { ChessOperation } from './types';
+import * as ChessOperation from './types/ChessOperation';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
@@ -23,16 +23,27 @@ describe('ChessPlugin', () => {
       plugins: [ClientPlugin({}), GamePlugin(), ChessPlugin()],
     });
 
-    // Modules expected to be active after a normal startup (headless/node variant).
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
+    // Modules expected to be active after a normal startup (headless/node variant). OperationHandler
+    // is a dependency-mode root, so it activates immediately too.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
+    );
 
-    // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
+    // Demand-gated on the assistant's start event, so it must stay off the startup pass.
+    expect(harness.manager.getActive()).not.toContain(moduleId('SkillDefinition'));
+  });
+
+  test('the skill definition activates when the assistant starts', async ({ expect }) => {
+    // Positive coverage for `AssistantStart`, which had none outside plugin-assistant: every
+    // non-assistant `SkillDefinition` module (chess, kanban, map, script, table, ...) was only
+    // ever asserted absent. A broken body surfaces as a skill the assistant silently never offers.
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin({}), GamePlugin(), ChessPlugin()],
+    });
+
+    await harness.fire(AppActivationEvents.AssistantStart);
     expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
-
-    // Operation handlers are not loaded on startup — SetupProcessManager fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
+    expect(harness.getAll(AppCapabilities.SkillDefinition).length).toBeGreaterThan(0);
   });
 
   test('invokes the Print operation via the invoker capability', async ({ expect }) => {

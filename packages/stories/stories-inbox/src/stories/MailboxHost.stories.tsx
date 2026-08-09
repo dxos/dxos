@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Database, Feed, Tag } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -65,7 +65,7 @@ const HostStory = () => {
   const [recoveryCode, setRecoveryCode] = useState<string>();
 
   const identity = client.halo.identity.get();
-  const space = AppSpace.getPersonalSpace(client);
+  const space = AppSpace.getDefaultSpace(client);
 
   // Recovery code (seed phrase) — the path a bun CLI can actually use to join this identity:
   // `dx account login --method recovery-code` recovers over EDGE (HTTP), whereas device-invitation
@@ -199,7 +199,6 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -211,7 +210,7 @@ const meta = {
                 return;
               }
 
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
               const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
               const feed = yield* Effect.promise(() => mailbox.feed.load());
               const messages = SEED_SENDERS.map((sender, index) =>

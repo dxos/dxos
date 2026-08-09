@@ -7,8 +7,10 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Routine, Trace, Trigger } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';

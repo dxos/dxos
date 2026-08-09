@@ -88,53 +88,58 @@ export type RecoverArgs =
  * {@link Invitation.Flow}s driven through the {@link Invitation} flow verbs; `invitations`
  * observes the active (host-created) device-invitation flows.
  */
-export class Service extends Context.Tag('@dxos/halo/Identity')<
-  Service,
-  {
-    /**
-     * The local identity (`Option.none` when none exists) as a stream that emits the current
-     * value immediately on subscription. Take the first element for a one-shot read; subscribe
-     * for updates.
-     */
-    readonly identity: Stream.Stream<Option.Option<Info>>;
-    /**
-     * Synchronous snapshot of the local identity (`Option.none` when none exists). For imperative
-     * callers (non-React, non-Effect) that need the current value without subscribing.
-     */
-    readonly getSnapshot: () => Option.Option<Info>;
-    /**
-     * Subscribe to local-identity changes (imperative). Invokes `callback` immediately with the
-     * current value, then on each change. Returns an unsubscribe function.
-     */
-    readonly subscribe: (callback: (identity: Option.Option<Info>) => void) => () => void;
-    /** Create the local identity (and its first device). */
-    readonly create: (options?: { displayName?: string; deviceLabel?: string }) => Effect.Effect<Info, IdentityError>;
-    /** Re-admit this device to an existing identity via a recovery credential. */
-    readonly recover: (args: RecoverArgs) => Effect.Effect<Info, IdentityError>;
-    /** Update the identity profile. */
-    readonly updateProfile: (profile: {
-      displayName?: string;
-      data?: Record<string, unknown>;
-    }) => Effect.Effect<Info, IdentityError>;
-    /** Devices belonging to the local identity; emits the current set immediately. */
-    readonly devices: Stream.Stream<readonly DeviceInfo[]>;
-    /** Synchronous snapshot of the local identity's devices, for imperative callers. */
-    readonly getDevicesSnapshot: () => readonly DeviceInfo[];
-    /** HALO credentials of the local identity; emits the current set immediately. */
-    readonly credentials: Stream.Stream<readonly Credential[]>;
-    /**
-     * Grant this identity access to an EDGE/Hub service by writing a `ServiceAccess` credential
-     * (self-issued). Replaces hand-constructing the protobuf credential at the call site.
-     */
-    readonly grantServiceAccess: (options: ServiceAccessOptions) => Effect.Effect<void, IdentityError>;
-    /** Initiate a device invitation (host side). */
-    readonly share: (options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, IdentityError>;
-    /** Redeem a device-invitation code on a new device (guest side). */
-    readonly join: (code: string) => Effect.Effect<Invitation.Flow, IdentityError>;
-    /** Active (host-created) device-invitation flows; emits the current set immediately. */
-    readonly invitations: Stream.Stream<readonly Invitation.Flow[]>;
-  }
->() {}
+/**
+ * The service shape backing {@link Service}. Named (rather than inline in the `Context.Tag`) so
+ * consumers referencing it — e.g. a capability typed `Context.Tag.Service<Identity.Service>` —
+ * name it portably instead of expanding its structure and leaking the transitive
+ * {@link Invitation} types into their declaration emit (TS2883).
+ */
+export interface ServiceApi {
+  /**
+   * The local identity (`Option.none` when none exists) as a stream that emits the current
+   * value immediately on subscription. Take the first element for a one-shot read; subscribe
+   * for updates.
+   */
+  readonly identity: Stream.Stream<Option.Option<Info>>;
+  /**
+   * Synchronous snapshot of the local identity (`Option.none` when none exists). For imperative
+   * callers (non-React, non-Effect) that need the current value without subscribing.
+   */
+  readonly getSnapshot: () => Option.Option<Info>;
+  /**
+   * Subscribe to local-identity changes (imperative). Invokes `callback` immediately with the
+   * current value, then on each change. Returns an unsubscribe function.
+   */
+  readonly subscribe: (callback: (identity: Option.Option<Info>) => void) => () => void;
+  /** Create the local identity (and its first device). */
+  readonly create: (options?: { displayName?: string; deviceLabel?: string }) => Effect.Effect<Info, IdentityError>;
+  /** Re-admit this device to an existing identity via a recovery credential. */
+  readonly recover: (args: RecoverArgs) => Effect.Effect<Info, IdentityError>;
+  /** Update the identity profile. */
+  readonly updateProfile: (profile: {
+    displayName?: string;
+    data?: Record<string, unknown>;
+  }) => Effect.Effect<Info, IdentityError>;
+  /** Devices belonging to the local identity; emits the current set immediately. */
+  readonly devices: Stream.Stream<readonly DeviceInfo[]>;
+  /** Synchronous snapshot of the local identity's devices, for imperative callers. */
+  readonly getDevicesSnapshot: () => readonly DeviceInfo[];
+  /** HALO credentials of the local identity; emits the current set immediately. */
+  readonly credentials: Stream.Stream<readonly Credential[]>;
+  /**
+   * Grant this identity access to an EDGE/Hub service by writing a `ServiceAccess` credential
+   * (self-issued). Replaces hand-constructing the protobuf credential at the call site.
+   */
+  readonly grantServiceAccess: (options: ServiceAccessOptions) => Effect.Effect<void, IdentityError>;
+  /** Initiate a device invitation (host side). */
+  readonly share: (options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, IdentityError>;
+  /** Redeem a device-invitation code on a new device (guest side). */
+  readonly join: (code: string) => Effect.Effect<Invitation.Flow, IdentityError>;
+  /** Active (host-created) device-invitation flows; emits the current set immediately. */
+  readonly invitations: Stream.Stream<readonly Invitation.Flow[]>;
+}
+
+export class Service extends Context.Tag('@dxos/halo/Identity')<Service, ServiceApi>() {}
 
 /** The local identity as a current-value stream (requires {@link Service}). */
 export const identity: Stream.Stream<Option.Option<Info>, never, Service> = Stream.unwrap(

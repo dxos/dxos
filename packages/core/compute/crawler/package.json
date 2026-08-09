@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crawler",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Incremental source crawl + configurable stage pipeline that builds the semantic fact graph.",
   "homepage": "https://dxos.org",
@@ -33,9 +33,9 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/sql": "catalog:"
   },
@@ -43,7 +43,6 @@
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
     "effect": "catalog:",
-    "tsx": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

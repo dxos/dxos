@@ -8,11 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-lib';
@@ -29,7 +30,7 @@ import { ComplexMap } from '@dxos/util';
 import { translations } from '#translations';
 
 import { SpaceOperationHandlerSet } from '../../operations';
-import { SpaceCapabilities } from '../../types';
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import { MergePreview } from '../MergePreview/MergePreview';
 import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack';
 import { TypeArticle } from './TypeArticle';
@@ -140,7 +141,7 @@ const DefaultStory = ({ type }: StoryArgs) => {
 const StoryCompanion = ({ space, type }: { space: Space; type: Type.AnyObj }) => {
   const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
   if (mergePreview?.typeUri === Type.getURI(type)) {
-    return <MergePreview type={type} spaceId={space.id} preview={mergePreview} />;
+    return <MergePreview type={type} preview={mergePreview} />;
   }
 
   return <ObjectCardStack objectId={Type.getURI(type)} db={space.db} type={type} />;
@@ -165,15 +166,14 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { count = 10 } }) => ({
       capabilities: [
-        Capability.contributes(AppCapabilities.Translations, translations),
+        Capability.contribute(AppCapabilities.Translations, translations),
         // The Duplicates tab is driven by real operations, so the story registers the handler set
         // and the state atom the space plugin would normally contribute.
-        Capability.contributes(Capabilities.OperationHandler, SpaceOperationHandlerSet),
-        Capability.contributes(SpaceCapabilities.EphemeralState, ephemeralState()),
+        Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet),
+        Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
         // plugin-inbox contributes these in the app (it owns the types this materialises); the story
         // runs no plugins that would.
-        Capability.contributes(SpaceCapabilities.IdentitySpec, personIdentitySpec),
-        Capability.contributes(SpaceCapabilities.IdentitySpec, organizationIdentitySpec),
+        Capability.contributeAll(SpaceCapabilities.IdentitySpec, [personIdentitySpec, organizationIdentitySpec]),
       ],
       plugins: [
         ...corePlugins(),
@@ -229,14 +229,17 @@ export const Default: Story = {
  * 3. Click a card. It becomes current and the companion shows its form. Click again to deselect.
  * 4. Press the right arrow. The counter reads `2 / 2` and the two Bob records appear — they share
  *    no address, and are grouped only by the Google resource name on both.
- * 5. Press the left arrow to return to group 1, then press Merge. The companion swaps to the merge
- *    preview: `fullName` is `Alice Andrews` (the oldest record wins), `jobTitle` is `Engineer`
- *    (filled from a later record), and `emails` lists `alice@dxos.org` once — lower-cased — plus
- *    `alice@personal.com`.
- * 6. Edit `nickname` in the preview form, then press Confirm merge. The article returns to the
- *    scan, the counter reads `1 / 1`, and only the Bob group remains.
- * 7. Switch to the Cards tab. There are now six people, not eight: one Alice carrying every merged
- *    field plus your nickname edit.
+ * 5. Press the left arrow to return to group 1, select two of the three Alice cards, and press
+ *    Merge. The two selected cards fold into one highlighted read-only result card (no card menu)
+ *    while the unselected Alice stays; the toolbar now reads Confirm merge / Cancel; the companion
+ *    shows the editable preview form.
+ * 6. Press Cancel — the three cards return, Merge / Skip come back. Press Merge again with nothing
+ *    selected: all three fold into one result card whose `fullName` is `Alice Andrews` (the oldest
+ *    record wins), `jobTitle` is `Engineer` (filled from a later record), and `emails` lists
+ *    `alice@dxos.org` once — lower-cased — plus `alice@personal.com`.
+ * 7. Edit `nickname` in the companion form, then press Confirm merge in the article toolbar. The
+ *    article rescans, the counter reads `1 / 1`, and only the Bob group remains. Switch to the
+ *    Cards tab: six people, not eight — one Alice carrying every merged field plus your edit.
  * 8. Switch to the Table tab and check two rows. A `Delete 2 objects` button appears in the
  *    toolbar.
  * 9. Confirm the two role inboxes (`DXOS` and `DXOS via TestFlight`) were never offered as a

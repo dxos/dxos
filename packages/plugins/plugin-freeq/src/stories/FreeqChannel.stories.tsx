@@ -6,10 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -50,16 +50,16 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      capabilities: [Capability.contributes(AppCapabilities.Schema, types)],
+      capabilities: [Capability.contribute(AppCapabilities.Schema, types)],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
           types,
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               // Live freeq channel over WebSocket; guest (no handle) is read-only against the server.
-              personalSpace.db.add(
+              defaultSpace.db.add(
                 Channel.make({
                   name: DEMO_CHANNEL,
                   backend: {

@@ -11,7 +11,8 @@ import { type Resolver } from '@dxos/extractor';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { Calendar, type SyncStreamConfig } from '@dxos/plugin-inbox/types';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
@@ -19,11 +20,11 @@ import { type GoogleCalendarApi, type GoogleCalendarApiError } from '../../../se
 import { mapEvent } from '../mapper';
 import { fetchEvents } from './fetch';
 
-/** Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
+/** Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
 const CALENDAR_SYNC_CONFIG = {
   listPageSize: 100,
   commitPageSize: 10,
-} as const satisfies SyncStreamConfig;
+} as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 const DEFAULT_SYNC_BACK_DAYS = 30;
 const DEFAULT_SYNC_FORWARD_DAYS = 365;

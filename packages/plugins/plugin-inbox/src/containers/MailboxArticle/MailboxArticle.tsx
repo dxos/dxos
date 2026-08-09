@@ -13,7 +13,8 @@ import {
   useOperationInvoker,
   useOptionalCapability,
 } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, ProgressMeter, useAppGraph, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -47,10 +48,12 @@ import {
 import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
 import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
-import { InboxOperation } from '#types';
-import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
+import * as SystemTags from '../../types/SystemTags';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
 import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
@@ -377,7 +380,9 @@ export const MailboxArticle = ({
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
           <Panel.Toolbar asChild>
-            <Menu.Toolbar />
+            <Menu.Toolbar>
+              <Menu.Items />
+            </Menu.Toolbar>
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>

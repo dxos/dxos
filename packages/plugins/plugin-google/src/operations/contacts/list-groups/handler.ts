@@ -9,10 +9,10 @@ import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import { InboxOperation } from '@dxos/plugin-inbox/types';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
 import { GoogleContacts } from '../../../apis';
 import { AccessTokenNotPopulatedError } from '../../../errors';

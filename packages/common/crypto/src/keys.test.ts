@@ -4,7 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { createId, createKeyPair, randomBytes, sign, verify } from './keys';
+import { createKeyPair, sign, verify } from './keys';
+import { createId, randomBytes } from './random';
 
 test('Create id is unique', () => {
   expect(createId()).not.to.equal(createId());

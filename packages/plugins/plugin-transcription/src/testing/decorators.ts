@@ -6,7 +6,6 @@ import { type Decorator } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -60,11 +59,11 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
         types: [TestItem, Person.Person, Organization.Organization],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            const { personalSpace } = yield* initializeIdentity(client);
+            const { defaultSpace } = yield* initializeIdentity(client);
             if (enableVectorIndex) {
               yield* enableQueryIndexes(client.services.services);
             }
-            yield* Effect.promise(() => seedTestData(personalSpace));
+            yield* Effect.promise(() => seedTestData(defaultSpace));
           }),
       }),
       PreviewPlugin(),
@@ -73,6 +72,5 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
     // setupEvents (not fireEvents) so capabilities activate during app setup, before the always-mounted
     // driver renders: SetupSettings registers the session/settings/status capabilities it reads,
     // SetupAppGraph the graph + transcriber contributions.
-    setupEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph],
   }),
 ];

@@ -7,9 +7,11 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
-import { Cancellation, Operation, Trace } from '@dxos/compute';
+import * as Cancellation from '@dxos/compute/Cancellation';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { Cursor } from '@dxos/link';
@@ -20,7 +22,8 @@ import { type TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { MailSyncError } from '../errors';
-import { Mailbox, type SyncStreamConfig } from '../types';
+import * as Mailbox from '../types/Mailbox';
+import type * as SyncStreamConfig from '../types/SyncStreamConfig';
 import { readBindingOptions } from './binding';
 
 /**
@@ -131,7 +134,7 @@ export interface MailSyncProviderService {
   /** Provider tag for spans and logs (`gmail`, `jmap`); the run's span is `<name>-sync`. */
   readonly name: string;
   /** The provider's streaming-pipeline tuning (commit page size, per-run cap, …). */
-  readonly config: SyncStreamConfig;
+  readonly config: SyncStreamConfig.SyncStreamConfig;
   /** Foreign-key source stamped on committed items (dedup key namespace). */
   readonly foreignKeySource: string;
   /**

@@ -20,12 +20,9 @@ import { type MemorySigner, SedimentreeId } from '@automerge/automerge-subductio
 import { onTestFinished } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { createTestLevel } from '@dxos/kv-store/testing';
-import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable } from '@dxos/util';
 
-import { TestAdapter, type TestConnectionStateProvider } from '../testing';
-import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing';
 
 export const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 export const SUBDUCTION_SERVICE_NAME = 'test-subduction-service';
@@ -260,10 +257,10 @@ export const waitForSubductionSave = async () => {
   await sleep(150);
 };
 
-export const createLevelAdapter = async (level = createTestLevel()) => {
-  const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-  await openAndClose(level, storage);
-  return storage;
+export const createSqliteAdapter = async (filename = ':memory:') => {
+  const { adapter, dispose } = await createTestSqliteStorageAdapter(filename);
+  onTestFinished(dispose);
+  return adapter;
 };
 
 // ── Policy helpers ────────────────────────────────────────────────────────

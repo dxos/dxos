@@ -4,8 +4,8 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { Filter, Ref } from '@dxos/echo';
 import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { parseId } from '@dxos/keys';

@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Calendar, InboxOperation } from '@dxos/plugin-inbox/types';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { CalendarForeignKeyWrongTypeError } from '../../../errors';

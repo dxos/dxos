@@ -7,7 +7,7 @@ import type * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
-import type { Credential } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
 
 import { createUrl, makeGoogleApiRequest } from '../google-api';
 import {

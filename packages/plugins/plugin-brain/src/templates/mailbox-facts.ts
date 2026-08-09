@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Skill, Trigger } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { scaffoldProject } from '@dxos/plugin-projects/templates';
-import { type ProjectCapabilities } from '@dxos/plugin-projects/types';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 

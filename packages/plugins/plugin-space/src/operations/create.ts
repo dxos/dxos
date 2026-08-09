@@ -3,19 +3,22 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
-import { AppAnnotation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { hues } from '@dxos/ui-types';
 import { iconValues } from '@dxos/ui-types';
 
 import { SpaceNotReadyError } from '../errors';
-import { SpaceCapabilities, SpaceEvents } from '../types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceEvents from '../types/SpaceEvents';
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
 
@@ -24,16 +27,20 @@ const SPACE_READY_TIMEOUT = Duration.seconds(10);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, edgeReplication }) {
+    Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, private: isPrivate, edgeReplication }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
       const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
       const space = yield* Effect.promise(() =>
-        client.spaces.create({
-          name,
-          hue,
-          icon,
-        }),
+        client.spaces.create(
+          {
+            name,
+            hue,
+            icon,
+          },
+          // Membership policy is written into the genesis credential and cannot be changed later.
+          { membershipPolicy: isPrivate ? MembershipPolicy.LOCKED : MembershipPolicy.INVITE },
+        ),
       );
       if (edgeReplication) {
         yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));

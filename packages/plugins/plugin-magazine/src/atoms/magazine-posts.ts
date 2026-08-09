@@ -7,7 +7,8 @@ import * as Data from 'effect/Data';
 
 import { Obj } from '@dxos/echo';
 
-import { type Magazine, type Subscription } from '../types';
+import type * as Magazine from '../types/Magazine';
+import type * as Subscription from '../types/Subscription';
 import { publishedTimestamp } from '../util/date';
 import { postTagsAtom } from './post-tags';
 

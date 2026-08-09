@@ -6,6 +6,38 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: memory-usage
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-08-06
+    summary: "Profile Composer's runtime memory usage — find what dominates the heap (main thread + workers), attribute it to subsystems, and queue fixes."
+    tasks: .agents/projects/memory-usage/TASKS.md
+    design: .agents/projects/memory-usage/DESIGN.md
+    prs: [12505]
+    resume: 'Investigation complete (DESIGN.md composition model; RESEARCH.md industry comparison). Phase 3 code-residency fixes landed: ~2.9MB of resident code removed (~32MB memory) across onboarding assets, emoji-mart, mermaid, bip39, AI/MCP runtime, ML runtime, EVM client, welcome screen. Target 300-400MB resting. PR #12505 OPEN (draft). Next: Phase 4 idle churn (largest pool, ~51 SQL/s from four loops); Phase 2 payload retention is Linear DX-1148 (reverted from this PR, to land separately).'
+
+  - name: leveldb-removal
+    status: active
+    user: root
+    host: vm
+    created: 2026-08-06
+    summary: Fully remove LevelDB and the @dxos/kv-store package — all consumers are superseded by SQLite storage; convert remaining tests/tooling and delete the package + level/abstract-level/level-transcoder deps.
+    tasks: .agents/projects/leveldb-removal/TASKS.md
+    design: .agents/projects/leveldb-removal/DESIGN.md
+    prs: [12492]
+    resume: 'PR #12492 OPEN. @dxos/kv-store deleted, LevelDB fully removed, tests/tooling converted to SQLite. Builds + tests + lint green (274 echo-host post-merge, 154 client-services). Merged main (resolved sqlite-storage-adapter migrator conflict) and addressed CodeRabbit review; watching CI.'
+  - name: crm-pipeline-operations
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-08-02
+    summary: 'CRM pipeline operations: deprecate crm skill instructions, audit Mailbox/Person/Org operations, spec CRM actions, scaffold research operations + deterministic fixture tests.'
+    tasks: .agents/projects/crm-pipeline-operations/TASKS.md
+    design: packages/plugins/plugin-crm/DESIGN.md
+    prs: [12441]
+    resume: 'PR #12441 OPEN — watch Check to green. Phase 4 shipped: Process CRM mailbox toolbar action, stories-inbox ProcessMailbox story (play test green), R2 fixture design (DESIGN.md §8), TESTPLAN.md. Audit+spec in packages/plugins/plugin-crm/DESIGN.md; plugin-inbox recordExtraction first-entry bug fixed.'
+
   - name: agent-directives
     status: active
     user: burdon
@@ -16,6 +48,7 @@ projects:
     design: .agents/projects/agent-directives/DESIGN.md
     prs: [12453, 12463]
     resume: 'PR #12453 MERGED 2026-08-04; PR #12463 OPEN — https://github.com/dxos/dxos/pull/12463. Phases 1-3 essentially DONE. The mode toggle is now the `/mode` SLASH COMMAND, not a sentinel: UserPromptSubmit carries the RAW typed text and fires BEFORE a command expands, so hooks/mode.sh greps `/mode <MODE>` there and the write stays deterministic — the planned UserPromptExpansion hook was never needed (that event is for BLOCKING an expansion, not beating it). commands/mode.md is inert ergonomics. `$mode` REMOVED; anchoring to the FIRST LINE retires the prose-flips-the-mode bug class entirely. `$project` WAS CONVERTED THE SAME WAY (it fired on the very message asking to convert it): `/project VERB [ARGS]` first-line only, legacy $track/track:/$hydrate/$checkpoint/$resume/$rehydrate all REMOVED, plus a new `tasks` verb and a bare-`/project` status report. Both hooks take head -1 before matching (grep -E anchors ^ per line) and require a trailing boundary after the value (`/mode tersex` used to prefix-match). Bare `/mode` = re-orientation report (worktree+branch, consulted instruction files, current mode) with NO numbered options — a numeric reply is the one form the hook cannot catch. REVERSED from #12453: the worktree/files-read line is FIRST-REPLY ONLY again (user, 2026-08-04) — per-turn injection is for rules governing every reply; a once-per-session rule belongs on SessionStart, where session-context.sh already delivers it. Phase 3 closed: mode.sh split kept + documented (the command gave the backend a second caller), task-planning SKILL.md slash-command claim fixed, branch-beacon.sh emits systemMessage + additionalContext (lives in ~/.claude, NOT in the PR — will not travel to another machine). The task-planning SKILL.md was thinned 215->186 lines: the per-verb enumeration lives ONLY in the hook directives now, and the skill keeps what applies when nobody types a command (TASKS.md convention, registry schema, handoff steps). REMAINING: (a) close the .agent/ entry at .agents/projects/ai-testing-strategy/TASKS.md:411 when this lands. CLOSED BY DECISION: updating ~/.claude/CLAUDE.md (user chose to skip 2026-08-04 — it has no stale markers, and the hook already covers this repo).'
+
   - name: lenses
     status: active
     user: josiah
@@ -39,6 +72,16 @@ projects:
       - agents/superpowers/specs/2026-08-01-task-plugin-reconciliation-design.md (RESOLVED)
     prs: [12423, 12428, 12432, 12443, 'edge#785', 'edge#786']
     resume: '2026-08-03 (hydrated). MERGED: #12443 (plugin-projects workerd entry, task set in project scaffold, plugin-space worker-safe imports) at 2026-08-03 05:06Z. PR OPEN: edge#789 (MCP project+task verbs, 3 worker fixes, DESIGN.md + TESTING.md; CI red until @dxos/plugin-projects publishes (12443 has landed; watch pkg.pr.new for a main SHA >= 71aa2a68, then flip the operation-service deps from the local tarballs back to catalog:dxos) — it consumes local tarballs from ~/Code/dxos/edge/temp-tarballs). LANDED: #12423 #12428 #12432 #12443 edge#785 edge#786. MCP surface now: object CRUD + discovery + task verbs (live-verified) + project verbs (unit-tested). NEXT = M6 passkey auth, RESHAPED by Josiah edge#789: no new storage (HALO credentials via agents service = IdentityRecovery + verifyWebauthnSignature + hub lookupAccount), rp.id stays composer.space via Related Origin Requests (no re-registration), @simplewebauthn/server comes out of hub-service. FIRST TASK: dev-origin problem (local passkeys scoped to localhost by rp.id = location.hostname, so the composer.space well-known cannot reach them). Then M7 identity-through-invoke, M8 space CRUD + sticky enter/exit (needs space.create-in-workerd spike), M9 connector-directory listing. BLOCKED: #12446 (dmaretskyi) objectCreate hangs after the write lands — blocks M8 live acceptance only; device-invitation admission still fails. Spec: edge:packages/services/mcp-space-service/DESIGN.md (§4.2-4.6, §9); runbook: same dir TESTING.md.'
+  - name: sql-migrations
+    status: active
+    user: mykola
+    host: mac
+    created: 2026-07-31
+    summary: Move every SQLite schema (9 packages, 18 stores) out of TS string literals into numbered .sql migrations with per-store history tables — @effect/sql Migrator + SqlTransaction.clientLayer (DO-safe), SqlMigrations splitter; Prisma ruled out (no browser/DO driver adapter).
+    tasks: .agents/projects/sql-migrations/TASKS.md
+    design: .agents/projects/sql-migrations/DESIGN.md
+    prs: [12449, 'edge#790']
+    resume: 'dxos#12449 MERGED 2026-08-06 (df93cc2749) — conversion complete, inline DDL 41 to 0. Old-DB safety proven three ways (per-package legacy tests, origin/main DDL replay across all 18 stores, cross-version interop for all 9 packages); DO path proven in edge#790 for BOTH feed (transaction control) and index-core (the PRAGMA table_info code migration), db-service 142/142. ONLY OPEN THREAD: edge#790 stays red until a dxos release carries the migrations — then bump edge catalog to that version and merge. Backlog: ts-test-workerd DO coverage for sql-sqlite inside dxos CI; shared *.sql?raw typings package.'
   - name: email-sync-stability
     status: active
     user: mykola
@@ -211,4 +254,45 @@ projects:
     design: .agents/projects/qa/DESIGN.md
     prs: []
     resume: "PR #12418 OPEN. Phase 1 (single-message toggle + latest-message auto-expand) and Phase 5 (MailboxSync fixture-capture harness: message panel + attention fixes, starred-only export, single-message save, per-render scan fix that resolved the >1s click latency) are DONE. Phases 2/3 are implemented and moved: the HTML sandbox `Html`, the `emailDialect` seam and the recolor policy now live in packages/ui/react-ui-components/src/components/HtmlViewer/ with their own DESIGN.md (the separate react-ui-html package was created then dropped by direction); `isPersonal` and the table-layout exemption are gone, so everything is recolored except a sender dark design that actually survived. Fixtures m1-m3 captured from a real account and scrubbed (addresses -> user@example.com, per-recipient URL tokens -> REDACTED) — scrub anything new the same way, the repo is public. NEXT: Gap A — DOMPurify strips <style>, so a sender's @media (prefers-color-scheme: dark) rules never arrive and applyAuthoredDarkRules is unreachable; extract those blocks pre-sanitize and inject the subset. Then Phase 4 (mailbox Sync routine shows no Operation) which is diagnosed as far as static analysis goes and needs the running app, and the StoryRole.Connector not-connected diagnosis."
-ended: []
+  - name: ci
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-08-06
+    summary: The build pipeline itself — runners, remote caching, and the workflows in .github/workflows. The moon remote cache now runs on a self-hosted bazel-remote behind mTLS instead of Depot; Depot remains the runner provider.
+    tasks: .agents/projects/ci/TASKS.md
+    design: .agents/projects/ci/DESIGN.md
+    prs: [12494]
+    resume: "Branch `claude/depot-vs-self-hosted-cache-3fbd62`, PR #12494 OPEN as a draft and GREEN (check, test, storybook, workerd, model-fixture); CodeRabbit review addressed. Next: mark ready for review. The moon remote cache is a self-hosted bazel-remote at `cache.dxos.network` (DO NYC3 droplet 64.225.13.237, s-4vcpu-8gb, $0.071/hr) behind mTLS from a private CA, and it is MEASURED IN CI: a fully-cached 324-task `:build` takes 14s against 161s uncached on a Depot runner, 324/324 hits, 13.6s hydration at 31ms per task over a 7ms link, with mTLS working from inside the job container. Depot hosted cache was 1,100s hydration / 338s wall for the same graph from a dev machine. RUNNERS COMPARED AND SETTLED: a 2x3 (Depot vs Blacksmith runners x nyc3 / sfo3 / no cache) showed compute is a wash (161-162s vs 164-177s cold) and cache LOCATION dominates — near cache 11-14s, far cache 24-26s, none 161-177s, hydration tracking RTT across four points. Depot stays: identical compute and the tightest pairing at 7ms. Blacksmith is REMOVED (its sticky disks never mounted in four runs, and its undocumented RE cache rejects moon's instance name); the sfo3 droplet is DESTROYED. Findings kept in REPORT.md so this is not re-litigated. Certs live in 1Password (moon-cache-certs, CI vault, one concealed field per file; install-certs.sh --op), the three MOON_CACHE_* repo secrets are set, and DNS is a grey-cloud Cloudflare A record. GOTCHAS: the A record MUST stay DNS-only (the proxy does not pass gRPC on 9092 and the failure is silent); any .moon/workspace.yml edit re-hashes EVERY task so the next run is a cold build; Check does not trigger on arbitrary branches. NEXT: reserve the droplet IP, monitoring on :9093/metrics, read-only dev certs (any client can write today), promote assert-remote-cache from warn-only, cancel the Depot CACHE subscription (Depot remains the RUNNER provider)."
+
+  - name: model-fixture-tests
+    status: active
+    user: dmaretskyi
+    host: Dmytros-MacBook-Pro-M4
+    created: 2026-08-05
+    summary: Rework the memoized-LLM test framework — give it its own vitest tag (env-gated in the tag config, skipped by default), a dedicated non-blocking CI job under Check, rename memoized-llm → model-fixture with a request-hash-addressed `.store/conversations/<suite>/<hash>.json` layout, and recover the deleted per-skill + assistant-e2e suites back under the tag.
+    tasks: .agents/projects/model-fixture-tests/TASKS.md
+    design: .agents/projects/model-fixture-tests/DESIGN.md
+    prs: [12474, 12475]
+    resume: "LANDING PR #12475 — https://github.com/dxos/dxos/pull/12475 (branch claude/model-fixture-tests-phases-b32q1r, base main; #12474 is the docs-only scaffold). All 5 phases shipped: (1) `model-fixture` vitest tag (vitest.tags.ts), skipped by default, env-gated in ONE place — DX_RUN_MODEL_FIXTURE_TESTS (replay) / DX_UPDATE_MODEL_FIXTURES (regenerate). (2) non-required .github/workflows/model-fixture.yml runs `moon run '#model-fixture:test'`. (3) engine consolidated into the single `LanguageModelFixture` namespace at ai/src/testing/model-fixture/ (replaced MemoizedAiService+MemoizedLanguageModel, no shims). (4) hash-addressed store .store/conversations/<suite>/<hash>.json (suite=path-flatten, hash=sha256 of normalized match key; O(1) read + suite-dir fallback); single-line JSON + `.gitattributes` `-diff -merge linguist-generated` so fixtures are opaque to git/GitHub. SCOPE (per user 2026-08-05): model-fixture coverage is focused on HARNESS (agent-runtime AgentService / assistant-session / functions, ai engine) + CORE SKILLS (memory, database). REMOVED the plugin-operation (plugin-magazine curate-magazine, plugin-markdown update) and assistant-e2e agent ({database,smoke,web-search}) suites + fixtures, and dropped the stale `model-fixture` moon tag from those 3 packages (their deterministic per-op tests live on main). DEFERRED: planning + agent skill tests (in-scope core skills, but their old tests targeted the removed `Plan` type → need an Outline-API rewrite; plan-reminder.test.ts covers today). NEXT: land — CI green, merge queue."
+  - name: startup-latency
+    status: active
+    user: jdw
+    host: vm
+    created: 2026-07-30
+    summary: Demand-driven activation — startup loads only startup-essential modules; everything else gates on a declared demand signal. Map-first; post-paint batching explicitly rejected. Successor to app-framework-capability-activation's deferral follow-up.
+    tasks: .agents/projects/startup-latency/TASKS.md
+    design: .agents/projects/startup-latency/DESIGN.md
+    prs: [12415]
+    resume: "PR #12415 targets main (retargeted once #12414 squash-landed as 34a84339) and is feature-complete, CI green, e2e green — landing. Shape: plugin start events are DEMAND-GATED — a plugin's own start fires when one of its modules contributes a ReactSurface (module-loader hook), so an unvisited feature never loads; contributions no surface can gate ride the feature they belong to (app-graph builders -> graph plugin's start, skills -> assistant's, cross-plugin contributions -> the consuming plugin's). All 71 surfaces are role-gated. Settings stay eager: app-shell components (transcription's ReactContext driver, DeckLayout) read them through the strict useAtomCapability at first render, so a post-ready gate trips the missing-capability invariant — verified by a fatal dialog in the e2e. Operation handler sets pair each definition with its handler module through Operation.lazyHandler, so a mispairing is a compile error and bodies still load per invocation. TWO CI BUDGETS LANDED: composer-app:check-boot-budget (static — entry + modulepreload closure, 30 entries / 6 MB, today 23 / 5.31 MB; count guards the chunk partition collapsing, NOT a bytes proxy) and composer-app:check-startup-budget (runtime — median modules-at-ready over 5 warm-cold repeats, budget 350, today 322). Timings are trend-only and CANNOT gate without a fixed runner: repeats of one unchanged commit span 1.9x in-container vs +/-1.7% on real hardware (TODO in TASKS.md). MERGE HAZARD, if this branch is ever re-derived: #12414 was SQUASHED into main, so a plain merge conflicts on ~499 files and silently reverts any line only our side changed — resolve conflicts to ours, then audit every merge-introduced hunk against main's non-#12414 commits. Open: react-aria still boot-reachable via Input->SegmentedInput->DatePicker (needs a component refactor); subpath migration remainder for plugin-space/client/graph (blocked on the export-namespace -> module-file refactor); PWA precaches 96.79MB for a 5MB shell (not implemented); map.json is 232KB of generated data whose pipeline was removed — decide whether to keep it."
+ended:
+  - name: app-framework-capability-activation
+    user: jdw
+    host: jdw-mbp
+    created: 2026-07-16
+    ended: 2026-08-05
+    summary: Capability-dependency activation w/ typed yieldable Effect-service capabilities. Module ordering derives from requires/provides instead of Setup*/-Ready events; the legacy API (AppPlugin, Capability.contributes/lazy, fires{Before,After}Activation, compatFires, ordering events) is deleted. Phases 1-9 plus the plugin-manager decomposition. Full itemized history + commit shas in TASKS.md addenda.
+    tasks: .agents/projects/app-framework-capability-activation/TASKS.md
+    design: .agents/projects/app-framework-capability-activation/DESIGN.md
+    prs: [12414]
+    resume: 'LANDED 2026-08-05 as main 34a84339 (PR #12414, squash; 1014 files, +15122/-8719). All ~90 plugin packages migrated. Manager decomposed into src/core/plugin-manager/{plugin-manager,manager-state,plugin-catalog,activation-scheduler,activation-graph,module-loader}.ts — contracts are (shared state, collaborators, host config), no unit holds a manager reference; Plugin.Service is a typed Effect requirement satisfied once at the public boundary. Two concurrency bugs fixed with regression tests (in-flight multi providers raced by one-shot consumers; event-mode pulls bypassing round ordering for sibling multi providers). Profiled perf-neutral vs main; the ~20-24 pct cold-startup regression since June is main plugin growth and is the startup-latency project. HAZARD carried forward: tsc never type-checks capabilities/node.ts (the types condition resolves to the browser barrel) — verify emitted node.mjs when touching node barrels. Open at close, none blocking: urlKey topic decision on the Project type section, magazine addModule<void> anchor, node-barrel scoping gaps (chess-com/sheet/transcription), and the react-ui-form FormLayout in-suite flake (Trunk da851520, unquarantined — collides with Client-creating suites, passes in isolation).'

@@ -11,8 +11,10 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Plugin } from '@dxos/app-framework';
-import { CommandConfig, performRecoveryOAuthFlow, print } from '@dxos/cli-util';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { CommandConfig, print } from '@dxos/cli-util';
+import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
@@ -130,7 +132,7 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
     const result = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
 
     if (result.needsIdentity) {
-      // `CreateIdentity` fires `IdentityCreated`, which is what provisions the personal space.
+      // `CreateIdentity` fires `IdentityCreated`, which is what provisions the identity's spaces.
       yield* invoke(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] });
       const identity = client.halo.identity.get();
       invariant(identity, 'identity should exist after create');

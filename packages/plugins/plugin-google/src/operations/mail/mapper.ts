@@ -8,8 +8,8 @@ import { Obj, Ref } from '@dxos/echo';
 import { type Resolver, resolve } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { parseFromHeader } from '@dxos/plugin-inbox/sync';
-import { Mailbox } from '@dxos/plugin-inbox/types';
 import { ContentBlock, Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../apis';

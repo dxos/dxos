@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-excalidraw",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Excalidraw sketch plugin",
   "homepage": "https://dxos.org",
@@ -48,11 +48,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -70,9 +65,46 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Excalidraw": {
+      "source": "./src/types/Excalidraw.ts",
+      "types": "./dist/types/src/types/Excalidraw.d.ts",
+      "import": "./dist/lib/Excalidraw.mjs"
+    },
+    "./ExcalidrawCapabilities": {
+      "source": "./src/types/ExcalidrawCapabilities.ts",
+      "types": "./dist/types/src/types/ExcalidrawCapabilities.d.ts",
+      "import": "./dist/lib/ExcalidrawCapabilities.mjs"
+    },
+    "./ExcalidrawEvents": {
+      "source": "./src/types/ExcalidrawEvents.ts",
+      "types": "./dist/types/src/types/ExcalidrawEvents.d.ts",
+      "import": "./dist/lib/ExcalidrawEvents.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Excalidraw": [
+        "dist/types/src/types/Excalidraw.d.ts"
+      ],
+      "ExcalidrawCapabilities": [
+        "dist/types/src/types/ExcalidrawCapabilities.d.ts"
+      ],
+      "ExcalidrawEvents": [
+        "dist/types/src/types/ExcalidrawEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -84,13 +116,10 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
-    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@excalidraw/excalidraw": "catalog:",
@@ -104,9 +133,9 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

@@ -18,7 +18,7 @@ import React, {
 } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph/hooks';
@@ -34,7 +34,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
-import { Attention, useAttended, useAttentionContext } from '@dxos/react-ui-attention';
+import { Attention, useAttended, useAttention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
@@ -49,8 +49,9 @@ import {
   useSelectedCompanionVariant,
 } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, Keyshortcuts } from '#types';
 
+import * as DeckOperation from '../../types/DeckOperation';
+import * as DeckRole from '../../types/DeckRole';
 import { findAttendedPlank, getRenderedPlanks, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
@@ -117,6 +118,8 @@ type PlankContextValue = RenderedPlanks & {
   maxPlankWidthPx: number;
   /** Records the tiles' geometry for the exposé transition; call before toggling it. See {@link useExposeFlip}. */
   captureExposeGeometry: () => void;
+  /** Marks the plank a select exit commits to, so the deck leaves the exposé scrolled to it. */
+  markExposeSelect: (id: string) => void;
 };
 
 /**
@@ -150,6 +153,7 @@ const PlankContext = createContext<PlankContextValue>({
   attendedPlankId: undefined,
   maxPlankWidthPx: Number.POSITIVE_INFINITY,
   captureExposeGeometry: () => {},
+  markExposeSelect: () => {},
 });
 
 const usePlankContext = () => useContext(PlankContext);
@@ -215,7 +219,7 @@ export const DeckContentEmpty = () => {
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
     <div className='grid place-items-center p-8 relative dx-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
-      <Surface.Surface type={Keyshortcuts} />
+      <Surface.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </div>
   );
@@ -419,11 +423,14 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
-  const { planks: rendered, maxPlankWidthPx, captureExposeGeometry } = usePlankContext();
+  const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = usePlankContext();
   const companion = useDeckCompanion(id);
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
   const exposed = !!state.expose;
+  // Drives the exposé's attended-tile outline: attention (not `:focus-visible`) so the indicator is
+  // deterministic — the focus heuristics only show a ring after keyboard interaction.
+  const { hasAttention } = useAttention(id);
   // Stacking (experiment): each plank is `position: sticky` on both edges (see the style below) so the
   // browser pins scrolled-past planks into the left pile and not-yet-reached planks into the right pile
   // natively — no per-frame JS repin, so the spines stay stable and opaque. The folded spine's sigil
@@ -462,9 +469,10 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // Picking a plank in the exposé is a navigation: leave the overview and bring the chosen plank forward.
   const handleExposeSelect = useCallback(() => {
     captureExposeGeometry();
+    markExposeSelect(id);
     void invokePromise(DeckOperation.ToggleExpose, { expose: false });
     void invokePromise(LayoutOperation.ScrollIntoView, { subject: id });
-  }, [invokePromise, id, captureExposeGeometry]);
+  }, [invokePromise, id, captureExposeGeometry, markExposeSelect]);
 
   if (presentation === 'fullbleed') {
     // A fullbleed pair flexes to the viewport rather than taking a stored total, so only the lower
@@ -509,7 +517,9 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
       // over each other (planks stack by z-index; each one's left edge overlaps its left neighbor).
       classNames={mx(
         'group/tile relative h-full shadow-[-6px_0_16px_-8px_rgba(0,0,0,0.45)]',
-        exposed && 'p-(--deck-expose-gutter)',
+        // The planks' own focus rings are suppressed while exposed: the hit-target outline below is
+        // the single current-plank indicator, and the two together read as a double frame.
+        exposed && 'p-(--deck-expose-gutter) [&_[data-attendable-id]:focus-visible::after]:shadow-none!',
       )}
       size={tileSize}
       minSize={companion ? MIN_PAIR_SIZE : MIN_PLANK_SIZE}
@@ -554,10 +564,15 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
       )}
       {/* The exposé's hit target, covering the plank so a click picks the tile rather than landing in a
           miniature editor. Also its frame: at exposé scale a plank is dark content on the equally dark
-          deck surface, and the outline is what makes it read as a tile at all. */}
+          deck surface, and the outline is what makes it read as a tile at all. The attended tile gets a
+          stronger neutral outline — attention-driven rather than `:focus-visible`, so it shows
+          deterministically however the exposé was opened; never the primary (blue) ring. */}
       {exposed && (
         <button
-          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors hover:outline-focus-ring'
+          className={mx(
+            'absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors hover:outline-2',
+            hasAttention && 'outline-2 outline-[color:var(--color-focus-ring-subtle)]',
+          )}
           aria-label={spineLabel}
           onClick={handleExposeSelect}
         />
@@ -883,6 +898,19 @@ const CLICK_TO_FRONT_DELAY_MS = 150;
  * preceding plank widths and gaps gives the natural offset instead, and backing off one spine per
  * preceding plank leaves the target just past the left pile.
  */
+/** The scroll offset that parks plank `index` just past the left pile — the pile geometry shared by
+ * the smooth navigation scroll and the exposé's select exit (which jumps there instantly). */
+const computePileOffset = ({ stack, tiles, index }: { stack: HTMLDivElement; tiles: HTMLElement[]; index: number }) => {
+  const styles = getComputedStyle(stack);
+  const gap = parseFloat(styles.columnGap) || 0;
+  // The logical property, so this and `useMaxPlankWidth` read the same inset.
+  let naturalLeft = parseFloat(styles.paddingInlineStart) || 0;
+  for (let plank = 0; plank < index; plank++) {
+    naturalLeft += tiles[plank].offsetWidth + gap;
+  }
+  return Math.max(0, naturalLeft - index * SPINE_PX);
+};
+
 const scrollPlankToPile = ({
   viewport,
   stack,
@@ -897,14 +925,7 @@ const scrollPlankToPile = ({
   /** Bypass the repeat-command dedupe — for the arrival watchdog, whose whole job is re-issuing. */
   force?: boolean;
 }) => {
-  const styles = getComputedStyle(stack);
-  const gap = parseFloat(styles.columnGap) || 0;
-  // The logical property, so this and `useMaxPlankWidth` read the same inset.
-  let naturalLeft = parseFloat(styles.paddingInlineStart) || 0;
-  for (let plank = 0; plank < index; plank++) {
-    naturalLeft += tiles[plank].offsetWidth + gap;
-  }
-  const left = Math.max(0, naturalLeft - index * SPINE_PX);
+  const left = computePileOffset({ stack, tiles, index });
 
   // The collapse legitimately re-runs while one interaction settles — attention lands, the companion
   // resolves a commit later, the width cap recomputes — and each `scrollTo` *restarts* the smooth
@@ -1167,9 +1188,16 @@ const useExposeFlip = ({
  */
 const useExposeScroll = ({
   viewportRef,
+  stackRef,
+  getPlankTiles,
+  selectRef,
   expose,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
+  stackRef: RefObject<HTMLDivElement | null>;
+  getPlankTiles: () => HTMLElement[];
+  /** Set (to a plank id) by the select/Enter exit so the deck leaves the exposé already scrolled there. */
+  selectRef: RefObject<string | undefined>;
   expose: boolean;
 }) => {
   const scrollLeftRef = useRef(0);
@@ -1211,8 +1239,21 @@ const useExposeScroll = ({
     }
 
     if (wasExposed) {
-      // Settable while overflow is hidden; the bar only comes back once the tiles have stopped moving.
-      viewport.scrollLeft = scrollLeftRef.current;
+      // Exiting via select (a tile click or Enter) jumps straight to the chosen plank's pile offset:
+      // restoring the pre-open scroll and smooth-gliding from there never survives the exit morph (the
+      // glide aborts mid-zoom and the fold hysteresis then hands attention back to whatever the restore
+      // left in view). The follow-up `ScrollIntoView` finds the deck already at its destination.
+      const stack = stackRef.current;
+      const target = selectRef.current;
+      selectRef.current = undefined;
+      const tiles = target ? getPlankTiles() : [];
+      const targetIndex = tiles.findIndex((tile) => tile.getAttribute('data-object-id') === target);
+      if (stack && targetIndex !== -1) {
+        // Settable while overflow is hidden; the bar only comes back once the tiles have stopped moving.
+        viewport.scrollLeft = computePileOffset({ stack, tiles, index: targetIndex });
+      } else {
+        viewport.scrollLeft = scrollLeftRef.current;
+      }
     }
     const timer = setTimeout(
       () => {
@@ -1222,6 +1263,25 @@ const useExposeScroll = ({
     );
     return () => clearTimeout(timer);
   }, [expose, viewportRef]);
+};
+
+/**
+ * Makes the exposé's miniature plank content inert: `pointer-events-none` alone leaves every control
+ * inside the miniatures tab-reachable and keyboard-operable. Inert is applied to the *children* of
+ * each attendable root rather than the root itself, so the root stays focusable — it is the target
+ * of the arrow navigation, the attention system, and the Escape restore.
+ */
+const useExposeInert = ({ getPlankTiles, expose }: { getPlankTiles: () => HTMLElement[]; expose: boolean }) => {
+  useLayoutEffect(() => {
+    if (!expose) {
+      return;
+    }
+    const elements = getPlankTiles()
+      .flatMap((tile) => Array.from(tile.querySelectorAll<HTMLElement>(Attention.ATTENDABLE_SELECTOR)))
+      .flatMap((root) => Array.from(root.children));
+    elements.forEach((el) => el.setAttribute('inert', ''));
+    return () => elements.forEach((el) => el.removeAttribute('inert'));
+  }, [expose, getPlankTiles]);
 };
 
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
@@ -1316,10 +1376,12 @@ export const DeckPlanks = () => {
     plankCount: planks.length,
   });
   usePreservedScroll({ viewportRef, isSliding });
+  // The plank a select/Enter exit committed to, consumed by `useExposeScroll` on the way out.
+  const exposeSelectRef = useRef<string | undefined>(undefined);
   // Ahead of the fold pass, whose layout effect must measure the restored scroll position: hooks run in
   // declaration order, and measuring at the exposé's zeroed scroll reads every trailing plank as
   // off-screen — enough for the attention hysteresis to hand attention to whatever sits near the start.
-  useExposeScroll({ viewportRef, expose });
+  useExposeScroll({ viewportRef, stackRef, getPlankTiles, selectRef: exposeSelectRef, expose });
   useFoldedPlanks({
     viewportRef,
     getPlankTiles,
@@ -1330,6 +1392,7 @@ export const DeckPlanks = () => {
     scrollIntentRef,
   });
   useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
+  useExposeInert({ getPlankTiles, expose });
   useExposeScale({ viewportRef, stackRef, hostRef, getPlankTiles, expose });
   // Last of the layout effects, so it measures the deck only once the scroll, the folds and the scale have
   // all landed — the FLIP inversion is against the final geometry, not an intermediate one.
@@ -1347,34 +1410,81 @@ export const DeckPlanks = () => {
   const getTilesRef = useRef(getPlankTiles);
   getTilesRef.current = getPlankTiles;
 
-  // Bound here rather than as a graph action so the shortcut works wherever the deck has focus; see the
-  // note in DESIGN about promoting it once its binding is settled.
+  // The plank attended when the exposé opened, so Escape can put attention back where it was —
+  // walking the row with the arrows attends as it goes (attention is focus-driven), and Escape is
+  // the cancel gesture. Cleared on close; the effect also covers opens that bypass the shortcut.
+  const exposeReturnRef = useRef<string | undefined>(undefined);
   useEffect(() => {
+    if (expose) {
+      exposeReturnRef.current ??= navigationRef.current.attendedPlankId;
+    } else {
+      exposeReturnRef.current = undefined;
+    }
+  }, [expose]);
+
+  // Bound here rather than as a graph action so the shortcut works wherever the deck has focus; see the
+  // note in DESIGN about promoting it once its binding is settled. Capture phase: in the exposé, Enter
+  // and Escape must win over the plank root's own key handling (which dives into / steps out of the
+  // plank's content — meaningless against the exposé's inert miniatures).
+  useEffect(() => {
+    // Focuses a plank's attendable container without scrolling — the exposé parks the scroll at zero
+    // to bring the whole row into frame (and the exit restores it), so focus must not fight either.
+    const focusPlank = (id: string) => {
+      const tile = getTilesRef.current().find((candidate) => candidate.getAttribute('data-object-id') === id);
+      tile?.querySelector<HTMLElement>(Attention.ATTENDABLE_SELECTOR)?.focus({ preventScroll: true });
+    };
+
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === ';' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
+        if (!exposeRef.current) {
+          exposeReturnRef.current = navigationRef.current.attendedPlankId;
+        }
         captureRef.current();
         void invokePromise(DeckOperation.ToggleExpose, {});
         return;
       }
 
-      // Escape is the way out of any overlay; the fullscreen handler already claims it for its own.
+      // Escape cancels the overview: close and put attention back on the plank that held it when the
+      // exposé opened. (The fullscreen handler already claims Escape for its own overlay.)
       if (event.key === 'Escape' && exposeRef.current) {
         event.preventDefault();
+        event.stopPropagation();
+        const restore = exposeReturnRef.current;
+        if (restore && navigationRef.current.planks.includes(restore)) {
+          focusPlank(restore);
+        }
         captureRef.current();
         void invokePromise(DeckOperation.ToggleExpose, { expose: false });
         return;
       }
 
-      // Arrows step between planks, but only once focus has left a plank's contents for the plank itself —
-      // otherwise this would swallow every caret movement in an editor. `isPlankLevelFocus` is what makes
-      // "the deck is selected" concrete: the attendable container is focused, not something inside it.
-      const step = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
-      if (step === 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+      // Enter commits the overview's current plank: close and bring it to the front, the same
+      // navigation a click on its tile performs.
+      if (event.key === 'Enter' && exposeRef.current) {
+        event.preventDefault();
+        event.stopPropagation();
+        const { planks: current, attendedPlankId: attended } = navigationRef.current;
+        const focused = document.activeElement?.closest('[role="listitem"]')?.getAttribute('data-object-id');
+        const target = (focused && current.includes(focused) ? focused : undefined) ?? attended;
+        captureRef.current();
+        exposeSelectRef.current = target;
+        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        if (target) {
+          void invokePromise(LayoutOperation.ScrollIntoView, { subject: target });
+        }
         return;
       }
-      // The exposé shows every plank at once and its content is inert, so there is no caret to protect
-      // and no scrolling to do — arrows just walk attention along the row.
+
+      const step = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+      if (step === 0 || event.altKey || event.shiftKey) {
+        return;
+      }
+      const reorder = event.metaKey || event.ctrlKey;
+      // Arrows act on planks only once focus has left a plank's contents for the plank itself —
+      // otherwise this would swallow caret movement (and Cmd+Arrow line jumps) in an editor.
+      // `isPlankLevelFocus` is what makes "the deck is selected" concrete. The exposé shows every
+      // plank at once and its content is inert, so there is no caret to protect.
       if (!exposeRef.current && !isPlankLevelFocus()) {
         return;
       }
@@ -1385,6 +1495,24 @@ export const DeckPlanks = () => {
       // plank. Falls back to the attended id when focus is not on a plank (the pre-exposé case).
       const focused = document.activeElement?.closest('[role="listitem"]')?.getAttribute('data-object-id');
       const from = (focused && current.includes(focused) ? focused : undefined) ?? attended;
+
+      // Cmd/Ctrl+Arrow moves the plank itself — reorder rather than walk.
+      if (reorder) {
+        if (!from) {
+          return;
+        }
+        event.preventDefault();
+        if (exposeRef.current) {
+          // Reordering re-lays the row out; the FLIP capture animates the tiles to their new slots.
+          captureRef.current();
+        }
+        void invokePromise(DeckOperation.Adjust, {
+          type: step < 0 ? ('increment-start' as const) : ('increment-end' as const),
+          id: from,
+        });
+        return;
+      }
+
       const index = from ? current.indexOf(from) : -1;
       const next = index === -1 ? current[0] : current[index + step];
       if (!next) {
@@ -1395,8 +1523,7 @@ export const DeckPlanks = () => {
       if (exposeRef.current) {
         // Attention is focus-driven, and `preventScroll` matters here: the exposé parks the scroll at
         // zero to bring the whole row into frame, and focusing without it would scroll the row away.
-        const tile = getTilesRef.current().find((candidate) => candidate.getAttribute('data-object-id') === next);
-        tile?.querySelector<HTMLElement>(Attention.ATTENDABLE_SELECTOR)?.focus({ preventScroll: true });
+        focusPlank(next);
         return;
       }
 
@@ -1405,8 +1532,8 @@ export const DeckPlanks = () => {
       void invokePromise(LayoutOperation.ScrollIntoView, { subject: next });
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => document.removeEventListener('keydown', handleKeyDown, { capture: true });
   }, [invokePromise]);
 
   // Clicking past the tiles leaves the exposé, the pointer equivalent of Escape. The tiles carry their own
@@ -1527,9 +1654,13 @@ export const DeckPlanks = () => {
     };
   }, [stackRef, viewportRef, getPlankTiles, isSliding, expose, scrollIntentRef]);
 
+  const markExposeSelect = useCallback((id: string) => {
+    exposeSelectRef.current = id;
+  }, []);
+
   const plankContext = useMemo<PlankContextValue>(
-    () => ({ ...rendered, maxPlankWidthPx, captureExposeGeometry }),
-    [rendered, maxPlankWidthPx, captureExposeGeometry],
+    () => ({ ...rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect }),
+    [rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect],
   );
 
   // The last tile's width as actually laid out, so the runway below can wait for the split to size the

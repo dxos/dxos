@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation, Skill } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 /**
  * Syncs plugin capability contributions into `client.graph.registry`.
@@ -28,15 +30,14 @@ import { ClientCapabilities } from '@dxos/plugin-client';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const atomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
-    const capabilityManager = yield* Capability.Service;
+    const client = yield* ClientCapabilities.Client;
+    const atomRegistry = yield* Capabilities.AtomRegistry;
 
     //
     // Skill registration.
     //
 
-    const skillDefinitionsAtom = capabilityManager.atom(AppCapabilities.SkillDefinition);
+    const skillDefinitionsAtom = yield* Capability.atom(AppCapabilities.SkillDefinition);
     const prevSkillKeys = new Set<string>();
 
     atomRegistry.subscribe(
@@ -60,14 +61,18 @@ export default Capability.makeModule(
     // Operation registration.
     //
 
-    const operationHandlersAtom = capabilityManager.atom(Capabilities.OperationHandler);
+    const operationHandlersAtom = yield* Capability.atom(Capabilities.OperationHandler);
     const prevOperationKeys = new Set<string>();
 
     atomRegistry.subscribe(
       operationHandlersAtom,
       async (handlerSets) => {
         try {
-          const handlers = (await Promise.all(handlerSets.map((set) => set.getHandlers()))).flat();
+          // Serialization needs only the definitions: keyed sets enumerate them without loading
+          // any handler body (per-operation loading); unkeyed sets still force their handlers.
+          const handlers = (
+            await Promise.all(handlerSets.map((set) => (set.definitions ? set.definitions() : set.getHandlers())))
+          ).flat();
           const seenKeys = new Set<string>();
           const batch: Operation.PersistentOperation[] = [];
           for (const handler of handlers) {
@@ -110,5 +115,7 @@ export default Capability.makeModule(
       },
       { immediate: true },
     );
+
+    return [];
   }),
 );

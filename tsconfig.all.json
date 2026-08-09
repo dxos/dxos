@@ -217,6 +217,9 @@
       "path": "packages/common/feed-store/tsconfig.json"
     },
     {
+      "path": "tools/fixtures/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/functions-runtime-cloudflare/tsconfig.json"
     },
     {
@@ -269,9 +272,6 @@
     },
     {
       "path": "packages/common/keys/tsconfig.json"
-    },
-    {
-      "path": "packages/common/kv-store/tsconfig.json"
     },
     {
       "path": "packages/core/compute/link/tsconfig.json"
@@ -785,6 +785,9 @@
     },
     {
       "path": "packages/ui/react-ui-task/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-terminal/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"

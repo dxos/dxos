@@ -890,9 +890,9 @@ export class AutomergeHost extends Resource {
   /**
    * Returns current heads of each requested document.
    *
-   * Loaded handles are read directly; unloaded documents fall back to the {@link HeadsStore},
+   * Loaded handles are read directly; unloaded documents fall back to the {@link SqliteHeadsStore},
    * then to reconstruction from the automerge storage chunks (for docs persisted before
-   * the HeadsStore was populated).
+   * the SqliteHeadsStore was populated).
    */
   async getHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
     const result: (Heads | undefined)[] = [];
@@ -1110,7 +1110,7 @@ export class AutomergeHost extends Resource {
     // fire-and-forget trigger — it creates a DocHandle and attaches sources. Under classical
     // sync this triggers automerge-repo's doc-synchronizer; under Subduction it registers a
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
-    // `HeadsStore` so collection sync sees the updated heads on the next diff.
+    // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
     for (const documentId of toReplicateWithoutBatching) {
       this._documentsToSync.add(documentId);
       this._repo.findWithProgress(documentId as DocumentId);

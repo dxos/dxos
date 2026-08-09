@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
 import { mergeExecEnv } from '../../services/sandbox-env';

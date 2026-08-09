@@ -22,22 +22,19 @@
     "@astrojs/rss": "catalog:",
     "@astrojs/starlight": "catalog:",
     "@bryanguffey/astro-standard-site": "catalog:",
-    "@dxos/keys": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "astro": "catalog:",
     "sharp": "catalog:",
     "starlight-links-validator": "catalog:"
   },
   "devDependencies": {
     "@atproto/api": "catalog:",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
-    "@dxos/config": "workspace:*",
-    "@dxos/echo": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@types/turndown": "catalog:",
-    "turndown": "catalog:",
-    "vite": "^7.3.2"
+    "turndown": "catalog:"
   }
 }

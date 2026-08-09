@@ -16,7 +16,9 @@ import { EditMessage } from '#components';
 import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 
-import { InboxCapabilities, InboxOperation, Mailbox } from '../../types';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 import { REPLY_REGEXP } from '../../util';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
@@ -90,7 +92,9 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
     <Panel.Root role={role} classNames='dx-document'>
       <Panel.Toolbar>
         <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

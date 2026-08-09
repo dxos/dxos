@@ -2,6 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const ScriptOperationHandlerSet = OperationHandlerSet.lazy(() => import('./create-script'));
+import * as ScriptOperation from '../types/ScriptOperation';
+
+export const ScriptOperationHandlerSet = OperationHandlerSet.lazy([
+  ScriptOperation.CreateScript.pipe(Operation.lazyHandler(() => import('./create-script'))),
+]);

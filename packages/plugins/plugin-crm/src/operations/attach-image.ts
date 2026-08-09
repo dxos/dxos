@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
@@ -12,7 +12,7 @@ import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
-import { CrmOperation } from '../types';
+import * as CrmOperation from '../types/CrmOperation';
 
 /**
  * Default image service base URL. Overridable per-invocation via the

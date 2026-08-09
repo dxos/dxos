@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/fixtures"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -28,9 +31,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -40,16 +40,13 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/compute-runtime"
-    },
-    {
       "path": "../../core/compute/extractor"
     },
     {
       "path": "../../core/compute/link"
     },
     {
-      "path": "../../core/compute/pipeline-email"
+      "path": "../../core/compute/pipeline"
     },
     {
       "path": "../../core/compute/pipeline-rdf"
@@ -74,6 +71,9 @@
     },
     {
       "path": "../../plugins/plugin-connector"
+    },
+    {
+      "path": "../../plugins/plugin-crm"
     },
     {
       "path": "../../plugins/plugin-debug"

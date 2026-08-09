@@ -5,14 +5,16 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Button, useTranslation } from '@dxos/react-ui';
 
 import { Pending, Transcript } from '#components';
 import { meta } from '#meta';
-import { Video, VideoOperation } from '#types';
+
+import * as Video from '../../types/Video';
+import * as VideoOperation from '../../types/VideoOperation';
 
 // TODO(burdon): Use AppSurface.Section.
 export type TranscriptSectionProps = {

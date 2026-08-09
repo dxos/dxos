@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Trigger, TriggerEvent } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Filter, Query } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 

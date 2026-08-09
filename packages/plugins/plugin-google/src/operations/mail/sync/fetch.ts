@@ -12,20 +12,21 @@ import * as Stream from 'effect/Stream';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
-import { type SyncStreamConfig } from '@dxos/plugin-inbox/types';
+import * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 
 import { GoogleMail } from '../../../apis';
+import { GoogleApiError } from '../../../errors';
 import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '../../../services';
 import { type AttachmentMetadata } from '../mapper';
 
-/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
+/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
 export const GOOGLE_SYNC_CONFIG = {
   listPageSize: 500,
   fetchConcurrency: 5,
   commitPageSize: 10,
   maxItemsPerRun: 500,
   dateChunkDays: 7,
-} as const satisfies SyncStreamConfig;
+} as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 //
 // Fetch messages
@@ -88,10 +89,22 @@ export const fetchMessages = (
             .getMessage(config.userId, messageId)
             .pipe(Effect.withSpan('google-sync.fetch.message'));
           config.onRetrieved?.();
-          return message;
-        }),
+          return Option.some(message);
+        }).pipe(
+          // A message deleted before this fetch 404s forever and the token only advances on a clean run,
+          // so failing here wedges the mailbox on that one id. Any other error must still fail, so the
+          // durable retry re-fetches it rather than stranding it once the cursor advances.
+          Effect.catchIf(
+            (error) => error instanceof GoogleApiError && error.code === 404,
+            (error) => {
+              log.warn('gmail sync: message not found, skipping', { messageId, error });
+              return Effect.succeed(Option.none<GoogleMail.Message>());
+            },
+          ),
+        ),
       { concurrency: GOOGLE_SYNC_CONFIG.fetchConcurrency },
     ),
+    Stream.filterMap(Function.identity),
   );
 };
 

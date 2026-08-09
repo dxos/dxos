@@ -5,12 +5,15 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Instructions, Routine, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, URI } from '@dxos/keys';
 import { AccessToken, Cursor } from '@dxos/link';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -36,11 +39,11 @@ const types = [
 ];
 
 const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
-  const { personalSpace } = await EffectEx.runAndForwardErrors(
+  const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );
   await harness.waitForEvent(ClientEvents.SpacesReady);
-  return personalSpace.db;
+  return defaultSpace.db;
 };
 
 const connectedIds = (db: Database.Database, object: Obj.Unknown) =>

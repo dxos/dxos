@@ -7,7 +7,9 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -17,9 +19,9 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { useActiveFilesystemWorkspace } from '#hooks';
 import { meta } from '#meta';
-import { NativeFilesystemOperation } from '#types';
-import { NativeFilesystemCapabilities } from '#types';
 
+import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
+import * as NativeFilesystemOperation from '../types/NativeFilesystemOperation';
 import { writeComposerConfig } from '../util';
 
 const WorkspaceSettingsSchema = Schema.Struct({
@@ -89,10 +91,10 @@ export const WorkspaceSettingsContainer = () => {
     }
 
     await invokePromise(NativeFilesystemOperation.CloseDirectory, { id: workspace.id });
-    const personalSpaceId = AppSpace.getPersonalSpace(client)?.id;
-    if (personalSpaceId) {
+    const defaultSpaceId = AppSpace.getDefaultSpace(client)?.id;
+    if (defaultSpaceId) {
       await invokePromise(LayoutOperation.SwitchWorkspace, {
-        subject: GraphPath.getSpacePath(personalSpaceId),
+        subject: GraphPath.getSpacePath(defaultSpaceId),
       });
     }
   }, [workspace, invokePromise, client]);

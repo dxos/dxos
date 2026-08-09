@@ -9,7 +9,8 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 
-import { LayerSpec, ServiceNotAvailableError } from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 

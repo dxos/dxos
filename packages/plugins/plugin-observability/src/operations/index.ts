@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const ObservabilityOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./send-event'),
-  () => import('./toggle'),
-);
+import * as ObservabilityOperation from '../types/ObservabilityOperation';
+
+export const ObservabilityOperationHandlerSet = OperationHandlerSet.lazy([
+  ObservabilityOperation.SendEvent.pipe(Operation.lazyHandler(() => import('./send-event'))),
+  ObservabilityOperation.Toggle.pipe(Operation.lazyHandler(() => import('./toggle'))),
+]);

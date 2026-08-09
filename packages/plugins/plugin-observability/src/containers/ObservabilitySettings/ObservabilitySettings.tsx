@@ -10,7 +10,9 @@ import { Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { ObservabilityOperation, Settings } from '#types';
+
+import * as ObservabilityOperation from '../../types/ObservabilityOperation';
+import * as Settings from '../../types/Settings';
 
 export type ObservabilitySettingsProps = AppSurface.SettingsData;
 
@@ -36,7 +38,9 @@ export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) =
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
             <Message.Root valence='info'>
-              <Message.Content>{t('observability.description')}</Message.Content>
+              <Message.Content>
+                <Message.Body>{t('observability.description')}</Message.Body>
+              </Message.Content>
             </Message.Root>
             <Form.FieldSet />
           </Form.Section>

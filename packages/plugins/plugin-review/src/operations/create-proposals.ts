@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
 import { computeDiffsWithCursors } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { CommentOperation } from '../types';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = CommentOperation.CreateProposals.pipe(
   Operation.withHandler(

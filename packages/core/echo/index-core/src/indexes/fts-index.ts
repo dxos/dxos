@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import type * as Statement from '@effect/sql/Statement';
@@ -10,7 +11,9 @@ import * as Effect from 'effect/Effect';
 import type { Obj } from '@dxos/echo';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import type { EntityId, SpaceId } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
 import type { EntityMeta } from './entity-meta-index';
 import type { Index, IndexerObject } from './interface';
 
@@ -90,19 +93,20 @@ const escapeFts5Query = (text: string): string => {
 };
 
 export class FtsIndex implements Index {
-  migrate = Effect.fn('FtsIndex.migrate')(function* () {
-    const sql = yield* SqlClient.SqlClient;
-
-    // https://sqlite.org/fts5.html#the_trigram_tokenizer
-    // FTS5 tables are created as virtual tables; they implicitly have a `rowid`.
-    // Trigram tokenizer enables substring matching (e.g., "rog" matches "programming").
-    //
-    // Data structure: inverted index mapping trigrams to document IDs.
-    // "hello" → trigrams ["hel", "ell", "llo"] → B-tree entries: "hel"→[1], "ell"→[1], "llo"→[1].
-    // Query "ell" → O(log n) B-tree lookup → returns [1].
-    // Posting lists are compressed, so index size scales well with document count.
-    yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot, tokenize='trigram')`;
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  migrate = Effect.fn('FtsIndex.migrate')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+    ),
+  );
 
   query({
     query,

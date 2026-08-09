@@ -8,7 +8,8 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 
-import { Drawing, LegacySketch } from '../types';
+import * as Drawing from '../types/Drawing';
+import * as LegacySketch from '../types/LegacySketch';
 import { sketchToDrawing } from './migrations';
 
 let builder: EchoTestBuilder;

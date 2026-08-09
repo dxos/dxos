@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 
 export interface SwarmTraceSinkOptions {
   /**

@@ -8,10 +8,17 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Queue rather than cancel: a cancelled run uploads nothing, so the commit it was building stays
+  # permanently un-installable for anything pinning pkg.pr.new — which is how the composer plugins
+  # repo tracks the SDK, and its nightly 404s when it lands on such a commit.
+  cancel-in-progress: false
 
 env:
-  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 jobs:
   publish:

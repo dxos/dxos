@@ -4,16 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { type Connection } from '@dxos/plugin-connector/types';
+import type * as Connection from '@dxos/plugin-connector/Connection';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Blog, BloggerCapabilities, Publisher } from '#types';
 
+import * as Blog from '../types/Blog';
+import * as BloggerCapabilities from '../types/BloggerCapabilities';
+import * as Publisher from '../types/Publisher';
 import { SyncPosts } from './definitions';
 import { linkedId, postText, resolvePublisherService, tryPublisher } from './sync-support';
 

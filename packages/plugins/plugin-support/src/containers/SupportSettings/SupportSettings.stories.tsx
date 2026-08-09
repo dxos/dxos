@@ -13,8 +13,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import { Settings } from '#types';
 
+import * as Settings from '../../types/Settings';
 import { SupportSettings } from './SupportSettings';
 
 type StoryProps = {
@@ -38,7 +38,7 @@ const DefaultStory = ({ settings }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-support/containers/SupportSettings',
   component: DefaultStory,
-  // The container resolves the personal space and invokes an operation, so it needs both contexts.
+  // The container resolves the default space and invokes an operation, so it needs both contexts.
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),

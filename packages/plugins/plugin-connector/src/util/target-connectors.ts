@@ -5,7 +5,7 @@
 import { type CapabilityManager } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
-import { Connector } from '../types';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 
 /**
  * The registered connectors that bind objects of this type, by their `sync.targetTypename`.
@@ -33,7 +33,7 @@ export const connectorIdsForTarget = (
   }
 
   return capabilities
-    .getAll(Connector)
+    .getAll(ConnectorSpec.Connector)
     .flat()
     .filter((connector) => connector.sync?.targetTypename === typename)
     .map((connector) => connector.id);

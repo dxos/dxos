@@ -46,7 +46,13 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/extractor"
+    },
+    {
       "path": "../../core/compute/extractor-lib"
+    },
+    {
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
@@ -79,15 +85,6 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-list"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -104,9 +101,6 @@
     },
     {
       "path": "../plugin-routine"
-    },
-    {
-      "path": "../plugin-space"
     }
   ]
 }

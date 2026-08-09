@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node } from '@dxos/plugin-graph';
@@ -13,7 +13,9 @@ import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
 import { useBreakpoints, useCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, type ResolvedPart } from '#types';
+
+import * as DeckOperation from '../../types/DeckOperation';
+import * as DeckSchema from '../../types/DeckSchema';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];
@@ -33,7 +35,7 @@ export type PlankCapabilities = {
 export type UseDeckPlankOptions = {
   id: string;
   /** Resolved part for the primary plank (`main` | `complementary`). */
-  part: ResolvedPart;
+  part: DeckSchema.ResolvedPart;
   /** Ordered active planks (multi mode); enables the increment affordances. */
   active?: string[];
 };

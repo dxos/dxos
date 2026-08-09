@@ -4,13 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
-
-import { AtprotoCapabilities } from '#types';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import * as AtprotoRepo from '../services/AtprotoRepo';
+import * as AtprotoCapabilities from '../types/AtprotoCapabilities';
 
 /**
  * Default (live) repo-layer factory: resolves credentials + PDS for the connection and talks to the
@@ -19,12 +18,12 @@ import * as AtprotoRepo from '../services/AtprotoRepo';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const client = yield* ClientCapabilities.Client;
     return [
-      Capability.contributes(AtprotoCapabilities.RepoLayer, (connection) =>
+      Capability.contribute(AtprotoCapabilities.RepoLayer, (connection) =>
         AtprotoRepo.layerLive({ connection: Ref.make(connection), client }),
       ),
-      Capability.contributes(AtprotoCapabilities.ReadRepoLayer, (handle) => AtprotoRepo.layerPublic(handle)),
+      Capability.contribute(AtprotoCapabilities.ReadRepoLayer, (handle) => AtprotoRepo.layerPublic(handle)),
     ];
   }),
 );

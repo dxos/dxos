@@ -1,10 +1,13 @@
 // Copyright 2025 DXOS.org
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const KanbanOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./delete-card'),
-  () => import('./delete-card-field'),
-  () => import('./restore-card'),
-  () => import('./restore-card-field'),
-);
+import * as KanbanOperation from '../types/KanbanOperation';
+
+export const KanbanOperationHandlerSet = OperationHandlerSet.lazy([
+  KanbanOperation.DeleteCard.pipe(Operation.lazyHandler(() => import('./delete-card'))),
+  KanbanOperation.DeleteCardField.pipe(Operation.lazyHandler(() => import('./delete-card-field'))),
+  KanbanOperation.RestoreCard.pipe(Operation.lazyHandler(() => import('./restore-card'))),
+  KanbanOperation.RestoreCardField.pipe(Operation.lazyHandler(() => import('./restore-card-field'))),
+]);

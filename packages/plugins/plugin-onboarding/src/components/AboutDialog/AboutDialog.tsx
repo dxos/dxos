@@ -10,11 +10,18 @@ import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
+// Keyed by the full edge host: `<env>.dxos.network` (apex = production) plus the
+// legacy `edge[-<env>].dxos.workers.dev` names still present in stored configs.
 const ENV_LABELS: Record<string, string> = {
-  'edge-dev': 'Dev',
-  'edge-main': 'Main',
-  'edge-labs': 'Labs',
-  'edge-production': 'Production',
+  'edge.dxos.workers.dev': 'Dev',
+  'edge-main.dxos.workers.dev': 'Main',
+  'edge-labs.dxos.workers.dev': 'Labs',
+  'edge-staging.dxos.workers.dev': 'Staging',
+  'edge-production.dxos.workers.dev': 'Production',
+  'main.dxos.network': 'Main',
+  'labs.dxos.network': 'Labs',
+  'staging.dxos.network': 'Staging',
+  'dxos.network': 'Production',
 };
 
 const REPO = 'https://github.com/dxos/dxos';
@@ -28,8 +35,6 @@ const parseUrl = (url: string): URL | undefined => {
   }
 };
 
-export const ABOUT_DIALOG = `${meta.profile.key}.component.about-dialog`;
-
 export const AboutDialog = () => {
   const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
@@ -37,7 +42,7 @@ export const AboutDialog = () => {
 
   // Show edge environment when not in production, so internal builds advertise which cluster they're on.
   const edgeUrl = config.values.runtime?.services?.edge?.url;
-  const envKey = edgeUrl ? parseUrl(edgeUrl)?.host.split('.')[0] : undefined;
+  const envKey = edgeUrl ? parseUrl(edgeUrl)?.host : undefined;
   const edgeEnv = envKey ? ENV_LABELS[envKey] : undefined;
   const showEnv = !!edgeEnv && edgeEnv !== 'Production';
 

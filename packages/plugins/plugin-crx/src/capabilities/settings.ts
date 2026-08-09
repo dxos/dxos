@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { CrxCapabilities, Settings } from '#types';
+
+import * as CrxCapabilities from '../types/CrxCapabilities';
+import * as Settings from '../types/Settings';
 
 /**
  * Contributes the Settings atom both under the plugin-scoped capability (so
@@ -25,8 +27,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(CrxCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.contribute(CrxCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,

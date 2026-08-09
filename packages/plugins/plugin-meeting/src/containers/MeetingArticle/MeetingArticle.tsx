@@ -7,12 +7,14 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { type Meeting, MeetingOperation } from '#types';
+
+import type * as Meeting from '../../types/Meeting';
+import * as MeetingOperation from '../../types/MeetingOperation';
 
 type MeetingTab = 'notes' | 'transcript' | 'summary' | 'call';
 
@@ -118,7 +120,9 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       {tab === 'call' && callData && (

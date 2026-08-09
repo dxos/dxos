@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TaskSet } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';
-import { GitHubOperation } from '../types';
+import * as GitHubOperation from '../types/GitHubOperation';
 
 const fkFor = (id: string) => ({ source: GITHUB_SOURCE, id });
 

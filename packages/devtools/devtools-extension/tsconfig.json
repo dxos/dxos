@@ -19,34 +19,16 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/esbuild-plugins"
-    },
-    {
       "path": "../../common/log"
     },
     {
       "path": "../../core/mesh/rpc"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-services"
-    },
-    {
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/observability"
-    },
-    {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/shell"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"

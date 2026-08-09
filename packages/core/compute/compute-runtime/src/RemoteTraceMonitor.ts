@@ -8,7 +8,7 @@ import * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 
 /**
  * Source of ephemeral trace messages broadcast by remote runtimes over the space swarm (DX-1125).

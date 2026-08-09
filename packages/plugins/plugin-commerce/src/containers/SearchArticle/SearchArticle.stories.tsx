@@ -19,7 +19,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CommercePlugin } from '../../plugin';
 import { makeSampleProvider, makeSampleResults, makeSampleSearch } from '../../testing';
 import { translations } from '../../translations';
-import { Provider, Result, Search } from '../../types';
+import * as Provider from '../../types/Provider';
+import * as Result from '../../types/Result';
+import * as Search from '../../types/Search';
 import { SearchArticle } from './SearchArticle';
 
 const DefaultStory = () => {

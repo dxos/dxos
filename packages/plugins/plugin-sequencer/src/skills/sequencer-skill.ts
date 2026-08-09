@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { Score, ScoreOperation } from '#types';
+import * as Score from '../types/Score';
+import * as ScoreOperation from '../types/ScoreOperation';
 
 const make = () =>
   Skill.make({

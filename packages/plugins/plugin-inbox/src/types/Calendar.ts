@@ -4,10 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { ConnectorAuthAnnotation, connectorIdsForTarget } from '@dxos/plugin-connector';
+import { connectorIdsForTarget } from '@dxos/plugin-connector';
+import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
 export const SKILL_KEY = 'org.dxos.skill.calendar';
@@ -26,7 +27,10 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the calendar toolbar; bind the calendar as the new connection's sync target.
     // Providers are resolved from the registry — see `Mailbox`.
-    ConnectorAuthAnnotation.set({ connectorIds: connectorIdsForTarget, bindTarget: true }),
+    ConnectorAnnotations.ConnectorAuthAnnotation.set({
+      connectorIds: connectorIdsForTarget,
+      bindTarget: true,
+    }),
   ),
 ) {}
 

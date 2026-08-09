@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -17,9 +16,11 @@ import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { TripBuilder } from '#testing';
-import { Booking, Segment, Trip } from '#types';
 
 import { TripPlugin } from '../../testing';
+import * as Booking from '../../types/Booking';
+import * as Segment from '../../types/Segment';
+import * as Trip from '../../types/Trip';
 import { SegmentArticle } from './SegmentArticle';
 
 type StoryArgs = {
@@ -63,16 +64,15 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager(() => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
           types: [Trip.Trip, Segment.Segment, Booking.Booking],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              seed(personalSpace);
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              seed(defaultSpace);
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         StorybookPlugin({}),

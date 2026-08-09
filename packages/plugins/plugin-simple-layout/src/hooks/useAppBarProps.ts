@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
@@ -16,7 +16,8 @@ import { type ActionGraphProps } from '@dxos/react-ui-menu';
 
 import { type AppBarProps } from '#components';
 import { meta } from '#meta';
-import { SimpleLayoutCapabilities } from '#types';
+
+import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 
 /**
  * Hook that computes all AppBar props from the app graph.

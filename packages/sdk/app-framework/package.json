@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,8 +44,8 @@
       "import": "./dist/lib/core/plugin.mjs"
     },
     "./PluginManager": {
-      "source": "./src/core/plugin-manager.ts",
-      "types": "./dist/types/src/core/plugin-manager.d.ts",
+      "source": "./src/core/plugin-manager/index.ts",
+      "types": "./dist/types/src/core/plugin-manager/index.d.ts",
       "import": "./dist/lib/core/plugin-manager.mjs"
     },
     "./UrlLoader": {
@@ -59,7 +59,6 @@
       "import": "./dist/lib/config.mjs"
     },
     "./vite-plugin": {
-      "source": "./src/vite-plugin/index.ts",
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/lib/vite-plugin.mjs"
     },
@@ -82,7 +81,8 @@
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "scripts": {
@@ -99,6 +99,7 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -107,8 +108,6 @@
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
-    "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
@@ -123,22 +122,20 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
-    "@dxos/brand": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/storybook-addon-logger": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "typedoc": "catalog:",
-    "vite": "catalog:",
-    "vite-plugin-solid": "catalog:"
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@effect-atom/atom-react": "catalog:",

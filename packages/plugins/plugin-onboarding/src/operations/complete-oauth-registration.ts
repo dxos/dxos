@@ -4,24 +4,25 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppSpace } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as Operation from '@dxos/compute/Operation';
 import { Context as DxContext } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, Connection } from '@dxos/plugin-connector';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { CompleteOAuthRegistration } from './definitions';
 import { createEdgeHttpClient } from './shared';
 
 /**
  * Completes OAuth recovery registration for the local identity. Submits the registration token plus
- * the identity and space keys to edge, which routes the OAuth refresh token into the personal space
- * and records the recovery binding. On success, materializes an `AccessToken` object in the personal
+ * the identity and space keys to edge, which routes the OAuth refresh token into the default space
+ * and records the recovery binding. On success, materializes an `AccessToken` object in the default
  * space keyed by the returned `accessTokenId` so subsequent token rotations land on it.
  */
 const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = CompleteOAuthRegistration.pipe(
@@ -35,9 +36,9 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
 
       const edgeClient = createEdgeHttpClient(client);
 
-      const personalSpace = AppSpace.getPersonalSpace(client);
-      invariant(personalSpace, 'Personal space not found.');
-      const spaceKey = personalSpace.key.toHex();
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      invariant(defaultSpace, 'Default space not found.');
+      const spaceKey = defaultSpace.key.toHex();
 
       log.info('completing OAuth registration', { identityKey, spaceKey });
 
@@ -54,7 +55,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
 
       // Materialize the AccessToken object keyed by the returned id so rotated tokens can be written
       // back onto it; without it the stored refresh token is treated as orphaned and dropped.
-      yield* Effect.promise(() => personalSpace.waitUntilReady());
+      yield* Effect.promise(() => defaultSpace.waitUntilReady());
       // OAuth recovery is atproto-only; the token belongs to the Atmosphere integration.
       const tokenObject = Obj.make(AccessToken.AccessToken, {
         id: result.accessTokenId,
@@ -63,7 +64,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
         token: result.accessToken,
         scopes: result.scopes,
       });
-      personalSpace.db.add(tokenObject);
+      defaultSpace.db.add(tokenObject);
       log.info('AccessToken ECHO object created', {
         id: result.accessTokenId,
         provider: result.provider,
@@ -71,10 +72,10 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
       });
 
       // Wrap the AccessToken in a Connection so the connected account surfaces as a first-class
-      // object in the personal space. Registration completes exactly once (first sign-up); login and
+      // object in the default space. Registration completes exactly once (first sign-up); login and
       // server-side token refresh never re-run this, so the AccessToken/Connection pair is created
       // unconditionally with no de-dup query.
-      personalSpace.db.add(
+      defaultSpace.db.add(
         Connection.make({
           name: result.email ?? result.identifier,
           connectorId: ATMOSPHERE_PROVIDER_ID,

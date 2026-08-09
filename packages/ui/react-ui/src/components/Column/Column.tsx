@@ -10,6 +10,7 @@ import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { composableProps, slottable } from '../../util';
+import { type ColumnGap } from './Column.theme';
 import { ColumnContext } from './ColumnContext';
 
 //
@@ -26,7 +27,12 @@ const gutterSizes: Record<GutterSize, string> = {
   lg: 'var(--dx-gutter-lg)',
 };
 
-type ColumnRootProps = { gutter?: GutterSize; subgrid?: boolean };
+type ColumnRootProps = {
+  gutter?: GutterSize;
+  subgrid?: boolean;
+  /** Vertical gap applied between all rows of the grid. */
+  gap?: ColumnGap;
+};
 
 /**
  * Creates a 3-column CSS grid with left/right gutter columns and a center content column.
@@ -47,7 +53,7 @@ type ColumnRootProps = { gutter?: GutterSize; subgrid?: boolean };
  * Use the `withColumn.center()` helper to apply placement on slotted elements.
  */
 const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
-  ({ children, asChild, role, gutter = 'lg', subgrid, ...props }, forwardedRef) => {
+  ({ children, asChild, role, gutter = 'lg', subgrid, gap, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
@@ -68,7 +74,7 @@ const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
               ...(subgrid && { gridColumn: '1 / -1' }),
             } as CSSProperties
           }
-          className={tx('column.root', { gutter }, className)}
+          className={tx('column.root', { gutter, gap }, className)}
           ref={forwardedRef}
         >
           {children}

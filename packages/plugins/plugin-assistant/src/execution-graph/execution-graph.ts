@@ -12,7 +12,9 @@ import * as Struct from 'effect/Struct';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, Trace } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
@@ -65,6 +67,10 @@ const ICONS = {
   operationEndError: {
     icon: 'ph--function--regular',
     level: LogLevel.ERROR,
+  },
+  operationEndIncomplete: {
+    icon: 'ph--arrows-clockwise--regular',
+    level: LogLevel.WARN,
   },
   toolCall: {
     icon: 'ph--wrench--regular',
@@ -328,11 +334,28 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
       log('invalid trace event', { type: event.type });
       return undefined;
     }
-    const success = event.data.outcome === 'success';
+    // A `RunAgainError` (Operation.runAgain) is a scheduler yield, not a hard error: the trace records
+    // it as a failure tagged with the run-again error code, but it will be re-invoked. Detect it here
+    // and present it as a distinct warn-level state rather than folding it into failure. Fall back to
+    // the legacy message for events persisted before `errorCode` existed.
+    const incomplete =
+      event.data.outcome === 'failure' &&
+      (event.data.errorCode === RUN_AGAIN_ERROR_CODE ||
+        (event.data.errorCode === undefined && event.data.error === RUN_AGAIN_MESSAGE));
+    const presentation =
+      event.data.outcome === 'success'
+        ? { icon: ICONS.operationEndSuccess.icon, level: ICONS.operationEndSuccess.level, suffix: '' }
+        : incomplete
+          ? {
+              icon: ICONS.operationEndIncomplete.icon,
+              level: ICONS.operationEndIncomplete.level,
+              suffix: ' - Incomplete',
+            }
+          : { icon: ICONS.operationEndError.icon, level: ICONS.operationEndError.level, suffix: ' - Error' };
     return {
-      icon: event.data.icon ?? (success ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon),
-      level: success ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
-      message: `${event.data.name ?? event.data.key}${!success ? ' - Error' : ''}`,
+      icon: event.data.icon ?? presentation.icon,
+      level: presentation.level,
+      message: `${event.data.name ?? event.data.key}${presentation.suffix}`,
       idSuffix: `${event.data.key}:end`,
     };
   }

@@ -2,8 +2,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, type Entity, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 

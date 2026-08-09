@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -23,10 +24,11 @@ import {
   SaveFilterPopover,
   SubscriptionsArticle,
 } from '#containers';
-import { Calendar, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../constants';
 import { getSubscriptionsId } from '../paths';
+import * as Calendar from '../types/Calendar';
+import * as Mailbox from '../types/Mailbox';
 import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
@@ -35,7 +37,7 @@ const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
 /** A single non-draft message or a non-empty conversation (thread) of them. */
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'subscriptions',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {

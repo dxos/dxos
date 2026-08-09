@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { AccessToken, Cursor } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector';
-import { Calendar } from '@dxos/plugin-inbox/types';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { TagIndex } from '@dxos/schema';
 import { Event, Organization, Person } from '@dxos/types';
 

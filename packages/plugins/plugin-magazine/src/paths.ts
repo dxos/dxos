@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-import { Magazine } from '#types';
+import * as Magazine from './types/Magazine';
 
 const { getSectionPath: getMagazinesPath, getObjectPath: getMagazinePath } = GraphPath.createTypeSectionPaths(
   Magazine.Magazine,

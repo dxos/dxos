@@ -3,3 +3,4 @@
 //
 
 export * as AnthropicResolver from './AnthropicResolver';
+export * from './anthropic-web-search';

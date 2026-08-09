@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
 import { StateMap } from '@dxos/schema';
 
-import { Subscription } from '../types';
+import * as Subscription from '../types/Subscription';
 
 /** Per-Post read slice. */
 export type ReadSlice = { readAt: string | undefined };

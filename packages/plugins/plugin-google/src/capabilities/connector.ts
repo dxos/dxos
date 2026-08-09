@@ -10,13 +10,18 @@ import * as Predicate from 'effect/Predicate';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Credential, Trigger } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withAuthorization } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Type } from '@dxos/echo';
-import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
-import { MAIL_AUTO_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
-import { Calendar, CalendarSyncOptions, InboxOperation, Mailbox, SyncOptions } from '@dxos/plugin-inbox/types';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
+import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -66,7 +71,7 @@ const isGoogleAuthRejection = (error: unknown): boolean =>
  * an actual 401/403 (an expired or revoked grant) is surfaced as "reauthenticate"; any other failure
  * after retries exhausted is reported as a distinct, less alarming message.
  */
-const testGoogleConnection: TestConnection = ({ accessToken }) =>
+const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
     const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
@@ -100,7 +105,7 @@ const testGoogleConnection: TestConnection = ({ accessToken }) =>
  * email so connections/mailboxes get a sensible default name. The sync target is
  * materialized separately (`materializeTarget`) when the binding is created.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     const email = yield* getAccountEmail(
       yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id }),
@@ -115,7 +120,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: GMAIL_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
@@ -137,9 +142,10 @@ export default Capability.makeModule(
           // Single-target connector: no `getTargets`. The coordinator calls `materializeTarget`
           // (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: InboxOperation.MaterializeGmailTarget,
-          optionsSchema: SyncOptions,
+          optionsSchema: SyncOptions.SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
+          remote: MAIL_REMOTE_SYNC,
         },
         onTokenCreated,
         testConnection: testGoogleConnection,
@@ -163,7 +169,7 @@ export default Capability.makeModule(
           targetTypename: Type.getTypename(Calendar.Calendar),
           getTargets: InboxOperation.GetGoogleCalendars,
           materializeTarget: InboxOperation.MaterializeCalendarTarget,
-          optionsSchema: CalendarSyncOptions,
+          optionsSchema: SyncOptions.CalendarSyncOptions,
         },
         onTokenCreated,
         testConnection: testGoogleConnection,

@@ -4,14 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { addEventListener } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
@@ -74,10 +78,10 @@ export default Capability.makeModule(
       // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
       // `AppCapabilities.Layout`, and `getAll` returns an empty array. Reading `registry.get(undefined)`
       // would crash inside Atom's identity check (`'~atom/Serializable' in undefined`). When layout
-      // isn't available, fall through to the personal-space default.
+      // isn't available, fall through to the default space.
       const [layoutAtom] = capabilities.getAll(AppCapabilities.Layout);
       const spaceId = layoutAtom && GraphPath.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
-      const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getPersonalSpace(client);
+      const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getDefaultSpace(client);
       if (!space) {
         return;
       }
@@ -118,6 +122,7 @@ export default Capability.makeModule(
       log.warn('no default view found');
     }
 
-    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => cleanup?.()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => cleanup?.()));
+    return [];
   }),
 );

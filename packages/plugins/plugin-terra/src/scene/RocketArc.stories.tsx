@@ -14,11 +14,12 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Terra, TerraObject } from '#types';
 
 import { PlanetCache, SceneManager, cross, normalize, seaRadius } from '../engine';
 import { BALLISTIC_APEX, EXPLOSION_SECONDS, SimEngine, angleBetween, slerp, toUnit } from '../sim';
 import { STORY_ATTENDABLE_ID, withAttention } from '../testing';
+import * as Terra from '../types/Terra';
+import * as TerraObject from '../types/TerraObject';
 import { ExplosionLayer } from './explosion-layer';
 import { ObjectLayer } from './object-layer';
 import { TrailLayer } from './trail-layer';
@@ -131,7 +132,9 @@ const RocketArcScene = () => {
     <Menu.Root {...menuActions} attendableId={STORY_ATTENDABLE_ID}>
       <Panel.Root role='article'>
         <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <div className='relative grow'>

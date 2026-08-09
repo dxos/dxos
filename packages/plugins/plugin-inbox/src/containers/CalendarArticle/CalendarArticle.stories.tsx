@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -18,9 +17,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Builder } from '#testing';
-import { Calendar } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
+import * as Calendar from '../../types/Calendar';
 import { CalendarArticle } from './CalendarArticle';
 
 type StoryArgs = {
@@ -44,27 +43,26 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { count = 0 } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
           types: [Feed.Feed, Calendar.Calendar],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
               // Create calendar with backing feed.
-              const calendar = personalSpace.db.add(Calendar.make({ name: 'My Calendar' }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              const calendar = defaultSpace.db.add(Calendar.make({ name: 'My Calendar' }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               // Populate the calendar's feed with events.
               const feed = yield* Effect.tryPromise(() => calendar.feed!.tryLoad());
               if (feed) {
                 const { events } = new Builder().createEvents(count).build();
-                yield* Feed.append(feed, events).pipe(Effect.provide(Database.layer(personalSpace.db)));
+                yield* Feed.append(feed, events).pipe(Effect.provide(Database.layer(defaultSpace.db)));
               }
 
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
 

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { getSpace } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { type Key } from '@dxos/echo';
 
 import { getNextVersion, loadFunctionObject } from './echo';

@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { IllustratorPlugin } from '#plugin';
 
-import { Drawing } from './types';
+import * as Drawing from './types/Drawing';
 
 describe('IllustratorPlugin', () => {
   // Canvas is written to the database by every variant's create flow, so the plugin that owns the

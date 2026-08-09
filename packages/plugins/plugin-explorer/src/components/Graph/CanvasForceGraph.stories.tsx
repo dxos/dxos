@@ -19,8 +19,8 @@ import { type ValueGenerator, createObjectFactory, createRelationFactory } from 
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '#hooks';
-import { Graph } from '#types';
 
+import * as Graph from '../../types/Graph';
 import { CanvasForceGraph } from './CanvasForceGraph';
 
 const generator = random as any as ValueGenerator;
@@ -58,10 +58,10 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(() =>
                 createObjectFactory(
-                  personalSpace.db,
+                  defaultSpace.db,
                   generator,
                 )([
                   { type: Organization.Organization, count: 20 },
@@ -71,15 +71,15 @@ const meta = {
               );
               yield* Effect.promise(() =>
                 createRelationFactory(
-                  personalSpace.db,
+                  defaultSpace.db,
                   generator,
                 )([{ type: HasRelationship.HasRelationship, count: 20, data: { kind: 'friend' } }]),
               );
               const { view } = yield* Effect.promise(() =>
-                ViewModel.makeFromDatabase({ db: personalSpace.db, typename: Type.getTypename(Graph.Graph) }),
+                ViewModel.makeFromDatabase({ db: defaultSpace.db, typename: Type.getTypename(Graph.Graph) }),
               );
-              personalSpace.db.add(Graph.make({ name: 'Test', view }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              defaultSpace.db.add(Graph.make({ name: 'Test', view }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
       ],
