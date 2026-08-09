@@ -226,7 +226,7 @@ const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, 
       return expanded;
     };
     recursiveResult = new SchemaAST.Suspend(expand, ast.annotations, undefined, ast.encoding, ast.context);
-  } else if (SchemaAST.isTypeLiteral(ast)) {
+  } else if (SchemaAST.isObjects(ast)) {
     // Add property order annotations
     recursiveResult = SchemaEx.mapAst(ast, (ast) => withEchoRefinements(stripUndefinedMember(ast), expansions));
     // Not for a reference: its encoded side is a struct only so that v4 will serialize it, and the
@@ -424,7 +424,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
-  return (Object.keys(annotations).length > 0 ? schema.annotate(annotations) : schema) as any;
+  return Object.keys(annotations).length > 0 ? schema.annotate(annotations) : schema;
 };
 
 const anyToEffectSchema = (root: JSONSchema.JsonSchema): Schema.Codec<any, any> => {
@@ -589,10 +589,6 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
 const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): SchemaAST.AST =>
   SchemaAST.annotate(ast, schema as SchemaAST.Annotations);
 
-/**
- * Fixes field order.
- * Sets `$schema` prop.
- */
 /**
  * Inlines the `allOf` wrapper Effect 4 emits for checks.
  *

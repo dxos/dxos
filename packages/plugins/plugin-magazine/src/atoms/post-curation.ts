@@ -18,7 +18,7 @@ const EMPTY_CURATION_SLICE: CurationSlice = { snippet: undefined, imageUrl: unde
 /**
  * This Post's magazine-scoped curation slice (snippet/imageUrl), sliced off the Magazine's
  * `postState`. Fires only when this Post's slice changes — sibling Posts' curation mutations are
- * discarded without propagating. Keyed by a structurally-equal tuple key `[post, magazine])`.
+ * discarded without propagating. Keyed by a structurally-equal tuple key `[post, magazine]`.
  */
 export const postCurationAtom = Atom.family((key: readonly [Subscription.Post, Magazine.Magazine]) =>
   Atom.make<CurationSlice>((get) => {

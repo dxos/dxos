@@ -398,9 +398,9 @@ export const createEchoReferenceSchema = (
 };
 
 const getSchemaExpectedName = (ast: SchemaAST.AST): string | undefined =>
-  (SchemaAST.getIdentifierAnnotation(ast) ??
-    SchemaAST.getTitleAnnotation(ast) ??
-    SchemaAST.getDescriptionAnnotation(ast)) as string | undefined;
+  SchemaAST.getAnnotation<string>(SchemaAST.IdentifierAnnotationId)(ast) ??
+  SchemaAST.getAnnotation<string>(SchemaAST.TitleAnnotationId)(ast) ??
+  SchemaAST.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(ast);
 
 /**
  * Load-source ceiling for a resolution request. Cheaper tiers are always probed first; the

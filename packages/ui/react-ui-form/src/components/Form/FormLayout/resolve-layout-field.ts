@@ -37,7 +37,7 @@ export type ResolvedLayoutField = {
 const resolvePropertySignature = (ast: SchemaAST.AST, segments: string[]): SchemaAST.PropertySignature | undefined => {
   let node: SchemaAST.AST = ast;
   for (let index = 0; index < segments.length; index++) {
-    const typeLiteral = SchemaEx.findNode(node, SchemaAST.isTypeLiteral);
+    const typeLiteral = SchemaEx.findNode(node, SchemaAST.isObjects);
     if (!typeLiteral) {
       return undefined;
     }
@@ -85,7 +85,7 @@ export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): Re
   // Label detection reads the *raw* property type: `SchemaEx.getBaseType`'s `encodedBoundAST`
   // strips annotations from non-keyword inner types (e.g. nested structs), which would
   // drop the `LabelAnnotation` we rely on here.
-  const labelType = SchemaEx.findNode(prop.type, SchemaAST.isTypeLiteral);
+  const labelType = SchemaEx.findNode(prop.type, SchemaAST.isObjects);
   const labelled = labelType != null && Option.isSome(Annotation.LabelAnnotation.getFromAst(labelType));
 
   return {

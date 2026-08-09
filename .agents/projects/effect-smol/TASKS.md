@@ -342,22 +342,18 @@ about them.
   `mcp-session-id`. It passed earlier only because the harness's mtime-stamped worker-bundle cache
   served a stale pre-migration server; the relink invalidated the stamp and surfaced it. The
   session-scoping test now passes with the fix.
-- **OPEN — echo-client doc load deadlocks inside workerd.** `functions`, `trace-progress`,
-  `triggers-dispatcher`, `access-token`, `client-invitations`, and the document-bearing MCP
-  integration tests all time out (30–360s); workerd reports "Worker's code had hung". The hang is
-  `EntityManager._initDocHandle` → `whenReady()` never resolving when the echo-client runs
-  *inside* the worker (`WorkerSpaceService`, `trace-feed-writer`) against db-service over
-  `makeInProcessClient(DataServiceRpc)`. The identical path driven from the node process
-  (`automerge*.node.test.ts`) passes. Peer→DO subduction replication works (frames flow, indexer
-  passes complete); only the worker-internal delivery starves. Ruled out: stale/mixed bundles
-  (reproduced with force-rebuilt bundles), the `sql-sqlite` Migrator narrowing (restatement is
-  byte-equivalent to upstream; reverting it only re-breaks bundle loading), contention (reproduces
-  solo on an idle machine). Prime suspects: v4 `RpcTest.makeClient` stream delivery or fiber
-  scheduling under workerd's DO context. Repro:
-  `cd packages/services/edge && vitest --run -t 'upload and dispatch' test/functions.node.test.ts`.
-  NOTE: whether this suite was ever green on v4 is unknowable from the logs — every earlier
-  "green" either replayed moon caches (task hashes ignore `node_modules`, so the relink never
-  invalidated them) or ran stale worker bundles.
+- **FIXED — echo-client doc load deadlocked inside workerd: missing ready beacon.**
+  `RepoProxy` gates every `updateSubscription` (which carries the document-load `addIds`) on the
+  first batch received from `DataService.subscribe`. The echo-host `DataService` emits an empty
+  `{ updates: [] }` batch as that beacon, but the `functions-runtime-cloudflare` adapter — the
+  implementation every worker-side echo-client talks to (`WorkerSpaceService`,
+  `trace-feed-writer`, MCP sessions) — registered the subscription without emitting it, so
+  document loads waited forever and workerd killed the requests as hung. One-line fix in
+  `data-service-impl.ts` plus a regression test pinning the beacon as the subscribe contract's
+  first emission. Diagnostic ruled out along the way: stale/mixed test bundles (the harness's
+  mtime-stamped bundle cache had also masked failures — moon task hashes ignore `node_modules`,
+  so relinks never invalidate cached "green" runs), the `sql-sqlite` Migrator narrowing (restated
+  byte-equivalent to upstream; reverting it re-breaks bundle loading), and contention.
 
 ### dxos-side changes this phase required
 
@@ -382,6 +378,21 @@ Order matters — EDGE ships before Composer.
 - [ ] **Ship Composer with the type migration** (D4).
 - [ ] **Retire the v3 decoder** — gated on space coverage, not a release date; a space nobody opens
       keeps v3 documents indefinitely.
+
+## Review follow-ups deferred (from the comprehensive branch review)
+
+- [ ] `effect-zod`: replace the hand-rolled `AnyAst` structural type (and its cast) with v4's real
+      `SchemaAST` discriminated union — verified possible, medium-size rewrite.
+- [ ] `devtools/cli`: collapse the two hand-rolled `readRootFlag` argv scanners and the
+      `commandConfigLayer` shadow-parse; evaluate v4 `GlobalFlag`/`withGlobalFlags` as the native
+      mechanism for `json`/`verbose`/`logLevel`.
+- [ ] `client-services` logging test converges the subscribe race with an emit-poll loop; a
+      deterministic fix needs a registration-ready signal on `queryLogs`.
+- [ ] `react-ui-canvas-compute` `TriggerShape as any` (existing TODO): derive the interface from
+      the schema instead.
+- [ ] `db-service` `createDoSqlTransactionLayer` body could delegate to v4's storage-backed
+      `withTransaction`; left because it changes production transaction semantics.
+- [ ] MCP sessions remain isolate-local; durable sessions need a Durable Object.
 
 ## Open questions
 

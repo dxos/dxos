@@ -123,7 +123,7 @@ export const promptForSchemaInput = Effect.fn(function* (
   const ast = schema.ast;
 
   // Check if it's a struct/object type
-  if (!SchemaAST.isTypeLiteral(ast)) {
+  if (!SchemaAST.isObjects(ast)) {
     return {};
   }
 

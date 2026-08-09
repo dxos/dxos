@@ -26,7 +26,7 @@ export type MagazinePostData = {
 
 /**
  * Aggregate display data for one tile within a magazine. Fires only on this Post's
- * read/star/feed-name/curation changes. Keyed by a structurally-equal tuple key `[post, magazine])`.
+ * read/star/feed-name/curation changes. Keyed by a structurally-equal tuple key `[post, magazine]`.
  *
  * Snippet and imageUrl precedence: agent-written postState > RSS-derived description fallback.
  */

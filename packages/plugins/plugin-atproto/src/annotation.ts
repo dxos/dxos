@@ -76,8 +76,8 @@ const ownVisibility = (ast: SchemaAST.AST): AtprotoVisibility | undefined => {
 };
 
 /** Unwrap an optional/transformed struct field to its `TypeLiteral`, if it is one. */
-const asStruct = (ast: SchemaAST.AST): SchemaAST.TypeLiteral | undefined => {
-  if (SchemaAST.isTypeLiteral(ast)) {
+const asStruct = (ast: SchemaAST.AST): SchemaAST.Objects | undefined => {
+  if (SchemaAST.isObjects(ast)) {
     return ast;
   }
   if (SchemaAST.isUnion(ast)) {

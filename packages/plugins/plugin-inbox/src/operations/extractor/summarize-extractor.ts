@@ -86,7 +86,7 @@ export const summarizeMessage = ({
   }).pipe(
     Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
     // Wrap genuine failures + defects as ExtractError, but leave fiber interruption untouched so
-    // cancellation propagates (neither catchAll nor catchAllDefect catches interruption).
+    // cancellation propagates (neither `catch` nor `catchDefect` catches interruption).
     Effect.catch((error) => Effect.fail(new ExtractError('Summarize failed', error))),
     Effect.catchDefect((defect) => Effect.fail(new ExtractError('Summarize failed', defect))),
   );

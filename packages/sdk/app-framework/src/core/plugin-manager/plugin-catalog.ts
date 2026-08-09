@@ -89,7 +89,7 @@ export class PluginCatalog {
   #lifecycle(id: string): Semaphore.Semaphore {
     let semaphore = this.#lifecycles.get(id);
     if (!semaphore) {
-      semaphore = Effect.runSync(Semaphore.make(1));
+      semaphore = Semaphore.makeUnsafe(1);
       this.#lifecycles.set(id, semaphore);
     }
     return semaphore;

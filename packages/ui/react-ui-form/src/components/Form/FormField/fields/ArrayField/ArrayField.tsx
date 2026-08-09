@@ -97,7 +97,7 @@ export const ArrayField = ({
     const baseNode = SchemaEx.findNode(typeNode, SchemaEx.isDiscriminatedUnion);
     const typeLiteral = baseNode
       ? SchemaEx.getDiscriminatedType(baseNode, {})
-      : SchemaEx.findNode(typeNode, SchemaAST.isTypeLiteral);
+      : SchemaEx.findNode(typeNode, SchemaAST.isObjects);
     if (!typeLiteral) {
       return {};
     }

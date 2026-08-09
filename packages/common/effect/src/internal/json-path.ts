@@ -22,17 +22,21 @@ const PROP_REGEX = /^\w+$/;
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
  */
 // TODO(burdon): Keys could be arbitrary strings.
-export const JsonPath = Schema.String.pipe(Schema.check(Schema.isPattern(PATH_REGEX))).annotate({
+export const JsonPath: Schema.Codec<JsonPath, string> = Schema.String.pipe(
+  Schema.check(Schema.isPattern(PATH_REGEX)),
+  Schema.refine((value): value is JsonPath => PATH_REGEX.test(value)),
+).annotate({
   title: 'JSON path',
   description: 'JSON path to a property',
-}) as any as Schema.Codec<JsonPath, string>;
-export const JsonProp = Schema.NonEmptyString.pipe(
+});
+export const JsonProp: Schema.Codec<JsonProp, string> = Schema.NonEmptyString.pipe(
   Schema.check(
     Schema.isPattern(PROP_REGEX, {
       message: 'Property name must contain only letters, numbers, and underscores',
     }),
   ),
-) as any as Schema.Codec<JsonProp, string>;
+  Schema.refine((value): value is JsonProp => PROP_REGEX.test(value)),
+);
 
 export const isJsonPath = (value: unknown): value is JsonPath => {
   return Option.isSome(Schema.decodeUnknownOption(JsonPath)(value));

@@ -27,7 +27,7 @@ import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 
 import * as AiService from '../../AiService';
-import { withoutToolCallParising } from '../../util';
+import { withoutToolCallParsing } from '../../util';
 
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
@@ -477,7 +477,7 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
                 disableToolCallResolution: true,
               })
               .pipe(
-                withoutToolCallParising,
+                withoutToolCallParsing,
                 Stream.mapEffect((part) =>
                   Schema.encodeEffect(PartCodec)(part).pipe(
                     Effect.catchTag('SchemaError', (error) =>

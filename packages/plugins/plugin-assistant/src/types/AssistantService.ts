@@ -69,7 +69,7 @@ const ServiceInterface = Schema.Union([
   ServiceInterfaceFunction,
   ServiceInterfaceWorkflow,
   ServiceInterfaceApi,
-]) as any;
+]);
 
 export type ServiceInterface = Schema.Schema.Type<typeof ServiceInterface>;
 

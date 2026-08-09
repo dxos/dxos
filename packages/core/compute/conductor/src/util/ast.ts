@@ -51,7 +51,7 @@ export const getPropertyKeyIndexedAccess = (ast: SchemaAST.AST, name: PropertyKe
 };
 
 const getTypeLiteralPropertySignature = (
-  ast: SchemaAST.TypeLiteral,
+  ast: SchemaAST.Objects,
   name: PropertyKey,
 ): SchemaAST.PropertySignature | undefined => {
   // from property signatures...
@@ -64,7 +64,7 @@ const getTypeLiteralPropertySignature = (
   if (Predicate.isString(name)) {
     let out: SchemaAST.PropertySignature | undefined;
     for (const is of ast.indexSignatures) {
-      const parameterBase = getParameterBase(is.parameter);
+      const parameterBase = is.parameter;
       switch (parameterBase._tag) {
         case 'TemplateLiteral': {
           // const regex = getTemplateLiteralRegExp(parameterBase)
@@ -86,12 +86,9 @@ const getTypeLiteralPropertySignature = (
     }
   } else if (Predicate.isSymbol(name)) {
     for (const is of ast.indexSignatures) {
-      const parameterBase = getParameterBase(is.parameter);
-      if (SchemaAST.isSymbolKeyword(parameterBase)) {
+      if (SchemaAST.isSymbolKeyword(is.parameter)) {
         return new SchemaAST.PropertySignature(name, is.type);
       }
     }
   }
 };
-
-export const getParameterBase = (ast: SchemaAST.AST): SchemaAST.AST => ast;

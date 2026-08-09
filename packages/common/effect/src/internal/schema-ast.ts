@@ -1,19 +1,15 @@
 //
 // Copyright 2026 DXOS.org
 //
-// Compatibility layer over `effect/SchemaAST`.
-//
-// Effect 4 keeps only nine of that module's 138 exports public and reshapes the AST itself
-// (`TypeLiteral` -> `Objects`, `TupleType` -> `Arrays`, `Refinement` -> `checks`, symbol
-// annotation ids -> string keys). Routing every importer through here means the rename lands in
-// one module instead of eighty, and lets call sites keep the v3 spelling where the v4 concept is
-// the same thing under a new name.
+// Facade over `effect/SchemaAST`, which keeps only a fraction of its exports public; the helpers
+// below fill the gaps (annotation resolution, `omit`/`pick`, suspend unwrapping).
 //
 
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-// Nodes and guards whose v4 names differ only in spelling.
+// Nodes and guards re-exported under their v4 names; the `*Keyword` aliases disambiguate the
+// bare `isAny`/`isString` guards from value-level checks at call sites.
 export {
   Arrays,
   type AST,
@@ -26,11 +22,10 @@ export {
   Objects,
   PropertySignature,
   Suspend,
-  Arrays as TupleType,
-  Objects as TypeLiteral,
   Union,
   toEncoded as encodedBoundAST,
   isAny as isAnyKeyword,
+  isArrays,
   isBoolean as isBooleanKeyword,
   isDeclaration,
   isEnum as isEnums,
@@ -38,12 +33,11 @@ export {
   isNever as isNeverKeyword,
   isNumber as isNumberKeyword,
   isObjectKeyword,
+  isObjects,
   isOptional,
   isString as isStringKeyword,
   isSuspend,
   isSymbol as isSymbolKeyword,
-  isArrays as isTupleType,
-  isObjects as isTypeLiteral,
   isUndefined as isUndefinedKeyword,
   isUnion,
   isUnknown as isUnknownKeyword,
@@ -64,10 +58,7 @@ export {
 
 export type Annotations = Schema.Annotations.Annotations;
 
-/**
- * Annotation ids are plain string keys in v4. Keeping the v3 names as constants lets the ~40
- * call sites that pass `SchemaAST.TitleAnnotationId` carry over untouched.
- */
+/** Annotation ids are plain string keys; named constants keep the ~40 call sites typo-safe. */
 export const TitleAnnotationId = 'title';
 export const DescriptionAnnotationId = 'description';
 export const ExamplesAnnotationId = 'examples';

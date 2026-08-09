@@ -21,14 +21,14 @@ export const narrowSchema = <S extends Schema.Codec<any, any>>(
 ): Schema.Codec<unknown, unknown> | undefined => {
   const ast = (schema as any)?.ast;
 
-  if (SchemaAST.isTypeLiteral(ast)) {
+  if (SchemaAST.isObjects(ast)) {
     // Filter property signatures that match any of the provided paths
     const propertySignatures = ast.propertySignatures.filter((signature) => paths.includes(signature.name.toString()));
 
     // If we found at least one matching property
     if (propertySignatures.length > 0) {
       // Create a new TypeLiteral with only the matching properties
-      const narrowType = new SchemaAST.TypeLiteral(propertySignatures, []);
+      const narrowType = new SchemaAST.Objects(propertySignatures, []);
       return Schema.make(narrowType);
     }
   }

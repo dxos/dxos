@@ -41,7 +41,7 @@ describe('resolveLayoutField', () => {
     const label = Annotation.getLabelWithSchema(Schema.make<Schema.Top>(resolved!.labelType!), {
       name: 'JFK',
       code: 'JFK',
-    } as any);
+    });
     expect(label).toBe('JFK');
   });
 

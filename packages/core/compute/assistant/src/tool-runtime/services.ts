@@ -205,14 +205,14 @@ const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
     const fallback = SchemaAST.resolveAnnotations(RefFromLLM.ast)?.description as string;
     const description = own ? `${own}\n${fallback}` : fallback;
     return RefFromLLM.annotate({ description }).ast;
-  } else if (SchemaAST.isTupleType(ast)) {
+  } else if (SchemaAST.isArrays(ast)) {
     return new SchemaAST.Arrays(
       ast.isMutable,
       ast.elements.map((element) => mapSchemaTypeForLLM(element)),
       ast.rest.map((element) => mapSchemaTypeForLLM(element)),
       ast.annotations,
     );
-  } else if (SchemaAST.isTypeLiteral(ast)) {
+  } else if (SchemaAST.isObjects(ast)) {
     return new SchemaAST.Objects(
       ast.propertySignatures.map(
         (property) => new SchemaAST.PropertySignature(property.name, mapSchemaTypeForLLM(property.type)),

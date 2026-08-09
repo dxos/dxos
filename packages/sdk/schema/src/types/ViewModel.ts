@@ -154,7 +154,7 @@ export const makeWithReferences = async ({
       // `NoSuchElementError` failure, which the recovery below already handles.
       // The target is read through `Ref.getReferenceTarget` rather than the typed annotation: this
       // schema was rebuilt from JSON, which carries the reference only as encoded `$ref` keys.
-      const referenceDXN = yield* Effect.fromOption(Option.fromNullishOr(Ref.getReferenceTarget(property.type)));
+      const referenceDXN = yield* Effect.fromNullishOr(Ref.getReferenceTarget(property.type));
 
       const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDXN, registry));
 
@@ -168,9 +168,7 @@ export const makeWithReferences = async ({
       );
 
       if (referenceSchema && referencePath) {
-        const fieldId = yield* Effect.fromOption(
-          Option.fromNullishOr(view.projection.fields?.find((f) => f.path === property.name)?.id),
-        );
+        const fieldId = yield* Effect.fromNullishOr(view.projection.fields?.find((f) => f.path === property.name)?.id);
         const title =
           SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.type) ?? String.capitalize(name);
         projection.setFieldProjection({

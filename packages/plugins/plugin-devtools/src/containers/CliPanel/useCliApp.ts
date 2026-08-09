@@ -67,7 +67,7 @@ export const useCliApp = (client: Client) => {
       // itself is the leaf.
       Command.withSharedFlags({
         json: Options.boolean('json').pipe(Options.withDescription('JSON output.')),
-        verbose: Options.boolean('verbose').pipe(Options.withDescription('Verbose output.')),
+        verbose: Options.boolean('verbose').pipe(Options.withAlias('v'), Options.withDescription('Verbose output.')),
       }),
       Command.withSubcommands([first, ...rest]),
       // After the subcommands so the config reaches them: `provide` wraps the handler it is applied

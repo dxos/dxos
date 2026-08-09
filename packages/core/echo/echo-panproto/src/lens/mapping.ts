@@ -66,8 +66,8 @@ export const compatible = (source: SchemaEx.SchemaProperty, target: SchemaEx.Sch
 
   // Structs match only when they declare the same property names; nothing here recurses, so a
   // same-shaped struct with differently-typed leaves is a known false positive of the PoC.
-  if (SchemaAST.isTypeLiteral(source.type) && SchemaAST.isTypeLiteral(target.type)) {
-    const names = (ast: SchemaAST.TypeLiteral) =>
+  if (SchemaAST.isObjects(source.type) && SchemaAST.isObjects(target.type)) {
+    const names = (ast: SchemaAST.Objects) =>
       ast.propertySignatures
         .map((property) => String(property.name))
         .sort()

@@ -66,7 +66,7 @@ export const IdentityDid: Schema.Codec<IdentityDid, string> & {
   isValid: (value: unknown) => value is IdentityDid;
   make: (value: string) => IdentityDid;
   random: () => IdentityDid;
-} = Object.assign(IdentityDidSchema as unknown as Schema.Codec<IdentityDid, string>, {
+} = Object.assign(IdentityDidSchema, {
   byteLength: DECODED_BYTE_LENGTH,
 
   encode: (value: Uint8Array): IdentityDid => {

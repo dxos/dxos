@@ -27,10 +27,10 @@ import { TriggerEditor } from '../TriggerEditor';
 //
 
 // Pick the editable general fields from the Routine schema rather than redeclaring them.
-const GeneralForm = Schema.make<Schema.Codec<any, any>>(
+type GeneralForm = Pick<Routine.Routine, 'name' | 'description'>;
+const GeneralForm = Schema.make<Schema.Codec<GeneralForm, any>>(
   SchemaAST.pick(Type.getSchema(Routine.Routine).ast, ['name', 'description']),
 );
-type GeneralForm = Schema.Schema.Type<typeof GeneralForm>;
 
 export type RoutineFormProps = {
   db: Database.Database;

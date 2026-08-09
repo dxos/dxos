@@ -40,7 +40,7 @@ export const SpaceId: Schema.Codec<SpaceId, string> & {
   isValid: (value: unknown) => value is SpaceId;
   make: (value: string) => SpaceId;
   random: () => SpaceId;
-} = Object.assign(SpaceIdSchema as unknown as Schema.Codec<SpaceId, string>, {
+} = Object.assign(SpaceIdSchema, {
   byteLength: 20,
 
   encode: (value: Uint8Array): SpaceId => {

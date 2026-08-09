@@ -37,18 +37,15 @@ export const handler = Effect.fn(function* ({
   const invitation = yield* acceptInvitation({
     observable: client.spaces.join(encoded),
     callbacks: {
-      onReadyForAuth: (invitation) => {
+      onReadyForAuth: (invitation): Effect.Effect<string | undefined> => {
         if (Option.isSome(authCode)) {
-          return Effect.succeed(Option.getOrUndefined(authCode) ?? undefined) as Effect.Effect<
-            string | void,
-            never,
-            never
-          >;
+          return Effect.succeed(Option.getOrUndefined(authCode));
         }
+        // TODO(dxos): `acceptInvitation` runs callbacks without a context, so the prompt's terminal
+        // requirement cannot be provided here — the interactive path dies without a terminal.
         return Prompt.text({ message: 'Enter the authentication code' })
           .pipe(Prompt.run)
-          .pipe(Effect.mapError(() => undefined as never))
-          .pipe(Effect.catch(() => Effect.succeed(undefined))) as Effect.Effect<string | void, never, never>;
+          .pipe(Effect.catch(() => Effect.succeed(undefined))) as Effect.Effect<string | undefined>;
       },
     },
   });

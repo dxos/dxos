@@ -99,7 +99,7 @@ describe('getFormProperties', () => {
     const findTypeLiteralWith = (ast: SchemaAST.AST, prop: string) =>
       SchemaEx.findNode(
         ast,
-        (node) => SchemaAST.isTypeLiteral(node) && SchemaAST.getPropertySignatures(node).some((p) => p.name === prop),
+        (node) => SchemaAST.isObjects(node) && SchemaAST.getPropertySignatures(node).some((p) => p.name === prop),
       )!;
     const propType = (ast: SchemaAST.AST, name: string) => getFormProperties(ast).find((p) => p.name === name)!.type;
 
@@ -107,11 +107,11 @@ describe('getFormProperties', () => {
     const roadTypeLiteral = findTypeLiteralWith(detailsType, 'routes');
     const routeTypeLiteral = SchemaEx.findNode(
       SchemaEx.getArrayElementType(propType(roadTypeLiteral, 'routes'))!,
-      SchemaAST.isTypeLiteral,
+      SchemaAST.isObjects,
     )!;
     const legTypeLiteral = SchemaEx.findNode(
       SchemaEx.getArrayElementType(propType(routeTypeLiteral, 'legs'))!,
-      SchemaAST.isTypeLiteral,
+      SchemaAST.isObjects,
     )!;
 
     const names = getFormProperties(legTypeLiteral).map((prop) => prop.name);

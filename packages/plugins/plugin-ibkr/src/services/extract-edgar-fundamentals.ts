@@ -51,11 +51,11 @@ const propertyBaseType = (property: SchemaAST.PropertySignature): SchemaAST.AST 
   return reduceRefinements(unwrapped);
 };
 
-const isNestedType = (node: SchemaAST.AST): boolean => SchemaAST.isTypeLiteral(reduceRefinements(node));
+const isNestedType = (node: SchemaAST.AST): boolean => SchemaAST.isObjects(reduceRefinements(node));
 
-const findTypeLiteral = (node: SchemaAST.AST): SchemaAST.TypeLiteral | undefined => {
+const findTypeLiteral = (node: SchemaAST.AST): SchemaAST.Objects | undefined => {
   const base = reduceRefinements(node);
-  if (SchemaAST.isTypeLiteral(base)) {
+  if (SchemaAST.isObjects(base)) {
     return base;
   }
   return undefined;

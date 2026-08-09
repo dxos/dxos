@@ -9,21 +9,12 @@ import { type Ansi } from './ansi';
 /**
  * Minimal stand-in for `@effect/printer/Doc` (and `AnsiDoc`'s renderer).
  *
- * Vendored because `@effect/printer` is staying on the Effect 3 line — not lagging behind it. Its
- * latest release (0.51.0, 2026-07-30) still peers `effect: ^3.22.1`, and v4 ships no
- * `unstable/printer` counterpart, so depending on it would keep a second copy of Effect in the CLI
- * bundle for rendering alone.
+ * Vendored: `@effect/printer` peers `effect ^3` permanently, v4 ships no printer, and its sealed
+ * CLI-internal renderer exposes no general seam — so depending on either would cost a second copy
+ * of Effect for rendering alone.
  *
- * Effect's own v4 CLI made the same trade: it dropped the `AnsiDoc` layer and concatenates escape
- * sequences directly (`unstable/cli/internal/ansi`), which the package's exports map seals off
- * (`"./unstable/cli/internal/*": null`). Its one public seam, `CliOutput.Formatter`, is typed to CLI
- * concepts — `formatHelpDoc`, `formatCliError`, `formatVersion` — so it can render help and errors
- * but not a key/value form.
- *
- * The API here is exactly the subset the CLI uses. There is no reflow: nothing constructs a `group`
- * or a soft line, so every break is mandatory and rendering is a straight line-by-line walk — the
- * Wadler layout this replaces was never exercised. Revisit if a v4 printer ships, or the day a
- * caller needs a document to reflow to terminal width.
+ * There is no reflow: nothing constructs a `group` or a soft line, so every break is mandatory and
+ * rendering is a straight line-by-line walk. Revisit if a v4 printer ships.
  */
 
 /** A rendered line: the styled text, plus the column width its escape sequences do not occupy. */
@@ -51,8 +42,6 @@ const join = (left: Line[], right: Line[]): Line[] => {
   const first = right[0];
   return [...left.slice(0, -1), { text: last.text + first.text, width: last.width + first.width }, ...right.slice(1)];
 };
-
-export const empty: Doc<never> = make(() => [plain('')]);
 
 /** A literal. Embedded newlines split the text, matching `Doc.string`. */
 export const string = (value: string): Doc<never> => make(() => value.split('\n').map(plain));

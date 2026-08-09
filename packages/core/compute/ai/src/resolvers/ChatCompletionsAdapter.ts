@@ -10,6 +10,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 import * as AiError from 'effect/unstable/ai/AiError';
 import * as IdGenerator from 'effect/unstable/ai/IdGenerator';
@@ -40,6 +41,9 @@ const toErrorRequest = (request?: HttpClientRequest.HttpClientRequest): AiError.
   hash: undefined,
   headers: {},
 });
+
+const isConnectionRefused = (cause: unknown): boolean =>
+  Predicate.hasProperty(cause, 'code') && cause.code === 'ConnectionRefused';
 
 const networkError = (method: string, detail: string, options?: { request?: unknown; cause?: unknown }) =>
   new AiError.AiError({
@@ -647,9 +651,9 @@ export const make = (model: string) =>
               if (err instanceof AiError.AiError) {
                 return Effect.fail(err) as Effect.Effect<never, any, never>;
               }
-              if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
+              if (HttpClientError.isHttpClientError(err) && isConnectionRefused(err.cause)) {
                 return Effect.fail(
-                  networkError('generateText', 'connection refused', { request: (err as any).request, cause: err }),
+                  networkError('generateText', 'connection refused', { request: err.request, cause: err }),
                 ) as Effect.Effect<never, any, never>;
               }
 
@@ -717,9 +721,9 @@ export const make = (model: string) =>
                 if (err instanceof AiError.AiError) {
                   return Effect.fail(err) as Effect.Effect<never, any, never>;
                 }
-                if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
+                if (HttpClientError.isHttpClientError(err) && isConnectionRefused(err.cause)) {
                   return Effect.fail(
-                    networkError('streamText', 'connection refused', { request: (err as any).request, cause: err }),
+                    networkError('streamText', 'connection refused', { request: err.request, cause: err }),
                   ) as Effect.Effect<never, any, never>;
                 }
 

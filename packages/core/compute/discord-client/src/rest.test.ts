@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { isErrorResponse, isMissingAccess, isRatelimited } from './errors';
 import { DiscordConfig, DiscordREST, DiscordRESTLive } from './rest';
@@ -49,7 +49,7 @@ const testLayer = (replies: ReadonlyArray<Reply>, tokenKind: 'Bot' | 'Bearer' = 
 const USER = { id: '1', username: 'dxos-bot', global_name: 'DXOS' };
 
 describe('DiscordREST', () => {
-  it('decodes a successful response and sends the configured credential', async () => {
+  test('decodes a successful response and sends the configured credential', async () => {
     const { layer, requests } = testLayer([{ status: 200, body: USER }]);
     const user = await Effect.runPromise(
       Effect.flatMap(DiscordREST, (rest) => rest.getMyUser()).pipe(Effect.provide(layer)),
@@ -61,14 +61,14 @@ describe('DiscordREST', () => {
     expect(requests[0].headers.get('Authorization')).toBe('Bot token-abc');
   });
 
-  it('sends user OAuth tokens under the Bearer scheme', async () => {
+  test('sends user OAuth tokens under the Bearer scheme', async () => {
     const { layer, requests } = testLayer([{ status: 200, body: USER }], 'Bearer');
     await Effect.runPromise(Effect.flatMap(DiscordREST, (rest) => rest.getMyUser()).pipe(Effect.provide(layer)));
 
     expect(requests[0].headers.get('Authorization')).toBe('Bearer token-abc');
   });
 
-  it('passes list options through as query parameters', async () => {
+  test('passes list options through as query parameters', async () => {
     const { layer, requests } = testLayer([{ status: 200, body: [] }]);
     await Effect.runPromise(
       Effect.flatMap(DiscordREST, (rest) => rest.listMessages('chan-1', { after: '42', limit: 100 })).pipe(
@@ -82,7 +82,7 @@ describe('DiscordREST', () => {
     expect(url.searchParams.get('limit')).toBe('100');
   });
 
-  it('omits options the caller left unset', async () => {
+  test('omits options the caller left unset', async () => {
     const { layer, requests } = testLayer([{ status: 200, body: [] }]);
     await Effect.runPromise(
       Effect.flatMap(DiscordREST, (rest) => rest.listMyGuilds({ limit: 200 })).pipe(Effect.provide(layer)),
@@ -93,7 +93,7 @@ describe('DiscordREST', () => {
     expect(url.searchParams.has('after')).toBe(false);
   });
 
-  it('retries a 429 for the interval Discord asks for, then succeeds', async () => {
+  test('retries a 429 for the interval Discord asks for, then succeeds', async () => {
     const { layer, requests } = testLayer([
       { status: 429, body: { message: 'rate limited', retry_after: 0.001 } },
       { status: 200, body: USER },
@@ -106,7 +106,7 @@ describe('DiscordREST', () => {
     expect(requests).toHaveLength(2);
   });
 
-  it("surfaces a 4xx with Discord's error envelope intact", async () => {
+  test("surfaces a 4xx with Discord's error envelope intact", async () => {
     const { layer } = testLayer([{ status: 403, body: { code: 50001, message: 'Missing Access' } }]);
     const outcome = await Effect.runPromise(
       Effect.result(
@@ -123,7 +123,7 @@ describe('DiscordREST', () => {
     expect(isErrorResponse(outcome.failure) && outcome.failure.response.status).toBe(403);
   });
 
-  it('gives up on a 429 once the attempt budget is spent', async () => {
+  test('gives up on a 429 once the attempt budget is spent', async () => {
     const { layer, requests } = testLayer([{ status: 429, body: { message: 'rate limited', retry_after: 0.001 } }]);
     const outcome = await Effect.runPromise(
       Effect.result(Effect.flatMap(DiscordREST, (rest) => rest.getMyUser()).pipe(Effect.provide(layer))),
@@ -134,7 +134,7 @@ describe('DiscordREST', () => {
     expect(requests).toHaveLength(5);
   });
 
-  it('tolerates a non-JSON error body', async () => {
+  test('tolerates a non-JSON error body', async () => {
     const layer = DiscordRESTLive.pipe(
       Layer.provide(
         DiscordConfig.layer({ token: Redacted.make('t'), rest: { baseUrl: 'https://discord.test/api/v10' } }),

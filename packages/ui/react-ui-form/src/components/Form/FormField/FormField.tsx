@@ -277,7 +277,7 @@ export const FormField = (props: FormFieldProps) => {
     const baseNode = SchemaEx.findNode(type, SchemaEx.isDiscriminatedUnion);
     const typeLiteral = baseNode
       ? SchemaEx.getDiscriminatedType(baseNode, fieldState.getValue() as any)
-      : SchemaEx.findNode(type, SchemaAST.isTypeLiteral);
+      : SchemaEx.findNode(type, SchemaAST.isObjects);
 
     if (typeLiteral) {
       const schema = Schema.make<Schema.Codec<any, any>>(typeLiteral);

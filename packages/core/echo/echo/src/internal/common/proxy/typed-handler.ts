@@ -692,7 +692,7 @@ export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeS
  * {@link prepareTypedTarget} and {@link prepareDecodedTypedTarget}.
  */
 export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T>) => {
-  if (!SchemaAST.isTypeLiteral(schema.ast)) {
+  if (!SchemaAST.isObjects(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
 

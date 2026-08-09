@@ -18,9 +18,9 @@ const getSimpleType = (node: SchemaAST.AST): string | undefined => {
   if (
     SchemaAST.isDeclaration(node) ||
     SchemaAST.isObjectKeyword(node) ||
-    SchemaAST.isTypeLiteral(node) ||
+    SchemaAST.isObjects(node) ||
     // TODO(wittjosiah): Tuples are actually arrays.
-    SchemaEx.isTupleType(node) ||
+    SchemaEx.isArrays(node) ||
     SchemaEx.isDiscriminatedUnion(node)
   ) {
     return 'object';
@@ -80,7 +80,7 @@ export const mapSchemaToFields = (schema: Schema.Codec<any, any>): SchemaFieldDe
  * @deprecated
  */
 const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; type: TypeEnum } => {
-  if (SchemaAST.isTypeLiteral(type)) {
+  if (SchemaAST.isObjects(type)) {
     return { type: TypeEnum.Ref, format: Format.TypeFormat.Ref };
   } else if (SchemaAST.isNumberKeyword(type)) {
     return { type: TypeEnum.Number };

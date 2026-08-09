@@ -10,25 +10,25 @@ import { invariant } from '@dxos/invariant';
 
 // TODO(ZaymonFC): Do this one at a time. This might be dangerous.
 export const addFieldsToSchema = (schema: Schema.Top, fields: Schema.Struct.Fields): Schema.Top => {
-  const ast = schema.ast as SchemaAST.TypeLiteral;
-  invariant(SchemaAST.isTypeLiteral(ast));
+  const ast = schema.ast as SchemaAST.Objects;
+  invariant(SchemaAST.isObjects(ast));
 
   // Rebuilt through the AST like its siblings below: `mapFields` is a `Struct` operation and this
   // takes any `Schema.Top`.
-  const added = (Schema.Struct(fields).mapFields(Struct.map(Schema.optional)).ast as SchemaAST.TypeLiteral)
+  const added = (Schema.Struct(fields).mapFields(Struct.map(Schema.optional)).ast as SchemaAST.Objects)
     .propertySignatures;
 
   return Schema.make<Schema.Top>(
-    new SchemaAST.TypeLiteral([...ast.propertySignatures, ...added], ast.indexSignatures, ast.annotations),
+    new SchemaAST.Objects([...ast.propertySignatures, ...added], ast.indexSignatures, ast.annotations),
   );
 };
 
 export const updateFieldsInSchema = (schema: Schema.Top, fields: Schema.Struct.Fields): Schema.Top => {
-  const ast = schema.ast as SchemaAST.TypeLiteral;
-  invariant(SchemaAST.isTypeLiteral(ast));
+  const ast = schema.ast as SchemaAST.Objects;
+  invariant(SchemaAST.isObjects(ast));
 
   const updatedProperties = [...ast.propertySignatures];
-  const propertiesToUpdate = (Schema.Struct(fields).mapFields(Struct.map(Schema.optional)).ast as SchemaAST.TypeLiteral)
+  const propertiesToUpdate = (Schema.Struct(fields).mapFields(Struct.map(Schema.optional)).ast as SchemaAST.Objects)
     .propertySignatures;
   for (const property of propertiesToUpdate) {
     const index = updatedProperties.findIndex((p) => p.name === property.name);
@@ -39,7 +39,7 @@ export const updateFieldsInSchema = (schema: Schema.Top, fields: Schema.Struct.F
     }
   }
 
-  return Schema.make<Schema.Top>(new SchemaAST.TypeLiteral(updatedProperties, ast.indexSignatures, ast.annotations));
+  return Schema.make<Schema.Top>(new SchemaAST.Objects(updatedProperties, ast.indexSignatures, ast.annotations));
 };
 
 export const removeFieldsFromSchema = (schema: Schema.Top, fieldNames: string[]): Schema.Top => {
@@ -50,11 +50,11 @@ export const updateFieldNameInSchema = (
   schema: Schema.Top,
   { before, after }: { before: PropertyKey; after: PropertyKey },
 ): Schema.Top => {
-  const ast = schema.ast as SchemaAST.TypeLiteral;
-  invariant(SchemaAST.isTypeLiteral(ast));
+  const ast = schema.ast as SchemaAST.Objects;
+  invariant(SchemaAST.isObjects(ast));
 
   return Schema.make<Schema.Top>(
-    new SchemaAST.TypeLiteral(
+    new SchemaAST.Objects(
       ast.propertySignatures.map((p) => (p.name === before ? new SchemaAST.PropertySignature(after, p.type) : p)),
       ast.indexSignatures,
       ast.annotations,

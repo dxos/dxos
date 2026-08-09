@@ -71,8 +71,7 @@ await EffectEx.runPromise(
     Effect.provide(makeDiscordLayerFromToken(token)),
     Effect.catch((err) => {
       // The Discord client surfaces the API body as a `cause` property on the wrapper error.
-      const cause =
-        typeof err === 'object' && err !== null && '[cause]' in err ? err['[cause]' as keyof typeof err] : err;
+      const cause = typeof err === 'object' && err !== null && 'cause' in err ? err.cause : err;
       if (isDiscordError(cause)) {
         console.error(`Discord API error: ${cause.message} (code ${cause.code})`);
         if (cause.code === 50001) {

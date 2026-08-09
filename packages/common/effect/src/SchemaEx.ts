@@ -25,7 +25,7 @@ export {
   isLiteralUnion,
   isNestedType,
   isOption,
-  isTupleType,
+  isArrays,
   mapAst,
   unwrapOptional,
   visit,

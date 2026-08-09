@@ -27,6 +27,6 @@ describe('EchoObjectSchema DSL', () => {
   });
 
   test('expect schema', async () => {
-    expect(SchemaAST.isTypeLiteral(Type.getSchema(Organization).ast)).to.be.true;
+    expect(SchemaAST.isObjects(Type.getSchema(Organization).ast)).to.be.true;
   });
 });

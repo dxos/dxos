@@ -96,7 +96,7 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
     log('lifecycle: subscribed to outputs', { handle });
     return {
       pid: handle.pid,
-      await: Effect.exit(Fiber.join(outputFiber)),
+      await: Fiber.await(outputFiber),
       poll: Effect.sync(() => Option.fromNullishOr(outputFiber.pollUnsafe())),
     };
   });

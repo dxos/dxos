@@ -26,7 +26,7 @@ import {
   type ToolExecutionService,
   type ToolResolverService,
   callTool,
-  withoutToolCallParising,
+  withoutToolCallParsing,
 } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -256,7 +256,7 @@ export class Request {
         : LanguageModel.streamText({ prompt, disableToolCallResolution: true });
 
       const messages = yield* stream.pipe(
-        withoutToolCallParising,
+        withoutToolCallParsing,
         AiParser.parseResponse({
           emitPartial: true,
           onBegin: () => observer.onBegin(),

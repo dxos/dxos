@@ -91,7 +91,7 @@ const Node = ({ ast, value, label, depth }: NodeProps) => {
 
   // Struct: header row + indented children. Skipping the header at depth 0
   // keeps the root flush-left.
-  if (SchemaAST.isTypeLiteral(inner) && isPlainObject(value)) {
+  if (SchemaAST.isObjects(inner) && isPlainObject(value)) {
     const childDepth = label === null ? depth : depth + 1;
     return (
       <>
@@ -110,7 +110,7 @@ const Node = ({ ast, value, label, depth }: NodeProps) => {
   }
 
   // Array (`Schema.Array(X)` -> TupleType with single rest element; v4's `rest` holds the node itself).
-  if (SchemaAST.isTupleType(inner) && Array.isArray(value)) {
+  if (SchemaAST.isArrays(inner) && Array.isArray(value)) {
     const elemType = inner.rest[0];
     return (
       <>

@@ -17,7 +17,7 @@ export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 export type Part = 'main' | 'complementary';
 export type ResolvedPart = Part;
 
-export const PlankSizing = Schema.Record(Schema.String, Schema.Number);
+export const PlankSizing = Schema.Record(Schema.String, Schema.mutableKey(Schema.Number));
 export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
 export const DeckState = Schema.Struct({
@@ -41,7 +41,7 @@ export const DeckState = Schema.Struct({
    * like a browser tab: opening under a name that is already taken replaces its occupant in place.
    * Entries are pruned as their plank closes.
    */
-  plankNames: Schema.mutableKey(Schema.Record(Schema.String, Schema.String)),
+  plankNames: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
@@ -82,7 +82,9 @@ export const StoredDeckState = Schema.Struct({
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutableKey(Schema.Record(Schema.String, DeckState.mapFields(Struct.map(Schema.mutableKey)))),
+  decks: Schema.mutableKey(
+    Schema.Record(Schema.String, Schema.mutableKey(DeckState.mapFields(Struct.map(Schema.mutableKey)))),
+  ),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 

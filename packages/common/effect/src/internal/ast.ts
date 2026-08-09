@@ -25,27 +25,9 @@ export const resolveAnnotations = Compat.resolveAnnotations;
 // Property signatures.
 //
 
-/**
- * v4 has no top-level `getPropertySignatures`; unwrap Suspend and read the node.
- */
-export const getPropertySignatures = (ast: SchemaAST.AST): ReadonlyArray<SchemaAST.PropertySignature> => {
-  const node = unwrapSuspend(ast);
-  return node._tag === 'Objects' ? node.propertySignatures : [];
-};
-
-export const getIndexSignatures = (ast: SchemaAST.AST): ReadonlyArray<SchemaAST.IndexSignature> => {
-  const node = unwrapSuspend(ast);
-  return node._tag === 'Objects' ? node.indexSignatures : [];
-};
-
-const unwrapSuspend = (ast: SchemaAST.AST): SchemaAST.AST =>
-  SchemaAST.isSuspend(ast) ? unwrapSuspend(ast.thunk()) : ast;
-
-/**
- * In v4 a `Refinement` node no longer exists — predicates are `Check`s attached to the
- * node they constrain, so unwrapping is reading `.checks` rather than walking a chain.
- */
-export const getChecks = (ast: SchemaAST.AST): ReadonlyArray<SchemaAST.Check<any>> => ast.checks ?? [];
+export const getPropertySignatures = Compat.getPropertySignatures;
+export const getIndexSignatures = Compat.getIndexSignatures;
+export const getChecks = Compat.getChecks;
 
 /**
  * Get the base type of a property: strips the encoding chain and the optional union.
@@ -298,7 +280,7 @@ export const isArrayType = (node: SchemaAST.AST): node is SchemaAST.Arrays =>
 export const getArrayElementType = (node: SchemaAST.AST): SchemaAST.AST | undefined =>
   isArrayType(node) ? node.rest[0] : undefined;
 
-export const isTupleType = (node: SchemaAST.AST): boolean => SchemaAST.isArrays(node) && node.elements.length > 0;
+export const isArrays = (node: SchemaAST.AST): boolean => SchemaAST.isArrays(node) && node.elements.length > 0;
 
 //
 // Discriminated unions.
@@ -347,12 +329,12 @@ export const getDiscriminatedType = (
             return found && SchemaAST.isLiteral(found.type) ? found.type.literal : undefined;
           })
           .filter((literal) => literal !== undefined);
-        return literals.length ? ([prop, Schema.Literals(literals as any)] as const) : undefined;
+        return literals.length ? ([prop, Schema.Literals(literals)] as const) : undefined;
       })
       .filter((entry) => entry !== undefined),
   );
 
-  return Schema.Struct(fields as any).ast;
+  return Schema.Struct(fields).ast;
 };
 
 /**
@@ -373,7 +355,7 @@ export const isNestedType = (node: SchemaAST.AST): boolean =>
   SchemaAST.isDeclaration(node) ||
   SchemaAST.isObjectKeyword(node) ||
   node._tag === 'Objects' ||
-  isTupleType(node) ||
+  isArrays(node) ||
   isDiscriminatedUnion(node);
 
 //

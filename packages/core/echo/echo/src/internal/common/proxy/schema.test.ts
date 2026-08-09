@@ -21,7 +21,7 @@ import { EchoObjectSchema } from '../../Entity';
 // below compare the underlying type by tag, which is what "unwraps optionality" is checking.
 const propertyTags = (type: Type.Type): [PropertyKey, string][] => {
   const ast = Type.getSchema(type).ast;
-  invariant(SchemaAST.isTypeLiteral(ast));
+  invariant(SchemaAST.isObjects(ast));
   return [...ast.propertySignatures]
     .filter((property) => property.name !== 'id')
     .map((property) => {

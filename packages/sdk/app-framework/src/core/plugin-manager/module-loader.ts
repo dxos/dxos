@@ -284,7 +284,7 @@ export class ModuleLoader {
   #semaphore(moduleId: Plugin.PluginModule['id']): Semaphore.Semaphore {
     let semaphore = this.#semaphores.get(moduleId);
     if (!semaphore) {
-      semaphore = Effect.runSync(Semaphore.make(1));
+      semaphore = Semaphore.makeUnsafe(1);
       this.#semaphores.set(moduleId, semaphore);
     }
     return semaphore;

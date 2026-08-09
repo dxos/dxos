@@ -46,7 +46,7 @@ export const EchoObjectSchema: {
     // Annotation ids are string keys in Effect 4; this guards against a bundling mishap that
     // leaves the id undefined, which would silently drop the annotation.
     invariant(typeof TypeAnnotationId === 'string', 'Sanity.');
-    invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
+    invariant(SchemaAST.isObjects(self.ast), 'Schema must be a TypeLiteral.');
 
     // Struct schemas expose `.fields`; retained for the schema's public field map.
     const fields = ((self as any).fields ?? {}) as Fields;
@@ -54,7 +54,7 @@ export const EchoObjectSchema: {
     // The id is prepended to the existing object node rather than rebuilt from `.fields`:
     // rebuilding drops index signatures, which is how `Expando` and other record-shaped types are
     // declared. (`mapFields` is unavailable here -- it is a `Struct` method and `self` is generic.)
-    const schemaWithId = new SchemaAST.TypeLiteral(
+    const schemaWithId = new SchemaAST.Objects(
       self.ast.propertySignatures.some((property) => property.name === 'id')
         ? self.ast.propertySignatures
         : [...self.ast.propertySignatures, new SchemaAST.PropertySignature('id', Schema.String.ast)],

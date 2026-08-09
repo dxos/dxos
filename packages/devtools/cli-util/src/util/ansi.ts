@@ -23,12 +23,8 @@ export type Ansi = {
 const style = (open: number, close: number): Ansi => ({ open: `[${open}m`, close: `[${close}m` });
 
 export const bold: Ansi = style(1, 22);
-export const black: Ansi = style(30, 39);
-export const red: Ansi = style(31, 39);
 export const green: Ansi = style(32, 39);
 export const yellow: Ansi = style(33, 39);
-export const blue: Ansi = style(34, 39);
-export const magenta: Ansi = style(35, 39);
 export const cyan: Ansi = style(36, 39);
 export const white: Ansi = style(37, 39);
 export const blackBright: Ansi = style(90, 39);

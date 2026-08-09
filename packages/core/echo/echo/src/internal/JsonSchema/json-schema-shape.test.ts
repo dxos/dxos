@@ -49,7 +49,7 @@ describe('toJsonSchema wire shape', () => {
     // Format annotations are readable without descending into a wrapper.
     expect(properties!.email).toMatchObject({ type: 'string', format: 'email' });
     expect(properties!.email).not.toHaveProperty('allOf');
-    expect(typeof (properties!.email as any).description).toBe('string');
+    expect(typeof properties!.email.description).toBe('string');
 
     expect(properties!.name).toMatchObject({
       type: 'string',
@@ -94,7 +94,7 @@ describe('toJsonSchema wire shape', () => {
 
     const { properties } = toJsonSchema(Described);
     for (const key of ['plain', 'refined', 'numeric']) {
-      expect(typeof (properties![key] as any).description, key).toBe('string');
+      expect(typeof properties![key].description, key).toBe('string');
     }
   });
 });

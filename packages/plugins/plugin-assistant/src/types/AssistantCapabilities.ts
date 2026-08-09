@@ -38,9 +38,9 @@ export const CompanionChatCache = Capability.makeSingleton<Atom.Writable<Record<
   `${meta.profile.key}.capability.companionChatCache`,
 );
 
-export const HomeSuggestionsCacheSchema = Schema.mutableKey(
-  Schema.Record(
-    Schema.String,
+export const HomeSuggestionsCacheSchema = Schema.Record(
+  Schema.String,
+  Schema.mutableKey(
     Schema.Struct({
       /** Epoch ms timestamp of the successful generation that produced these prompts. */
       generatedAt: Schema.Number,

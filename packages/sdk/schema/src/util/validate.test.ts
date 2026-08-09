@@ -63,7 +63,7 @@ describe('validate', () => {
 
     // Convert to/from AST.
     const s1: Schema.Codec<TestType> = TestSchema;
-    expect(SchemaAST.isTypeLiteral(s1.ast)).to.be.true;
+    expect(SchemaAST.isObjects(s1.ast)).to.be.true;
     const s2 = Schema.make(s1.ast);
     // v4's AST nodes have no `toJSON`; `toString` is the stable rendering.
     expect(s1.ast.toString()).to.eq(s2.ast.toString());
