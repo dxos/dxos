@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Domino } from '@dxos/ui';
+
 export type RecoveryAction = 'diagnostics' | 'boot' | 'reset' | 'export' | 'import' | 'logs' | 'debug-port';
 
 export type RecoveryUi = {
@@ -10,10 +12,6 @@ export type RecoveryUi = {
   /** Relabels and highlights the debug-port button, and keeps it clickable while everything else is busy. */
   setDebugPortActive: (active: boolean) => void;
   onAction: (handler: (action: RecoveryAction) => void) => void;
-};
-
-export type CreateRecoveryUiOptions = {
-  container: HTMLElement;
 };
 
 type ActionSpec = {
@@ -32,13 +30,43 @@ const HEADER_ACTIONS: ActionSpec[] = [
 ];
 
 const FOOTER_ACTIONS: ActionSpec[] = [
-  { action: 'boot', label: 'Boot', title: 'Open full Composer at /', className: 'primary' },
-  { action: 'reset', label: 'Reset', title: 'Wipe all origin storage', className: 'danger' },
-  { action: 'export', label: 'Export', title: 'Export .dxprofile archive with OPFS SQLite database' },
-  { action: 'import', label: 'Import', title: 'Import .dxprofile or raw .sqlite into OPFS DXOS database' },
-  { action: 'logs', label: 'Logs', title: 'Download logs from IDB log collector' },
-  { action: 'debug-port', label: 'Debug Port', title: 'Open agent debug port' },
+  {
+    action: 'boot',
+    label: 'Boot',
+    title: 'Open full Composer at /',
+    className: 'primary',
+  },
+  {
+    action: 'reset',
+    label: 'Reset',
+    title: 'Wipe all origin storage',
+    className: 'danger',
+  },
+  {
+    action: 'export',
+    label: 'Export',
+    title: 'Export .dxprofile archive with OPFS SQLite database',
+  },
+  {
+    action: 'import',
+    label: 'Import',
+    title: 'Import .dxprofile or raw .sqlite into OPFS DXOS database',
+  },
+  {
+    action: 'logs',
+    label: 'Logs',
+    title: 'Download logs from IDB log collector',
+  },
+  {
+    action: 'debug-port',
+    label: 'Debug Port',
+    title: 'Open agent debug port',
+  },
 ];
+
+export type CreateRecoveryUiOptions = {
+  container: HTMLElement;
+};
 
 /**
  * Builds the recovery page chrome with no framework dependency — the page must render when the
@@ -51,40 +79,38 @@ export const createRecoveryUi = ({ container }: CreateRecoveryUiOptions): Recove
   const buttons = new Map<RecoveryAction, HTMLButtonElement>();
   const handlers: ((action: RecoveryAction) => void)[] = [];
 
-  const createButton = ({ action, label, title, className }: ActionSpec): HTMLButtonElement => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.dataset.action = action;
-    button.textContent = label;
-    button.title = title;
-    if (className) {
-      button.classList.add(className);
-    }
-    button.addEventListener('click', () => handlers.forEach((handler) => handler(action)));
-    buttons.set(action, button);
+  const createButton = ({ action, label, title, className }: ActionSpec) => {
+    const button = Domino.of('button')
+      .attributes({ type: 'button', title })
+      .data('action', action)
+      .classNames(className)
+      .text(label)
+      .on('click', () => handlers.forEach((handler) => handler(action)));
+    buttons.set(action, button.root);
     return button;
   };
 
-  const header = document.createElement('header');
-  const heading = document.createElement('h1');
-  heading.textContent = 'Composer Recovery';
-  const subheading = document.createElement('p');
-  subheading.textContent = 'Safe mode — static dxos globals only. Use Diagnostics to inspect the profile.';
-  const headerActions = document.createElement('div');
-  headerActions.className = 'header-actions';
-  headerActions.append(...HEADER_ACTIONS.map(createButton));
-  header.append(heading, subheading, headerActions);
+  const log = Domino.of('pre').classNames('log');
 
-  const log = document.createElement('pre');
-  log.className = 'log';
+  Domino.of('header')
+    .append(
+      Domino.of('h1').text('Composer Recovery'),
+      Domino.of('p').text('Safe mode — static dxos globals only. Use Diagnostics to inspect the profile.'),
+      Domino.of('div')
+        .classNames('header-actions')
+        .append(...HEADER_ACTIONS.map(createButton)),
+    )
+    .mount(container);
 
-  const footer = document.createElement('footer');
-  const footerActions = document.createElement('div');
-  footerActions.className = 'actions';
-  footerActions.append(...FOOTER_ACTIONS.map(createButton));
-  footer.append(footerActions);
+  log.mount(container);
 
-  container.append(header, log, footer);
+  Domino.of('footer')
+    .append(
+      Domino.of('div')
+        .classNames('actions')
+        .append(...FOOTER_ACTIONS.map(createButton)),
+    )
+    .mount(container);
 
   let busy = false;
   let debugPortActive = false;
@@ -96,12 +122,13 @@ export const createRecoveryUi = ({ container }: CreateRecoveryUiOptions): Recove
     }
   };
 
+  const logElement = log.root;
   const debugPortButton = buttons.get('debug-port')!;
 
   return {
     print: (message) => {
-      log.textContent += (log.textContent ? '\n' : '') + message;
-      log.scrollTop = log.scrollHeight;
+      logElement.textContent += (logElement.textContent ? '\n' : '') + message;
+      logElement.scrollTop = logElement.scrollHeight;
     },
     setBusy: (value) => {
       busy = value;

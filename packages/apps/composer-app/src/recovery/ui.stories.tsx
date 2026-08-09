@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import './recovery.css';
+import './ui.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef } from 'react';
@@ -49,7 +49,7 @@ const BANNER = [
 ];
 
 const meta = {
-  title: 'apps/composer-app/recovery/RecoveryUi',
+  title: 'apps/composer-app/Recovery',
   component: RecoveryUiStory,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof RecoveryUiStory>;

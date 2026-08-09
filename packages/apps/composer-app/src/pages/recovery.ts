@@ -7,20 +7,26 @@ import { getDebugPortController, mountDevtoolsHooks, resolveDebugPortOrigin } fr
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 
 import {
+  type RecoveryAction,
+  type RecoveryHelpers,
+  attachRecoveryHelpers,
   bootRecoveryClient,
+  compactDocumentsInRecovery,
+  createRecoveryUi,
   destroyRecoveryClient,
+  downloadProfileArchiveExport,
+  downloadRecoveryLogs,
   exportBootedSqlite,
+  exportOpfsSqlite,
+  getDxos,
+  importProfileFromUrl,
+  importSqliteInRecovery,
+  installDxosGlobals,
   isRecoveryClientBooted,
-} from '../recovery/boot-client';
-import { compactDocumentsInRecovery } from '../recovery/compact-documents';
-import { runRecoveryDiagnostics } from '../recovery/diagnostics';
-import { downloadRecoveryLogs } from '../recovery/download-logs';
-import { type RecoveryHelpers, attachRecoveryHelpers, getDxos, installDxosGlobals } from '../recovery/dxos-globals';
-import { importProfileFromUrl, importSqliteInRecovery } from '../recovery/import-sqlite';
-import { downloadProfileArchiveExport, exportOpfsSqlite } from '../recovery/opfs-export';
-import { resetComposerStorage } from '../recovery/reset-storage';
-import { runSqlStorageDiagnostics } from '../recovery/sql-storage-diagnostics';
-import { type RecoveryAction, createRecoveryUi } from '../recovery/ui';
+  resetComposerStorage,
+  runRecoveryDiagnostics,
+  runSqlStorageDiagnostics,
+} from '../recovery';
 
 const { print, setBusy, setDebugPortActive, onAction } = createRecoveryUi({
   container: document.getElementById('root')!,

@@ -20,6 +20,8 @@ html[data-recovery-page] #root {
   display: flex;
   flex-direction: column;
   block-size: 100%;
+  max-width: 60rem;
+  margin: 0 auto;
   min-block-size: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   background: #0b0f14;
@@ -79,7 +81,6 @@ html[data-recovery-page] #root {
 .dxos-recovery footer {
   flex: none;
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid #1e2936;
   background: rgba(11, 15, 20, 0.96);
   backdrop-filter: blur(8px);
 }
