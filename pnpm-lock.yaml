@@ -499,25 +499,25 @@ catalogs:
       specifier: ^0.8.10
       version: 0.8.10
     '@storybook/addon-docs':
-      specifier: ^10.4.2
+      specifier: ^10.5.7
       version: 10.5.7
     '@storybook/addon-links':
-      specifier: ^10.4.2
+      specifier: ^10.5.7
       version: 10.5.7
     '@storybook/addon-themes':
-      specifier: ^10.4.2
+      specifier: ^10.5.7
       version: 10.5.7
     '@storybook/addon-vitest':
-      specifier: ^10.4.2
+      specifier: ^10.5.7
       version: 10.5.7
     '@storybook/icons':
-      specifier: ^2.0.2
+      specifier: ^2.1.0
       version: 2.1.0
     '@storybook/react-vite':
-      specifier: ^10.4.2
+      specifier: ^10.5.7
       version: 10.5.7
     '@storybook/web-components-vite':
-      specifier: ^10.4.2
+      specifier: ^10.5.7
       version: 10.5.7
     '@svgr/cli':
       specifier: ^8.1.0
@@ -1537,10 +1537,10 @@ catalogs:
       specifier: ^0.24.0
       version: 0.24.0
     storybook:
-      specifier: ^10.4.2
+      specifier: ^10.5.7
       version: 10.5.7
     storybook-solidjs-vite:
-      specifier: ^10.0.13
+      specifier: ^10.6.0
       version: 10.6.0
     streamx:
       specifier: ^2.12.5
@@ -1648,7 +1648,7 @@ catalogs:
       specifier: ^6.0.0
       version: 6.0.0
     vite-plugin-devtools-json:
-      specifier: ^1.0.0
+      specifier: ^1.1.0
       version: 1.1.0
     vite-plugin-glslify:
       specifier: ^2.3.0
@@ -1660,7 +1660,7 @@ catalogs:
       specifier: ^1.2.0
       version: 1.2.0
     vite-plugin-solid:
-      specifier: ^2.11.12
+      specifier: ^2.11.14
       version: 2.11.14
     vite-plugin-top-level-await:
       specifier: ^1.6.0
