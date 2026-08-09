@@ -2,6 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as ParseResult from 'effect/ParseResult';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -21,6 +25,14 @@ export type PluginInfo = {
   moduleIds: string[];
 };
 
+/** One top-level field of an operation's input or output. */
+export type OperationField = {
+  name: string;
+  optional: boolean;
+  /** Rendered type, truncated — enough to choose a value, not a substitute for the schema. */
+  type: string;
+};
+
 /** Summary of one operation, enumerated without loading its handler. */
 export type OperationInfo = {
   key: string;
@@ -29,6 +41,10 @@ export type OperationInfo = {
   /** Derived from the contributing module id; absent when the operation came from outside a plugin. */
   pluginId?: string;
   moduleId?: string;
+  /** Top-level input fields. Absent when the input is not a struct (e.g. `Schema.Void`). */
+  input?: OperationField[];
+  /** Top-level output fields. Absent when the output is not a struct. */
+  output?: OperationField[];
 };
 
 /**
@@ -58,6 +74,28 @@ const pluginIdOf = (moduleId: string): string | undefined => {
   return index === -1 ? undefined : moduleId.slice(0, index);
 };
 
+/** Rendered types carry the field's description annotation, which can be a paragraph. */
+const MAX_TYPE_LENGTH = 60;
+
+/**
+ * Top-level fields of a struct schema, so `operations()` says what an operation takes rather than
+ * only what it is called. Non-struct schemas (`Schema.Void`, unions) have no field list.
+ */
+const fieldsOf = (schema: Schema.Schema.Any | undefined): OperationField[] | undefined => {
+  const ast = schema?.ast;
+  if (!ast || !SchemaAST.isTypeLiteral(ast)) {
+    return undefined;
+  }
+  return ast.propertySignatures.map((property) => {
+    const type = String(property.type);
+    return {
+      name: String(property.name),
+      optional: property.isOptional,
+      type: type.length > MAX_TYPE_LENGTH ? `${type.slice(0, MAX_TYPE_LENGTH)}…` : type,
+    };
+  });
+};
+
 /**
  * Attaches the plugin/operation console API to `globalThis.composer`.
  *
@@ -82,6 +120,8 @@ export const setupDevtools = (manager: PluginManager.PluginManager): void => {
           description: definition.meta.description,
           pluginId: owner,
           moduleId,
+          input: fieldsOf(definition.input),
+          output: fieldsOf(definition.output),
         })),
       );
     });
@@ -130,6 +170,21 @@ export const setupDevtools = (manager: PluginManager.PluginManager): void => {
     if (!definition) {
       throw new Error(`Unknown operation: ${key} (try composer.operations())`);
     }
+
+    // `invokePromise` does not validate its input: a payload missing a required field comes back
+    // as `{ data: undefined }` with no error, and the operation quietly does nothing. Validating
+    // here turns that silent no-op into the error the caller expected — the whole point of an
+    // operation carrying a schema.
+    const validation = Schema.validateEither(definition.input)(input);
+    if (validation._tag === 'Left') {
+      // `ArrayFormatter` over `TreeFormatter`: the tree renders the whole schema before reaching the
+      // offending field, which buries `id: is missing` under a paragraph of unrelated shape.
+      const issues = ParseResult.ArrayFormatter.formatErrorSync(validation.left)
+        .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+        .join('; ');
+      throw new Error(`Invalid input for ${key} — ${issues}`);
+    }
+
     const invoker = manager.capabilities.get(Capabilities.OperationInvoker);
     const { data, error } = await invoker.invokePromise(definition, input as never);
     if (error) {
