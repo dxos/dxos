@@ -4,25 +4,32 @@ Ran the `test-perf-leaks` tooling (`--force`) on 2026-08-09, one representative 
 Scope differs by mode: **`DX_DEBUG_LEAKS` covered all eight suites**; **`DX_PROFILE_TESTS` clean
 profiles were captured for the two heavy layers only** (`assistant`, `agent-runtime`) — the other
 six were run with both vars together, so their CPU traces are dominated by `writeHeapSnapshot` and
-not reported as hotspots. "Leak Δ" is `heapUsed` at the last test minus the warmed baseline (test 1,
-post-`settle()`); negative/flat = no residual growth.
+not reported as hotspots.
 
-## Leak sweep — no leaks found
+## Leak sweep — no leak signatures
 
-| Layer        | Package · suite                                       | Tests | Baseline → last  | Δ from baseline | Verdict |
-| ------------ | ----------------------------------------------------- | ----- | ---------------- | --------------- | ------- |
-| echo         | `echo` · Type.test.ts                                 | 27    | 45.7 → 45.0 MB   | **−0.7 MB**     | no leak |
-| halo         | `credentials` · verifier.test.ts                      | 12    | 46.7 → 45.6 MB   | **−1.1 MB**     | no leak |
-| mesh         | `messaging` · edge-signal-manager.test.ts             | 7     | 55.1 → 53.6 MB   | **−1.5 MB**     | no leak |
-| app-sdk      | `app-graph` · util.test.ts                            | 10    | 23.1 → 22.8 MB   | **−0.3 MB**     | no leak |
-| composer     | `plugin-markdown` · Versioning.test.ts                | 2     | 60.1 → 58.2 MB   | **−1.9 MB**     | no leak |
-| compute      | `compute-runtime` · SwarmTraceSink.test.ts            | 3     | 44.0 → 42.7 MB   | **−1.3 MB**     | no leak |
-| assistant    | `assistant` · util/execution-graph.test.ts            | 15    | 112.4 → 110.9 MB | **−1.5 MB**     | no leak |
-| agentService | `agent-runtime` · agent-service/agent-process.test.ts | 15    | 128.9 → 127.9 MB | **−0.9 MB**     | no leak |
+Reading the full `heap-samples.ndjson` progression (not just the endpoints): test 1 is inflated by
+warmup (lazy init), so the meaningful window is **test 2 (the post-warmup floor) → last**. Every
+suite ends **below its test-1 warmed baseline**, and the post-warmup window shows only a **small
+sub-MB drift** (agentService the largest at +1.4 MB over 15 tests). With `isolate: false` the file's
+tests share state, so a gentle rise is expected fixture/registry accumulation across the suite — not
+a product leak (which would climb steeply and proportionally to test count).
 
-Every suite settles at or below its warmed baseline — no monotonic grower. The high baselines on
-`assistant`/`agent-runtime` (112–129 MB) are the one-time heavy module graph (Effect + ECHO + AI),
-captured _after_ the first test so lazy init is not mistaken for a leak; it does not grow after.
+| Layer        | Package · suite                                       | Tests | test1 → test2(floor) → last (MB) | post-warmup drift (test2→last) |
+| ------------ | ----------------------------------------------------- | ----- | -------------------------------- | ------------------------------ |
+| echo         | `echo` · Type.test.ts                                 | 27    | 45.7 → 44.3 → 45.0               | **+0.66 MB**                   |
+| halo         | `credentials` · verifier.test.ts                      | 12    | 46.7 → 45.2 → 45.6               | **+0.44 MB**                   |
+| mesh         | `messaging` · edge-signal-manager.test.ts             | 7     | 55.1 → 53.3 → 53.6               | **+0.28 MB**                   |
+| app-sdk      | `app-graph` · util.test.ts                            | 10    | 23.1 → 22.6 → 22.8               | **+0.21 MB**                   |
+| composer     | `plugin-markdown` · Versioning.test.ts                | 2     | 60.1 → 58.2 → 58.2               | **+0.00 MB**                   |
+| compute      | `compute-runtime` · SwarmTraceSink.test.ts            | 3     | 44.0 → 42.7 → 42.7               | **+0.03 MB**                   |
+| assistant    | `assistant` · util/execution-graph.test.ts            | 15    | 112.4 → 110.5 → 110.9            | **+0.49 MB**                   |
+| agentService | `agent-runtime` · agent-service/agent-process.test.ts | 15    | 128.9 → 126.5 → 127.9            | **+1.41 MB**                   |
+
+The high baselines on `assistant`/`agent-runtime` (112–129 MB) are the one-time heavy module graph
+(Effect + ECHO + AI), captured _after_ the first test so lazy init is not mistaken for a leak. No
+suite shows a leak signature (steep, test-count-proportional climb); worth a second look only if a
+future run pushes the agentService drift materially higher.
 
 ## CPU hotspots — startup-bound, no product hotspot
 

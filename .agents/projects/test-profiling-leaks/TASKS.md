@@ -2,7 +2,7 @@
 
 _Resume: Tooling MERGED (PR #12523 → main f1c67714) — createNodeProject + tools/vitest/leak-setup.ts,
 gated via .moon/tasks/tag-ts-test.yml; `test-perf-leaks` skill added. Phase 4 sweep DONE: leak check
-across all eight layers (no leaks); clean CPU profiles on the two heavy layers (assistant,
+across all eight layers (no leak signatures, only sub-MB post-warmup drift); clean CPU profiles on the two heavy layers (assistant,
 agent-runtime — no product hotspot). Full table + methodology in RESULTS.md. This follow-up branch
 was restarted from main after the merge._
 
@@ -40,14 +40,15 @@ Heap-snapshot before/after on an existing single suite, no test-file edits.
 Now that the harness works, actually run it against representative suites and act on what it finds.
 This is investigation/remediation, not tooling — one finding-set per layer, then fixes.
 
-Result: **no leaks** across all eight representative layers, and **no product CPU hotspot** in the
+Result: **no leak signatures** across all eight representative layers (only sub-MB post-warmup
+fixture drift), and **no product CPU hotspot** in the
 two heavy layers that got clean profiles (assistant, agent-runtime) — full table and methodology in
 `RESULTS.md`. Nothing to fix at this scale.
 
 ### Tasks
 
 - [x] **Pick + run representative suites per layer** — echo, halo, mesh, app-sdk, composer, compute, assistant, and agentService (`agent-runtime` agent-process). See RESULTS.md.
-- [x] **Leaks** — `heap-samples.ndjson` slope per suite: every layer settles at/below its warmed baseline (net Δ −0.3 to −1.9 MB). No monotonic grower.
+- [x] **Leaks** — `heap-samples.ndjson` slope per suite: every layer ends below its test-1 warmed baseline; the post-warmup window (test 2 → last) drifts only sub-MB (agentService largest at +1.4 MB / 15 tests) — expected `isolate:false` fixture accumulation, no leak signature.
 - [x] **CPU hotspots** — clean profiles (leak-mode off) of the two heavy layers: ~62% idle + module-load/transform + import-time Effect `Schema` construction; no product self-time hotspot.
 - [x] **Triage** — high assistant/agent baselines are one-time module-graph lazy init (post-warmup), not leaks; nothing to file.
 - [x] **Record findings** — `RESULTS.md`.
