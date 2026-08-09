@@ -63,6 +63,10 @@ export class AppManager {
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
+  // Rolling tail of browser console errors, for failure diagnostics: the app reports operation
+  // failures to the user generically (e.g. `create-space-dialog.error.message`) and logs the real
+  // cause via `log.catch`, so without this the test cannot say WHICH operation failed.
+  private _consoleErrors: string[] = [];
 
   // prettier-ignore
   constructor(
@@ -279,9 +283,11 @@ export class AppManager {
         .first()
         .textContent()
         .catch(() => null);
+      // The dialog's message is generic by design (it catches Create, Open, and UpdateDialog alike),
+      // so the console tail — where `log.catch` puts the squashed cause — is what attributes it.
       throw new Error(
         error
-          ? `create-space failed: ${error.trim()}`
+          ? `create-space failed: ${error.trim()} — console: ${this.recentConsoleErrors()}`
           : // No error rendered and the submit was clicked while enabled, so the operation is still
             // pending rather than rejected — which is what made this surface in unrelated tests as
             // a bare detach timeout.
@@ -536,7 +542,19 @@ export class AppManager {
     await this.page.getByTestId('resetDialog.confirmReset').click();
   }
 
+  /** The most recent browser console errors, newest last, for embedding in thrown diagnostics. */
+  recentConsoleErrors(count = 5): string {
+    const tail = this._consoleErrors.slice(-count);
+    return tail.length > 0 ? tail.join(' | ') : '(none captured)';
+  }
+
   private async _onConsoleMessage(message: ConsoleMessage): Promise<void> {
+    if (message.type() === 'error') {
+      this._consoleErrors.push(message.text());
+      if (this._consoleErrors.length > 20) {
+        this._consoleErrors.shift();
+      }
+    }
     try {
       const text = message.text();
       const json = JSON.parse(text.slice(text.indexOf('{')));
