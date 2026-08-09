@@ -49,6 +49,29 @@ const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 const DEBUG_TIMEOUT_MS = 3_600_000;
 
+// Env-gated node-test instrumentation (opt-in; unset → config byte-identical to today).
+// DESIGN: .agents/projects/test-profiling-leaks/DESIGN.md.
+//   DX_PROFILE_TESTS[=dir] — emit a V8 `.cpuprofile` via Node `--cpu-prof` (dir default ./profiles).
+//   DX_DEBUG_LEAKS         — before/after heap snapshots + per-test heapUsed samples of a single suite.
+// Both need the tests to run on a fork's main thread, so instrumentation forces `pool: 'forks'` with
+// a single non-isolated process: `--cpu-prof`/`--expose-gc` (passed via `execArgv`) apply to the
+// process main thread, which under the default worker-per-file isolation is not where tests run.
+const CPU_PROFILE_DIR = process.env.DX_PROFILE_TESTS
+  ? process.env.DX_PROFILE_TESTS === '1'
+    ? './profiles'
+    : process.env.DX_PROFILE_TESTS
+  : undefined;
+const DEBUG_LEAKS = !!process.env.DX_DEBUG_LEAKS;
+const TEST_INSTRUMENTED = Boolean(CPU_PROFILE_DIR) || DEBUG_LEAKS;
+// `execArgv` / `isolate` / `fileParallelism` / `maxWorkers` are top-level test options in vitest 4
+// (the v3 `poolOptions.forks.{singleFork,execArgv}` nesting was removed). A single, non-isolated,
+// non-parallel fork runs the whole suite in one persistent process — one coherent profile / snapshot pair.
+const TEST_INSTRUMENT_EXEC_ARGV = [
+  ...(CPU_PROFILE_DIR ? ['--cpu-prof', `--cpu-prof-dir=${CPU_PROFILE_DIR}`] : []),
+  ...(DEBUG_LEAKS ? ['--expose-gc'] : []),
+];
+const VITEST_LEAK_SETUP = new URL('./tools/vitest/leak-setup.ts', import.meta.url).pathname;
+
 // Node-only Vitest NDJSON file sink (@dxos/vite-plugin-log/vitest). Relative paths avoid a moon dep cycle.
 const VITEST_LOG_GLOBAL_SETUP = new URL('./tools/vite-plugin-log/src/vitest/global-setup.ts', import.meta.url).pathname;
 const VITEST_LOG_SETUP = new URL('./tools/vite-plugin-log/src/vitest/setup.ts', import.meta.url).pathname;
@@ -585,7 +608,24 @@ const createNodeProject = ({
         '!**/test/**/*.workerd.test.{ts,tsx}',
       ],
       globalSetup: [VITEST_LOG_GLOBAL_SETUP],
-      setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname, VITEST_LOG_SETUP],
+      setupFiles: [
+        ...setupFiles,
+        new URL('./tools/vitest/setup.ts', import.meta.url).pathname,
+        VITEST_LOG_SETUP,
+        // Wraps the suite with before/after heap snapshots; only loaded when leak-detecting.
+        ...(DEBUG_LEAKS ? [VITEST_LEAK_SETUP] : []),
+      ],
+      // Env-gated CPU-profile / leak-detect instrumentation. Unset → this block is absent and the
+      // node project is unchanged. See DX_PROFILE_TESTS / DX_DEBUG_LEAKS above.
+      ...(TEST_INSTRUMENTED
+        ? {
+            pool: 'forks',
+            isolate: false,
+            fileParallelism: false,
+            maxWorkers: 1,
+            execArgv: TEST_INSTRUMENT_EXEC_ARGV,
+          }
+        : {}),
     },
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui

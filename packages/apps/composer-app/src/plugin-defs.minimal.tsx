@@ -6,6 +6,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
+import { GooglePlugin } from '@dxos/plugin-google/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
@@ -33,15 +34,19 @@ export const getDefaults = ({ isDev }: PluginConfig): string[] =>
     ProjectsPlugin.meta.profile.key,
     ReviewPlugin.meta.profile.key,
     RoutinePlugin.meta.profile.key,
+    // The Inbox's mail provider, defaulted on like the full set does: a mailbox offers no Connect
+    // action unless some registered connector claims its type, so enabling Inbox alone yields a
+    // mailbox nothing can bind. Headless, so it costs a capability module and no UI.
+    GooglePlugin.meta.profile.key,
   ]
     .filter(isTruthy)
     .flat();
 
 /**
  * Minimal plugin registry for fast dev startup (`serve-min`, DX_PLUGIN_SET=minimal):
- * core infrastructure + Assistant, Debug, Devtools, Inbox, Markdown, Outliner, Preview,
- * Projects, Review, Routine, and Thread. Keep the plugin list in sync with the
- * `optimizeDeps.entries` brace glob in vite.config.ts.
+ * core infrastructure + Assistant, Debug, Devtools, Google, Inbox, Markdown, Preview,
+ * Projects, Review, Routine, Tasks, and Thread. Google is the Inbox's mail provider —
+ * a mailbox is inert without one, and the provider is a separate plugin.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore } = config;
@@ -50,6 +55,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     AssistantPlugin(),
     DebugPlugin({ logStore }),
     DevtoolsPlugin(),
+    GooglePlugin(),
     InboxPlugin(),
     MarkdownPlugin(),
     TasksPlugin(),

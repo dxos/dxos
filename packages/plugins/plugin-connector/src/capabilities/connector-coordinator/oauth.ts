@@ -38,6 +38,15 @@ export const decodeOAuthMessageData = (
   return { tag: 'invalid' };
 };
 
+/**
+ * Whether a `postMessage` payload is shaped like an OAuth reply, regardless of whether it decodes.
+ *
+ * Separates "the relay answered and we rejected it" from "the relay never answered" when reporting a
+ * discarded message, without reporting every unrelated message the window receives.
+ */
+export const isOAuthShapedMessage = (data: unknown): boolean =>
+  typeof data === 'object' && data !== null && ('success' in data || 'accessTokenId' in data);
+
 export const initiateOAuthFlow = (
   edge: EdgeHttpClient,
   spaceId: Key.SpaceId,

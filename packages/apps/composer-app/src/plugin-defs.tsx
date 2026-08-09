@@ -29,12 +29,14 @@ import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
+import { GooglePlugin } from '@dxos/plugin-google/plugin';
 import { HeyGenPlugin } from '@dxos/plugin-heygen/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
 import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
 import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
+import { JmapPlugin } from '@dxos/plugin-jmap/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
 import { LibraryPlugin } from '@dxos/plugin-library/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
@@ -96,6 +98,9 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ReviewPlugin.meta.profile.key,
     FilePlugin.meta.profile.key,
     InboxPlugin.meta.profile.key,
+    // Mail providers for the Inbox: a mailbox is inert without one, so they default on with it.
+    GooglePlugin.meta.profile.key,
+    JmapPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
@@ -174,7 +179,9 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ExplorerPlugin(),
     MagazinePlugin(),
     GamePlugin(),
+    GooglePlugin(),
     InboxPlugin(),
+    JmapPlugin(),
     KanbanPlugin(),
     LibraryPlugin(),
     MapPlugin(),

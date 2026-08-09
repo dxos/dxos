@@ -1,0 +1,11 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Plugin from '@dxos/app-framework/Plugin';
+
+import { meta } from './meta';
+
+export const JmapPlugin = Plugin.lazy(meta, () => import('#plugin'));
+
+export { JmapOperationHandlerSet } from './operations';
