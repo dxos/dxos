@@ -121,26 +121,64 @@ return dxos.halo.identity.get()?.identityKey.truncate();
 return Object.keys(await dxos.client.diagnostics());
 ```
 
+### Creating an object, into a named space and collection
+
+A `create` operation is a **factory**: it returns a detached object and places nothing. Placement
+is a second operation, `space.operation.addObject`, whose `target` is a `Database` or a
+`Collection`. Both must run in **one snippet** — the port serializes results, so a live object
+cannot cross back and forth.
+
+```js
+const space = dxos.client.spaces.get().find((s) => s.properties?.name === 'My Space');
+const objects = await space.db.query(dxos.Filter.everything()).run();
+const collection = objects.find((o) => dxos.Obj.getTypename(o) === 'org.dxos.type.collection');
+
+const { object } = await composer.invoke('org.dxos.plugin.markdown.operation.create', {
+  name: 'Notes',
+  content: '# Notes\n',
+});
+await composer.invoke('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+await space.db.flush();
+
+// Verify placement rather than trusting the return.
+const after = await space.db.query(dxos.Filter.everything()).run();
+return { placed: after.some((o) => o.id === object.id), collectionCount: collection.objects?.length };
+```
+
+Passing `target: space.db` adds to the space root instead of a collection. `addObject` returns a
+DXN-form id (`echo://<spaceId>/<objectId>`), not the bare object id.
+
 ## 6. Gotchas
 
 Each of these cost a retry in practice; they are why this file exists.
 
-1. **`invoke` can report success on invalid input.** A payload missing a required field
-   returned `ok` and did nothing. Read the operation's `input` schema in source before
-   invoking — `operations()` does not surface field shape, and a silent no-op looks
-   identical to success. Verify the effect (DOM, ECHO state), do not trust the return.
-2. **Keys are DXN-form.** `operations()` prints `dxn:org.dxos.plugin.layout.operation.select`.
+1. **A successful `invoke` does not mean the thing you wanted happened.** Two distinct failures,
+   both of which return `ok`:
+   - **Invalid input is silently accepted.** A toast payload missing the required `id` returned
+     `ok` and rendered nothing.
+   - **The operation did its job, which was less than you assumed.** `markdown.operation.create`
+     returned `{ created: true, id }` for an object that was in no space and no DOM — it is a
+     factory (see above).
+
+   Always verify the _effect_ — query the space, read the DOM — never the return value.
+
+2. **`operations()` does not surface input shape.** Read the operation's `input` schema in
+   source before invoking. 262 operations all carry a `name`, but only ~73% carry a
+   `description`, and none expose their fields through this API.
+3. **Keys are DXN-form.** `operations()` prints `dxn:org.dxos.plugin.layout.operation.select`.
    `invoke` accepts that or the bare NSID.
-3. **An operation's key namespace is not its owning plugin.** That `layout` key is contributed
+4. **An operation's key namespace is not its owning plugin.** That `layout` key is contributed
    by `plugin-attention`. Trust `pluginId`, which is derived from the contributing module.
-4. **`SpaceState.SPACE_READY === 3`.** Guessing `4` silently yields empty results rather than
+5. **`space.db.query(…).run()` resolves to an array**, not `{ objects }`. Destructuring the
+   wrong shape throws inside the snippet rather than returning an empty result.
+6. **`SpaceState.SPACE_READY === 3`.** Guessing `4` silently yields empty results rather than
    an error.
-5. **`dxos.importModule` only resolves modules registered via `exposeModule`.** Most package
+7. **`dxos.importModule` only resolves modules registered via `exposeModule`.** Most package
    paths throw "is not exposed"; reach through `dxos.*` instead.
-6. **`alert`/`confirm`/`prompt` block the port.** They freeze the JS thread the loop runs on,
+8. **`alert`/`confirm`/`prompt` block the port.** They freeze the JS thread the loop runs on,
    so the result never posts until dismissed. Wrap in `setTimeout(…, 0)` to fire the dialog
    after the result returns, or raise `COMPOSER_RECOVERY_TIMEOUT` and accept the block.
-7. **`composer` is absent** on `/recovery.html` and until React mounts. Probe for it rather
+9. **`composer` is absent** on `/recovery.html` and until React mounts. Probe for it rather
    than assuming.
 
 ## Checklist
