@@ -107,7 +107,14 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     client,
     host,
     tracing: TRACE_PROCESSOR,
-    debugPort: getDebugPortController(),
+    // `resume` is a no-op unless this tab persisted a live session before the reload, so mounting the
+    // hook can never switch the port on by itself — it only carries an already-authorized session
+    // across a navigation the user did not intend to end it (an OAuth redirect, a HMR reload).
+    debugPort: (() => {
+      const controller = getDebugPortController();
+      controller.resume();
+      return controller;
+    })(),
 
     openClientRpcServer: async () => {
       if (!client) {

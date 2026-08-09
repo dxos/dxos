@@ -61,6 +61,8 @@ const createFakeController = (initial: Partial<DebugPortStatus> = {}): DebugPort
       emit('Waiting for debug server…', session);
       return session;
     },
+    // Nothing is persisted in a story, so there is never a session to carry across a reload.
+    resume: () => undefined,
     stop: () => {
       emit('Debug port stopped.', status.session);
       update({ running: false });
