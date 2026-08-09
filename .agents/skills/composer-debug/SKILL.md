@@ -73,6 +73,27 @@ background at that point, its output completes later in the background file. Rea
 after the completion notification: reading it early looks exactly like an empty result, which
 invites the wrong diagnosis.
 
+### Announce yourself — always the first snippet
+
+The user handed over a session id, then went back to what they were doing. Make the connection
+visible in the page, so an active agent is never something they have to remember. Post a toast as
+the first thing you run, and verify connectivity in the same round trip:
+
+```js
+await composer.invoke('org.dxos.plugin.layout.operation.addToast', {
+  id: 'agent-connected',
+  title: 'Agent connected',
+  description: 'An agent is running commands via the debug port. Turn the switch off to end it.',
+  icon: 'ph--broadcast--regular',
+  duration: 8000,
+});
+return { origin: location.origin, spaces: dxos.client.spaces.get().length, hasComposer: !!globalThis.composer };
+```
+
+A stable `id` means reconnecting reuses the same toast rather than stacking them. On
+`/recovery.html` there is no `composer`, so say so in the log instead — `recovery.log('…')` prints
+into the page the user is already looking at.
+
 ## 3. Writing snippets
 
 The body runs inside `async () => { … }`, so:
@@ -191,24 +212,51 @@ Each of these cost a retry in practice; they are why this file exists.
 
    Always verify the _effect_ — query the space, read the DOM — never the return value.
 
-2. **`operations()` does not surface input shape.** Read the operation's `input` schema in
+2. **Database-backed operations need a `spaceId`, which `composer.invoke` does not pass.** An
+   operation declaring `services: [Database.Service]` (`markdown.update`, most write paths) fails
+   with `Service not available: @dxos/echo/Database/Service … spawn environment is missing space`.
+   Until `invoke` forwards options, reach the invoker directly:
+
+   ```js
+   const mgr = composer.manager;
+   const sets = mgr.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.operationHandler' });
+   let def;
+   for (const set of sets) {
+     const found = set.definitions().find((d) => d.meta.key.endsWith('markdown.update'));
+     if (found) {
+       def = found;
+       break;
+     }
+   }
+   const invoker = mgr.capabilities.get({ identifier: 'org.dxos.app-framework.capability.operationInvoker' });
+   const { data, error } = await invoker.invokePromise(def, input, { spaceId: space.id });
+   ```
+
+3. **ECHO properties cannot be assigned directly.** `doc.name = 'x'` throws
+   `Cannot modify ECHO object property … outside of Obj.update()`. Use
+   `dxos.Obj.update(obj, (mutable) => { mutable.name = 'x'; })`. This bites at the end of a chain,
+   where earlier mutations have already landed and only the last one fails — a partial effect.
+   There is no programmatic rename operation: `space.operation.renameObject` takes only
+   `{ object, caller? }` because it opens the rename dialog.
+
+4. **`operations()` does not surface input shape.** Read the operation's `input` schema in
    source before invoking. 262 operations all carry a `name`, but only ~73% carry a
    `description`, and none expose their fields through this API.
-3. **Keys are DXN-form.** `operations()` prints `dxn:org.dxos.plugin.layout.operation.select`.
+5. **Keys are DXN-form.** `operations()` prints `dxn:org.dxos.plugin.layout.operation.select`.
    `invoke` accepts that or the bare NSID.
-4. **An operation's key namespace is not its owning plugin.** That `layout` key is contributed
+6. **An operation's key namespace is not its owning plugin.** That `layout` key is contributed
    by `plugin-attention`. Trust `pluginId`, which is derived from the contributing module.
-5. **`space.db.query(…).run()` resolves to an array**, not `{ objects }`. Destructuring the
+7. **`space.db.query(…).run()` resolves to an array**, not `{ objects }`. Destructuring the
    wrong shape throws inside the snippet rather than returning an empty result.
-6. **`SpaceState.SPACE_READY === 3`.** Guessing `4` silently yields empty results rather than
+8. **`SpaceState.SPACE_READY === 3`.** Guessing `4` silently yields empty results rather than
    an error.
-7. **`dxos.importModule` only resolves modules registered via `exposeModule`.** Most package
+9. **`dxos.importModule` only resolves modules registered via `exposeModule`.** Most package
    paths throw "is not exposed"; reach through `dxos.*` instead.
-8. **`alert`/`confirm`/`prompt` block the port.** They freeze the JS thread the loop runs on,
-   so the result never posts until dismissed. Wrap in `setTimeout(…, 0)` to fire the dialog
-   after the result returns, or raise `COMPOSER_RECOVERY_TIMEOUT` and accept the block.
-9. **`composer` is absent** on `/recovery.html` and until React mounts. Probe for it rather
-   than assuming.
+10. **`alert`/`confirm`/`prompt` block the port.** They freeze the JS thread the loop runs on,
+    so the result never posts until dismissed. Wrap in `setTimeout(…, 0)` to fire the dialog
+    after the result returns, or raise `COMPOSER_RECOVERY_TIMEOUT` and accept the block.
+11. **`composer` is absent** on `/recovery.html` and until React mounts. Probe for it rather
+    than assuming.
 
 ## Checklist
 
