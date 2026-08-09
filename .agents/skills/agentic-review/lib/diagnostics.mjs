@@ -12,10 +12,13 @@
 // Column is optional. Body is everything until the next header or EOF.
 
 const HEADER_RE = /^#\s+(WARN|ERROR)\s+`([^`:]+):(\d+)(?::(\d+))?`\s*$/;
-// A line that looks like a diagnostic header but must be validated strictly — a
-// malformed one (missing backticks or line number, lowercased severity) is a
-// subagent error we surface rather than silently drop.
-const LOOSE_HEADER_RE = /^#\s*(warn|error)\b/i;
+// A line that is clearly attempting to be a diagnostic header — it starts with
+// `#`, a severity-ish word (including the near-misses WARNING/ERRORS), and
+// carries a location cue (a backtick or a `:<line>`) — yet fails HEADER_RE. Such
+// a line is a subagent mistake surfaced rather than silently dropped. Prose that
+// merely opens with `# error …` and no location cue stays body text.
+const HEADER_CANDIDATE_RE = /^#\s*(?:warn(?:ing)?|errors?)\b/i;
+const LOCATION_CUE_RE = /`|:\d/;
 
 /**
  * Parse diagnostics out of a group fragment. Throws on a header-like line that
@@ -51,7 +54,7 @@ export const parseDiagnostics = (text, label = 'fragment') => {
         col: match[4] != null ? Number.parseInt(match[4], 10) : null,
         body: [],
       };
-    } else if (LOOSE_HEADER_RE.test(line)) {
+    } else if (HEADER_CANDIDATE_RE.test(line) && LOCATION_CUE_RE.test(line)) {
       throw new Error(
         `${label}:${index + 1}: malformed diagnostic header ${JSON.stringify(line)} — expected \`# WARN|ERROR \`file:line[:col]\`\``,
       );

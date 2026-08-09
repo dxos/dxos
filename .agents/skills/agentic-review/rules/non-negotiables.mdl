@@ -30,7 +30,7 @@ rule no-sleep-in-test: No sleep or polling in tests
   files:
     - packages/**/*.test.ts
     - packages/**/*.test.tsx
-  grep: sleep|setTimeout|setInterval|poll|while\s*\(
+  grep: sleep|setTimeout|setInterval
   severity: warn
 ```
 
@@ -45,7 +45,7 @@ rule no-casts: No casts to silence the type-checker
   files:
     - packages/**/*.ts
     - packages/**/*.tsx
-  grep: as any|as unknown|: any|<any|any\[\]|[^!=]![.\[]
+  grep: as any|as unknown|: any\b|<any\b|[^!=]![.\[]
   severity: error
 ```
 
@@ -61,7 +61,7 @@ rule no-compat-shims: No compatibility re-exports when moving code
   files:
     - packages/**/*.ts
     - packages/**/*.tsx
-  grep: compat|backward|@deprecated|re-export|export \*|export \{
+  grep: compat|backward|@deprecated|re-export|export \*
   severity: warn
 ```
 

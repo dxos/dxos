@@ -77,7 +77,7 @@ if (existsSync(groupsDir)) {
       const parsed = parseDiagnostics(readFileSync(join(groupsDir, name), 'utf8'), `groups/${name}`);
       for (const diagnostic of parsed) {
         // Rule severity wins; fall back to the parsed value only for a manifest-less run.
-        diagnostics.push({ ...diagnostic, severity: rule?.severity ?? diagnostic.severity, ruleId: rule?.ruleId });
+        diagnostics.push({ ...diagnostic, severity: rule?.severity ?? diagnostic.severity });
       }
     }
   }
