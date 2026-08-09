@@ -14,7 +14,7 @@ import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Credential from '@dxos/compute/Credential';
 import type * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
+import { Database, EID, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -329,7 +329,7 @@ export default Capability.makeModule(
           connectorId: connector.id,
           tokenSnapshot: { source: connector.source, account, scopes: oauth.scopes },
           connectionSnapshot: { name: label, connectorId: connector.id },
-          ...(existingTarget ? { existingTargetDxn: existingTarget.uri } : {}),
+          ...(existingTarget ? { existingTargetUri: existingTarget.uri } : {}),
         });
 
         const edge = getEdgeClient();
@@ -384,7 +384,7 @@ export default Capability.makeModule(
             name: connection.name ?? connector.label ?? connector.id,
             connectorId: connector.id,
           },
-          reauthAccessTokenDxn: connection.accessToken.uri,
+          reauthAccessTokenUri: connection.accessToken.uri,
         });
 
         const edge = getEdgeClient();
@@ -446,12 +446,15 @@ export default Capability.makeModule(
         // Reauth: refresh the existing AccessToken value in place rather than
         // minting a new token + Connection.
         if (snapshot.mode === 'reauth') {
-          const dxn = snapshot.reauthAccessTokenDxn ? DXN.tryMake(snapshot.reauthAccessTokenDxn) : undefined;
-          if (!dxn) {
-            log.warn('finalizeRedirectFlow: reauth snapshot missing access token dxn', { accessTokenId });
+          const tokenUri = snapshot.reauthAccessTokenUri ? EID.tryParse(snapshot.reauthAccessTokenUri) : undefined;
+          if (!tokenUri) {
+            log.warn('finalizeRedirectFlow: reauth snapshot missing access token uri', {
+              accessTokenId,
+              uri: snapshot.reauthAccessTokenUri,
+            });
             return;
           }
-          const tokenRef = space.db.makeRef<AccessToken.AccessToken>(dxn);
+          const tokenRef = space.db.makeRef<AccessToken.AccessToken>(tokenUri);
           const token = yield* Database.load(tokenRef).pipe(Effect.provide(Database.layer(space.db)));
           Obj.update(token, (token) => {
             token.token = accessTokenValue;
@@ -479,9 +482,18 @@ export default Capability.makeModule(
           accessToken: Ref.make(token),
         });
 
-        const existingTarget = snapshot.existingTargetDxn
-          ? space.db.makeRef<Obj.Any>(DXN.tryMake(snapshot.existingTargetDxn)!)
-          : undefined;
+        // A snapshot that names a target but cannot be parsed must not fall through as "no target":
+        // `createSingleCursor` would then materialize a second root and bind that instead, leaving the
+        // object the user started from unbound with its Connect action still showing.
+        const existingTargetUri = snapshot.existingTargetUri ? EID.tryParse(snapshot.existingTargetUri) : undefined;
+        if (snapshot.existingTargetUri && !existingTargetUri) {
+          log.warn('finalizeRedirectFlow: unparseable existing target uri', {
+            accessTokenId,
+            uri: snapshot.existingTargetUri,
+          });
+          return;
+        }
+        const existingTarget = existingTargetUri ? space.db.makeRef<Obj.Any>(existingTargetUri) : undefined;
 
         yield* finalizePendingEntry(invoker, serviceResolver, {
           mode: 'create',
