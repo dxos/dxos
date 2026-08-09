@@ -192,7 +192,8 @@ describe('EdgeHttpClient api key', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new EdgeHttpClient('https://edge.example.com', { apiKey: 'secret-key' });
-    await client.uploadPluginBundle(Context.default(), { slug: 'x', version: '1', files: [] });
+    // Mirror uploadBundleDirect's call shape: VP auth off, so the api key is the only credential.
+    await client.uploadPluginBundle(Context.default(), { slug: 'x', version: '1', files: [] }, { auth: false });
 
     const authCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/auth'));
     expect(authCall).toBeUndefined();

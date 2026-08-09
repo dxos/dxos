@@ -282,7 +282,8 @@ const uploadBundleDirect = ({
 
     const { moduleUrl } = yield* Effect.tryPromise({
       try: () => http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth: false }),
-      catch: (error) => error,
+      // Keep EdgeCallFailedError intact for the conflict recovery below; type everything else.
+      catch: (error) => (error instanceof EdgeCallFailedError ? error : new Error(`Bundle upload failed: ${error}`)),
     }).pipe(
       // Hosted versions are immutable, so a re-run of an already-uploaded version answers 409 —
       // the existing bundle is the publish's outcome, keeping registry publishes re-runnable.
