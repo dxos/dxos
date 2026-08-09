@@ -138,6 +138,26 @@ The namespace is open-ended — plugins `??=` their own members onto it as they 
 
 `recovery` — safe mode only; see `composer-forensics`.
 
+### Resolving an operation before you invoke it
+
+`composer.operations()` lists what the _running page_ has activated, with top-level `input`/`output`
+fields. That is the live truth, and it is what you should trust about a session. But it only sees
+active plugins, and it flattens nested structs — so when you need the authoritative definition
+(including `services`, which `operations()` does not report), read it from the `dxos-introspect` MCP
+server instead of grepping:
+
+1. `mcp__dxos-introspect__list_plugins({ id: 'space' })` → the exact plugin id.
+2. `mcp__dxos-introspect__find_symbol({ query: 'SpaceOperation' })` → `@dxos/plugin-space#SpaceOperation`.
+3. `mcp__dxos-introspect__get_symbol({ ref: '…#SpaceOperation', include: ['source'] })` → every
+   definition with `meta.key`, `input`, `output` and `services`.
+
+Search `<Plugin>Operation` regardless of how the plugin structures it — `plugin-space` uses a
+`namespace`, `plugin-markdown` a module of top-level exports, and `find_symbol` finds both.
+
+`services` is the payoff: a definition listing `Database.Service` needs a `spaceId` that
+`composer.invoke` does not pass (gotcha 2), and the key alone never tells you that. Note that
+`list_operations` does _not_ enumerate operations — it returns the handler-file location per plugin.
+
 ## 5. Recipes
 
 ```js
@@ -226,7 +246,10 @@ Each of these cost a retry in practice; they are why this file exists.
 2. **Database-backed operations need a `spaceId`, which `composer.invoke` does not pass.** An
    operation declaring `services: [Database.Service]` (`markdown.update`, most write paths) fails
    with `Service not available: @dxos/echo/Database/Service … spawn environment is missing space`.
-   Until `invoke` forwards options, reach the invoker directly:
+   Check `services` on the definition via `dxos-introspect` (§4) _before_ invoking —
+   `composer.operations()` does not report it, though the runtime definition the snippet below
+   reaches through `set.definitions()` does. Until `invoke` forwards options, reach the invoker
+   directly:
 
    ```js
    const mgr = composer.manager;
@@ -250,14 +273,18 @@ Each of these cost a retry in practice; they are why this file exists.
    There is no programmatic rename operation: `space.operation.renameObject` takes only
    `{ object, caller? }` because it opens the rename dialog.
 
-4. **`operations()` reports top-level fields only.** Each entry carries `input`/`output` field
-   lists — name, type, optionality — which is enough to call most operations without opening the
-   source. Nested structs are not expanded, and a non-struct input (`Schema.Void`, a union) has no
-   field list at all; read the schema in source for those.
+4. **`operations()` reports top-level fields only, for active plugins only.** Each entry carries
+   `input`/`output` field lists — name, type, optionality — enough to call most operations. Nested
+   structs are not expanded, a non-struct input (`Schema.Void`, a union) has no field list at all,
+   and `services` is absent. For any of those, resolve the definition through `dxos-introspect`
+   (§4) rather than reading files.
 5. **Keys are DXN-form.** `operations()` prints `dxn:org.dxos.plugin.layout.operation.select`.
    `invoke` accepts that or the bare NSID.
 6. **An operation's key namespace is not its owning plugin.** That `layout` key is contributed
-   by `plugin-attention`. Trust `pluginId`, which is derived from the contributing module.
+   by `plugin-attention`, and `plugin-markdown` keys its LLM-facing operations
+   `org.dxos.function.markdown.*` while its UI ones are `org.dxos.plugin.markdown.operation.*` —
+   `update` and `create` live in different namespaces in the same file. Trust `pluginId`, which is
+   derived from the contributing module.
 7. **`space.db.query(…).run()` resolves to an array**, not `{ objects }`. Destructuring the
    wrong shape throws inside the snippet rather than returning an empty result.
 8. **`SpaceState.SPACE_READY === 3`.** Guessing `4` silently yields empty results rather than
