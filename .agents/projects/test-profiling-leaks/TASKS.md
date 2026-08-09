@@ -1,9 +1,9 @@
 # Test profiling & leak detection — Tasks
 
-_Resume: IMPLEMENTED + verified across all six layers. Wired into `createNodeProject`
-(`vite.base.config.ts`) + `tools/vitest/leak-setup.ts`, gated via `.moon/tasks/tag-ts-test.yml`
-inputs. vitest-4 adaptations recorded in DESIGN.md §Implementation. PR #12523 OPEN — monitoring
-CI to green, then merge; addressed CodeRabbit review (samples-file truncation, --force caching note)._
+_Resume: Tooling MERGED (PR #12523 → main f1c67714) — createNodeProject + tools/vitest/leak-setup.ts,
+gated via .moon/tasks/tag-ts-test.yml; `test-perf-leaks` skill added. Phase 4 sweep DONE across all
+eight layers: no leaks, no product CPU hotspots (full table + methodology in RESULTS.md). This
+follow-up branch was restarted from main after the merge._
 
 ## Phase 1: CPU profiling (`DX_PROFILE_TESTS`)
 
@@ -39,13 +39,17 @@ Heap-snapshot before/after on an existing single suite, no test-file edits.
 Now that the harness works, actually run it against representative suites and act on what it finds.
 This is investigation/remediation, not tooling — one finding-set per layer, then fixes.
 
+Result: **no leaks or product CPU hotspots** across all eight representative layers — full table
+and methodology in `RESULTS.md`. Nothing to fix at this scale.
+
 ### Tasks
 
-- [ ] **Pick + run representative suites per layer** with both `DX_PROFILE_TESTS` and `DX_DEBUG_LEAKS` (`--force`): echo, halo, mesh, app-sdk, composer, compute, **and assistant + agentService** (`assistant`, `assistant-toolkit`/`assistant-evals`, and the agent/`agent-runtime` service suites) as an explicit layer — these are heavy, long-lived-service tests where leaks/hotspots are most likely.
-- [ ] **Leaks** — for each suite, diff before/after snapshots in DevTools Comparison + check the `heap-samples.ndjson` slope; record per-constructor deltas and retainer chains for any monotonic grower.
-- [ ] **CPU hotspots** — open each `.cpuprofile` (DevTools/speedscope); note the dominant self-time frames (transform/runner overhead vs. real product code) per layer.
-- [ ] **Triage + file** — separate real leaks/hotspots from test-fixture accumulation and first-run lazy init; open issues or fixes for the real ones, starting with assistant/agentService if they dominate.
-- [ ] **Record findings** — a short RESULTS.md (or DESIGN.md §Findings) with per-layer leak/hotspot summary and links to any follow-up PRs/issues.
+- [x] **Pick + run representative suites per layer** — echo, halo, mesh, app-sdk, composer, compute, assistant, and agentService (`agent-runtime` agent-process). See RESULTS.md.
+- [x] **Leaks** — `heap-samples.ndjson` slope per suite: every layer settles at/below its warmed baseline (net Δ −0.3 to −1.9 MB). No monotonic grower.
+- [x] **CPU hotspots** — clean profiles (leak-mode off) of the two heavy layers: ~62% idle + module-load/transform + import-time Effect `Schema` construction; no product self-time hotspot.
+- [x] **Triage** — high assistant/agent baselines are one-time module-graph lazy init (post-warmup), not leaks; nothing to file.
+- [x] **Record findings** — `RESULTS.md`.
+- [ ] **(Optional next)** Point the tooling at long-lived integration suites (`echo-host` spaces/replication, `client-services` sessions) when leak-hunting a specific subsystem — that is where a real residual would show.
 
 ## Follow-ups
 
