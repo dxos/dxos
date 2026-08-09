@@ -19,7 +19,7 @@ import { findDxConfigFile, loadDxConfig } from '@dxos/app-framework/vite-plugin'
 import { type Client, ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { Config2 } from '@dxos/protocols';
+import { Config2, EdgeCallFailedError } from '@dxos/protocols';
 
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 
@@ -125,6 +125,16 @@ export const publish = Command.make(
         const version = manifest.version;
         const manifestHash = `sha256-${yield* Effect.promise(() => sha256Base64(new TextEncoder().encode(manifestRaw)))}`;
 
+        // Authenticate for the record writes BEFORE uploading: hosted bundles are immutable once
+        // uploaded, so a publish whose PDS session cannot authenticate must fail before it burns
+        // the version with an orphaned upload.
+        const client = yield* ClientService;
+        const session = yield* resolveSession({
+          handle: Option.getOrUndefined(options.handle),
+          appPassword: Option.getOrUndefined(options.appPassword),
+          client,
+        });
+
         // Resolve hosting → moduleUrl.
         const assetBaseUrl = Option.getOrUndefined(options.assetBaseUrl) ?? config.publish?.assetBaseUrl;
         let moduleUrl: string;
@@ -143,24 +153,15 @@ export const publish = Command.make(
           } else if (apiKey) {
             // Headless callers (CI) hold no HALO identity, so the VP flow cannot run; the admin
             // API key authenticates the upload instead.
-            const client = yield* ClientService;
             const http = new EdgeHttpClient(client.edge.http.baseUrl, { apiKey });
             moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
           } else {
-            const client = yield* ClientService;
             const hasIdentity = !!client.halo.identity.get();
             moduleUrl = yield* uploadBundle({ client, key, version, outdir, auth: hasIdentity });
           }
           yield* Console.log(`Uploaded:  ${moduleUrl}`);
         }
 
-        // Authenticate and write records.
-        const client = yield* ClientService;
-        const session = yield* resolveSession({
-          handle: Option.getOrUndefined(options.handle),
-          appPassword: Option.getOrUndefined(options.appPassword),
-          client,
-        });
         const createdAt = new Date().toISOString();
 
         const profile: Record<string, unknown> = { key, name: manifest.name, createdAt };
@@ -279,8 +280,19 @@ const uploadBundleDirect = ({
       files.push({ path: entry.split(path.sep).join('/'), content: Buffer.from(bytes).toString('base64') });
     }
 
-    const { moduleUrl } = yield* Effect.tryPromise(() =>
-      http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth: false }),
+    const { moduleUrl } = yield* Effect.tryPromise({
+      try: () => http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth: false }),
+      catch: (error) => error,
+    }).pipe(
+      // Hosted versions are immutable, so a re-run of an already-uploaded version answers 409 —
+      // the existing bundle is the publish's outcome, keeping registry publishes re-runnable.
+      Effect.catchIf(
+        (error) => error instanceof EdgeCallFailedError && error.data?.type === 'conflict',
+        () => {
+          const existingUrl = new URL(`/registry/modules/${key}/${version}/manifest.json`, http.baseUrl).toString();
+          return Console.log(`Version already in registry: ${existingUrl}`).pipe(Effect.as({ moduleUrl: existingUrl }));
+        },
+      ),
     );
     return moduleUrl;
   });

@@ -163,7 +163,10 @@ export abstract class BaseHttpClient {
           processingError = await EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
-        processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
+        // A thrown EdgeCallFailedError already carries its retry semantics (e.g. the terminal
+        // rejected-api-key 401) — wrapping it as a processing failure would mark it retryable.
+        processingError =
+          error instanceof EdgeCallFailedError ? error : EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
       if (processingError?.isRetryable && (await shouldRetry(ctx, processingError.retryAfterMs))) {
@@ -194,7 +197,7 @@ export abstract class BaseHttpClient {
     while (true) {
       let processingError: EdgeCallFailedError | undefined;
       try {
-        if (!this._authHeader && args.auth) {
+        if (!this._authHeader && args.auth && !this._apiKey) {
           const response = await fetch(new URL('/auth', this._baseUrl));
           if (response.status === 401) {
             this._authHeader = await this._handleUnauthorized(response);
@@ -204,6 +207,10 @@ export abstract class BaseHttpClient {
         const headers: Record<string, string> = { ...args.headers };
         if (this._authHeader) {
           headers['Authorization'] = this._authHeader;
+        } else if (this._apiKey) {
+          // Canonical edgeAuth admin-key form; never collides with the VP header, since the
+          // api-key path skips the auth flow that would populate it.
+          headers['Authorization'] = `Bearer ${this._apiKey}`;
         }
         if (traceHeaders) {
           Object.assign(headers, traceHeaders);
@@ -226,7 +233,10 @@ export abstract class BaseHttpClient {
 
         processingError = await EdgeCallFailedError.fromHttpFailure(response);
       } catch (error: any) {
-        processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
+        // A thrown EdgeCallFailedError already carries its retry semantics (e.g. the terminal
+        // rejected-api-key 401) — wrapping it as a processing failure would mark it retryable.
+        processingError =
+          error instanceof EdgeCallFailedError ? error : EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
       if (processingError?.isRetryable && (await shouldRetry(ctx, processingError.retryAfterMs))) {
