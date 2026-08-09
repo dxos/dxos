@@ -43,13 +43,16 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         ),
       );
       if (edgeReplication) {
-        // `Effect.tryPromise`, not `Effect.promise`: the cause the dialog renders has to name the step
-        // it came from. Under `Effect.promise` a rejection arrived as a bare `Error`, which is why a
-        // transient edge hiccup was indistinguishable from any other create failure.
+        // Best-effort, and deliberately not fatal. `updateSpace` commits the preference on the host;
+        // what can fail here is only the local snapshot catching up over `querySpaces`, behind every
+        // other space's synchronized `_processSpaceUpdate`. Failing the whole operation on that threw
+        // away a space that had already been created and left the dialog showing a generic error —
+        // measured on firefox in CI run 31313863039 (`delete message`) and locally at ~1 in 15. The
+        // preference converges on its own; a create must not hinge on observing it.
         yield* Effect.tryPromise({
           try: () => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED),
           catch: EdgeReplicationError.wrap(),
-        });
+        }).pipe(Effect.catchAll((error) => Effect.logWarning('edge replication preference not observed', error)));
       }
       yield* Effect.tryPromise({
         try: () => space.waitUntilReady(),
