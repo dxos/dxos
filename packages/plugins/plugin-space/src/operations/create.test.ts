@@ -6,7 +6,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { type Space } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
