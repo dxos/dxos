@@ -290,11 +290,11 @@ projects:
     user: dmaretskyi
     host: Dmytros-MacBook-Pro-M4
     created: 2026-08-09
-    summary: "A Claude-owned agentic code-review harness — .mdl rule files (glob + grep + instructions), a prepare script that diffs git against the last finalized review and emits STAGING.md groups of rules×files, Sonnet subagents that emit parsable diagnostics into per-group review fragments, and a finalize script that merges + posts PR comments. Packaged as a review skill with scripts; store lives in .agents/reviews/<slug>/."
+    summary: 'A Claude-owned agentic code-review harness — .mdl rule files (glob + grep + instructions), a prepare script that diffs git against the last finalized review and emits STAGING.md groups of rules×files, Sonnet subagents that emit parsable diagnostics into per-group review fragments, and a finalize script that merges + posts PR comments. Packaged as a review skill with scripts; store lives in .agents/reviews/<slug>/.'
     tasks: .agents/projects/agentic-code-review/TASKS.md
     design: .agents/projects/agentic-code-review/DESIGN.md
     prs: []
-    resume: "Design scaffolded; awaiting go-ahead to implement Phase 1 (.mdl parser + prepare.mjs). Next: build the rule discovery + diff-base resolution + STAGING/REVIEW generation."
+    resume: 'Phases 1–2 built + dogfooded (real Sonnet subagents). Next: Phase 3 — PR-comment posting in finalize.mjs + CI wiring.'
 
 ended:
   - name: app-framework-capability-activation

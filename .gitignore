@@ -228,3 +228,8 @@ node_modules
 
 # Remote-cache benchmark output (tools/moon-cache/bench).
 .moon-bench/
+
+# Agentic-review run store (STAGING/REVIEW/group fragments). Runs are ephemeral
+# artifacts; base resolution falls back to the merge-base with main when absent.
+# Persisting finalized reviews for incremental review is a later decision.
+/.agents/reviews/

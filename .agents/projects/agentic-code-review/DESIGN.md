@@ -17,11 +17,18 @@ files to stay focused and cheap.
 **Claude owns the process** — it is packaged as a review _skill_ plus scripts, so
 the harness drives prepare → spawn subagents → finalize.
 
-## Rule format — `.mdl`
+## Rule format — `.rule.md`
 
-Rules live in `.mdl` files anywhere in the repo, ideally colocated with the code
-they govern. `files:` globs resolve **relative to the `.mdl` file's directory**,
-so a package can drop a rule next to its own tests.
+> **Extension changed from `.mdl` during implementation.** The repo already uses
+> `.mdl` for module descriptors (`SPEC.mdl`, `PLUGIN.mdl`, deus lang files — 90+
+> of them), so discovery would have tried to parse them as rules. Review rules
+> use the collision-free **`.rule.md`** suffix instead.
+
+Rules live in `.rule.md` files anywhere in the repo, ideally colocated with the
+code they govern. `files:` globs resolve **relative to the rule file's directory**
+by default (`scope: dir`), so a package can drop a rule next to its own tests. A
+rule sets **`scope: repo`** to resolve its globs from the repo root instead —
+used by the shared seed rules under the skill's `rules/` dir.
 
 Format: **YAML frontmatter + markdown body** (the body is the instructions,
 allowing rich markdown). One rule per file; the filename slug is the rule id.
@@ -30,7 +37,8 @@ allowing rich markdown). One rule per file; the filename slug is the rule id.
 ---
 name: no-sleep-in-test
 title: No sleep in tests
-files: "src/**/*.test.ts" # glob(s), relative to this file's dir; array allowed
+scope: repo # repo | dir (default dir); globs resolve from repo root or this file's dir
+files: 'src/**/*.test.ts' # glob(s), relative to the scope base; array allowed
 grep: sleep # optional pre-filter; only files matching are reviewed
 severity: warn # warn | error (default warn)
 ---
@@ -136,11 +144,12 @@ Column is optional.
 
 The skill instructs the harness to spawn `groups` subagents on the **Sonnet**
 model. Each subagent is handed: its group number, the rule (title + instructions
-+ severity), and its file list (read from STAGING.md). It reviews each file
-against that one rule and **appends diagnostics to `groups/NN.md`** in the
-diagnostic format. Per-group fragment files avoid concurrent-write races on a
-single REVIEW.md (design decision — the brief said "append to REVIEW.md"; we
-split to isolate writers, then merge in finalize).
+
+- severity), and its file list (read from STAGING.md). It reviews each file
+  against that one rule and **appends diagnostics to `groups/NN.md`** in the
+  diagnostic format. Per-group fragment files avoid concurrent-write races on a
+  single REVIEW.md (design decision — the brief said "append to REVIEW.md"; we
+  split to isolate writers, then merge in finalize).
 
 Subagents report **only** violations of their assigned rule — no general review,
 no style opinions outside the rule. If clean, the fragment stays empty.
@@ -183,23 +192,42 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
 
 ## Open questions
 
-1. **Skill name.** `agentic-review` vs `review-rules` vs folding into an existing
-   name. Built-ins `/review` and `/code-review` already exist. Leaning
-   `agentic-review`.
-2. **Trigger priority.** Build for PR-comment flow first, or the manual/nightly
-   flow first? (Affects whether finalize's `gh` posting is Phase 1 or later.)
-3. **Severity authority.** Rule-fixed severity, or may a subagent adjust it with
-   justification? Leaning rule-fixed for determinism.
-4. **PR-comment idempotency** mechanism (hidden marker vs delete-and-repost).
+1. ~~**Skill name.**~~ **Resolved: `agentic-review`** (avoids built-in `/review`,
+   `/code-review`).
+2. ~~**Trigger priority.**~~ **Resolved: manual/local flow first.** `finalize.mjs`
+   writes `REVIEW.md` only; PR-comment posting is Phase 3.
+3. ~~**Severity authority.**~~ **Resolved: rule-fixed** for determinism — subagents
+   do not adjust severity.
+4. **PR-comment idempotency** mechanism (hidden marker vs delete-and-repost) —
+   still open, deferred to Phase 3.
+5. **Incremental persistence.** The run store is git-ignored, so incremental base
+   resolution (newest finalized ancestor) has nothing to read across fresh clones
+   and the base is the merge-base with main (whole branch diff). Committing
+   finalized reviews for true incrementality is a Phase 3 decision.
 
 ## Decisions log
 
-- `.mdl` = YAML frontmatter + markdown body (not inline YAML).
-- Globs resolve relative to the rule file's directory.
+- **Rule extension is `.rule.md`, not `.mdl`** — `.mdl` collides with the repo's
+  module descriptors (`SPEC.mdl`/`PLUGIN.mdl`). Format unchanged: YAML
+  frontmatter + markdown body.
+- Added **`scope: dir|repo`** to the rule frontmatter (default `dir`); `repo`
+  resolves globs from the repo root, for shared/seed rules.
+- Globs resolve relative to the scope base (rule dir, or repo root when
+  `scope: repo`).
 - Per-group fragment files (`groups/NN.md`), merged at finalize — not concurrent
   appends to one file.
 - Base resolution scans finalized reviews for the newest HEAD-ancestor commit;
-  fallback to merge-base with `origin/main`.
+  fallback to merge-base with the first main-like ref (`origin/main`, `main`, …);
+  final fallback to HEAD (working-tree-only review) when no main ref exists.
 - Grouping favors few rules per group over few files (focus over packing).
-- Scripts are Node ESM `.mjs` (no build step), matching `scripts/*.mjs`.
+- Scripts are dependency-free Node ESM `.mjs` — a hand-rolled frontmatter parser
+  is used because a standalone script can't resolve a pnpm-hoisted YAML package.
 - Subagents run on **Sonnet**.
+- The run store (`.agents/reviews/`) is **git-ignored** — runs are ephemeral
+  artifacts.
+
+## Status
+
+Phases 0–2 implemented and dogfooded (real Sonnet subagents flagged `as any`, a
+non-null `!`, and a `sleep`/`setTimeout` in a test, with accurate line numbers,
+merged into `REVIEW.md`). Phase 3 (PR comments + CI wiring) not started.
