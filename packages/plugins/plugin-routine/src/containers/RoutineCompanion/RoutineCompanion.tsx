@@ -274,16 +274,15 @@ const useConnectedRoutines = (
  * Reactive family for a routine's on/off state — subscribes (via `get`) to its triggers' `enabled` flags so the
  * row icon re-derives when a flag flips. Keyed by the routine instance.
  */
-const routineEnabled = Atom.family(
-  (routine: Routine.Routine): Atom.Atom<{ hasTriggers: boolean; enabled: boolean }> =>
-    Atom.make((get) => {
-      const triggers = get(Obj.atomProperty(routine, 'triggers'));
-      const hasTriggers = triggers.length > 0;
-      return {
-        hasTriggers,
-        enabled: hasTriggers && triggers.every((ref) => get(Obj.atomProperty(ref, 'enabled')) === true),
-      };
-    }),
+const routineEnabled = Atom.family((routine: Routine.Routine): Atom.Atom<{ hasTriggers: boolean; enabled: boolean }> =>
+  Atom.make((get) => {
+    const triggers = get(Obj.atomProperty(routine, 'triggers'));
+    const hasTriggers = triggers.length > 0;
+    return {
+      hasTriggers,
+      enabled: hasTriggers && triggers.every((ref) => get(Obj.atomProperty(ref, 'enabled')) === true),
+    };
+  }),
 );
 
 type GetMenuOptions = {

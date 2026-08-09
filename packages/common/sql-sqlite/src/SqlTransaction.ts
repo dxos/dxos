@@ -35,12 +35,9 @@ export class SqlTransaction extends Context.Tag('@dxos/sql-sqlite/SqlTransaction
  */
 export const layer: Layer.Layer<SqlTransaction, never, SqlClient.SqlClient> = Layer.effect(
   SqlTransaction,
-  Effect.map(
-    SqlClient.SqlClient,
-    (sql: SqlClient.SqlClient): Context.Tag.Service<SqlTransaction> => ({
-      withTransaction: (self) => sql.withTransaction(self),
-    }),
-  ),
+  Effect.map(SqlClient.SqlClient, (sql: SqlClient.SqlClient): Context.Tag.Service<SqlTransaction> => ({
+    withTransaction: (self) => sql.withTransaction(self),
+  })),
 );
 
 /**

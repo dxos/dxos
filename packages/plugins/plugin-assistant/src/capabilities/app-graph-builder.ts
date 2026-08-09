@@ -128,9 +128,8 @@ export default Capability.makeModule(
                   if (!key) {
                     continue;
                   }
-                  const existing = yield* Effect.promise(
-                    (): Promise<Operation.PersistentOperation[]> =>
-                      space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
+                  const existing = yield* Effect.promise((): Promise<Operation.PersistentOperation[]> =>
+                    space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
                   );
                   if (existing.length === 0) {
                     space.db.add(Operation.serialize(definition));

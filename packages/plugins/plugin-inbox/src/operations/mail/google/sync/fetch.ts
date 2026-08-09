@@ -279,15 +279,13 @@ export const fetchAttachments = (
           Effect.flatMap((body) =>
             // The single-arg form suffices: `catchAll` below discards the error regardless of its
             // shape, so there's no reason to map it to a specific type here.
-            Effect.try(
-              (): EmailStage.Attachment => ({
-                name: attachment.filename,
-                mimeType: attachment.mimeType,
-                size: attachment.size,
-                bytes: Buffer.from(base64UrlToBase64(body.data ?? ''), 'base64'),
-                contentId: attachment.contentId,
-              }),
-            ),
+            Effect.try((): EmailStage.Attachment => ({
+              name: attachment.filename,
+              mimeType: attachment.mimeType,
+              size: attachment.size,
+              bytes: Buffer.from(base64UrlToBase64(body.data ?? ''), 'base64'),
+              contentId: attachment.contentId,
+            })),
           ),
           Effect.catchAll((error) => {
             log.catch(error, { messageId, attachmentId: attachment.attachmentId });

@@ -123,29 +123,28 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
 
     const tileItems = useMemo(
       () =>
-        items?.map(
-          (item): StackTileData =>
-            isMessageGroup(item)
-              ? {
-                  conversationId: item.id,
-                  messages: item.messages,
-                  total: item.total,
-                  // Conversations show the latest message; star reflects/toggles that message.
-                  starredAtom: starredAtom?.(item.messages[0]?.id),
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  onAction,
-                }
-              : {
-                  message: item,
-                  tagsAtom: tagsAtom?.(item.id),
-                  starredAtom: starredAtom?.(item.id),
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  onAction,
-                },
+        items?.map((item): StackTileData =>
+          isMessageGroup(item)
+            ? {
+                conversationId: item.id,
+                messages: item.messages,
+                total: item.total,
+                // Conversations show the latest message; star reflects/toggles that message.
+                starredAtom: starredAtom?.(item.messages[0]?.id),
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                onAction,
+              }
+            : {
+                message: item,
+                tagsAtom: tagsAtom?.(item.id),
+                starredAtom: starredAtom?.(item.id),
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                onAction,
+              },
         ),
       [items, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction],
     );

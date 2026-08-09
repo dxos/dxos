@@ -312,15 +312,13 @@ export class IndexEngine {
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(
-            updatedCursors.map(
-              (_): IndexCursor => ({
-                indexName: opts.indexName,
-                spaceId: _.spaceId,
-                sourceName: source.sourceName,
-                resourceId: _.resourceId,
-                cursor: _.cursor,
-              }),
-            ),
+            updatedCursors.map((_): IndexCursor => ({
+              indexName: opts.indexName,
+              spaceId: _.spaceId,
+              sourceName: source.sourceName,
+              resourceId: _.resourceId,
+              cursor: _.cursor,
+            })),
           );
           return { updated: objects.length, done: false, objects };
         }),
