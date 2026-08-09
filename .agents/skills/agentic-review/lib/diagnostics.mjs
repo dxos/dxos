@@ -12,14 +12,21 @@
 // Column is optional. Body is everything until the next header or EOF.
 
 const HEADER_RE = /^#\s+(WARN|ERROR)\s+`([^`:]+):(\d+)(?::(\d+))?`\s*$/;
+// A line that looks like a diagnostic header but must be validated strictly — a
+// malformed one (missing backticks or line number, lowercased severity) is a
+// subagent error we surface rather than silently drop.
+const LOOSE_HEADER_RE = /^#\s*(warn|error)\b/i;
 
 /**
- * Parse diagnostics out of a group fragment.
+ * Parse diagnostics out of a group fragment. Throws on a header-like line that
+ * does not match the strict format, so a malformed diagnostic fails finalization
+ * instead of vanishing from the report.
  *
  * @param {string} text Fragment contents.
+ * @param {string} [label] Fragment name, included in error messages.
  * @returns {Array<{ severity: 'warn'|'error', file: string, line: number, col: number|null, body: string }>}
  */
-export const parseDiagnostics = (text) => {
+export const parseDiagnostics = (text, label = 'fragment') => {
   const lines = text.split(/\r?\n/);
   const diagnostics = [];
   let current = null;
@@ -32,7 +39,8 @@ export const parseDiagnostics = (text) => {
     }
   };
 
-  for (const line of lines) {
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
     const match = line.match(HEADER_RE);
     if (match) {
       flush();
@@ -43,10 +51,14 @@ export const parseDiagnostics = (text) => {
         col: match[4] != null ? Number.parseInt(match[4], 10) : null,
         body: [],
       };
+    } else if (LOOSE_HEADER_RE.test(line)) {
+      throw new Error(
+        `${label}:${index + 1}: malformed diagnostic header ${JSON.stringify(line)} — expected \`# WARN|ERROR \`file:line[:col]\`\``,
+      );
     } else if (current) {
       current.body.push(line);
     }
-    // Lines before the first header (stub comments, blank lines) are ignored.
+    // Non-header lines before the first header (stub comments, blank lines) are ignored.
   }
   flush();
   return diagnostics;

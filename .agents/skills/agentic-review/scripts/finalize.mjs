@@ -17,7 +17,7 @@ import { parseArgs } from 'node:util';
 
 import { compareDiagnostics, diagnosticKey, parseDiagnostics, renderDiagnostic } from '../lib/diagnostics.mjs';
 import { repoRoot } from '../lib/git.mjs';
-import { REVIEWS_DIR, readReview, renderFrontmatter } from '../lib/store.mjs';
+import { assertSafeSlug, GROUPS_MANIFEST, REVIEWS_DIR, readReview, renderFrontmatter } from '../lib/store.mjs';
 
 const { values } = parseArgs({
   options: {
@@ -35,19 +35,22 @@ const resolveStoreDir = () => {
   }
   const reviewsPath = join(root, REVIEWS_DIR);
   if (values.slug) {
-    return join(reviewsPath, values.slug);
+    return join(reviewsPath, assertSafeSlug(values.slug));
   }
   if (!existsSync(reviewsPath)) {
     throw new Error(`no reviews directory at ${REVIEWS_DIR}`);
   }
+  // Pick the most recently modified run that is still pending — a finalized run
+  // must not be re-finalized just because it is the newest on disk.
   const candidates = readdirSync(reviewsPath, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => join(reviewsPath, entry.name))
-    .filter((dir) => existsSync(join(dir, 'REVIEW.md')))
-    .map((dir) => ({ dir, mtime: statSync(join(dir, 'REVIEW.md')).mtimeMs }))
+    .map((dir) => ({ dir, review: readReview(join(dir, 'REVIEW.md')) }))
+    .filter(({ review }) => String(review?.data?.isFinalized) === 'false')
+    .map(({ dir }) => ({ dir, mtime: statSync(join(dir, 'REVIEW.md')).mtimeMs }))
     .sort((a, b) => b.mtime - a.mtime);
   if (candidates.length === 0) {
-    throw new Error(`no review runs found under ${REVIEWS_DIR}`);
+    throw new Error(`no pending (non-finalized) review runs found under ${REVIEWS_DIR}`);
   }
   return candidates[0].dir;
 };
@@ -59,12 +62,23 @@ if (!review) {
   throw new Error(`cannot read ${reviewPath}`);
 }
 
+// The manifest carries each group's authoritative rule id + severity, so a
+// subagent's WARN/ERROR header cannot change the rule-fixed severity.
+const manifestPath = join(storeDir, GROUPS_MANIFEST);
+const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {};
+
 const groupsDir = join(storeDir, 'groups');
 const diagnostics = [];
 if (existsSync(groupsDir)) {
   for (const name of readdirSync(groupsDir).sort()) {
     if (name.endsWith('.md')) {
-      diagnostics.push(...parseDiagnostics(readFileSync(join(groupsDir, name), 'utf8')));
+      const nn = name.replace(/\.md$/, '');
+      const rule = manifest[nn];
+      const parsed = parseDiagnostics(readFileSync(join(groupsDir, name), 'utf8'), `groups/${name}`);
+      for (const diagnostic of parsed) {
+        // Rule severity wins; fall back to the parsed value only for a manifest-less run.
+        diagnostics.push({ ...diagnostic, severity: rule?.severity ?? diagnostic.severity, ruleId: rule?.ruleId });
+      }
     }
   }
 }

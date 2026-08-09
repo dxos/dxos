@@ -21,7 +21,7 @@ usable manually before any CI wiring.
 - [x] **Rule parser** (`lib/mdl.mjs`) — read `.mdl` docs, extract ` ```mdl ` blocks, keep `rule` blocks (`files`,`grep`,`severity`,`scope` + instruction prose); validated; glob base = `.mdl` dir or repo root (`scope`). Rules ride the existing `.mdl` format, not a new extension.
 - [x] **Rule discovery** (`lib/discover.mjs`) — `git ls-files '*.mdl'` (tracked + untracked-not-ignored), honoring `.gitignore`; flattens `rule` blocks across files; descriptor `.mdl` (SPEC/PLUGIN) yield none.
 - [x] **Diff-base resolution** (`prepare.mjs`) — scan `.agents/reviews/*/REVIEW.md` for finalized reviews whose `commit` is an ancestor of HEAD; newest wins; fallback to merge-base with first main-like ref, then HEAD.
-- [x] **`prepare.mjs`** — changed files vs base (committed + staged + unstaged + untracked), intersect with rule globs, apply `grep`, group (one rule × ≤chunk files), write STAGING.md + blank REVIEW.md + `groups/NN.md` stubs, print paths + group count + per-group line.
+- [x] **`prepare.mjs`** — changed files vs base (committed + staged + unstaged + untracked), intersect with rule globs, apply `grep`, group (one rule × ≤ chunkSize files), write STAGING.md + groups.json manifest + blank REVIEW.md + `groups/NN.md` stubs, print paths + group count + per-group line.
 - [x] **Diagnostic parser** (`lib/diagnostics.mjs`) — parse `# WARN|ERROR \`file:line[:col]\`` + body; dedupe + sort helpers.
 - [x] **`finalize.mjs`** — merge fragments into REVIEW.md (sorted, deduped), set `isFinalized: true`, print severity counts.
 

@@ -57,10 +57,11 @@ rule no-sleep-in-test: No sleep in tests
 
 Each review run gets a slug directory:
 
-```
+```text
 .agents/reviews/<slug>/
   REVIEW.md            # frontmatter + merged, finalized diagnostics
   STAGING.md           # groups of (rule × files) for subagents; input only
+  groups.json          # per-group manifest: NN → { ruleId, severity, title }
   groups/
     01.md              # one fragment per group — a subagent writes here
     02.md
@@ -107,8 +108,11 @@ Column is optional.
 
 - Header line: `# WARN|ERROR` + space + backtick-wrapped `` `file:line[:col]` ``.
 - Body: everything until the next `# WARN|ERROR` header or EOF.
-- The severity comes from the subagent (seeded by the rule's `severity`, but the
-  subagent may downgrade/upgrade with justification — TBD, default: rule wins).
+- A header-like line that does not match this format **fails finalization** (with
+  the fragment name and line number) rather than being silently dropped.
+- **Severity is rule-fixed and deterministic.** The subagent writes `WARN`/`ERROR`
+  for readability, but finalize stamps every diagnostic in a group with the rule's
+  severity from the run manifest (`groups.json`), so a subagent cannot change it.
 
 ## Workflow (three steps)
 
@@ -130,9 +134,10 @@ Column is optional.
    a group is one rule × a bounded chunk of its files (chunk size configurable,
    e.g. ≤ 15 files). Big rules split into multiple groups; tiny rules are **not**
    merged across rules (focus > packing).
-6. Write `STAGING.md` (human/agent-readable: per group, the rule frontmatter +
-   instructions + the file list) and a blank `REVIEW.md` (frontmatter above,
-   `isFinalized: false`), and empty `groups/NN.md` stubs.
+6. Write `STAGING.md` (human/agent-readable: per group, the rule instructions +
+   the file list), a `groups.json` manifest (NN → rule id + rule-fixed severity),
+   a blank `REVIEW.md` (frontmatter above, `isFinalized: false`), and empty
+   `groups/NN.md` stubs.
 7. **Print to stdout**: paths to STAGING.md and REVIEW.md, and the **group
    count** — the harness spawns exactly that many subagents. Also print a
    per-group one-liner (rule + file count) for logging.
@@ -153,15 +158,18 @@ no style opinions outside the rule. If clean, the fragment stays empty.
 
 ### Step 3 — finalize (`finalize.mjs`)
 
-1. Parse every `groups/NN.md`, validate diagnostic headers, collect them.
+1. Parse every `groups/NN.md`, validating diagnostic headers (a malformed one
+   fails the run); collect them, stamping each with its group's rule-fixed
+   severity from `groups.json`.
 2. Merge into `REVIEW.md` under the frontmatter, sorted by file then line;
    dedupe identical diagnostics.
 3. Set `isFinalized: true`.
-4. **If on a PR** (`pr` set / detectable via `gh`): post diagnostics as review
-   comments anchored to `file:line` (via `gh pr review` / the comments API).
-   Idempotency: tag comments with the rule id + a hidden marker so re-runs
-   update rather than duplicate (TBD mechanism).
-5. Print a summary (counts by severity, PR link if posted).
+4. Print a summary (counts by severity).
+
+**Deferred to Phase 3 — PR-comment posting.** When on a PR, post diagnostics as
+review comments anchored to `file:line`, made idempotent with a hidden per-rule
+marker so re-runs update rather than duplicate. Today finalize writes `REVIEW.md`
+only.
 
 ## Packaging — the skill
 

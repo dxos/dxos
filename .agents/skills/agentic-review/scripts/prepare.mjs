@@ -5,7 +5,8 @@
 
 // Prepare an agentic review run: discover `rule` blocks in `.mdl` files, resolve
 // the diff base, intersect changed files with each rule, group for subagents, and
-// write the review store (STAGING.md, blank REVIEW.md, groups/NN.md stubs).
+// write the review store (STAGING.md, groups.json, blank REVIEW.md, groups/NN.md
+// stubs).
 //
 // Usage:
 //   node prepare.mjs [--chunk=15] [--base=<ref>] [--main=origin/main] [--slug=<slug>]
@@ -27,7 +28,14 @@ import {
   repoRoot,
   shortSha,
 } from '../lib/git.mjs';
-import { REVIEWS_DIR, readReview, renderFrontmatter, reviewSlug } from '../lib/store.mjs';
+import {
+  assertSafeSlug,
+  GROUPS_MANIFEST,
+  REVIEWS_DIR,
+  readReview,
+  renderFrontmatter,
+  reviewSlug,
+} from '../lib/store.mjs';
 
 const { values } = parseArgs({
   options: {
@@ -91,7 +99,7 @@ const ruleMatches = rules
   .filter(({ files }) => files.length > 0);
 const groups = groupRuleMatches(ruleMatches, chunkSize);
 
-const slug = values.slug ?? reviewSlug(branch, short);
+const slug = values.slug ? assertSafeSlug(values.slug) : reviewSlug(branch, short);
 const storeDir = join(root, REVIEWS_DIR, slug);
 const groupsDir = join(storeDir, 'groups');
 // A re-run for the same slug replaces prior fragments so stale diagnostics never linger.
@@ -109,8 +117,10 @@ const staging = [
   'reviews its files against the rule and appends diagnostics to the named fragment.',
   '',
 ];
+const manifest = {};
 for (const group of groups) {
   const nn = String(group.n).padStart(2, '0');
+  manifest[nn] = { ruleId: group.rule.id, severity: group.rule.severity, title: group.rule.title };
   staging.push(
     `## Group ${nn} — ${group.rule.title} (\`${group.rule.id}\`, severity: ${group.rule.severity})`,
     '',
@@ -131,6 +141,7 @@ for (const group of groups) {
   );
 }
 writeFileSync(join(storeDir, 'STAGING.md'), staging.join('\n'));
+writeFileSync(join(storeDir, GROUPS_MANIFEST), `${JSON.stringify(manifest, null, 2)}\n`);
 
 const reviewFrontmatter = renderFrontmatter({
   branch,

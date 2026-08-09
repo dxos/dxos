@@ -21,7 +21,7 @@ The scripts are dependency-free Node ESM and can also be run by hand.
 
 ## Layout
 
-```
+```text
 .agents/skills/agentic-review/
   scripts/prepare.mjs    # discover rules, resolve base, group, write the store
   scripts/finalize.mjs   # merge group fragments into REVIEW.md
@@ -42,7 +42,7 @@ run store is written to `.agents/reviews/<slug>/` (git-ignored).
 
 ### 1. Prepare
 
-```
+```sh
 node .agents/skills/agentic-review/scripts/prepare.mjs
 ```
 
@@ -68,26 +68,26 @@ Give each subagent its group number and the store path. Prompt template:
 > general review, no style opinions outside the rule. For each genuine violation,
 > append a diagnostic to `<STORE>/groups/<NN>.md` in exactly this format:
 >
-> ```
+> ```text
 > # WARN `path/to/file.ts:42:7`
 >
 > One short paragraph: what the violation is and the concrete fix, referencing
 > the rule. Column is optional.
 > ```
 >
-> Use the rule's severity (`WARN` or `ERROR`) unless the rule text says
-> otherwise. If a file is clean, write nothing for it. Do not edit any file other
-> than your `groups/<NN>.md` fragment. Do not run the finalize step.
+> Use the rule's severity (`WARN` or `ERROR`) in the header. If a file is clean,
+> write nothing for it. Do not edit any file other than your `groups/<NN>.md`
+> fragment. Do not run the finalize step.
 
 ### 3. Finalize
 
 After all subagents finish:
 
-```
+```sh
 node .agents/skills/agentic-review/scripts/finalize.mjs --slug=<slug>
 ```
 
-(With no `--slug`/`--dir`, it finalizes the most recently modified run.) It parses
+(With no `--slug`/`--dir`, it finalizes the most recently modified pending run.) It parses
 every `groups/NN.md`, merges the diagnostics into `REVIEW.md` (sorted by file then
 line, deduped), sets `isFinalized: true`, and prints counts by severity.
 
@@ -124,7 +124,8 @@ rule no-sleep-in-test: No sleep in tests
   globs select. Values are literal (no YAML quoting) — write `grep: @dxos/`, not
   `grep: "@dxos/"`.
 - **`severity`** — `warn` | `error` (default `warn`), authoritative from the rule
-  (deterministic); subagents do not change it.
+  (deterministic). `finalize.mjs` stamps every diagnostic in a group with the
+  rule's severity from the run manifest, so a subagent's header cannot change it.
 
 A document that uses the `rule` type should declare it in an `## Extensions`
 section (`` `rule` `` → `org.dxos.mdl.rule@1.0`); see
