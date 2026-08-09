@@ -87,9 +87,9 @@ const meta = {
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              defaultSpace.db.add(Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         MarkdownPlugin(),

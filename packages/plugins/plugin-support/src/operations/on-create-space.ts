@@ -13,7 +13,7 @@ import * as SupportOperation from '../types/SupportOperation';
 const handler: Operation.WithHandler<typeof SupportOperation.OnCreateSpace> = SupportOperation.OnCreateSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space, isDefault }) {
-      // On personal-space creation, land on its Home node (where the Welcome content is shown).
+      // On default-space creation, land on its Home node (where the Welcome content is shown).
       if (!isDefault) {
         return;
       }

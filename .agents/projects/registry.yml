@@ -6,6 +6,38 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: test-profiling-leaks
+    status: active
+    user: dmaretskyi
+    host: Dmytros-MacBook-Pro-M4
+    created: 2026-08-09
+    summary: 'Env-gated test-harness tooling — DX_PROFILE_TESTS emits V8 CPU profiles via --cpu-prof; DX_DEBUG_LEAKS heap-snapshots an existing suite (before/after + per-test heapUsed slope, forced GC) with zero edits to the test files.'
+    tasks: .agents/projects/test-profiling-leaks/TASKS.md
+    design: .agents/projects/test-profiling-leaks/DESIGN.md
+    prs: [12523]
+    resume: 'Tooling MERGED via PR #12523 (squashed to main f1c67714). Phase 4 sweep DONE — RESULTS.md: leak check across all 8 layers (echo/halo/mesh/sdk/composer/compute/assistant/agentService) shows no leak signatures (every suite ends below its test-1 warmed baseline; only sub-MB post-warmup fixture drift, agentService largest at +1.4 MB); clean CPU profiles on the 2 heavy layers (assistant, agent-runtime) are startup/module-load bound with no product hotspot. Follow-up branch restarted from main for the Phase 4 docs. IMPLEMENTED + verified on echo/halo/mesh/sdk/composer/compute. Env-gated block in createNodeProject (vite.base.config.ts): DX_PROFILE_TESTS → --cpu-prof; DX_DEBUG_LEAKS → tools/vitest/leak-setup.ts (before/after heap snapshots + per-test heapUsed slope). vitest-4 flattened the pool model (no poolOptions.forks/singleFork; execArgv/isolate/fileParallelism/maxWorkers top-level) and dropped config repeats — recorded in DESIGN.md §Implementation. Also fixed the moon test task''s missing ''"$@"'' passthrough so `moon run <pkg>:test -- <file>` filters to one file. Gitignored *.heapsnapshot + profiles/. CI GREEN on PR #12523 (one transient cache.dxos.network flake in `test`, cleared by re-running the job). Added the `test-perf-leaks` skill (.agents/skills/) documenting the workflow. Remaining follow-ups: point the tooling at long-lived integration suites (echo-host, client-services) when leak-hunting; apply the same `"$@"` passthrough fix to test-browser/test-workerd.'
+
+  - name: memory-usage
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-08-06
+    summary: "Profile Composer's runtime memory usage — find what dominates the heap (main thread + workers), attribute it to subsystems, and queue fixes."
+    tasks: .agents/projects/memory-usage/TASKS.md
+    design: .agents/projects/memory-usage/DESIGN.md
+    prs: [12505]
+    resume: 'Investigation complete (DESIGN.md composition model; RESEARCH.md industry comparison). Phase 3 code-residency fixes landed: ~2.9MB of resident code removed (~32MB memory) across onboarding assets, emoji-mart, mermaid, bip39, AI/MCP runtime, ML runtime, EVM client, welcome screen. Target 300-400MB resting. PR #12505 OPEN (draft). Next: Phase 4 idle churn (largest pool, ~51 SQL/s from four loops); Phase 2 payload retention is Linear DX-1148 (reverted from this PR, to land separately).'
+
+  - name: leveldb-removal
+    status: active
+    user: root
+    host: vm
+    created: 2026-08-06
+    summary: Fully remove LevelDB and the @dxos/kv-store package — all consumers are superseded by SQLite storage; convert remaining tests/tooling and delete the package + level/abstract-level/level-transcoder deps.
+    tasks: .agents/projects/leveldb-removal/TASKS.md
+    design: .agents/projects/leveldb-removal/DESIGN.md
+    prs: [12492]
+    resume: 'PR #12492 OPEN. @dxos/kv-store deleted, LevelDB fully removed, tests/tooling converted to SQLite. Builds + tests + lint green (274 echo-host post-merge, 154 client-services). Merged main (resolved sqlite-storage-adapter migrator conflict) and addressed CodeRabbit review; watching CI.'
   - name: crm-pipeline-operations
     status: active
     user: burdon

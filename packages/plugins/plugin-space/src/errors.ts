@@ -10,6 +10,12 @@ export class NoIdentityError extends BaseError.extend(
   'A local identity is required to accept a space invitation.',
 ) {}
 
+/** Deleting the designated default space would strand content that resolves to it. */
+export class DefaultSpaceDeletionError extends BaseError.extend(
+  'DefaultSpaceDeletionError',
+  'The default space cannot be deleted; designate another space first.',
+) {}
+
 /** The space's properties object never became available, so it cannot be safely used yet. */
 export class SpaceNotReadyError extends BaseError.extend(
   'SpaceNotReadyError',

@@ -70,7 +70,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/kv-store": "workspace:*",
     "@dxos/lock-file": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",

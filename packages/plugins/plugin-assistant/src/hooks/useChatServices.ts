@@ -23,7 +23,7 @@ export type UseChatServicesProps = {
  */
 export const useChatServices = ({ id }: UseChatServicesProps) => {
   const client = useClient();
-  id ??= AppSpace.getPersonalSpace(client)?.id;
+  id ??= AppSpace.getDefaultSpace(client)?.id;
 
   // Every chat entry point resolves its services here, so this is the assistant-in-use demand
   // signal: start-gated assistant modules (skills included) load now and register via the

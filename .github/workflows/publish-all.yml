@@ -117,6 +117,23 @@ jobs:
         env:
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
 
+      # `changeset publish` cannot ship the CLI: `@dxos/cli` is `private`, and what it actually ships is one
+      # prebuilt binary per platform generated into `dist/`, so neither is a workspace member Changesets can
+      # see. Runs before the tag step so a failed CLI publish is not tagged as a complete release.
+      - name: Publish the CLI (@latest)
+        if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Version packages')
+        run: moon run cli:publish
+        env:
+          NODE_ENV: production
+          NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
+
+      - name: Publish the CLI (@next snapshot)
+        if: github.event_name == 'workflow_dispatch'
+        run: moon run cli:publish -- --tag next
+        env:
+          NODE_ENV: production
+          NPM_CONFIG_PROVENANCE: 'true'
+
       # One tag + one GitHub Release per lockstep group (`v<version>` for core/SDK, `plugins-v<version>` for
       # plugins + CLI), both refs in a single push.
       #

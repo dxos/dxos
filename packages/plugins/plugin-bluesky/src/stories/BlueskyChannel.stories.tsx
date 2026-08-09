@@ -71,9 +71,9 @@ const meta = {
           }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               // Read-only channel backed by a public Bluesky author feed (no auth).
-              personalSpace.db.add(
+              defaultSpace.db.add(
                 Channel.make({
                   name: `@${DEMO_HANDLE}`,
                   backend: {

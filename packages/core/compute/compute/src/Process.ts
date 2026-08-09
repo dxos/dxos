@@ -415,14 +415,18 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
             }).pipe(
               Effect.catchAllDefect((defect) =>
                 Effect.gen(function* () {
-                  // Emit operation end event with failure.
+                  // Emit operation end event with failure. Carry the error's stable name as `errorCode`
+                  // so consumers can match on the failure kind (e.g. a run-again yield) without parsing
+                  // the message.
                   const errorMessage = defect instanceof Error ? defect.message : String(defect);
+                  const errorCode = defect instanceof Error ? defect.name : undefined;
                   yield* Trace.write(Trace.OperationEnd, {
                     key: op.meta.key,
                     name: op.meta.name,
                     icon: op.meta.icon,
                     outcome: 'failure',
                     error: errorMessage,
+                    ...(errorCode ? { errorCode } : {}),
                   });
                   return yield* Effect.die(defect);
                 }),

@@ -27,8 +27,8 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 
-import { resolveCollectionObjectPath } from '../../../collection-path';
 import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
+import { resolveCollectionObjectPath } from '../../../util';
 import {
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,

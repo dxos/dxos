@@ -21,6 +21,10 @@ export const BuiltinConnectors = Capability.lazyModule(
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connectors'),
 );
+// Empty in the browser: `connector oauth` needs a Bun callback server, so only the
+// node barrel loads the command graph. The export still has to exist here — `#capabilities`
+// resolves its types through this file for both variants.
+export const Commands = AppCapability.commands([]);
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OAuthRedirect = Capability.lazyModule(
   'OAuthRedirect',

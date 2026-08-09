@@ -173,7 +173,7 @@ const MockAiServicePlugin = Plugin.define(
 );
 
 /**
- * Seeds a personal space with a Mailbox and one message that matches FOUR extractors:
+ * Seeds a default space with a Mailbox and one message that matches FOUR extractors:
  *  - `ContactMessageExtractor` (plugin-inbox) — any sender with an email.
  *  - `TripMessageExtractor` (plugin-trip) — body contains a United-style flight block;
  *    creates Trip + Booking + Segment AND tags the message `travel`.
@@ -261,11 +261,11 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
-                personalSpace.db.add(Mailbox.make());
-                seedMessage(personalSpace);
-                await personalSpace.db.flush({ indexes: true });
+                defaultSpace.db.add(Mailbox.make());
+                seedMessage(defaultSpace);
+                await defaultSpace.db.flush({ indexes: true });
               });
             }),
         }),

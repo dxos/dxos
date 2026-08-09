@@ -57,9 +57,9 @@ const meta = {
           types,
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               // Live freeq channel over WebSocket; guest (no handle) is read-only against the server.
-              personalSpace.db.add(
+              defaultSpace.db.add(
                 Channel.make({
                   name: DEMO_CHANNEL,
                   backend: {

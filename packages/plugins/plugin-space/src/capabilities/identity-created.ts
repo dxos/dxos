@@ -10,8 +10,6 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
 
@@ -19,22 +17,18 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
 
-    const personalSpace = yield* Effect.tryPromise(() =>
-      client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
-    );
-    yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
+    const { defaultSpace } = yield* AppSpace.setupIdentitySpaces(client);
     // Boot-waterfall milestone: the default space is usable from here (first-run path).
     performance.mark('milestone:default-space-ready');
 
     // Create root collection structure.
-    yield* Effect.tryPromise(() => personalSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-    Obj.update(personalSpace.properties, (properties) => {
+    Obj.update(defaultSpace.properties, (properties) => {
       Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(Collection.make()));
       if (Migrations.targetVersion) {
         Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
       }
     });
 
-    return Capability.contribute(SpaceCapabilities.PersonalSpace, personalSpace);
+    return Capability.contribute(SpaceCapabilities.DefaultSpace, defaultSpace);
   }),
 );

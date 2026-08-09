@@ -11,11 +11,10 @@ import { languages } from '@codemirror/language-data';
 import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { type MarkdownConfig } from '@lezer/markdown';
-import { mermaidLanguageDescription } from 'codemirror-lang-mermaid';
 
 import { isTruthy } from '@dxos/util';
 
-import { mermaidHighlightStyle } from '../mermaid';
+import { mermaidHighlighting, mermaidLanguageDescription } from '../mermaid';
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
 
 export type MarkdownBundleOptions = {
@@ -71,7 +70,7 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
 
     // Custom styles.
     // Fenced mermaid uses custom tags, so it needs its own style alongside markdown's.
-    syntaxHighlighting(mermaidHighlightStyle()),
+    mermaidHighlighting(),
     syntaxHighlighting(markdownHighlightStyle()),
 
     keymap.of(

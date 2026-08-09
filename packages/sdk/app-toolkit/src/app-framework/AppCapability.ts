@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
@@ -262,13 +261,32 @@ export const pluginAsset = (
 /**
  * Module contributing CLI commands.
  *
- * On the startup pass: the CLI reads the contributed set ONCE while building its command tree, so a
- * command registered in the idle wave is simply absent — `dx space list` falls through to the root
- * help and exits non-zero rather than failing anywhere near the cause.
+ * Gated on demand rather than startup: the `dx` binary fires the event as part of its boot, so the
+ * commands are there by the time it reads them, while a browser host — the devtools terminal —
+ * pays for a plugin's command graph only once someone opens a terminal. Contributing at startup
+ * instead would drag every command-bearing plugin onto the app's critical path to serve a panel
+ * most sessions never open.
+ *
+ * Prefer the loader form. Demand-gating the module defers only its activation, not its code: an
+ * inline list is a static import in the plugin definition, so `@effect/cli` and every handler's
+ * service graph land in the definition's closure and are paid at boot by every session. A loader
+ * keeps them in the module body chunk, which is what makes the gating worth anything.
  */
-export const commands = (values: ReadonlyArray<Command$.Command<any, any, any, any>>, options?: { name?: string }) =>
-  Capability$.inlineModule(
-    options?.name ?? 'cli-commands',
-    { activatesOn: ActivationEvents.Startup, provides: [Capabilities.Command] },
-    () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, values)]),
+export const commands = (
+  values: ReadonlyArray<Capabilities.AnyCommand> | (() => Promise<{ default: ReadonlyArray<Capabilities.AnyCommand> }>),
+  options?: { name?: string },
+) => {
+  const spec = { activatesOn: ActivationEvents.CommandsRequested, provides: [Capabilities.Command] } as const;
+  if (typeof values === 'function') {
+    const loader = values;
+    return Capability$.lazyModule<readonly [typeof Capabilities.Command]>(options?.name ?? 'cli-commands', spec, () =>
+      loader().then(({ default: commands }) => ({
+        default: () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, commands)]),
+      })),
+    );
+  }
+
+  return Capability$.inlineModule(options?.name ?? 'cli-commands', spec, () =>
+    Effect.succeed([Capability$.contributeAll(Capabilities.Command, values)]),
   );
+};

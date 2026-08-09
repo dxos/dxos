@@ -112,7 +112,7 @@ const meta = {
                 return;
               }
 
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
               space.db.add(Mailbox.make());
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),

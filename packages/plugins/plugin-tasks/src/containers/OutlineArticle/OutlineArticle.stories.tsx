@@ -207,8 +207,15 @@ export const ConvertToTask: Story = {
     // neighbours (the chip's vertical padding is cancelled by a negative margin).
     await waitFor(() => {
       const lines = [...canvasElement.querySelectorAll('.cm-content')][0].querySelectorAll('.cm-line');
-      const heights = [...lines].map((line) => line.getBoundingClientRect().height).filter((height) => height > 0);
-      return expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(1);
+      const chipLine = [...lines].find((line) => line.querySelector('dx-anchor'));
+      invariant(chipLine, 'No line carries the anchor chip.');
+      // Against the shortest plain line, not the tallest: the longest item soft-wraps to two line
+      // boxes at this column width, which says nothing about the chip.
+      const plain = [...lines]
+        .filter((line) => line !== chipLine)
+        .map((line) => line.getBoundingClientRect().height)
+        .filter((height) => height > 0);
+      return expect(Math.abs(chipLine.getBoundingClientRect().height - Math.min(...plain))).toBeLessThan(1);
     });
 
     // The promoted task appears in the durable task list (third column), proving the outliner

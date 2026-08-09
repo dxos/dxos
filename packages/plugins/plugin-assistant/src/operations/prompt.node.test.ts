@@ -35,7 +35,7 @@ describe('Agent prompt (composer plugin harness)', () => {
         plugins: [ClientPlugin({}), AssistantPlugin(), RoutinePlugin()],
       });
 
-      const { personalSpace } = await EffectEx.runAndForwardErrors(
+      const { defaultSpace } = await EffectEx.runAndForwardErrors(
         initializeIdentity(harness.get(ClientCapabilities.Client)),
       );
 
@@ -64,7 +64,7 @@ describe('Agent prompt (composer plugin harness)', () => {
               input: {},
               chat: Ref.make(chat),
             },
-            { spaceId: personalSpace.id },
+            { spaceId: defaultSpace.id },
           );
 
           const messageCountAfter = yield* Feed.query(feed, Filter.type(Message.Message)).run.pipe(
@@ -73,7 +73,7 @@ describe('Agent prompt (composer plugin harness)', () => {
 
           expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
           expect(result).toBe('ack');
-        }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
+        }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
         { timeout: 30_000 },
       );
     },

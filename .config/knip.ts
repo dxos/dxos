@@ -326,6 +326,21 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+  // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
+  // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
+  // dependency is not reachable from the emitted chunk.
+  'docs': ['sharp'],
+  // `@opentui/core` reaches its native library through a dynamic import interpolating
+  // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so
+  // cross-compiling the CLI resolves all five at bundle time. pnpm installs them for the host
+  // platform only, hence the explicit declarations.
+  'packages/devtools/cli': [
+    '@opentui/core-darwin-arm64',
+    '@opentui/core-darwin-x64',
+    '@opentui/core-linux-arm64',
+    '@opentui/core-linux-x64',
+    '@opentui/core-win32-x64',
+  ],
 };
 
 const workspaces: KnipConfig['workspaces'] = {

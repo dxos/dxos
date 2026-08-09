@@ -7,15 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Database, type Key, Obj, type Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
 import { type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import * as Connection from '../types/Connection';
 import * as ConnectorCoordination from '../types/ConnectorCoordination';
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { ensureSyncTrigger } from './sync-routine';
+import { bindConnectionToTarget } from './auto-bind';
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';
@@ -104,23 +102,11 @@ export const connectorAuthActions = ({
           if (!existingTarget) {
             return;
           }
-          const target = yield* Database.load(existingTarget);
-          const accessToken = yield* Database.load(connection.accessToken);
-          const name = accessToken.account;
-          if (name) {
-            Obj.update(target, (target) => Obj.setLabel(target, name));
-          }
-          const cursor = yield* Database.add(
-            Cursor.makeExternal({ source: connection.accessToken, target: existingTarget }),
-          );
-          invariant(Cursor.isExternal(cursor));
-          // Sets up recurring background sync for the binding, if the connector declares a trigger
-          // spec. Not specially protected — a failure here propagates like any other step in this
-          // action (e.g. a `Database.load` failure above); it has no blanket catch of its own.
-          const connector = allConnectors.find((entry) => entry.id === connection.connectorId);
-          if (connector) {
-            yield* ensureSyncTrigger({ connector, cursor });
-          }
+          yield* bindConnectionToTarget({
+            connection,
+            connector: allConnectors.find((entry) => entry.id === connection.connectorId),
+            target: existingTarget,
+          });
         }).pipe(Effect.provide(Database.layer(db))),
     });
 

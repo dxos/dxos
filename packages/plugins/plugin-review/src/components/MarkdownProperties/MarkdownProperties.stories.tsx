@@ -74,15 +74,15 @@ const meta = {
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              const doc = personalSpace.db.add(Markdown.make({ name: 'Project Plan', content: 'alpha\nbravo\n' }));
-              yield* Effect.promise(() => personalSpace.db.flush());
+              const { defaultSpace } = yield* initializeIdentity(client);
+              const doc = defaultSpace.db.add(Markdown.make({ name: 'Project Plan', content: 'alpha\nbravo\n' }));
+              yield* Effect.promise(() => defaultSpace.db.flush());
               const root = doc.content.target;
               if (root) {
                 Version.create(doc, { name: 'first draft', target: root });
                 yield* Effect.promise(() => Branch.create(doc, { name: 'agent-draft', parent: root }));
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         // Contributes the versioning-state atom consumed by useVersioning.
