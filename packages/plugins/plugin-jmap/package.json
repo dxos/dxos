@@ -99,7 +99,6 @@
     "@dxos/pipeline-email": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -109,6 +108,7 @@
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@effect/vitest": "catalog:",
     "vite": "catalog:"
   },
