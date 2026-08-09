@@ -62,7 +62,27 @@ export class ScopedShellManager {
     // Wait for the input to be both visible and enabled before filling. The input is conditionally
     // mounted based on the invitation state machine (connectingSpaceInvitation →
     // inputtingSpaceVerificationCode), so a fixed sleep races the transition.
-    await input.waitFor({ state: 'visible' });
+    try {
+      await input.waitFor({ state: 'visible' });
+    } catch (err) {
+      // The input not mounting means the invitation never left its earlier state, which is a
+      // different failure from a stuck click — and a bare locator timeout cannot say which state it
+      // stalled in. Name the panel's rendered testids so the CI log attributes it, since a two-peer
+      // invitation cannot be reproduced faithfully outside CI (external STUN/TURN are unavailable in
+      // the sandbox, so it fails there for unrelated reasons).
+      const rendered = await peer
+        .locator('[data-testid]')
+        .evaluateAll((elements) =>
+          elements.map((element) => element.getAttribute('data-testid')).filter((testId): testId is string => !!testId),
+        )
+        .catch(() => [] as string[]);
+      throw new Error(
+        `${type} invitation never reached the auth-code step; shell is showing: ${
+          rendered.length > 0 ? [...new Set(rendered)].join(', ') : '(no testids rendered)'
+        }`,
+        { cause: err },
+      );
+    }
     await input.fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }
