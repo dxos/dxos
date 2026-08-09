@@ -277,10 +277,15 @@ Branch `claude/effect-4-migration-audit-pq2m8z` in `dxos/edge` (no PR — user a
 - [x] **Bump `dfx` to 1.0.15** — 0.113 peer-depends on `effect ^3.13` and cannot type-check against
       v4 at all. The REST surface changed with the major:
       `getChannelMessages(...).pipe((x) => x.json)` is now `listMessages(...)`.
-- [x] **Run the edge test suites** (`:test`, node + workerd) and fix what the migration broke.
+- [ ] **Run the edge test suites** (`:test`, node + workerd) and fix what the migration broke.
       First run: 100 projects green, 4 failing (`edge` 22/35 files, `mcp-space-service` 4/4,
       `crawler-service` 2/6, `db-service` 1/15). Root causes and fixes below; the two under
       "production defects" would have shipped broken.
+      **Correction:** the "103 completed, 0 failed" run previously recorded as green was
+      interrupted by the runner's own 30-minute timeout, which dropped `edge:test`'s failure from
+      moon's tally. Every complete post-relink run of the `edge` integration suite fails —
+      package-level suites are genuinely green, `packages/services/edge/test` is not. Two causes,
+      one fixed, one open (see "Edge integration-suite regressions" below).
 - [ ] **Repoint `catalog:dxos` at the dxos branch SHA** (`edge:pnpm-workspace.yaml:104`) — blocked
       on D7, and the reason the tarball overrides above are a WIP shim rather than the answer.
 - [x] **Verify the ai-service tool-schema path** still passes its description check (F4) —
@@ -329,6 +334,30 @@ about them.
   CJS bundle member by member, and without interop every binding — including the
   `PermissionFlagsBits` dfx reads at import time — is `undefined`.
 - **`db-service`** asserted on a `SqlError` message that v4 now derives from a structured `reason`.
+
+### Edge integration-suite regressions (found by the post-review test audit)
+
+- **FIXED — `McpTestClient` predated the session transport** (edge commit `99a6699`). The
+  integration client sent no `Accept` header (v4 406s without both media types) and no
+  `mcp-session-id`. It passed earlier only because the harness's mtime-stamped worker-bundle cache
+  served a stale pre-migration server; the relink invalidated the stamp and surfaced it. The
+  session-scoping test now passes with the fix.
+- **OPEN — echo-client doc load deadlocks inside workerd.** `functions`, `trace-progress`,
+  `triggers-dispatcher`, `access-token`, `client-invitations`, and the document-bearing MCP
+  integration tests all time out (30–360s); workerd reports "Worker's code had hung". The hang is
+  `EntityManager._initDocHandle` → `whenReady()` never resolving when the echo-client runs
+  *inside* the worker (`WorkerSpaceService`, `trace-feed-writer`) against db-service over
+  `makeInProcessClient(DataServiceRpc)`. The identical path driven from the node process
+  (`automerge*.node.test.ts`) passes. Peer→DO subduction replication works (frames flow, indexer
+  passes complete); only the worker-internal delivery starves. Ruled out: stale/mixed bundles
+  (reproduced with force-rebuilt bundles), the `sql-sqlite` Migrator narrowing (restatement is
+  byte-equivalent to upstream; reverting it only re-breaks bundle loading), contention (reproduces
+  solo on an idle machine). Prime suspects: v4 `RpcTest.makeClient` stream delivery or fiber
+  scheduling under workerd's DO context. Repro:
+  `cd packages/services/edge && vitest --run -t 'upload and dispatch' test/functions.node.test.ts`.
+  NOTE: whether this suite was ever green on v4 is unknowable from the logs — every earlier
+  "green" either replayed moon caches (task hashes ignore `node_modules`, so the relink never
+  invalidated them) or ran stale worker bundles.
 
 ### dxos-side changes this phase required
 
