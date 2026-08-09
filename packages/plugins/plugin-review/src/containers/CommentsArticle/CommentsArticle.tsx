@@ -233,25 +233,13 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // just-set marker (chromium ~1 in 5, worse on webkit, where CI caught it). Keying on thread
   // membership instead recomputes purely from `anchors` + `state.current`, both reactive, so no
   // timing is involved; a thread from another document simply is not in this set.
-  // Keyed by object id, not URI: a draft thread's URI gains its space on persist
-  // (`echo:///<id>` → `echo://<spaceId>/<id>`), so the selection and the rendered thread can hold
-  // different URI spellings of the same object and an exact match silently drops the marker
-  // (observed in CI: the thread rendered with the persisted URI while `aria-current` stayed null).
-  const currentThreadIds = useMemo(() => {
-    const ids = new Map<string, string>();
-    for (const anchor of anchors) {
-      try {
-        const thread = Relation.getSource(anchor);
-        if (thread) {
-          ids.set(thread.id, Obj.getURI(thread as Obj.Any));
-        }
-      } catch {}
-    }
-    return ids;
-  }, [anchors]);
-  // Both spellings end in the object id (`echo:///<id>` and `echo://<spaceId>/<id>`), so the last
-  // path segment identifies the thread regardless of whether the selection predates the persist.
-  const currentId = state.current ? currentThreadIds.get(state.current.split('/').pop() ?? '') : undefined;
+  // Compare by OBJECT ID on both sides. A draft thread's URI gains its space when its first message
+  // persists it (`echo:///<id>` → `echo://<spaceId>/<id>`), and both spellings end in the id — so the
+  // last path segment identifies the thread whichever spelling either side happens to hold. Matching
+  // URI strings instead drops the marker for the whole persist window: any value captured before the
+  // flip cannot equal an `Obj.getURI` read after it (measured on firefox at 6 in 15, and it is the
+  // `aria-current` null in CI run 31313848871).
+  const currentObjectId = state.current?.split('/').pop();
 
   // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
   // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
@@ -456,10 +444,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   // Scroll the current thread into view when it changes.
   useEffect(() => {
-    if (currentId) {
-      document.getElementById(currentId)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (!currentObjectId) {
+      return;
     }
-  }, [currentId]);
+    // The rendered element is keyed by URI, so scroll by whichever spelling is in the DOM now rather
+    // than by a remembered one.
+    const target = anchors
+      .map((anchor) => {
+        try {
+          return Relation.getSource(anchor);
+        } catch {
+          return undefined;
+        }
+      })
+      .find((thread) => thread?.id === currentObjectId);
+    if (target) {
+      document.getElementById(Obj.getURI(target as Obj.Any))?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [currentObjectId, anchors]);
 
   const filteredAnchors = showResolvedThreads
     ? anchors.filter((anchor) => !!Relation.getSource(anchor))
@@ -493,7 +495,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               getMetadata={getMetadata}
               authorMetadata={authorMetadata}
               identityDid={identity?.did}
-              current={currentId === threadId}
+              current={currentObjectId === thread.id}
               onAttend={handleAttend}
               onActivate={handleActivate}
               onComment={handleComment}
