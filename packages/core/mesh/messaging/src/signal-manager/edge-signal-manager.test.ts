@@ -4,8 +4,16 @@
 
 import { describe, test } from 'vitest';
 
+import { asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { protocol } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
+import { EdgeService } from '@dxos/protocols';
+import {
+  type Message as EdgeMessage,
+  SwarmRequest_Action as SwarmRequestAction,
+  SwarmRequestSchema,
+} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { type Message, type PeerInfo } from '../signal-methods';
 import { TestEdgeMesh } from '../testing';
@@ -189,5 +197,83 @@ describe('EdgeSignalManager broadcast (DX-1125)', () => {
     expect(sink.messages).toHaveLength(1);
     expect(sink.messages[0].author.peerKey).toBe(sender.peer.peerKey);
     expect(sink.broadcasts).toHaveLength(0);
+  });
+});
+
+const isJoinRequest = (message: EdgeMessage): boolean =>
+  message.serviceId === EdgeService.SWARM &&
+  protocol.getPayload(message, SwarmRequestSchema).action === SwarmRequestAction.JOIN;
+
+describe('EdgeSignalManager join repair', () => {
+  // Regression: the edge router can drop a JOIN without closing the socket (a Durable Object storage
+  // timeout resets it mid-dispatch). The client used to fire-and-forget the JOIN, so a dropped one
+  // left it permanently absent from the swarm — peers never discovered each other and a space
+  // invitation stalled in CONNECTING (4 of 10 CI campaign runs on 2026-08-09). The pushed swarm state
+  // naming this peer acknowledges the JOIN; an unconfirmed JOIN must be re-sent.
+  test('recovers when the edge drops the initial JOIN', async ({ expect }) => {
+    const mesh = new TestEdgeMesh();
+    const topic = PublicKey.random();
+
+    const host: PeerInfo = { peerKey: PublicKey.random().toHex(), identityDid: 'did:test:host' };
+    const hostManager = new EdgeSignalManager({
+      edgeConnection: mesh.createConnection({ peerKey: host.peerKey!, identityDid: host.identityDid! }),
+      joinRetryInterval: 50,
+    });
+    await hostManager.open();
+    await hostManager.join(Context.default(), { topic, peer: host });
+
+    // Drop the guest's first JOIN, socket staying open — the router-reset failure mode.
+    const guest: PeerInfo = { peerKey: PublicKey.random().toHex(), identityDid: 'did:test:guest' };
+    let dropped = 0;
+    mesh.dropMessage = (fromPeerKey, message) => {
+      if (fromPeerKey === guest.peerKey && isJoinRequest(message) && dropped === 0) {
+        dropped++;
+        return true;
+      }
+      return false;
+    };
+    const guestManager = new EdgeSignalManager({
+      edgeConnection: mesh.createConnection({ peerKey: guest.peerKey!, identityDid: guest.identityDid! }),
+      joinRetryInterval: 50,
+    });
+    await guestManager.open();
+
+    const discovered = guestManager.swarmState.waitFor(
+      (state) => state.swarmKey === topic.toHex() && (state.peers ?? []).some((peer) => peer.peerKey === host.peerKey),
+    );
+    await guestManager.join(Context.default(), { topic, peer: guest });
+
+    // Without the repair loop this never resolves: the JOIN was dropped and nothing re-sends it.
+    await asyncTimeout(discovered, 2_000);
+    expect(dropped).toBe(1);
+
+    await guestManager.close();
+    await hostManager.close();
+  });
+
+  test('a confirmed join is not re-sent', async ({ expect }) => {
+    const mesh = new TestEdgeMesh();
+    const topic = PublicKey.random();
+
+    const peer: PeerInfo = { peerKey: PublicKey.random().toHex(), identityDid: 'did:test:solo' };
+    let joins = 0;
+    mesh.dropMessage = (_fromPeerKey, message) => {
+      if (isJoinRequest(message)) {
+        joins++;
+      }
+      return false;
+    };
+    const manager = new EdgeSignalManager({
+      edgeConnection: mesh.createConnection({ peerKey: peer.peerKey!, identityDid: peer.identityDid! }),
+      joinRetryInterval: 50,
+    });
+    await manager.open();
+    await manager.join(Context.default(), { topic, peer });
+
+    // Several retry intervals pass; the confirmed join must not produce more JOIN traffic.
+    await sleep(250);
+    expect(joins).toBe(1);
+
+    await manager.close();
   });
 });
