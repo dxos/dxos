@@ -13,10 +13,20 @@ export const Thread = {
     await expect(addButton).toBeEnabled();
     await addButton.click();
     const currentThread = Thread.getCurrentThread(page);
-    // Wait for the newly-created draft thread to appear with aria-current="location".
-    // After the click, there is a brief window where React has not yet re-rendered
-    // the new draft thread into the DOM, so the locator resolves to nothing.
-    await currentThread.waitFor({ state: 'visible' });
+    // Wait for the newly-created draft thread to appear with aria-current="location". After the
+    // click, there is a brief window where React has not yet re-rendered the new draft thread into
+    // the DOM, so the locator resolves to nothing.
+    try {
+      await currentThread.waitFor({ state: 'visible' });
+    } catch (err) {
+      // No current thread means the marker landed on nothing, or on a DIFFERENT thread — and those
+      // are different bugs that a bare locator timeout cannot separate. Report every thread with its
+      // marker state; read from the DOM so this costs nothing until it fails (instrumenting the
+      // component itself perturbed the very timing under test).
+      throw new Error(`no thread is current after creating a comment; threads: ${await Thread.describeThreads(page)}`, {
+        cause: err,
+      });
+    }
     const input = Thread.getReplyInput(currentThread);
     await input.fill(comment);
     await input.press('Enter');
@@ -32,6 +42,20 @@ export const Thread = {
     page.getByTestId('thread').filter({ has: page.getByTestId('thread.heading').filter({ hasText: text }) }),
 
   getCurrentThread: (page: Page) => page.locator('[data-testid=thread][aria-current="location"]'),
+
+  /**
+   * Every rendered thread as `<id>:<aria-current>`, for attributing a missing or misplaced current
+   * marker. DOM-only, so it adds no cost to a passing run.
+   */
+  describeThreads: async (page: Page): Promise<string> => {
+    const threads = await page
+      .getByTestId('thread')
+      .evaluateAll((elements) =>
+        elements.map((element) => `${element.id || '(no id)'}:${element.getAttribute('aria-current') ?? 'null'}`),
+      )
+      .catch(() => [] as string[]);
+    return threads.length > 0 ? threads.join(', ') : '(none rendered)';
+  },
 
   deleteThread: (thread: Locator) => thread.getByTestId('thread.delete').click(),
 
