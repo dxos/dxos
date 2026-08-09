@@ -246,8 +246,10 @@ Each of these cost a retry in practice; they are why this file exists.
 2. **Database-backed operations need a `spaceId`, which `composer.invoke` does not pass.** An
    operation declaring `services: [Database.Service]` (`markdown.update`, most write paths) fails
    with `Service not available: @dxos/echo/Database/Service … spawn environment is missing space`.
-   Check `services` on the definition via `dxos-introspect` (§4) _before_ invoking — it is the only
-   place this is visible. Until `invoke` forwards options, reach the invoker directly:
+   Check `services` on the definition via `dxos-introspect` (§4) _before_ invoking —
+   `composer.operations()` does not report it, though the runtime definition the snippet below
+   reaches through `set.definitions()` does. Until `invoke` forwards options, reach the invoker
+   directly:
 
    ```js
    const mgr = composer.manager;
