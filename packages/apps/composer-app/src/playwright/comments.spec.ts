@@ -184,18 +184,15 @@ test.describe('Comments tests', () => {
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
     await Markdown.select(editorTextbox, thirdMessage);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
-    await expect(Thread.getComment(host.page, thirdMessage)).toHaveAttribute('data-current', '1');
-    await expect(Thread.getThread(host.page, thirdMessage)).toHaveAttribute('aria-current', 'location');
+    await Thread.expectCurrent(host.page, thirdMessage);
 
     // Selecting a comment should highlight the thread.
     await Thread.getComment(host.page, firstMessage).click();
-    await expect(Thread.getComment(host.page, firstMessage)).toHaveAttribute('data-current', '1');
-    await expect(Thread.getThread(host.page, firstMessage)).toHaveAttribute('aria-current', 'location');
+    await Thread.expectCurrent(host.page, firstMessage);
 
     // Selecting a thread should highlight the comment.
     await Thread.getThread(host.page, secondMessage).click();
-    await expect(Thread.getComment(host.page, secondMessage)).toHaveAttribute('data-current', '1');
-    await expect(Thread.getThread(host.page, secondMessage)).toHaveAttribute('aria-current', 'location');
+    await Thread.expectCurrent(host.page, secondMessage);
   });
 
   // TODO(wittjosiah): Paste doesn't work in headless mode.

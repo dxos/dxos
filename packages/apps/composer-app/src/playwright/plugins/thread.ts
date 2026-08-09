@@ -57,6 +57,40 @@ export const Thread = {
     return threads.length > 0 ? threads.join(', ') : '(none rendered)';
   },
 
+  /**
+   * Every rendered comment mark as `<threadId>:<data-current>`, the editor-side counterpart to
+   * {@link describeThreads}.
+   */
+  describeComments: async (page: Page): Promise<string> => {
+    const marks = await page
+      .getByTestId('cm-comment')
+      .evaluateAll((elements) =>
+        elements.map(
+          (element) =>
+            `${(element.getAttribute('data-comment-id') ?? '?').split('/').pop()}:${element.getAttribute('data-current') ?? 'null'}`,
+        ),
+      )
+      .catch(() => [] as string[]);
+    return marks.length > 0 ? [...new Set(marks)].join(', ') : '(none rendered)';
+  },
+
+  /**
+   * Asserts the marker is on the thread AND the comment naming `text`, reporting the whole marker
+   * state on failure. A bare `toHaveAttribute` cannot say whether the marker went missing or landed
+   * on a different thread, which is what made this failure unattributable across CI runs.
+   */
+  expectCurrent: async (page: Page, text: string): Promise<void> => {
+    try {
+      await expect(Thread.getComment(page, text)).toHaveAttribute('data-current', '1');
+      await expect(Thread.getThread(page, text)).toHaveAttribute('aria-current', 'location');
+    } catch (err) {
+      throw new Error(
+        `marker not on "${text}" — threads: ${await Thread.describeThreads(page)}; comments: ${await Thread.describeComments(page)}`,
+        { cause: err },
+      );
+    }
+  },
+
   deleteThread: (thread: Locator) => thread.getByTestId('thread.delete').click(),
 
   getMessages: (thread: Locator) => thread.getByTestId('thread.message'),
