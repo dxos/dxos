@@ -7,25 +7,19 @@ import { type Locator, type Page } from '@playwright/test';
 // TODO(wittjosiah): If others find this useful, factor out the markdown plugin.
 export const Markdown = {
   select: async (locator: Locator, text: string) => {
-    // TODO(wittjosiah): If selection happens too fast, the comment button is not enabled.
-    //   This likely has to do with refactoring selection to use global selection state,
-    //   and comment action being driven via the app graph.
-    await locator.page().waitForTimeout(1_000);
-
-    // `fill()` resolves once the DOM write lands, which can precede the editor state holding the
-    // text, so the offset has to be waited for. Resolve and dispatch it in ONE evaluate: as two
-    // calls, `composer.editorView` could change between them (it names whichever editor mounted
-    // last, and a second plank's editor is smaller), and the offset from the first call then pointed
-    // past the end of the document the second call dispatched against — `RangeError: Selection
-    // points outside of document`. Bounded so a document that never receives the text fails here by
-    // name rather than consuming the test's whole budget.
+    // Resolve the offset and dispatch the selection in ONE evaluate: across two calls
+    // `composer.editorView` can change (it names whichever editor mounted last), and an offset from
+    // the first call then pointed past the end of the document the second dispatched against
+    // (`RangeError: Selection points outside of document`). Polling because `fill()` resolves when
+    // the DOM write lands, which can precede the editor state holding the text; bounded so a
+    // document that never receives it fails by name rather than eating the test's budget.
     await locator.evaluate(async (_element, text) => {
       const deadline = performance.now() + 15_000;
       for (;;) {
-        const editorView = globalThis.composer?.editorView;
         // `doc.toString()`, not `doc.text.join('\n')`: `text` is only present on a leaf node, so the
         // latter reads undefined once the document is large enough for CodeMirror to build a tree.
-        const pos = editorView ? editorView.state.doc.toString().indexOf(text) : -1;
+        const editorView = globalThis.composer?.editorView;
+        const pos = editorView?.state.doc.toString().indexOf(text) ?? -1;
         if (editorView && pos >= 0) {
           editorView.dispatch({ selection: { anchor: pos, head: pos + text.length } });
           return;
