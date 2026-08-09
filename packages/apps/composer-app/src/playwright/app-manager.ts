@@ -239,28 +239,12 @@ export class AppManager {
     await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
     const initialCount = await this.getSpaceItems().count();
 
-    // A closed dialog does not prove a space was created, and `waitForSpaceReady()` cannot tell the
-    // difference: it only requires the selected workspace to match the URL, which the space the app
-    // is already in satisfies on entry. So a submit that silently did not take returned success here
-    // and surfaced much later as a bare count mismatch in whichever test called this — `reset device`
-    // in run 31143471056, `create space, which is displayed in tree` in 31140999737. The new rail item
-    // is the first condition that cannot be met by pre-existing state, which is also what makes
-    // re-submitting safe: an unchanged count is proof the previous attempt created nothing.
-    // TODO(wittjosiah): Re-submitting is a workaround — find why the first submit intermittently
-    //   does not take on chromium and drop the retry.
-    for (let attempt = 1; ; attempt++) {
-      await this.#submitCreateSpaceForm();
-      try {
-        await expect(this.getSpaceItems()).toHaveCount(initialCount + 1, { timeout });
-        break;
-      } catch (err) {
-        // One retry, not three: if the baseline is ever wrong again the cost is a single extra space
-        // rather than a suite-wide cascade.
-        if (attempt === 2) {
-          throw err;
-        }
-      }
-    }
+    await this.#submitCreateSpaceForm();
+
+    // The new rail item is the first condition pre-existing state cannot satisfy: a closed dialog
+    // does not prove a space was created, and `waitForSpaceReady()` is already satisfied by the
+    // space the app is in on entry.
+    await expect(this.getSpaceItems()).toHaveCount(initialCount + 1, { timeout });
 
     await this.waitForSpaceReady(timeout);
   }
@@ -272,33 +256,16 @@ export class AppManager {
 
     const form = this.page.getByTestId('create-space-form');
     const save = form.getByTestId('save-button');
-    // Wait for the dialog to mount before touching it, so that a later `isHidden` can only mean the
-    // submit landed. Skipping this is what broke run 31132403723: an unmounted form reads as hidden,
-    // the click was skipped as redundant, and the helper returned having created no space at all.
-    await expect(save).toBeVisible({ timeout: 10_000 });
+    // Gate on ENABLED, not merely visible: `Form.Submit` derives `disabled` from the form's own
+    // `canSave`, so an enabled button is the form stating it has resolved its fields (they arrive
+    // through a Surface lookup, which is what remounted the control mid-click) and will accept a
+    // submit. Playwright's own actionability wait then absorbs a remount, rather than a retry loop.
+    await expect(save).toBeEnabled({ timeout: 15_000 });
+    await save.click();
 
-    // Retry only a click that *threw*. `Form.Root`'s fields resolve through a Surface lookup, so the
-    // button can detach mid-click ("element is not stable", then "element was detached from the DOM")
-    // — that took out `create space` in run 31130465200 and `create document` in 31131235658.
-    for (let attempt = 1; ; attempt++) {
-      try {
-        await save.click({ timeout: 10_000 });
-        break;
-      } catch (err) {
-        if (await form.isHidden()) {
-          break; // The submit landed even though the click reported a detached element.
-        }
-        if (attempt === 3) {
-          throw err;
-        }
-      }
-    }
-
-    // The caller may re-submit, and reopening the dialog while the old one is still up would target
-    // the wrong tree. 30s rather than 10s: closing the dialog waits on the space actually being
-    // created, which took longer than 10s on firefox in run 31149685264. This wait is not the test's
-    // assertion — the caller's count check is — so being generous here costs nothing but delays a
-    // genuine "dialog never closed" failure.
+    // Closing the dialog waits on the space actually being created, so this is sized to the
+    // operation rather than to an interaction. It is not the test's assertion — the caller's count
+    // check is — so a generous bound only delays a genuine "dialog never closed" failure.
     try {
       await form.waitFor({ state: 'detached', timeout: 30_000 });
     } catch (err) {
@@ -315,10 +282,9 @@ export class AppManager {
       throw new Error(
         error
           ? `create-space failed: ${error.trim()}`
-          : // No error rendered and the submit button was clicked while enabled: the operation is
-            // still pending rather than rejected. Measured locally at ~1 in 12 (chromium) — the
-            // dialog stays open with a clean form, which is why this surfaced across unrelated
-            // tests as a bare detach timeout.
+          : // No error rendered and the submit was clicked while enabled, so the operation is still
+            // pending rather than rejected — which is what made this surface in unrelated tests as
+            // a bare detach timeout.
             'create-space never completed: dialog still open with no error — SpaceOperation.Create did not resolve',
         { cause: err },
       );

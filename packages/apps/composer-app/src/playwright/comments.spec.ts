@@ -39,10 +39,6 @@ test.describe('Comments tests', () => {
   });
 
   test('edit message', async () => {
-    // Space + document + comment + an edit round-trip runs 45-52s of the default 60s budget on a
-    // loaded machine (CI measures 18s), so the tail of the flow was being cut off mid-call and
-    // reported as "page closed" at whatever it was doing. Headroom, not a retry: the race that
-    // silently dropped the typed text is fixed in `Message.tsx`.
     test.slow();
 
     await host.createSpace();
@@ -83,53 +79,6 @@ test.describe('Comments tests', () => {
     await expect(editedMessage).toContainText(editedText);
   });
 
-  // TODO(wittjosiah): Fails on the *add* path, not the delete path, so the anchor-resolution fix in
-  //   `CommentOperation.Delete` does not touch it: 3 failures in 10 both before and after, always at
-  //   the `toHaveCount(3)` after `addMessage` (got 2). Same signature as the webkit failure in run
-  //   31147977323. The second message's ref does not always resolve into the rendered thread — a race
-  //   in `add-message` rather than in deletion. Its two neighbours are now 10/10 and stay enabled.
-  // TODO(wittjosiah): Two layers. The first is fixed: `addMessage` reached the reply composer as the
-  //   *last* `role=textbox` (nothing identified it in the DOM), and when the ordering guess lost, the
-  //   reply was typed into an existing message body — count stayed 2 where 3 was expected. It now
-  //   targets `thread.reply`, and all three repeats get past that step. The remaining failure is at
-  //   the delete click itself: `thread.message.delete` resolves, then loops "element is not stable" /
-  //   "detached from the DOM" until timeout — the message row is being re-rendered continuously.
-  //   Likely the same family as `undo delete thread`'s cm-comment count flapping in run 31215927769.
-  //   Three mechanisms found by instrumentation; two are fixed, one remains. Fixed: echo property
-  //   atoms over-firing (snapshotEquals, including ref-aware element comparison — Ref mints a
-  //   fresh wrapper per read), and the add-path remount — CommentsArticle keyed threads by URI,
-  //   which CHANGES when a draft thread persists, so the whole subtree remounted mid-typing and
-  //   Enter fired on a fresh empty composer (add-path failures 0/5 with the stable key). Open:
-  //   the delete-click stall. Measured during it: zero propertyFamily fires, zero message-tile
-  //   renders, yet CommentThread + the reply composer re-render ~12 cycles until timeout — no
-  //   echo fingerprint, so suspect the focus/attention path (Thread.Content onFocusCapture →
-  //   handleAttend → shared stateAtom) or hover-transition styling racing Playwright's stability
-  //   check. Instrument THAT before the next attempt. UPDATE: instrumented and DISPROVED — during
-  //   the stall handleAttend bails immediately (state.current already set) and the attention
-  //   snapshot is byte-identical across the storm. The real mechanism is an async operation/query
-  //   race: the earlier AddMessage completion resolves conspicuously late, a ~10-15x re-render
-  //   burst follows with no logged trigger, and the thread ANCHOR transiently drops out of
-  //   CommentsArticle's filteredAnchors — whose try/catch silently drops an anchor whenever
-  //   Relation.getSource throws mid-mutation — sometimes unmounting the whole thread while the
-  //   delete button is mid-click. DeleteMessage itself was instrumented and is correct. The fix
-  //   belongs in the operations/query layer (late invocation completion + query re-fire), not in
-  //   any component. A consumer-side anchor-resolution cache (fall back to the last resolved
-  //   thread when getSource throws) was implemented and measured 2/5 — the detach loop persists
-  //   even when anchors cannot drop, and one run saw the message list resolve to 0 elements — so
-  //   the component-level avenue is exhausted; do not retry it.
-  // RESOLVED(wittjosiah): The operations-layer race, timed. Each nested `Operation.invoke` spawns a
-  // full process (~0.5-1.5s of pure ProcessManager/Effect-fiber scheduling per hop, no worker RPC
-  // involved), so the first message's persist (`AddObject` then `AddRelation`, sequential) took over
-  // 2s end to end. A reply typed during that window read the *same* still-listed draft entry — the
-  // first call only clears it after its own persist finishes — so the second `AddMessage` also saw
-  // `draft` truthy and re-ran the persist branch: a second `AddObject`/`AddRelation` pair for the same
-  // anchor, which then lost the `claimed` race and rolled itself back via `db.remove(relation)` +
-  // `db.remove(thread)` — deleting the very thread the first call (and the user's own messages)
-  // depended on. That is the "no echo fingerprint" render storm and the transient/zero-element anchor
-  // drop: real relation churn from a duplicate persist-then-rollback, not a query dedup gap. Fixed in
-  // `add-message.ts` by gating the persist branch on whether `thread` already has a database
-  // association (set by the first call's `AddObject`), not on the draft entry alone. 5/5 on webkit
-  // `--repeat-each=5`.
   test('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
@@ -209,15 +158,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  // Re-enabled with the attention gate made sticky (see `CommentsArticle`'s `currentId`): clicking
-  // a comment attends the EDITOR plank, so the comments companion's gate briefly closed and dropped
-  // the selection it had just recorded — permanently, since nothing re-fires. Two test-side bugs
-  // were fixed alongside: lorem slices collided under strict-mode locators (unique anchor tokens
-  // now), and `onSelect` routed through an async operation whose completions could reorder.
   test('selecting comment highlights thread and vice versa', async () => {
-    // The heaviest test here — three comment round-trips plus two selection gestures — measuring
-    // 38-53s of the default 60s budget on a loaded machine (CI measures 16-20s). Headroom, not a
-    // retry: the marker races it used to expose are fixed in `CommentsArticle` and `comment-sync`.
     test.slow();
 
     await host.createSpace();

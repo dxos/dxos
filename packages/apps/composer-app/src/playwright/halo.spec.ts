@@ -33,14 +33,6 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // Re-enabled with the transport defect fixed. `client.reset()` was rejecting with
-  // `Service handler not available: FeedService.getSyncState`: a background sync-status poll
-  // hitting torn-down services threw a DEFECT in the rpc dispatch, and the worker-pool client
-  // treats a defect as a crashed connection — failing every in-flight call with it, including the
-  // unrelated reset (so `onReset` never reloaded into the join dialog). Missing-handler dispatch
-  // is now a typed per-request failure (`service-rpc.ts` makeClientServicesHandlers; regression
-  // test in client-services effect-rpc.test.ts). Measured 20/20 across both device-join tests
-  // after the fix, against 4-in-10 failures before it.
   test('join new identity', async () => {
     test.setTimeout(90_000);
 
@@ -74,9 +66,6 @@ test.describe('HALO tests', () => {
     // });
   });
 
-  // Re-enabled together with the test above (same transport defect; see its note). Historical
-  // watch item if this flakes again: one pre-fix run saw the join complete but the host's space
-  // never replicate to the guest within 60s — not reproduced in 10/10 post-fix runs.
   test('deleting a space replicates across devices', async () => {
     test.setTimeout(120_000);
 

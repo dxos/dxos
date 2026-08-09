@@ -111,18 +111,10 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     // unusable for sizing the suite. A flake now fails loudly and gets skipped with a TODO until
     // it is fixed, so measured time reflects the tests that actually work.
     retries: 0,
-    // CI runners have 8 vCPUs and every test pays a ~15s app boot, so one worker leaves most of the
-    // machine idle. 4 was measured 2.6x faster than 1 and looked more stable — but that trial only
-    // covered composer on firefox, where most specs skip, so it never exercised a suite with enough
-    // live tests to contend. On chromium 4 workers starves shared setup: run 31109309594 put
-    // composer's 36 chromium tests on a cell of their own and 6 failed, every one a 30s timeout
-    // clicking `create-space-form`'s save button, reported "not stable"/"detached from the DOM".
-    // Four concurrent ~15s app boots race the same render. `re-order collections` passed at 26s with
-    // less concurrency and failed at 44s with more. The same signature appeared in plugin-kanban's
-    // `waitUntilReady` and todomvc's WebRTC `beforeEach`, so 2 is the compromise: still parallel,
-    // but under the point where boot contention turns into false failures.
+    // Every test pays a ~15s app boot, and 4 workers starved shared setup into false
+    // "not stable"/"detached" failures, so 2 is the compromise.
     // `|| 2` rather than `??`: an env var set to the empty string is common in Actions and would
-    // otherwise coerce to 0 workers. `PLAYWRIGHT_WORKERS` remains the escape hatch.
+    // otherwise coerce to 0 workers.
     workers: Number(process.env.PLAYWRIGHT_WORKERS) || 2,
     // Reporter to use. See https://playwright.dev/docs/test-reporters.
     reporter: [

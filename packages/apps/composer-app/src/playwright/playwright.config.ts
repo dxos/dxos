@@ -18,9 +18,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm vite preview',
     port: 4173,
-    // `vite preview` serves the prebuilt bundle, so one instance serves every worker; reusing it
-    // also means the Knapsack wrapper's per-batch `playwright test` does not pay a fresh boot
-    // (measured at ~2.6s per batch) when the previous batch left a server listening.
+    // `vite preview` serves a prebuilt bundle, so a single instance serves every worker.
     reuseExistingServer: true,
     timeout: 300_000,
   },

@@ -13,6 +13,6 @@ tasks:
   bundle-e2e:
     extends: bundle
     env:
-      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_EDGE_BASE_URL: 'https://dxos.network'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: 'false'

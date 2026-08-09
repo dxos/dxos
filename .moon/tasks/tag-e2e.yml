@@ -4,9 +4,17 @@ tasks:
     command: pnpm exec playwright test
     args:
       - --config=src/playwright/playwright.config.ts
-    # The service worker breaks `page.route` interception, and specs assert on this rather than
-    # silently running without it — set here so no caller has to remember it.
+    # The suite's runtime environment, declared here rather than only in CI so that a local
+    # `moon run <app>:e2e` exercises the same edge and telemetry target the CI cells do. The
+    # workflow repeats these because moon hashes the AMBIENT value of any env var a task lists in
+    # `inputs`, so the job env has to agree with the task env or the warmed `bundle-e2e` entry
+    # hashes differently and is never read.
     env:
+      # Production edge — e2e must exercise what users hit, not a dev-tier worker.
+      DX_EDGE_BASE_URL: 'https://dxos.network'
+      DX_TELEMETRY_TAG: e2e
+      # The service worker breaks `page.route` interception, and specs assert on this rather than
+      # silently running without it.
       DX_PWA: 'false'
     deps:
       - test-utils:build
