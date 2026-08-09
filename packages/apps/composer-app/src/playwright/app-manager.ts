@@ -299,7 +299,30 @@ export class AppManager {
     // created, which took longer than 10s on firefox in run 31149685264. This wait is not the test's
     // assertion — the caller's count check is — so being generous here costs nothing but delays a
     // genuine "dialog never closed" failure.
-    await form.waitFor({ state: 'detached', timeout: 30_000 });
+    try {
+      await form.waitFor({ state: 'detached', timeout: 30_000 });
+    } catch (err) {
+      // `CreateSpaceDialog` only closes after `SpaceOperation.Create` resolves, and its `catchAll`
+      // leaves the dialog open showing `create-space-dialog.error.message` when it fails. Those are
+      // different bugs — a slow create versus a failed one — and a bare detach timeout cannot tell
+      // them apart, which is what made this flake (seen across `edit message`, `guest joins` and
+      // `selecting comment`) unattributable. Report the error text when the dialog is showing one.
+      const error = await form
+        .getByTestId('form.error')
+        .first()
+        .textContent()
+        .catch(() => null);
+      throw new Error(
+        error
+          ? `create-space failed: ${error.trim()}`
+          : // No error rendered and the submit button was clicked while enabled: the operation is
+            // still pending rather than rejected. Measured locally at ~1 in 12 (chromium) — the
+            // dialog stays open with a clean form, which is why this surfaced across unrelated
+            // tests as a bare detach timeout.
+            'create-space never completed: dialog still open with no error — SpaceOperation.Create did not resolve',
+        { cause: err },
+      );
+    }
   }
 
   async joinSpace(): Promise<void> {
