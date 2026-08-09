@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef, useState } from 'react';
@@ -45,9 +46,12 @@ export const CreateSpaceDialog = () => {
         });
         yield* invoke(LayoutOperation.UpdateDialog, { state: false });
       }).pipe(
-        Effect.catchAll((failure) =>
+        // `catchAllCause`, not `catchAll`: a defect (any rejected promise the create chain wraps with
+        // `Effect.promise`) is invisible to `catchAll`, and the dialog then neither closes nor shows
+        // an error — it just stays open, which is how this surfaced as a hung create.
+        Effect.catchAllCause((cause) =>
           Effect.sync(() => {
-            log.catch(failure);
+            log.catch(Cause.squash(cause));
             setError(t('create-space-dialog.error.message'));
           }),
         ),

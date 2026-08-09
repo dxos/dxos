@@ -16,7 +16,7 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { hues } from '@dxos/ui-types';
 import { iconValues } from '@dxos/ui-types';
 
-import { SpaceNotReadyError } from '../errors';
+import { EdgeReplicationError, SpaceNotReadyError } from '../errors';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
 import * as SpaceEvents from '../types/SpaceEvents';
 import { SpaceOperation } from './definitions';
@@ -43,7 +43,13 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         ),
       );
       if (edgeReplication) {
-        yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+        // `Effect.tryPromise`, not `Effect.promise`: the cause the dialog renders has to name the step
+        // it came from. Under `Effect.promise` a rejection arrived as a bare `Error`, which is why a
+        // transient edge hiccup was indistinguishable from any other create failure.
+        yield* Effect.tryPromise({
+          try: () => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED),
+          catch: EdgeReplicationError.wrap(),
+        });
       }
       yield* Effect.tryPromise({
         try: () => space.waitUntilReady(),
