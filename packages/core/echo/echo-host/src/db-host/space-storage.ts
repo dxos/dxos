@@ -77,7 +77,10 @@ export const countSpaceObjects = async (
   }
 
   for (const documentId of docs.linkedDocumentIds) {
-    const handle = await automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId);
+    // Storage-only: `stats()` is a local metric and must always resolve. A default load would wait
+    // on the network for a linked document that is not on disk, hanging `stats()` for an offline
+    // space; an unavailable document is simply not counted.
+    const handle = await automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId, { fetchFromNetwork: false });
     const doc = handle?.doc();
     if (doc) {
       addObjectCounts(counts, doc);

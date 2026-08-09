@@ -269,7 +269,9 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   /**
-   * Reclaim storage held by soft-deleted objects and unreachable documents / feed blocks.
+   * Reclaim storage held by soft-deleted objects and unreachable automerge documents (and their
+   * index rows). Feed-block reclamation is deferred on the local host — `purgedFeedBlocks` is
+   * currently always `0` and `feeds` is reserved.
    */
   Rpc.make('runGarbageCollection', {
     payload: RunGarbageCollectionRequest,

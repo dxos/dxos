@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -21,7 +21,7 @@ describe('storage metrics & garbage collection', () => {
     await builder.close();
   });
 
-  test('stats on an empty space', async () => {
+  test('stats on an empty space', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Expando] });
     const db = await peer.createDatabase();
 
@@ -33,7 +33,7 @@ describe('storage metrics & garbage collection', () => {
     expect(stats.feedBlocks).toEqual(0);
   });
 
-  test('stats counts alive and deleted objects and their documents', async () => {
+  test('stats counts alive and deleted objects and their documents', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Expando] });
     const db = await peer.createDatabase();
 
@@ -58,7 +58,7 @@ describe('storage metrics & garbage collection', () => {
     }
   });
 
-  test('stats counts feeds and feed blocks', async () => {
+  test('stats counts feeds and feed blocks', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
 
@@ -74,7 +74,7 @@ describe('storage metrics & garbage collection', () => {
     expect(stats.feedBlocks).toEqual(2);
   });
 
-  test('garbage collection unlinks deleted objects, wipes documents and clears index entries', async () => {
+  test('garbage collection unlinks deleted objects, wipes documents and clears index entries', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Expando] });
     const db = await peer.createDatabase();
 
@@ -102,7 +102,7 @@ describe('storage metrics & garbage collection', () => {
     expect(results.map((object) => object.value)).toEqual([1]);
   });
 
-  test('garbage collection is idempotent and survives reopen', async () => {
+  test('garbage collection is idempotent and survives reopen', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Expando] });
     const db = await peer.createDatabase();
 

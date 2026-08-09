@@ -9,11 +9,12 @@ This document specifies two per-space maintenance APIs on the ECHO `Database`:
 - `Database.runGarbageCollection()` — reclaims storage held by soft-deleted
   objects and the documents / feed blocks that are no longer reachable.
 
-Both are **per-space** and routed through the `DataService` RPC, so the same
-surface works whether the host is in-process (the local client worker) or remote
-(EDGE). The algorithm below is written to be re-implementable on EDGE, which
-holds the same logical storage (automerge documents + feeds) behind a different
-physical store.
+Both are **per-space** and routed through the `DataService` RPC, so the client
+API surface is identical whether the host is in-process (the local client
+worker) or remote (EDGE). Only the **local host implements them today**; the EDGE
+handlers return a not-implemented error (see the status table below). The
+algorithm is written to be re-implementable on EDGE, which holds the same logical
+storage (automerge documents + feeds) behind a different physical store.
 
 ## Implementation status (local host)
 
