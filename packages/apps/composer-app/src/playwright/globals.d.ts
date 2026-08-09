@@ -6,9 +6,6 @@
 // casting at every `page.evaluate` site. Everything here is optional and framework-internal: these
 // hooks appear only once the app has mounted (and `composer.manager` only after React does), so the
 // call sites still guard — the declaration buys type-checking, not a presence guarantee.
-//
-// `var` rather than `interface Window`, because the specs reach them through both `window` and
-// `globalThis` depending on which context the evaluate body runs in.
 
 import type { ProfilerSnapshot } from '../util/profiler';
 
