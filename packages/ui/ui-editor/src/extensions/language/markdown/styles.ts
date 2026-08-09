@@ -152,7 +152,6 @@ export const formattingStyles = EditorView.theme({
     textTransform: 'uppercase',
     color: 'var(--color-description)',
     backgroundColor: 'var(--color-input-surface)',
-    // borderBottom: '1px solid var(--color-cm-separator)',
   },
   '.cm-table-cell': {
     padding: '4px 8px',
@@ -160,7 +159,7 @@ export const formattingStyles = EditorView.theme({
     whiteSpace: 'pre-wrap',
     wordBreak: 'keep-all',
     verticalAlign: 'top',
-    backgroundColor: 'var(--color-base-surface)',
+    backgroundColor: 'var(--color-input-surface)',
     fontVariantNumeric: 'tabular-nums',
   },
 
