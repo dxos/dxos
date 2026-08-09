@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: test-profiling-leaks
+    status: active
+    user: dmaretskyi
+    host: Dmytros-MacBook-Pro-M4
+    created: 2026-08-09
+    summary: "Env-gated test-harness tooling — DX_PROFILE_TESTS emits V8 CPU profiles via --cpu-prof; DX_DEBUG_LEAKS heap-snapshots an existing suite (before/after, repeats, forced GC) with zero edits to the test files."
+    tasks: .agents/projects/test-profiling-leaks/TASKS.md
+    design: .agents/projects/test-profiling-leaks/DESIGN.md
+    prs: []
+    resume: "Design agreed, nothing implemented. Next: wire DX_PROFILE_TESTS + DX_DEBUG_LEAKS into per-package test config (forks/singleFork, --expose-gc, injected leak setupFile, config repeats). Decide global vs per-package config placement."
+
   - name: memory-usage
     status: active
     user: jdw
