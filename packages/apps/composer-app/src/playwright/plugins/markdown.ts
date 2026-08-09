@@ -12,11 +12,25 @@ export const Markdown = {
     //   and comment action being driven via the app graph.
     await locator.page().waitForTimeout(1_000);
 
+    // `fill()` resolves once the DOM write lands, which can precede the editor state holding the
+    // text. `indexOf` then returned -1 and the dispatch threw `RangeError: Selection points outside
+    // of document`. Wait for the position to exist rather than computing one that does not.
+    await locator
+      .page()
+      .waitForFunction(
+        (text) => (globalThis.composer?.editorView?.state.doc.toString().indexOf(text) ?? -1) >= 0,
+        text,
+      );
+
     await locator.evaluate((_element, text) => {
-      const composer = (window as any).composer;
-      const doc = composer.editorView.state.doc.text.join('\n');
-      const pos = doc.indexOf(text);
-      composer.editorView.dispatch({ selection: { anchor: pos, head: pos + text.length } });
+      const editorView = globalThis.composer?.editorView;
+      if (!editorView) {
+        throw new Error('composer.editorView is not exposed');
+      }
+      // `doc.toString()`, not `doc.text.join('\n')`: `text` is only present on a leaf node, so the
+      // latter reads undefined once the document is large enough for CodeMirror to build a tree.
+      const pos = editorView.state.doc.toString().indexOf(text);
+      editorView.dispatch({ selection: { anchor: pos, head: pos + text.length } });
     }, text);
   },
 

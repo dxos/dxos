@@ -301,6 +301,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const handleComment = useCallback(
     async (anchor: AnchoredTo.AnchoredTo, text: string) => {
+      // Persisting spans an await, and the reader can click another thread while it runs. Re-assert
+      // the selection only if nothing moved it in the meantime, so a submit cannot drag the marker
+      // back off the thread they have since chosen.
+      const selectionBefore = registry.get(stateAtom).current;
       await invokePromise(CommentOperation.AddMessage, {
         anchor,
         subject,
@@ -308,8 +312,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         text,
       });
 
+      const latest = registry.get(stateAtom);
+      if (latest.current !== selectionBefore) {
+        return;
+      }
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      registry.set(stateAtom, { ...registry.get(stateAtom), current: Obj.getURI(thread) });
+      registry.set(stateAtom, { ...latest, current: Obj.getURI(thread) });
     },
     [invokePromise, identity, subject, registry, stateAtom],
   );

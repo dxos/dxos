@@ -106,7 +106,16 @@ export const commentSync = (
         }
       })
       .concat(registry.get(stateAtom).drafts[objectId] ?? [])
-      .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'));
+      .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'))
+      // Dedupe by source thread, committed first — the same dedupe the companion does. Persisting a
+      // draft creates a new relation while its draft entry is still listed, so both name one thread
+      // for a frame, and without this the editor decorated it twice: two `cm-comment` spans with the
+      // same `data-comment-id`, which is a strict-mode violation for any test (or a11y tree) that
+      // addresses a comment by its text.
+      .filter(
+        (anchor, index, all) =>
+          all.findIndex((candidate) => Relation.getSource(candidate).id === Relation.getSource(anchor).id) === index,
+      );
 
   return [
     EditorView.updateListener.of((update) => {

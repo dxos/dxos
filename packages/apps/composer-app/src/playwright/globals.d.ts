@@ -18,6 +18,11 @@ declare global {
         profiler?: { snapshot?: () => ProfilerSnapshot };
         /** The plugin manager; shape is framework-internal, so readers narrow what they use. */
         manager?: { getModules?: () => unknown[] };
+        /** The focused markdown editor, exposed so specs can drive selection the way a user would. */
+        editorView?: {
+          state: { doc: { toString: () => string } };
+          dispatch: (spec: { selection: { anchor: number; head: number } }) => void;
+        };
         changeStorageVersionInMetadata?: (version: number) => void;
       }
     | undefined;

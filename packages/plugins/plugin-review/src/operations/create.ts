@@ -47,15 +47,19 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
 
       const state = registry.get(stateAtom);
       const existingDrafts = state.drafts[subjectId];
+      // Select in the same write that adds the draft, rather than through a nested `Select`
+      // invocation. That invocation resolved on its own schedule and could land after a click the
+      // reader had since made, reverting the selection to this draft for good — measured stomping a
+      // just-clicked thread ~450ms later, which is the comments e2e's missing `aria-current`.
       registry.set(stateAtom, {
         ...state,
+        current: Obj.getURI(thread),
         drafts: {
           ...state.drafts,
           [subjectId]: existingDrafts ? [...existingDrafts, anchor] : [anchor],
         },
       });
 
-      yield* Operation.invoke(CommentOperation.Select, { current: Obj.getURI(thread) });
       yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
         subject: Attention.linkedSegment('comments'),
       });
