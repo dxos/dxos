@@ -42,8 +42,15 @@ env:
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 # The event is part of the key because on a schedule `github.ref` is `refs/heads/main`: without it the
 # nightly shares a group with pushes to main and the next push cancels it mid-e2e.
+#
+# A manual dispatch additionally keys on its own run id, so repeated dispatches of one ref run in
+# parallel rather than each cancelling the last — measuring flakiness needs N independent samples of
+# the same commit, and serialized dispatches make that N times slower for no benefit. Every other
+# event keeps the one-run-per-ref behaviour, where superseding an in-flight run is what you want.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: >-
+    ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
+    }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
   cancel-in-progress: true
 
 # https://moonrepo.dev/docs/guides/ci
