@@ -51,14 +51,17 @@ export type OperationInfo = {
  * `globalThis.composer` — the app-layer console namespace, the counterpart to `__DXOS__`/`dxos`
  * (client and ECHO). Populated as the app boots, so every member is optional; the declaration buys
  * type-checking at call sites, not a presence guarantee.
+ *
+ * An interface rather than a type alias so apps can declaration-merge their own debug hooks onto it
+ * — a second `declare global { var composer }` elsewhere would collide with this one instead.
  */
-export type ComposerDevtools = {
+export interface ComposerDevtools {
   manager?: PluginManager.PluginManager;
   plugins?: () => PluginInfo[];
   operations?: (pluginId?: string) => OperationInfo[];
   invoke?: (key: string, input?: unknown) => Promise<unknown>;
   [key: string]: unknown;
-};
+}
 
 declare global {
   // eslint-disable-next-line no-var
