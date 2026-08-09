@@ -1,9 +1,10 @@
 # Test profiling & leak detection — Tasks
 
 _Resume: Tooling MERGED (PR #12523 → main f1c67714) — createNodeProject + tools/vitest/leak-setup.ts,
-gated via .moon/tasks/tag-ts-test.yml; `test-perf-leaks` skill added. Phase 4 sweep DONE across all
-eight layers: no leaks, no product CPU hotspots (full table + methodology in RESULTS.md). This
-follow-up branch was restarted from main after the merge._
+gated via .moon/tasks/tag-ts-test.yml; `test-perf-leaks` skill added. Phase 4 sweep DONE: leak check
+across all eight layers (no leaks); clean CPU profiles on the two heavy layers (assistant,
+agent-runtime — no product hotspot). Full table + methodology in RESULTS.md. This follow-up branch
+was restarted from main after the merge._
 
 ## Phase 1: CPU profiling (`DX_PROFILE_TESTS`)
 
@@ -39,8 +40,9 @@ Heap-snapshot before/after on an existing single suite, no test-file edits.
 Now that the harness works, actually run it against representative suites and act on what it finds.
 This is investigation/remediation, not tooling — one finding-set per layer, then fixes.
 
-Result: **no leaks or product CPU hotspots** across all eight representative layers — full table
-and methodology in `RESULTS.md`. Nothing to fix at this scale.
+Result: **no leaks** across all eight representative layers, and **no product CPU hotspot** in the
+two heavy layers that got clean profiles (assistant, agent-runtime) — full table and methodology in
+`RESULTS.md`. Nothing to fix at this scale.
 
 ### Tasks
 
@@ -49,7 +51,7 @@ and methodology in `RESULTS.md`. Nothing to fix at this scale.
 - [x] **CPU hotspots** — clean profiles (leak-mode off) of the two heavy layers: ~62% idle + module-load/transform + import-time Effect `Schema` construction; no product self-time hotspot.
 - [x] **Triage** — high assistant/agent baselines are one-time module-graph lazy init (post-warmup), not leaks; nothing to file.
 - [x] **Record findings** — `RESULTS.md`.
-- [ ] **(Optional next)** Point the tooling at long-lived integration suites (`echo-host` spaces/replication, `client-services` sessions) when leak-hunting a specific subsystem — that is where a real residual would show.
+- [ ] **(Optional next)** Point the tooling at long-lived integration suites (`echo-host` spaces/replication, `client-services` sessions) when leak-hunting a specific subsystem — they exercise longer-lived object lifetimes than the unit suites swept here.
 
 ## Follow-ups
 
