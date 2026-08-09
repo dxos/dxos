@@ -249,8 +249,16 @@ export default Capability.makeModule(
         }
         const entry = takePendingEntry(decoded.accessTokenId);
         if (!entry) {
+          // The in-memory map is per page load, so a reload mid-flow empties it. The persisted
+          // snapshot is the recovery path (`finalizeRedirectFlow`); leave it in place for that and
+          // say so, because returning silently here is indistinguishable from a completed flow.
+          log.warn('oauth message has no pending entry — leaving snapshot for redirect recovery', {
+            accessTokenId: decoded.accessTokenId,
+            hasSnapshot: !!readPendingSnapshot(decoded.accessTokenId),
+          });
           return;
         }
+        log.info('oauth message accepted', { accessTokenId: decoded.accessTokenId, mode: entry.mode });
         deletePendingSnapshot(decoded.accessTokenId);
         Obj.update(entry.token, (token) => {
           token.token = decoded.accessToken;
@@ -411,6 +419,7 @@ export default Capability.makeModule(
       accessToken: accessTokenValue,
     }) =>
       Effect.gen(function* () {
+        log.info('finalizeRedirectFlow', { accessTokenId });
         // Prefer the in-memory pending entry (same-tab redirect, rare).
         const inMemory = takePendingEntry(accessTokenId);
         if (inMemory) {
