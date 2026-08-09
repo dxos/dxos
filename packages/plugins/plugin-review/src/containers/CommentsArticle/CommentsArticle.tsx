@@ -261,16 +261,18 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const threadId = Obj.getURI(thread);
-      // Compare by object id, not URI spelling — both forms end in it. A thread's URI gains its space
-      // on persist (`echo:///<id>` → `echo://<spaceId>/<id>`), so an exact match missed a selection
-      // made moments earlier and re-attended a thread that was already current. That schedules a
-      // `ScrollIntoView`, which pulls focus to the plank ~170ms later — measured landing in the middle
-      // of the keystrokes of a message edit, so the typing went to a container and was lost.
-      if (state.current?.split('/').pop() === thread.id) {
+      // Recording and revealing are guarded differently, and conflating them broke one or the other.
+      // Always record: a thread's URI gains its space on persist (`echo:///<id>` →
+      // `echo://<spaceId>/<id>`), and skipping the write left the selection on the draft spelling, so
+      // a freshly created comment never showed the current marker.
+      const sameThread = state.current?.split('/').pop() === thread.id;
+      registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
+      if (sameThread) {
+        // Already the current thread — re-revealing its plank pulls focus there ~170ms later, which
+        // was measured landing mid-keystroke in a message edit and losing the typed text.
         return;
       }
 
-      registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
       // Scroll plank into view (deck handler).
       void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
     },

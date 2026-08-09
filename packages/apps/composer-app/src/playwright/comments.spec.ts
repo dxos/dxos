@@ -215,6 +215,11 @@ test.describe('Comments tests', () => {
   // were fixed alongside: lorem slices collided under strict-mode locators (unique anchor tokens
   // now), and `onSelect` routed through an async operation whose completions could reorder.
   test('selecting comment highlights thread and vice versa', async () => {
+    // The heaviest test here — three comment round-trips plus two selection gestures — measuring
+    // 38-53s of the default 60s budget on a loaded machine (CI measures 16-20s). Headroom, not a
+    // retry: the marker races it used to expose are fixed in `CommentsArticle` and `comment-sync`.
+    test.slow();
+
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
