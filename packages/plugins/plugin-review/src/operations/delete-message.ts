@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Relation } from '@dxos/echo';
+import { Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { Thread } from '@dxos/types';
@@ -19,11 +19,14 @@ const handler: Operation.WithHandler<typeof CommentOperation.DeleteMessage> = Co
       const db = Obj.getDatabase(subject);
       invariant(db, 'Database not found');
 
-      const msgIndex = thread.messages.findIndex((ref) => ref.target?.id === messageId);
-      const msg = thread.messages[msgIndex]?.target;
-      if (!msg) {
+      // Match on the reference's own id, not `ref.target?.id`: `target` reads undefined until the
+      // message object is loaded, so an unresolved ref made this find nothing and return quietly —
+      // the delete no-opped and the thread outlived its last message (comments e2e, 1 in 8).
+      const msgIndex = thread.messages.findIndex(Ref.hasEntityId(messageId));
+      if (msgIndex === -1) {
         return { messageIndex: -1 };
       }
+      const msg = yield* Effect.promise(() => thread.messages[msgIndex].load());
 
       if (msgIndex === 0 && thread.messages.length === 1) {
         // TODO(wittjosiah): This doesn't support restoring the thread.

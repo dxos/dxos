@@ -15,11 +15,15 @@ export const Markdown = {
     // `fill()` resolves once the DOM write lands, which can precede the editor state holding the
     // text. `indexOf` then returned -1 and the dispatch threw `RangeError: Selection points outside
     // of document`. Wait for the position to exist rather than computing one that does not.
+    // Bounded well under the test budget so a document that never receives the text fails here,
+    // naming the cause, instead of consuming the whole test and reporting whatever call was in
+    // flight when playwright tore the page down.
     await locator
       .page()
       .waitForFunction(
         (text) => (globalThis.composer?.editorView?.state.doc.toString().indexOf(text) ?? -1) >= 0,
         text,
+        { timeout: 15_000 },
       );
 
     await locator.evaluate((_element, text) => {

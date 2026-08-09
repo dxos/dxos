@@ -194,6 +194,9 @@ const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) =
 
 MessageBody.displayName = 'Message.Body';
 
+/** Stand-in for the text dependency while editing, so the value under the editor cannot rebuild it. */
+const EDITING_TEXT_DEP = Symbol('editing');
+
 const TextBlock = ({
   block,
   isAuthor,
@@ -232,7 +235,12 @@ const TextBlock = ({
         }),
       ],
     }),
-    [block.text, editing, isAuthor, themeMode, handleDocumentChange],
+    // While editing, the editor owns the text: pin the dependency so an incoming update to
+    // `block.text` cannot rebuild the view the reader is typing in. That rebuild destroyed the
+    // CodeMirror instance mid-edit and took focus with it, so the remaining keystrokes reached
+    // nothing and the edit was silently lost (comments e2e, load-dependent — 4 in 10 at two workers,
+    // 0 in 6 at one).
+    [editing ? EDITING_TEXT_DEP : block.text, editing, isAuthor, themeMode, handleDocumentChange],
   );
 
   useEffect(() => {
