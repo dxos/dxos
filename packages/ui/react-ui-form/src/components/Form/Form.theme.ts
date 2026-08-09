@@ -24,7 +24,7 @@ const formStyles = tv({
     fieldSet: '',
     field: '',
     // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
-    fieldLabel: 'min-h-(--dx-control) grid grid-cols-[1fr_auto_auto_auto] items-center select-none',
+    fieldLabel: 'min-h-(--dx-control) grid grid-cols-[1fr_auto_auto_auto] items-center',
     fieldLabelText: '',
     fieldDescription: 'text-description',
     fieldControl: '',
