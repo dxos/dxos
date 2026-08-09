@@ -34,6 +34,19 @@ Heap-snapshot before/after on an existing single suite, no test-file edits.
 
 - [x] **Document usage** — DESIGN.md §Implementation (both vars, one-suite assumption, output location, layer verification). PR body carries the quickstart.
 
+## Phase 4: Apply the tooling — leaks + CPU hotspots per layer
+
+Now that the harness works, actually run it against representative suites and act on what it finds.
+This is investigation/remediation, not tooling — one finding-set per layer, then fixes.
+
+### Tasks
+
+- [ ] **Pick + run representative suites per layer** with both `DX_PROFILE_TESTS` and `DX_DEBUG_LEAKS` (`--force`): echo, halo, mesh, app-sdk, composer, compute, **and assistant + agentService** (`assistant`, `assistant-toolkit`/`assistant-evals`, and the agent/`agent-runtime` service suites) as an explicit layer — these are heavy, long-lived-service tests where leaks/hotspots are most likely.
+- [ ] **Leaks** — for each suite, diff before/after snapshots in DevTools Comparison + check the `heap-samples.ndjson` slope; record per-constructor deltas and retainer chains for any monotonic grower.
+- [ ] **CPU hotspots** — open each `.cpuprofile` (DevTools/speedscope); note the dominant self-time frames (transform/runner overhead vs. real product code) per layer.
+- [ ] **Triage + file** — separate real leaks/hotspots from test-fixture accumulation and first-run lazy init; open issues or fixes for the real ones, starting with assistant/agentService if they dominate.
+- [ ] **Record findings** — a short RESULTS.md (or DESIGN.md §Findings) with per-layer leak/hotspot summary and links to any follow-up PRs/issues.
+
 ## Follow-ups
 
 - [ ] Apply the same `"$@"` passthrough fix to `test-browser` / `test-workerd` moon commands (node-only tooling left them untouched).
