@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -92,6 +92,20 @@ export const CommentThread = ({
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
   const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);
+  // Activating reveals the thread in the anchored document, which moves focus to that plank. Operating
+  // the thread's own controls is not that gesture: routing the edit button's click through here stole
+  // focus mid-keystroke from the message editor it had just opened, so the typing landed on a
+  // container div and the edit was lost (comments e2e, 2 in 8 — the captured `activeElement` went from
+  // `DIV[cm-content]` to `DIV[dx-container … dx-attention-surface …]` across the keypresses).
+  const handleContentClickCapture = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (event.target instanceof Element && event.target.closest('button')) {
+        return;
+      }
+      handleActivate();
+    },
+    [handleActivate],
+  );
   const handleResolve = useCallback(() => onResolve?.(anchor), [onResolve, anchor]);
   const handleMessageDelete = useCallback(
     (messageId: string) => onMessageDelete?.(anchor, messageId),
@@ -186,7 +200,7 @@ export const CommentThread = ({
         id={threadUri}
         classNames='pt-2 border-b border-subdued-separator last:border-none'
         current={current}
-        onClickCapture={handleActivate}
+        onClickCapture={handleContentClickCapture}
         onFocusCapture={handleAttend}
       >
         {header}

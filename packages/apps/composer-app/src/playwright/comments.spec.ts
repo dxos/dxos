@@ -67,12 +67,11 @@ test.describe('Comments tests', () => {
 
     const editedText = 'Edited';
 
-    // Entering edit mode rebuilds the tile's editor and focuses it from an effect, and that focus
-    // does not always land — the keystrokes then went to the document editor and the message was
-    // never edited (2 in 8 locally). Click the message editor to put the caret in it first. The keys
-    // themselves stay page-level: clearing the text makes `message`'s hasText filter stop matching,
-    // so a locator-scoped press would wait out the test on its own edit.
-    await messageTextbox.click();
+    // Edit mode autofocuses the message editor; wait for that rather than clicking into it, since a
+    // click inside the thread is the "reveal in the document" gesture and moves focus to that plank.
+    // The keys stay page-level: clearing the text makes `message`'s hasText filter stop matching, so
+    // a locator-scoped press would wait out the test on its own edit.
+    await expect(messageTextbox).toBeFocused();
     await host.page.keyboard.press('ControlOrMeta+A');
     await host.page.keyboard.press('Backspace');
     await host.page.keyboard.type(editedText);
