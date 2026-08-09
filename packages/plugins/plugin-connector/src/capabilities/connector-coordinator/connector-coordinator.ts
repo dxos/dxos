@@ -29,7 +29,13 @@ import * as ConnectorCoordination from '../../types/ConnectorCoordination';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
-import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
+import {
+  decodeOAuthMessageData,
+  initiateOAuthFlow,
+  isOAuthShapedMessage,
+  openOAuthPopupWindow,
+  openOAuthRedirectWindow,
+} from './oauth';
 import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
 import { reconcileCursors } from './reconcile-cursors';
 
@@ -233,14 +239,27 @@ export default Capability.makeModule(
 
     const handleOAuthPostMessage = (event: MessageEvent): Effect.Effect<void, never> =>
       Effect.gen(function* () {
+        // The window receives unrelated `postMessage` traffic (HMR, embeds), so these rejections are
+        // reported only for payloads shaped like an OAuth reply — enough to tell "the relay answered
+        // and we discarded it" from "the relay never answered", which silence cannot.
         if (!edgeOrigin) {
+          if (isOAuthShapedMessage(event.data)) {
+            log.warn('oauth message before any flow started', { origin: event.origin });
+          }
           return;
         }
         if (event.origin !== edgeOrigin) {
+          if (isOAuthShapedMessage(event.data)) {
+            log.warn('oauth message from an unexpected origin', { origin: event.origin, expected: edgeOrigin });
+          }
           return;
         }
         const decoded = decodeOAuthMessageData(event.data);
         if (decoded.tag === 'invalid') {
+          log.warn('oauth message could not be decoded', {
+            origin: event.origin,
+            keys: event.data && typeof event.data === 'object' ? Object.keys(event.data) : typeof event.data,
+          });
           return;
         }
         if (decoded.tag === 'failure') {
