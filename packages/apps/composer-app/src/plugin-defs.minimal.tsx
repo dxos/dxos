@@ -34,6 +34,10 @@ export const getDefaults = ({ isDev }: PluginConfig): string[] =>
     ProjectsPlugin.meta.profile.key,
     ReviewPlugin.meta.profile.key,
     RoutinePlugin.meta.profile.key,
+    // The Inbox's mail provider, defaulted on like the full set does: a mailbox offers no Connect
+    // action unless some registered connector claims its type, so enabling Inbox alone yields a
+    // mailbox nothing can bind. Headless, so it costs a capability module and no UI.
+    GooglePlugin.meta.profile.key,
   ]
     .filter(isTruthy)
     .flat();
