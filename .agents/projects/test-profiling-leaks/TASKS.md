@@ -2,7 +2,8 @@
 
 _Resume: IMPLEMENTED + verified across all six layers. Wired into `createNodeProject`
 (`vite.base.config.ts`) + `tools/vitest/leak-setup.ts`, gated via `.moon/tasks/tag-ts-test.yml`
-inputs. vitest-4 adaptations recorded in DESIGN.md §Implementation. Next: open PR, watch CI._
+inputs. vitest-4 adaptations recorded in DESIGN.md §Implementation. PR #12523 OPEN — monitoring
+CI to green, then merge; addressed CodeRabbit review (samples-file truncation, --force caching note)._
 
 ## Phase 1: CPU profiling (`DX_PROFILE_TESTS`)
 
@@ -22,7 +23,7 @@ Heap-snapshot before/after on an existing single suite, no test-file edits.
 
 ### Tasks
 
-- [x] **Author `leak-setup.ts`** — `settle()` (gc ×3), `afterEach` first-run baseline snapshot + per-test `heapUsed` sample, `afterAll` final snapshot.
+- [x] **Author `leak-setup.ts`** — `settle()` (gc ×3), `afterEach` first-run baseline snapshot + one `heapUsed` sample written per test to `heap-samples.ndjson` (truncated at run start; the slope is derived from those samples), `afterAll` final snapshot.
 - [x] **Env-gate injection** — `leak-setup.ts` added to `setupFiles` only when `DX_DEBUG_LEAKS` set.
 - [x] **Env-gate run mode** — `isolate:false`, single non-parallel fork, `--expose-gc` in `execArgv`.
 - [x] **Amplification** — config `repeats` unavailable in vitest 4; replaced with per-test `heapUsed` slope written to `profiles/heap-samples.ndjson`.

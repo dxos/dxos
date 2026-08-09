@@ -8,12 +8,19 @@
 // existing suite can be leak-checked with zero edits.
 // DESIGN: .agents/projects/test-profiling-leaks/DESIGN.md.
 
-import { appendFileSync, mkdirSync } from 'node:fs';
+import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { writeHeapSnapshot } from 'node:v8';
 import { afterAll, afterEach } from 'vitest';
 
 const outDir = process.env.DX_DEBUG_LEAKS_DIR ?? './profiles';
+const samplesFile = join(outDir, 'heap-samples.ndjson');
+
+// Truncate any samples file left by a prior run in this dir (appendFileSync would otherwise
+// concatenate runs and repeat `test` indices, so a slope could span unrelated captures). This
+// setup file is evaluated once per test file in the fork, matching the one-suite-per-run assumption.
+mkdirSync(outDir, { recursive: true });
+writeFileSync(samplesFile, '');
 
 // `--expose-gc` (added to the fork's execArgv when DX_DEBUG_LEAKS is set) is what makes `global.gc`
 // callable; without it the snapshots still write but retain garbage, so the deltas are meaningless.
@@ -48,8 +55,7 @@ let completed = 0;
 afterEach(async () => {
   await settle();
   const heapUsed = process.memoryUsage().heapUsed;
-  mkdirSync(outDir, { recursive: true });
-  appendFileSync(join(outDir, 'heap-samples.ndjson'), JSON.stringify({ test: ++completed, heapUsed }) + '\n');
+  appendFileSync(samplesFile, JSON.stringify({ test: ++completed, heapUsed }) + '\n');
   if (completed === 1) {
     snapshot('before.heapsnapshot');
   }

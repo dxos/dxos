@@ -146,7 +146,9 @@ packages/sdk/observability/src/cli-observability-secrets.json
 *.cpuprofile
 
 # DX_PROFILE_TESTS / DX_DEBUG_LEAKS test-instrumentation output (see .agents/projects/test-profiling-leaks).
+# `*.cpuprofile` is already ignored above; these cover custom DX_DEBUG_LEAKS_DIR locations too.
 *.heapsnapshot
+heap-samples.ndjson
 profiles/
 
 # Debug logging for require hooks

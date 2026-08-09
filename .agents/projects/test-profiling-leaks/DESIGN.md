@@ -121,6 +121,10 @@ Run: `DX_DEBUG_LEAKS=1 moon run <pkg>:test -- the-existing.test.ts`.
 
 ### Signal quality
 
+> Superseded — see "Implementation". vitest 4 has no config `repeats`; the slope
+> is sampled across the suite's own tests (one `heapUsed` reading per test) rather
+> than across repeats of a single test.
+
 - A real leak is monotonic in `repeats`. The two-point before/after diff is the
   investigation view; if variance is high, sample `process.memoryUsage().heapUsed`
   (after `settle()`) across repeats and check for a positive slope.
@@ -135,16 +139,13 @@ Run: `DX_DEBUG_LEAKS=1 moon run <pkg>:test -- the-existing.test.ts`.
 - `isolate: false` shares globals across the file's tests — a real behavior change
   vs. the default run, hence env-gated.
 
-## Config placement — OPEN
+## Config placement — RESOLVED (Option 1)
 
-Do **not** bake `singleFork`/`isolate:false`/`execArgv` into the shared
-`vite.base.config.ts` unconditionally — it would serialize every package's test
-run. Options to decide:
-
-1. Env-gated block inside the shared `createConfig`/node-config builder, so any
-   package inherits the behavior only when `DX_PROFILE_TESTS`/`DX_DEBUG_LEAKS` is
-   set. (Preferred — one place, opt-in by env.)
-2. Per-package opt-in helper for packages that want it.
+Shipped as Option 1: an env-gated block inside the shared node-config builder
+(`createNodeProject`), so any package inherits the behavior only when
+`DX_PROFILE_TESTS`/`DX_DEBUG_LEAKS` is set. Unset → the node project is unchanged,
+so nothing is serialized on normal runs. (Option 2, a per-package helper, was not
+needed.) Details in "Implementation".
 
 ## Rejected / out of scope
 
@@ -212,8 +213,23 @@ one-file usage does too.
 
 `--cpu-prof-dir` and the snapshot writer are relative to the **fork cwd** = the
 package dir, so artifacts land in `packages/<…>/<pkg>/profiles/` (per-package,
-gitignored via `*.heapsnapshot` + `profiles/`). `DX_DEBUG_LEAKS_DIR` overrides
-the leak output dir.
+gitignored via `*.heapsnapshot` + `heap-samples.ndjson` + `profiles/`).
+`DX_DEBUG_LEAKS_DIR` overrides the leak output dir. `leak-setup.ts` truncates
+`heap-samples.ndjson` at the start of each run so a slope never mixes captures.
+
+### Always pass `--force` for instrumented runs
+
+The env vars are declared as task inputs, so _toggling_ one busts the moon cache.
+But moon archives/hydrates only the declared outputs (`coverage/`, `test-results/`)
+— it does not treat the profiles as outputs (they are large diagnostic artifacts,
+not build products worth caching). So a _repeat_ instrumented run with identical
+inputs would hydrate the cached result and skip vitest, producing no fresh profile.
+Always run with `--force` so vitest actually re-executes:
+
+```bash
+DX_PROFILE_TESTS=1 moon run <pkg>:test --force -- src/foo.test.ts
+DX_DEBUG_LEAKS=1  moon run <pkg>:test --force -- src/foo.test.ts
+```
 
 ### Verified layers (2026-08-09)
 
