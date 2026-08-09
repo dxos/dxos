@@ -80,6 +80,29 @@ worktrees.
 It is reclaimed after inactivity or when the session ends. Anything not committed and pushed is
 gone. Push early rather than at the end of a long task.
 
+### The checkout can silently revert mid-session
+
+Twice in one session the working tree was found at an **older commit than the branch it had already
+pushed** — once ~30 commits behind, once back at a commit from before a dozen fixes. `origin` was
+intact both times, so nothing was lost, but every local measurement taken in that window had been
+running **pre-fix code while appearing to test the tip**, and one commit landed on the stale base
+(fixed by rebasing onto `origin/<branch>`).
+
+Nothing warns you. `git status` reads clean, because the tree is consistent — just old. The tell is
+indirect: a file lacking an edit you know you made, `git log -- <file>` showing only upstream
+commits, or a commit SHA you created reported as `unknown revision`.
+
+Before trusting any local test result, and before committing:
+
+```bash
+git merge-base --is-ancestor <a-commit-you-know-you-made> HEAD && echo current || echo STALE
+git fetch origin <branch> && git log --oneline -1 origin/<branch>   # compare with HEAD
+```
+
+Recover with `git merge --ff-only origin/<branch>` (never a fresh branch or worktree — see below).
+Then **rebuild before re-measuring**: the bundle on disk may have been built from either revision,
+and a stale `out/<app>` presents as `vite preview: directory does not exist`, not as a test failure.
+
 ## Network: everything HTTPS goes through a local proxy
 
 Outbound HTTPS is only reachable via a local agent proxy on loopback — read the address from
