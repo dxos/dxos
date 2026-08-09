@@ -10822,15 +10822,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/platform':
-        specifier: 'catalog:'
-        version: 0.96.2(effect@3.21.4)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
-      effect:
-        specifier: 3.21.4
-        version: 3.21.4
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -10844,6 +10838,9 @@ importers:
       '@effect/opentelemetry':
         specifier: 'catalog:'
         version: 0.63.0(@effect/platform@0.96.2(effect@3.21.4))(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.221.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(effect@3.21.4)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.96.2(effect@3.21.4)
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.29.0(effect@3.21.4)(vitest@4.1.10)
@@ -10862,6 +10859,9 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: 'catalog:'
         version: 1.43.0
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
       vite:
         specifier: '>=8.1.4'
         version: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -11543,15 +11543,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/platform':
-        specifier: 'catalog:'
-        version: 0.96.2(effect@3.21.4)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
-      effect:
-        specifier: 3.21.4
-        version: 3.21.4
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -11559,9 +11553,15 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.96.2(effect@3.21.4)
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.29.0(effect@3.21.4)(vitest@4.1.10)
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
       vite:
         specifier: '>=8.1.4'
         version: 8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)

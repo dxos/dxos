@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-jmap",
   "version": "0.10.0",
-  "private": true,
   "description": "DXOS plugin that syncs mail from a JMAP server (RFC 8620/8621) into a Mailbox.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -102,14 +101,14 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
-    "date-fns": "catalog:",
-    "effect": "catalog:"
+    "date-fns": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
+    "effect": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
