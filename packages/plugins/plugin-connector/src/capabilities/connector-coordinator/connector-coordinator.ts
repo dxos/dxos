@@ -24,6 +24,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
+import { meta } from '../../meta';
 import * as Connection from '../../types/Connection';
 import * as ConnectorCoordination from '../../types/ConnectorCoordination';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
@@ -122,6 +123,34 @@ const runOnTokenCreated = (
     ),
   );
 };
+
+/**
+ * Tell the user a sign-in was discarded.
+ *
+ * The provider's reply arrives on a channel the user cannot see, so a rejected one leaves the flow
+ * looking merely unfinished — they completed the popup and the app shows the same Connect button as
+ * before. The log records the reason; this is the part they can act on.
+ */
+const reportOAuthRejected = (invoker: Operation.OperationService, descriptionKey: string): Effect.Effect<void, never> =>
+  Effect.ignore(
+    invoker.invoke(LayoutOperation.AddToast, {
+      id: `${meta.profile.key}.oauth-rejected`,
+      icon: 'ph--warning--regular',
+      title: ['oauth-rejected.title', { ns: meta.profile.key }],
+      description: [descriptionKey, { ns: meta.profile.key }],
+    }),
+  );
+
+/** Report a sign-in the provider itself rejected, carrying its reason verbatim. */
+const reportOAuthFailed = (invoker: Operation.OperationService, reason: string): Effect.Effect<void, never> =>
+  Effect.ignore(
+    invoker.invoke(LayoutOperation.AddToast, {
+      id: `${meta.profile.key}.oauth-failed`,
+      icon: 'ph--warning--regular',
+      title: ['oauth-failed.title', { ns: meta.profile.key }],
+      description: reason,
+    }),
+  );
 
 const navigateToNewConnection = (
   invoker: Operation.OperationService,
@@ -251,6 +280,7 @@ export default Capability.makeModule(
         if (event.origin !== edgeOrigin) {
           if (isOAuthShapedMessage(event.data)) {
             log.warn('oauth message from an unexpected origin', { origin: event.origin, expected: edgeOrigin });
+            yield* reportOAuthRejected(invoker, 'oauth-rejected.description');
           }
           return;
         }
@@ -260,10 +290,13 @@ export default Capability.makeModule(
             origin: event.origin,
             keys: event.data && typeof event.data === 'object' ? Object.keys(event.data) : typeof event.data,
           });
+          yield* reportOAuthRejected(invoker, 'oauth-undecodable.description');
           return;
         }
         if (decoded.tag === 'failure') {
           log.warn('oauth flow failed', { reason: decoded.reason });
+          // The provider's own reason, not one of ours: it is the only account of what went wrong.
+          yield* reportOAuthFailed(invoker, decoded.reason);
           return;
         }
         const entry = takePendingEntry(decoded.accessTokenId);
