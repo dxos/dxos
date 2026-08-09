@@ -1,6 +1,6 @@
 # Agentic Code Review — Tasks
 
-_Resume: Phases 1–2 built + dogfooded with real Sonnet subagents; open PR. Next: Phase 3 — PR-comment posting in finalize.mjs + CI wiring. Uncommitted: none (pending commit of the skill). Last: implemented the harness (lib + prepare/finalize + seed rules + SKILL.md); switched rule ext `.mdl`→`.rule.md` (collision)._
+_Resume: Phases 1–2 built + dogfooded; open PR #12526. Next: Phase 3 — PR-comment posting in finalize.mjs + CI wiring. Uncommitted: pending commit of the `.mdl`-block rewrite. Last: rules are now `rule` blocks in `.mdl` files (parser extracts them; SPEC/PLUGIN descriptors skipped) — reverted the `.rule.md` extension per format intent._
 
 ## Phase 0: Design & scaffolding
 
@@ -18,8 +18,8 @@ usable manually before any CI wiring.
 
 ### Tasks
 
-- [x] **Rule parser** (`lib/frontmatter.mjs` + `lib/rule.mjs`) — frontmatter (`name`,`title`,`files`,`grep`,`severity`,`scope`) + markdown body; validated; glob base = rule dir or repo root (`scope`). Ext is `.rule.md` (not `.mdl` — collides with SPEC.mdl/PLUGIN.mdl).
-- [x] **Rule discovery** (`lib/discover.mjs`) — `git ls-files '*.rule.md'` (tracked + untracked-not-ignored), honoring `.gitignore`.
+- [x] **Rule parser** (`lib/mdl.mjs`) — read `.mdl` docs, extract ` ```mdl ` blocks, keep `rule` blocks (`files`,`grep`,`severity`,`scope` + instruction prose); validated; glob base = `.mdl` dir or repo root (`scope`). Rules ride the existing `.mdl` format, not a new extension.
+- [x] **Rule discovery** (`lib/discover.mjs`) — `git ls-files '*.mdl'` (tracked + untracked-not-ignored), honoring `.gitignore`; flattens `rule` blocks across files; descriptor `.mdl` (SPEC/PLUGIN) yield none.
 - [x] **Diff-base resolution** (`prepare.mjs`) — scan `.agents/reviews/*/REVIEW.md` for finalized reviews whose `commit` is an ancestor of HEAD; newest wins; fallback to merge-base with first main-like ref, then HEAD.
 - [x] **`prepare.mjs`** — changed files vs base (committed + staged + unstaged + untracked), intersect with rule globs, apply `grep`, group (one rule × ≤chunk files), write STAGING.md + blank REVIEW.md + `groups/NN.md` stubs, print paths + group count + per-group line.
 - [x] **Diagnostic parser** (`lib/diagnostics.mjs`) — parse `# WARN|ERROR \`file:line[:col]\`` + body; dedupe + sort helpers.
@@ -32,7 +32,7 @@ Make Claude own the loop.
 ### Tasks
 
 - [x] **`SKILL.md`** — workflow: run prepare → read group count → spawn N Sonnet subagents with the per-group brief → wait → run finalize → report. Includes the subagent prompt template and rule-authoring guide.
-- [x] **Seed example rules** (`rules/*.rule.md`, `scope: repo`) — no-sleep-in-test, no-casts, no-compat-shims, private-new-packages, workspace-deps.
+- [x] **Seed example rules** (`rules/non-negotiables.mdl`, five `rule` blocks, `scope: repo`) — no-sleep-in-test, no-casts, no-compat-shims, private-new-packages, workspace-deps; with an `## Extensions` decl + inline `ext rule` definition.
 - [x] **Dogfood** — ran the full harness on a probe with real Sonnet subagents; diagnostics (`as any`, non-null `!`, sleep/setTimeout) landed in REVIEW.md with accurate line numbers.
 
 ## Phase 3: PR + CI integration

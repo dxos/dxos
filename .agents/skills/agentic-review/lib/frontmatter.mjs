@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-// Dependency-free YAML-frontmatter parser for the `.rule.md` and REVIEW.md
-// subset. A standalone script cannot reliably resolve a workspace-hoisted YAML
-// package under pnpm, and the subset here (scalars, inline arrays, block
-// sequences) does not warrant a full YAML dependency.
+// Dependency-free YAML-frontmatter parser for the REVIEW.md store file. A
+// standalone script cannot reliably resolve a workspace-hoisted YAML package
+// under pnpm, and the subset here (scalars, inline arrays, block sequences) does
+// not warrant a full YAML dependency.
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
 

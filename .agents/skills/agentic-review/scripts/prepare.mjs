@@ -3,9 +3,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// Prepare an agentic review run: discover `.rule.md` rules, resolve the diff
-// base, intersect changed files with each rule, group for subagents, and write
-// the review store (STAGING.md, blank REVIEW.md, groups/NN.md stubs).
+// Prepare an agentic review run: discover `rule` blocks in `.mdl` files, resolve
+// the diff base, intersect changed files with each rule, group for subagents, and
+// write the review store (STAGING.md, blank REVIEW.md, groups/NN.md stubs).
 //
 // Usage:
 //   node prepare.mjs [--chunk=15] [--base=<ref>] [--main=origin/main] [--slug=<slug>]

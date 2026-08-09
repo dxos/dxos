@@ -17,45 +17,41 @@ files to stay focused and cheap.
 **Claude owns the process** — it is packaged as a review _skill_ plus scripts, so
 the harness drives prepare → spawn subagents → finalize.
 
-## Rule format — `.rule.md`
+## Rule format — a `rule` block in `.mdl`
 
-> **Extension changed from `.mdl` during implementation.** The repo already uses
-> `.mdl` for module descriptors (`SPEC.mdl`, `PLUGIN.mdl`, deus lang files — 90+
-> of them), so discovery would have tried to parse them as rules. Review rules
-> use the collision-free **`.rule.md`** suffix instead.
+A rule is **one block type within the repo's `.mdl` document format** (see
+`packages/reflect/deus/lang/core.mdl`): YAML frontmatter + markdown body + typed
+` ```mdl ` fenced blocks. A `.mdl` file can define `type`, `feat`, `test`, … and
+now `rule`. The harness scans every `.mdl` file, extracts the `rule` blocks, and
+ignores the rest — so descriptor documents (`SPEC.mdl`, `PLUGIN.mdl`, 90+ of
+them) define no rules and are passed over without error. This is why rules are
+**not** a new file extension: they ride the existing format.
 
-Rules live in `.rule.md` files anywhere in the repo, ideally colocated with the
-code they govern. `files:` globs resolve **relative to the rule file's directory**
-by default (`scope: dir`), so a package can drop a rule next to its own tests. A
-rule sets **`scope: repo`** to resolve its globs from the repo root instead —
-used by the shared seed rules under the skill's `rules/` dir.
+Rules can live anywhere — colocated in a package's `.mdl`, or in a shared
+document (`rules/non-negotiables.mdl`). `files` globs resolve **relative to the
+`.mdl` file's directory** by default (`scope: dir`); a rule sets **`scope: repo`**
+to resolve from the repo root instead (the shared seed rules do this).
 
-Format: **YAML frontmatter + markdown body** (the body is the instructions,
-allowing rich markdown). One rule per file; the filename slug is the rule id.
+A `rule` block: header `rule <id>: <title>`, then instruction prose, then fields.
 
-```markdown
----
-name: no-sleep-in-test
-title: No sleep in tests
-scope: repo # repo | dir (default dir); globs resolve from repo root or this file's dir
-files: 'src/**/*.test.ts' # glob(s), relative to the scope base; array allowed
-grep: sleep # optional pre-filter; only files matching are reviewed
-severity: warn # warn | error (default warn)
----
-
-Using `sleep` or polling is disallowed in tests, prefer subscribing to events.
-
-Flag any use of `sleep`, `setTimeout`-based waits, or busy-poll loops. Prefer
-event subscription, `Trigger`, or Effect `TestClock`.
+````markdown
+```mdl
+rule no-sleep-in-test: No sleep in tests
+  Prose instructions (inline `code`, no fenced blocks — it's already in a fence).
+  scope: repo # repo | dir (default dir)
+  files: # one glob or a list; relative to the scope base
+    - packages/**/*.test.ts
+  grep: sleep|setTimeout # optional regex pre-filter over file contents
+  severity: warn # warn | error (default warn)
 ```
+````
 
 - `grep` is an **optimization + precision** filter: a file only enters a group
-  for this rule if it contains the pattern. Cheap way to skip files the rule
-  can't apply to. Optional.
-- `files` may be a string or a list. Globs are matched against repo-relative
-  paths after resolving relative to the rule dir.
-- Design decision: frontmatter+body over the inline-YAML sketch in the brief —
-  it keeps `.mdl` genuinely markdown-editable and lets instructions be long.
+  for this rule if its contents match. Values are literal (no YAML quoting).
+- `files` may be a scalar or a list.
+- Design decision: reuse the `.mdl` block format rather than invent a new file
+  type — a rule is one of many things an `.mdl` document can carry, and the
+  parser's job is to read `.mdl` files and find the rules in them.
 
 ## Store — `.agents/reviews/<slug>/`
 
@@ -118,7 +114,8 @@ Column is optional.
 
 ### Step 1 — prepare (`prepare.mjs`)
 
-1. Discover all `.mdl` rule files (walk repo, honor `.gitignore`).
+1. Discover all `rule` blocks across the repo's `.mdl` files (walk repo, honor
+   `.gitignore`; non-rule blocks and descriptor documents are skipped).
 2. **Resolve the diff base.** Scan `.agents/reviews/*/REVIEW.md` for **finalized**
    reviews whose `commit` is an **ancestor of HEAD** (`git merge-base --is-ancestor`).
    Pick the one with the **most recent** such commit → that's the base. This makes
@@ -207,13 +204,17 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
 
 ## Decisions log
 
-- **Rule extension is `.rule.md`, not `.mdl`** — `.mdl` collides with the repo's
-  module descriptors (`SPEC.mdl`/`PLUGIN.mdl`). Format unchanged: YAML
-  frontmatter + markdown body.
-- Added **`scope: dir|repo`** to the rule frontmatter (default `dir`); `repo`
+- **A rule is a `rule` block inside an `.mdl` document**, not a new file
+  extension. The parser reads every `.mdl` file, extracts `rule` blocks, and
+  ignores all other block types — so the repo's existing `SPEC.mdl`/`PLUGIN.mdl`
+  descriptors (90+) coexist and simply define no rules. (Earlier iteration tried
+  a dedicated `.rule.md`; reverted per the format's intent.)
+- Added a **`scope: dir|repo`** field to the rule block (default `dir`); `repo`
   resolves globs from the repo root, for shared/seed rules.
-- Globs resolve relative to the scope base (rule dir, or repo root when
-  `scope: repo`).
+- Globs resolve relative to the scope base (the `.mdl` file's dir, or repo root
+  when `scope: repo`).
+- `rule`-block values are literal (no YAML quoting), matching the `.mdl` block
+  body syntax.
 - Per-group fragment files (`groups/NN.md`), merged at finalize — not concurrent
   appends to one file.
 - Base resolution scans finalized reviews for the newest HEAD-ancestor commit;

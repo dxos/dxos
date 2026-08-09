@@ -9,13 +9,14 @@ import { globSync, readFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 
 import { git } from './git.mjs';
-import { loadRule, RULE_SUFFIX } from './rule.mjs';
+import { loadRules, RULE_SUFFIX } from './mdl.mjs';
 
 const toPosix = (path) => path.split(sep).join('/');
 
 /**
- * Discover `.rule.md` files tracked or untracked-but-not-ignored, so `.gitignore`
- * is honored and freshly added rules are still picked up.
+ * Discover every `rule` block across the repo's `.mdl` files (tracked and
+ * untracked-but-not-ignored, so `.gitignore` is honored and freshly added rules
+ * are still picked up). Descriptor `.mdl` files with no `rule` block yield none.
  */
 export const discoverRules = (root) => {
   const glob = `*${RULE_SUFFIX}`;
@@ -24,7 +25,7 @@ export const discoverRules = (root) => {
   const paths = new Set(
     [...tracked.split(/\r?\n/), ...untracked.split(/\r?\n/)].map((line) => line.trim()).filter(Boolean),
   );
-  return [...paths].sort().map((relPath) => loadRule(resolve(root, relPath)));
+  return [...paths].sort().flatMap((relPath) => loadRules(resolve(root, relPath)));
 };
 
 /** Compile a grep pattern as a RegExp, falling back to a literal match. */
