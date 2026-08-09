@@ -86,17 +86,6 @@ export const wrapFunctionHandler = (
 
       // eslint-disable-next-line no-useless-catch
       try {
-        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
-          try {
-            Schema.decodeUnknownSync(Schema.toType(func.input), { onExcessProperty: 'error' })(data);
-          } catch (error: any) {
-            throw new InvalidOperationInputError({
-              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
-              cause: error,
-            });
-          }
-        }
-
         await using funcContext = await new FunctionContext(context, opts).open();
 
         const types = [...(opts.types ?? []), ...(func.types ?? [])];
@@ -109,6 +98,19 @@ export const wrapFunctionHandler = (
           funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
             ? decodeRefsFromSchema(func.input.ast, data, funcContext.db)
             : data;
+
+        // Validated after ref hydration: the type side of a `Ref` field admits only a `Ref`
+        // instance, and callers send the encoded `{'/': dxn}` form.
+        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
+          try {
+            Schema.decodeUnknownSync(Schema.toType(func.input), { onExcessProperty: 'error' })(dataWithDecodedRefs);
+          } catch (error: any) {
+            throw new InvalidOperationInputError({
+              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
+              cause: error,
+            });
+          }
+        }
 
         let result: any = await func.handler(dataWithDecodedRefs);
 

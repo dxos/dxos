@@ -397,11 +397,6 @@ export const createEchoReferenceSchema = (
   return refSchema;
 };
 
-const getSchemaExpectedName = (ast: SchemaAST.AST): string | undefined =>
-  SchemaAST.getAnnotation<string>(SchemaAST.IdentifierAnnotationId)(ast) ??
-  SchemaAST.getAnnotation<string>(SchemaAST.TitleAnnotationId)(ast) ??
-  SchemaAST.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(ast);
-
 /**
  * Load-source ceiling for a resolution request. Cheaper tiers are always probed first; the
  * ceiling caps how far a request is allowed to reach:
