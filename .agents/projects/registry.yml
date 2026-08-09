@@ -14,8 +14,8 @@ projects:
     summary: 'Env-gated test-harness tooling — DX_PROFILE_TESTS emits V8 CPU profiles via --cpu-prof; DX_DEBUG_LEAKS heap-snapshots an existing suite (before/after + per-test heapUsed slope, forced GC) with zero edits to the test files.'
     tasks: .agents/projects/test-profiling-leaks/TASKS.md
     design: .agents/projects/test-profiling-leaks/DESIGN.md
-    prs: []
-    resume: 'IMPLEMENTED + verified on echo/halo/mesh/sdk/composer/compute. Env-gated block in createNodeProject (vite.base.config.ts): DX_PROFILE_TESTS → --cpu-prof; DX_DEBUG_LEAKS → tools/vitest/leak-setup.ts (before/after heap snapshots + per-test heapUsed slope). vitest-4 flattened the pool model (no poolOptions.forks/singleFork; execArgv/isolate/fileParallelism/maxWorkers top-level) and dropped config repeats — recorded in DESIGN.md §Implementation. Also fixed the moon test task''s missing ''"$@"'' passthrough so `moon run <pkg>:test -- <file>` filters to one file. Gitignored *.heapsnapshot + profiles/. Next: open PR, watch CI; follow-up = same passthrough fix for test-browser/test-workerd.'
+    prs: [12523]
+    resume: 'PR #12523 OPEN — https://github.com/dxos/dxos/pull/12523 · preview https://pr-12523-composer-main.dxos.workers.dev. IMPLEMENTED + verified on echo/halo/mesh/sdk/composer/compute. Env-gated block in createNodeProject (vite.base.config.ts): DX_PROFILE_TESTS → --cpu-prof; DX_DEBUG_LEAKS → tools/vitest/leak-setup.ts (before/after heap snapshots + per-test heapUsed slope). vitest-4 flattened the pool model (no poolOptions.forks/singleFork; execArgv/isolate/fileParallelism/maxWorkers top-level) and dropped config repeats — recorded in DESIGN.md §Implementation. Also fixed the moon test task''s missing ''"$@"'' passthrough so `moon run <pkg>:test -- <file>` filters to one file. Gitignored *.heapsnapshot + profiles/. Next: open PR, watch CI; follow-up = same passthrough fix for test-browser/test-workerd.'
 
   - name: memory-usage
     status: active
