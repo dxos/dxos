@@ -112,5 +112,10 @@ export type CommentState = {
   toolbar: Record<string, boolean>;
   /** In-memory draft threads. */
   drafts: Record<string, AnchoredTo.AnchoredTo[]>;
+  /**
+   * The current thread, as an object id or a URI — writers differ, and a URI's spelling changes when
+   * a draft persists (`echo:///<id>` → `echo://<spaceId>/<id>`), so readers MUST compare by the last
+   * path segment (the object id), never by string equality.
+   */
   current?: string | undefined;
 };

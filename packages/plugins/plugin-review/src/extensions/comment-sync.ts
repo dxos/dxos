@@ -144,11 +144,19 @@ export const commentSync = (
       readonly: suggestionBranch,
       // `getAnchors()` is already branch-scoped, so selection-style highlights show only the review
       // branch's comments.
+      // The editor comment id is the thread's stable OBJECT id, never its URI: a draft thread's URI
+      // gains its space when its first message persists it (`echo:///<id>` → `echo://<spaceId>/<id>`),
+      // and every id comparison downstream (decoration `data-current`, `scrollCommentIntoView`'s
+      // lookup, the delete/update matching below) breaks for the whole persist window if the two
+      // sides hold different spellings. Measured: clicking a thread while a sibling persisted made
+      // `scrollCommentIntoView` miss its lookup and silently no-op, so the debounced proximity
+      // selection restored the previous thread — a terminal wrong-marker state (firefox 3-of-3 under
+      // worker contention).
       getComments: () =>
         getAnchors()
           .filter((anchor) => anchor.anchor)
           .map((anchor) => ({
-            id: Obj.getURI(Relation.getSource(anchor)),
+            id: Relation.getSource(anchor).id,
             cursor: anchor.anchor,
           })),
       subscribe: (sink) => {
@@ -173,7 +181,8 @@ export const commentSync = (
       onDelete: ({ id }) => {
         const drafts = registry.get(stateAtom).drafts[objectId];
         if (drafts) {
-          const index = drafts.findIndex((draft) => Relation.getURI(draft) === id);
+          // `id` is the source thread's object id (see getComments), so drafts match by source too.
+          const index = drafts.findIndex((draft) => Relation.getSource(draft).id === id);
           if (index !== -1) {
             const current = registry.get(stateAtom);
             registry.set(stateAtom, {
@@ -194,7 +203,7 @@ export const commentSync = (
         }
       },
       onUpdate: ({ id, cursor }) => {
-        const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getURI(d) === id);
+        const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getSource(d).id === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           Obj.update(thread, (thread) => {

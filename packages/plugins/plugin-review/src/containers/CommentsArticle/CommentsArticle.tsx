@@ -277,11 +277,15 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return;
       }
 
-      const threadId = Obj.getURI(Relation.getSource(anchor) as Thread.Thread);
+      // The stable OBJECT id, matching the id the comment-sync extension registers comments under.
+      // Passing the URI here broke the lookup for the whole persist window (`echo:///<id>` →
+      // `echo://<spaceId>/<id>`): `scrollCommentIntoView` missed and silently no-op'd, so the editor
+      // never marked the clicked thread current and the previous thread's highlight survived.
+      const threadId = (Relation.getSource(anchor) as Thread.Thread).id;
 
-      // Scroll within content to anchor (comment config per typename). Fall back to the object URI:
-      // this is what tells the editor which thread is current, so skipping it when the companion has
-      // no attendable id leaves the previous comment highlighted while the app selection moves on.
+      // Scroll within content to anchor (comment config per typename). This is what tells the editor
+      // which thread is current, so skipping it when the companion has no attendable id leaves the
+      // previous comment highlighted while the app selection moves on.
       const typename = Obj.getTypename(subject);
       const commentConfig = commentConfigs.find(({ id }) => id === typename);
       if (commentConfig?.scrollToAnchor) {
