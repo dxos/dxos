@@ -62,9 +62,16 @@ delivers one snippet, prints the JSON result, and exits.
 
 | Variable                            | Use                                                                                                                                                                |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `COMPOSER_RECOVERY_CONNECT_TIMEOUT` | Raise to `15000` when the first attempt times out — a backgrounded tab throttles its long-poll past the 6 s default.                                               |
+| `COMPOSER_RECOVERY_CONNECT_TIMEOUT` | Raise to `15000`-`25000` when the browser fails to connect within the 6 s default. A tab the user is not looking at polls slowly; the session is usually alive.    |
 | `COMPOSER_RECOVERY_TIMEOUT`         | Raise when the snippet blocks (see `alert` below); default 120 s.                                                                                                  |
 | `COMPOSER_RECOVERY_HTTPS=1`         | Required on HTTPS origins — an HTTPS page cannot fetch `http://127.0.0.1` (mixed content). Needs an mkcert-trusted cert; see `composer-forensics/COMMANDS.md` §12. |
+
+**Give the command a generous timeout of your own.** A probe that walks the DOM of a loaded deck
+can take minutes. The port is not what gives up — the page keeps working and the result still
+arrives. What fails is the _caller's_ timeout, and if your harness moves the command to the
+background at that point, its output completes later in the background file. Read that file only
+after the completion notification: reading it early looks exactly like an empty result, which
+invites the wrong diagnosis.
 
 ## 3. Writing snippets
 
@@ -147,6 +154,28 @@ return { placed: after.some((o) => o.id === object.id), collectionCount: collect
 
 Passing `target: space.db` adds to the space root instead of a collection. `addObject` returns a
 DXN-form id (`echo://<spaceId>/<objectId>`), not the bare object id.
+
+### …and opening it in the navtree
+
+`layout.operation.open` takes **navigation paths**, not object ids:
+
+```
+root/BEJ6664GTXJQ3QAKERGFWHXILSL32S6YN/content/collections/01KZHX7Z1XHX0YS9QP9F23PZ7G
+```
+
+Do not build that string. `addObject` already computed it — resolving the type slug, and for
+view-holding objects the view's target type — and returns it as `subject`, so step two's output
+is step three's input:
+
+```js
+const added = await composer.invoke('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+await space.db.flush();
+await composer.invoke('org.dxos.plugin.layout.operation.open', { subject: added.subject });
+```
+
+Opening the path is what moves the navtree selection; confirm with `aria-selected`/`aria-current`
+rather than assuming. `layout.operation.select` is a different thing — it applies a selection
+_within_ an attention context (`{ contextId, subject: Selection }`) and does not drive the tree.
 
 ## 6. Gotchas
 
