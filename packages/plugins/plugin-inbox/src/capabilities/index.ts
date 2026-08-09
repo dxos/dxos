@@ -8,8 +8,6 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
-import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
@@ -24,11 +22,6 @@ export const IdentitySpecs = Capability.lazyModule(
   'IdentitySpecs',
   { provides: [SpaceCapabilities.IdentitySpec] },
   () => import('./identity-specs'),
-);
-export const Connector = Capability.lazyModule(
-  'Connector',
-  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
 );
 export const ContactExtractor = Capability.inlineModule(
   'contact-extractor',

@@ -184,6 +184,12 @@ export default Capability.makeModule(
             if (!db) {
               return [];
             }
+            // Read the connector list reactively BEFORE anything can return early. Connector modules
+            // activate lazily, so on a fresh load this runs while the list is still empty — and an
+            // early return that never touched the atom registered no dependency, so the action never
+            // reappeared once the provider activated. That is why Connect showed up only right after
+            // creating a mailbox: unrelated graph churn, not the capability arriving.
+            const allConnectors = get(connectorAtom).flat();
             const capabilities = yield* Capability.Service;
             const connectorIds =
               typeof annotation.connectorIds === 'function'
@@ -206,7 +212,6 @@ export default Capability.makeModule(
               // Connected: the owning plugin's own sync/generate action covers this state.
               return [];
             }
-            const allConnectors = get(connectorAtom).flat();
             return connectorAuthActions({
               connectorIds,
               db,

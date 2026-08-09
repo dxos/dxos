@@ -40,8 +40,10 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
 
+  // `persist` keeps the session across reloads of this tab: an OAuth redirect or a HMR reload would
+  // otherwise strand the agent mid-investigation with a dead session id.
   const handleToggle = useCallback(
-    (checked: boolean) => (checked ? controller.start() : controller.stop()),
+    (checked: boolean) => (checked ? controller.start({ persist: true }) : controller.stop()),
     [controller],
   );
 
