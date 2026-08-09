@@ -25,10 +25,8 @@ export default Config2.make({
       server's state string drives a bounded delta per run, and folder and keyword changes reconcile
       against messages already in the feed.
     `,
-    // Every operation here runs against plugin-inbox's Mailbox type and its mail-sync harness, so this
-    // provider is inert on its own.
     dependsOn: ['org.dxos.plugin.inbox'],
-    icon: { key: 'ph--envelope--regular', hue: 'indigo' },
+    icon: { key: 'ph--envelope-simple-open--regular', hue: 'green' },
     tags: ['alpha', 'connector'],
   },
 });

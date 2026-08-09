@@ -25,10 +25,8 @@ export default Config2.make({
       first run to an updated-since window after that. Gmail's own labels become read-only tags, while
       its system labels map onto DXOS's canonical ones so a Gmail star and a local star are one tag.
     `,
-    // Every operation here runs against plugin-inbox's Mailbox type and its mail-sync harness, so this
-    // provider is inert on its own.
     dependsOn: ['org.dxos.plugin.inbox'],
-    icon: { key: 'ph--google-logo--regular', hue: 'red' },
+    icon: { key: 'ph--google-logo--regular', hue: 'green' },
     tags: ['alpha', 'connector'],
   },
 });
