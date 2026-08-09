@@ -35,7 +35,9 @@ test.describe('Kanban MutableSchema', () => {
   });
 
   test.afterEach(async () => {
-    await page.close();
+    // `afterEach` runs even when `beforeEach` skipped, so `page` may never have been assigned —
+    // closing it unconditionally turned every skipped webkit test into a teardown failure.
+    await page?.close();
   });
 
   test('rearrange columns', async () => {
