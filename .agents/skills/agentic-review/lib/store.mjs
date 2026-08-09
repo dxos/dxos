@@ -45,11 +45,19 @@ export const renderFrontmatter = (data) => {
   return `---\n${lines.join('\n')}\n---\n`;
 };
 
-/** Read a REVIEW.md file into `{ data, body }`; returns null if unreadable. */
+/**
+ * Read a REVIEW.md into `{ data, body }`. Returns null only when the file is
+ * absent (ENOENT); a malformed file or other I/O error propagates, so a corrupt
+ * review is never mistaken for a missing one (which would let finalize skip it
+ * and select an older run).
+ */
 export const readReview = (path) => {
   try {
     return parseFrontmatter(readFileSync(path, 'utf8'));
-  } catch {
-    return null;
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return null;
+    }
+    throw new Error(`cannot read ${path}: ${error.message}`);
   }
 };
