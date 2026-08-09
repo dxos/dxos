@@ -39,6 +39,12 @@ test.describe('Comments tests', () => {
   });
 
   test('edit message', async () => {
+    // Space + document + comment + an edit round-trip runs 45-52s of the default 60s budget on a
+    // loaded machine (CI measures 18s), so the tail of the flow was being cut off mid-call and
+    // reported as "page closed" at whatever it was doing. Headroom, not a retry: the race that
+    // silently dropped the typed text is fixed in `Message.tsx`.
+    test.slow();
+
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 

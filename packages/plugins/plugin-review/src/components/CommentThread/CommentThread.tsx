@@ -196,8 +196,15 @@ export const CommentThread = ({
           scroll area, so render tiles inline (not the virtual stack) — this keeps
           them at full width so their controls align with the header's controls.
         */}
+        {/*
+          Keyed by the stable object id, NOT the URI: a message's URI gains its space when the thread
+          persists (`echo:///<id>` → `echo://<spaceId>/<id>`), and keying by URI remounted the tile at
+          that moment — which resets `editing` to false and destroys the editor holding the reader's
+          in-progress text, so an edit typed across the persist landed nowhere and its save control
+          disappeared. Same defect the companion already fixed for threads.
+        */}
         {loadedMessages.map((message) => (
-          <MessageComponent.Tile key={Obj.getURI(message)} message={message} />
+          <MessageComponent.Tile key={message.id} message={message} />
         ))}
 
         {/*

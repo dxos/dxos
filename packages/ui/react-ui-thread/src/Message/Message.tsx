@@ -194,8 +194,8 @@ const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) =
 
 MessageBody.displayName = 'Message.Body';
 
-/** Stand-in for the text dependency while editing, so the value under the editor cannot rebuild it. */
-const EDITING_TEXT_DEP = Symbol('editing');
+/** Stand-in for the dependencies an in-progress edit must not be rebuilt by. */
+const EDITING_DEP = Symbol('editing');
 
 const TextBlock = ({
   block,
@@ -225,7 +225,12 @@ const TextBlock = ({
     () => ({
       initialValue: block.text,
       extensions: [
-        createBasicExtensions({ readOnly: !isAuthor || !editing }),
+        // Being in edit mode is authorisation enough: the control that gets here is already gated on
+        // `isAuthor`. Re-deriving read-only from it let a change in the asynchronously-loaded member
+        // list flip the editor read-only mid-edit, and `createBasicExtensions` answers that by
+        // silently DROPPING user input and delete transactions — so the typing landed nowhere at all
+        // and the edit was lost without an error.
+        createBasicExtensions({ readOnly: !editing }),
         createThemeExtensions({ themeMode }),
         command,
         EditorView.updateListener.of((update) => {
@@ -235,12 +240,11 @@ const TextBlock = ({
         }),
       ],
     }),
-    // While editing, the editor owns the text: pin the dependency so an incoming update to
-    // `block.text` cannot rebuild the view the reader is typing in. That rebuild destroyed the
-    // CodeMirror instance mid-edit and took focus with it, so the remaining keystrokes reached
-    // nothing and the edit was silently lost (comments e2e, load-dependent — 4 in 10 at two workers,
-    // 0 in 6 at one).
-    [editing ? EDITING_TEXT_DEP : block.text, editing, isAuthor, themeMode, handleDocumentChange],
+    // While editing, the editor owns both its content and its authorisation: pin them so neither an
+    // incoming `block.text` update nor a member-list refresh rebuilds the view the reader is typing
+    // in — that rebuild destroyed the CodeMirror instance mid-edit and took focus with it (comments
+    // e2e, load-dependent: 4 in 10 at two workers, 0 in 6 at one).
+    [editing ? EDITING_DEP : block.text, editing, editing ? EDITING_DEP : isAuthor, themeMode, handleDocumentChange],
   );
 
   useEffect(() => {
