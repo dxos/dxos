@@ -45,15 +45,21 @@ export const useMediaQuery = (query: string | string[], options: UseMediaQueryOp
     }));
   });
 
+  // Keyed on the resolved queries (via a stable string — the array is rebuilt every render) so a
+  // changed `query` re-seeds state and re-subscribes; keyed on `document.defaultView` it never
+  // re-ran, leaving the hook tracking the original query for the component's lifetime.
+  const queryKey = queries.join('|');
   useEffect(() => {
+    const mql = queries.map((query) => document.defaultView?.matchMedia(query));
+
+    // Seed `media` from the MediaQueryList's own normalized string; change events carry the
+    // normalized form, and a raw query that normalizes differently would never match in `handler`.
     setValue(
-      queries.map((query) => ({
-        media: query,
-        matches: document.defaultView?.matchMedia(query).matches,
+      mql.map((mql, index) => ({
+        media: mql?.media ?? queries[index],
+        matches: mql?.matches,
       })),
     );
-
-    const mql = queries.map((query) => document.defaultView?.matchMedia(query));
 
     const handler = (evt: MediaQueryListEvent) => {
       setValue((prev) => {
@@ -83,7 +89,7 @@ export const useMediaQuery = (query: string | string[], options: UseMediaQueryOp
         }
       });
     };
-  }, [document.defaultView]);
+  }, [queryKey]);
 
   return value.map((item) => !!item.matches);
 };
