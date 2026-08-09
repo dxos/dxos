@@ -141,7 +141,7 @@ export const formattingStyles = EditorView.theme({
     fontFamily: fontMono,
   },
   '.cm-table-head': {
-    padding: '4px 8px',
+    padding: '8px 8px',
     paddingRight: '24px',
     overflowWrap: 'break-word',
     whiteSpace: 'pre-wrap',
@@ -151,7 +151,7 @@ export const formattingStyles = EditorView.theme({
     fontSize: 'small',
     textTransform: 'uppercase',
     color: 'var(--color-description)',
-    backgroundColor: 'var(--color-input-surface)',
+    backgroundColor: 'var(--color-group-alt-surface)',
   },
   '.cm-table-cell': {
     padding: '4px 8px',
@@ -159,7 +159,7 @@ export const formattingStyles = EditorView.theme({
     whiteSpace: 'pre-wrap',
     wordBreak: 'keep-all',
     verticalAlign: 'top',
-    backgroundColor: 'var(--color-input-surface)',
+    backgroundColor: 'var(--color-group-surface)',
     fontVariantNumeric: 'tabular-nums',
   },
 
