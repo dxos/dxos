@@ -51,7 +51,8 @@ test: {
 }
 ```
 
-Run: `DX_PROFILE_TESTS=./profiles moon run <pkg>:test -- some.test.ts`. Open the
+Run: `DX_PROFILE_TESTS=./profiles moon run <pkg>:test --force -- some.test.ts`
+(the `--force` is required — see "Always pass `--force`" below). Open the
 `.cpuprofile` in Chrome DevTools (Performance → load) or speedscope.
 
 Tradeoff vs. the programmatic `inspector.Session` approach (rejected for the
@@ -117,7 +118,8 @@ afterAll(async () => {
 });
 ```
 
-Run: `DX_DEBUG_LEAKS=1 moon run <pkg>:test -- the-existing.test.ts`.
+Run: `DX_DEBUG_LEAKS=1 moon run <pkg>:test --force -- the-existing.test.ts`
+(the `--force` is required — see "Always pass `--force`" below).
 
 ### Signal quality
 
