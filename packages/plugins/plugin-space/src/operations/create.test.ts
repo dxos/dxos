@@ -20,11 +20,11 @@ import { EdgeReplicationError } from '../errors';
 import { SpaceOperation } from './definitions';
 
 describe('SpaceOperation.Create', () => {
-  // `Process.fromOperation` runs handlers under `Effect.orDie`, so every failure reaches the caller
-  // as a defect — which is why `CreateSpaceDialog` has to catch the cause, not just the error. What
-  // this pins is the other half: the edge-replication step ran under `Effect.promise`, so the cause
-  // carried a bare rejection with nothing naming the step it came from.
-  test('a failing edge replication preference surfaces as EdgeReplicationError', async ({ expect }) => {
+  // `updateSpace` commits the preference on the host, so what can fail afterwards is only the local
+  // snapshot catching up. Failing the create on that discarded a space that already existed and left
+  // the dialog on a generic error — measured on firefox in CI run 31313863039. The space must come
+  // back regardless; the preference converges on its own.
+  test('a failing edge replication preference does not fail the create', async ({ expect }) => {
     const harness = await createComposerTestApp({ plugins: [ClientPlugin({}), SpacePlugin({})] });
     await using _harness = harness;
 
@@ -42,7 +42,8 @@ describe('SpaceOperation.Create', () => {
       ),
     );
 
-    expect(outcome).toBeInstanceOf(EdgeReplicationError);
+    expect(outcome).not.toBeInstanceOf(EdgeReplicationError);
+    expect((outcome as { space?: Space }).space).toBeDefined();
   });
 });
 
