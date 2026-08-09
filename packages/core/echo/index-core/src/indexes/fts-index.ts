@@ -14,6 +14,7 @@ import type { EntityId, SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
+import { chunkArray } from '../utils';
 import type { EntityMeta } from './entity-meta-index';
 import type { Index, IndexerObject } from './interface';
 
@@ -222,6 +223,17 @@ export class FtsIndex implements Index {
       return allResults;
     });
   }
+
+  /** Delete FTS rows by record id (rowid). Used by garbage collection. */
+  deleteByRecordIds = Effect.fn('FtsIndex.deleteByRecordIds')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(recordIds)) {
+          yield* sql`DELETE FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+        }
+      }),
+  );
 
   update = Effect.fn('FtsIndex.update')(
     (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>

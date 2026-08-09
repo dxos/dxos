@@ -36,6 +36,11 @@ export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
   updateIndexes: () => Promise<void>;
+  getSpaceStats: (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
+  runGarbageCollection: (
+    spaceId: SpaceId,
+    options: DataService.RunGarbageCollectionRequest,
+  ) => Promise<DataService.GarbageCollectionReport>;
 };
 
 /**
@@ -52,11 +57,18 @@ export class DataServiceImpl implements DataService.Handlers {
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
   private readonly '_updateIndexes': () => Promise<void>;
+  private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
+  private readonly '_runGarbageCollection': (
+    spaceId: SpaceId,
+    options: DataService.RunGarbageCollectionRequest,
+  ) => Promise<DataService.GarbageCollectionReport>;
 
   'constructor'(params: DataServiceProps) {
     this._automergeHost = params.automergeHost;
     this._spaceStateManager = params.spaceStateManager;
     this._updateIndexes = params.updateIndexes;
+    this._getSpaceStats = params.getSpaceStats;
+    this._runGarbageCollection = params.runGarbageCollection;
   }
 
   ['DataService.subscribe'](request: SubscribeRequest): EffectStream.Stream<BatchedDocumentUpdates, Error> {
@@ -151,6 +163,22 @@ export class DataServiceImpl implements DataService.Handlers {
   ['DataService.updateIndexes'](): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       await this._updateIndexes();
+    });
+  }
+
+  ['DataService.stats'](request: DataService.DatabaseStatsRequest): Effect.Effect<DataService.DatabaseStats, Error> {
+    return Effect.promise(async () => {
+      invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
+      return this._getSpaceStats(request.spaceId);
+    });
+  }
+
+  ['DataService.runGarbageCollection'](
+    request: DataService.RunGarbageCollectionRequest,
+  ): Effect.Effect<DataService.GarbageCollectionReport, Error> {
+    return Effect.promise(async () => {
+      invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
+      return this._runGarbageCollection(request.spaceId, request);
     });
   }
 

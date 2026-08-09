@@ -9,6 +9,21 @@ import { invariant } from '@dxos/invariant';
 export type EntityPropPath = string[];
 
 /**
+ * SQLite bound-variable limit (`SQLITE_LIMIT_VARIABLE_NUMBER`, typically 999 in wasm builds).
+ * Batch `IN (...)` queries below this; 500 gives a safe margin.
+ */
+export const SQL_CHUNK_SIZE = 500;
+
+/** Split an array into chunks of at most `size` for batched SQL `IN (...)` clauses. */
+export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE): T[][] => {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
+};
+
+/**
  * Escaped property path within an object.
  *
  * Escaping rules:

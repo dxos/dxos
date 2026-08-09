@@ -565,6 +565,19 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * Wipe a document from local storage: its automerge chunks and its heads-store row (both, or the
+   * heads row is orphaned). Used by garbage collection for documents that are no longer reachable
+   * from any space directory. Callers must ensure the document is unreachable — no in-memory handle
+   * is expected to be live for an orphan, so this does not attempt repo eviction.
+   */
+  async removeDocument(id: AnyDocumentId): Promise<void> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    const documentId = interpretAsDocumentId(id);
+    await this._storage.removeRange([documentId]);
+    await RuntimeProvider.runPromise(this._runtime)(this._headsStore.remove(documentId));
+  }
+
+  /**
    * Create new persisted document.
    */
   async createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): Promise<DocHandle<T>> {

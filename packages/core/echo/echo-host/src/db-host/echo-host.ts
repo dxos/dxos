@@ -24,7 +24,7 @@ import type {
   GetSyncStateResponse,
   SyncFeedRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type FeedService } from '@dxos/protocols/rpc';
+import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
@@ -43,10 +43,12 @@ import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { FeedDataSource } from './feed-data-source';
+import { runSpaceGarbageCollection } from './garbage-collector';
 import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalFeedServiceImpl } from './local-feed-service';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
+import { allSpaceDocumentIds, collectSpaceDocuments, countSpaceObjects } from './space-storage';
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -170,6 +172,8 @@ export class EchoHost extends Resource {
       // Delegate to the public method so the closed-host early-out and
       // cooperative loop apply uniformly to the RPC handler path.
       updateIndexes: () => this.updateIndexes(),
+      getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
+      runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
     });
 
     trace.diagnostic<EchoStatsDiagnostic>({
@@ -464,6 +468,66 @@ export class EchoHost extends Resource {
     spaceId: SpaceId,
   ): Promise<Array<{ feedId: string; feedNamespace: string; blocks: FeedProtocol.Block[] }>> {
     return RuntimeProvider.runPromise(this._runtime)(this._feedStore.getAllFeedsForSpace({ spaceId }));
+  }
+
+  /**
+   * Per-space storage metrics: objects (alive/deleted), automerge documents, feeds, feed blocks.
+   * See `docs/GARBAGE_COLLECTION.md`.
+   */
+  async getSpaceStats(spaceId: SpaceId): Promise<DataService.DatabaseStats> {
+    const root = await this._ensureSpaceRootLoaded(spaceId);
+    const documents = collectSpaceDocuments(root);
+    const objects = await countSpaceObjects(this._ctx, this._automergeHost, root, documents);
+    const feeds = await this.getAllFeedsForSpace(spaceId);
+    const feedBlocks = feeds.reduce((sum, feed) => sum + feed.blocks.length, 0);
+
+    return {
+      objects,
+      documents: allSpaceDocumentIds(documents).size,
+      feeds: feeds.length,
+      feedBlocks,
+    };
+  }
+
+  /**
+   * Reclaim storage held by soft-deleted objects and unreachable documents for a space.
+   * See `docs/GARBAGE_COLLECTION.md`.
+   */
+  async runGarbageCollection(
+    spaceId: SpaceId,
+    options: DataService.RunGarbageCollectionRequest = { spaceId },
+  ): Promise<DataService.GarbageCollectionReport> {
+    const root = await this._ensureSpaceRootLoaded(spaceId);
+    const { unlinkedObjects, wipedDocumentIds, removedInlineObjects } = await runSpaceGarbageCollection({
+      ctx: this._ctx,
+      spaceId,
+      root,
+      automergeHost: this._automergeHost,
+    });
+
+    // Step 5: drop stale index rows for the reclaimed documents and objects.
+    let removedIndexEntries = 0;
+    if (options.index !== false && (wipedDocumentIds.length > 0 || removedInlineObjects.length > 0)) {
+      removedIndexEntries = await RuntimeProvider.runPromise(this._runtime)(
+        this._indexEngine.deleteObjects({ spaceId, documentIds: wipedDocumentIds, objects: removedInlineObjects }),
+      );
+    }
+
+    return {
+      unlinkedObjects,
+      removedDocuments: wipedDocumentIds.length,
+      removedIndexEntries,
+      purgedFeedBlocks: 0,
+    };
+  }
+
+  /** Resolve the space root, opening (and loading) it if it is not already loaded on the host. */
+  private async _ensureSpaceRootLoaded(spaceId: SpaceId): Promise<DatabaseRoot> {
+    const existing = this._spaceStateManager.getRootBySpaceId(spaceId);
+    if (existing?.isLoaded) {
+      return existing;
+    }
+    return this.openSpaceRoot(this._ctx, spaceId);
   }
 
   private _runUpdateIndexes = async (): Promise<void> => {
