@@ -2,7 +2,44 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RECOVERY_DEBUG_RECONNECT_MS, resolveRecoveryDebugOrigin } from './constants';
+/** Default port for `composer-recovery.js` — keep in sync with that script. */
+export const DEBUG_PORT = 9321;
+
+/** Browser retry interval when the debug server is unreachable — keep in sync with `composer-recovery.js`. */
+export const DEBUG_PORT_RECONNECT_MS = 2_000;
+
+/**
+ * Debug server origin matching the page scheme.
+ * HTTPS pages must use an HTTPS debug server (mixed content blocks http://127.0.0.1).
+ */
+export const resolveDebugPortOrigin = (port = DEBUG_PORT): string => {
+  const scheme = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'https' : 'http';
+  return `${scheme}://127.0.0.1:${port}`;
+};
+
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]', '::1']);
+
+/**
+ * The loop evaluates whatever the server hands it, so the server must be one only a local process
+ * can be. `origin` is caller-supplied and reaches `fetch` directly; a remote CORS-enabled host would
+ * otherwise be able to drive `eval` in the page.
+ */
+export const assertLoopbackOrigin = (origin: string): URL => {
+  let url: URL;
+  try {
+    url = new URL(origin);
+  } catch {
+    throw new Error(`Debug port origin is not a URL: ${origin}`);
+  }
+  // A scheme `fetch` cannot speak would otherwise fail past the hostname check and retry forever.
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error(`Debug port origin must use HTTP(S), got ${url.protocol}`);
+  }
+  if (!LOOPBACK_HOSTS.has(url.hostname)) {
+    throw new Error(`Debug port origin must be loopback, got ${url.origin}`);
+  }
+  return url;
+};
 
 export type DebugCommand = {
   id: number;
@@ -30,12 +67,14 @@ export type DebugPortOptions = {
  */
 export const runDebugPortLoop = async ({
   session,
-  origin = resolveRecoveryDebugOrigin(),
+  origin = resolveDebugPortOrigin(),
   evalCommand,
   onLog,
   signal,
 }: DebugPortOptions): Promise<void> => {
   const log = (line: string) => onLog?.(line);
+
+  assertLoopbackOrigin(origin);
 
   log(`Session: ${session}`);
   log(`Connecting to ${origin}…`);
@@ -56,7 +95,7 @@ export const runDebugPortLoop = async ({
         log('Waiting for debug server…');
         waitingLogged = true;
       }
-      await sleep(RECONNECT_MS, signal);
+      await sleep(DEBUG_PORT_RECONNECT_MS, signal);
       continue;
     }
 
@@ -84,19 +123,23 @@ export const runDebugPortLoop = async ({
       log(`Command #${command.id} error: ${payload.error}`);
     }
 
-    try {
-      await postResult(origin, payload, signal);
-    } catch (error) {
-      if (signal?.aborted) {
-        break;
+    // Keep re-posting the same payload: the caller is blocked waiting for this id, and in one-shot
+    // mode nothing re-sends it — dropping through to the next poll loses the result for good.
+    let posted = false;
+    while (!posted && !signal?.aborted) {
+      try {
+        await postResult(origin, payload, signal);
+        posted = true;
+      } catch (error) {
+        if (signal?.aborted) {
+          break;
+        }
+        log('Debug server unreachable posting result — retrying…');
+        await sleep(DEBUG_PORT_RECONNECT_MS, signal);
       }
-      log(`Debug server unreachable posting result — retrying…`);
-      await sleep(RECONNECT_MS, signal);
     }
   }
 };
-
-const RECONNECT_MS = RECOVERY_DEBUG_RECONNECT_MS;
 
 const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
   new Promise((resolve, reject) => {
@@ -131,9 +174,10 @@ const pollCommand = async (
   session: string,
   signal?: AbortSignal,
 ): Promise<DebugCommand | undefined> => {
-  const url = new URL('/poll', origin);
+  const url = new URL('/poll', assertLoopbackOrigin(origin));
   url.searchParams.set('session', session);
-  const response = await fetch(url, { signal });
+  // `redirect: 'error'` so a loopback server cannot bounce evaluation off to a remote origin.
+  const response = await fetch(url, { signal, redirect: 'error' });
   if (response.status === 204) {
     return undefined;
   }
@@ -148,11 +192,12 @@ const pollCommand = async (
 };
 
 const postResult = async (origin: string, payload: DebugResultPayload, signal?: AbortSignal) => {
-  const response = await fetch(new URL('/result', origin), {
+  const response = await fetch(new URL('/result', assertLoopbackOrigin(origin)), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
     signal,
+    redirect: 'error',
   });
   if (!response.ok) {
     throw new Error(`Result post failed: ${response.status} ${response.statusText}`);

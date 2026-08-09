@@ -427,6 +427,9 @@
       "path": "../../ui/solid-ui-geo"
     },
     {
+      "path": "../../ui/ui"
+    },
+    {
       "path": "../../ui/ui-theme"
     }
   ]

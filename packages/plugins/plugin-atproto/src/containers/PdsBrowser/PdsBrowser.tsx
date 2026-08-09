@@ -199,7 +199,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
     : undefined;
 
   const recordDetail = record ? (
-    <ScrollArea.Root orientation='vertical' classNames='flex-1 min-bs-0 overflow-hidden'>
+    <ScrollArea.Root orientation='vertical' classNames='flex-1 min-h-0 overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
         <div role='none' className='flex flex-col gap-2'>
           <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
@@ -256,7 +256,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
           <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col min-bs-0 plb-2'>
+      <Panel.Content classNames='flex flex-col min-h-0 py-2'>
         {error && (
           <div role='none' className='px-2 pbe-2 text-sm text-error-text'>
             {error}
@@ -264,7 +264,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
         )}
         <MasterDetail<CollectionItem>
           orientation='horizontal'
-          classNames='flex-1 min-bs-0'
+          classNames='flex-1 min-h-0'
           items={collectionItems}
           selectedId={collection}
           onSelect={setCollection}
@@ -276,7 +276,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
             collection ? (
               <MasterDetail<RecordItem>
                 orientation='horizontal'
-                classNames='flex-1 min-bs-0'
+                classNames='flex-1 min-h-0'
                 items={recordItems}
                 selectedId={recordUri}
                 onSelect={setRecordUri}

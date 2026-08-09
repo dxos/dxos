@@ -150,6 +150,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/tracing": "workspace:*",
+    "@dxos/ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",

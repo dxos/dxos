@@ -49,6 +49,19 @@ export const translations = [
           'Warning: Swapping the storage adapter will make your data unavailable.',
 
         'settings.data-store.label': 'Data Store',
+
+        'settings.debug-port.section.label': 'Agent debug port',
+        'settings.debug-port.section.description':
+          'Lets a local agent evaluate code against this page via composer-recovery.js. Off by default; stops on reload.',
+        'settings.debug-port.label': 'Open debug port.',
+        'settings.debug-port.description':
+          'Runs arbitrary code from a loopback server with full access to your data. Only enable while you are working with an agent you trust.',
+        'settings.debug-port.running.label': 'Listening on',
+        'settings.debug-port.session.label': 'Session id',
+        'settings.debug-port.session.description':
+          'Pass to composer-recovery.js --session. A new id is issued on every restart.',
+        'settings.debug-port.copy-session.label': 'Copy session id.',
+        'settings.debug-port.log.label': 'Debug port log',
       },
     },
   },

@@ -2680,6 +2680,9 @@ importers:
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../common/tracing
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../../ui/ui
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

@@ -1,0 +1,134 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+/* Page chrome — only the standalone recovery entry sets this attribute, so the rules below
+   cannot leak into a host that merely renders the UI (storybook). */
+html[data-recovery-page] {
+  block-size: 100%;
+  color-scheme: dark;
+  background: #0b0f14;
+}
+
+html[data-recovery-page] body,
+html[data-recovery-page] #root {
+  margin: 0;
+  block-size: 100%;
+}
+
+.dxos-recovery {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  max-width: 60rem;
+  margin: 0 auto;
+  min-block-size: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: #0b0f14;
+  color: #d7e0ea;
+}
+
+.dxos-recovery * {
+  box-sizing: border-box;
+}
+
+/* Hosts that embed the chrome rather than owning the document (storybook) have no 100%-height
+   ancestor chain to inherit from. */
+.dxos-recovery-fill {
+  block-size: 100dvh;
+}
+
+.dxos-recovery header {
+  padding: 1rem 1.25rem 0.5rem;
+  border-bottom: 1px solid #1e2936;
+}
+
+.dxos-recovery header h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.dxos-recovery header p {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #8fa3b8;
+}
+
+.dxos-recovery .header-actions {
+  margin-top: 0.65rem;
+}
+
+.dxos-recovery .header-actions button {
+  flex: none;
+  width: auto;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.72rem;
+}
+
+.dxos-recovery .log {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.dxos-recovery footer {
+  flex: none;
+  padding: 0.5rem 0.75rem;
+  background: rgba(11, 15, 20, 0.96);
+  backdrop-filter: blur(8px);
+}
+
+.dxos-recovery .actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+}
+
+.dxos-recovery button {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 1px solid #334155;
+  background: #111827;
+  color: inherit;
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.35rem;
+  font: inherit;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.dxos-recovery button:hover:not(:disabled) {
+  background: #1e293b;
+}
+
+.dxos-recovery button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dxos-recovery button.primary {
+  border-color: #2563eb;
+  background: #1d4ed8;
+}
+
+.dxos-recovery button.danger {
+  border-color: #7f1d1d;
+  background: #991b1b;
+}
+
+/* The debug port evaluates arbitrary agent-supplied code; it must be unmistakable while live. */
+.dxos-recovery button.running {
+  border-color: #b45309;
+  background: #92400e;
+}

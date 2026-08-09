@@ -115,7 +115,7 @@ export const DiagnosticsPanel = () => {
         <Toolbar.Root>
           <Button variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
             <Icon icon='ph--play--regular' size={4} />
-            <span className='pis-1'>{t('run-diagnostics.label')}</span>
+            <span className='ps-1'>{t('run-diagnostics.label')}</span>
           </Button>
           {isRunning && (
             <Button variant='ghost' onClick={handleCancel}>
