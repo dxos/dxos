@@ -227,8 +227,8 @@ catalog:
   '@storybook/react-vite': ^10.4.2
   '@storybook/web-components-vite': ^10.4.2
   '@svgr/cli': ^8.1.0
-  '@swc/core': 1.15.46
-  '@swc/types': ^0.1.27
+  '@swc/core': 1.15.47
+  '@swc/types': ^0.1.28
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
   '@tailwindcss/postcss': ^4.3.0
@@ -424,7 +424,7 @@ catalog:
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
-  esbuild: 0.28.1
+  esbuild: 0.28.2
   esbuild-plugin-glsl: ^1.4.2
   esbuild-plugin-inline-image: ^0.0.9
   esbuild-plugin-raw: 0.4.2
