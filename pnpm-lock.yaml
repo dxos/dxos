@@ -2047,7 +2047,7 @@ importers:
         specifier: 'catalog:'
         version: 0.0.1
       eslint:
-        specifier: ^10.8.0
+        specifier: ^10.8.1
         version: 10.8.1(jiti@2.6.1)
       eslint-plugin-import-x:
         specifier: ^4.17.1
