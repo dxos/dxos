@@ -1746,7 +1746,7 @@ catalogs:
 
 overrides:
   '@automerge/automerge': 3.3.0-fragments.2
-  '@automerge/automerge-subduction': 0.16.0
+  '@automerge/automerge-subduction': 0.16.1
   '@dxos/docs>vite': ^7.3.2
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/common': ^1.5.2
@@ -1803,9 +1803,9 @@ patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.40':
     hash: 8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f
     path: patches/@automerge__automerge-repo@2.6.0-subduction.40.patch
-  '@automerge/automerge-subduction@0.16.0':
+  '@automerge/automerge-subduction@0.16.1':
     hash: 6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669
-    path: patches/@automerge__automerge-subduction@0.16.0.patch
+    path: patches/@automerge__automerge-subduction@0.16.1.patch
   '@changesets/assemble-release-plan@6.0.10':
     hash: 9e13c8f8b2a0e32321bcd57fe6f2eb0f3cab1e6d4534e18d1ad8652cd6ff97d8
     path: patches/@changesets__assemble-release-plan@6.0.10.patch
@@ -5800,8 +5800,8 @@ importers:
         specifier: 'catalog:'
         version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
       '@automerge/automerge-subduction':
-        specifier: 0.16.0
-        version: 0.16.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
+        specifier: 0.16.1
+        version: 0.16.1(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -23480,8 +23480,8 @@ packages:
     resolution: {integrity: sha512-9r3GS8FtZKoIJOtJqkQR0ukF7HSu+IyV5Iqf7MP3ELDz/TEaUbZV8ysyl5Ju4fVZjmagI/n3oH2h4ySk4FdEFQ==}
     engines: {node: '>=22.13'}
 
-  '@automerge/automerge-subduction@0.16.0':
-    resolution: {integrity: sha512-BOOn/4p8cF4LhjDUQdgM3qyZFya+M7ZuZywuC99x/kbhk4UK7dw/QcsifcHG5E1TAW4R/K17ZGFUC5nCVUSSWg==}
+  '@automerge/automerge-subduction@0.16.1':
+    resolution: {integrity: sha512-alH7U4eYn0O7sT6hNLv7CJhNODJi+QD6qfRQTNfZCxL3Q5JZdJ8lFpdvXUkBf+I3bu0GLvVlTaYPWGrBihjpIw==}
 
   '@automerge/automerge@3.3.0-fragments.2':
     resolution: {integrity: sha512-F5KL+YXD0GMFH/as0/kJ3+lotpuJsH1SSrhhKdYSGtR+S9ytBNTw+s3pAjF2Vr0+ZdTMHxsGjqj5SRkJiSNokQ==}
@@ -43107,7 +43107,7 @@ snapshots:
   '@automerge/automerge-repo@2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)':
     dependencies:
       '@automerge/automerge': 3.3.0-fragments.2
-      '@automerge/automerge-subduction': 0.16.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
+      '@automerge/automerge-subduction': 0.16.1(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
       bs58check: 4.0.0
       cbor-x: 1.6.4
       debug: 4.4.3(supports-color@5.5.0)
@@ -43122,7 +43122,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-subduction@0.16.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)': {}
+  '@automerge/automerge-subduction@0.16.1(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)': {}
 
   '@automerge/automerge@3.3.0-fragments.2': {}
 
