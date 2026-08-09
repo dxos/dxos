@@ -33,6 +33,14 @@ describe('assertLoopbackOrigin', () => {
     }
   });
 
+  // A scheme fetch cannot speak passes the hostname check but never connects, so the loop would
+  // retry it forever rather than failing at start.
+  test('rejects loopback origins on a non-HTTP(S) scheme', () => {
+    for (const origin of ['ftp://localhost', 'ws://127.0.0.1:9321', 'file://localhost/tmp']) {
+      expect(() => assertLoopbackOrigin(origin)).toThrow(/must use HTTP\(S\)/);
+    }
+  });
+
   test('rejects unparseable origins', () => {
     expect(() => assertLoopbackOrigin('not a url')).toThrow(/not a URL/);
   });

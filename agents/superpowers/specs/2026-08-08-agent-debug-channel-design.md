@@ -167,13 +167,16 @@ What landed:
 
 | Piece                                  | Location                                                          |
 | -------------------------------------- | ----------------------------------------------------------------- |
-| Long-poll loop (body unchanged)        | `packages/sdk/client/src/devtools/debug-port.ts`                  |
+| Long-poll loop, hardened in review     | `packages/sdk/client/src/devtools/debug-port.ts`                  |
 | Start/stop + subscribable status       | `packages/sdk/client/src/devtools/debug-port-controller.ts`       |
 | `dxos.debugPort` on the hook           | `packages/sdk/client/src/devtools/devtools.ts`                    |
 | Settings switch, session id, log       | `packages/plugins/plugin-debug/src/containers/DebugPortSettings/` |
 | Recovery chrome, extracted + storyable | `packages/apps/composer-app/src/recovery/{ui.ts,ui.css}`          |
 
-`composer-recovery.js` is unchanged, as §2 item 3 requires.
+`composer-recovery.js` is unchanged, as §2 item 3 requires. The loop body is not: review added a
+loopback-and-HTTP(S) origin assertion at the entry and both fetch sites, `redirect: 'error'` on both
+fetches, and a retry around the result post that previously dropped the payload the caller was
+blocked on.
 
 **Q3 is cheaper than assumed.** `DebugPortController.start({ scope })` takes the binding set, so a
 read-only variant is a second scope factory exposing structured accessors instead of the raw hook —

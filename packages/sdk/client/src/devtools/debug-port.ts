@@ -31,6 +31,10 @@ export const assertLoopbackOrigin = (origin: string): URL => {
   } catch {
     throw new Error(`Debug port origin is not a URL: ${origin}`);
   }
+  // A scheme `fetch` cannot speak would otherwise fail past the hostname check and retry forever.
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error(`Debug port origin must use HTTP(S), got ${url.protocol}`);
+  }
   if (!LOOPBACK_HOSTS.has(url.hostname)) {
     throw new Error(`Debug port origin must be loopback, got ${url.origin}`);
   }
