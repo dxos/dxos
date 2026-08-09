@@ -60,7 +60,7 @@ class DebugPortControllerImpl implements DebugPortController {
       return this.#status.session;
     }
 
-    const session = crypto.randomUUID();
+    const session = randomSession();
     const abort = new AbortController();
     this.#abort = abort;
     this.#update({ running: true, session, origin });
@@ -89,7 +89,7 @@ class DebugPortControllerImpl implements DebugPortController {
         // A later start() has already replaced the controller state; leave it alone.
         if (this.#abort === abort) {
           this.#abort = undefined;
-          this.#update({ running: false });
+          this.#reset();
         }
       });
 
@@ -101,15 +101,36 @@ class DebugPortControllerImpl implements DebugPortController {
     this.#abort = undefined;
     if (this.#status.running) {
       logger.info('Debug port stopped.', { session: this.#status.session });
-      this.#update({ running: false });
+      this.#reset();
     }
   }
 
   #update(patch: Partial<DebugPortStatus>): void {
     this.#status = { ...this.#status, ...patch };
+    this.#notify();
+  }
+
+  // Back to STOPPED rather than merging `running: false`, so `getStatus()` cannot hand out a dead
+  // session id to a consumer that reads `session` without also checking `running`.
+  #reset(): void {
+    this.#status = STOPPED;
+    this.#notify();
+  }
+
+  #notify(): void {
     this.#listeners.forEach((listener) => listener());
   }
 }
+
+// `crypto.randomUUID` is secure-context only, and the port is worth having on a plain-HTTP LAN
+// origin — the id is a handshake nonce, not a secret, so a `getRandomValues` hex string does.
+const randomSession = (): string => {
+  if (typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+};
 
 // `composer` is the app-layer namespace (plugins, operations); it is absent on the recovery page
 // and until the app has mounted, which an agent probing it can see for itself.

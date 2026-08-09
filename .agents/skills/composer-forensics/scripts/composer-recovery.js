@@ -24,7 +24,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PORT = 9321;
 const PORT = Number(process.env.COMPOSER_RECOVERY_PORT ?? DEFAULT_PORT);
 const LONG_POLL_MS = 25_000;
-/** Must match `DEBUG_PORT_RECONNECT_MS` in @dxos/client devtools/debug-port.ts */
+/** Must match `DEBUG_PORT_RECONNECT_MS` in @dxos/client devtools/debug-port.ts. */
 const BROWSER_RECONNECT_MS = 2_000;
 const DEFAULT_CONNECT_TIMEOUT_MS = 3 * BROWSER_RECONNECT_MS;
 const DEFAULT_RESULT_TIMEOUT_MS = 120_000;

@@ -24,6 +24,8 @@ const CONTROLLER_FILE = 'devtools/debug-port-controller';
 export type DebugPortSettingsProps = {
   /** Injectable for stories/tests; defaults to the page-wide controller. */
   controller?: DebugPortController;
+  /** The switch starts arbitrary eval, so it follows the form's readonly state like every other control. */
+  disabled?: boolean;
 };
 
 /**
@@ -32,7 +34,7 @@ export type DebugPortSettingsProps = {
  * The port evaluates agent-supplied code against the live client, so it is off until this switch is
  * flipped, the session id is regenerated on every activation, and nothing survives a reload.
  */
-export const DebugPortSettings = ({ controller = getDebugPortController() }: DebugPortSettingsProps) => {
+export const DebugPortSettings = ({ controller = getDebugPortController(), disabled }: DebugPortSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
@@ -56,9 +58,13 @@ export const DebugPortSettings = ({ controller = getDebugPortController() }: Deb
     >
       <Form.Row label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
         <div className='flex items-center gap-3'>
+          {status.running && (
+            <span className='text-sm text-description'>
+              {t('settings.debug-port.running.label')} <span className='font-mono'>{status.origin}</span>
+            </span>
+          )}
           <Input.Root>
-            {status.running ? status.origin : ''}
-            <Input.Switch checked={status.running} onCheckedChange={handleToggle} />
+            <Input.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
           </Input.Root>
         </div>
       </Form.Row>

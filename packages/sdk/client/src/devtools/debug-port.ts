@@ -17,6 +17,26 @@ export const resolveDebugPortOrigin = (port = DEBUG_PORT): string => {
   return `${scheme}://127.0.0.1:${port}`;
 };
 
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]', '::1']);
+
+/**
+ * The loop evaluates whatever the server hands it, so the server must be one only a local process
+ * can be. `origin` is caller-supplied and reaches `fetch` directly; a remote CORS-enabled host would
+ * otherwise be able to drive `eval` in the page.
+ */
+export const assertLoopbackOrigin = (origin: string): URL => {
+  let url: URL;
+  try {
+    url = new URL(origin);
+  } catch {
+    throw new Error(`Debug port origin is not a URL: ${origin}`);
+  }
+  if (!LOOPBACK_HOSTS.has(url.hostname)) {
+    throw new Error(`Debug port origin must be loopback, got ${url.origin}`);
+  }
+  return url;
+};
+
 export type DebugCommand = {
   id: number;
   code: string;
@@ -49,6 +69,8 @@ export const runDebugPortLoop = async ({
   signal,
 }: DebugPortOptions): Promise<void> => {
   const log = (line: string) => onLog?.(line);
+
+  assertLoopbackOrigin(origin);
 
   log(`Session: ${session}`);
   log(`Connecting to ${origin}…`);
@@ -97,14 +119,20 @@ export const runDebugPortLoop = async ({
       log(`Command #${command.id} error: ${payload.error}`);
     }
 
-    try {
-      await postResult(origin, payload, signal);
-    } catch (error) {
-      if (signal?.aborted) {
-        break;
+    // Keep re-posting the same payload: the caller is blocked waiting for this id, and in one-shot
+    // mode nothing re-sends it — dropping through to the next poll loses the result for good.
+    let posted = false;
+    while (!posted && !signal?.aborted) {
+      try {
+        await postResult(origin, payload, signal);
+        posted = true;
+      } catch (error) {
+        if (signal?.aborted) {
+          break;
+        }
+        log('Debug server unreachable posting result — retrying…');
+        await sleep(DEBUG_PORT_RECONNECT_MS, signal);
       }
-      log('Debug server unreachable posting result — retrying…');
-      await sleep(DEBUG_PORT_RECONNECT_MS, signal);
     }
   }
 };
@@ -142,9 +170,10 @@ const pollCommand = async (
   session: string,
   signal?: AbortSignal,
 ): Promise<DebugCommand | undefined> => {
-  const url = new URL('/poll', origin);
+  const url = new URL('/poll', assertLoopbackOrigin(origin));
   url.searchParams.set('session', session);
-  const response = await fetch(url, { signal });
+  // `redirect: 'error'` so a loopback server cannot bounce evaluation off to a remote origin.
+  const response = await fetch(url, { signal, redirect: 'error' });
   if (response.status === 204) {
     return undefined;
   }
@@ -159,11 +188,12 @@ const pollCommand = async (
 };
 
 const postResult = async (origin: string, payload: DebugResultPayload, signal?: AbortSignal) => {
-  const response = await fetch(new URL('/result', origin), {
+  const response = await fetch(new URL('/result', assertLoopbackOrigin(origin)), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
     signal,
+    redirect: 'error',
   });
   if (!response.ok) {
     throw new Error(`Result post failed: ${response.status} ${response.statusText}`);

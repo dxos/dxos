@@ -132,7 +132,18 @@ export const setupDevtools = (manager: PluginManager.PluginManager): void => {
 
   // Definitions carry DXN-form keys, so accept either that or the bare NSID — same normalization
   // the handler sets apply, so whatever `operations()` prints can be pasted straight into `invoke`.
-  const normalizeKey = (key: string): string => (DXN.isDXN(key) ? DXN.getName(key) : key);
+  // `isDXN` is only a `dxn:` prefix check, so a hand-typed `dxn:` would throw out of `getName` and
+  // abort the whole lookup; fall back to the raw key and let it miss as "Unknown operation".
+  const normalizeKey = (key: string): string => {
+    if (!DXN.isDXN(key)) {
+      return key;
+    }
+    try {
+      return DXN.getName(key);
+    } catch {
+      return key;
+    }
+  };
 
   const findDefinition = (key: string): Operation.Definition.Any | undefined => {
     const wanted = normalizeKey(key);

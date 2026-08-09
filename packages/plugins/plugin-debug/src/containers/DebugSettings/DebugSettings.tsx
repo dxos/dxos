@@ -248,7 +248,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
             </Form.Row>
           </Form.Section>
 
-          <DebugPortSettings />
+          <DebugPortSettings disabled={!onSettingsChange} />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

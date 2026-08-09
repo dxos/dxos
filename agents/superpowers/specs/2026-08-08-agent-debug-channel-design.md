@@ -112,8 +112,12 @@ tool, and it would have to survive store review on those permissions.
 
 **Do Option 1 first; if a standing UI is still wanted, revive (a); do not put this in (b).**
 
-Option 1 delivers the capability that mattered, reusing code that already exists and shipping no new
-attack surface. Reviving (a) is the right home for a _panel_ because `inspectedWindow.eval` is the
+Option 1 delivers the capability that mattered, reusing code that already exists and requiring no new
+extension permissions. It is not free of attack surface: it adds a loopback endpoint that evaluates
+arbitrary code in a production page. What bounds that is the gesture (off until the user flips the
+switch), the per-activation session id, the loopback-only origin check, and the fact that a reload
+stops it — a page an attacker can already run script in needs none of this, and one they cannot is
+unaffected until the user opts in. Reviving (a) is the right home for a _panel_ because `inspectedWindow.eval` is the
 correct primitive and internal-only distribution keeps remote eval out of the product. (b) has the
 best transport, but the cost of putting an eval channel into a user-facing extension with universal
 host permissions is not worth saving the injection work — and Option 1 avoids that work entirely by
@@ -167,7 +171,7 @@ What landed:
 | Start/stop + subscribable status       | `packages/sdk/client/src/devtools/debug-port-controller.ts`       |
 | `dxos.debugPort` on the hook           | `packages/sdk/client/src/devtools/devtools.ts`                    |
 | Settings switch, session id, log       | `packages/plugins/plugin-debug/src/containers/DebugPortSettings/` |
-| Recovery chrome, extracted + storyable | `packages/apps/composer-app/src/recovery/{ui.ts,recovery.css}`    |
+| Recovery chrome, extracted + storyable | `packages/apps/composer-app/src/recovery/{ui.ts,ui.css}`          |
 
 `composer-recovery.js` is unchanged, as §2 item 3 requires.
 

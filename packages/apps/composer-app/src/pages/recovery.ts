@@ -144,26 +144,34 @@ const recoveryHelpers: RecoveryHelpers = {
 
 attachRecoveryHelpers(recoveryHelpers);
 
+// Busy has two independent sources — a running action and a live debug port — so it is derived
+// rather than assigned: clearing it at the end of an action would otherwise hide an agent still
+// driving the page.
+let actionBusy = false;
+let debugPortRunning = false;
+const syncBusy = () => setBusy(actionBusy || debugPortRunning);
+
 const runAction = async (label: string, task: () => Promise<void>) => {
-  setBusy(true);
+  actionBusy = true;
+  syncBusy();
   try {
     await task();
   } catch (error) {
     print(`${label} failed: ${error instanceof Error ? error.message : String(error)}`);
   } finally {
-    setBusy(false);
+    actionBusy = false;
+    syncBusy();
   }
 };
 
 // The loop can also stop on its own (fatal error), so the button follows the controller rather
 // than the click. Busy tracks it too: while an agent is driving, the human should not also click.
-let debugPortRunning = false;
 debugPort.subscribe(() => {
   const { running } = debugPort.getStatus();
   if (running !== debugPortRunning) {
     debugPortRunning = running;
     setDebugPortActive(running);
-    setBusy(running);
+    syncBusy();
   }
 });
 
