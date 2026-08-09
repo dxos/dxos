@@ -247,3 +247,37 @@ run 31111016212 reported success while a test failed.
 - **Overclaim corrected:** `selecting comment highlights thread and vice versa` passes on webkit
   ×3; the earlier Tier-3 note calling it a _verified_ product gap rested on chromium alone and
   overstated. Browser-dependent behaviour still points at product, but "verified" was wrong.
+
+## Deferred-test inventory and per-test verdicts (2026-08-09)
+
+Every `test.fixme` / `test.skip` in an e2e spec, with why it is deferred and what re-enables it.
+Browser gates (`test.skip(browserName === …)`) are listed only where this work changed them.
+
+### Deferred on a defect, with a named re-enable condition
+
+| Test                       | Where                    | Verdict                                                                                                                                                                                                                                                                                                                                                                               |
+| -------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `guest joins host's space` | collaboration.spec       | REPLICATION, not invitation — guest reached the doc, editor kept the placeholder (firefox, run 31313863039). Re-enable with a trace from a CI failure; not reproducible in the sandbox (external STUN/TURN unavailable, fails 11/16 there for unrelated reasons).                                                                                                                     |
+| kanban suite on webkit     | plugin-kanban smoke.spec | Story-boot stall: no column painted in 45s. `storybook dev` arrival-order evaluation hits a mid-evaluation `ReferenceError` swallowed by storybook's error boundary. Preload lowered the rate only; `check-cycles` finds no static cycle; a BUILT storybook is measurably worse (build succeeds, 4/4 timeout, no story renders). Needs a different mechanism, not another workaround. |
+
+### Pre-existing skips, untouched by this work (follow-up)
+
+`basic.spec`: error-boundary/storage-version, reset app. `collaboration.spec`: cursors, presence.
+`comments.spec`: cut & paste (paste unavailable headless). `startup.spec`: warm start, warm-cold,
+throttled. `sdk/examples`: airplane mode, batching. `react-ui-table`: browser-gated throughout —
+check what it currently skips before counting its coverage.
+
+### Verdicts on the previously-flaky composer chromium tests
+
+| Test                                                 | Verdict                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create space, which is displayed in tree`           | FIXED. Both retry loops removed; the real cause was create aborting on the edge-replication wait. 30/30 chromium, 0/39 firefox.                                                                                                                                                                                                                         |
+| `create document`                                    | FIXED with the above (shared `createSpace`).                                                                                                                                                                                                                                                                                                            |
+| `edit message`                                       | FIXED by the attend/reveal split — the reveal was stealing focus mid-keystroke.                                                                                                                                                                                                                                                                         |
+| `delete message`                                     | NOT FIXED — `toHaveCount` still fails ~1 in 12 on webkit. Distinct from the marker issue.                                                                                                                                                                                                                                                               |
+| `selecting comment highlights thread and vice versa` | IMPROVED, NOT FIXED. id-vs-URI comparison fixed (firefox 6/15 → 2/15); ~13% residual remains and also hits `undo delete thread`, so it is a shared marker-path defect. Next probe must wrap the SPEC's assertions — the `createComment` diagnostic covers a different path, and a per-render probe distorts the timing (4/39 → 7/16 with one attached). |
+
+### Runtime (answered)
+
+Cold cache: e2e slowest shard 7.7 min (6.2 warm) vs `test` 12.8 min and `storybook` 9.4 min. E2E is
+no longer the critical path; `test` is.
