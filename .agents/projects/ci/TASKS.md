@@ -152,10 +152,10 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       ResetDialog race; only ever passed on the retries since removed), `warm start` (30 s
       `waitForReady` too tight under load) and `Welcome focus` for their own sake, not to make Check
       green.
-- [ ] **Needs a product change or is platform-bound** — `error boundary is rendered on invalid storage
-    version` (reset no longer wipes old data; needs an upgrade path), `cut & paste comment` (paste
-      unavailable headless, may be unfixable), `devtools-extension › Basic test` (Playwright cannot
-      load extensions headless; likely stays off).
+- [ ] **Needs a product change or is platform-bound** — the storage-version error boundary (reset no
+      longer wipes old data; needs an upgrade path), `cut & paste comment` (paste unavailable
+      headless, may be unfixable), `devtools-extension › Basic test` (Playwright cannot load
+      extensions headless; likely stays off).
 - [ ] **Follow-up, not this PR: convert storybook-driven suites to storybook tests** — `react-ui-table`
       (~12), `plugin-sheet` (3), `lit-grid` (3), `welcome-focus` (2). Kanban and mosaic are excluded:
       drag-and-drop does not work as a storybook test. Composer and todomvc are genuinely end-to-end
