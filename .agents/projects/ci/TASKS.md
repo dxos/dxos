@@ -73,6 +73,33 @@ Every disabled Playwright test, grouped by root cause and ordered by cost to fix
 `test.skip`, and 5 skipped suites. Work it top-down; each item is only done once it runs green in
 CI without a retry.
 
+What the **enabled** tests intermittently fail on is in
+[`E2E-FLAKE-ROOT-CAUSES.md`](./E2E-FLAKE-ROOT-CAUSES.md): the four causes behind every red cell of a
+ten-run campaign, plus the refuted hypotheses and the measurement hazards that produced confident
+wrong answers. Read its "Refuted hypotheses" and "Measurement hazards" sections before spending a
+round-trip on this area.
+
+- [x] **Comment marker landed on the wrong thread** (Class B) — the editor keyed comments by a URI
+      whose spelling changes when a draft persists, so a click's `scrollCommentIntoView` lookup
+      missed and the proximity tracker restored the previous thread. Keyed on the stable object id.
+- [x] **Text typed into an unbound editor was destroyed** (Class C) — a user-facing data-loss
+      window, not only a test failure: `useExtensions` omitted the automerge binding while the
+      content ref resolved, so the editor was editable but unbound and the binding's attach-reconcile
+      then replaced the document. Non-editable until bound, with a regression test.
+- [ ] **Class A: the production-edge two-peer path** — invitations and replication stall; the
+      dominant cause of red cells and endemic in production, not test-induced. Tracked as **DX-1152**
+      (edge side, assigned to Mykola); `dxos/edge#840` should heal the replication half. The client
+      half (an unacknowledged swarm JOIN with no repair path) needs the JOIN-ack semantics confirmed
+      first — a repair loop built on a guessed acknowledgment was measured and reverted.
+- [ ] **Class D: mosaic story never paints on webkit** — 1 of 10 runs, does not reproduce locally
+      (35/35). Ungated deliberately; needs a CI trace, not a guess.
+- [ ] **Sweep the other unbound-editable windows** — `MarkdownField`, `TemplateEditor`,
+      `SpecArticle`, `CodeArticle`, `Outline` share Class C's conditional-binding shape. Worth one
+      shared guard rather than five patches.
+- [ ] **Ten green campaign runs**, then **VM sizing** — both blocked on Class A: with ~30 two-peer
+      operations per run and a ~2% stall tail, no ten-run set passes against the current edge, and
+      sizing measured against a flaky baseline is meaningless.
+
 - [x] **Fix `cli:bundle`** — #12398 dropped the five `@opentui/core-<platform>-<arch>` packages
       from the CLI manifest as unused. Nothing imports them; they exist so pnpm installs all five
       native libraries for the five-target cross-compile, and without them every run failed with
