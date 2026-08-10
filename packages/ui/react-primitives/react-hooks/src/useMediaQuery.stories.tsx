@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// `react-hooks` deliberately doesn't depend on `@dxos/react-ui` (a `withTheme`/`withLayout` import
-// would create a cycle since `react-ui` depends on this package). Storybook's global
-// `withThemeByClassName` already applies the theme class at the root.
+// `react-hooks` deliberately doesn't depend on `@dxos/react-ui`
+// (a `withTheme`/`withLayout` import would create a cycle since `react-ui` depends on this package).
+// Storybook's global `withThemeByClassName` already applies the theme class at the root.
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
@@ -40,16 +40,18 @@ const MediaQueryDemo = ({ query }: MediaQueryDemoProps) => {
   const width = useWindowWidth();
 
   return (
-    <div className='flex flex-col w-full gap-4 p-4 font-mono text-sm'>
-      <div className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 max-w-md'>
-        <span className='text-description'>query</span>
-        <span>{query}</span>
-        <span className='text-description'>window width</span>
-        <span>{width}px</span>
-        <span className='text-description'>matches</span>
-        <span data-testid='matches'>{String(matches)}</span>
+    <div className='absolute inset-0 grid place-items-center'>
+      <div className='flex flex-col gap-4 p-4 border border-separator rounded'>
+        <div className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 max-w-md'>
+          <span className='text-description'>query</span>
+          <span>{query}</span>
+          <span className='text-description'>window width</span>
+          <span>{width}px</span>
+          <span className='text-description'>matches</span>
+          <span data-testid='matches'>{String(matches)}</span>
+        </div>
+        <AllBreakpoints />
       </div>
-      <AllBreakpoints />
     </div>
   );
 };
@@ -61,7 +63,10 @@ const AllBreakpoints = () => {
   return (
     <div className='flex gap-2'>
       {breakpoints.map((token, index) => (
-        <span key={token} className={`px-2 py-1 border border-separator rounded ${matches[index] ? '' : 'opacity-30'}`}>
+        <span
+          key={token}
+          className={`grid w-10 h-10 place-items-center font-mono border border-separator rounded ${matches[index] ? '' : 'opacity-30'}`}
+        >
           {token}
         </span>
       ))}
