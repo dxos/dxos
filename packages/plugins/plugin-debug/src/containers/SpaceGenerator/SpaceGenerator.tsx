@@ -97,6 +97,9 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     }, []);
 
     const handleReset = useCallback(async () => {
+      if (!window.confirm('Remove all objects from this space? This cannot be undone.')) {
+        return;
+      }
       try {
         const { data, error } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, { spaceId: space.id });
         if (error) {
@@ -113,6 +116,9 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     }, [space, invokePromise, updateInfo, showToast]);
 
     const handleCollectGarbage = useCallback(async () => {
+      if (!window.confirm("Permanently reclaim this space's deleted objects? This cannot be undone.")) {
+        return;
+      }
       try {
         const { data, error } = await invokePromise(SpaceOperation.CollectGarbage, undefined, { spaceId: space.id });
         if (error) {
@@ -144,39 +150,17 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
             { label: 'Refresh', icon: 'ph--arrow-clockwise--regular', testId: 'spaceGenerator.refresh' },
             () => void updateInfo(),
           )
-          .group(
+          .action(
             'reset',
-            {
-              label: 'Reset space',
-              icon: 'ph--trash--regular',
-              variant: 'dropdownMenu',
-              testId: 'spaceGenerator.reset',
-            },
-            (group) =>
-              group.action(
-                'confirm-reset',
-                { label: 'Confirm to remove all objects from the space.', testId: 'spaceGenerator.confirmReset' },
-                handleReset,
-              ),
+            { label: 'Reset space', icon: 'ph--trash--regular', testId: 'spaceGenerator.reset' },
+            handleReset,
           )
-          .group(
+          .action(
             'collect',
-            {
-              label: 'Collect garbage',
-              icon: 'ph--recycle--regular',
-              variant: 'dropdownMenu',
-              testId: 'spaceGenerator.collectGarbage',
-            },
-            (group) =>
-              group.action(
-                'confirm-collect',
-                {
-                  label: "Confirm to permanently reclaim the space's deleted objects.",
-                  testId: 'spaceGenerator.confirmCollectGarbage',
-                },
-                handleCollectGarbage,
-              ),
+            { label: 'Collect garbage', icon: 'ph--recycle--regular', testId: 'spaceGenerator.collectGarbage' },
+            handleCollectGarbage,
           )
+          .separator('gap')
           .build(),
       [updateInfo, handleReset, handleCollectGarbage],
     );
