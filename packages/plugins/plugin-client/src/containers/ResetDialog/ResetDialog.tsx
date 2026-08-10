@@ -14,6 +14,8 @@ import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ConfirmReset, type ConfirmResetProps, translationKey } from '@dxos/shell/react';
 
+import { meta } from '#meta';
+
 import * as ClientOptions from '../../types/ClientOptions';
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
@@ -28,8 +30,11 @@ export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
 
 export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }: ResetDialogProps) => {
   const { t } = useTranslation(translationKey);
+  const { t: tClient } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
+  // The bare storage reset is presented as logging out; the other modes swap to a new identity.
+  const isLogout = (mode ?? 'reset-storage') === 'reset-storage';
 
   const handleReset = useCallback(async () => {
     if (onBeforeReset) {
@@ -52,11 +57,19 @@ export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }:
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('reset-dialog.title')}</Dialog.Title>
+        <Dialog.Title>{isLogout ? tClient('logout.label') : t('reset-dialog.title')}</Dialog.Title>
       </Dialog.Header>
       <Dialog.Body>
-        <Dialog.Description classNames='sr-only'>{t('reset-dialog.description')}</Dialog.Description>
-        <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
+        <Dialog.Description classNames='sr-only'>
+          {isLogout ? tClient('logout.description') : t('reset-dialog.description')}
+        </Dialog.Description>
+        <ConfirmReset
+          active
+          mode={mode}
+          confirmLabel={isLogout ? tClient('logout.label') : undefined}
+          onConfirm={handleReset}
+          onCancel={handleCancel}
+        />
       </Dialog.Body>
     </Dialog.Content>
   );
