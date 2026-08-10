@@ -66,23 +66,27 @@ export class ColumnManager {
 
     await handle.hover();
     await this._page.mouse.down();
-    // Small initial movement to trigger the native drag start.
-    await this._page.mouse.move(handleBox.x + handleBox.width / 2 + 1, handleBox.y + handleBox.height / 2, {
-      steps: 1,
-    });
-    // Allow the drag monitor to register and the DOM to settle
-    // (the dragged column is removed from visible items, shifting remaining columns).
-    await this._page.waitForTimeout(200);
-    const box = await target.boundingBox();
-    if (!box) {
-      // Releasing here would leave the button down and corrupt the next gesture.
+    // Every exit releases the button. Playwright's mouse state belongs to the page, so throwing while it
+    // is held leaves the page mid-drag and the next gesture — or teardown — is swallowed by that drag
+    // rather than reporting this failure.
+    try {
+      // Small initial movement to trigger the native drag start.
+      await this._page.mouse.move(handleBox.x + handleBox.width / 2 + 1, handleBox.y + handleBox.height / 2, {
+        steps: 1,
+      });
+      // Allow the drag monitor to register and the DOM to settle
+      // (the dragged column is removed from visible items, shifting remaining columns).
+      await this._page.waitForTimeout(200);
+      const box = await target.boundingBox();
+      if (!box) {
+        throw new Error('column drop target has no bounding box — nothing to drop onto');
+      }
+      await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
+      // Allow the drop target to process the hover before releasing.
+      await this._page.waitForTimeout(100);
+    } finally {
       await this._page.mouse.up();
-      throw new Error('column drop target has no bounding box — nothing to drop onto');
     }
-    await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
-    // Allow the drop target to process the hover before releasing.
-    await this._page.waitForTimeout(100);
-    await this._page.mouse.up();
   }
 }
 
@@ -117,98 +121,95 @@ export class ItemManager {
 
     await handle.hover();
     await this._page.mouse.down();
-    // Allow the drag monitor to register the grab before moving.
-    await this._page.waitForTimeout(100);
+    try {
+      // Allow the drag monitor to register the grab before moving.
+      await this._page.waitForTimeout(100);
 
-    if (edge) {
-      // Stage 1: trigger the dragstart. A 1-pixel nudge near the press
-      // point primes pragmatic-dnd's HTML5 dragstart, then a long move
-      // over the target tile commits the drag past every browser's
-      // "click vs drag" threshold.
-      await this._page.mouse.move(handleBox.x + handleBox.width / 2 + 1, handleBox.y + handleBox.height / 2, {
-        steps: 1,
-      });
-      await this._page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 });
+      if (edge) {
+        // Stage 1: trigger the dragstart. A 1-pixel nudge near the press
+        // point primes pragmatic-dnd's HTML5 dragstart, then a long move
+        // over the target tile commits the drag past every browser's
+        // "click vs drag" threshold.
+        await this._page.mouse.move(handleBox.x + handleBox.width / 2 + 1, handleBox.y + handleBox.height / 2, {
+          steps: 1,
+        });
+        await this._page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 });
 
-      // Wait for `data-mosaic-container-state="active"` so we know the
-      // dragstart has been processed. This alone is *not* enough: pragmatic-
-      // dnd's `monitorForElements.onDragStart` (Root.tsx) and the
-      // `dropTargetForElements.onDragStart` (Container.tsx) write into
-      // independent React state, and only the latter drives the attribute.
-      // The former drives `useVisibleItems` filtering, which is what
-      // physically reflows the column. So we ALSO wait for the source tile
-      // to detach from the DOM — that's the unambiguous signal that the
-      // reflow has happened and any cached bbox is stale.
-      await expect
-        .poll(() => this._page.locator('[data-mosaic-container-state="active"]').count(), { timeout: 2000 })
-        .toBeGreaterThan(0);
-      if (sourceHandle) {
-        await this._page.waitForFunction((el) => !el || !el.isConnected, sourceHandle, { timeout: 2000 });
-      }
+        // Wait for `data-mosaic-container-state="active"` so we know the
+        // dragstart has been processed. This alone is *not* enough: pragmatic-
+        // dnd's `monitorForElements.onDragStart` (Root.tsx) and the
+        // `dropTargetForElements.onDragStart` (Container.tsx) write into
+        // independent React state, and only the latter drives the attribute.
+        // The former drives `useVisibleItems` filtering, which is what
+        // physically reflows the column. So we ALSO wait for the source tile
+        // to detach from the DOM — that's the unambiguous signal that the
+        // reflow has happened and any cached bbox is stale.
+        await expect
+          .poll(() => this._page.locator('[data-mosaic-container-state="active"]').count(), { timeout: 2000 })
+          .toBeGreaterThan(0);
+        if (sourceHandle) {
+          await this._page.waitForFunction((el) => !el || !el.isConnected, sourceHandle, { timeout: 2000 });
+        }
 
-      // Stage 2: walk siblings on the (now reflowed) drag-time DOM and aim
-      // at the placeholder representing the requested edge. The Fragment
-      // keying on item id keeps the target tile's adjacent placeholder DOM
-      // node stable across reconciliation, but its `location` prop and bbox
-      // both change once the source is filtered out — measure after the
-      // reflow, never before.
-      const placeholderHandle = await this._adjacentPlaceholder(targetHandle, edge);
-      if (!placeholderHandle) {
-        await this._page.mouse.up();
-        throw new Error(`no ${edge} placeholder adjacent to the drop target — the drop would land unaimed`);
-      }
-      {
+        // Stage 2: walk siblings on the (now reflowed) drag-time DOM and aim
+        // at the placeholder representing the requested edge. The Fragment
+        // keying on item id keeps the target tile's adjacent placeholder DOM
+        // node stable across reconciliation, but its `location` prop and bbox
+        // both change once the source is filtered out — measure after the
+        // reflow, never before.
+        const placeholderHandle = await this._adjacentPlaceholder(targetHandle, edge);
+        if (!placeholderHandle) {
+          throw new Error(`no ${edge} placeholder adjacent to the drop target — the drop would land unaimed`);
+        }
         const phBox = await placeholderHandle.boundingBox();
         if (!phBox) {
-          await this._page.mouse.up();
           throw new Error(`${edge} placeholder has no bounding box — the drop would land unaimed`);
         }
-        {
-          const aimX = phBox.x + phBox.width / 2;
-          const aimY = phBox.y + Math.max(phBox.height / 2, 1);
-          await this._page.mouse.move(aimX, aimY, { steps: 4 });
+        const aimX = phBox.x + phBox.width / 2;
+        const aimY = phBox.y + Math.max(phBox.height / 2, 1);
+        await this._page.mouse.move(aimX, aimY, { steps: 4 });
 
-          // Some browser/CDP combinations need a follow-up nudge to push
-          // the dragOver event through — re-aim with a 1px offset and poll.
-          const isActive = () =>
-            placeholderHandle.evaluate((el) => el.getAttribute('data-mosaic-placeholder-state') === 'active');
-          if (!(await isActive())) {
-            const start = Date.now();
-            let nudge = 0;
-            while (Date.now() - start < 3000) {
-              await this._page.waitForTimeout(100);
-              nudge = (nudge + 1) % 4;
-              const dx = nudge === 0 || nudge === 2 ? 1 : -1;
-              const dy = nudge === 1 || nudge === 2 ? 1 : -1;
-              await this._page.mouse.move(aimX + dx, aimY + dy, { steps: 1 });
-              if (await isActive()) {
-                break;
-              }
+        // Some browser/CDP combinations need a follow-up nudge to push
+        // the dragOver event through — re-aim with a 1px offset and poll.
+        const isActive = () =>
+          placeholderHandle.evaluate((el) => el.getAttribute('data-mosaic-placeholder-state') === 'active');
+        if (!(await isActive())) {
+          const start = Date.now();
+          let nudge = 0;
+          while (Date.now() - start < 3000) {
+            await this._page.waitForTimeout(100);
+            nudge = (nudge + 1) % 4;
+            const dx = nudge === 0 || nudge === 2 ? 1 : -1;
+            const dy = nudge === 1 || nudge === 2 ? 1 : -1;
+            await this._page.mouse.move(aimX + dx, aimY + dy, { steps: 1 });
+            if (await isActive()) {
+              break;
             }
-            await expect
-              .poll(() => placeholderHandle.evaluate((el) => el.getAttribute('data-mosaic-placeholder-state')), {
-                timeout: 1000,
-              })
-              .toBe('active');
           }
-
-          // Re-centre on the now-expanded placeholder so the drop lands
-          // solidly inside it.
-          const expanded = await placeholderHandle.boundingBox();
-          if (expanded) {
-            await this._page.mouse.move(expanded.x + expanded.width / 2, expanded.y + expanded.height / 2, {
-              steps: 2,
-            });
-          }
+          await expect
+            .poll(() => placeholderHandle.evaluate((el) => el.getAttribute('data-mosaic-placeholder-state')), {
+              timeout: 1000,
+            })
+            .toBe('active');
         }
+
+        // Re-centre on the now-expanded placeholder so the drop lands
+        // solidly inside it.
+        const expanded = await placeholderHandle.boundingBox();
+        if (expanded) {
+          await this._page.mouse.move(expanded.x + expanded.width / 2, expanded.y + expanded.height / 2, {
+            steps: 2,
+          });
+        }
+      } else {
+        // Legacy path: no explicit edge — rely on the offset placement and a
+        // small settle delay before releasing.
+        await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
+        await this._page.waitForTimeout(100);
       }
-    } else {
-      // Legacy path: no explicit edge — rely on the offset placement and a
-      // small settle delay before releasing.
-      await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
-      await this._page.waitForTimeout(100);
+    } finally {
+      await this._page.mouse.up();
     }
-    await this._page.mouse.up();
   }
 
   /**
@@ -270,58 +271,56 @@ export class ItemManager {
 
     await handle.hover();
     await this._page.mouse.down();
-    // Allow the drag monitor to register the grab before moving.
-    await this._page.waitForTimeout(100);
+    try {
+      // Allow the drag monitor to register the grab before moving.
+      await this._page.waitForTimeout(100);
 
-    if (!needsScroll) {
-      // Target is already visible — drag directly without auto-scroll.
-      await this._page.mouse.move(holdX, holdY, { steps: 4 });
-      const dropBox = await dropTarget.boundingBox();
-      if (!dropBox) {
-        await this._page.mouse.up();
-        throw new Error('drop target vanished after the drag started — nothing to drop onto');
-      }
-      const dropX = dropOffset.x + dropBox.x + dropBox.width / 2;
-      const dropY = dropOffset.y + dropBox.y + dropBox.height / 2;
-      await this._page.mouse.move(dropX, dropY, { steps: 8 });
-      await this._page.waitForTimeout(200);
-      await this._page.mouse.up();
-      return;
-    }
-
-    // Move to hold position above the footer to trigger auto-scroll.
-    await this._page.mouse.move(holdX, holdY, { steps: 4 });
-
-    // Hold and nudge mouse periodically to keep auto-scroll active until drop target is visible.
-    for (let i = 0; i < 40; i++) {
-      // Wait between nudges to give auto-scroll time to advance.
-      await this._page.waitForTimeout(200);
-      // Small nudge to keep drag events firing (auto-scroll stalls without movement).
-      await this._page.mouse.move(holdX + (i % 2), holdY, { steps: 1 });
-
-      const dropBox = await dropTarget.boundingBox();
-      if (dropBox && dropBox.y + dropBox.height < holdY) {
-        // Drop target has scrolled into view. Re-read box so we use current position (scroll may have moved it).
-        const finalBox = await dropTarget.boundingBox();
-        if (!finalBox) {
-          await this._page.mouse.up();
-          throw new Error('drop target vanished after scrolling into view — nothing to drop onto');
+      if (!needsScroll) {
+        // Target is already visible — drag directly without auto-scroll.
+        await this._page.mouse.move(holdX, holdY, { steps: 4 });
+        const dropBox = await dropTarget.boundingBox();
+        if (!dropBox) {
+          throw new Error('drop target vanished after the drag started — nothing to drop onto');
         }
-
-        const dropX = dropOffset.x + finalBox.x + finalBox.width / 2;
-        const dropY = dropOffset.y + finalBox.y + finalBox.height / 2;
+        const dropX = dropOffset.x + dropBox.x + dropBox.width / 2;
+        const dropY = dropOffset.y + dropBox.y + dropBox.height / 2;
         await this._page.mouse.move(dropX, dropY, { steps: 8 });
-        // Let drop target receive dragOver and settle (headless is faster; needs a moment to register).
-        await dropTarget.waitFor({ state: 'visible' });
         await this._page.waitForTimeout(200);
-        await this._page.mouse.up();
         return;
       }
-    }
 
-    // Auto-scroll never brought the target into view; releasing here would drop the card at whatever
-    // position the cursor holds instead of failing loudly.
-    await this._page.mouse.up();
-    throw new Error('auto-scroll did not bring the drop target into view within 40 nudges');
+      // Move to hold position above the footer to trigger auto-scroll.
+      await this._page.mouse.move(holdX, holdY, { steps: 4 });
+
+      // Hold and nudge mouse periodically to keep auto-scroll active until drop target is visible.
+      for (let i = 0; i < 40; i++) {
+        // Wait between nudges to give auto-scroll time to advance.
+        await this._page.waitForTimeout(200);
+        // Small nudge to keep drag events firing (auto-scroll stalls without movement).
+        await this._page.mouse.move(holdX + (i % 2), holdY, { steps: 1 });
+
+        const dropBox = await dropTarget.boundingBox();
+        if (dropBox && dropBox.y + dropBox.height < holdY) {
+          // Drop target has scrolled into view. Re-read box so we use current position (scroll may have moved it).
+          const finalBox = await dropTarget.boundingBox();
+          if (!finalBox) {
+            throw new Error('drop target vanished after scrolling into view — nothing to drop onto');
+          }
+
+          const dropX = dropOffset.x + finalBox.x + finalBox.width / 2;
+          const dropY = dropOffset.y + finalBox.y + finalBox.height / 2;
+          await this._page.mouse.move(dropX, dropY, { steps: 8 });
+          // Let drop target receive dragOver and settle (headless is faster; needs a moment to register).
+          await dropTarget.waitFor({ state: 'visible' });
+          await this._page.waitForTimeout(200);
+          return;
+        }
+      }
+
+      // Failing loudly rather than releasing: an unaimed drop lands the card wherever the cursor sits.
+      throw new Error('auto-scroll did not bring the drop target into view within 40 nudges');
+    } finally {
+      await this._page.mouse.up();
+    }
   }
 }

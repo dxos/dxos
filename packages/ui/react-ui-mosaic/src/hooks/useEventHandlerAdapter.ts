@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
 import { type Obj } from '@dxos/echo';
@@ -77,34 +78,38 @@ export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown 
 
         const mutate = (items: TItem[]) => {
           const from = items.findIndex((item) => getId(item) === source.id);
-          // A tile target's index comes from its id against the CURRENT list, never from its
-          // `location`: that number is captured at the last dragover, so a release beating the
-          // post-drag-start re-render still holds the pre-reflow position, one too high. Placeholders
-          // keep `location`, which names the gap itself.
-          let insertIndex: number;
-          if (target?.type === 'tile') {
-            const withoutSource = from === -1 ? items : items.filter((item) => getId(item) !== source.id);
-            const tileIndex = withoutSource.findIndex((item) => getId(item) === target.id);
-            insertIndex = tileIndex === -1 ? -1 : tileIndex + 1;
-          } else {
+
+          // `none` when the drop resolves to no position. A tile target's index comes from its id
+          // against the CURRENT list, never from its `location`: that number is captured at the last
+          // dragover, so a release beating the post-drag-start re-render still holds the pre-reflow
+          // position, one too high. Placeholders keep `location`, which names the gap itself.
+          const resolveInsertIndex = (): Option.Option<number> => {
+            if (target?.type === 'tile') {
+              const withoutSource = from === -1 ? items : items.filter((item) => getId(item) !== source.id);
+              const tileIndex = withoutSource.findIndex((item) => getId(item) === target.id);
+              return tileIndex === -1 ? Option.none() : Option.some(tileIndex + 1);
+            }
+
             const to =
               target?.type === 'placeholder' ? target.location : target?.type === 'container' ? items.length : -1;
-            insertIndex = typeof to === 'number' && to >= 0 ? Math.floor(to) : -1;
-          }
-          if (insertIndex === -1) {
-            return;
-          }
+            return typeof to === 'number' && to >= 0 ? Option.some(Math.floor(to)) : Option.none();
+          };
 
-          if (from !== -1) {
-            // Clamped because the index is measured against the list including the dragged item but
-            // applied after it is spliced out: one past the end, an ECHO array throws rather than
-            // appending, and the removal has already committed, so the item would be destroyed.
-            const [item] = items.splice(from, 1);
-            items.splice(Math.min(insertIndex, items.length), 0, item);
-          } else {
-            // TODO(burdon): This should be the responsibility of the source container.
-            items.splice(Math.min(insertIndex, items.length), 0, make(get(source.data)));
-          }
+          Option.match(resolveInsertIndex(), {
+            onNone: () => {},
+            // Clamped against the length read AFTER the removal: the index is measured against the list
+            // including the dragged item, so one past the end makes an ECHO array throw rather than
+            // append, and the removal has already committed, destroying the item.
+            onSome: (insertIndex) => {
+              if (from !== -1) {
+                const [item] = items.splice(from, 1);
+                items.splice(Math.min(insertIndex, items.length), 0, item);
+              } else {
+                // TODO(burdon): This should be the responsibility of the source container.
+                items.splice(Math.min(insertIndex, items.length), 0, make(get(source.data)));
+              }
+            },
+          });
         };
 
         if (onChange) {
