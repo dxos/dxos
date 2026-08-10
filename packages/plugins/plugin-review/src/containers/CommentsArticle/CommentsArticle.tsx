@@ -238,7 +238,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const threadId = Obj.getURI(thread);
       // Recorded unconditionally, revealed only on a change: skipping the write leaves the selection
-      // on a stale spelling, so a freshly persisted comment never shows the marker.
+      // on a stale spelling, so a freshly persisted comment never shows the marker. A DIRECT write,
+      // never a queued Select: attention is passive (a re-render restoring focus, a draft
+      // autofocusing), and ordering it into the serial queue applies render noise AFTER a deliberate
+      // click that issued before it — measured putting the marker on a sibling thread the reader
+      // never chose. Applied at event time, it loses to any later intent, which is the point.
       const sameThread = ReviewCapabilities.currentObjectId(state.current) === thread.id;
       registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
       if (sameThread) {
@@ -300,6 +304,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return;
       }
       const thread = Relation.getSource(anchor) as Thread.Thread;
+      // Direct write, not a queued Select: this is a compare-and-set, and its guard is only sound
+      // while the read and the write share one synchronous turn.
       registry.set(stateAtom, { ...latest, current: Obj.getURI(thread) });
     },
     [invokePromise, identity, subject, registry, stateAtom],

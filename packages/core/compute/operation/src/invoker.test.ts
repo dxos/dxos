@@ -283,6 +283,120 @@ describe('OperationInvoker.invokePromise', () => {
 });
 
 //
+// Serial dispatch: invocations of a `dispatch: 'serial'` operation apply in issue order, even when
+// an earlier invocation stalls (a lazy handler's chunk load, a busy runtime). Last-write-wins state
+// (e.g. a selection) silently keeps a stale value without this.
+//
+
+describe('OperationInvoker serial dispatch', () => {
+  /** Stand-in for the stall: the first invocation blocks until the test releases it. */
+  const makeStallingSetup = (
+    dispatch: 'concurrent' | 'serial',
+    extraHandlers: Operation.WithHandler<Operation.Definition.Any>[] = [],
+  ) => {
+    const Write = Operation.make({
+      input: Schema.Struct({ value: Schema.String, stall: Schema.Boolean }),
+      output: Schema.Void,
+      meta: { key: DXN.make('org.example.test.write') },
+      dispatch,
+    });
+
+    const applied: string[] = [];
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = () => resolve();
+    });
+    const writeHandler = Operation.withHandler(Write, (input) =>
+      Effect.gen(function* () {
+        if (input.stall) {
+          yield* Effect.promise(() => gate);
+        }
+        applied.push(input.value);
+      }),
+    );
+
+    const invoker = OperationInvoker.make(() => Effect.succeed([writeHandler, ...extraHandlers]), testRuntime);
+    return { Write, applied, release, invoker };
+  };
+
+  test('concurrent (default): a stalled earlier call is overtaken — the hazard this exists for', async ({ expect }) => {
+    const { Write, applied, release, invoker } = makeStallingSetup('concurrent');
+
+    const first = invoker.invokePromise(Write, { value: 'stale', stall: true });
+    const second = invoker.invokePromise(Write, { value: 'newest', stall: false });
+    await second;
+    release();
+    await first;
+
+    // Issued [stale, newest]; applied [newest, stale] — the stale value wins.
+    expect(applied).toEqual(['newest', 'stale']);
+  });
+
+  test('serial: applications match issue order across a stalled predecessor', async ({ expect }) => {
+    const { Write, applied, release, invoker } = makeStallingSetup('serial');
+
+    const first = invoker.invokePromise(Write, { value: 'stale', stall: true });
+    const second = invoker.invokePromise(Write, { value: 'newest', stall: false });
+    release();
+    await Promise.all([first, second]);
+
+    expect(applied).toEqual(['stale', 'newest']);
+  });
+
+  test('serial: a failing invocation releases the queue', async ({ expect }) => {
+    const Flaky = Operation.make({
+      input: Schema.Struct({ fail: Schema.Boolean }),
+      output: Schema.Void,
+      meta: { key: DXN.make('org.example.test.flakyWrite') },
+      dispatch: 'serial',
+    });
+    const applied: boolean[] = [];
+    const flakyHandler = Operation.withHandler(Flaky, (input) =>
+      Effect.gen(function* () {
+        if (input.fail) {
+          return yield* Effect.fail(new Error('boom'));
+        }
+        applied.push(true);
+      }),
+    );
+    const invoker = OperationInvoker.make(() => Effect.succeed([flakyHandler]), testRuntime);
+
+    const first = await invoker.invokePromise(Flaky, { fail: true });
+    const second = await invoker.invokePromise(Flaky, { fail: false });
+
+    expect(first.error).toBeDefined();
+    expect(second.error).toBeUndefined();
+    expect(applied).toEqual([true]);
+  });
+
+  test('serial operations with different keys do not serialize each other', async ({ expect }) => {
+    const Other = Operation.make({
+      input: Schema.Void,
+      output: Schema.Void,
+      meta: { key: DXN.make('org.example.test.otherSerial') },
+      dispatch: 'serial',
+    });
+    const otherApplied: boolean[] = [];
+    const otherHandler = Operation.withHandler(Other, () =>
+      Effect.sync(() => {
+        otherApplied.push(true);
+      }),
+    );
+    const { Write, applied, release, invoker } = makeStallingSetup('serial', [otherHandler]);
+
+    const stalled = invoker.invokePromise(Write, { value: 'stuck', stall: true });
+    const other = await invoker.invokePromise(Other, undefined);
+
+    // `Other` completed while `Write`'s tail was still stalled.
+    expect(other.error).toBeUndefined();
+    expect(otherApplied).toEqual([true]);
+    release();
+    await stalled;
+    expect(applied).toEqual(['stuck']);
+  });
+});
+
+//
 // Type-level tests for Operation.withHandler service constraints.
 //
 

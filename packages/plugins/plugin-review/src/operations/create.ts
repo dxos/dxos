@@ -47,8 +47,10 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
 
       const state = registry.get(stateAtom);
       const existingDrafts = state.drafts[subjectId];
-      // Selected in the same write that adds the draft: a nested `Select` invocation resolves on its
-      // own schedule and can land after a click the reader has since made.
+      // Selected in the same write that adds the draft — atomic with the state it accompanies, and
+      // deliberately NOT a queued Select: this intent exists only once the draft does, so it has no
+      // meaningful issue-time in the queue, and a nested invocation is what used to stomp clicks the
+      // reader had since made.
       registry.set(stateAtom, {
         ...state,
         current: Obj.getURI(thread),

@@ -51,6 +51,11 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<O, NoHandlerError>;
+  /**
+   * Fire-and-forget invocation. Each call runs on its own fiber, so completion order is not issue
+   * order — except for operations declaring `dispatch: 'serial'`, whose invocations apply strictly
+   * in the order this method was called.
+   */
   invokePromise: <I, O>(
     op: Operation.Definition<I, O>,
     ...args: void extends I
@@ -106,6 +111,10 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   private readonly _databaseResolver?: DatabaseResolver;
   // Cache for DynamicRuntime instances keyed by service tag keys.
   private readonly _dynamicRuntimeCache = new Map<string, DynamicRuntime.DynamicRuntime<any>>();
+  // Pending tail per `dispatch: 'serial'` operation key. Chained synchronously at the
+  // `invokePromise` call site — capturing issue order inside the fiber would be too late, since a
+  // fiber only enqueues once it is scheduled.
+  readonly #serialTails = new Map<string, Promise<unknown>>();
 
   constructor(
     getHandlers: () => Effect.Effect<Operation.WithHandler<Operation.Definition.Any>[]>,
@@ -178,13 +187,39 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   };
 
   // Arrow function to preserve `this` context when destructured.
-  invokePromise = async <I, O>(
+  invokePromise = <I, O>(
     op: Operation.Definition<I, O>,
     ...args: void extends I
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ): Promise<{ data?: O; error?: Error }> => {
-    const effect = this.invoke(op, ...args);
+    if (op.dispatch !== 'serial') {
+      return this._runPromise(op, args);
+    }
+
+    // Serial dispatch: apply strictly in issue order. Each call chains behind the key's pending
+    // tail before any async boundary, so a stalled predecessor (e.g. paying a lazy handler's chunk
+    // load) cannot be overtaken by a later, faster call — the inversion that let a stale
+    // last-write-wins value overwrite a newer one. `_runPromise` never rejects, so a failed
+    // predecessor releases the queue rather than wedging it.
+    const key = op.meta.key.toString();
+    const tail = this.#serialTails.get(key) ?? Promise.resolve();
+    const next = tail.then(() => this._runPromise(op, args));
+    this.#serialTails.set(key, next);
+    void next.finally(() => {
+      // Only the newest tail may clear the entry, or a queued successor would be dropped.
+      if (this.#serialTails.get(key) === next) {
+        this.#serialTails.delete(key);
+      }
+    });
+    return next;
+  };
+
+  private _runPromise = async <I, O>(
+    op: Operation.Definition<I, O>,
+    args: readonly [input?: I, options?: Operation.InvokeOptions],
+  ): Promise<{ data?: O; error?: Error }> => {
+    const effect = this.invoke(op, ...(args as [I, Operation.InvokeOptions?]));
     const exit = await this._managedRuntime.runPromiseExit(effect);
     try {
       const data = EffectEx.unwrapExit(exit);

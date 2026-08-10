@@ -218,9 +218,9 @@ export const commentSync = (
       onSelect: ({ selection }) => {
         const current = selection.current ?? selection.closest;
         if (current) {
-          // Direct atom write, not an operation: proximity fires on every caret move and async
-          // invocations complete out of order, so a slower earlier one overwrites a click's selection.
-          registry.set(stateAtom, { ...registry.get(stateAtom), current });
+          // `Select` declares `dispatch: 'serial'`, so this applies in issue order against the
+          // click path below — a stalled earlier proximity update cannot overwrite a later click.
+          void invokePromise(CommentOperation.Select, { current });
         }
       },
       // A deliberate click reveals the thread in the comments companion; `reveal` routes the companion

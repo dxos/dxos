@@ -145,6 +145,31 @@ wait block until the editor is bound, so the tests became deterministic with no 
 evidence in `plugin-kanban/src/playwright/smoke.spec.ts` — but that evidence does not transfer to a
 different storybook.
 
+### Serial operation dispatch (the cause-B follow-through)
+
+The comment-selection race under cause B was, mechanically, a dispatch-ordering defect:
+`invokePromise` runs each invocation on its own fiber, and handler resolution can await a lazy
+handler's dynamic `import()`, so a stalled earlier `Select` overwrote a later click — last-write-wins
+by completion order where the semantics need issue order. Fixed at the invoker:
+`dispatch: 'serial'` on an Operation tail-chains its `invokePromise` calls **synchronously at the
+call site** (a fiber enqueues too late), so applications match issue order; `CommentOperation.Select`
+declares it, and the proximity path invokes the operation again instead of writing the atom directly.
+
+Two boundaries, both measured, that the queue must NOT absorb:
+
+1. **Passive focus is not intent.** `handleAttend` records attention (a re-render restoring focus, a
+   draft autofocusing). Queued as a Select, a render-triggered attend that _issues_ after a
+   deliberate click _applies_ after it — measured putting the marker on a sibling thread the reader
+   never chose (1 in 5 two-worker runs). It stays a direct write, applied at event time, so any later
+   intent beats it.
+2. **Creation-bound selection has no queue position.** `Create` selects its draft in the same
+   synchronous write that adds it; the intent exists only once the draft does, and a nested/queued
+   Select issues at handler-run time — behind clicks the reader has since made.
+
+Validated: invoker tests prove the inversion under `'concurrent'` and its absence under `'serial'`;
+comments spec 6/6 serial and 4×6/6 at two workers after the boundaries above were restored (the
+first attempt queued `handleAttend` too, and failed exactly as predicted).
+
 ### Earlier shared causes, already fixed
 
 Deferring one victim of a shared cause just moves the failure to another test next run, so these were

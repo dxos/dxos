@@ -52,6 +52,11 @@ export const Delete = Operation.make({
 
 export const Select = Operation.make({
   meta: { key: makeKey('select'), name: 'Select Comment Thread', icon: 'ph--check--regular' },
+  // Selection is last-intent-wins state, so applications must match issue order: the caret's
+  // proximity tracker and a deliberate click both write through this operation, and a concurrent
+  // dispatch let a stalled earlier call (paying the lazy handler's chunk load) overwrite a later
+  // click's selection — terminal, since nothing re-fires until the caret moves again.
+  dispatch: 'serial',
   services: [Capability.Service],
   input: Schema.Struct({
     // Optional so callers can clear the active thread (e.g. after delete/close).
