@@ -119,3 +119,11 @@ const meta = {
 export default meta;
 
 export const Default: StoryObj<StoryProps> = { args: { variant: 'random' } };
+
+export const Wander: StoryObj<StoryProps> = { args: { variant: 'wander' } };
+
+export const Orbit: StoryObj<StoryProps> = { args: { variant: 'orbit' } };
+
+export const Trails: StoryObj<StoryProps> = { args: { variant: 'trails' } };
+
+export const Linked: StoryObj<StoryProps> = { args: { variant: 'linked' } };
