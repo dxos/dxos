@@ -47,7 +47,7 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
               navigator.credentials.create({
                 publicKey: {
                   challenge: new Uint8Array(),
-                  rp: { id: location.hostname, name: 'Composer' },
+                  rp: { id: NativePasskey.getRelyingPartyId(), name: 'Composer' },
                   user: {
                     id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
                     name: identity.did,
