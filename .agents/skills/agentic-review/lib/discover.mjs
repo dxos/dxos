@@ -59,8 +59,13 @@ export const matchRuleFiles = (rule, root, changedSet) => {
     files = files.filter((path) => {
       try {
         return regex.test(readFileSync(join(root, path), 'utf8'));
-      } catch {
-        return false;
+      } catch (error) {
+        // A file may vanish between the changed-set scan and this read; treat
+        // only that as a non-match and surface any other read failure.
+        if (error?.code === 'ENOENT') {
+          return false;
+        }
+        throw error;
       }
     });
   }

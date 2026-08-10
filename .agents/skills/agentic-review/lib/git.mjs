@@ -64,7 +64,13 @@ export const commitTimestamp = (commit) => {
   return out ? Number.parseInt(out, 10) : 0;
 };
 
-/** True if `ancestor` is an ancestor of (or equal to) `descendant`. */
+/**
+ * True if `ancestor` is an ancestor of (or equal to) `descendant`. Any nonzero
+ * exit is deliberately treated as "not an ancestor" — that covers git's own
+ * exit-1 answer and an `ancestor` commit absent from this clone (a persisted
+ * prior review referencing an unfetched commit), both of which mean base
+ * resolution should skip it rather than fail.
+ */
 export const isAncestor = (ancestor, descendant) => {
   try {
     execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], { stdio: 'ignore' });
