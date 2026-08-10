@@ -45,9 +45,8 @@ export const useMediaQuery = (query: string | string[], options: UseMediaQueryOp
     }));
   });
 
-  // Keyed on the resolved queries (via a stable string — the array is rebuilt every render) so a
-  // changed `query` re-seeds state and re-subscribes; keyed on `document.defaultView` it never
-  // re-ran, leaving the hook tracking the original query for the component's lifetime.
+  // Keyed on a stable string of the resolved queries (the array is rebuilt every render) so a
+  // changed `query` re-seeds state and re-subscribes.
   const queryKey = queries.join('|');
   useEffect(() => {
     const mql = queries.map((query) => document.defaultView?.matchMedia(query));
