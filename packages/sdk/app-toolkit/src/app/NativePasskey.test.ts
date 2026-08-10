@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { afterEach, describe, test, vi } from 'vitest';
 
 import * as NativePasskey from './NativePasskey';
 
@@ -119,6 +119,23 @@ const concat = (...arrays: Uint8Array[]): Uint8Array => {
   }
   return result;
 };
+
+describe('getRelyingPartyId', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test.for([
+    ['composer.space', 'composer.space'],
+    ['labs.composer.space', 'composer.space'],
+    ['staging.composer.space', 'composer.space'],
+    ['localhost', 'localhost'],
+    ['dxos-composer.netlify.app', 'dxos-composer.netlify.app'],
+  ])('%s -> %s', ([hostname, expected], { expect }) => {
+    vi.stubGlobal('location', { hostname });
+    expect(NativePasskey.getRelyingPartyId()).toBe(expected);
+  });
+});
 
 describe('extractPublicKeyFromAttestation', () => {
   test('extracts ES256 public key from attestation object', ({ expect }) => {
