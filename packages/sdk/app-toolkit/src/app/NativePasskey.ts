@@ -16,7 +16,7 @@
 //   The iOS entitlements file also needs webcredentials:composer.space and a deployment target bump to 16.0+.
 
 import { log } from '@dxos/log';
-import { isTauri } from '@dxos/util';
+import { getHostPlatform, isTauri } from '@dxos/util';
 
 /** Result from the native passkey registration command. */
 export type NativePasskeyRegistrationResult = {
@@ -67,8 +67,7 @@ export const supportsNativePasskeys = (): boolean => {
   if (!isTauri()) {
     return false;
   }
-  const platform = ((navigator as any).userAgentData?.platform || navigator.platform)?.toLowerCase();
-  return platform?.startsWith('mac') === true;
+  return getHostPlatform() === 'macos';
 };
 
 /**

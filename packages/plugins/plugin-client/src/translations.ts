@@ -72,6 +72,11 @@ const pluginTranslations = [
         'verification-sent.message': 'Verification email sent.',
         'verification-cooldown.message': 'Please wait {{seconds}}s before resending.',
         'verification-failed.message': 'Could not send verification email.',
+        'account-page-section.title': 'Account page',
+        'account-page-section.description':
+          'Operations that need proof you are present, rather than just a signed-in device: revoking a passkey, changing the registered email, and deleting the account. You will be asked for a passkey to sign in.',
+        'open-account-page.label': 'Open account page',
+        'open-account-page.description': 'Opens in a new tab.',
         'delete-account.label': 'Delete account',
         'delete-account.description':
           'Permanently delete your account and all associated data. This will sign you out of this device.',
@@ -103,6 +108,20 @@ const pluginTranslations = [
         'open-user-account.label': 'Open user account',
         'manage-credentials-dialog.title': 'Manage Account Recovery',
         'credentials-list.label': 'Recovery credentials',
+        'recovery-kind-passkey.label': 'Passkey',
+        'recovery-kind-recovery-code.label': 'Recovery code',
+        'recovery-kind-oauth.label': 'Linked account',
+        'recovery-kind-unknown.label': 'Recovery credential',
+        'credential-revoked.label': 'Revoked',
+        'revoke-credential.label': 'Revoke',
+        'revoke-failed.message': 'Could not revoke that credential. Reconnect and try again.',
+        'revoke-credential-confirm.message':
+          'Revoke this credential?\n\nIt will no longer be accepted for recovering your account, and this cannot be undone.\n\nThe passkey itself is not deleted — it stays in your password manager or on your device until you remove it there too.',
+        'last-credential.message':
+          'This is your only way back into your account, so it cannot be revoked. Add another passkey first, then revoke this one.',
+        'manage-passkeys.label': 'Manage passkeys',
+        'manage-passkeys.description':
+          'Opens your account page, which shows when each passkey was last used and asks for a passkey to confirm before revoking. Revoking here or there only stops the server accepting the passkey — it stays in your password manager or on your device until you delete it there too.',
         'no-credentials.title': 'WARNING: There is currently no way to recover your account.',
         'no-credentials.message': 'Create a recovery credential above to secure your account.',
         'recovery-setup-dialog.title': 'Account Security',
