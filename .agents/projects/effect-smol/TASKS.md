@@ -18,7 +18,7 @@ Establish the size of the problem and de-risk the two unknowns (persisted schema
 - [x] **Resolve the `@effect-atom` question** (D2) — absorbed into the v4 train
       (`effect/unstable/reactivity` + `@effect/atom-react@4`); every symbol in use is covered.
 - [x] **Port `@dxos/effect`'s `ast.ts` to the v4 AST** — 449 LOC, public API only, clean `tsc`.
-      `agents/superpowers/spikes/effect-4-schema-ast/src/ast.ts`.
+      `.agents/projects/effect-smol/spike/src/ast.ts`.
 - [x] **Write the v3-persisted → v4 decoder** — 279 LOC, 20 tests over a fixture generated from
       `@dxos/echo` on HEAD (not hand-written). Handles the v3-only sentinels (`/schemas/any`,
       `/schemas/unknown`, `/schemas/{}`), `/schemas/echo/ref`, `propertyOrder`, both annotation
@@ -35,7 +35,7 @@ Establish the size of the problem and de-risk the two unknowns (persisted schema
 
 ### References
 
-- Spike + full findings: `agents/superpowers/spikes/effect-4-schema-ast/REPORT.md`
+- Spike + full findings: `.agents/projects/effect-smol/spike/REPORT.md`
 - Branch `claude/effect-4-migration-audit-pq2m8z`, commits `275d4fc6`, `082684f4` (no PR — user
   asked for none).
 
@@ -88,7 +88,7 @@ Work that pays off whether or not v4 ever lands, and shrinks Phase 3 materially.
 
 ### References
 
-- Spike now at 106 tests: `agents/superpowers/spikes/effect-4-schema-ast/`.
+- Spike now at 106 tests: `.agents/projects/effect-smol/spike/`.
 
 ## Phase 2: Migrate dxos/dxos
 
@@ -246,8 +246,9 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
       `schema-validator.ts`, `json-schema.ts`, `react-ui-form`.
 - [ ] **Add the annotation-resolver lint rule** (F2) — reading `ast.annotations` directly is wrong
       for any refined type.
-- [ ] **Remove the spike's `as any` casts** before any of it ships (6 in `src/`, at the
-      dynamic-schema boundary; the v3 code has the same casts in the same places).
+- [x] **Remove the spike's `as any` casts** before any of it ships — moot as written: the spike code
+      never shipped verbatim. The ported modules were rewritten in-package and the casts audited in
+      the branch review (`003058bb`); the spike keeps its own casts and stays out of the build.
 - [ ] **Dispatch pkg.pr.new on the branch** (D7) — `workflow_dispatch`, since the workflow only
       auto-triggers on `main`.
 

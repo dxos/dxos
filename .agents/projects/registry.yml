@@ -293,8 +293,8 @@ projects:
     summary: Migrate the monorepo from Effect 3 to Effect 4 (effect-smol), then EDGE — audit, SchemaAST port, one-directional persisted-schema compatibility, and the dxos -> edge -> Composer release sequence.
     tasks: .agents/projects/effect-smol/TASKS.md
     design: .agents/projects/effect-smol/DESIGN.md
-    prs: []
-    resume: 'Audit + schema spike DONE and pushed (branch claude/effect-4-migration-audit-pq2m8z, commits 275d4fc6 + 082684f4, no PR yet by user request). Spike at agents/superpowers/spikes/effect-4-schema-ast (28 tests, clean tsc) proves v3-persisted JSON Schema reads into v4 and that SchemaRepresentation round-trips losslessly. NEXT: prototype the org.dxos.type.schema 0.1.0 -> 0.2.0 ECHO migration, and pin the LLM-facing toJsonSchema output shape (EDGE ai-service breaks on v4-shaped output).'
+    prs: [12521]
+    resume: 'Both repos migrated, reviewed and pushed as draft PRs: dxos/dxos#12521 and dxos/edge#827 (branch claude/effect-4-migration-audit-pq2m8z in each). dxos build 326/326 + node tests green; edge build 83/83 + full :test sweep green. Durable v4 rules extracted to .agents/skills/effect/v4-schema.md; spike moved to .agents/projects/effect-smol/spike. NEXT: D7 — dispatch pkg.pr.new on the dxos branch, then repoint edge catalogs.dxos off the 315 local tarball overrides (edge CI is red until that lands, install-time, by design).'
 ended:
   - name: app-framework-capability-activation
     user: jdw

@@ -153,9 +153,14 @@ the Wadler layout was never exercised, which is why the replacement is a line-by
 **Open**: the rendered output has not been eyeballed since the swap. `dx fn list` and `dx trigger`
 are the surfaces that go through it.
 
-## Findings that shape the work
+## Findings that shaped the work
 
-Full evidence: [`agents/superpowers/spikes/effect-4-schema-ast/REPORT.md`](../../../agents/superpowers/spikes/effect-4-schema-ast/REPORT.md).
+All four landed. The **rules** they imply are permanent and live in the `effect` skill
+([v4-schema.md](../../skills/effect/v4-schema.md), plus §8 of
+[layer-composition.md](../../skills/effect/layer-composition.md)) — that is where a future session
+will look, not here. Kept below as the record of why the code took the shape it did.
+
+Full evidence: [`spike/REPORT.md`](spike/REPORT.md).
 
 ### F1 — `SchemaAST` is effectively private in v4
 
@@ -166,9 +171,9 @@ Full evidence: [`agents/superpowers/spikes/effect-4-schema-ast/REPORT.md`](../..
 
 The spike's port works entirely on public API via three shims (`Schema.make(ast).annotate()`,
 `ast.context?.isMutable`, rebuild through `optionalKey`/`mutableKey`) — but DXOS's AST-reaching
-approach is unsupported, and any shim can break in a minor release. **This is the single biggest
-risk in the migration.** Mitigation: consolidate the 80 direct `effect/SchemaAST` importers behind
-`@dxos/effect`'s `ast.ts` _before_ migrating, shrinking the exposed surface to one module.
+approach is unsupported, and any shim can break in a minor release. **This was the single biggest
+risk in the migration.** Mitigation shipped: the 80 direct `effect/SchemaAST` importers now route
+through `@dxos/effect`'s facade, so the exposed surface is one module.
 
 ### F2 — Annotations on a checked node move to the check
 
@@ -206,9 +211,20 @@ with a check. Prevented by D5, but needs a shape-pinning test in dxos/dxos to st
    `schema-validator.ts` 417 LOC / 55 refs, `json-schema.ts` 574 LOC, `react-ui-form` 15 files).
 4. **Persistence** — bounded by D3/D4; the decoder is written and tested.
 
+## Deferred
+
+**Move the schema _write_ path onto `SchemaRepresentation`.** v4 ships a purpose-built,
+bidirectional, persistable encoding that v3 had no equivalent of; the spike round-trips ECHO's
+declarations and checks through it losslessly, which the JSON Schema path provably does not (the
+`Ref` reference payload is dropped). Not done: the read path is what the migration needed, and D5
+keeps the emitted JSON Schema shape fixed as the LLM wire contract regardless. If taken up, it needs
+explicit revivers — there is no global registry, and even built-in checks must be listed
+(`spike/src/json-schema-compat.ts` exports `EchoRevivers` as the pattern).
+
 ## References
 
-- Spike: `agents/superpowers/spikes/effect-4-schema-ast/` (28 tests, clean tsc)
+- Spike: [`spike/`](spike/) — 106 tests, clean tsc; still holds the unimplemented
+  `org.dxos.type.schema` `0.1.0` → `0.2.0` migration prototype
 - [Effect v4 Beta](https://www.effect.website/blog/releases/effect/40-beta)
 - [effect-smol MIGRATION.md](https://github.com/Effect-TS/effect-smol/blob/main/MIGRATION.md)
 - [layer-memoization guide](https://github.com/Effect-TS/effect-smol/blob/main/migration/layer-memoization.md)
