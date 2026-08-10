@@ -155,7 +155,7 @@ fixed rather than deferred:
 | `createSpace()` clicked a remounting form                                             | ~24 composer tests, all browsers          |
 | `createSpace()` could not tell a successful submit from a dialog that created nothing | any caller, intermittently                |
 | todomvc shipped unstyled — knip stripped `todomvc-app-css` from `index.html`          | 5 tests × 3 browsers                      |
-| `lit-grid` storybook boot contention                                                  | 1 of 3 tests in 5 of 6 non-chromium cells |
+| `lit-grid` storybook readiness probed by `port`, a bare TCP check                     | 1 of 3 tests in 5 of 6 non-chromium cells |
 | `todomvc` app-boot contention (2 workers × 2 apps per test)                           | intermittent, any test                    |
 | `plugin-kanban` waited on a story's first paint with too short a budget               | 2 webkit tests                            |
 | `cli:bundle` could not resolve `@opentui/core-darwin-arm64`                           | the whole `cli` job, every run            |
@@ -168,6 +168,23 @@ attempt was too permissive the other way (an idle ~8px placeholder could accept 
 fall through), which webkit caught at 14/15 against a 15/15 baseline — the regression was only visible
 because a baseline had been measured, since the doc already carried a note calling that test
 webkit-flaky and it would have explained the failure away.
+
+### Storybook-backed suites: readiness, not serialization
+
+Every storybook suite (`lit-grid`, `plugin-sheet`, `react-ui-mosaic`, `plugin-kanban`, `react-ui-table`)
+has the same shape: several tests race the first request of one shared story from `beforeEach`. The
+shared root cause was **readiness probing**, and it is fixed once in `storybookWebServer(port)`
+(`@dxos/test-utils/playwright`): with `webServer.port`, Playwright's probe is `isPortUsed()`, a bare TCP
+check that `storybook dev` satisfies by binding the socket before it can serve — and Vite's
+dep-optimization then restarts the server, so tests starting in that gap get ERR_CONNECTION_REFUSED.
+Probing by `url` makes it an HTTP fetch, so the dep scan is done before any test starts.
+
+`lit-grid` additionally carried `workers: 1`, which predated that fix and was removed once it landed:
+24/24 tests over 8 runs at the preset's 2 workers, **firefox 3/3 and webkit 3/3** — the two browsers it
+originally failed on, where it had lost 1 of 3 tests in 5 of 6 cells — plus chromium 2/2, each run
+restarting storybook so the compile window was recreated rather than warmed. The condition **not**
+reproduced is CI cell contention (other moon targets running alongside it), so if it recurs there,
+restore the override with a justification written from that failure rather than from the `port` probe.
 
 ## Refuted — do not retry these
 
