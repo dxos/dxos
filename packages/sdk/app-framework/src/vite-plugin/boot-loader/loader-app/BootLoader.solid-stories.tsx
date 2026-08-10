@@ -92,11 +92,35 @@ const BootLoaderRun = (props: StoryProps & { onLoop: () => void }) => {
  */
 const BootLoaderStory = (props: StoryProps) => {
   const [cycle, setCycle] = createSignal(1);
+  const restart = () => setCycle((value) => value + 1);
   return (
-    <Show when={cycle()} keyed>
-      {/* `keyed` only re-invokes this callback (forcing a remount) when it takes an argument. */}
-      {(_cycle) => <BootLoaderRun {...props} onLoop={() => setCycle((value) => value + 1)} />}
-    </Show>
+    <>
+      <Show when={cycle()} keyed>
+        {/* `keyed` only re-invokes this callback (forcing a remount) when it takes an argument. */}
+        {(_cycle) => <BootLoaderRun {...props} onLoop={restart} />}
+      </Show>
+      {/* Above the fixed #boot-loader backdrop (z-index 10) so it stays clickable mid-boot. */}
+      <button
+        type='button'
+        onClick={restart}
+        style={{
+          'position': 'fixed',
+          'top': '8px',
+          'right': '8px',
+          'z-index': 20,
+          'padding': '4px 10px',
+          'font': 'inherit',
+          'cursor': 'pointer',
+          'background': 'transparent',
+          'color': 'inherit',
+          'border': '1px solid currentColor',
+          'border-radius': '4px',
+          'opacity': 1.0,
+        }}
+      >
+        Restart
+      </button>
+    </>
   );
 };
 
@@ -118,12 +142,44 @@ const meta = {
 
 export default meta;
 
-export const Default: StoryObj<StoryProps> = { args: { variant: 'random' } };
+const defaults: Partial<StoryProps> = {
+  dotSize: 1,
+  dotCount: 50,
+  ringRadius: 40,
+  ringRotationSpeed: 0.0002,
+};
 
-export const Wander: StoryObj<StoryProps> = { args: { variant: 'wander' } };
+export const Default: StoryObj<StoryProps> = {
+  args: {
+    variant: 'random',
+    ...defaults,
+  },
+};
 
-export const Orbit: StoryObj<StoryProps> = { args: { variant: 'orbit' } };
+export const Wander: StoryObj<StoryProps> = {
+  args: {
+    variant: 'wander',
+    ...defaults,
+  },
+};
 
-export const Trails: StoryObj<StoryProps> = { args: { variant: 'trails' } };
+export const Orbit: StoryObj<StoryProps> = {
+  args: {
+    variant: 'orbit',
+    ...defaults,
+  },
+};
 
-export const Linked: StoryObj<StoryProps> = { args: { variant: 'linked' } };
+export const Trails: StoryObj<StoryProps> = {
+  args: {
+    variant: 'trails',
+    ...defaults,
+  },
+};
+
+export const Linked: StoryObj<StoryProps> = {
+  args: {
+    variant: 'linked',
+    ...defaults,
+  },
+};

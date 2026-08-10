@@ -255,7 +255,10 @@ export const Swarm: Component<SwarmProps> = (props) => {
         Array.from({ length: config.maxLinks }, (_, index) => (
           <line ref={(element) => (linkRefs[index] = element)} opacity={0} />
         ))}
-      {hasLinks && dots.map((_, index) => <line ref={(element) => (ringLinkRefs[index] = element)} opacity={0} />)}
+      {hasLinks &&
+        dots.map((_, index) => (
+          <line ref={(element) => (ringLinkRefs[index] = element)} opacity={0} stroke-width={0.5} />
+        ))}
       {hasTrails &&
         dots.flatMap((dot, dotIndex) =>
           Array.from({ length: config.ghostCount }, (_, ghostIndex) => (
