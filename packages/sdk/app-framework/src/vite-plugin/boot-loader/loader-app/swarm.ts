@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export const SWARM_VARIANTS = ['wander', 'orbit', 'trails', 'linked', 'arc'] as const;
+export const SWARM_VARIANTS = ['wander', 'orbit', 'trails', 'linked', 'halo', 'arc'] as const;
 export type SwarmVariant = (typeof SWARM_VARIANTS)[number];
 
 export type SwarmConfig = {
@@ -78,6 +78,9 @@ export const defaultSwarmConfig = (variant: SwarmVariant): SwarmConfig => {
       return { ...BASE, variant, dotCount: 48, dotSize: 1.6, ringRotationSpeed: 0 };
     case 'linked':
       return { ...BASE, variant, dotCount: 64, dotSize: 1.3, ringRotationSpeed: 0 };
+    case 'halo':
+      // A tight ring hugging the no-go rim; dots fade in on their rotating slots.
+      return { ...BASE, variant, dotCount: 24, dotSize: 2.2, ringRotationSpeed: 0.00035, ringRadius: 66 };
     case 'arc':
       // The original determinate ring (`ClassicRing.tsx`) — no dots.
       return { ...BASE, variant, dotCount: 0, dotSize: 0, ringRotationSpeed: 0 };
@@ -198,6 +201,13 @@ export const dotPosition = (
   settleEased: number,
   nowMs: number,
 ): { x: number; y: number } => {
+  // Halo dots never wander: they sit on their rotating slot from the first
+  // frame and only fade in as they dock.
+  if (config.variant === 'halo') {
+    const slot = slotPosition(config, dot, nowMs);
+    return projectNogo(config, slot.x, slot.y);
+  }
+
   let waitingX: number;
   let waitingY: number;
 

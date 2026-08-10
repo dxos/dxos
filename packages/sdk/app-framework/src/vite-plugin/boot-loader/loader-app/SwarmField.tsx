@@ -67,6 +67,7 @@ export const Swarm: Component<SwarmProps> = (props) => {
   const dots: SwarmDot[] = createDots(config);
   const hasTrails = config.variant === 'trails';
   const hasLinks = config.variant === 'linked';
+  const hasHalo = config.variant === 'halo';
 
   let fieldRef: SVGSVGElement | undefined;
   let markRef: SVGSVGElement | undefined;
@@ -159,7 +160,8 @@ export const Swarm: Component<SwarmProps> = (props) => {
 
       const circle = dotRefs[index];
       if (circle) {
-        const baseOpacity = reducedMotion && index >= lit ? 0 : 0.55 + 0.45 * settleEased;
+        // Halo dots fade in from nothing on their slots; other variants dim while loose.
+        const baseOpacity = (reducedMotion && index >= lit) || hasHalo ? settleEased : 0.55 + 0.45 * settleEased;
         circle.setAttribute('cx', String(x));
         circle.setAttribute('cy', String(y));
         circle.setAttribute('r', String(config.dotSize * radiusScale));

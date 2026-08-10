@@ -186,6 +186,8 @@ export const Trails: StoryObj<StoryProps> = {
   },
 };
 
+export const Halo: StoryObj<StoryProps> = { args: { variant: 'halo', showLog: true } };
+
 export const Arc: StoryObj<StoryProps> = { args: { variant: 'arc', showLog: true } };
 
 export const Linked: StoryObj<StoryProps> = {

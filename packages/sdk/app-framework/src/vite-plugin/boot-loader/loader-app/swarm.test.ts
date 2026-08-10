@@ -27,6 +27,12 @@ describe('defaultSwarmConfig', () => {
     expect(defaultSwarmConfig('orbit')).toMatchObject({ dotCount: 32, dotSize: 2.0, ringRotationSpeed: 0.00015 });
     expect(defaultSwarmConfig('trails')).toMatchObject({ dotCount: 48, dotSize: 1.6 });
     expect(defaultSwarmConfig('linked')).toMatchObject({ dotCount: 64, dotSize: 1.3 });
+    expect(defaultSwarmConfig('halo')).toMatchObject({
+      dotCount: 24,
+      dotSize: 2.2,
+      ringRadius: 66,
+      ringRotationSpeed: 0.00035,
+    });
   });
 });
 
@@ -159,6 +165,17 @@ describe('dotPosition', () => {
           expect(Math.hypot(x - config.centerX, y - config.centerY)).toBeGreaterThanOrEqual(config.nogoRadius - 1e-6);
         }
       }
+    }
+  });
+
+  test('halo variant: dots ride their rotating slot at every settle level', ({ expect }) => {
+    const config = defaultSwarmConfig('halo');
+    const dot = createDots(config, () => 0.5)[2];
+    for (const settle of [0, 0.5, 1]) {
+      const position = dotPosition(config, dot, settle, 4321);
+      const slot = slotPosition(config, dot, 4321);
+      expect(position.x).toBeCloseTo(slot.x);
+      expect(position.y).toBeCloseTo(slot.y);
     }
   });
 
