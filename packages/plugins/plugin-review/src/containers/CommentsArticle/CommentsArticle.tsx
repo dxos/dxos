@@ -447,8 +447,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         }
       })
       .find((thread) => thread?.id === currentObjectId);
-    if (target) {
-      document.getElementById(Obj.getURI(target as Obj.Any))?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (target && Obj.instanceOf(Thread.Thread, target)) {
+      document.getElementById(Obj.getURI(target))?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [currentObjectId, anchors]);
 
