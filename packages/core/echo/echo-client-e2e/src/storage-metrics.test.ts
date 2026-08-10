@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Feed, Filter, Obj } from '@dxos/echo';
+import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -127,5 +127,32 @@ describe('storage metrics & garbage collection', () => {
     const stats = await db2.stats();
     expect(stats.objects).toEqual({ alive: 1, deleted: 0 });
     expect(stats.documents).toEqual(2);
+  });
+
+  // Deletion cascades are computed at read time, never written: a child of a deleted parent has no
+  // `deleted` flag of its own yet queries as deleted. Collection has to apply the same rule, or
+  // such objects stay on disk forever while being invisible to every query.
+  test('collects objects that are only transitively deleted', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Expando] });
+    const db = await peer.createDatabase();
+
+    const parent = db.add(Obj.make(TestSchema.Expando, { name: 'parent' }));
+    const child = db.add(Obj.make(TestSchema.Expando, { name: 'child' }));
+    Obj.setParent(child, parent);
+    await db.flush();
+
+    const before = await db.stats();
+    db.remove(parent);
+    await db.flush();
+
+    // The child is deleted by cascade, without a flag of its own.
+    expect(await db.query(Query.select(Filter.everything())).run()).toHaveLength(0);
+
+    const report = await db.runGarbageCollection();
+    expect(report.unlinkedObjects).toBeGreaterThanOrEqual(2);
+
+    const after = await db.stats();
+    expect(after.objects).toEqual({ alive: 0, deleted: 0 });
+    expect(after.documents).toBeLessThan(before.documents);
   });
 });

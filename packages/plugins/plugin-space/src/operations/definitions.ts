@@ -233,6 +233,28 @@ export namespace SpaceOperation {
     }),
   });
 
+  /**
+   * Remove every object from a space except its `SpaceProperties`. The root collection is kept —
+   * `RootCollectionAnnotation` must keep resolving for the space to stay navigable — but emptied.
+   *
+   * Implemented as a migration keeping only those two, so the cleared objects are actually
+   * reclaimed rather than left as tombstones. Unlike {@link RemoveObjects} this is therefore
+   * permanent, and deliberately has no undo mapping.
+   */
+  export const RemoveAllObjects = Operation.make({
+    meta: {
+      key: makeKey('removeAllObjects'),
+      name: 'Remove All Objects',
+      description: 'Permanently remove all objects from a space, preserving the space properties.',
+      icon: 'ph--trash--regular',
+    },
+    services: [Database.Service],
+    input: Schema.Void,
+    output: Schema.Struct({
+      objectIds: Schema.Array(Schema.String).annotations({ description: 'IDs of the removed objects.' }),
+    }),
+  });
+
   export const DeleteFieldOutput = Schema.Struct({
     field: View.FieldSchema.annotations({ description: 'The deleted field schema.' }),
     // TODO(wittjosiah): This creates a type error with PropertySchema.
