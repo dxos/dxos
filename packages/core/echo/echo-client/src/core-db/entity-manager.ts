@@ -566,6 +566,51 @@ export class EntityManager implements IDatabaseBinding {
     });
   }
 
+  /**
+   * Replaces the set of objects the space directory tracks, dropping everything not retained.
+   *
+   * The directory's own `objects` and `links` maps already name every object in the space, so the
+   * set to drop is derived from them rather than queried — clearing a space costs one root change,
+   * never a scan of its contents or a write per object. The dropped documents are orphaned, which
+   * is what the host reclaims.
+   *
+   * Dropped ids are evicted from the working set here, keyed off what this call actually removed:
+   * nothing re-derives a client's view of a space from the directory, so an object left in
+   * `_objects` would keep answering queries. Only ids removed above are evicted — an object whose
+   * document is still being created is bound before its link is written, and inferring the eviction
+   * set from the directory alone would drop it mid-flight.
+   *
+   * @returns Ids of the objects dropped from the directory.
+   */
+  retainObjects(keep: Iterable<string>): string[] {
+    const root = this.getSpaceRootDocHandle();
+    const doc = root.doc();
+    const retained = new Set(keep);
+    const droppedInline = Object.keys(doc.objects ?? {}).filter((id) => !retained.has(id));
+    const droppedLinks = Object.keys(doc.links ?? {}).filter((id) => !retained.has(id));
+    const dropped = [...droppedInline, ...droppedLinks];
+    if (dropped.length === 0) {
+      return [];
+    }
+
+    root.change((draft: DatabaseDirectory) => {
+      for (const id of droppedInline) {
+        delete draft.objects![id];
+      }
+      for (const id of droppedLinks) {
+        delete draft.links![id];
+      }
+    });
+
+    for (const id of dropped) {
+      this._objects.delete(id);
+      this._objectDocumentHandles.delete(id as EntityId);
+    }
+    this._updateScheduler.trigger();
+
+    return dropped;
+  }
+
   async unlinkDeletedObjects({ batchSize = 10 }: { batchSize?: number } = {}): Promise<void> {
     const idChunks = chunkArray(this.getAllObjectIds(), batchSize);
     for (const ids of idChunks) {

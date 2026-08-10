@@ -155,4 +155,35 @@ describe('storage metrics & garbage collection', () => {
     expect(after.objects).toEqual({ alive: 0, deleted: 0 });
     expect(after.documents).toBeLessThan(before.documents);
   });
+
+  // Clearing a space names what to keep rather than what to remove: the drop set is diffed against
+  // the space directory's own maps, so the contents are never enumerated and no object is loaded or
+  // flagged. What the drop orphans is then reclaimed like any other garbage.
+  test('retaining a subset drops the rest and reclaims their documents', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Expando] });
+    const db = await peer.createDatabase();
+
+    const kept = db.add(Obj.make(TestSchema.Expando, { value: 'kept' }));
+    const dropped = [1, 2, 3].map((value) => db.add(Obj.make(TestSchema.Expando, { value })));
+    await db.flush();
+
+    const before = await db.stats();
+    expect(before.objects).toEqual({ alive: 4, deleted: 0 });
+
+    const removed = db.retainObjects([kept.id]);
+    expect([...removed].sort()).toEqual(dropped.map((object) => object.id).sort());
+    await db.flush();
+
+    // Dropped objects leave the client's view immediately — nothing rebuilds it from the directory,
+    // so an object left in the working set would keep answering queries.
+    const results = await db.query(Query.select(Filter.everything())).run();
+    expect(results.map((object) => object.id)).toEqual([kept.id]);
+
+    await db.runGarbageCollection();
+
+    const after = await db.stats();
+    expect(after.objects).toEqual({ alive: 1, deleted: 0 });
+    // Root + the retained object's document; the dropped objects' documents are gone.
+    expect(after.documents).toEqual(2);
+  });
 });

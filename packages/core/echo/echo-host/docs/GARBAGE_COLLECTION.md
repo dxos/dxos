@@ -2,14 +2,17 @@
 
 Status: **draft / v1**. Tracking: DX-1151.
 
-This document specifies two per-space maintenance APIs on the ECHO `Database`:
+This document specifies three per-space maintenance APIs on the ECHO `Database`:
 
 - `Database.stats()` — a snapshot of what a space occupies on the host (objects,
   automerge documents, feeds, feed blocks).
 - `Database.runGarbageCollection()` — reclaims storage held by soft-deleted
   objects and the documents / feed blocks that are no longer reachable.
+- `Database.retainObjects(keep)` — replaces the set of objects the space
+  directory tracks, dropping the rest for collection to reclaim. Destructive of
+  live data, so it is described separately below rather than as a mode of GC.
 
-Both are **per-space** and routed through the `DataService` RPC, so the client
+The first two are **per-space** and routed through the `DataService` RPC, so the client
 API surface is identical whether the host is in-process (the local client
 worker) or remote (EDGE). Only the **local host implements them today**; the EDGE
 handlers return a not-implemented error (see the status table below). The
@@ -25,6 +28,7 @@ storage (automerge documents + feeds) behind a different physical store.
 | GC step 2 — wipe unreachable owned documents       | implemented                     |
 | GC step 5 — delete stale index rows                | implemented (`index` option)    |
 | GC steps 3–4 — feed purge                          | specified, deferred (see below) |
+| `retainObjects()` — drop all but the retained ids  | implemented (client-side)       |
 
 The EDGE host implements neither API yet (both return a not-implemented error);
 this document is the reference for that work.
@@ -220,6 +224,45 @@ tombstone rows for storage that no longer exists.
 Correctness note: query correctness for deleted objects already holds before GC
 (soft-deleted objects carry `deleted = 1` and are filtered out). Step 5 is
 space reclamation, not a correctness fix — it is gated by `options.index`.
+
+## `retainObjects()`
+
+`retainObjects(keep)` replaces the set of objects the space directory tracks.
+It is **not** garbage collection: GC reclaims what was already soft-deleted,
+whereas this drops live objects on the caller's instruction. Collection is what
+reclaims the result, so clearing a space is `retainObjects` followed by
+`runGarbageCollection`.
+
+The directory's `objects` and `links` maps already name every object in the
+space, so the drop set is diffed against their keys and removed in a single
+change — one root write, never a scan of the contents, no object loaded and no
+`deleted` flag written per object. The dropped documents are orphaned, and steps
+2 and 5 above reclaim them. Because the change replicates like any other, peers
+reclaim the same bytes through automatic reclamation without being told to.
+
+**It runs on the client, not the host.** The host can perform the identical
+directory rewrite, and the storage outcome is correct when it does — but the
+objects keep answering queries afterwards. Nothing rebuilds a client's view of a
+space from the directory, so its working set still holds them, and deleting the
+index rows does not help because the working set is consulted first. A drop has
+to originate where the objects live. `retainObjects` therefore evicts the ids it
+removed from the working set, keyed off what the call actually dropped rather
+than re-derived from the directory: `_createDocumentForObject` binds an object
+before writing its link, so a directory-derived eviction set would drop objects
+mid-creation.
+
+Two consequences worth stating plainly:
+
+- **It is permanent.** The objects are dropped, not flagged, so there is no
+  tombstone to restore from and no undo.
+- **Root history is retained.** The directory keeps the change that removed the
+  entries, so the root document itself does not shrink. The bytes reclaimed are
+  the linked documents', which is where a space's size actually lives. Dropping
+  the root's own history requires a new epoch, which is a separate operation.
+
+A remote peer applying the replicated change reclaims the storage but does not
+prune its own working set — same root url, and only a root-url change triggers
+the client's reconciliation today. Its view corrects on reload.
 
 ## Safety & invariants
 

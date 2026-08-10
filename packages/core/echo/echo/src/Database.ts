@@ -332,6 +332,18 @@ export interface Database extends Queryable {
    * garbage-collection design notes in `@dxos/echo-host`.
    */
   runGarbageCollection(options?: GarbageCollectionOptions): Promise<GarbageCollectionReport>;
+
+  /**
+   * Replaces the set of objects the space directory tracks, dropping everything not retained.
+   *
+   * Derived from the directory's own maps, so clearing a space costs one change rather than a scan
+   * of its contents. The objects are dropped, not soft-deleted: they are gone from the space and
+   * their documents are reclaimed by garbage collection, on this peer and — as the change
+   * replicates — on every other. Permanent; there is nothing left to restore from.
+   *
+   * @returns Ids of the objects dropped from the directory.
+   */
+  retainObjects(keep: Iterable<string>): string[];
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
@@ -504,6 +516,13 @@ export const runGarbageCollection = (options?: GarbageCollectionOptions) =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.runGarbageCollection(options)))).pipe(
     Effect.withSpan('Database.runGarbageCollection'),
   );
+
+/**
+ * Drops every object in the space except the retained ones. Permanent.
+ * @see {@link Database.retainObjects}
+ */
+export const retainObjects = (keep: Iterable<string>) =>
+  Service.pipe(Effect.map(({ db }) => db.retainObjects(keep))).pipe(Effect.withSpan('Database.retainObjects'));
 
 /**
  * Per-space storage metrics.

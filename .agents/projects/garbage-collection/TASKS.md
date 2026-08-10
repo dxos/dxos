@@ -86,16 +86,23 @@ dxos-side phases — edge starts only after this lands. Detail: DESIGN.md §5.4.
 
 - [x] **`SpaceOperation.CreateEpoch`** (plugin-space) — new operation wrapping bare `space.internal.createEpoch()` (regular GC epoch: hard-deletes already-soft-deleted objects, compacts history).
 - [x] **Expose in debug plugin** — alongside the clear-space action in the `SpaceGenerator` reset panel (`plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.tsx:100`).
-- [x] **`RemoveAllObjects` collects after removing** — keeps #12500's client-side removal exactly as
-      it was and appends one `Database.runGarbageCollection()`. This is what "clear space triggers GC"
-      reduces to once host-side clearing is ruled out (below); the space is reclaimed rather than left
-      holding a tombstone per object, and #12500's test passes unmodified.
-- [x] **RULED OUT: host-side `Database.clearSpace({ keep })`** — implemented and measured over two
-      shapes (rewrite the directory; mark-deleted then collect). Both are storage-correct — the report
-      read `removedObjects: 2, removedDocuments: 2, removedIndexEntries: 2` — and both leave the client
-      showing all objects afterwards. With the index rows gone, the surviving query results prove the
-      client answers from its own in-memory entity state, so a deletion has to ORIGINATE client-side to
-      be visible there. Reverted in full: no protocol, host, echo-client, `@dxos/echo`, or EDGE change.
+- [x] **`Database.retainObjects(keep)`** — names what to KEEP; the drop set is diffed against the
+      space directory's own `objects`/`links` keys and removed in one root change. No query over the
+      space, no object loaded, no `deleted` flag per object. `RemoveAllObjects` is `retainObjects` +
+      `runGarbageCollection`, and #12500's test passes unmodified.
+- [x] **Client-side, not host-side — and this is the crux.** The host can do the identical directory
+      rewrite and the storage outcome is correct (measured: `removedObjects: 2, removedDocuments: 2,
+removedIndexEntries: 2`), but every object still answers queries afterwards. Root cause found:
+      `_handleSpaceRootDocumentChange` — the reconciliation that evicts objects missing from the
+      directory — is called ONLY from `updateSpaceState`, which early-returns unless the root URL
+      changed. It runs on an epoch (new root doc) and never on a content change to the same root. So
+      `retainObjects` evicts the ids it dropped directly, keyed off what the call removed rather than
+      re-derived from the directory (`_createDocumentForObject` binds an object before writing its link,
+      so a directory-derived eviction set would drop objects mid-creation).
+- [ ] **FOLLOW-UP: reconcile the working set on same-root content changes.** A remote peer applying
+      the replicated drop reclaims the storage but keeps showing the objects until reload, for the same
+      reason. Fixing it means calling the reconciliation on root content changes, guarded against the
+      pending-creation window above.
 - [x] **DROPPED: `clearSpaceEpochMigration`** — superseded before the above (2026-08-10, Josiah:
       "clear space would just update the space root ... which should then trigger GC"), and
       `@dxos/migrations` ends up untouched by this PR either way.
