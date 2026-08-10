@@ -3,6 +3,35 @@
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
 
+## Mailbox pipeline routine (2026-08-10)
+
+Spec: `agents/superpowers/specs/2026-08-10-mailbox-pipeline-routine-design.md`. A manually
+triggerable routine driving a **cursored** pipeline over the Mailbox feed — the cursor machinery
+(incremental + reset) is the thing under test; the pipeline body is a log-title walking skeleton.
+
+### Tasks
+
+- [x] **`InboxOperation.ProcessMailbox`** — cursored log-title pipeline over the feed
+      (`plugin-inbox/src/operations/process/`): tagged feed cursor (`org.dxos.plugin.inbox` /
+      `processMailbox`, DXN-conformant — the CRM precedent's hyphenated tags are not), per-page
+      `Cursor.advance`, strictly-greater skip, sync-style `#process` progress (title as status
+      text), `Cancellation.signal` via `Pipeline.abortWith`.
+- [x] **`InboxOperation.ResetProcessCursor`** — clears max/min/lastTick/lastError; `reset: false`
+      when no cursor exists; cursor object reused (found by tag), never recreated.
+- [x] **Toolbar start/stop + reset** — app-graph `processMailbox` extension: Process/Stop primary
+      toolbar toggle (`Operation.schedule` so the run is a cancellable process; stop =
+      `ProgressRegistry.cancel`), reset as a context-menu action disabled mid-run.
+- [x] **`MailboxArticle` statusbar** — shows whichever of `#sync` / `#process` is active.
+- [x] **Routine template** — plugin-inbox contributes `org.dxos.routine.processMailbox`
+      (Automations companion, Mailbox subjects, disabled hourly timer, runnable = the operation).
+- [x] **Tests** — 3 node unit tests (`process-mailbox.test.ts`: cursor tag + advance, incremental,
+      reset cycle, malformed `created` skip) + stories-inbox `ProcessPipeline.stories.tsx` play test
+      (run 3 → rerun 0 → reset → run 3) green.
+- [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
+      meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
+- [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
+      triage work above) once the skeleton is proven live.
+
 ## Overnight model-ladder experiment
 
 **Goal:** per task, find the smallest open-weight model that matches a cheap premier model (haiku) —
