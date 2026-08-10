@@ -16,7 +16,7 @@ tasks:
       - target: bundle
         optional: true
         env:
-          DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+          DX_EDGE_BASE_URL: 'https://main.dxos.network/'
           DX_TELEMETRY_TAG: e2e
           # Read at bundle time by `vite.config.ts` (VitePWA `selfDestroying`), so it belongs on the
           # bundle as well as on the test process above.
