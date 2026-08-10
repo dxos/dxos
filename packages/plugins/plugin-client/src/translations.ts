@@ -81,14 +81,14 @@ const pluginTranslations = [
         'generate-invitation.description_other': 'You have {{count}} invitations left to generate.',
         'available-invitations.title': 'Available invitations',
         'redeemed-invitations.title': 'Redeemed invitations',
-        'logout.description': 'Log out from this device, erasing all the data on this device.',
+        'logout.description': 'Log out and erase all data on this device.',
         'join-new-identity.description':
           'Log out from this device, erasing all the data currently on this device, and use a QR code or URL to log in.',
         'recover-identity.description':
           'Log out from this device, erasing all the data currently on this device, and use a passkey or recovery code to log in.',
         'logout-section.title': 'Log out',
         'logout-section.description':
-          'Because Composer is decentralized, logging out entails erasing all the data on this device. If you have any data on this device that you’d like to keep, you can log in on a separate device using a passkey or complete a peer-to-peer device invitation above.',
+          'Logging out erases all data on this device. Anything that has not synced to another device or to the cloud will be lost.',
         'display-name.label': 'Display name',
         'display-name.description': 'Your name as it appears in the app.',
         'display-name-input.placeholder': 'Enter a name',
