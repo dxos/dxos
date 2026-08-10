@@ -1,5 +1,13 @@
 # https://moonrepo.dev/docs/proto/config
 
+# IMPORTANT: every pin below is duplicated outside this file — CI workflows and composite actions pin
+# moon/proto and the container image tag, `.github/Dockerfile` installs node and pnpm, and the root
+# `package.json` + catalog carry pnpm and moon for the non-proto entrypoints. None of those read
+# `.prototools`, and a divergence only surfaces on a cold cache, so bumping a version here is half the
+# change. Sweep for the old one and update every hit:
+#
+#   git grep -n '<old version>' -- ':!pnpm-lock.yaml'
+#
 proto = "0.58.2"
 # NOTE: Keep node and pnpm in sync with `.github/Dockerfile`, which installs them too.
 #  CI's setup action runs `pnpm install` before any moon task, so the image supplies them until moon's
