@@ -3,7 +3,7 @@
  * so the full-screen backdrop paints before any JS bundle is fetched. The Solid
  * `Loader` renders the swarm + status into the `#boot-loader` backdrop; this
  * sheet styles both. Class/id names here form a contract with `Loader.tsx` and
- * `SwarmField.tsx`, guarded by `SwarmField.solid-stories.tsx` (it mounts the real component).
+ * `SwarmField.tsx`, guarded by `BootLoader.solid-stories.tsx` (it mounts the real component).
  */
 
 body {
@@ -74,7 +74,7 @@ body {
 
 /*
  * Widen the disc to the full backdrop so the swarm field has room to spiral —
- * the explode outro (see `Swarm.tsx`'s `applyOutro`) replaces the old
+ * the explode outro (see `SwarmField.tsx`'s `applyOutro`) replaces the old
  * uniform-scale dismissal, so there is no `data-dismissing` transform rule here.
  */
 #boot-loader-disc {
