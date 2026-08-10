@@ -76,6 +76,12 @@ export const login = Command.make(
       ? method.value
       : yield* Prompt.select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
 
+    // Only the email method redeems an invitation code; the other branches would drop it, and a
+    // login that silently ignores the code the user asked for is worse than one that refuses.
+    if (Option.isSome(code) && resolvedMethod !== 'email') {
+      return yield* Effect.fail(new Error(`\`--code\` applies to \`--method email\`, not \`${resolvedMethod}\`.`));
+    }
+
     const resolvedInput = Option.isSome(input)
       ? input.value
       : yield* Prompt.text({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
@@ -150,17 +156,10 @@ const loginWithEmail = (
       const identity = client.halo.identity.get();
       invariant(identity, 'identity should exist after create');
       // The local identity outlives any failure from here on, and the `Already logged in` guard
-      // above rejects a plain retry, so a rejected request and a non-admitting response both need
-      // the same recovery guidance.
-      const notAdmitted = (detail: string) =>
-        new Error(
-          `Hub did not admit ${email} (${detail}). ` +
-            (code
-              ? 'The invitation code may be invalid, already redeemed, or revoked. '
-              : 'A gated hub requires an invitation code — pass `--code <CODE>` to create an account. ') +
-            'A local identity was created and remains bound to this profile; run `dx account logout` ' +
-            'to clear it before retrying.',
-        );
+      // above rejects a plain retry, so every failure below carries the same recovery step.
+      const recovery =
+        'A local identity was created and remains bound to this profile; run `dx account logout` ' +
+        'to clear it before retrying.';
 
       const retry = yield* Effect.tryPromise({
         try: () =>
@@ -170,10 +169,24 @@ const loginWithEmail = (
             identityDid: identity.did,
             identityKey: identity.identityKey.toHex(),
           }),
-        catch: (cause) => notAdmitted(cause instanceof Error ? cause.message : String(cause)),
+        // A rejected request says nothing about the code: blaming it during an outage would send
+        // the user hunting for a fresh code when the one they hold is fine.
+        catch: (cause) =>
+          new Error(
+            `Login request for ${email} failed (${cause instanceof Error ? cause.message : String(cause)}). ${recovery}`,
+          ),
       });
+      // A well-formed response that does not admit is the case the code explains.
       if (!retry.admitted) {
-        return yield* Effect.fail(notAdmitted('no admission granted'));
+        return yield* Effect.fail(
+          new Error(
+            `Hub did not admit ${email}. ` +
+              (code
+                ? 'The invitation code may be invalid, already redeemed, or revoked. '
+                : 'A gated hub requires an invitation code — pass `--code <CODE>` to create an account. ') +
+              recovery,
+          ),
+        );
       }
       yield* invoke(ClientOperation.CreateAgent);
       return identity;
