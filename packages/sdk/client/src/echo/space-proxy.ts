@@ -9,7 +9,6 @@ import isEqualWith from 'lodash.isequalwith';
 import {
   Event,
   MulticastObservable,
-  TimeoutError,
   Trigger,
   asyncTimeout,
   scheduleMicroTask,
@@ -70,16 +69,6 @@ import { InvitationsProxy } from '../invitations';
 import { createDeviceLocalBranchStore } from './branch-store';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
-
-/** How long a space may take to surface its properties before the wait is reported as suspicious. */
-const PROPERTIES_WARN_TIMEOUT = 5_000;
-
-/**
- * How long a READY space may go without properties before one is written for it. Erring early is
- * cheap — the id sort makes a spurious heal an orphaned object — while erring late holds the
- * space's mutex for the duration on every boot.
- */
-const PROPERTIES_HEAL_TIMEOUT = 15_000;
 
 /**
  * Returns the {@link Space} that owns the given object, or `undefined`.
@@ -464,12 +453,8 @@ export class SpaceProxy implements Space, CustomInspectable {
     {
       const unsubscribe = this._db.query(Filter.type(SpaceProperties)).subscribe(
         (query) => {
-          // Object ids are time-ordered, so the lowest is the one written at creation and a
-          // duplicate healed by {@link SpaceProxy.#awaitProperties} always loses. Requiring exactly one
-          // would leave a space that somehow acquired two permanently uninitialized.
-          const [properties] = [...query.results].sort((left, right) => (left.id < right.id ? -1 : 1));
-          if (properties) {
-            this._properties = properties;
+          if (query.results.length === 1) {
+            this._properties = query.results[0];
             propertiesAvailable.wake();
             this._stateUpdate.emit(this._currentState);
             scheduleMicroTask(this._ctx, () => {
@@ -480,38 +465,9 @@ export class SpaceProxy implements Space, CustomInspectable {
         { fire: true },
       );
     }
-    await cancelWithContext(this._ctx, this.#awaitProperties(propertiesAvailable));
-  }
-
-  /**
-   * Wait for the space's properties object, writing one if the space has none.
-   *
-   * Space creation is two-phase — the host performs genesis and the client then writes the
-   * properties object ({@link SpaceList._createSpaceInternal}) — so an interruption in between
-   * (a reload, a closed tab, a throw) leaves a space that has none and can never open. This wait
-   * runs inside `_processSpaceUpdate`'s mutex, so leaving it unbounded wedged every subsequent
-   * update for the space, and with it `_anySpaceUpdate`, for the lifetime of the session.
-   *
-   * Healing writes what the interrupted creation would have written. It is bounded by a long
-   * timeout rather than by an empty query result because a query returning nothing only means the
-   * document has not loaded yet.
-   */
-  async #awaitProperties(propertiesAvailable: Trigger): Promise<void> {
-    try {
-      await warnAfterTimeout(PROPERTIES_WARN_TIMEOUT, 'Finding properties for a space', () =>
-        asyncTimeout(propertiesAvailable.wait(), PROPERTIES_HEAL_TIMEOUT),
-      );
-      return;
-    } catch (err) {
-      if (!(err instanceof TimeoutError) || this._data.state !== SpaceState.SPACE_READY) {
-        throw err;
-      }
-    }
-
-    log.warn('space has no properties; writing them', { spaceId: this.id });
-    this._db.add(Obj.make(SpaceProperties, {}), { placeIn: 'root-doc' });
-    await this._db.flush();
-    await propertiesAvailable.wait();
+    await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
+      cancelWithContext(this._ctx, propertiesAvailable.wait()),
+    );
   }
 
   /**
