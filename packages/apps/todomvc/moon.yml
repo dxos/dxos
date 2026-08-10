@@ -8,8 +8,7 @@ tasks:
   bundle:
     deps:
       - shell:bundle
-  # The bundle Playwright serves, as its own target. See composer-app's copy for why the e2e env is
-  # declared here rather than overridden on the `e2e` dependency.
+  # The bundle Playwright serves; see composer-app's `bundle-e2e` for why this is a target of its own.
   bundle-e2e:
     extends: bundle
     env:

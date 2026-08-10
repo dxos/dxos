@@ -45,8 +45,37 @@ runners. Blacksmith was evaluated as an alternative runner and rejected — REPO
 
 Two axes into 9 matrix cells — browser (`PLAYWRIGHT_BROWSER`) × `moon exec --job N --job-total 3`,
 with composer-app opting out of the inherited `e2e-ci` to supply `e2e-ci-1of2` / `-2of2` because it is
-too big for one cell. Job layout, the two rejected sharding strategies and their measured numbers are
-in [`.github/workflows/README.md`](../../../.github/workflows/README.md).
+too big for one cell. Job layout and the JUnit paths Trunk reads are in
+[`.github/workflows/README.md`](../../../.github/workflows/README.md).
+
+The browser rides an env var rather than per-browser task variants (`e2e-chromium`, …) so it does not
+multiply with the shard dimension in the task namespace: a suite that outgrows one cell then needs two
+task definitions, not six. Being a hash input already gives each browser its own cache entry.
+
+### Sharding alternatives measured and rejected
+
+Two other strategies were built out and run head-to-head against the shipped one in a single 27-cell
+run (9 cells each, same commit). Neither survives in the diff; recorded so the choice is not
+re-litigated from scratch.
+
+|                                             |   critical path | runner-time | targets |            failures |
+| :------------------------------------------ | --------------: | ----------: | ------: | ------------------: |
+| Knapsack Pro queue mode + per-browser split |            297s |       1618s |   27/27 | 5 (only 2 surfaced) |
+| Per-browser moon task variants, 9 cells     | ~335s corrected |      ~1470s |   23/25 |                   2 |
+| **Browser × `--job`, 9 cells (shipped)**    |            364s |       1500s |   27/27 |                   6 |
+
+All three landed within ~10% on runner cost and 297–364s on critical path, so speed did not decide it:
+
+1. **Knapsack Pro** (`@knapsack-pro/playwright`, a file-level queue ordered by recorded duration) needs
+   an external service and a token, and its measured advantage came entirely from offloading composer —
+   the part `--shard` now handles in-repo. Two of its cells also reported success while a test failed,
+   masked by quarantine.
+2. **Per-browser moon task variants** put all 24 browser targets in one flat pool, which can lend work
+   across browsers — a real advantage, since chromium's pool is ~30% heavier. But the browser then
+   multiplies with the shard dimension, and splitting composer fixes the same imbalance more directly.
+   Its numbers are corrected because moon's default bail silently dropped `composer-app:e2e-chromium`
+   and `plugin-sheet:e2e-chromium` from a failing cell, making the arm look cheapest when it had simply
+   skipped the two most expensive targets — which is what motivated `--on-failure continue`.
 
 **Retries are absent by policy** (`e2ePreset` sets `retries: 0`; two retry loops were also removed
 from composer's `app-manager.ts`). A retry converts a product defect into a slow pass — removing the

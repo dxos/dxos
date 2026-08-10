@@ -36,22 +36,7 @@ To run e2e job:
 
 **unit/browser/storybook** go through Trunk on typical PRs; **e2e** only when the `e2e` job runs (not on ordinary topic-branch PRs). Exact `moon` commands and `env` are in [`check.yml`](check.yml).
 
-### E2E sharding — alternatives measured and rejected
-
-Two other sharding strategies were built out and run head-to-head against the shipped one in a single 27-cell run (9 cells each, same commit). Neither survives in the diff; recorded so the choice is not re-litigated from scratch.
-
-| | critical path | runner-time | targets covered | test failures |
-| :-- | --: | --: | --: | --: |
-| Knapsack Pro queue mode + per-browser split | 297s | 1618s | 27/27 | 5 (only 2 surfaced) |
-| Per-browser moon task variants, 9 cells | ~335s corrected | ~1470s | 23/25 | 2 |
-| **Browser × `--job`, 9 cells (shipped)** | 364s | 1500s | 27/27 | 6 |
-
-All three landed within ~10% on runner cost and 297–364s on critical path, so speed did not decide it:
-
-1. **Knapsack Pro** ([`@knapsack-pro/playwright`](https://knapsackpro.com), file-level queue ordered by recorded duration) needs an external service and a token, and its measured advantage came entirely from offloading composer — the part `--shard` now handles in-repo. Two of its cells also reported success while a test failed, masked by quarantine.
-2. **Per-browser moon task variants** (`e2e-chromium`/`-firefox`/`-webkit`) put all 24 browser targets in one flat pool, which can lend work across browsers — a real advantage, since chromium's pool is ~30% heavier than the others. But the browser then multiplies with the shard dimension in the task namespace, and splitting composer fixes the same imbalance more directly. Its numbers above are corrected because moon's default bail silently dropped `composer-app:e2e-chromium` and `plugin-sheet:e2e-chromium` from a failing cell, making the arm look cheapest when it had simply skipped the two most expensive targets — which is what motivated `--on-failure continue`.
-
-What the matrix intermittently fails on, how to attribute a red cell, and which fixes have already been measured and refuted are in the CI project's [`DESIGN.md`](../../.agents/projects/ci/DESIGN.md).
+Why the matrix is shaped this way (two other sharding strategies were measured against it and rejected), what it intermittently fails on, how to attribute a red cell, and which fixes are already refuted are in the CI project's [`DESIGN.md`](../../.agents/projects/ci/DESIGN.md).
 
 ### Flaky label vs quarantine vs code tags
 

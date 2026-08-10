@@ -32,9 +32,8 @@ tasks:
     deps:
       - ~:build
   e2e:
-    # The suite serves stories from `storybook dev`, which resolves packages from source but still
-    # needs generated artifacts: vendor bundles (their dist is absent under the `vendor` tag, and
-    # without it Vite's dep-scan aborts and the web server exits) and each `storybook:prebuild`.
+    # `storybook dev` resolves packages from source, but Vite's dep-scan aborts without vendor dist,
+    # taking the web server down with it.
     deps:
       - '#vendor:build'
       - '#storybook:prebuild'

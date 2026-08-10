@@ -7,8 +7,8 @@ tags:
   - pack
 tasks:
   e2e:
-    # See the react storybook packages: `storybook dev` needs vendor dist (Vite's dep-scan aborts
-    # without it, taking the web server with it) and the generated `storybook:prebuild` assets.
+    # `storybook dev` resolves packages from source, but Vite's dep-scan aborts without vendor dist,
+    # taking the web server down with it.
     deps:
       - '#vendor:build'
       - '#storybook:prebuild'

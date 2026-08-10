@@ -4,26 +4,22 @@ tasks:
     command: pnpm exec playwright test
     args:
       - --config=src/playwright/playwright.config.ts
-    # The suite's runtime environment, declared here rather than only in CI so that a local
-    # `moon run <app>:e2e` exercises the same edge and telemetry target the CI cells do. The
-    # workflow repeats these because moon hashes the AMBIENT value of any env var a task lists in
-    # `inputs`, so the job env has to agree with the task env or the warmed `bundle-e2e` entry
-    # hashes differently and is never read.
+    # Declared here, not only in CI, so a local `moon run <app>:e2e` exercises the same edge and
+    # telemetry target. The workflow repeats them because moon hashes the AMBIENT value of any env var
+    # a task lists in `inputs`, so a job that disagrees hashes `bundle-e2e` differently.
     env:
       # Production edge — e2e must exercise what users hit, not a dev-tier worker.
       DX_EDGE_BASE_URL: 'https://dxos.network'
       DX_TELEMETRY_TAG: e2e
-      # The service worker breaks `page.route` interception, and specs assert on this rather than
-      # silently running without it.
+      # The service worker breaks `page.route` interception.
       DX_PWA: 'false'
     deps:
       - test-utils:build
       - vite-plugin-icons:build
       - target: ^:build
         optional: true
-      # `bundle-e2e` rather than `bundle` with an `env` override: the override is hashed into the
-      # dependency, so it produced a bundle no other invocation could hydrate. Only the two apps that
-      # serve a production bundle define it, hence optional.
+      # `bundle-e2e`, not `bundle` with an `env` override: an override is hashed into the dependency, so
+      # it yields a bundle no other invocation can hydrate. Optional — only two apps define it.
       - target: bundle-e2e
         optional: true
     inputs:
@@ -32,34 +28,21 @@ tasks:
       - '@group(tests)'
       - $CI
       - $CONFIG_DYNAMIC
-      # Set to a unique value (run id) to force execution without disabling the cache wholesale:
-      # MOON_CACHE=off would also re-run every cached bundle/build dependency in each shard.
       - $DX_E2E_RUN_ID
       - $DX_ENVIRONMENT
       - $DX_HOST
       - $DX_HUB_URL
       - $DX_IPDATA_API_KEY
       - $DX_SHARED_WORKER
-      # The browser rides an env var rather than being baked into per-browser task variants
-      # (`e2e-chromium`, …). Both shapes shard equally well, but keeping the browser out of the task
-      # namespace stops it multiplying with the shard dimension: a suite that outgrows one cell then
-      # needs two task definitions (`e2e-ci-1of2`/`-2of2`), not six. Being a hash input already gives
-      # each browser its own remote-cache entry.
       - $PLAYWRIGHT_BROWSER
 
-  # Deliberately identical to `e2e` — it adds nothing, and it is NOT where sharding lives. It exists
-  # only so the CI pool has a task-name prefix of its own (`moon exec ':e2e-ci*'`), which is what lets
-  # a suite too big for one cell withhold its whole-suite target from the pool
-  # (`workspace.inheritedTasks.exclude`) and register halves in its place — see composer-app's
-  # `e2e-ci-1of2`/`-2of2`. Without the separate name the pool would have to glob `:e2e`, and that suite
-  # would contribute both its full suite and its halves, running every one of its tests twice.
+  # Identical to `e2e` by design: it exists only to give the CI pool a task-name prefix of its own
+  # (`moon exec ':e2e-ci*'`), so a suite too big for one cell can withhold its whole-suite target and
+  # register halves instead (composer-app's `e2e-ci-1of2`/`-2of2`). Globbing `:e2e` would run that
+  # suite's tests twice, once via the full suite and once via the halves.
   #
-  # Sharding is not defined here because the useful shard count is per-suite: composer-app is the only
-  # suite whose runtime exceeds the ~160s a cell costs to stand up. Splitting the rest would make each
-  # storybook-backed suite pay its ~30s story compile twice to divide ~7s of tests.
-  #
-  # (`moon exec` cannot union a `--query` with explicit targets — the targets silently win — so the
-  # pool has to be expressible as globs rather than as "every `e2e` except composer's".)
+  # Sharding is per-suite, not here: composer-app is the only suite whose runtime exceeds the ~160s a
+  # cell costs to stand up.
   e2e-ci:
     extends: e2e
 

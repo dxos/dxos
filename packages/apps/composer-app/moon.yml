@@ -1,8 +1,7 @@
 layer: application
 language: typescript
-# `e2e-ci` is the target CI's sharded pool globs; this suite is too big for one cell, so it opts out
-# and supplies `e2e-ci-1of2`/`-2of2` below instead. Excluding it rather than the workflow excluding
-# this project keeps the pool a plain glob that picks up any future suite automatically.
+# Too big for one cell, so this suite opts out of the pool's `e2e-ci` and supplies halves below.
+# Excluding it here rather than in the workflow keeps the pool a plain glob.
 workspace:
   inheritedTasks:
     exclude:
@@ -26,12 +25,9 @@ tasks:
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
-  # The bundle Playwright serves. This exists as a separate target, rather than the e2e env being
-  # overridden on `e2e`'s `bundle` dependency, because a dependency-level `env` map is part of the
-  # dependency's task hash: `moon run composer-app:bundle` and the bundle the e2e closure waits on
-  # were two different hashes, so the warming job populated an entry no e2e node ever read and every
-  # node rebuilt the bundle (measured at 19s each). DX_PWA stays off `bundle` itself because
-  # production deploys ship the service worker.
+  # The bundle Playwright serves, as its own target rather than an `env` override on `e2e`'s `bundle`
+  # dep: a dependency-level `env` map is part of that dependency's hash, so the override yields a bundle
+  # no other invocation can hydrate. `DX_PWA` stays on for `bundle`, which production deploys ship.
   bundle-e2e:
     extends: bundle
     env:
@@ -136,17 +132,10 @@ tasks:
       # — not merely anything the config imports. A non-plugin import like `@dxos/util` stays
       # untagged: the plugin packages depend on it, so their own `^:build` builds it first.
       - '#vite-plugin:build'
-  # Halves of `e2e` for CI's sharded pool, replacing the inherited `e2e-ci` excluded above.
-  # `moon --job` partitions targets and can never split one, which made this suite the floor of the
-  # whole phase: 3m28s on chromium against ~160s of fixed per-cell overhead, with no other target
-  # above 1m9s. Playwright's `--shard` splits per *test* rather than per file wherever `fullyParallel`
-  # is set and no `beforeAll` welds a group together — the only two specs here that use `beforeAll`
-  # are `testIgnore`d by this config. `args` appends to the base task's and is hashed (verified:
-  # distinct hashes), so the halves cannot replay each other's cache entry.
-  #
-  # Two, not more: another cell costs ~160s of setup plus a fresh chance of drawing a stalled checkout
-  # (2 of 27 cells lost >18m to one in run 31111016212), so a half at ~104s already sits under the
-  # overhead splitting it again would buy. Split one browser further if it runs consistently hotter.
+  # Halves of `e2e` for CI's sharded pool, replacing the excluded `e2e-ci`. `moon --job` partitions
+  # targets and can never split one, so without these this suite alone sets the floor for the whole
+  # phase. `args` is hashed, so the halves cannot replay each other's cache entry. Two, not more: a half
+  # already runs under what another cell would cost to stand up.
   e2e-ci-1of2:
     extends: e2e
     args:

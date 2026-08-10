@@ -182,6 +182,19 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       `@opentui` explanation appeared twice. The URI-vs-object-id rule is now stated once, on
       `CommentState.current`. Verified: knip exit 0, lint 8/8, `Obj.test.ts` 49/49,
       `useExtensions.test.tsx` 2/2, all five configs load under `--list`.
+- [x] **Second pass: the yml files the first audit missed** — the first pass filtered the diff to
+      `*.ts`/`*.tsx`, so `check.yml`, `.moon/tasks/tag-e2e.yml` and the seven `moon.yml` files were
+      never audited, and they were the worst offenders: 144 added comment lines down to 78. The
+      "these four env vars must be IDENTICAL" block appeared **twice verbatim** in `check.yml`, and the
+      second copy said "`e2e`'s block below" while sitting inside that very job; the storybook-deps
+      comment appeared verbatim in five `moon.yml` files. Env-var `inputs:` entries no longer carry
+      prose — a declarative list documents itself. Proven comment-only by stripping `#` lines and
+      diffing against HEAD; all nine files still parse.
+- [x] **Move the rejected sharding strategies out of `.github/workflows/README.md`** — a workflows
+      README should describe the workflow that exists, so the Knapsack Pro / per-browser-variant
+      comparison now lives in DESIGN.md next to "Refuted", and the README points at it rather than the
+      other way round. No Knapsack code or dependency remains; the changeset still names the removal,
+      which is correct there.
 - [ ] **Restore `quarantine: true`** on the e2e uploader in `check.yml` (set to `false` for the
       campaign so a masked failure could not make a green cell unfalsifiable).
 - [ ] **Sync with main and drop draft status.**
