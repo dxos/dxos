@@ -63,7 +63,9 @@ Same Solid pipeline as today — the change is internal to the loader app:
 
 - `packages/sdk/app-framework/src/vite-plugin/boot-loader/loader-app/`
   - **`swarm.ts` (new)** — pure, DOM-free: constants above, per-variant position functions,
-    settle/no-go/colour-mix math. Unit-testable like `store.ts`.
+    settle/no-go/colour-mix math. Unit-testable like `store.ts`. Tunables are a `SwarmConfig`
+    options bag (variant, dot count, dot size, ring/outer/no-go radii, settle duration, ring
+    rotation speed, outro scale/duration); each variant supplies defaults, callers may override.
   - **`Loader.tsx`** — replaces the arc/`marker` internals: renders `<circle>` (and `<line>` for D)
     elements once via refs, mutates `cx/cy/r/fill/opacity` inside the existing rAF loop. The eased
     `shown` progress (per-frame lerp toward `store.progress()`) is kept and feeds `lit = shown/100 × N`.
@@ -91,8 +93,9 @@ Same Solid pipeline as today — the change is internal to the loader app:
   (anticlockwise from 12 o'clock), settle monotonicity ("docked never moves" for A/C/D; rigid
   rotation invariant for B — pairwise distances constant), no-go projection, lit-count mapping,
   outro scaling.
-- **Storybook**: the existing loader story gains variant + scripted-boot controls; same component
-  as production.
+- **Storybook**: a single story (DefaultStory + args, no per-story renderers) whose controls cover
+  the variant (A–D/random) and the `SwarmConfig` tunables — dot count, dot size, rotation speed,
+  radii, settle/outro timing — plus the scripted-boot driver; same component as production.
 - **Playwright**: `startup.spec.ts` asserts on status text/dismissal, not ring internals — verify
   selectors before landing.
 
