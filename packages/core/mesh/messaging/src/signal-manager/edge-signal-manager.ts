@@ -6,7 +6,7 @@
 // (proto field 2). The dual-read fallback that still gates removing that field lives on the
 // edge side (which relays peers from not-yet-migrated senders); nothing here needs it.
 
-import { Event, scheduleMicroTask, scheduleTaskInterval } from '@dxos/async';
+import { Event, scheduleMicroTask } from '@dxos/async';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { type EdgeConnection, EdgeIdentityChangedError, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -44,18 +44,6 @@ type MessageSubscription = {
   onMessage: (message: Message) => void;
 };
 
-/**
- * How often unconfirmed swarm JOINs are re-sent. A JOIN is a single websocket message with no
- * acknowledgment, and the edge router can drop it without closing the socket (a Durable Object
- * storage timeout resets the router mid-dispatch — "router websocket message handling failed" on the
- * edge). A dropped JOIN left this client believing it was in the swarm while the edge had no record
- * of it, so peers never discovered each other and a space invitation sat in CONNECTING until the
- * caller gave up (4 of 10 CI campaign runs on 2026-08-09, correlated with edge RouterObject error
- * bursts at the exact wait windows). The pushed swarm state that names this peer is the de-facto
- * acknowledgment; until it arrives the JOIN is re-sent at this interval.
- */
-const JOIN_CONFIRMATION_RETRY_INTERVAL = 5_000;
-
 export class EdgeSignalManager extends Resource implements SignalManager {
   /**
    * @deprecated
@@ -70,13 +58,12 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   private readonly _subscriptions = new Set<MessageSubscription>();
 
   /**
-   * Swarm key -> { peer: <own state payload>, joinedPeers: <state of swarm> }. `confirmed` flips when
-   * a pushed swarm state names this peer — the signal that the edge actually registered the JOIN.
+   * Swarm key -> { peer: <own state payload>, joinedPeers: <state of swarm> }.
    */
   // TODO(mykola): This class should not contain swarm state joinedPeers. Temporary before network-manager API changes to accept list of peers.
   private readonly _swarmPeers = new ComplexMap<
     PublicKey,
-    { lastState?: Uint8Array; joinedPeers: ComplexSet<PeerInfo>; confirmed: boolean }
+    { lastState?: Uint8Array; joinedPeers: ComplexSet<PeerInfo> }
   >(PublicKey.hash);
 
   /**
@@ -89,18 +76,10 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   private readonly _subscribedTags = new Map<string, number>();
 
   private readonly _edgeConnection: EdgeConnection;
-  private readonly _joinRetryInterval: number;
 
-  constructor({
-    edgeConnection,
-    joinRetryInterval = JOIN_CONFIRMATION_RETRY_INTERVAL,
-  }: {
-    edgeConnection: EdgeConnection;
-    joinRetryInterval?: number;
-  }) {
+  constructor({ edgeConnection }: { edgeConnection: EdgeConnection }) {
     super();
     this._edgeConnection = edgeConnection;
-    this._joinRetryInterval = joinRetryInterval;
   }
 
   protected override async _open(): Promise<void> {
@@ -110,7 +89,6 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         scheduleMicroTask(this._ctx, () => this._rejoinAllSwarms());
       }),
     );
-    scheduleTaskInterval(this._ctx, () => this._resendUnconfirmedJoins(), this._joinRetryInterval);
   }
 
   /**
@@ -133,20 +111,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       peer.peerKey = this._edgeConnection.peerKey;
     }
 
-    this._swarmPeers.set(topic, {
-      lastState: peer.state,
-      joinedPeers: new ComplexSet<PeerInfo>(PeerInfoHash),
-      confirmed: false,
-    });
-    await this._sendJoinRequest(ctx, topic, peer);
-
-    // Re-establish any broadcast subscription on the newly-joined swarm (DX-1125).
-    if (this._subscribedTags.size > 0) {
-      await this._sendSubscription(ctx);
-    }
-  }
-
-  private async _sendJoinRequest(ctx: Context, topic: PublicKey, peer: PeerInfo): Promise<void> {
+    this._swarmPeers.set(topic, { lastState: peer.state, joinedPeers: new ComplexSet<PeerInfo>(PeerInfoHash) });
     await this._edgeConnection.send(
       ctx,
       protocol.createMessage(SwarmRequestSchema, {
@@ -155,29 +120,10 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         payload: { action: SwarmRequestAction.JOIN, swarmKeys: [topic.toHex()] },
       }),
     );
-  }
 
-  /**
-   * Re-send the JOIN for every swarm the edge has not yet confirmed (see
-   * {@link JOIN_CONFIRMATION_RETRY_INTERVAL}). JOIN is idempotent on the edge, so a resend that
-   * crosses an in-flight confirmation is harmless.
-   */
-  private async _resendUnconfirmedJoins(): Promise<void> {
-    for (const [topic, entry] of this._swarmPeers.entries()) {
-      if (entry.confirmed) {
-        continue;
-      }
-      log.warn('swarm join unconfirmed; re-sending', { topic });
-      try {
-        await this._sendJoinRequest(this._ctx, topic, {
-          peerKey: this._edgeConnection.peerKey,
-          identityDid: this._edgeConnection.identityDid,
-          state: entry.lastState,
-        });
-      } catch (err) {
-        // The next interval retries; a closed connection also triggers _rejoinAllSwarms on reconnect.
-        log('failed to re-send swarm join', { topic, err });
-      }
+    // Re-establish any broadcast subscription on the newly-joined swarm (DX-1125).
+    if (this._subscribedTags.size > 0) {
+      await this._sendSubscription(ctx);
     }
   }
 
@@ -338,16 +284,9 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       return;
     }
 
-    const entry = this._swarmPeers.get(topic)!;
-    const { joinedPeers: oldPeers } = entry;
+    const { joinedPeers: oldPeers } = this._swarmPeers.get(topic)!;
     const timestamp = message.timestamp ? new Date(Date.parse(message.timestamp)) : new Date();
     const newPeers = new ComplexSet<PeerInfo>(PeerInfoHash, payload.peers);
-
-    // A pushed state that names this peer is the edge acknowledging the JOIN; until then the JOIN is
-    // re-sent (see _resendUnconfirmedJoins). Membership can also be lost server-side (a router reset
-    // wipes swarm storage), so a state WITHOUT this peer re-arms the repair loop rather than trusting
-    // the earlier confirmation.
-    entry.confirmed = payload.peers.some((peer) => peer.peerKey === this._edgeConnection.peerKey);
 
     // Emit new available peers in the swarm.
     for (const peer of newPeers) {
@@ -426,13 +365,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   private async _rejoinAllSwarms(): Promise<void> {
     log('rejoin swarms', { swarms: Array.from(this._swarmPeers.keys()) });
-    for (const [topic, entry] of this._swarmPeers.entries()) {
+    for (const [topic, { lastState }] of this._swarmPeers.entries()) {
       await this.join(this._ctx, {
         topic,
         peer: {
           peerKey: this._edgeConnection.peerKey,
           identityDid: this._edgeConnection.identityDid,
-          state: entry.lastState,
+          state: lastState,
         },
       });
     }

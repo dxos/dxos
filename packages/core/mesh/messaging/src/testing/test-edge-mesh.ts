@@ -10,7 +10,6 @@ import {
   type Message,
   SwarmRequest_Action as SwarmRequestAction,
   SwarmRequestSchema,
-  SwarmResponseSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 /**
@@ -27,13 +26,6 @@ export class TestEdgeMesh {
   private readonly _subscriptions = new Map<string, Map<string, string[]>>();
   /** swarmKey -> set of member peerKeys. */
   private readonly _members = new Map<string, Set<string>>();
-
-  /**
-   * Fault injection: called for every incoming message; return `true` to silently drop it — the way
-   * the real edge loses a message when a Durable Object storage timeout resets the router mid-dispatch
-   * (the socket stays open, the sender is never told).
-   */
-  public dropMessage?: (fromPeerKey: string, message: Message) => boolean;
 
   createConnection({ peerKey, identityDid }: { peerKey: string; identityDid: string }): TestEdgeConnection {
     const connection = new TestEdgeConnection({ peerKey, identityDid, mesh: this });
@@ -53,9 +45,6 @@ export class TestEdgeMesh {
 
   /** Handle a message sent by a client connection. */
   receive(fromPeerKey: string, message: Message): void {
-    if (this.dropMessage?.(fromPeerKey, message)) {
-      return;
-    }
     switch (message.serviceId) {
       case EdgeService.SWARM:
         this._handleSwarmRequest(fromPeerKey, message);
@@ -73,14 +62,12 @@ export class TestEdgeMesh {
       case SwarmRequestAction.JOIN:
         for (const swarmKey of swarmKeys) {
           this._memberSet(swarmKey).add(fromPeerKey);
-          this._pushSwarmState(swarmKey);
         }
         break;
       case SwarmRequestAction.LEAVE:
         for (const swarmKey of swarmKeys) {
           this._memberSet(swarmKey).delete(fromPeerKey);
           this._subscriptionMap(swarmKey).delete(fromPeerKey);
-          this._pushSwarmState(swarmKey);
         }
         break;
       case SwarmRequestAction.SUBSCRIBE:
@@ -89,26 +76,6 @@ export class TestEdgeMesh {
           this._subscriptionMap(swarmKey).set(fromPeerKey, request.subscribeTags ?? []);
         }
         break;
-    }
-  }
-
-  /**
-   * Push the swarm's full peer list (including the requester) to every member — the real edge fans
-   * out state on membership change, and that push is what {@link EdgeSignalManager} treats as the
-   * JOIN acknowledgment.
-   */
-  private _pushSwarmState(swarmKey: string): void {
-    const peers = Array.from(this._memberSet(swarmKey)).map((peerKey) => ({
-      swarmKey,
-      peerKey,
-      identityDid: this._connections.get(peerKey)?.identityDid,
-    }));
-    const message = protocol.createMessage(SwarmResponseSchema, {
-      serviceId: EdgeService.SWARM,
-      payload: { swarmKey, peers },
-    });
-    for (const peerKey of this._memberSet(swarmKey)) {
-      this._connections.get(peerKey)?.deliver(message);
     }
   }
 
