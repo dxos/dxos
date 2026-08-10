@@ -215,7 +215,8 @@ export const dotPosition = (
 
     // Damped sinusoidal drift.
     const amplitude = config.wanderAmplitude * (1 - settleEased);
-    const driftX = Math.sin(nowMs / 900 + dot.phase * 3) * amplitude + Math.sin(nowMs / 331 + dot.phase) * amplitude * 0.3;
+    const driftX =
+      Math.sin(nowMs / 900 + dot.phase * 3) * amplitude + Math.sin(nowMs / 331 + dot.phase) * amplitude * 0.3;
     const driftY =
       Math.cos(nowMs / 1100 + dot.phase * 2) * amplitude + Math.cos(nowMs / 411 + dot.phase) * amplitude * 0.3;
 
@@ -225,7 +226,7 @@ export const dotPosition = (
     // orbit or trails: orbital motion with wobble.
     const wobble = Math.sin(nowMs / 700 + dot.phase) * 5 * (1 - settleEased);
     const effectiveRadius = dot.orbitRadius + wobble;
-    const angle = dot.orbitBearing - (nowMs * dot.orbitSpeed);
+    const angle = dot.orbitBearing - nowMs * dot.orbitSpeed;
 
     waitingX = config.centerX + effectiveRadius * Math.cos(angle);
     waitingY = config.centerY + effectiveRadius * Math.sin(angle);
