@@ -63,7 +63,7 @@ import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from
 import { getHandleState } from './handle-state';
 import { tryGetSpaceIdFromCollectionId } from './space-collection';
 import { SqliteHeadsStore } from './sqlite-heads-store';
-import { SqliteStorageAdapter } from './sqlite-storage-adapter';
+import { SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX, SqliteStorageAdapter } from './sqlite-storage-adapter';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -572,14 +572,49 @@ export class AutomergeHost extends Resource {
   async removeDocument(id: AnyDocumentId): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
-    // Evict any in-memory handle first (draining its pending save) so it cannot re-persist the
-    // document after we wipe storage below — GC loads the document to inspect ownership, so a live
-    // handle typically exists at this point.
+    // Heads row first: the indexer enumerates every row of that table and loads what it finds, so
+    // a pass racing this wipe would re-create the document as an empty one and persist it again.
+    await RuntimeProvider.runPromise(this._runtime)(this._headsStore.remove(documentId));
+
+    // Evict any in-memory handle (draining its pending save) so it cannot re-persist the document
+    // after the wipe below — collection loads the document to inspect ownership, so a live handle
+    // typically exists at this point.
     if (this._repo.handles[documentId]) {
       await this._repo.removeFromCache(documentId);
     }
     await this._storage.removeRange([documentId]);
-    await RuntimeProvider.runPromise(this._runtime)(this._headsStore.remove(documentId));
+
+    // The subduction transport persists the same document as sedimentree records under a disjoint
+    // key space, so the range above does not touch them; on that transport they are most of the
+    // document's bytes.
+    const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+    for (const family of SUBDUCTION_KEY_FAMILIES) {
+      await this._storage.removeRange([SUBDUCTION_PREFIX, family, sedimentreeId]);
+    }
+
+    // These sets are otherwise append-only for the process lifetime, and the classical share
+    // policy answers from them — a wiped document left behind here keeps being announced to peers.
+    this._createdDocuments.delete(documentId);
+    this._documentsToSync.delete(documentId);
+    this._documentsToRequest.delete(documentId);
+    this._headsUpdates.delete(documentId);
+    for (const requested of this._documentsRequested.values()) {
+      requested.delete(documentId);
+    }
+  }
+
+  /**
+   * Reclaims free pages back to the filesystem. Deleting rows only returns pages to SQLite's
+   * freelist, so without this a garbage-collection pass frees no disk at all. Cannot run inside a
+   * transaction, and rewrites the whole database file — call it sparingly.
+   */
+  async vacuum(): Promise<void> {
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`VACUUM`;
+      }),
+    );
   }
 
   /**
@@ -1333,3 +1368,16 @@ const encodeCollectionState = (state: CollectionState): unknown => {
  */
 const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId =>
   bs58check.encode(sedimentreeId.toBytes().slice(0, 16)) as DocumentId;
+
+/**
+ * Matches `toSedimentreeId` (zero-pad the 16-byte DocumentId to 32 bytes) followed by the
+ * lowercase-hex rendering `SedimentreeId.toString()` produces, which is what
+ * `SubductionStorageBridge` embeds in its storage keys. Derived arithmetically rather than through
+ * the WASM type so that sweeping never depends on the subduction module being initialized;
+ * `sqlite-storage-adapter.test.ts` pins the two representations against each other.
+ */
+export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string => {
+  const bytes = new Uint8Array(32);
+  bytes.set(bs58check.decode(documentId).subarray(0, 16));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+};

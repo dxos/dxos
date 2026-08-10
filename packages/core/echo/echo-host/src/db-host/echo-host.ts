@@ -8,13 +8,14 @@ import {
   type DocHandle,
   type DocumentId,
   interpretAsDocumentId,
+  isValidAutomergeUrl,
 } from '@automerge/automerge-repo';
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { DeferredTask, sleep } from '@dxos/async';
+import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -48,11 +49,12 @@ import {
 import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
+import { DeletionResolver } from './deletion';
 import { FeedDataSource } from './feed-data-source';
 import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalFeedServiceImpl } from './local-feed-service';
 import { QueryServiceImpl } from './query-service';
-import { SpaceStateManager } from './space-state-manager';
+import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager';
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -71,6 +73,13 @@ export type EchoHostProps = {
    * @default false
    */
   useSubduction?: boolean;
+
+  /**
+   * Reclaim documents locally when they leave a space's directory — i.e. when a garbage-collection
+   * pass run on some peer replicates here, or a new epoch root is applied.
+   * @default true
+   */
+  autoReclaim?: boolean;
 };
 
 /**
@@ -131,6 +140,11 @@ export class EchoHost extends Resource {
 
   private _indexesUpToDate = false;
 
+  private readonly _autoReclaim: boolean;
+
+  /** Last known document set per space, to detect what left the directory. */
+  private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
+
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
   #syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
@@ -142,8 +156,11 @@ export class EchoHost extends Resource {
     runtime,
     assignQueuePositions = false,
     useSubduction,
+    autoReclaim = true,
   }: EchoHostProps) {
     super();
+
+    this._autoReclaim = autoReclaim;
 
     this._echoDataMonitor = new EchoDataMonitor();
     this._automergeHost = new AutomergeHost({
@@ -301,6 +318,9 @@ export class EchoHost extends Resource {
     });
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
+      const previous = this._spaceDocumentIds.get(e.spaceId);
+      this._spaceDocumentIds.set(e.spaceId, new Set(e.documentIds));
+
       if (e.previousRootId) {
         void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
       }
@@ -308,6 +328,22 @@ export class EchoHost extends Resource {
         deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
         e.documentIds,
       );
+
+      // Documents that left the directory are this peer's share of a garbage-collection pass some
+      // peer explicitly ran: the unlink replicates as an ordinary change, and its arrival here is
+      // the evidence. Reclaiming them locally is what makes one invocation free disk everywhere,
+      // rather than requiring every peer to run collection itself.
+      //
+      // Safe because a departed document id never comes back: automerge delivers causally, so a
+      // link removal is never observed before the create it depends on, and the sole writer of a
+      // `links` key (object creation) always writes a freshly created document url. Registering
+      // the new collection state first also means no fetch can race the wipe.
+      if (this._autoReclaim) {
+        const departed = previous ? this.#departedDocuments(previous, e) : [];
+        if (departed.length > 0 || e.previousRootId) {
+          this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+        }
+      }
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
       this._updateIndexes.schedule();
@@ -518,7 +554,7 @@ export class EchoHost extends Resource {
     options: DataService.RunGarbageCollectionRequest = { spaceId },
   ): Promise<DataService.GarbageCollectionReport> {
     const root = await this.#ensureSpaceRootLoaded(spaceId);
-    const { unlinkedObjects, removedInlineObjects } = await this.#unlinkDeletedObjects(root);
+    const { unlinkedObjects, removedInlineObjects } = await this.#unlinkDeletedObjects(spaceId, root);
     const wipedDocumentIds = await this.#wipeUnreachableDocuments(spaceId, root);
 
     let removedIndexEntries = 0;
@@ -534,6 +570,124 @@ export class EchoHost extends Resource {
       removedIndexEntries,
       purgedFeedBlocks: 0,
     };
+  }
+
+  /** Document ids present in the space's previous directory listing but not the current one. */
+  #departedDocuments(previous: ReadonlySet<DocumentId>, event: SpaceDocumentListUpdatedEvent): DocumentId[] {
+    const current = new Set(event.documentIds);
+    return [...previous].filter((documentId) => !current.has(documentId));
+  }
+
+  /**
+   * Wipes documents that left a space's directory, off the critical path of applying the change
+   * that removed them. Failures are logged rather than propagated: reclamation is best-effort
+   * maintenance, and a space that fails to reclaim is only still holding disk.
+   *
+   * A retired root is expanded to its whole closure rather than trusting the departed set. The
+   * diff only knows what this peer observed, and the directory listing is debounced — a document
+   * linked and then orphaned in quick succession may never have appeared in a listing at all.
+   * Walking the retired root makes an epoch deterministic regardless of what was seen.
+   *
+   * The unlink case has no equivalent anchor and so relies on the diff, which is exact for the
+   * case it exists to serve: an unlink replicating in from a peer arrives long after the link it
+   * removes, so the document was certainly observed. A document that was never observed is left
+   * for the next explicit collection pass, whose orphan scan finds it by reachability.
+   */
+  #scheduleReclaim(spaceId: SpaceId, departed: DocumentId[], retiredRoot?: DocumentId): void {
+    scheduleTask(this._ctx, async () => {
+      try {
+        const candidates = new Set(departed);
+        if (retiredRoot) {
+          for (const documentId of await this.#collectClosure(retiredRoot)) {
+            candidates.add(documentId);
+          }
+        }
+
+        // Re-checked against the live directory: between the event and this task the documents
+        // could have been re-linked (a concurrent write merging in), and reachable data is never
+        // a collection candidate.
+        const root = this._spaceStateManager.getRootBySpaceId(spaceId);
+        const reachable = root ? await this.#collectClosure(root.documentId) : new Set<DocumentId>();
+
+        const stale: DocumentId[] = [];
+        for (const documentId of candidates) {
+          if (reachable.has(documentId)) {
+            continue;
+          }
+          // Same attribution boundary as the explicit pass: never wipe a document that does not
+          // positively identify as this space's.
+          if (await this.#isOwnedBySpace(spaceId, documentId)) {
+            stale.push(documentId);
+          }
+        }
+        if (stale.length === 0) {
+          return;
+        }
+
+        // Index state first: the indexer enumerates documents from their heads rows and cursors,
+        // and a pass landing between the wipe and this cleanup would re-load a document whose
+        // bytes are gone — which re-creates it as an empty document and persists it again.
+        await RuntimeProvider.runPromise(this._runtime)(
+          this._indexEngine.deleteObjects({ spaceId, documentIds: stale, objects: [] }),
+        );
+        for (const documentId of stale) {
+          await this._automergeHost.removeDocument(documentId);
+        }
+        log.info('reclaimed documents that left the space directory', { spaceId, documents: stale.length });
+      } catch (err) {
+        if (this._ctx.disposed) {
+          return;
+        }
+        log.warn('automatic reclamation failed', { spaceId, err });
+      }
+    });
+  }
+
+  /**
+   * Transitive closure of documents reachable from a document, over object links and branch
+   * members. Storage-only: fetching from the network here would re-materialize the very documents
+   * being collected. A document that is not on disk terminates the walk.
+   */
+  async #collectClosure(documentId: DocumentId): Promise<Set<DocumentId>> {
+    const visited = new Set<DocumentId>();
+    const queue: DocumentId[] = [documentId];
+    while (queue.length > 0) {
+      const next = queue.shift()!;
+      if (visited.has(next)) {
+        continue;
+      }
+      visited.add(next);
+      const doc = await this.#loadFromStorage(next);
+      if (!doc) {
+        continue;
+      }
+      for (const url of [
+        ...Object.values(doc.links ?? {}).map((link) => link.toString()),
+        ...DatabaseDirectory.getAllBranchDocUrls(doc),
+      ]) {
+        if (isValidAutomergeUrl(url)) {
+          queue.push(interpretAsDocumentId(url as AutomergeUrl));
+        }
+      }
+    }
+    return visited;
+  }
+
+  async #isOwnedBySpace(spaceId: SpaceId, documentId: DocumentId): Promise<boolean> {
+    const doc = await this.#loadFromStorage(documentId);
+    return doc ? (await DatabaseDirectory.getSpaceId(doc)) === spaceId : false;
+  }
+
+  async #loadFromStorage(documentId: DocumentId): Promise<DatabaseDirectory | null> {
+    try {
+      const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+        fetchFromNetwork: false,
+      });
+      return handle?.doc() ?? null;
+    } catch (err) {
+      log.warn('reclamation: document failed to load, treating as opaque', { documentId, err });
+      return null;
+    }
   }
 
   /** Enumerate the documents reachable from a space root (root + object links + branch members). */
@@ -601,6 +755,7 @@ export class EchoHost extends Resource {
    * document) have their `links` entry removed, orphaning the document for step 2.
    */
   async #unlinkDeletedObjects(
+    spaceId: SpaceId,
     root: DatabaseRoot,
   ): Promise<{ unlinkedObjects: number; removedInlineObjects: { documentId: string; objectId: string }[] }> {
     const rootDoc = root.doc();
@@ -608,11 +763,12 @@ export class EchoHost extends Resource {
       return { unlinkedObjects: 0, removedInlineObjects: [] };
     }
 
-    const deletedInlineIds = Object.entries(rootDoc.objects ?? {})
-      .filter(([, object]) => EntityStructure.isDeleted(object as EntityStructure))
-      .map(([id]) => id);
-
-    const deletedLinkIds: string[] = [];
+    // Every entity in the directory is registered before anything is judged: deletion cascades
+    // through parents and relation endpoints, which routinely live in a different document than
+    // the object they condemn.
+    const deletion = new DeletionResolver(spaceId);
+    deletion.add(rootDoc.objects);
+    const linkedDocs = new Map<string, DatabaseDirectory>();
     for (const [objectId, url] of Object.entries(rootDoc.links ?? {})) {
       const documentId = interpretAsDocumentId(url.toString() as AutomergeUrl);
       const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
@@ -626,8 +782,15 @@ export class EchoHost extends Resource {
         // unlinked below.
         continue;
       }
-      const object = doc.objects?.[objectId];
-      if (object && EntityStructure.isDeleted(object)) {
+      linkedDocs.set(objectId, doc);
+      deletion.add(doc.objects);
+    }
+
+    const deletedInlineIds = Object.keys(rootDoc.objects ?? {}).filter((id) => deletion.isDeleted(id));
+
+    const deletedLinkIds: string[] = [];
+    for (const [objectId] of linkedDocs) {
+      if (deletion.has(objectId) && deletion.isDeleted(objectId)) {
         deletedLinkIds.push(objectId);
       }
     }

@@ -204,6 +204,25 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   }
 }
 
+/**
+ * Storage-key prefix every subduction sedimentree key is written under, and the per-sedimentree
+ * key families beneath it. Mirrors `SubductionStorageBridge` in `@automerge/automerge-repo`, which
+ * writes `[SUBDUCTION_PREFIX, <family>, <sedimentreeId>, ...]` into this same table. Garbage
+ * collection has to sweep these explicitly: a document's classical `<documentId>-*` keys and its
+ * sedimentree records are disjoint, and on the subduction transport the latter hold the bulk of
+ * the bytes.
+ */
+export const SUBDUCTION_PREFIX = 'subduction';
+
+export const SUBDUCTION_KEY_FAMILIES = [
+  'ids',
+  'commits',
+  'blobs',
+  'fragments',
+  'fragment-blobs',
+  'remote-heads',
+] as const;
+
 /** Coerces a value to a plain Uint8Array (Buffer is a subclass in Node.js but not identical). */
 const toUint8Array = (value: Uint8Array): Uint8Array =>
   value instanceof Uint8Array && value.constructor === Uint8Array
