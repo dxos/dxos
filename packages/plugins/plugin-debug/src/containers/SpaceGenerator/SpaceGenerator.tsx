@@ -9,12 +9,23 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useProgress } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Panel, ScrollArea, ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import {
+  DropdownMenu,
+  IconButton,
+  Input,
+  Panel,
+  ScrollArea,
+  ThemedClassName,
+  Toolbar,
+  useAsyncEffect,
+} from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -84,6 +95,18 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     useAsyncEffect(updateInfo, [updateInfo]);
 
+    const handleReset = useCallback(async () => {
+      try {
+        const { error } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, { spaceId: space.id });
+        if (error) {
+          log.catch(error);
+        }
+        await updateInfo();
+      } catch (error) {
+        log.catch(error);
+      }
+    }, [space, invokePromise, updateInfo]);
+
     const handleCreateData = useCallback(
       async (typename: string) => {
         const constructor = typeMap.get(typename);
@@ -93,7 +116,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
           await updateInfo();
         }
       },
-      [typeMap, count, space, onCreateObjects, updateInfo],
+      [space, typeMap, count, updateInfo, onCreateObjects],
     );
 
     return (
@@ -101,6 +124,21 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         <Panel.Toolbar>
           <Toolbar.Root classNames='dx-document'>
             <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <IconButton icon='ph--trash--regular' iconOnly label='Reset space' data-testid='spaceGenerator.reset' />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content side='bottom'>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item data-testid='spaceGenerator.confirmReset' onClick={handleReset}>
+                      Confirm to remove all objects from the space.
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
             <Toolbar.Separator />
             <Input.Root>
               <Input.TextInput

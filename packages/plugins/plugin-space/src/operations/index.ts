@@ -29,6 +29,7 @@ export const SpaceOperationHandlerSet = OperationHandlerSet.lazy([
   SpaceOperation.OpenImportSpace.pipe(Operation.lazyHandler(() => import('./open-import-space'))),
   SpaceOperation.OpenMembers.pipe(Operation.lazyHandler(() => import('./open-members'))),
   SpaceOperation.OpenSettings.pipe(Operation.lazyHandler(() => import('./open-settings'))),
+  SpaceOperation.RemoveAllObjects.pipe(Operation.lazyHandler(() => import('./remove-all-objects'))),
   SpaceOperation.RemoveObjects.pipe(Operation.lazyHandler(() => import('./remove-objects'))),
   SpaceOperation.Rename.pipe(Operation.lazyHandler(() => import('./rename'))),
   SpaceOperation.RenameObject.pipe(Operation.lazyHandler(() => import('./rename-object'))),
