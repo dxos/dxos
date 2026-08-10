@@ -16,18 +16,9 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import {
-  DropdownMenu,
-  IconButton,
-  Input,
-  Panel,
-  ScrollArea,
-  ThemedClassName,
-  Toast,
-  Toolbar,
-  useAsyncEffect,
-} from '@dxos/react-ui';
+import { IconButton, Input, Panel, ScrollArea, ThemedClassName, Toast, useAsyncEffect } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { sortKeys } from '@dxos/util';
@@ -53,8 +44,6 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     // Both destructive actions report only through the object counts, which do not move when a pass
     // reclaims nothing — leaving the button indistinguishable from one that did not fire.
     const [toast, setToast] = useState<{ title: string; description?: string }>();
-    // A pass over a large space is slow enough to re-click, and both actions are destructive.
-    const [pending, setPending] = useState(false);
     const presets = useMemo(() => generator(), []);
 
     // Register types.
@@ -108,7 +97,6 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     }, []);
 
     const handleReset = useCallback(async () => {
-      setPending(true);
       try {
         const { data, error } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, { spaceId: space.id });
         if (error) {
@@ -121,13 +109,10 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       } catch (error: any) {
         log.catch(error);
         showToast('Failed to remove objects', error?.message ?? String(error));
-      } finally {
-        setPending(false);
       }
     }, [space, invokePromise, updateInfo, showToast]);
 
     const handleCollectGarbage = useCallback(async () => {
-      setPending(true);
       try {
         const { data, error } = await invokePromise(SpaceOperation.CollectGarbage, undefined, { spaceId: space.id });
         if (error) {
@@ -146,10 +131,55 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       } catch (error: any) {
         log.catch(error);
         showToast('Garbage collection failed', error?.message ?? String(error));
-      } finally {
-        setPending(false);
       }
     }, [space, invokePromise, updateInfo, showToast]);
+
+    // The toolbar's own action items own the pending state: each awaits its invoke, disables only
+    // itself while in flight, and guards re-entry — so nothing here tracks that.
+    const menuActions = useMenuBuilder(
+      (): ActionGraphProps =>
+        MenuBuilder.make()
+          .action(
+            'refresh',
+            { label: 'Refresh', icon: 'ph--arrow-clockwise--regular', testId: 'spaceGenerator.refresh' },
+            () => void updateInfo(),
+          )
+          .group(
+            'reset',
+            {
+              label: 'Reset space',
+              icon: 'ph--trash--regular',
+              variant: 'dropdownMenu',
+              testId: 'spaceGenerator.reset',
+            },
+            (group) =>
+              group.action(
+                'confirm-reset',
+                { label: 'Confirm to remove all objects from the space.', testId: 'spaceGenerator.confirmReset' },
+                handleReset,
+              ),
+          )
+          .group(
+            'collect',
+            {
+              label: 'Collect garbage',
+              icon: 'ph--recycle--regular',
+              variant: 'dropdownMenu',
+              testId: 'spaceGenerator.collectGarbage',
+            },
+            (group) =>
+              group.action(
+                'confirm-collect',
+                {
+                  label: "Confirm to permanently reclaim the space's deleted objects.",
+                  testId: 'spaceGenerator.confirmCollectGarbage',
+                },
+                handleCollectGarbage,
+              ),
+          )
+          .build(),
+      [updateInfo, handleReset, handleCollectGarbage],
+    );
 
     const handleCreateData = useCallback(
       async (typename: string) => {
@@ -164,107 +194,65 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     );
 
     return (
-      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar>
-          <Toolbar.Root classNames='dx-document'>
-            <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <IconButton
-                  icon='ph--trash--regular'
-                  iconOnly
-                  label='Reset space'
-                  disabled={pending}
-                  data-testid='spaceGenerator.reset'
+      // `alwaysActive`: the toolbar gates itself on the menu scope's attention, and this debug panel
+      // is not an attendable surface, so without it every action renders disabled.
+      <Menu.Root {...menuActions} alwaysActive>
+        <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+          <Panel.Toolbar>
+            <Menu.Toolbar classNames='dx-document'>
+              <Menu.Items />
+              <Input.Root>
+                <Input.TextInput
+                  type='number'
+                  placeholder='Count'
+                  classNames='w-[4rem] text-right'
+                  min={1}
+                  max={100}
+                  size={8}
+                  value={count}
+                  onChange={(event) => setCount(parseInt(event.target.value))}
                 />
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content side='bottom'>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item data-testid='spaceGenerator.confirmReset' onClick={handleReset}>
-                      Confirm to remove all objects from the space.
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <IconButton
-                  icon='ph--recycle--regular'
-                  iconOnly
-                  label='Collect garbage'
-                  disabled={pending}
-                  data-testid='spaceGenerator.collectGarbage'
+              </Input.Root>
+            </Menu.Toolbar>
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <ScrollArea.Root thin orientation='vertical'>
+              <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
+                <SchemaTable
+                  classNames='py-1'
+                  types={staticTypes}
+                  objects={info.objects}
+                  label='Static Types'
+                  onClick={handleCreateData}
                 />
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content side='bottom'>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item
-                      data-testid='spaceGenerator.confirmCollectGarbage'
-                      onClick={handleCollectGarbage}
-                    >
-                      Confirm to permanently reclaim the space's deleted objects.
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-            <Toolbar.Separator />
-            <Input.Root>
-              <Input.TextInput
-                type='number'
-                placeholder='Count'
-                classNames='w-[4rem] text-right'
-                min={1}
-                max={100}
-                size={8}
-                value={count}
-                onChange={(event) => setCount(parseInt(event.target.value))}
-              />
-            </Input.Root>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root thin orientation='vertical'>
-            <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
-              <SchemaTable
-                classNames='py-1'
-                types={staticTypes}
-                objects={info.objects}
-                label='Static Types'
-                onClick={handleCreateData}
-              />
-              <SchemaTable
-                classNames='py-1'
-                types={recordTypes}
-                objects={info.objects}
-                label='Record Types'
-                onClick={handleCreateData}
-              />
-              <SchemaTable
-                classNames='py-1'
-                types={presets.types}
-                objects={info.objects}
-                label='Presets'
-                onClick={handleCreateData}
-              />
-              <ProgressGenerator classNames='py-1' />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Content>
-        {toast && (
-          <Toast.Root>
-            <Toast.Title icon='ph--recycle--duotone'>
-              <span>{toast.title}</span>
-            </Toast.Title>
-            {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-          </Toast.Root>
-        )}
-      </Panel.Root>
+                <SchemaTable
+                  classNames='py-1'
+                  types={recordTypes}
+                  objects={info.objects}
+                  label='Record Types'
+                  onClick={handleCreateData}
+                />
+                <SchemaTable
+                  classNames='py-1'
+                  types={presets.types}
+                  objects={info.objects}
+                  label='Presets'
+                  onClick={handleCreateData}
+                />
+                <ProgressGenerator classNames='py-1' />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Content>
+          {toast && (
+            <Toast.Root>
+              <Toast.Title icon='ph--recycle--duotone'>
+                <span>{toast.title}</span>
+              </Toast.Title>
+              {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
+            </Toast.Root>
+          )}
+        </Panel.Root>
+      </Menu.Root>
     );
   },
 );
