@@ -81,8 +81,8 @@ export const pickRandomVariant = (random: () => number = Math.random): SwarmVari
 
 export const createDots = (config: SwarmConfig, random: () => number = Math.random): SwarmDot[] => {
   const dots: SwarmDot[] = [];
-  for (let i = 0; i < config.dotCount; i++) {
-    const angle = -Math.PI / 2 - (i / config.dotCount) * 2 * Math.PI;
+  for (let index = 0; index < config.dotCount; index++) {
+    const angle = -Math.PI / 2 - (index / config.dotCount) * 2 * Math.PI;
     const startX = config.centerX + config.outerRadius * Math.cos(angle + config.spiralLead);
     const startY = config.centerY + config.outerRadius * Math.sin(angle + config.spiralLead);
     const orbitRadius = config.nogoRadius + 14 + random() * (config.outerRadius - config.nogoRadius - 22);
@@ -149,18 +149,18 @@ export const smoothstep = (x: number): number => {
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
 export const dotFill = (settleEased: number, colorFactor: number): string => {
-  const g = Math.round(lerp(GREY_LOOSE, GREY_DOCKED, settleEased));
-  const r = Math.round(lerp(g, lerp(GREY_LOOSE, BRAND_RGB[0], settleEased), colorFactor));
-  const gFinal = Math.round(lerp(g, lerp(GREY_LOOSE, BRAND_RGB[1], settleEased), colorFactor));
-  const b = Math.round(lerp(g, lerp(GREY_LOOSE, BRAND_RGB[2], settleEased), colorFactor));
-  return `rgb(${r},${gFinal},${b})`;
+  const greyChannelUnrounded = lerp(GREY_LOOSE, GREY_DOCKED, settleEased);
+  const redChannel = Math.round(lerp(greyChannelUnrounded, lerp(GREY_LOOSE, BRAND_RGB[0], settleEased), colorFactor));
+  const greenChannel = Math.round(lerp(greyChannelUnrounded, lerp(GREY_LOOSE, BRAND_RGB[1], settleEased), colorFactor));
+  const blueChannel = Math.round(lerp(greyChannelUnrounded, lerp(GREY_LOOSE, BRAND_RGB[2], settleEased), colorFactor));
+  return `rgb(${redChannel},${greenChannel},${blueChannel})`;
 };
 
 export const linkStroke = (colorFactor: number): string => {
-  const r = Math.round(lerp(LINK_GREY, BRAND_RGB[0], colorFactor));
-  const g = Math.round(lerp(LINK_GREY, BRAND_RGB[1], colorFactor));
-  const b = Math.round(lerp(LINK_GREY, BRAND_RGB[2], colorFactor));
-  return `rgb(${r},${g},${b})`;
+  const redChannel = Math.round(lerp(LINK_GREY, BRAND_RGB[0], colorFactor));
+  const greenChannel = Math.round(lerp(LINK_GREY, BRAND_RGB[1], colorFactor));
+  const blueChannel = Math.round(lerp(LINK_GREY, BRAND_RGB[2], colorFactor));
+  return `rgb(${redChannel},${greenChannel},${blueChannel})`;
 };
 
 export const outroFactor = (config: SwarmConfig, dismissingForMs: number | undefined): number => {
