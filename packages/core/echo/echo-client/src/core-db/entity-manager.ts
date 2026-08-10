@@ -895,13 +895,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   getObjectDocumentId(objectId: string): string | undefined {
-    // `updateSpaceState` clears the root handle before loading the replacement, so an epoch root
-    // swap leaves a window in which no document can be attributed. Callers already treat an
-    // unresolved id as "not available yet" and retry off the post-swap update, whereas throwing
-    // here would fail whichever query happened to be in flight.
-    if (!this._spaceRootDocHandle) {
-      return undefined;
-    }
+    invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     const spaceRootDoc = this._spaceRootDocHandle.doc();
     invariant(spaceRootDoc);
     if (spaceRootDoc.objects?.[objectId]) {

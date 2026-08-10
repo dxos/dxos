@@ -365,6 +365,14 @@ differs. When implementing on EDGE:
   disk. Prerequisite: `acceptSpace` asserts `!isSpaceDeleted`, so a space you
   deleted can never be re-joined — a tombstone must become re-joinable by
   explicit invitation before any purge lands, or the data is unrecoverable.
+- **Two races on the epoch root swap.** Applying an epoch clears the client's
+  root handle before loading the replacement, leaving a window in which no
+  document can be attributed: `EntityManager.getObjectDocumentId` asserts on the
+  null handle and fails whichever query is in flight, and
+  `SpaceProxy._createEpochInternal` resolves before the swap lands, so callers
+  cannot tell when the space is writable again. Both are reachable today via
+  `compactDocumentsEpochMigration`; neither is on any path in this document,
+  which is why they are recorded rather than fixed here.
 - **`MigrationBuilder._buildNewRoot` drops only links.** Deleted ids are removed
   from `links` but the inline `objects` map is copied wholesale, so an object
   inlined in the root survives the migration that deleted it. Affects
