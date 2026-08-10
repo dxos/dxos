@@ -15,7 +15,16 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Panel, ScrollArea, ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import {
+  DropdownMenu,
+  IconButton,
+  Input,
+  Panel,
+  ScrollArea,
+  ThemedClassName,
+  Toolbar,
+  useAsyncEffect,
+} from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -107,7 +116,21 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         <Panel.Toolbar>
           <Toolbar.Root classNames='dx-document'>
             <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
-            <IconButton icon='ph--trash--regular' iconOnly label='Reset space' onClick={handleReset} />
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <IconButton icon='ph--trash--regular' iconOnly label='Reset space' data-testid='spaceGenerator.reset' />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content side='bottom'>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item data-testid='spaceGenerator.confirmReset' onClick={handleReset}>
+                      Confirm to remove all objects from the space.
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
             <Toolbar.Separator />
             <Input.Root>
               <Input.TextInput
