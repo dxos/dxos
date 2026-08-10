@@ -162,7 +162,9 @@ All four landed. The **rules** they imply are permanent and live in the `effect`
 [layer-composition.md](../../skills/effect/layer-composition.md)) — that is where a future session
 will look, not here. Kept below as the record of why the code took the shape it did.
 
-Full evidence: [`spike/REPORT.md`](spike/REPORT.md).
+The spike that produced them has been deleted; its ported code shipped in-package, its v3 corpus
+is now `packages/core/echo/echo/src/internal/JsonSchema/json-schema-v3-corpus.json` with tests
+beside it, and its migration prototype is recorded in [TASKS.md](TASKS.md).
 
 ### F1 — `SchemaAST` is effectively private in v4
 
@@ -171,7 +173,7 @@ Full evidence: [`spike/REPORT.md`](spike/REPORT.md).
 `record`, `getAST`. Public: node classes, `is*` guards, `isOptional`, `resolve*`,
 `toEncoded`/`toType`, `mapOrSame`, `optionalKey`, `decodeTo`, `flip`.
 
-The spike's port works entirely on public API via three shims (`Schema.make(ast).annotate()`,
+The spike's port worked entirely on public API via three shims (`Schema.make(ast).annotate()`,
 `ast.context?.isMutable`, rebuild through `optionalKey`/`mutableKey`) — but DXOS's AST-reaching
 approach is unsupported, and any shim can break in a minor release. **This was the single biggest
 risk in the migration.** Mitigation shipped: the 80 direct `effect/SchemaAST` importers now route
@@ -216,17 +218,15 @@ with a check. Prevented by D5, but needs a shape-pinning test in dxos/dxos to st
 ## Deferred
 
 **Move the schema _write_ path onto `SchemaRepresentation`.** v4 ships a purpose-built,
-bidirectional, persistable encoding that v3 had no equivalent of; the spike round-trips ECHO's
+bidirectional, persistable encoding that v3 had no equivalent of; the spike round-tripped ECHO's
 declarations and checks through it losslessly, which the JSON Schema path provably does not (the
 `Ref` reference payload is dropped). Not done: the read path is what the migration needed, and D5
 keeps the emitted JSON Schema shape fixed as the LLM wire contract regardless. If taken up, it needs
 explicit revivers — there is no global registry, and even built-in checks must be listed
-(`spike/src/json-schema-compat.ts` exports `EchoRevivers` as the pattern).
+(omitting them fails with `Missing reviver for effect/schema/isPattern`).
 
 ## References
 
-- Spike: [`spike/`](spike/) — 106 tests, clean tsc; still holds the unimplemented
-  `org.dxos.type.schema` `0.1.0` → `0.2.0` migration prototype
 - [Effect v4 Beta](https://www.effect.website/blog/releases/effect/40-beta)
 - [effect-smol MIGRATION.md](https://github.com/Effect-TS/effect-smol/blob/main/MIGRATION.md)
 - [layer-memoization guide](https://github.com/Effect-TS/effect-smol/blob/main/migration/layer-memoization.md)

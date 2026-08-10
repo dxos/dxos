@@ -18,7 +18,7 @@ Establish the size of the problem and de-risk the two unknowns (persisted schema
 - [x] **Resolve the `@effect-atom` question** (D2) — absorbed into the v4 train
       (`effect/unstable/reactivity` + `@effect/atom-react@4`); every symbol in use is covered.
 - [x] **Port `@dxos/effect`'s `ast.ts` to the v4 AST** — 449 LOC, public API only, clean `tsc`.
-      `.agents/projects/effect-smol/spike/src/ast.ts`.
+      Shipped as `packages/common/effect/src/internal/{ast,schema-ast}.ts`.
 - [x] **Write the v3-persisted → v4 decoder** — 279 LOC, 20 tests over a fixture generated from
       `@dxos/echo` on HEAD (not hand-written). Handles the v3-only sentinels (`/schemas/any`,
       `/schemas/unknown`, `/schemas/{}`), `/schemas/echo/ref`, `propertyOrder`, both annotation
@@ -35,7 +35,7 @@ Establish the size of the problem and de-risk the two unknowns (persisted schema
 
 ### References
 
-- Spike + full findings: `.agents/projects/effect-smol/spike/REPORT.md`
+- Findings F1–F4: [DESIGN.md](./DESIGN.md); durable rules: `.agents/skills/effect/v4-schema.md`.
 - Branch `claude/effect-4-migration-audit-pq2m8z`, commits `275d4fc6`, `082684f4` (no PR — user
   asked for none).
 
@@ -60,23 +60,41 @@ Work that pays off whether or not v4 ever lands, and shrinks Phase 3 materially.
     property (not nested under `allOf`), optional fields as the bare type omitted from
     `required` (not `anyOf: [T, null]`), literal unions as a flat `enum`, and a flat document
     with no `$ref`/`definitions`. Full echo suite green (493 passed).
-- [x] **Prototype the `org.dxos.type.schema` `0.1.0` → `0.2.0` migration**
-  - `spike/src/migration.ts` + `test/migration.test.ts` (5 tests). Idempotent by construction —
-    an already-v4 payload is returned by identity, so a re-run, or a space another peer already
-    migrated, is a no-op. Verified across the whole corpus, including a half-migrated space.
-  - Only the transform is modelled; wiring to `Migration.define` / `Database.runMigrations`
-    needs a live database and belongs in Phase 2.
+- [x] **Prototype the `org.dxos.type.schema` `0.1.0` → `0.2.0` migration** — verified across the
+      whole corpus, including a half-migrated space. Only the transform was modelled; wiring it to
+      `Migration.define` / `Database.runMigrations` needs a live database and is the Composer-ship
+      step. The spike is gone, so the transform is recorded here verbatim — it is the whole of it:
+
+  ```ts
+  // `Type.Type` entities store `{ name?, jsonSchema }`. The migration rewrites that payload from
+  // the v3 JSON Schema encoding to v4's `SchemaRepresentation`. Idempotent by construction: a
+  // payload already in the v4 encoding is returned untouched, so a re-run — or a space another
+  // peer already migrated — is a no-op.
+  const transform = (entity: StoredType): StoredType =>
+    isRepresentationDocument(entity.jsonSchema)
+      ? entity
+      : { ...entity, jsonSchema: writeStoredSchema(readStoredSchema(entity.jsonSchema)) };
+  ```
+
+  The two formats are structurally distinguishable — a representation document carries
+  `{ representation, references }`, which a v3 JSON Schema document never has — so no version field
+  needs adding to already-written data. Note this depends on the deferred `SchemaRepresentation`
+  write path (see DESIGN.md §Deferred); until that lands there is no v4 encoding to migrate _to_.
+
 - [x] **Sweep EDGE for transitive consumers of `toJsonSchema` output**
   - Exactly one: `ai-service/src/generation/tools/types.ts:73`. The `graphQuery/cypher`
     `.properties[...]` hits are Cypher graph data, not JSON Schema. The shape contract does
     extend past that call into the model-provider SDK via `parameters:`.
 - [x] **Validate the decoder against a real corpus**
-  - `corpus-v3.json`: all 18 ECHO types exported by `@dxos/types` (Person, Organization, Message,
-    Task, Event, Transcript, Thread, Channel, File, Outline, 5 relations, …), emitted by
-    `toJsonSchema` on effect 3.21.4 — 38 refs, 43 enums, 14 patterns, both `/schemas/*` sentinels.
-  - `test/corpus.test.ts`, 73 tests: every type decodes to `Objects`, keeps its declared property
-    set and per-property optionality, keeps its type identity, and survives a v3 → v4 rewrite
-    with an unchanged property shape.
+  - All 18 ECHO types exported by `@dxos/types` (Person, Organization, Message, Task, Event,
+    Transcript, Thread, Channel, File, Outline, 5 relations, …), emitted by `toJsonSchema` on
+    effect 3.21.4 — 38 refs, 43 enums, 14 patterns, both `/schemas/*` sentinels. It cannot be
+    regenerated: v4 emits no sentinels, so they survive only in stored data and in this fixture.
+  - Now permanent, against the shipped decoder:
+    `packages/core/echo/echo/src/internal/JsonSchema/json-schema-v3-corpus.json` +
+    `json-schema-v3.test.ts` (60 tests). Every type decodes to `Objects`, keeps its declared
+    property set, per-property optionality and type identity; the three sentinels and the ref DXN
+    are asserted directly. Those decoder branches had no coverage in-package before.
 - [x] **Apply Tier 1 renames that v3 already supports** — **not applicable, nothing to do.**
   - Checked every v4 target name against `effect@3.21.4`: `Effect.catch`, `result`, `callback`,
     `catchCause`, `catchDefect`, `tapCause`, `Layer.tapCause`, `Stream.catch`, `result`,
@@ -88,7 +106,8 @@ Work that pays off whether or not v4 ever lands, and shrinks Phase 3 materially.
 
 ### References
 
-- Spike now at 106 tests: `.agents/projects/effect-smol/spike/`.
+- The spike's v3 corpus and its decode coverage now live in `@dxos/echo`
+  (`src/internal/JsonSchema/json-schema-v3-corpus.json` + `json-schema-v3.test.ts`).
 
 ## Phase 2: Migrate dxos/dxos
 
@@ -260,9 +279,9 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
       `schema-validator.ts`, `json-schema.ts`, `react-ui-form`.
 - [ ] **Add the annotation-resolver lint rule** (F2) — reading `ast.annotations` directly is wrong
       for any refined type.
-- [x] **Remove the spike's `as any` casts** before any of it ships — moot as written: the spike code
-      never shipped verbatim. The ported modules were rewritten in-package and the casts audited in
-      the branch review (`003058bb`); the spike keeps its own casts and stays out of the build.
+- [x] **Remove the spike's `as any` casts** before any of it ships — moot: the spike code never
+      shipped verbatim. The ported modules were rewritten in-package and their casts audited in the
+      branch review (`003058bb`); the spike itself has since been deleted.
 - [ ] **Dispatch pkg.pr.new on the branch** (D7) — `workflow_dispatch`, since the workflow only
       auto-triggers on `main`.
 
