@@ -33,10 +33,10 @@ export type SwarmProps = {
 };
 
 const MARK_SIZE = 84;
+// The C's arc hub sits at the icon's box centre, so box-centring the nested svg
+// keeps the mark concentric with the dot ring (the bbox skews left only because
+// the C opens right — do not "optically" correct it).
 const MARK_HALF = MARK_SIZE / 2;
-// The composer glyph paints x 20..176 of its 256 viewBox (visual centre 98, not
-// 128); shift the nested svg so the glyph — not its box — centres on the ring.
-const MARK_GLYPH_SHIFT_X = (MARK_SIZE * (128 - 98)) / 256;
 
 // Snaps `shown` to the target within 5% so a large progress jump doesn't leave a visible eased trail.
 const SHOWN_SNAP_THRESHOLD = 0.05;
@@ -285,7 +285,7 @@ export const Swarm: Component<SwarmProps> = (props) => {
       <svg
         id='boot-loader-swarm-mark'
         ref={markRef}
-        x={config.centerX - MARK_HALF + MARK_GLYPH_SHIFT_X}
+        x={config.centerX - MARK_HALF}
         y={config.centerY - MARK_HALF}
         width={MARK_SIZE}
         height={MARK_SIZE}
