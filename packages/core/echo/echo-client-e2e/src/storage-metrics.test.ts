@@ -100,6 +100,19 @@ describe('storage metrics & garbage collection', () => {
     // The surviving object is still queryable; the reclaimed ones are gone.
     const results = await db.query(Filter.type(TestSchema.Expando)).run();
     expect(results.map((object) => object.value)).toEqual([1]);
+
+    // Also gone from a `deleted`-inclusive query, which is what devtools and recovery surfaces use:
+    // a collected object is no longer in the space, not a tombstone still sitting in it. Nothing
+    // rebuilds the client's working set from the directory, so this holds only because the client
+    // evicts what the unlink removed — and polls because the unlink is applied on the host, so it
+    // reaches the client as a replicated change rather than a local one.
+    await expect
+      .poll(async () =>
+        (await db.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run()).map(
+          (object) => object.id,
+        ),
+      )
+      .toEqual([objects[0].id]);
   });
 
   test('garbage collection is idempotent and survives reopen', async ({ expect }) => {

@@ -23,6 +23,7 @@ import {
   Panel,
   ScrollArea,
   ThemedClassName,
+  Toast,
   Toolbar,
   useAsyncEffect,
 } from '@dxos/react-ui';
@@ -49,6 +50,11 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     const client = useClient();
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
+    // Both destructive actions report only through the object counts, which do not move when a pass
+    // reclaims nothing — leaving the button indistinguishable from one that did not fire.
+    const [toast, setToast] = useState<{ title: string; description?: string }>();
+    // A pass over a large space is slow enough to re-click, and both actions are destructive.
+    const [pending, setPending] = useState(false);
     const presets = useMemo(() => generator(), []);
 
     // Register types.
@@ -95,29 +101,55 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     useAsyncEffect(updateInfo, [updateInfo]);
 
+    const showToast = useCallback((title: string, description?: string) => {
+      setToast({ title, description });
+      const timer = setTimeout(() => setToast(undefined), 5_000);
+      return () => clearTimeout(timer);
+    }, []);
+
     const handleReset = useCallback(async () => {
+      setPending(true);
       try {
-        const { error } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, { spaceId: space.id });
+        const { data, error } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, { spaceId: space.id });
         if (error) {
           log.catch(error);
+          showToast('Failed to remove objects', error.message);
+          return;
         }
+        showToast('Space cleared', `Removed ${data?.objectIds.length ?? 0} objects.`);
         await updateInfo();
-      } catch (error) {
+      } catch (error: any) {
         log.catch(error);
+        showToast('Failed to remove objects', error?.message ?? String(error));
+      } finally {
+        setPending(false);
       }
-    }, [space, invokePromise, updateInfo]);
+    }, [space, invokePromise, updateInfo, showToast]);
 
     const handleCollectGarbage = useCallback(async () => {
+      setPending(true);
       try {
-        const { error } = await invokePromise(SpaceOperation.CollectGarbage, undefined, { spaceId: space.id });
+        const { data, error } = await invokePromise(SpaceOperation.CollectGarbage, undefined, { spaceId: space.id });
         if (error) {
           log.catch(error);
+          showToast('Garbage collection failed', error.message);
+          return;
         }
+        const { removedDocuments = 0, unlinkedObjects = 0 } = data ?? {};
+        showToast(
+          'Garbage collected',
+          removedDocuments === 0
+            ? 'Nothing to reclaim.'
+            : `Reclaimed ${removedDocuments} document${removedDocuments === 1 ? '' : 's'} from ${unlinkedObjects} object${unlinkedObjects === 1 ? '' : 's'}.`,
+        );
         await updateInfo();
-      } catch (error) {
+      } catch (error: any) {
         log.catch(error);
+        showToast('Garbage collection failed', error?.message ?? String(error));
+      } finally {
+        setPending(false);
       }
-    }, [space, invokePromise, updateInfo]);
+    }, [space, invokePromise, updateInfo, showToast]);
 
     const handleCreateData = useCallback(
       async (typename: string) => {
@@ -138,7 +170,13 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
             <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <IconButton icon='ph--trash--regular' iconOnly label='Reset space' data-testid='spaceGenerator.reset' />
+                <IconButton
+                  icon='ph--trash--regular'
+                  iconOnly
+                  label='Reset space'
+                  disabled={pending}
+                  data-testid='spaceGenerator.reset'
+                />
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content side='bottom'>
@@ -151,13 +189,30 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
-            <IconButton
-              icon='ph--recycle--regular'
-              iconOnly
-              label='Collect garbage'
-              data-testid='spaceGenerator.collectGarbage'
-              onClick={handleCollectGarbage}
-            />
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <IconButton
+                  icon='ph--recycle--regular'
+                  iconOnly
+                  label='Collect garbage'
+                  disabled={pending}
+                  data-testid='spaceGenerator.collectGarbage'
+                />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content side='bottom'>
+                  <DropdownMenu.Viewport>
+                    <DropdownMenu.Item
+                      data-testid='spaceGenerator.confirmCollectGarbage'
+                      onClick={handleCollectGarbage}
+                    >
+                      Confirm to permanently reclaim the space's deleted objects.
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
             <Toolbar.Separator />
             <Input.Root>
               <Input.TextInput
@@ -201,6 +256,14 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Content>
+        {toast && (
+          <Toast.Root>
+            <Toast.Title icon='ph--recycle--duotone'>
+              <span>{toast.title}</span>
+            </Toast.Title>
+            {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
+          </Toast.Root>
+        )}
       </Panel.Root>
     );
   },

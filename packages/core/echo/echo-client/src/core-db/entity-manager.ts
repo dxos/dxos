@@ -54,7 +54,7 @@ import {
   type LoadObjectOptions,
   type SpaceDocumentHeads,
 } from './types';
-import { getInlineAndLinkChanges } from './util';
+import { getInlineAndLinkChanges, getRemovedObjectIds } from './util';
 
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
@@ -1598,6 +1598,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   private readonly _onDocumentUpdate = (event: ChangeEvent<DatabaseDirectory>) => {
+    this._evictRemovedObjects(event);
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._onObjectLinksUpdated(documentChanges.linkedDocuments);
@@ -1605,6 +1606,30 @@ export class EntityManager implements IDatabaseBinding {
     this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
     this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
   };
+
+  /**
+   * Drops objects whose directory entry was removed — a garbage-collection pass replicating in, or
+   * a local {@link retainObjects}. Nothing else re-derives the working set from the directory, so an
+   * object left here keeps answering queries long after its document is gone.
+   *
+   * An object whose document is still being created is bound before its link is written, so it is
+   * momentarily absent from the directory; those are skipped rather than evicted mid-flight.
+   */
+  private _evictRemovedObjects(event: ChangeEvent<DatabaseDirectory>): void {
+    const removed = getRemovedObjectIds(event).filter(
+      (objectId) => this._objects.has(objectId) && !this._pendingDocumentCreations.has(objectId),
+    );
+    if (removed.length === 0) {
+      return;
+    }
+
+    for (const objectId of removed) {
+      this._objects.delete(objectId);
+      this._objectDocumentHandles.delete(objectId as EntityId);
+    }
+    log('evicted objects removed from the space directory', { count: removed.length });
+    this._updateScheduler.trigger();
+  }
 
   private _processDocumentUpdate(event: ChangeEvent<DatabaseDirectory>): DocumentChanges {
     const { inlineChangedObjects, linkedDocuments } = getInlineAndLinkChanges(event);
