@@ -1,6 +1,6 @@
 # Agentic Code Review — Tasks
 
-_Resume: Phases 1–2 built + dogfooded; open PR #12526. Next: Phase 3 — PR-comment posting in finalize.mjs + CI wiring. Uncommitted: pending commit of the `.mdl`-block rewrite. Last: rules are now `rule` blocks in `.mdl` files (parser extracts them; SPEC/PLUGIN descriptors skipped) — reverted the `.rule.md` extension per format intent._
+_Resume: Phases 1–2 done; PR #12526 open & green. Phase 3: persistence + self-review done; remaining = PR-comment posting + CI wiring. Uncommitted: none. Last: dogfooded the harness on its own scripts (persisted REVIEW.md), fixed the two catch-swallow findings it raised._
 
 ## Phase 0: Design & scaffolding
 
@@ -39,8 +39,9 @@ Make Claude own the loop.
 
 ### Tasks
 
+- [x] **Incremental persistence** — finalized REVIEW.md is committed (transient STAGING/groups.json/groups ignored); base resolution reads the newest finalized ancestor across clones.
+- [x] **Self-review rule** — `rules/harness-scripts.mdl` reviews the harness's own `.mjs`; dogfooded (found + fixed two catch-swallow warns), REVIEW.md persisted.
 - [ ] **PR comment posting** in `finalize.mjs` — anchor to `file:line` via the GitHub API; idempotent (hidden marker per rule id).
-- [ ] **Incremental persistence** — decide whether/how finalized REVIEW.md is committed so base resolution is incremental across fresh clones.
 - [ ] **CI wiring** — run on PRs (post comments) and/or nightly on main (summary/issue).
 
 ### References
