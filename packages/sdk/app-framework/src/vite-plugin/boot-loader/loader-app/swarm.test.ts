@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import {
+  HALO_RING_GAP,
   SWARM_VARIANTS,
   applyOutro,
   createDots,
@@ -168,7 +169,7 @@ describe('dotPosition', () => {
     }
   });
 
-  test('halo variant: dots stay on the tight ring, orbiting at differing rates', ({ expect }) => {
+  test('halo variant: two counter-rotating rings at differing per-dot rates', ({ expect }) => {
     const config = defaultSwarmConfig('halo');
     // Distinct random draws give each dot a distinct orbitSpeed.
     const randomSequence = [0.1, 0.9, 0.5, 0.3, 0.7];
@@ -176,13 +177,21 @@ describe('dotPosition', () => {
     const dots = createDots(config, () => randomSequence[draw++ % randomSequence.length]);
     const bearingOf = (position: { x: number; y: number }) =>
       Math.atan2(position.y - config.centerY, position.x - config.centerX);
+    const radiusOf = (position: { x: number; y: number }) =>
+      Math.hypot(position.x - config.centerX, position.y - config.centerY);
+    // Even slots ride the inner ring, odd slots the outer, at every settle level.
     for (const settle of [0, 0.5, 1]) {
-      const position = dotPosition(config, dots[0], settle, 4321);
-      expect(Math.hypot(position.x - config.centerX, position.y - config.centerY)).toBeCloseTo(config.ringRadius);
+      expect(radiusOf(dotPosition(config, dots[0], settle, 4321))).toBeCloseTo(config.ringRadius);
+      expect(radiusOf(dotPosition(config, dots[1], settle, 4321))).toBeCloseTo(config.ringRadius + HALO_RING_GAP);
     }
-    // Different per-dot rates: the angular gap between two dots changes over time.
-    const gapEarly = bearingOf(dotPosition(config, dots[0], 1, 0)) - bearingOf(dotPosition(config, dots[1], 1, 0));
-    const gapLate = bearingOf(dotPosition(config, dots[0], 1, 5000)) - bearingOf(dotPosition(config, dots[1], 1, 5000));
+    // Opposite directions: inner bearing decreases (anticlockwise on screen), outer increases.
+    const innerDelta = bearingOf(dotPosition(config, dots[0], 1, 200)) - bearingOf(dotPosition(config, dots[0], 1, 0));
+    const outerDelta = bearingOf(dotPosition(config, dots[1], 1, 200)) - bearingOf(dotPosition(config, dots[1], 1, 0));
+    expect(innerDelta).toBeLessThan(0);
+    expect(outerDelta).toBeGreaterThan(0);
+    // Different per-dot rates: dots on the same ring drift apart over time.
+    const gapEarly = bearingOf(dotPosition(config, dots[0], 1, 0)) - bearingOf(dotPosition(config, dots[2], 1, 0));
+    const gapLate = bearingOf(dotPosition(config, dots[0], 1, 5000)) - bearingOf(dotPosition(config, dots[2], 1, 5000));
     expect(Math.abs(gapLate - gapEarly)).toBeGreaterThan(0.01);
   });
 

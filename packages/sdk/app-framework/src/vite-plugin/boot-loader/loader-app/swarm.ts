@@ -50,6 +50,9 @@ export const TRANSIENT_LINK_COLOR = 'rgb(1,122,183)';
 /** Stroke for the welded chain between docked ring neighbours. */
 export const RING_LINK_COLOR = 'rgb(5,40,61)';
 
+/** Radial gap between the halo variant's two counter-rotating rings. */
+export const HALO_RING_GAP = 12;
+
 const BASE: Omit<SwarmConfig, 'variant' | 'dotCount' | 'dotSize' | 'ringRotationSpeed'> = {
   centerX: 200,
   centerY: 150,
@@ -203,15 +206,20 @@ export const dotPosition = (
   settleEased: number,
   nowMs: number,
 ): { x: number; y: number } => {
-  // Halo dots never wander: each orbits the tight ring at its own fast rate
-  // (base speed + per-dot variation, all anticlockwise) and only fades in as it
-  // docks.
+  // Halo dots never wander: alternating dots ride two tight counter-rotating
+  // rings (inner anticlockwise, outer clockwise), each at its own fast rate
+  // (base speed + per-dot variation), and only fade in as they dock.
   if (config.variant === 'halo') {
-    const bearing = dot.angle - nowMs * (config.ringRotationSpeed + dot.orbitSpeed);
+    // Recover the dot's slot index from its bearing to split rings deterministically.
+    const slotIndex = Math.round(((-Math.PI / 2 - dot.angle) * config.dotCount) / (2 * Math.PI));
+    const onOuterRing = slotIndex % 2 === 1;
+    const radius = onOuterRing ? config.ringRadius + HALO_RING_GAP : config.ringRadius;
+    const rate = config.ringRotationSpeed + dot.orbitSpeed;
+    const bearing = onOuterRing ? dot.angle + nowMs * rate : dot.angle - nowMs * rate;
     return projectNogo(
       config,
-      config.centerX + config.ringRadius * Math.cos(bearing),
-      config.centerY + config.ringRadius * Math.sin(bearing),
+      config.centerX + radius * Math.cos(bearing),
+      config.centerY + radius * Math.sin(bearing),
     );
   }
 
