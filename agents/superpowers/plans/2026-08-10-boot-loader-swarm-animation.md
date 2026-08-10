@@ -13,7 +13,7 @@
 - Work ONLY in this worktree on branch `claude/boot-loader-animation-86c185`; never create branches/worktrees (repo non-negotiable).
 - No new dependencies; added minified payload budget ~3–4 KB.
 - No casts to silence the type-checker; ES `#private`; no single-letter variable names (repo code style).
-- Comments state *why* in one load-bearing clause (repo comment rule).
+- Comments state _why_ in one load-bearing clause (repo comment rule).
 - All geometry in the swarm SVG's `0 0 400 300` viewBox; center `(200, 150)`.
 - Normative constants (from the spec): ring radius 76, outer circle 136 (+0.55 rad spiral lead), no-go 60, settle ≈450 ms cubic-out, unsettle 300 ms, orbital rigid ring rotation 0.00015 rad/ms anticlockwise, wander amplitude 55, trails: 4 ghosts @ 45 ms, links: range 46 / max 40 transient, outro: ×(1 + 2.2·f) radial scale, shrink to 15% radius, ~600 ms smoothstep, brand colour `rgb(5,40,61)`, dot grey `rgb(64,64,64)` → docked grey `rgb(140,140,140)`, opacity 0.55 → 1.0.
 - Variants: wander N=20 size 2.8 · orbit N=32 size 2.0 · trails N=48 size 1.6 · linked N=64 size 1.3.
@@ -27,10 +27,12 @@
 ### Task 1: `swarm.ts` — config + core geometry (pure, tested)
 
 **Files:**
+
 - Create: `packages/sdk/app-framework/src/vite-plugin/boot-loader/loader-app/swarm.ts`
 - Test: `packages/sdk/app-framework/src/vite-plugin/boot-loader/loader-app/swarm.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing new (mirrors `store.ts` conventions).
 - Produces (used by Tasks 2–4):
 
@@ -41,32 +43,36 @@ export type SwarmConfig = {
   variant: SwarmVariant;
   dotCount: number;
   dotSize: number;
-  centerX: number;        // 200
-  centerY: number;        // 150
-  ringRadius: number;     // 76
-  outerRadius: number;    // 136
-  nogoRadius: number;     // 60
-  spiralLead: number;     // 0.55
-  settleMs: number;       // 450
-  unsettleMs: number;     // 300
+  centerX: number; // 200
+  centerY: number; // 150
+  ringRadius: number; // 76
+  outerRadius: number; // 136
+  nogoRadius: number; // 60
+  spiralLead: number; // 0.55
+  settleMs: number; // 450
+  unsettleMs: number; // 300
   ringRotationSpeed: number; // rad/ms; 0.00015 for 'orbit', 0 otherwise
-  wanderAmplitude: number;   // 55
-  ghostCount: number;        // 4
-  ghostIntervalMs: number;   // 45
-  linkRange: number;         // 46
-  maxLinks: number;          // 40
-  outroScale: number;        // 2.2
-  outroMs: number;           // 600
+  wanderAmplitude: number; // 55
+  ghostCount: number; // 4
+  ghostIntervalMs: number; // 45
+  linkRange: number; // 46
+  maxLinks: number; // 40
+  outroScale: number; // 2.2
+  outroMs: number; // 600
 };
 export const defaultSwarmConfig: (variant: SwarmVariant) => SwarmConfig;
 export const pickRandomVariant: (random?: () => number) => SwarmVariant;
 export type SwarmDot = {
-  angle: number;          // slot bearing, -π/2 - (i/N)·2π
-  startX: number; startY: number;   // outer-circle entry position
-  orbitRadius: number; orbitBearing: number; orbitSpeed: number;
-  phase: number;          // per-dot noise seed
-  settle: number;         // 0..1, stepped by stepSettle
-  x: number; y: number;   // last rendered position (written by the component)
+  angle: number; // slot bearing, -π/2 - (i/N)·2π
+  startX: number;
+  startY: number; // outer-circle entry position
+  orbitRadius: number;
+  orbitBearing: number;
+  orbitSpeed: number;
+  phase: number; // per-dot noise seed
+  settle: number; // 0..1, stepped by stepSettle
+  x: number;
+  y: number; // last rendered position (written by the component)
 };
 export const createDots: (config: SwarmConfig, random?: () => number) => SwarmDot[];
 export const litCount: (config: SwarmConfig, progressPct: number) => number;
@@ -78,7 +84,12 @@ export const smoothstep: (x: number) => number;
 export const dotFill: (settleEased: number, colorFactor: number) => string;
 export const linkStroke: (colorFactor: number) => string;
 export const outroFactor: (config: SwarmConfig, dismissingForMs: number | undefined) => number; // 0 before dismissal; smoothstep over outroMs
-export const applyOutro: (config: SwarmConfig, x: number, y: number, outro: number) => { x: number; y: number; radiusScale: number; opacityScale: number };
+export const applyOutro: (
+  config: SwarmConfig,
+  x: number,
+  y: number,
+  outro: number,
+) => { x: number; y: number; radiusScale: number; opacityScale: number };
 ```
 
 - [ ] **Step 1: Ensure deps are installed**
@@ -127,7 +138,7 @@ describe('pickRandomVariant', () => {
 });
 
 describe('createDots', () => {
-  test('slots run anticlockwise from 12 o\'clock', ({ expect }) => {
+  test("slots run anticlockwise from 12 o'clock", ({ expect }) => {
     const config = defaultSwarmConfig('wander');
     const dots = createDots(config, () => 0.5);
     // Slot 0 at 12 o'clock; later slots decrease in angle (anticlockwise on screen).
@@ -236,23 +247,39 @@ Same copyright header as siblings. Key implementation notes (write real code, no
 export const SWARM_VARIANTS = ['wander', 'orbit', 'trails', 'linked'] as const;
 export type SwarmVariant = (typeof SWARM_VARIANTS)[number];
 
-const BRAND_RGB = [5, 40, 61] as const;      // The mark's outer ring — the only brand colour used.
+const BRAND_RGB = [5, 40, 61] as const; // The mark's outer ring — the only brand colour used.
 const GREY_LOOSE = 64;
 const GREY_DOCKED = 140;
 const LINK_GREY = 120;
 
 const BASE: Omit<SwarmConfig, 'variant' | 'dotCount' | 'dotSize' | 'ringRotationSpeed'> = {
-  centerX: 200, centerY: 150, ringRadius: 76, outerRadius: 136, nogoRadius: 60, spiralLead: 0.55,
-  settleMs: 450, unsettleMs: 300, wanderAmplitude: 55, ghostCount: 4, ghostIntervalMs: 45,
-  linkRange: 46, maxLinks: 40, outroScale: 2.2, outroMs: 600,
+  centerX: 200,
+  centerY: 150,
+  ringRadius: 76,
+  outerRadius: 136,
+  nogoRadius: 60,
+  spiralLead: 0.55,
+  settleMs: 450,
+  unsettleMs: 300,
+  wanderAmplitude: 55,
+  ghostCount: 4,
+  ghostIntervalMs: 45,
+  linkRange: 46,
+  maxLinks: 40,
+  outroScale: 2.2,
+  outroMs: 600,
 };
 
 export const defaultSwarmConfig = (variant: SwarmVariant): SwarmConfig => {
   switch (variant) {
-    case 'wander': return { ...BASE, variant, dotCount: 20, dotSize: 2.8, ringRotationSpeed: 0 };
-    case 'orbit':  return { ...BASE, variant, dotCount: 32, dotSize: 2.0, ringRotationSpeed: 0.00015 };
-    case 'trails': return { ...BASE, variant, dotCount: 48, dotSize: 1.6, ringRotationSpeed: 0 };
-    case 'linked': return { ...BASE, variant, dotCount: 64, dotSize: 1.3, ringRotationSpeed: 0 };
+    case 'wander':
+      return { ...BASE, variant, dotCount: 20, dotSize: 2.8, ringRotationSpeed: 0 };
+    case 'orbit':
+      return { ...BASE, variant, dotCount: 32, dotSize: 2.0, ringRotationSpeed: 0.00015 };
+    case 'trails':
+      return { ...BASE, variant, dotCount: 48, dotSize: 1.6, ringRotationSpeed: 0 };
+    case 'linked':
+      return { ...BASE, variant, dotCount: 64, dotSize: 1.3, ringRotationSpeed: 0 };
   }
 };
 
@@ -287,16 +314,23 @@ git commit -m "app-framework: boot loader swarm core geometry (pure, tested)"
 ### Task 2: `swarm.ts` — waiting behaviors (wander / orbit / trails / linked)
 
 **Files:**
+
 - Modify: `packages/sdk/app-framework/src/vite-plugin/boot-loader/loader-app/swarm.ts`
 - Test: `packages/sdk/app-framework/src/vite-plugin/boot-loader/loader-app/swarm.test.ts` (append)
 
 **Interfaces:**
+
 - Consumes: Task 1's `SwarmConfig`, `SwarmDot`, `slotPosition`, `projectNogo`.
 - Produces (used by Task 3):
 
 ```ts
 /** Position of a dot at `nowMs` given its eased settle — variant motion blended toward the slot, no-go enforced. */
-export const dotPosition: (config: SwarmConfig, dot: SwarmDot, settleEased: number, nowMs: number) => { x: number; y: number };
+export const dotPosition: (
+  config: SwarmConfig,
+  dot: SwarmDot,
+  settleEased: number,
+  nowMs: number,
+) => { x: number; y: number };
 /** Pairs of unsettled-dot indices within linkRange, capped at maxLinks, with 0..1 closeness. */
 export const transientLinks: (config: SwarmConfig, dots: SwarmDot[]) => { a: number; b: number; closeness: number }[];
 /** True when adjacent docked dots i and i+1 (mod N) should draw a permanent ring link. */
@@ -345,11 +379,20 @@ describe('transientLinks', () => {
     const config = defaultSwarmConfig('linked');
     const dots = createDots(config, () => 0.5);
     // Cluster three dots, dock one of them, scatter the rest far away.
-    dots.forEach((dot, index) => { dot.x = 1000 + index * 200; dot.y = 1000; dot.settle = 0; });
-    dots[0].x = 100; dots[0].y = 100;
-    dots[1].x = 110; dots[1].y = 100;
-    dots[2].x = 105; dots[2].y = 108;
-    dots[3].x = 102; dots[3].y = 95; dots[3].settle = 1; // docked: excluded
+    dots.forEach((dot, index) => {
+      dot.x = 1000 + index * 200;
+      dot.y = 1000;
+      dot.settle = 0;
+    });
+    dots[0].x = 100;
+    dots[0].y = 100;
+    dots[1].x = 110;
+    dots[1].y = 100;
+    dots[2].x = 105;
+    dots[2].y = 108;
+    dots[3].x = 102;
+    dots[3].y = 95;
+    dots[3].settle = 1; // docked: excluded
     const links = transientLinks(config, dots);
     const pairs = links.map(({ a, b }) => `${a}-${b}`);
     expect(pairs).toContain('0-1');
@@ -369,9 +412,9 @@ describe('ringLinkVisible', () => {
     const dots = createDots(config, () => 0.5);
     dots.forEach((dot) => (dot.settle = 1));
     dots[1].settle = 0.9;
-    expect(ringLinkVisible(dots, 0)).toBe(false);      // 0–1: neighbour not fully docked
-    expect(ringLinkVisible(dots, 1)).toBe(false);      // 1–2
-    expect(ringLinkVisible(dots, 2)).toBe(true);       // 2–3
+    expect(ringLinkVisible(dots, 0)).toBe(false); // 0–1: neighbour not fully docked
+    expect(ringLinkVisible(dots, 1)).toBe(false); // 1–2
+    expect(ringLinkVisible(dots, 2)).toBe(true); // 2–3
     expect(ringLinkVisible(dots, dots.length - 1)).toBe(true); // wraps to 0
   });
 });
@@ -407,11 +450,13 @@ git commit -m "app-framework: swarm waiting behaviors (wander/orbit/trails/linke
 ### Task 3: `Swarm.tsx` component + `Loader.tsx` swap + CSS
 
 **Files:**
+
 - Create: `packages/sdk/app-framework/src/vite-plugin/boot-loader/loader-app/Swarm.tsx`
 - Modify: `packages/sdk/app-framework/src/vite-plugin/boot-loader/loader-app/Loader.tsx`
 - Modify: `packages/sdk/app-framework/src/vite-plugin/boot-loader/loader-app/boot-loader.css`
 
 **Interfaces:**
+
 - Consumes: Task 1/2 exports; `LoaderStore` (`progress()`, `phase()`); `markSvg` string.
 - Produces (used by Task 4):
 
@@ -517,9 +562,11 @@ git commit -m "app-framework: swap boot loader ring for swarm constellation"
 ### Task 4: Storybook — single story with variant + tunable args
 
 **Files:**
+
 - Create: `packages/sdk/app-framework/src/vite-plugin/boot-loader/loader-app/BootLoader.solid-stories.tsx`
 
 **Interfaces:**
+
 - Consumes: `Loader`, `createLoaderStore`, `boot-loader.css`, `SwarmConfig`/`SWARM_VARIANTS` (Tasks 1–3).
 - Produces: story `sdk/BootLoader` with args `{ variant: SwarmVariant | 'random', dotCount?, dotSize?, ringRotationSpeed?, ringRadius?, outerRadius?, nogoRadius?, settleMs?, outroMs? }`.
 
@@ -545,13 +592,18 @@ type StoryProps = Partial<SwarmConfig> & { variant: SwarmVariant | 'random' };
 const BootLoaderStory = (props: StoryProps) => {
   const store = createLoaderStore('Loading…');
   // Scripted boot: framework → 12 plugin range ticks → client → ready, on a repeating timeline.
-  onMount(() => { /* setTimeout script driving store.pushStatus/setProgress/ready; loop by re-creating the store is NOT needed — one pass, then a manual restart via remount */ });
+  onMount(() => {
+    /* setTimeout script driving store.pushStatus/setProgress/ready; loop by re-creating the store is NOT needed — one pass, then a manual restart via remount */
+  });
   onCleanup(() => store.dispose());
   const { variant, ...overrides } = props;
   return (
     <div id='boot-loader' style={{ position: 'fixed', inset: 0 }}>
-      <Loader store={store} markSvg={undefined /* storybook has no brand asset; mark slot stays empty */}
-        swarm={{ ...(variant === 'random' ? {} : { variant }), ...overrides }} />
+      <Loader
+        store={store}
+        markSvg={undefined /* storybook has no brand asset; mark slot stays empty */}
+        swarm={{ ...(variant === 'random' ? {} : { variant }), ...overrides }}
+      />
     </div>
   );
 };
@@ -591,6 +643,7 @@ git commit -m "app-framework: boot loader storybook story with swarm controls"
 ### Task 5: Integration verification, changeset, PR update
 
 **Files:**
+
 - Create: `.changeset/<generated-name>.md`
 - Verify (no edits expected): `packages/apps/composer-app/src/playwright/startup.spec.ts`, `packages/apps/composer-app/src/main.tsx`
 

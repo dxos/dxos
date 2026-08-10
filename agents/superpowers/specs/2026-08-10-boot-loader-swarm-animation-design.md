@@ -47,12 +47,12 @@ existing disc viewBox.
 
 Shared engine, one position function each. Per-variant dot count/size (viewBox units):
 
-| Variant | Waiting behavior | N | size |
-| --- | --- | --- | --- |
-| A — Firefly wander | Undirected sinusoidal drift (amplitude 55, damped by settle factor) around the midpoint between start and slot. | 20 | 2.8 |
-| B — Orbital | Anticlockwise circulation at a personal radius (uniform in [74, 128]), slight radial wobble; docked ring keeps rotating rigidly. | 32 | 2.0 |
-| C — Comet trails | Orbital motion plus 4 fading afterimage ghosts sampled every ~45 ms; a dot's tail extinguishes when it docks. | 48 | 1.6 |
-| D — Linked | Firefly wander; transient links (opacity ∝ closeness, max ~40 at once) flash between unsettled dots within range 46; adjacent docked dots weld permanent links, closing the ring as a chain. | 64 | 1.3 |
+| Variant            | Waiting behavior                                                                                                                                                                             | N   | size |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ---- |
+| A — Firefly wander | Undirected sinusoidal drift (amplitude 55, damped by settle factor) around the midpoint between start and slot.                                                                              | 20  | 2.8  |
+| B — Orbital        | Anticlockwise circulation at a personal radius (uniform in [74, 128]), slight radial wobble; docked ring keeps rotating rigidly.                                                             | 32  | 2.0  |
+| C — Comet trails   | Orbital motion plus 4 fading afterimage ghosts sampled every ~45 ms; a dot's tail extinguishes when it docks.                                                                                | 48  | 1.6  |
+| D — Linked         | Firefly wander; transient links (opacity ∝ closeness, max ~40 at once) flash between unsettled dots within range 46; adjacent docked dots weld permanent links, closing the ring as a chain. | 64  | 1.3  |
 
 Random pick: uniform over the four at mount (`Math.random()`), no persistence, no
 "different-from-last-boot" memory. Storybook can force a variant via prop.
