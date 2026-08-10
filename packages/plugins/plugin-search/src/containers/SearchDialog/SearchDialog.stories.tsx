@@ -28,8 +28,7 @@ import { SearchDialog } from './SearchDialog';
 random.seed(0);
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const [space] = useSpaces();
   if (!space) {
     return <Loading />;
   }
@@ -59,9 +58,9 @@ const meta = {
           types: [Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
-              const factory = createObjectFactory(personalSpace.db, random as any);
+              const factory = createObjectFactory(defaultSpace.db, random as any);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 10 },

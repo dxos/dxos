@@ -67,11 +67,11 @@ const meta = {
           types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               // Thread pool of size 1 assigns every seeded message the same threadId — a single
               // conversation of exactly `length` messages, oldest to newest.
-              yield* Effect.promise(() => initializeMailbox(personalSpace.db, length, 1));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => initializeMailbox(defaultSpace.db, length, 1));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         StorybookPlugin({}),

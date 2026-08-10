@@ -54,8 +54,8 @@ const meta = {
         ClientPlugin({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => EffectEx.runPromise(registry.forSpace(personalSpace.id).putFacts(FACTS)));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => EffectEx.runPromise(registry.forSpace(defaultSpace.id).putFacts(FACTS)));
             }),
         }),
         StorybookPlugin({}),

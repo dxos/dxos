@@ -45,9 +45,9 @@ const meta = {
           types: [Transcript.Transcript, Feed.Feed, Message.Message, TestItem],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              const feed = personalSpace.db.add(Feed.make({ name: 'transcription' }));
-              personalSpace.db.add(Transcript.make(Ref.make(feed)));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              const feed = defaultSpace.db.add(Feed.make({ name: 'transcription' }));
+              defaultSpace.db.add(Transcript.make(Ref.make(feed)));
             }),
         }),
         TranscriptionPlugin(),

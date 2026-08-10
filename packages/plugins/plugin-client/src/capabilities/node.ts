@@ -30,6 +30,7 @@ export const Client = Capability.lazyModule(
   },
   () => import('./client'),
 );
+export const Commands = AppCapability.commands(() => import('./commands.node'));
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), { name: 'LayerSpecs' });
 export const Migrations = Capability.lazyModule(
   'Migrations',

@@ -11,6 +11,7 @@ export default defineConfig({
     'InboxPlugin.node': 'src/InboxPlugin.node.ts',
     'InboxPlugin.workerd': 'src/InboxPlugin.workerd.ts',
     'skills': 'src/skills/index.ts',
+    'sync': 'src/sync/index.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',
@@ -21,7 +22,7 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'plugin.workerd': 'src/plugin.workerd.ts',
     'testing': 'src/testing/index.ts',
-    'testing/node': 'src/testing/node.ts',
+    'testing/sync-fixture': 'src/testing/sync-fixture.ts',
     'translations': 'src/translations.ts',
     'SyncOptions': 'src/types/SyncOptions.ts',
     'SyncStreamConfig': 'src/types/SyncStreamConfig.ts',
@@ -40,5 +41,7 @@ export default defineConfig({
   // re-instantiates that WASM module graph for every story file and exhausts the single headless
   // chromium's WASM memory partway through the suite (`RangeError: ... Out of memory: Cannot
   // allocate Wasm memory for new instance`). Share the module graph across files instead.
-  test: { node: true, storybook: { isolate: false } },
+  // The first story in a file pays the whole lazy module-load bill — tens of seconds, against a
+  // couple for each story after it — which the 15s browser-mode default cannot cover.
+  test: { node: true, storybook: { isolate: false, timeout: 60_000 } },
 });

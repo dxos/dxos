@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
 import * as Trace from '@dxos/compute/Trace';
 import { type Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-export type RunStatus = 'success' | 'failure' | 'pending';
+export type RunStatus = 'success' | 'failure' | 'incomplete' | 'pending';
 
 export type RunEvent = {
   type: string;
@@ -103,15 +104,26 @@ export const groupIntoRuns = (
     const lastTimestamp = allEvents.at(-1)?.timestamp ?? startedAt;
     const duration = lastTimestamp - startedAt;
 
-    // Determine status from OperationEnd events — failure beats success.
+    // Determine status from OperationEnd events. Precedence: failure beats incomplete beats success.
+    // A `RunAgainError` (Operation.runAgain) is recorded as a failure tagged with the run-again error
+    // code, but the run will be re-invoked — surface it as `incomplete`, neither success nor hard failure.
+    // Fall back to the legacy message for events persisted before `errorCode` existed.
+    const isRunAgain = (data: { errorCode?: string; error?: string }): boolean =>
+      data.errorCode === RUN_AGAIN_ERROR_CODE || (data.errorCode === undefined && data.error === RUN_AGAIN_MESSAGE);
     let status: RunStatus = 'pending';
     for (const evt of allEvents) {
       if (Trace.isOfType(Trace.OperationEnd, evt)) {
         if (evt.data.outcome === 'failure') {
+          if (isRunAgain(evt.data)) {
+            status = 'incomplete';
+            continue;
+          }
           status = 'failure';
           break;
         }
-        status = 'success';
+        if (status !== 'incomplete') {
+          status = 'success';
+        }
       }
     }
 

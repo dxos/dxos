@@ -69,7 +69,7 @@ const meta = {
         ClientPlugin({
           types: [Organization.Organization],
           onClientInitialized: Effect.fnUntraced(function* ({ client }) {
-            const { personalSpace } = yield* initializeIdentity(client);
+            const { defaultSpace } = yield* initializeIdentity(client);
             yield* Effect.gen(function* () {
               yield* Database.add(
                 Obj.make(Organization.Organization, {
@@ -78,7 +78,7 @@ const meta = {
                   description: 'A decentralized network for collaborative applications.',
                 }),
               );
-            }).pipe(Effect.provide(Database.layer(personalSpace.db)));
+            }).pipe(Effect.provide(Database.layer(defaultSpace.db)));
           }),
         }),
       ],

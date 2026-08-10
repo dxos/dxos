@@ -250,7 +250,7 @@ export function createEvalRunner<I, O, D>(
           (testHarness) => Effect.promise(() => testHarness.dispose()),
         );
 
-        const { personalSpace } = yield* Effect.promise(() =>
+        const { defaultSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
 
@@ -259,8 +259,8 @@ export function createEvalRunner<I, O, D>(
         if (seedFn) {
           seeded = yield* Effect.promise(() =>
             harness.runPromise(
-              seedFn({ spaceId: personalSpace.id, instructions }).pipe(
-                Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service)),
+              seedFn({ spaceId: defaultSpace.id, instructions }).pipe(
+                Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service)),
               ),
             ),
           );
@@ -274,7 +274,7 @@ export function createEvalRunner<I, O, D>(
 
         const agentOutput = yield* Effect.tryPromise({
           try: () =>
-            runInstructions(harness, instructions, model, personalSpace.id, input, options.sessionChat, seeded.chat),
+            runInstructions(harness, instructions, model, defaultSpace.id, input, options.sessionChat, seeded.chat),
           catch: (cause) => new AgentRunFailure({ cause }),
         });
 
@@ -285,9 +285,9 @@ export function createEvalRunner<I, O, D>(
 
         const dbQuery = yield* Effect.promise(() =>
           harness.runPromise(
-            dbQueryFn(input, personalSpace.id).pipe(
+            dbQueryFn(input, defaultSpace.id).pipe(
               Effect.provide(
-                ServiceResolver.provide({ space: personalSpace.id }, Database.Service, FeedTraceSink.FeedTraceSink),
+                ServiceResolver.provide({ space: defaultSpace.id }, Database.Service, FeedTraceSink.FeedTraceSink),
               ),
             ),
           ),

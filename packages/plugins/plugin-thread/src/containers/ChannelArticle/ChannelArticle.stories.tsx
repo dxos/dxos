@@ -72,8 +72,8 @@ const meta = {
           }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              const channel = personalSpace.db.add(Channel.make({ name: 'general' }));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              const channel = defaultSpace.db.add(Channel.make({ name: 'general' }));
               yield* Effect.promise(() => channel.backend.config.load());
               const feed = Channel.getFeed(channel);
               invariant(feed, 'Channel is not feed-backed');
@@ -84,7 +84,7 @@ const meta = {
                   blocks: [{ _tag: 'text', text: 'Messages are stored in the feed.' }],
                 }),
               ];
-              yield* Feed.append(feed, seed).pipe(Effect.provide(Database.layer(personalSpace.db)));
+              yield* Feed.append(feed, seed).pipe(Effect.provide(Database.layer(defaultSpace.db)));
             }),
         }),
         SpacePlugin({}),

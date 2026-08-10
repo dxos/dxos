@@ -9,10 +9,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { ABOUT_DIALOG, AboutDialog, NATIVE_REDIRECT_DIALOG, NativeRedirectDialog, WELCOME_SCREEN } from '../components';
-import { ExemplarSettings } from '../containers';
+import { AboutDialog, NativeRedirectDialog } from '../components';
+import { ABOUT_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants';
+import { ExemplarSettings, WelcomeContainer } from '../containers';
 import { meta } from '../meta';
-import { WelcomeSurface } from './WelcomeSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'welcome',
         filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
-        component: WelcomeSurface,
+        component: WelcomeContainer,
       }),
       Surface.create({
         id: 'nativeRedirect',

@@ -8,11 +8,10 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { connectorIdsForTarget } from '@dxos/plugin-connector';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
-
-import { GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID } from '../constants';
 
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
@@ -83,8 +82,10 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     FeedAnnotation.set(true),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
+    // Providers are resolved from the registry (any connector whose `sync.targetTypename` is this
+    // type), so a mail provider registers itself rather than being named here.
     ConnectorAnnotations.ConnectorAuthAnnotation.set({
-      connectorIds: [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID],
+      connectorIds: connectorIdsForTarget,
       bindTarget: true,
     }),
   ),

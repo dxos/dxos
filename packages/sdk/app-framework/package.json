@@ -59,7 +59,6 @@
       "import": "./dist/lib/config.mjs"
     },
     "./vite-plugin": {
-      "source": "./src/vite-plugin/index.ts",
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/lib/vite-plugin.mjs"
     },

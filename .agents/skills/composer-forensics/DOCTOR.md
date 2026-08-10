@@ -26,21 +26,44 @@ User opens debug port → User describes problem → Agent explores (read-only)
 
 ### 1. Handoff — user opens debug port
 
-Ask the user to:
+There are two mounts for the same port and protocol. Pick by whether the app boots.
+
+**Safe mode** (app won't boot, or you need storage-level helpers) — ask the user to:
 
 1. Open their Composer origin (e.g. `https://main.composer.space/recovery.html` or local dev).
 2. Click **Open Debug Port** (leave the tab open; it long-polls `127.0.0.1:9321`).
 3. Tell you **what’s wrong** in their own words.
 
+Scope: `dxos` (static globals) and `recovery` (the `RecoveryHelpers` in COMMANDS.md §12).
+
+**Running app** (app boots but misbehaves — a hang, a bad query, a plugin fault) — ask the user to:
+
+1. Open **Settings → Debug** in the running app.
+2. Turn on **Open debug port** and copy the session id shown beneath it.
+3. Tell you **what’s wrong** in their own words.
+
+Scope: `dxos` — the live devtools hook, so `dxos.client`, `dxos.spaces(…)`, `dxos.halo`,
+`dxos.get(dxn)`, `dxos.Filter` / `dxos.Obj` / `dxos.Query`, and `dxos.tracing`. This is the mount to
+use when you need the actual client, not the storage underneath it.
+
+Either way the port is off until the user turns it on, the session id is new each time, and a reload
+stops it — so a dropped connection means asking them to start it again, not a lost session to hunt.
+
 On **HTTPS** origins, remind them you will use `COMPOSER_RECOVERY_HTTPS=1` (mkcert-trusted cert). See [COMMANDS.md §12](COMMANDS.md).
 
-Agent verifies connectivity (read-only):
+Agent verifies connectivity (read-only) — safe mode:
 
 ```bash
 node .agents/skills/composer-forensics/scripts/composer-recovery.js --session <uuid> 'return dxos.recovery.status()'
 ```
 
-Composer echoes each snippet in the recovery log before eval.
+…or the running app:
+
+```bash
+node .agents/skills/composer-forensics/scripts/composer-recovery.js --session <uuid> 'return dxos.client.spaces.get().map((space) => space.id)'
+```
+
+Composer echoes each snippet in the recovery log before eval; the app's settings panel shows the same log.
 
 ### 2. Intake — user describes the problem
 
@@ -150,7 +173,8 @@ Append a one-line pointer in [MEMORY.md](MEMORY.md) (no secrets; report path onl
 
 ```
 Doctor session:
-- [ ] User opened /recovery.html → Open Debug Port (agent did NOT open browser)
+- [ ] User opened the debug port themselves — /recovery.html → Open Debug Port, or Settings → Debug
+      in the running app (agent did NOT open browser)
 - [ ] User symptoms captured in report
 - [ ] Report file created under /tmp/composer-forensics/reports/
 - [ ] Read-only exploration complete (status → boot → spaces → objects / export + offline)

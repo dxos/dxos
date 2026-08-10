@@ -13,7 +13,15 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#capabilities": "./src/capabilities/index.ts",
+    "#capabilities": {
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/capabilities/node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
+    },
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",

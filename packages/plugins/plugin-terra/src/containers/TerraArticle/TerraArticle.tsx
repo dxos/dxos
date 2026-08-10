@@ -417,7 +417,7 @@ const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelect
       <Select.TriggerButton
         placeholder={t('camera-target.placeholder')}
         data-testid='terra.toolbar.camera-target'
-        classNames='min-is-32'
+        classNames='min-w-32'
       />
       <Select.Portal>
         <Select.Content>
