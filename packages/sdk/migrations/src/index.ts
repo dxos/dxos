@@ -8,4 +8,3 @@ export * from './annotations';
 export * from './document-compaction';
 export * from './migration-builder';
 export * from './migrations';
-export * from './space-clear';

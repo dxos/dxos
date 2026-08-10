@@ -86,10 +86,22 @@ dxos-side phases — edge starts only after this lands. Detail: DESIGN.md §5.4.
 
 - [x] **`SpaceOperation.CreateEpoch`** (plugin-space) — new operation wrapping bare `space.internal.createEpoch()` (regular GC epoch: hard-deletes already-soft-deleted objects, compacts history).
 - [x] **Expose in debug plugin** — alongside the clear-space action in the `SpaceGenerator` reset panel (`plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.tsx:100`).
-- [x] **`clearSpaceEpochMigration`** (`@dxos/migrations`) — the clear is a MIGRATION, not GC: it destroys live objects on caller instruction (DESIGN.md §5.2/§5.4). `MigrationBuilder.keepOnlyObjects` derives the drop set from the root doc's own `links`/`objects` maps, so the space's contents are never enumerated; commits via the existing `REPLACE_AUTOMERGE_ROOT` path. Also fixed `_buildNewRoot` to drop deleted ids from inline `objects` (previously copied wholesale).
-- [x] **Reimplement `RemoveAllObjects` on top of it** — replaces the `Filter.everything()` query + per-object `Database.remove` loop; empties the root collection, then one `clearSpaceEpochMigration`.
-  - Semantic change flagged: soft delete (undoable) → hard clear; description updated; no undo mapping.
-  - Test moved to `migrations/src/space-clear.test.ts` (real client harness); the plugin-space unit test was removed — its layer provides only a database, and the clear now needs a client-attached space.
+- [x] **`RemoveAllObjects` collects after removing** — keeps #12500's client-side removal exactly as
+      it was and appends one `Database.runGarbageCollection()`. This is what "clear space triggers GC"
+      reduces to once host-side clearing is ruled out (below); the space is reclaimed rather than left
+      holding a tombstone per object, and #12500's test passes unmodified.
+- [x] **RULED OUT: host-side `Database.clearSpace({ keep })`** — implemented and measured over two
+      shapes (rewrite the directory; mark-deleted then collect). Both are storage-correct — the report
+      read `removedObjects: 2, removedDocuments: 2, removedIndexEntries: 2` — and both leave the client
+      showing all objects afterwards. With the index rows gone, the surviving query results prove the
+      client answers from its own in-memory entity state, so a deletion has to ORIGINATE client-side to
+      be visible there. Reverted in full: no protocol, host, echo-client, `@dxos/echo`, or EDGE change.
+- [x] **DROPPED: `clearSpaceEpochMigration`** — superseded before the above (2026-08-10, Josiah:
+      "clear space would just update the space root ... which should then trigger GC"), and
+      `@dxos/migrations` ends up untouched by this PR either way.
+  - DROPPED with it: the `_buildNewRoot` fix (deleted ids were removed from `links` but not inline
+    `objects`, so an inline object survived the migration that deleted it). Real pre-existing bug in
+    `REPLACE_AUTOMERGE_ROOT` migrations and `compactDocumentsEpochMigration` — see Follow-ups.
 
 ## Phase 6: Edge mark-and-sweep (dxos/edge)
 
@@ -130,6 +142,7 @@ be restorable by re-invitation. Detail: DESIGN.md §5.6.
 - [ ] **Epoch permissions** — restrict who may create epochs (any member for v1).
 - [ ] **Feed retention** — `Feed.RetentionOptions` → `deleteOldestBlocks`; edge trims only the `trace` namespace today.
 - [ ] **Blob GC** — `blobs_data` refcounting; no space attribution today.
+- [ ] **`MigrationBuilder._buildNewRoot` drops only links** — deleted ids are removed from `links` but the inline `objects` map is copied wholesale, so an object inlined in the root survives the migration that deleted it. Affects `REPLACE_AUTOMERGE_ROOT` migrations and `compactDocumentsEpochMigration`. Five-line fix, carried in this project's branch until the clear-space rewrite made `@dxos/migrations` untouched; belongs in its own PR.
 
 ### References
 

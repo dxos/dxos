@@ -118,23 +118,6 @@ export class MigrationBuilder {
   }
 
   /**
-   * Drops every object in the space except the given ids.
-   *
-   * The root document's `links` and `objects` maps already name every object, so the set to drop is
-   * derived here rather than queried — clearing a space costs one root read, not a scan of its
-   * contents.
-   *
-   * @returns Ids of the objects that will be dropped.
-   */
-  keepOnlyObjects(keep: Iterable<string>): string[] {
-    const kept = new Set(keep);
-    const present = [...Object.keys(this._rootDoc.links ?? {}), ...Object.keys(this._rootDoc.objects ?? {})];
-    const dropped = [...new Set(present)].filter((id) => !kept.has(id));
-    this._deleteObjects.push(...dropped);
-    return dropped;
-  }
-
-  /**
    * Re-materializes linked object documents into fresh Automerge docs without history.
    * Call {@link _commit} to publish a new space epoch with updated root links.
    */
@@ -211,12 +194,8 @@ export class MigrationBuilder {
 
   private async _buildNewRoot(): Promise<void> {
     const links = { ...(this._rootDoc.links ?? {}) };
-    const objects = { ...(this._rootDoc.objects ?? {}) };
     for (const id of this._deleteObjects) {
       delete links[id];
-      // Inline objects are dropped too: a deleted object placed in the root rather than its own
-      // document would otherwise survive the migration that removed it.
-      delete objects[id];
     }
 
     for (const [id, url] of Object.entries(this._newLinks)) {
@@ -226,7 +205,7 @@ export class MigrationBuilder {
     this._newRoot = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: this._makeAccess(),
-      objects,
+      objects: this._rootDoc.objects,
       links,
     });
     await this._newRoot.whenReady();
