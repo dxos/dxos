@@ -128,8 +128,8 @@ export class AppManager {
     return await this._authCode.wait();
   }
 
-  async resetDevice(confirmInput = 'RESET'): Promise<void> {
-    await this.page.getByTestId('devicesContainer.reset').click();
+  async logout(confirmInput = 'RESET'): Promise<void> {
+    await this.page.getByTestId('devicesContainer.logout').click();
     await this.page.getByTestId('reset-storage.reset-identity-input').fill(confirmInput);
     await this.page.getByTestId('reset-storage.reset-identity-confirm').click();
   }
