@@ -66,25 +66,9 @@ describe('IdentityService', () => {
   describe.skip('recoverIdentity', () => {});
 
   describe('revokeRecoveryCredential', () => {
-    const createCredential = async () => {
-      const lookupKey = PublicKey.random();
-      await EffectEx.runPromise(
-        identityService['IdentityService.createRecoveryCredential']({
-          data: {
-            recoveryKey: PublicKey.random(),
-            lookupKey,
-            algorithm: 'ED25519',
-            label: 'Test passkey',
-            kind: IdentityRecovery.Kind.PASSKEY,
-          },
-        }),
-      );
-      return lookupKey;
-    };
-
     test('records the label and kind on the credential', async () => {
       await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
-      await createCredential();
+      await createCredential(identityService);
 
       const [{ assertion }] = serviceContext.recoveryManager.listActiveRecoveryCredentials();
       expect(assertion.label).to.equal('Test passkey');
@@ -93,8 +77,8 @@ describe('IdentityService', () => {
 
     test('revoking removes the credential from the active list', async () => {
       await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
-      const first = await createCredential();
-      const second = await createCredential();
+      const first = await createCredential(identityService);
+      const second = await createCredential(identityService);
 
       await EffectEx.runPromise(identityService['IdentityService.revokeRecoveryCredential']({ lookupKey: first }));
 
@@ -105,7 +89,7 @@ describe('IdentityService', () => {
 
     test('refuses to revoke the only remaining credential', async () => {
       await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
-      const only = await createCredential();
+      const only = await createCredential(identityService);
 
       await expect(
         EffectEx.runPromise(identityService['IdentityService.revokeRecoveryCredential']({ lookupKey: only })),
@@ -114,8 +98,8 @@ describe('IdentityService', () => {
 
     test('refuses to revoke a credential twice', async () => {
       await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
-      const first = await createCredential();
-      await createCredential();
+      const first = await createCredential(identityService);
+      await createCredential(identityService);
 
       await EffectEx.runPromise(identityService['IdentityService.revokeRecoveryCredential']({ lookupKey: first }));
       await expect(
@@ -162,6 +146,23 @@ describe('IdentityService', () => {
     });
   });
 });
+
+/** Registers a passkey-kind recovery credential and returns its lookup key. */
+const createCredential = async (identityService: IdentityServiceImpl) => {
+  const lookupKey = PublicKey.random();
+  await EffectEx.runPromise(
+    identityService['IdentityService.createRecoveryCredential']({
+      data: {
+        recoveryKey: PublicKey.random(),
+        lookupKey,
+        algorithm: 'ED25519',
+        label: 'Test passkey',
+        kind: IdentityRecovery.Kind.PASSKEY,
+      },
+    }),
+  );
+  return lookupKey;
+};
 
 const createIdentityService = (serviceContext: ServiceContext) => {
   return new IdentityServiceImpl(
