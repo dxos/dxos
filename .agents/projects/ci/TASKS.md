@@ -68,55 +68,104 @@ REPORT.md, "In CI". What remains is operational hardening, not the rollout itsel
 
 ## Phase 3: E2E stabilization
 
-Every disabled Playwright test, grouped by root cause and ordered by cost to fix, is in
-[`E2E-STABILIZATION.md`](./E2E-STABILIZATION.md) — 42 tests off across 16 `test.fixme`, 11
-`test.skip`, and 5 skipped suites. Work it top-down; each item is only done once it runs green in
-CI without a retry.
+The four flake causes, the refuted hypotheses and the measurement hazards live in
+[`DESIGN.md`](./DESIGN.md) — read "Refuted — do not retry these" and "Measurement hazards" before
+spending a round-trip here; between them they cover four dead ends and a dozen ways a local result
+lies. Each item below is done only when it runs green in CI **without a retry**.
 
-What the **enabled** tests intermittently fail on is in
-[`E2E-FLAKE-ROOT-CAUSES.md`](./E2E-FLAKE-ROOT-CAUSES.md): the four causes behind every red cell of a
-ten-run campaign, plus the refuted hypotheses and the measurement hazards that produced confident
-wrong answers. Read its "Refuted hypotheses" and "Measurement hazards" sections before spending a
-round-trip on this area.
+Where the suite stands: 33 iterations of dispatch-fix-redispatch reached five consecutive runs with
+all nine cells green (on `af0b657b`). The bar has since moved to ten green runs, which cause A blocks.
 
-- [x] **Comment marker landed on the wrong thread** (Class B) — the editor keyed comments by a URI
-      whose spelling changes when a draft persists, so a click's `scrollCommentIntoView` lookup
-      missed and the proximity tracker restored the previous thread. Keyed on the stable object id.
-- [x] **Text typed into an unbound editor was destroyed** (Class C) — a user-facing data-loss
-      window, not only a test failure: `useExtensions` omitted the automerge binding while the
-      content ref resolved, so the editor was editable but unbound and the binding's attach-reconcile
-      then replaced the document. Non-editable until bound, with a regression test.
-- [ ] **Class A: the production-edge two-peer path** — invitations and replication stall; the
-      dominant cause of red cells and endemic in production, not test-induced. Tracked as **DX-1152**
-      (edge side, assigned to Mykola); `dxos/edge#840` should heal the replication half. The client
-      half (an unacknowledged swarm JOIN with no repair path) needs the JOIN-ack semantics confirmed
-      first — a repair loop built on a guessed acknowledgment was measured and reverted.
-- [ ] **Class D: mosaic story never paints on webkit** — 1 of 10 runs, does not reproduce locally
-      (35/35). Ungated deliberately; needs a CI trace, not a guess.
-- [ ] **Sweep the other unbound-editable windows** — `MarkdownField`, `TemplateEditor`,
-      `SpecArticle`, `CodeArticle`, `Outline` share Class C's conditional-binding shape. Worth one
-      shared guard rather than five patches.
-- [ ] **Ten green campaign runs**, then **VM sizing** — both blocked on Class A: with ~30 two-peer
-      operations per run and a ~2% stall tail, no ten-run set passes against the current edge, and
-      sizing measured against a flaky baseline is meaningless.
+### Flake causes in the enabled tests
 
-- [x] **Fix `cli:bundle`** — #12398 dropped the five `@opentui/core-<platform>-<arch>` packages
-      from the CLI manifest as unused. Nothing imports them; they exist so pnpm installs all five
-      native libraries for the five-target cross-compile, and without them every run failed with
-      `Could not resolve: "@opentui/core-darwin-arm64/index.ts"`. Restored and registered in
-      knip's `BUNDLER_RESOLVED` so they are not stripped again.
-- [x] **`createSpace()` proves a space was created** — `waitForSpaceReady()` only requires the
-      selected workspace to match the URL, which the space the app is already in satisfies, so a
-      submit that did not take read as success and failed later in the calling test.
-- [ ] **Tier 1.1: testid on the type-picker option** — `createObject()` targets
+- [x] **Comment marker landed on the wrong thread** (cause B) — the editor keyed comments by a URI
+      whose spelling changes when a draft persists, so a click's `scrollCommentIntoView` lookup missed
+      and the proximity tracker restored the previous thread. Keyed on the stable object id.
+- [x] **Text typed into an unbound editor was destroyed** (cause C) — a user-facing data-loss window,
+      not only a test failure. Non-editable until the content binding attaches, with a regression test.
+- [ ] **Cause A: the production-edge two-peer path** — invitations and replication stall; dominant,
+      and endemic in production rather than test-induced. **DX-1152** on the edge side (assigned to
+      Mykola); `dxos/edge#840` should heal the replication half. The client half (an unacknowledged
+      swarm JOIN with no repair path) needs DX-1152's ask #3 — the JOIN-ack semantics — answered first:
+      a repair loop built on a guessed acknowledgment was measured and reverted.
+- [ ] **Cause D: mosaic story never paints on webkit** — 1 of 10 runs, does not reproduce locally
+      (35/35). Deliberately ungated; needs a CI trace, not a guess.
+- [ ] **Sweep the other unbound-editable windows** — `MarkdownField`, `TemplateEditor`, `SpecArticle`,
+      `CodeArticle`, `Outline` share cause C's conditional-binding shape. One shared guard (or a guard
+      inside the automerge extension) rather than five patches.
+- [ ] **Ten green campaign runs**, then **VM sizing** (how small the e2e runners can go; interacts with
+      the `workers` default). Both blocked on cause A by arithmetic, not by code quality.
+
+### Deferred tests — 42 off (16 `test.fixme`, 11 `test.skip`, 5 suites)
+
+Browser gates are listed only where this work changed them. Ordered by cost to fix.
+
+- [x] **Fix `cli:bundle`** — #12398 dropped the five `@opentui/core-<platform>-<arch>` packages from
+      the CLI manifest as unused. Nothing imports them; they exist so pnpm installs all five native
+      libraries for the five-target cross-compile, and without them every run failed with
+      `Could not resolve: "@opentui/core-darwin-arm64/index.ts"`. Restored and registered in knip's
+      `BUNDLER_RESOLVED` so they are not stripped again.
+- [x] **`createSpace()` proves a space was created** — `waitForSpaceReady()` only requires the selected
+      workspace to match the URL, which the space the app is already in satisfies, so a submit that did
+      not take read as success and failed later in the calling test.
+- [x] **Comments deletion race** — `delete message`, `delete thread` and `undo delete thread` are back
+      on. The editor's `cm-comment` decoration is dropped asynchronously after a thread is deleted; the
+      assertion now has 30 s. If it fails again the decoration is never removed, which is a product bug
+      rather than a slow one.
+- [x] **Mosaic drag-and-drop** — two product bugs (see DESIGN.md). 21/21 and 15/15 per browser after
+      the fix, from 0/5 on firefox for `rearrange within column`; no deferred test left in that package.
+- [ ] **Testid on the type-picker option** — `createObject()` targets
       `getByRole('listbox').getByText(type)`, which the `browser-e2e-tests` skill forbids. Highest
-      leverage item on the list: most of composer's suite goes through this helper.
-- [ ] **Tier 1.2: re-check the four wholesale-skipped suites** — `Inbox` and `Table tests` alone
-      are 10 tests, and each carries a stated condition that is cheaper to verify than to diagnose.
-- [ ] **Tier 1.3: delete rather than fix** the three tests carrying a `Remove?` note, and record a
-      reason for the three that have none.
-- [ ] **Tier 2**, then **Tier 3** — shared-cause groups first (halo `joinNewIdentity()`, comments
-      deletion, todomvc replication), then the product bugs and hard races.
+      leverage item here: most of composer's suite goes through this helper.
+- [ ] **Re-check the wholesale-skipped suites**, each of which states a checkable condition:
+      `Inbox` (4, disabled in #12481 while mail sync moves to EDGE — the migration may still be in
+      flight), `Welcome focus` (2, no reason given; runs against storybook via `e2e-welcome-focus`, so
+      the local composer loop does not cover it). Verified **not** cheap: `First-run` (2) still fails
+      immediately with `helpPlugin.tooltip` never rendering — blocked on the beta auth flow, not the
+      tests; `Table tests` (6) all fail at `locator.fill` on the table cell and need real diagnosis.
+- [ ] **Delete rather than fix** the three carrying a `Remove?` note — `Basic tests › reset app` (the
+      button no longer exists), and `react-ui-table`'s two `relations work as expected` (duplicate a
+      story play function). Then record a reason for the three that have none at all:
+      `examples › Demo › airplane mode`, `batching`, `react-ui-table › test toggles`.
+- [ ] **halo `joinNewIdentity()` — unblocks 2 tests.** Both halo tests fail identically: 30 s timeout
+      filling `halo-invitation-input` after the helper resets storage and reloads. `halo.spec.ts` has
+      no live tests. Related to cause A — `join new identity` also fails as a live device-invitation
+      stall.
+- [ ] **todomvc replication — 2 tests, one cause.** `edit a task` (the edit never reached the guest)
+      and `toggle all tasks & clear completed` (`toBeChecked` never settled). Same two-peer setup as
+      cause A.
+- [ ] **`delete message` on webkit** — `toHaveCount` still fails ~1 in 12, distinct from the marker
+      defect.
+- [ ] **`guest joins host's space`** — replication, **not** invitation: the guest reached the doc and
+      the editor kept its placeholder (firefox, run 31313863039). Needs a trace from a CI failure; not
+      reproducible in the sandbox, where external STUN/TURN are unavailable.
+- [ ] **kanban suite on webkit** — story-boot stall, no column painted in 45 s; gated at `beforeEach`
+      with evidence. Needs a different mechanism, not another workaround: a preload lowered the rate
+      only, `check-cycles` finds no static cycle, and a built storybook is measurably worse.
+- [ ] **Collaboration remainder** — `host and guest can see each others' changes` (markdown textbox
+      focus timeout, and a webkit renderer crash under cause A), `cursors` (documented as depending on
+      winning a race the test cannot observe; storybook covers it), `presence` ("Fix.").
+      `collaboration.spec.ts` has no live tests.
+- [ ] **Startup harness, and the four tests CI never runs.** The pool is
+      `moon exec ':e2e-ci*' plugin-script:e2e`, so composer's `e2e-startup`, `e2e-dev` and
+      `e2e-welcome-focus` tasks sit outside it — re-enable `warm-cold start` (deferred pending the
+      ResetDialog race; only ever passed on the retries since removed), `warm start` (30 s
+      `waitForReady` too tight under load) and `Welcome focus` for their own sake, not to make Check
+      green.
+- [ ] **Needs a product change or is platform-bound** — `error boundary is rendered on invalid storage
+    version` (reset no longer wipes old data; needs an upgrade path), `cut & paste comment` (paste
+      unavailable headless, may be unfixable), `devtools-extension › Basic test` (Playwright cannot
+      load extensions headless; likely stays off).
+- [ ] **Follow-up, not this PR: convert storybook-driven suites to storybook tests** — `react-ui-table`
+      (~12), `plugin-sheet` (3), `lit-grid` (3), `welcome-focus` (2). Kanban and mosaic are excluded:
+      drag-and-drop does not work as a storybook test. Composer and todomvc are genuinely end-to-end
+      and stay in Playwright.
+
+### Before landing PR #12482
+
+- [ ] **Restore `quarantine: true`** on the e2e uploader in `check.yml` (set to `false` for the
+      campaign so a masked failure could not make a green cell unfalsifiable).
+- [ ] **Sync with main and drop draft status.**
 
 ## Phase 4: Storybook failures the cache was hiding
 

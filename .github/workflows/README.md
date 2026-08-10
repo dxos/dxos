@@ -51,7 +51,7 @@ All three landed within ~10% on runner cost and 297–364s on critical path, so 
 1. **Knapsack Pro** ([`@knapsack-pro/playwright`](https://knapsackpro.com), file-level queue ordered by recorded duration) needs an external service and a token, and its measured advantage came entirely from offloading composer — the part `--shard` now handles in-repo. Two of its cells also reported success while a test failed, masked by quarantine.
 2. **Per-browser moon task variants** (`e2e-chromium`/`-firefox`/`-webkit`) put all 24 browser targets in one flat pool, which can lend work across browsers — a real advantage, since chromium's pool is ~30% heavier than the others. But the browser then multiplies with the shard dimension in the task namespace, and splitting composer fixes the same imbalance more directly. Its numbers above are corrected because moon's default bail silently dropped `composer-app:e2e-chromium` and `plugin-sheet:e2e-chromium` from a failing cell, making the arm look cheapest when it had simply skipped the two most expensive targets — which is what motivated `--on-failure continue`.
 
-What the matrix intermittently fails on, and how to attribute a red cell, is in [`E2E-FLAKE-ROOT-CAUSES.md`](../../.agents/projects/ci/E2E-FLAKE-ROOT-CAUSES.md).
+What the matrix intermittently fails on, how to attribute a red cell, and which fixes have already been measured and refuted are in the CI project's [`DESIGN.md`](../../.agents/projects/ci/DESIGN.md).
 
 ### Flaky label vs quarantine vs code tags
 
