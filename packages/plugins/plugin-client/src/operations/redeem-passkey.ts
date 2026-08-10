@@ -52,7 +52,7 @@ const webAssertion = (challenge: string): Effect.Effect<Assertion, PasskeyDismis
         navigator.credentials.get({
           publicKey: {
             challenge: Buffer.from(challenge, 'base64'),
-            rpId: location.hostname,
+            rpId: NativePasskey.getRelyingPartyId(),
             userVerification: 'required',
           },
         }),
