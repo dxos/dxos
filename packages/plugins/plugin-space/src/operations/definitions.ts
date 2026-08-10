@@ -237,9 +237,8 @@ export namespace SpaceOperation {
    * Remove every object from a space except its `SpaceProperties`. The root collection is kept —
    * `RootCollectionAnnotation` must keep resolving for the space to stay navigable — but emptied.
    *
-   * Implemented as a migration keeping only those two, so the cleared objects are actually
-   * reclaimed rather than left as tombstones. Unlike {@link RemoveObjects} this is therefore
-   * permanent, and deliberately has no undo mapping.
+   * The cleared objects are reclaimed rather than left as tombstones, so unlike
+   * {@link RemoveObjects} this is permanent and deliberately has no undo mapping.
    */
   export const RemoveAllObjects = Operation.make({
     meta: {

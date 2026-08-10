@@ -28,7 +28,7 @@ storage (automerge documents + feeds) behind a different physical store.
 | GC step 2 — wipe unreachable owned documents       | implemented                     |
 | GC step 5 — delete stale index rows                | implemented (`index` option)    |
 | GC steps 3–4 — feed purge                          | specified, deferred (see below) |
-| Automatic reclamation on peers                     | implemented (`autoReclaim`)     |
+| Automatic reclamation on peers                     | implemented                     |
 | `retainObjects()` — drop all but the retained ids  | implemented (client-side)       |
 
 The EDGE host implements neither API yet (both return a not-implemented error);
@@ -177,6 +177,13 @@ handle; it replicates like any other change.
 
 ### 2. Wipe unreachable documents owned by the space
 
+Wiping one document commits as a single transaction: its heads row, its
+classical chunks, and its subduction ranges. A partial wipe would be
+unrecoverable rather than merely incomplete — the orphan scan below enumerates
+the heads table, so chunks that outlive their heads row can never be found
+again. Interrupting the pass _between_ documents is safe: what was unlinked but
+not yet wiped is an orphan, which the next pass finds by the same scan.
+
 Compute the **reachable set** by walking the space directory transitively from
 the root: `{ root } ∪ links ∪ branch-member-docs`, following any nested links.
 
@@ -232,8 +239,12 @@ Collection is explicit, but its _result_ propagates. Removing an object's entry
 from the space directory is an ordinary automerge change, so it replicates like
 any other; a peer that receives it wipes the documents that change orphaned,
 without being asked and without running a pass of its own. One collection
-therefore frees the same bytes everywhere. Disable with `autoReclaim: false` on
-`EchoHost`.
+therefore frees the same bytes everywhere.
+
+This does not make deletion ambient. The soft-to-hard promotion is decided by
+whoever ran the collection and arrives here as replicated data; a receiving peer
+applies a decision already taken rather than taking one, which is why it needs no
+opt-out.
 
 The hook is the space's document-list update. Two cases reach it:
 
@@ -355,6 +366,11 @@ differs. When implementing on EDGE:
   fires on an epoch and never on a content change to the same root. Any fix must
   be guarded against the window in `_createDocumentForObject` where an object is
   bound before its link is written.
+- **Index rows can outlive their documents.** Wiping a document and deleting its
+  index rows are separate stores and separate transactions, so a process that
+  dies between them leaves rows describing storage that is gone; nothing
+  recomputes them. A stale row, not lost data. The document wipe itself is
+  atomic — see the interruption note under step 2.
 - **Two-peer convergence tests.** Automatic reclamation is covered single-host;
   the replicated path is exercised only by construction.
 - **Age guard on the orphan scan.** Document creation and the link write are

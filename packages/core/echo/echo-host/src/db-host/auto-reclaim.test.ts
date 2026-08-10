@@ -17,9 +17,9 @@ import { documentIdToSedimentreeIdHex } from '../automerge';
 import { createTestSqliteRuntime } from '../testing';
 import { EchoHost } from './echo-host';
 
-const setup = async (options: { autoReclaim?: boolean } = {}) => {
+const setup = async () => {
   const { runtime, dispose } = createTestSqliteRuntime();
-  const host = new EchoHost({ runtime, ...options });
+  const host = new EchoHost({ runtime });
   await host.open(Context.default());
   onTestFinished(async () => {
     await host.close();
@@ -27,6 +27,17 @@ const setup = async (options: { autoReclaim?: boolean } = {}) => {
   });
 
   const spaceId = SpaceId.random();
+
+  const countHeads = (documentId: DocumentId) =>
+    RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql<{ n: number }>`
+          SELECT COUNT(*) AS n FROM automerge_heads WHERE document_id = ${documentId}
+        `;
+        return Number(rows[0].n);
+      }),
+    );
 
   const countChunks = (documentId: DocumentId) =>
     RuntimeProvider.runPromise(runtime)(
@@ -80,7 +91,7 @@ const setup = async (options: { autoReclaim?: boolean } = {}) => {
     await host.flush(Context.default());
   };
 
-  return { host, spaceId, countChunks, createRoot, linkObject, unlink };
+  return { host, spaceId, countChunks, countHeads, createRoot, linkObject, unlink };
 };
 
 describe('automatic reclamation', () => {
@@ -117,16 +128,28 @@ describe('automatic reclamation', () => {
     expect(await countChunks(newRoot.documentId)).toBeGreaterThan(0);
   });
 
-  test('leaves everything alone when disabled', async () => {
-    const { host, spaceId, countChunks, createRoot, linkObject, unlink } = await setup({ autoReclaim: false });
+  // A wipe interrupted partway is unrecoverable rather than merely incomplete: the orphan scan
+  // enumerates the heads table, so chunks that outlive their heads row can never be found again.
+  // The wipe therefore commits as one transaction, and a failure must leave the document whole.
+  test('a failed wipe leaves the document intact', async () => {
+    const { host, spaceId, countChunks, countHeads, createRoot, linkObject } = await setup();
 
     const root = await createRoot();
     await host.updateSpaceRoot(Context.default(), spaceId, root.url);
-    const dropped = await linkObject(root.documentId, 'obj-dropped');
-    await unlink(root.documentId, 'obj-dropped');
+    const target = await linkObject(root.documentId, 'obj-target');
+    const chunksBefore = await countChunks(target);
+    expect(chunksBefore).toBeGreaterThan(0);
+    expect(await countHeads(target)).toEqual(1);
 
-    // Nothing to wait for, so settle briefly and assert the bytes survived.
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    expect(await countChunks(dropped)).toBeGreaterThan(0);
+    // Fails after the heads row is deleted but before the chunk ranges are — the window that
+    // strands chunks if the two are not committed together.
+    const storage = (host as any)._automergeHost._storage;
+    const removeRangeEffect = storage.removeRangeEffect.bind(storage);
+    storage.removeRangeEffect = () => Effect.fail(new Error('storage failure mid-wipe'));
+    await expect((host as any)._automergeHost.removeDocument(target)).rejects.toThrow();
+    storage.removeRangeEffect = removeRangeEffect;
+
+    expect(await countHeads(target)).toEqual(1);
+    expect(await countChunks(target)).toEqual(chunksBefore);
   });
 });

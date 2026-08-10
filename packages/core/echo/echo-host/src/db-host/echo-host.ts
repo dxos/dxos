@@ -73,13 +73,6 @@ export type EchoHostProps = {
    * @default false
    */
   useSubduction?: boolean;
-
-  /**
-   * Reclaim documents locally when they leave a space's directory — i.e. when a garbage-collection
-   * pass run on some peer replicates here, or a new epoch root is applied.
-   * @default true
-   */
-  autoReclaim?: boolean;
 };
 
 /**
@@ -140,8 +133,6 @@ export class EchoHost extends Resource {
 
   private _indexesUpToDate = false;
 
-  private readonly _autoReclaim: boolean;
-
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
 
@@ -156,11 +147,8 @@ export class EchoHost extends Resource {
     runtime,
     assignQueuePositions = false,
     useSubduction,
-    autoReclaim = true,
   }: EchoHostProps) {
     super();
-
-    this._autoReclaim = autoReclaim;
 
     this._echoDataMonitor = new EchoDataMonitor();
     this._automergeHost = new AutomergeHost({
@@ -338,11 +326,9 @@ export class EchoHost extends Resource {
       // link removal is never observed before the create it depends on, and the sole writer of a
       // `links` key (object creation) always writes a freshly created document url. Registering
       // the new collection state first also means no fetch can race the wipe.
-      if (this._autoReclaim) {
-        const departed = previous ? this.#departedDocuments(previous, e) : [];
-        if (departed.length > 0 || e.previousRootId) {
-          this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
-        }
+      const departed = previous ? this.#departedDocuments(previous, e) : [];
+      if (departed.length > 0 || e.previousRootId) {
+        this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
       }
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {

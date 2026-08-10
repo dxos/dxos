@@ -193,14 +193,21 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return;
     }
+    await RuntimeProvider.runPromise(this.#runtime)(this.removeRangeEffect(keyPrefix));
+  }
+
+  /**
+   * {@link removeRange} as an effect, so callers deleting several ranges can commit them as one
+   * transaction. Wiping a document spans many ranges, and a partial wipe that loses the document's
+   * heads row strands the surviving chunks: nothing enumerates them afterwards.
+   */
+  removeRangeEffect(keyPrefix: StorageKey): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     const prefix = encodeKey(keyPrefix);
     const glob = prefix + '-*';
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR key GLOB ${glob}`;
-      }),
-    );
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR key GLOB ${glob}`;
+    }).pipe(Effect.withSpan('SqliteStorageAdapter.removeRange'));
   }
 }
 

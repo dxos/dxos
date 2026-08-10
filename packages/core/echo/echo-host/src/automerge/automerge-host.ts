@@ -572,25 +572,34 @@ export class AutomergeHost extends Resource {
   async removeDocument(id: AnyDocumentId): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
-    // Heads row first: the indexer enumerates every row of that table and loads what it finds, so
-    // a pass racing this wipe would re-create the document as an empty one and persist it again.
-    await RuntimeProvider.runPromise(this._runtime)(this._headsStore.remove(documentId));
-
-    // Evict any in-memory handle (draining its pending save) so it cannot re-persist the document
-    // after the wipe below — collection loads the document to inspect ownership, so a live handle
-    // typically exists at this point.
+    // Evicted before anything is deleted (draining its pending save) so the handle cannot
+    // re-persist the document afterwards — collection loads the document to inspect ownership, so a
+    // live handle typically exists at this point.
     if (this._repo.handles[documentId]) {
       await this._repo.removeFromCache(documentId);
     }
-    await this._storage.removeRange([documentId]);
 
-    // The subduction transport persists the same document as sedimentree records under a disjoint
-    // key space, so the range above does not touch them; on that transport they are most of the
-    // document's bytes.
+    // One transaction, because a partial wipe is unrecoverable rather than merely incomplete: the
+    // orphan scan enumerates the heads table, so chunks that outlive their heads row can never be
+    // found again. Committing together also denies the indexer, which loads whatever that table
+    // lists, any state in which the document is half-deleted. The subduction transport stores the
+    // same document as sedimentree records under a disjoint key space — most of its bytes on that
+    // transport — so those ranges are swept here too.
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
-    for (const family of SUBDUCTION_KEY_FAMILIES) {
-      await this._storage.removeRange([SUBDUCTION_PREFIX, family, sedimentreeId]);
-    }
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(this, function* () {
+        const transaction = yield* SqlTransaction.SqlTransaction;
+        yield* transaction.withTransaction(
+          Effect.gen(this, function* () {
+            yield* this._headsStore.remove(documentId);
+            yield* this._storage.removeRangeEffect([documentId]);
+            for (const family of SUBDUCTION_KEY_FAMILIES) {
+              yield* this._storage.removeRangeEffect([SUBDUCTION_PREFIX, family, sedimentreeId]);
+            }
+          }),
+        );
+      }),
+    );
 
     // These sets are otherwise append-only for the process lifetime, and the classical share
     // policy answers from them — a wiped document left behind here keeps being announced to peers.

@@ -19,8 +19,8 @@ const MAX_DELETION_DEPTH = 10;
  * (`ObjectCore.isDeleted`). Garbage collection has to apply the same rule, or those entities are
  * invisible to every query while their documents are retained forever.
  *
- * Memoized across the whole pass: the walk revisits shared parents constantly, and the memo also
- * carries the cycle guard.
+ * Memoized across the pass: the walk revisits shared parents constantly, and the memo doubles as
+ * the cycle guard.
  */
 export class DeletionResolver {
   readonly #structures = new Map<EntityId, EntityStructure>();
