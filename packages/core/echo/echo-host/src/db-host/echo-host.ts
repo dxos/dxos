@@ -492,15 +492,15 @@ export class EchoHost extends Resource {
    * See `docs/GARBAGE_COLLECTION.md`.
    */
   async getSpaceStats(spaceId: SpaceId): Promise<DataService.DatabaseStats> {
-    const root = await this._ensureSpaceRootLoaded(spaceId);
-    const documents = this._collectSpaceDocuments(root);
-    const objects = await this._countSpaceObjects(root, documents);
+    const root = await this.#ensureSpaceRootLoaded(spaceId);
+    const documents = this.#collectSpaceDocuments(root);
+    const objects = await this.#countSpaceObjects(root, documents);
     const feeds = await this.getAllFeedsForSpace(spaceId);
     const feedBlocks = feeds.reduce((sum, feed) => sum + feed.blocks.length, 0);
 
     return {
       objects,
-      documents: this._allSpaceDocumentIds(documents).size,
+      documents: this.#allSpaceDocumentIds(documents).size,
       feeds: feeds.length,
       feedBlocks,
     };
@@ -517,9 +517,9 @@ export class EchoHost extends Resource {
     spaceId: SpaceId,
     options: DataService.RunGarbageCollectionRequest = { spaceId },
   ): Promise<DataService.GarbageCollectionReport> {
-    const root = await this._ensureSpaceRootLoaded(spaceId);
-    const { unlinkedObjects, removedInlineObjects } = await this._unlinkDeletedObjects(root);
-    const wipedDocumentIds = await this._wipeUnreachableDocuments(spaceId, root);
+    const root = await this.#ensureSpaceRootLoaded(spaceId);
+    const { unlinkedObjects, removedInlineObjects } = await this.#unlinkDeletedObjects(root);
+    const wipedDocumentIds = await this.#wipeUnreachableDocuments(spaceId, root);
 
     let removedIndexEntries = 0;
     if (options.index !== false && (wipedDocumentIds.length > 0 || removedInlineObjects.length > 0)) {
@@ -537,7 +537,7 @@ export class EchoHost extends Resource {
   }
 
   /** Enumerate the documents reachable from a space root (root + object links + branch members). */
-  private _collectSpaceDocuments(root: DatabaseRoot): SpaceDocumentSet {
+  #collectSpaceDocuments(root: DatabaseRoot): SpaceDocumentSet {
     const doc = root.doc();
     if (!doc) {
       return { rootDocumentId: root.documentId, linkedDocumentIds: [], branchDocumentIds: [] };
@@ -554,7 +554,7 @@ export class EchoHost extends Resource {
   }
 
   /** Distinct set of every document id owned by the space directory. */
-  private _allSpaceDocumentIds(docs: SpaceDocumentSet): Set<DocumentId> {
+  #allSpaceDocumentIds(docs: SpaceDocumentSet): Set<DocumentId> {
     return new Set<DocumentId>([docs.rootDocumentId, ...docs.linkedDocumentIds, ...docs.branchDocumentIds]);
   }
 
@@ -562,10 +562,7 @@ export class EchoHost extends Resource {
    * Count live/soft-deleted objects across the root and every object-bearing linked document.
    * Branch documents are skipped to avoid double-counting an object across its branches.
    */
-  private async _countSpaceObjects(
-    root: DatabaseRoot,
-    docs: SpaceDocumentSet,
-  ): Promise<{ alive: number; deleted: number }> {
+  async #countSpaceObjects(root: DatabaseRoot, docs: SpaceDocumentSet): Promise<{ alive: number; deleted: number }> {
     const counts = { alive: 0, deleted: 0 };
     const addCounts = (doc: DatabaseDirectory) => {
       for (const object of Object.values(doc.objects ?? {}) as EntityStructure[]) {
@@ -603,7 +600,7 @@ export class EchoHost extends Resource {
    * dropped from the root document; deleted linked objects (and links dangling to a missing
    * document) have their `links` entry removed, orphaning the document for step 2.
    */
-  private async _unlinkDeletedObjects(
+  async #unlinkDeletedObjects(
     root: DatabaseRoot,
   ): Promise<{ unlinkedObjects: number; removedInlineObjects: { documentId: string; objectId: string }[] }> {
     const rootDoc = root.doc();
@@ -623,8 +620,10 @@ export class EchoHost extends Resource {
       });
       const doc = handle?.doc();
       if (!doc) {
-        // Link points to a document that is not on disk — drop the dangling pointer.
-        deletedLinkIds.push(objectId);
+        // A storage-only miss is ambiguous: the document may be genuinely gone, or it may be live
+        // data this host has not replicated yet. Retain the link — unlinking here would sync the
+        // removal and make a live object unreachable. Only a loaded, confirmed-deleted object is
+        // unlinked below.
         continue;
       }
       const object = doc.objects?.[objectId];
@@ -662,8 +661,8 @@ export class EchoHost extends Resource {
    * set. Attribution is the safety boundary — a document is wiped only when its `access.spaceId`
    * matches; a document that cannot be loaded (offline) or carries no owner is left untouched.
    */
-  private async _wipeUnreachableDocuments(spaceId: SpaceId, root: DatabaseRoot): Promise<DocumentId[]> {
-    const reachable = this._allSpaceDocumentIds(this._collectSpaceDocuments(root));
+  async #wipeUnreachableDocuments(spaceId: SpaceId, root: DatabaseRoot): Promise<DocumentId[]> {
+    const reachable = this.#allSpaceDocumentIds(this.#collectSpaceDocuments(root));
     const wipedDocumentIds: DocumentId[] = [];
     for await (const { documentId } of this._automergeHost.listDocumentHeads()) {
       if (reachable.has(documentId)) {
@@ -688,7 +687,7 @@ export class EchoHost extends Resource {
   }
 
   /** Resolve the space root, opening (and loading) it if it is not already loaded on the host. */
-  private async _ensureSpaceRootLoaded(spaceId: SpaceId): Promise<DatabaseRoot> {
+  async #ensureSpaceRootLoaded(spaceId: SpaceId): Promise<DatabaseRoot> {
     const existing = this._spaceStateManager.getRootBySpaceId(spaceId);
     if (existing?.isLoaded) {
       return existing;
