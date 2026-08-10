@@ -11,6 +11,7 @@ import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { getHostPlatform } from '@dxos/util';
 
 import * as ClientCapabilities from '../types/ClientCapabilities';
 import { CreatePasskey } from './definitions';
@@ -20,8 +21,15 @@ import { CreatePasskey } from './definitions';
  * The authenticator never tells us which it is, so the platform is the only distinguishing thing
  * available at creation time; the user can rename it on the account page.
  */
+const PLATFORM_NAMES: Partial<Record<ReturnType<typeof getHostPlatform>, string>> = {
+  macos: 'macOS',
+  windows: 'Windows',
+  ios: 'iOS',
+  linux: 'Linux',
+};
+
 const defaultPasskeyLabel = (): string => {
-  const platform = NativePasskey.getPlatform();
+  const platform = PLATFORM_NAMES[getHostPlatform()];
   return platform ? `Passkey on ${platform}` : 'Passkey';
 };
 
