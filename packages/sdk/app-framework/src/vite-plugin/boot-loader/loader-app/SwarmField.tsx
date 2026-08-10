@@ -17,6 +17,7 @@ import {
   defaultSwarmConfig,
   dotFill,
   dotPosition,
+  haloLinks,
   litCount,
   outroFactor,
   pickRandomVariant,
@@ -189,9 +190,9 @@ export const Swarm: Component<SwarmProps> = (props) => {
       }
     }
 
-    if (hasLinks) {
+    if (hasLinks || hasHalo) {
       // Unlit dots sit invisibly on their slots and are still in link range, so skip transient links entirely.
-      const links = reducedMotion ? [] : transientLinks(config, dots);
+      const links = reducedMotion ? [] : hasHalo ? haloLinks(config, dots, nowMs) : transientLinks(config, dots);
       for (let index = 0; index < linkRefs.length; index++) {
         const line = linkRefs[index];
         const link = links[index];
@@ -208,7 +209,7 @@ export const Swarm: Component<SwarmProps> = (props) => {
         }
       }
 
-      const ringOpacity = 0.5 * Math.max(0, 1 - outro * 2.5);
+      const ringOpacity = hasLinks ? 0.5 * Math.max(0, 1 - outro * 2.5) : 0;
       for (let index = 0; index < ringLinkRefs.length; index++) {
         const line = ringLinkRefs[index];
         if (ringLinkVisible(dots, index)) {
@@ -252,7 +253,7 @@ export const Swarm: Component<SwarmProps> = (props) => {
       preserveAspectRatio='xMidYMid meet'
       aria-hidden='true'
     >
-      {hasLinks &&
+      {(hasLinks || hasHalo) &&
         Array.from({ length: config.maxLinks }, (_, index) => (
           <line ref={(element) => (linkRefs[index] = element)} opacity={0} stroke={TRANSIENT_LINK_COLOR} />
         ))}

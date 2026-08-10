@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import {
   HALO_RING_GAP,
   SWARM_VARIANTS,
+  haloLinks,
   applyOutro,
   createDots,
   defaultSwarmConfig,
@@ -112,6 +113,46 @@ describe('projectNogo', () => {
     expect(Math.hypot(inside.x - config.centerX, inside.y - config.centerY)).toBeCloseTo(config.nogoRadius);
     const outside = projectNogo(config, config.centerX + 200, config.centerY);
     expect(outside).toEqual({ x: config.centerX + 200, y: config.centerY });
+  });
+});
+
+describe('haloLinks', () => {
+  test('connects only close inner/outer pairs, deterministically per time bucket', ({ expect }) => {
+    const config = defaultSwarmConfig('halo');
+    const dots = createDots(config, () => 0.5);
+    dots.forEach((dot, index) => {
+      dot.settle = 1;
+      // Park everyone far apart, then stage one close inner/outer pair and one
+      // close same-ring pair.
+      dot.x = 1000 + index * 100;
+      dot.y = 1000;
+    });
+    dots[0].x = 100;
+    dots[0].y = 100; // inner
+    dots[1].x = 110;
+    dots[1].y = 100; // outer — within linkRange (18) of dots[0]
+    dots[2].x = 90;
+    dots[2].y = 112; // inner — close to dots[0] (same ring, no link), out of range of dots[1]
+    dots[3].settle = 0.1;
+    dots[3].x = 100;
+    dots[3].y = 104; // outer but not yet visible
+
+    // Probe a few buckets: any produced link must be the staged inner/outer pair,
+    // and every bucket must give the same answer when asked twice.
+    let linkedInSomeBucket = false;
+    for (let bucket = 0; bucket < 8; bucket++) {
+      const nowMs = bucket * 900;
+      const links = haloLinks(config, dots, nowMs);
+      expect(links).toEqual(haloLinks(config, dots, nowMs));
+      for (const link of links) {
+        expect([link.first, link.second]).toEqual([0, 1]);
+        expect(link.closeness).toBeGreaterThan(0);
+        expect(link.closeness).toBeLessThanOrEqual(1);
+      }
+      linkedInSomeBucket ||= links.length > 0;
+    }
+    // With ~50% probability per bucket, eight buckets link at least once.
+    expect(linkedInSomeBucket).toBe(true);
   });
 });
 

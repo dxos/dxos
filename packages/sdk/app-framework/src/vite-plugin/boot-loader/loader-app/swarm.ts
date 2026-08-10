@@ -52,6 +52,17 @@ export const RING_LINK_COLOR = 'rgb(5,40,61)';
 
 /** Radial gap between the halo variant's two counter-rotating rings. */
 export const HALO_RING_GAP = 12;
+/** Chance that a close inner/outer halo pass draws a link. */
+const HALO_LINK_PROBABILITY = 0.5;
+/** How long (ms) a halo pass keeps its random link decision. */
+const HALO_LINK_DECISION_MS = 800;
+
+// Deterministic per (pair, time-bucket) so a pass's link neither flickers per
+// frame nor repeats identically forever.
+const pairHash = (first: number, second: number, bucket: number): number => {
+  const seed = Math.sin(first * 127.1 + second * 311.7 + bucket * 74.7) * 43758.5453;
+  return seed - Math.floor(seed);
+};
 
 const BASE: Omit<SwarmConfig, 'variant' | 'dotCount' | 'dotSize' | 'ringRotationSpeed'> = {
   centerX: 200,
@@ -84,8 +95,16 @@ export const defaultSwarmConfig = (variant: SwarmVariant): SwarmConfig => {
     case 'halo':
       // A tight ring hugging the no-go rim; tiny dots orbit fast, each at its
       // own rate (ringRotationSpeed is the shared base; per-dot orbitSpeed adds
-      // the variation).
-      return { ...BASE, variant, dotCount: 24, dotSize: 0.9, ringRotationSpeed: 0.0008, ringRadius: 66 };
+      // the variation). linkRange only needs to span the inter-ring gap.
+      return {
+        ...BASE,
+        variant,
+        dotCount: 24,
+        dotSize: 0.9,
+        ringRotationSpeed: 0.0008,
+        ringRadius: 66,
+        linkRange: 18,
+      };
     case 'arc':
       // The original determinate ring (`ClassicRing.tsx`) — no dots.
       return { ...BASE, variant, dotCount: 0, dotSize: 0, ringRotationSpeed: 0 };
@@ -259,6 +278,42 @@ export const dotPosition = (
   const lerpedY = waitingY + (slot.y - waitingY) * settleEased;
 
   return projectNogo(config, lerpedX, lerpedY);
+};
+
+/**
+ * Halo cross-ring links: an inner-ring and an outer-ring dot passing within
+ * `linkRange` connect with probability {@link HALO_LINK_PROBABILITY}, holding
+ * each decision for {@link HALO_LINK_DECISION_MS} so links persist while the
+ * pair stays close. Only visible (fading-in or docked) dots participate.
+ */
+export const haloLinks = (
+  config: SwarmConfig,
+  dots: SwarmDot[],
+  nowMs: number,
+): { first: number; second: number; closeness: number }[] => {
+  const links: { first: number; second: number; closeness: number }[] = [];
+  const bucket = Math.floor(nowMs / HALO_LINK_DECISION_MS);
+  for (let inner = 0; inner < dots.length && links.length < config.maxLinks; inner += 2) {
+    if (dots[inner].settle < 0.3) {
+      continue;
+    }
+    for (let outer = 1; outer < dots.length && links.length < config.maxLinks; outer += 2) {
+      if (dots[outer].settle < 0.3) {
+        continue;
+      }
+      const dx = dots[inner].x - dots[outer].x;
+      const dy = dots[inner].y - dots[outer].y;
+      const distance = Math.hypot(dx, dy);
+      if (distance > config.linkRange) {
+        continue;
+      }
+      if (pairHash(inner, outer, bucket) > HALO_LINK_PROBABILITY) {
+        continue;
+      }
+      links.push({ first: inner, second: outer, closeness: 1 - distance / config.linkRange });
+    }
+  }
+  return links;
 };
 
 export const transientLinks = (
