@@ -4,6 +4,7 @@
 
 import { type Component, onCleanup, onMount } from 'solid-js';
 
+import { ClassicRing } from './ClassicRing';
 import { type LoaderStore } from './store';
 import {
   RING_LINK_COLOR,
@@ -12,7 +13,6 @@ import {
   type SwarmVariant,
   TRANSIENT_LINK_COLOR,
   applyOutro,
-  arcPath,
   createDots,
   defaultSwarmConfig,
   dotFill,
@@ -60,16 +60,16 @@ export const Swarm: Component<SwarmProps> = (props) => {
     ...defaultSwarmConfig(props.config?.variant ?? pickRandomVariant()),
     ...props.config,
   };
+  if (config.variant === 'arc') {
+    // The original ring, verbatim — its own DOM, CSS, and easing for comparison.
+    return <ClassicRing store={props.store} markSvg={props.markSvg} />;
+  }
   const dots: SwarmDot[] = createDots(config);
   const hasTrails = config.variant === 'trails';
   const hasLinks = config.variant === 'linked';
-  const hasArc = config.variant === 'arc';
 
   let fieldRef: SVGSVGElement | undefined;
   let markRef: SVGSVGElement | undefined;
-  let arcLayerRef: SVGSVGElement | undefined;
-  let arcPathRef: SVGPathElement | undefined;
-  let arcHeadRef: SVGCircleElement | undefined;
   const dotRefs: SVGCircleElement[] = [];
   const ghostRefs: SVGCircleElement[][] = [];
   const linkRefs: SVGLineElement[] = [];
@@ -223,23 +223,6 @@ export const Swarm: Component<SwarmProps> = (props) => {
       }
     }
 
-    if (hasArc) {
-      const arc = arcPath(config, shown);
-      const arcOpacity = Math.max(0, 1 - outro);
-      // The conic fade mask reads the eased progress from this custom property.
-      arcLayerRef?.style.setProperty('--boot-loader-arc', String(shown));
-      if (arc && arcPathRef && arcHeadRef) {
-        arcPathRef.setAttribute('d', arc.d);
-        arcPathRef.setAttribute('opacity', String(0.5 * arcOpacity));
-        arcHeadRef.setAttribute('cx', String(arc.headX));
-        arcHeadRef.setAttribute('cy', String(arc.headY));
-        arcHeadRef.setAttribute('opacity', String(arcOpacity));
-      } else {
-        arcPathRef?.setAttribute('opacity', '0');
-        arcHeadRef?.setAttribute('opacity', '0');
-      }
-    }
-
     fieldRef?.classList.toggle('boot-loader-color', wantColor);
 
     raf = requestAnimationFrame(animate);
@@ -304,20 +287,6 @@ export const Swarm: Component<SwarmProps> = (props) => {
           fill={dotFill(0)}
         />
       ))}
-      {hasArc && (
-        <svg
-          id='boot-loader-arc-layer'
-          ref={arcLayerRef}
-          width='100%'
-          height='100%'
-          viewBox='0 0 400 300'
-          preserveAspectRatio='xMidYMid meet'
-        >
-          <path ref={arcPathRef} class='boot-loader-arc-path' opacity={0} />
-        </svg>
-      )}
-      {/* Head dot outside the masked layer so the conic fade never bisects it. */}
-      {hasArc && <circle ref={arcHeadRef} class='boot-loader-arc-head' r={1.6} opacity={0} />}
       <svg
         id='boot-loader-swarm-mark'
         ref={markRef}

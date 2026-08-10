@@ -19,6 +19,7 @@ import css from './loader-app/boot-loader.css?raw';
 // Solid JSX). They are compiled to a self-contained browser IIFE at the
 // consuming app's build time by {@link compileLoaderBundle} below.
 import bridgeSrc from './loader-app/bridge.ts?raw';
+import classicRingSrc from './loader-app/ClassicRing.tsx?raw';
 import entrySrc from './loader-app/entry.tsx?raw';
 import loaderSrc from './loader-app/Loader.tsx?raw';
 import mountSrc from './loader-app/mount.tsx?raw';
@@ -64,6 +65,7 @@ const MODULES: Record<string, { contents: string; tsx: boolean }> = {
   mount: { contents: mountSrc, tsx: true },
   Loader: { contents: loaderSrc, tsx: true },
   SwarmField: { contents: swarmFieldSrc, tsx: true },
+  ClassicRing: { contents: classicRingSrc, tsx: true },
   bridge: { contents: bridgeSrc, tsx: false },
   store: { contents: storeSrc, tsx: false },
   swarm: { contents: swarmSrc, tsx: false },

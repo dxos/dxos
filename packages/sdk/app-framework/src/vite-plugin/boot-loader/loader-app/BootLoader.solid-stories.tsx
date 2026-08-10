@@ -12,7 +12,7 @@ import { Loader } from './Loader';
 import { createLoaderStore } from './store';
 import { SWARM_VARIANTS, type SwarmConfig, type SwarmVariant } from './swarm';
 
-type StoryProps = Partial<SwarmConfig> & { variant: SwarmVariant | 'random' };
+type StoryProps = Partial<SwarmConfig> & { variant: SwarmVariant | 'random'; showLog?: boolean };
 
 /** Ticks the "Loading plugins (k/12)" range status advances through. */
 const PLUGIN_TICK_COUNT = 12;
@@ -32,7 +32,7 @@ const OUTRO_RESET_MS = 1500;
  * parent to remount so the story loops forever.
  */
 const BootLoaderRun = (props: StoryProps & { onLoop: () => void }) => {
-  const { variant, onLoop, ...overrides } = props;
+  const { variant, onLoop, showLog, ...overrides } = props;
   const store = createLoaderStore('Loading framework…');
   const timers: ReturnType<typeof setTimeout>[] = [];
   const schedule = (delayMs: number, run: () => void): void => {
@@ -78,7 +78,14 @@ const BootLoaderRun = (props: StoryProps & { onLoop: () => void }) => {
   });
 
   return (
-    <div id='boot-loader' style={{ position: 'fixed', inset: 0 }} bool:data-dismissing={store.phase() === 'dismissing'}>
+    <div
+      id='boot-loader'
+      style={{ position: 'fixed', inset: 0 }}
+      bool:data-dismissing={store.phase() === 'dismissing'}
+      bool:data-hide-log={showLog === false}
+    >
+      {/* Storybook-only: the show/hide-log control drives the data attribute above. */}
+      <style>{'#boot-loader[data-hide-log] #boot-loader-status { display: none; }'}</style>
       <Loader store={store} markSvg={markSvg} swarm={{ ...(variant === 'random' ? {} : { variant }), ...overrides }} />
     </div>
   );
@@ -129,6 +136,7 @@ const meta = {
   render: (args: StoryProps) => <BootLoaderStory {...args} />,
   argTypes: {
     variant: { control: 'select', options: ['random', ...SWARM_VARIANTS] },
+    showLog: { control: 'boolean' },
     dotCount: { control: { type: 'range', min: 8, max: 96, step: 1 } },
     dotSize: { control: { type: 'range', min: 0.5, max: 6, step: 0.1 } },
     ringRotationSpeed: { control: { type: 'range', min: 0, max: 0.0006, step: 0.00005 } },
@@ -143,6 +151,7 @@ const meta = {
 export default meta;
 
 const defaults: Partial<StoryProps> = {
+  showLog: true,
   dotSize: 1,
   dotCount: 50,
   ringRadius: 40,
@@ -177,7 +186,7 @@ export const Trails: StoryObj<StoryProps> = {
   },
 };
 
-export const Arc: StoryObj<StoryProps> = { args: { variant: 'arc' } };
+export const Arc: StoryObj<StoryProps> = { args: { variant: 'arc', showLog: true } };
 
 export const Linked: StoryObj<StoryProps> = {
   args: {

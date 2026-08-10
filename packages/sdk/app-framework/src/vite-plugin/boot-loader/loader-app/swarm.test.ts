@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 import {
   SWARM_VARIANTS,
   applyOutro,
-  arcPath,
   createDots,
   defaultSwarmConfig,
   dotFill,
@@ -109,22 +108,9 @@ describe('projectNogo', () => {
   });
 });
 
-describe('arcPath', () => {
-  test("sweeps anticlockwise from 12 o'clock and never degenerates at 100%", ({ expect }) => {
-    const config = defaultSwarmConfig('arc');
-    expect(config.dotCount).toBe(0);
-    expect(arcPath(config, 0)).toBeUndefined();
-    const quarter = arcPath(config, 25);
-    expect(quarter).toBeDefined();
-    // Anticlockwise: at 25% the head sits at 9 o'clock (left of center).
-    expect(quarter?.headX).toBeCloseTo(config.centerX - config.ringRadius);
-    expect(quarter?.headY).toBeCloseTo(config.centerY);
-    const full = arcPath(config, 100);
-    // Capped just shy of a full turn: the head approaches, but never equals, the start.
-    expect(full?.headX).not.toBeCloseTo(config.centerX, 5);
-    expect(
-      Math.hypot((full?.headX ?? 0) - config.centerX, (full?.headY ?? 0) - (config.centerY - config.ringRadius)),
-    ).toBeLessThan(1);
+describe('arc variant', () => {
+  test('has no dots — the original ring renders instead', ({ expect }) => {
+    expect(defaultSwarmConfig('arc').dotCount).toBe(0);
   });
 });
 

@@ -22,12 +22,12 @@ body {
  */
 #boot-loader {
   /*
-   * Half the rendered mark height: the mark is 84 units of the swarm's
-   * 400×300 viewBox scaled with `xMidYMid meet`, i.e. 42·min(vw/400, vh/300)
-   * — the status block anchors just below it at every viewport.
+   * The swarm's outer start circle: radius 136 units of the 400×300 viewBox
+   * scaled with `xMidYMid meet`, i.e. 136·min(vw/400, vh/300) — the status
+   * block anchors just below it, clear of the whole animation.
    */
-  --boot-loader-mark-half: min(10.5vw, 14vh);
-  --boot-loader-status-gap: 32px;
+  --boot-loader-outer-radius: min(34vw, 45.34vh);
+  --boot-loader-status-gap: 24px;
 
   position: fixed;
   inset: 0;
@@ -111,12 +111,58 @@ body {
 }
 
 /*
- * The original determinate arc (variant 'arc'), in its own nested layer so the
- * conic fade — opaque at the head, transparent at the 12 o'clock tail, driven
- * by the eased progress in `--boot-loader-arc` — masks only the arc, never the
- * head dot or the mark. The -1.16deg start keeps the head unmasked.
+ * The `'arc'` variant: the ORIGINAL boot loader, restored verbatim from the
+ * pre-swarm implementation (`ClassicRing.tsx`) for side-by-side comparison —
+ * its own disc box, brand-palette accent, conic fade mask, and mark reveal,
+ * all self-contained under the `-classic` ids so the swarm styles never leak in.
  */
-#boot-loader-arc-layer {
+#boot-loader-disc-classic {
+  --color-composer-200: rgb(10 75 105);
+  --color-composer-300: rgb(1 122 183);
+  --boot-loader-accent: var(--color-composer-200);
+  /* Caps the disc / mark at the design pixel sizes on roomy viewports while
+     shrinking proportionally on narrow ones. */
+  --boot-loader-disc-size: min(384px, 80vmin);
+  --boot-loader-mark-size: min(300px, 62.5vmin);
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: var(--boot-loader-disc-size);
+  height: var(--boot-loader-disc-size);
+  transform: translate(-50%, -50%);
+}
+
+@media (prefers-color-scheme: dark) {
+  #boot-loader-disc-classic {
+    --boot-loader-accent: var(--color-composer-300);
+  }
+}
+
+#boot-loader-disc-classic > * {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* Gently shrink the disc + mark as the loader fades, echoing the original handoff. */
+#boot-loader[data-dismissing] #boot-loader-disc-classic {
+  transform: translate(-50%, -50%) scale(0.92);
+  transition: transform 500ms ease-out;
+}
+
+/*
+ * Circular determinate progress — a single SVG `<path>` arc that sweeps
+ * anticlockwise from 12 o'clock, its angle growing with progress. There is no
+ * static track; `marker-end` is replaced by the separate head layer. The conic
+ * mask fades the arc linearly from the head (opaque) back to the 12 o'clock
+ * tail (transparent); `ClassicRing` writes the eased progress into
+ * `--boot-loader-arc` (0–100). The -1.16deg start keeps the head unmasked.
+ */
+#boot-loader-ring {
+  width: var(--boot-loader-disc-size);
+  height: var(--boot-loader-disc-size);
   overflow: visible;
   --boot-loader-arc: 0;
   mask: conic-gradient(
@@ -135,16 +181,52 @@ body {
   );
 }
 
-.boot-loader-arc-path {
-  fill: none;
-  stroke: rgb(1 122 183);
-  stroke-width: 0.6;
-  stroke-linecap: butt;
+/* The head dot's layer — same geometry, no mask, so the dot renders whole. */
+#boot-loader-ring-head {
+  width: var(--boot-loader-disc-size);
+  height: var(--boot-loader-disc-size);
+  overflow: visible;
 }
 
-.boot-loader-arc-head {
-  fill: rgb(1 122 183);
+.boot-loader-ring-progress {
+  fill: none;
+  stroke: var(--boot-loader-accent);
+  /* viewBox units: ~1.9px on the 384px disc, scaling down on smaller viewports. */
+  stroke-width: 0.5;
+  opacity: 0.5;
+  stroke-linecap: butt;
+  overflow: visible;
+}
+
+.boot-loader-ring-marker {
+  fill: var(--boot-loader-accent);
   stroke: none;
+  overflow: visible;
+}
+
+/*
+ * The classic mark: grayscale until the first host-driven progress lands
+ * (`data-host-driven` on the disc), with a hover reveal; percentage keeps the
+ * transition interpolable.
+ */
+#boot-loader-mark {
+  width: var(--boot-loader-mark-size);
+  height: var(--boot-loader-mark-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: grayscale(100%);
+  transition: filter 1000ms ease-out;
+}
+
+#boot-loader-disc-classic[data-host-driven] #boot-loader-mark,
+#boot-loader-mark:hover {
+  filter: grayscale(0%);
+}
+
+#boot-loader-mark svg {
+  width: 100%;
+  height: 100%;
 }
 
 #boot-loader-status {
@@ -152,8 +234,8 @@ body {
   top: 50%;
   left: 0;
   right: 0;
-  /* Sit just below the centered mark — half the mark plus the configured gap. */
-  transform: translate(0, calc(var(--boot-loader-mark-half) + var(--boot-loader-status-gap)));
+  /* Sit just below the swarm's outer circle plus the configured gap. */
+  transform: translate(0, calc(var(--boot-loader-outer-radius) + var(--boot-loader-status-gap)));
   /*
    * Slightly de-emphasised vs body text so the brand mark + swarm stay the
    * dominant focus, but high enough to remain legible on both light and dark

@@ -134,6 +134,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "storybook-solidjs-vite": "catalog:",
     "typedoc": "catalog:",
     "vite": "catalog:"
   },
