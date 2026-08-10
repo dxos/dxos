@@ -6,7 +6,7 @@ import * as Command from '@effect/cli/Command';
 
 import { create } from './create';
 
-export const invitation: Command.Command<any, any, any, any> = Command.make('invitation').pipe(
+export const invitation = Command.make('invitation').pipe(
   Command.withDescription('Manage account invitation codes.'),
   Command.withSubcommands([create]),
 );
