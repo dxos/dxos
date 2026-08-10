@@ -38,10 +38,12 @@ existing disc viewBox.
   global factor eases (~500 ms) every docked dot and the mark to full colour. Dot/link brand colour
   is the mark's outer ring: `rgb(5,40,61)`. The mark renders greyscale via CSS filter until then.
   No percentage indicator: the docked fraction is the progress display.
-- **Outro (dismissal)**: on `ready()`, after the colour sweep, dots accelerate radially outward
-  (positions scale ×3.2 from center over ~600 ms, smoothstep), shrinking to ~15% radius and fading
-  to transparent; links (variant D) fade out first. Runs inside the existing `dismissing` fade
-  window — no timing changes to `mountLoader`.
+- **Outro (dismissal)**: on `ready()`, the colour sweep (~500 ms) and the outro (~600 ms) run
+  concurrently, not sequentially — dots accelerate radially outward (positions scale ×3.2 from
+  center over ~600 ms, smoothstep), shrinking to ~15% radius and fading to transparent; links
+  (variant D) fade out first. Both run inside the existing `dismissing` fade window, unchanged at
+  500 ms — no timing changes to `mountLoader`. Because the 600 ms outro outlasts that window, its
+  tail may not paint before the loader is removed (accepted).
 
 ## The four behaviors
 

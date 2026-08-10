@@ -146,7 +146,7 @@ export const smoothstep = (x: number): number => {
   return clamped * clamped * (3 - 2 * clamped);
 };
 
-const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
+const lerp = (from: number, to: number, fraction: number): number => from + (to - from) * fraction;
 
 export const dotFill = (settleEased: number, colorFactor: number): string => {
   const greyChannelUnrounded = lerp(GREY_LOOSE, GREY_DOCKED, settleEased);
@@ -167,8 +167,8 @@ export const outroFactor = (config: SwarmConfig, dismissingForMs: number | undef
   if (dismissingForMs === undefined) {
     return 0;
   }
-  const t = Math.max(0, Math.min(1, dismissingForMs / config.outroMs));
-  return smoothstep(t);
+  const clamped = Math.max(0, Math.min(1, dismissingForMs / config.outroMs));
+  return smoothstep(clamped);
 };
 
 export const applyOutro = (
@@ -179,7 +179,6 @@ export const applyOutro = (
 ): { x: number; y: number; radiusScale: number; opacityScale: number } => {
   const dx = x - config.centerX;
   const dy = y - config.centerY;
-  const dist = Math.hypot(dx, dy);
   const scale = 1 + outro * config.outroScale;
   const outroX = config.centerX + dx * scale;
   const outroY = config.centerY + dy * scale;
@@ -209,11 +208,9 @@ export const dotPosition = (
       y: config.centerY + config.ringRadius * Math.sin(dot.angle),
     };
 
-    // Midpoint of start and slot.
     const midpointX = (dot.startX + slotWithoutRotation.x) / 2;
     const midpointY = (dot.startY + slotWithoutRotation.y) / 2;
 
-    // Damped sinusoidal drift.
     const amplitude = config.wanderAmplitude * (1 - settleEased);
     const driftX =
       Math.sin(nowMs / 900 + dot.phase * 3) * amplitude + Math.sin(nowMs / 331 + dot.phase) * amplitude * 0.3;
@@ -232,30 +229,26 @@ export const dotPosition = (
     waitingY = config.centerY + effectiveRadius * Math.sin(angle);
   }
 
-  // Lerp toward slot position by settleEased.
   const slot = slotPosition(config, dot, nowMs);
   const lerpedX = waitingX + (slot.x - waitingX) * settleEased;
   const lerpedY = waitingY + (slot.y - waitingY) * settleEased;
 
-  // Project onto nogo boundary.
   return projectNogo(config, lerpedX, lerpedY);
 };
 
 export const transientLinks = (
   config: SwarmConfig,
   dots: SwarmDot[],
-): { a: number; b: number; closeness: number }[] => {
-  const links: { a: number; b: number; closeness: number }[] = [];
+): { first: number; second: number; closeness: number }[] => {
+  const links: { first: number; second: number; closeness: number }[] = [];
 
   for (let indexA = 0; indexA < dots.length; indexA++) {
     if (dots[indexA].settle > 0.5) {
-      // Only unsettled dots participate.
       continue;
     }
 
     for (let indexB = indexA + 1; indexB < dots.length; indexB++) {
       if (dots[indexB].settle > 0.5) {
-        // Only unsettled dots participate.
         continue;
       }
 
@@ -265,9 +258,8 @@ export const transientLinks = (
 
       if (distance < config.linkRange) {
         const closeness = 1 - distance / config.linkRange;
-        links.push({ a: indexA, b: indexB, closeness });
+        links.push({ first: indexA, second: indexB, closeness });
 
-        // Stop if we've reached the cap.
         if (links.length >= config.maxLinks) {
           return links;
         }

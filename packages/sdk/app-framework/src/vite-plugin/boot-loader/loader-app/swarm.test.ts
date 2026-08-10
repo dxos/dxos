@@ -187,7 +187,7 @@ describe('transientLinks', () => {
     dots[3].y = 95;
     dots[3].settle = 1; // docked: excluded
     const links = transientLinks(config, dots);
-    const pairs = links.map(({ a, b }) => `${a}-${b}`);
+    const pairs = links.map(({ first, second }) => `${first}-${second}`);
     expect(pairs).toContain('0-1');
     expect(pairs).toContain('0-2');
     expect(pairs.some((pair) => pair.includes('3'))).toBe(false);

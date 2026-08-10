@@ -34,7 +34,7 @@ export type SwarmProps = {
 const MARK_SIZE = 84;
 const MARK_HALF = MARK_SIZE / 2;
 
-// Matches the eased-`shown` constants in the previous ring loop (`Loader.tsx` history).
+// Snaps `shown` to the target within 5% so a large progress jump doesn't leave a visible eased trail.
 const SHOWN_SNAP_THRESHOLD = 0.05;
 const SHOWN_EASE_RATE = 0.18;
 // Duration (ms) of the grayscale ↔ colour cross-fade the mark drives via `colorFactor`.
@@ -188,13 +188,14 @@ export const Swarm: Component<SwarmProps> = (props) => {
 
     if (hasLinks) {
       const stroke = linkStroke(colorFactor);
-      const links = transientLinks(config, dots);
+      // Unlit dots sit invisibly on their slots and are still in link range, so skip transient links entirely.
+      const links = reducedMotion ? [] : transientLinks(config, dots);
       for (let index = 0; index < linkRefs.length; index++) {
         const line = linkRefs[index];
         const link = links[index];
         if (link) {
-          const dotA = dots[link.a];
-          const dotB = dots[link.b];
+          const dotA = dots[link.first];
+          const dotB = dots[link.second];
           line.setAttribute('x1', String(dotA.x));
           line.setAttribute('y1', String(dotA.y));
           line.setAttribute('x2', String(dotB.x));
@@ -230,14 +231,14 @@ export const Swarm: Component<SwarmProps> = (props) => {
   };
 
   onMount(() => {
-    fieldRef?.addEventListener('mouseenter', handleMouseEnter);
-    fieldRef?.addEventListener('mouseleave', handleMouseLeave);
+    markRef?.addEventListener('mouseenter', handleMouseEnter);
+    markRef?.addEventListener('mouseleave', handleMouseLeave);
     raf = requestAnimationFrame(animate);
   });
 
   onCleanup(() => {
-    fieldRef?.removeEventListener('mouseenter', handleMouseEnter);
-    fieldRef?.removeEventListener('mouseleave', handleMouseLeave);
+    markRef?.removeEventListener('mouseenter', handleMouseEnter);
+    markRef?.removeEventListener('mouseleave', handleMouseLeave);
     if (raf !== undefined) {
       cancelAnimationFrame(raf);
     }
