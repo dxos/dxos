@@ -10,12 +10,15 @@ import {
   createDots,
   defaultSwarmConfig,
   dotFill,
+  dotPosition,
   litCount,
   outroFactor,
   pickRandomVariant,
   projectNogo,
+  ringLinkVisible,
   slotPosition,
   stepSettle,
+  transientLinks,
 } from './swarm';
 
 describe('defaultSwarmConfig', () => {
@@ -127,5 +130,84 @@ describe('outro', () => {
     expect(flung.x).toBeCloseTo(config.centerX + config.ringRadius * (1 + config.outroScale));
     expect(flung.radiusScale).toBeCloseTo(0.15);
     expect(flung.opacityScale).toBeCloseTo(0);
+  });
+});
+
+describe('dotPosition', () => {
+  test('fully settled dot sits exactly on its slot', ({ expect }) => {
+    const config = defaultSwarmConfig('wander');
+    const dot = createDots(config, () => 0.5)[0];
+    dot.settle = 1;
+    const position = dotPosition(config, dot, 1, 1234);
+    const slot = slotPosition(config, dot, 1234);
+    expect(position.x).toBeCloseTo(slot.x);
+    expect(position.y).toBeCloseTo(slot.y);
+  });
+
+  test('unsettled dots stay outside the no-go zone in every variant', ({ expect }) => {
+    for (const variant of SWARM_VARIANTS) {
+      const config = defaultSwarmConfig(variant);
+      const dots = createDots(config, () => 0.99); // worst case: tight orbit radii
+      for (let now = 0; now < 5000; now += 250) {
+        for (const dot of dots) {
+          const { x, y } = dotPosition(config, dot, 0, now);
+          expect(Math.hypot(x - config.centerX, y - config.centerY)).toBeGreaterThanOrEqual(config.nogoRadius - 1e-6);
+        }
+      }
+    }
+  });
+
+  test('orbit variant: settled dots track the rotating slot (never static)', ({ expect }) => {
+    const config = defaultSwarmConfig('orbit');
+    const dot = createDots(config, () => 0.5)[0];
+    dot.settle = 1;
+    const early = dotPosition(config, dot, 1, 1000);
+    const late = dotPosition(config, dot, 1, 2000);
+    expect(Math.hypot(late.x - early.x, late.y - early.y)).toBeGreaterThan(0.05);
+  });
+});
+
+describe('transientLinks', () => {
+  test('links only near, unsettled pairs and respects the cap', ({ expect }) => {
+    const config = defaultSwarmConfig('linked');
+    const dots = createDots(config, () => 0.5);
+    // Cluster three dots, dock one of them, scatter the rest far away.
+    dots.forEach((dot, index) => {
+      dot.x = 1000 + index * 200;
+      dot.y = 1000;
+      dot.settle = 0;
+    });
+    dots[0].x = 100;
+    dots[0].y = 100;
+    dots[1].x = 110;
+    dots[1].y = 100;
+    dots[2].x = 105;
+    dots[2].y = 108;
+    dots[3].x = 102;
+    dots[3].y = 95;
+    dots[3].settle = 1; // docked: excluded
+    const links = transientLinks(config, dots);
+    const pairs = links.map(({ a, b }) => `${a}-${b}`);
+    expect(pairs).toContain('0-1');
+    expect(pairs).toContain('0-2');
+    expect(pairs.some((pair) => pair.includes('3'))).toBe(false);
+    expect(links.length).toBeLessThanOrEqual(config.maxLinks);
+    for (const { closeness } of links) {
+      expect(closeness).toBeGreaterThan(0);
+      expect(closeness).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe('ringLinkVisible', () => {
+  test('welds only when both adjacent dots are fully docked (wrapping)', ({ expect }) => {
+    const config = defaultSwarmConfig('linked');
+    const dots = createDots(config, () => 0.5);
+    dots.forEach((dot) => (dot.settle = 1));
+    dots[1].settle = 0.9;
+    expect(ringLinkVisible(dots, 0)).toBe(false); // 0–1: neighbour not fully docked
+    expect(ringLinkVisible(dots, 1)).toBe(false); // 1–2
+    expect(ringLinkVisible(dots, 2)).toBe(true); // 2–3
+    expect(ringLinkVisible(dots, dots.length - 1)).toBe(true); // wraps to 0
   });
 });

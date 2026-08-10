@@ -192,3 +192,93 @@ export const applyOutro = (
     opacityScale,
   };
 };
+
+export const dotPosition = (
+  config: SwarmConfig,
+  dot: SwarmDot,
+  settleEased: number,
+  nowMs: number,
+): { x: number; y: number } => {
+  let waitingX: number;
+  let waitingY: number;
+
+  if (config.variant === 'wander' || config.variant === 'linked') {
+    // Rotation-free slot position for wander/linked.
+    const slotWithoutRotation = {
+      x: config.centerX + config.ringRadius * Math.cos(dot.angle),
+      y: config.centerY + config.ringRadius * Math.sin(dot.angle),
+    };
+
+    // Midpoint of start and slot.
+    const midpointX = (dot.startX + slotWithoutRotation.x) / 2;
+    const midpointY = (dot.startY + slotWithoutRotation.y) / 2;
+
+    // Damped sinusoidal drift.
+    const amplitude = config.wanderAmplitude * (1 - settleEased);
+    const driftX = Math.sin(nowMs / 900 + dot.phase * 3) * amplitude + Math.sin(nowMs / 331 + dot.phase) * amplitude * 0.3;
+    const driftY =
+      Math.cos(nowMs / 1100 + dot.phase * 2) * amplitude + Math.cos(nowMs / 411 + dot.phase) * amplitude * 0.3;
+
+    waitingX = midpointX + driftX;
+    waitingY = midpointY + driftY;
+  } else {
+    // orbit or trails: orbital motion with wobble.
+    const wobble = Math.sin(nowMs / 700 + dot.phase) * 5 * (1 - settleEased);
+    const effectiveRadius = dot.orbitRadius + wobble;
+    const angle = dot.orbitBearing - (nowMs * dot.orbitSpeed);
+
+    waitingX = config.centerX + effectiveRadius * Math.cos(angle);
+    waitingY = config.centerY + effectiveRadius * Math.sin(angle);
+  }
+
+  // Lerp toward slot position by settleEased.
+  const slot = slotPosition(config, dot, nowMs);
+  const lerpedX = waitingX + (slot.x - waitingX) * settleEased;
+  const lerpedY = waitingY + (slot.y - waitingY) * settleEased;
+
+  // Project onto nogo boundary.
+  return projectNogo(config, lerpedX, lerpedY);
+};
+
+export const transientLinks = (
+  config: SwarmConfig,
+  dots: SwarmDot[],
+): { a: number; b: number; closeness: number }[] => {
+  const links: { a: number; b: number; closeness: number }[] = [];
+
+  for (let indexA = 0; indexA < dots.length; indexA++) {
+    if (dots[indexA].settle > 0.5) {
+      // Only unsettled dots participate.
+      continue;
+    }
+
+    for (let indexB = indexA + 1; indexB < dots.length; indexB++) {
+      if (dots[indexB].settle > 0.5) {
+        // Only unsettled dots participate.
+        continue;
+      }
+
+      const dx = dots[indexB].x - dots[indexA].x;
+      const dy = dots[indexB].y - dots[indexA].y;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance < config.linkRange) {
+        const closeness = 1 - distance / config.linkRange;
+        links.push({ a: indexA, b: indexB, closeness });
+
+        // Stop if we've reached the cap.
+        if (links.length >= config.maxLinks) {
+          return links;
+        }
+      }
+    }
+  }
+
+  return links;
+};
+
+export const ringLinkVisible = (dots: SwarmDot[], index: number): boolean => {
+  const current = dots[index];
+  const next = dots[(index + 1) % dots.length];
+  return current.settle >= 1 && next.settle >= 1;
+};
