@@ -117,6 +117,22 @@ Useful when reading pre-migration code, old PRs, or upstream issues.
 | `Schedule.compose(recurs(n))`          | `Effect.retry({ schedule, times: n })`                   |
 | `Predicate.isNotNullable` / `isRecord` | `isNotNullish` / `isObject`                              |
 
+## Upstream docs
+
+Read these rather than recalling v4 from memory — the beta moves.
+
+- **`node_modules/effect/ai-docs/src/`** — the installed version's own guides, so they always match
+  the pinned beta. `01_effect/02_schema` is the Schema guide; `10_predicate`, `03_stream`,
+  `50_http-client`, `70_cli`, `71_ai` cover the other tiers. `node_modules/effect/AGENTS.md` is the
+  short-form authoring guide.
+- [effect-smol `MIGRATION.md`](https://github.com/Effect-TS/effect-smol/blob/main/MIGRATION.md) —
+  package consolidation, the `effect/unstable/*` split, versioning.
+- [`migration/schema.md`](https://github.com/Effect-TS/effect-smol/blob/main/migration/schema.md) and
+  [`migration/v3-to-v4.md`](https://github.com/Effect-TS/effect-smol/blob/main/migration/v3-to-v4.md)
+  — the rename tables `tools/codemods/effect-4-verified-renames.mjs` was built from.
+- [`migration/layer-memoization.md`](https://github.com/Effect-TS/effect-smol/blob/main/migration/layer-memoization.md)
+  — background for §8 of [layer-composition.md](layer-composition.md).
+
 ## Bundling: watch for dynamic imports in `export *` chains
 
 `effect/unstable/sql/Migrator` includes `fromFileSystem`, whose template-literal `import()` no static

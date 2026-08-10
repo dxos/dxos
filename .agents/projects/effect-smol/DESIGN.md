@@ -141,8 +141,10 @@ Decision: vendor the used subset into `cli-util/src/util/{doc,ansi}.ts` (~140 li
 weighed and rejected —
 
 1. Peer-override the package back in: no code change, but reinstates `effect@3` in the CLI bundle
-   purely for rendering. Unlike `dfx` there is no two-runtime hazard (the printer is a pure
-   `Doc -> string` renderer), so this stays available if the vendoring becomes a burden.
+   purely for rendering. A pure `Doc -> string` renderer carries no two-runtime hazard — nothing
+   crosses a runtime boundary — so this stays available if the vendoring becomes a burden. (Verified
+   2026-08-10: `@effect/printer@0.51.0` is still the latest and still peers `effect ^3.22.1`. Unlike
+   the `dfx` case, there is no newer v4-compatible release to bump to.)
 2. `chalk` (already catalog-pinned for `@dxos/log`): covers `ansi.ts` only. `doc.ts`'s
    concat/indent/fill has no equivalent at that size, so the vendoring would remain _and_ gain a
    dependency.

@@ -188,8 +188,13 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
       reflow, since nothing built a `group` or a soft line.
       **Worth a human look at the CLI's rendered output (`dx fn list`, `dx trigger`).**
 - [x] **Clear the remaining frontier** — the workspace builds: 325/325 moon build tasks, none
-      failing and none skipped. Clearing it also required replacing `dfx` (no v4 release, peers
-      `effect@3.21.4`) with `@dxos/discord-client`, which retired the last `effect@3` in the tree.
+      failing and none skipped. Clearing it also required retiring the pinned `dfx@0.113` (peers
+      `effect@3.21.4`), the last `effect@3` in the tree, in favour of `@dxos/discord-client`.
+      **Correction:** the stated reason ("dfx has no v4 release") was wrong — `dfx@1.0.0` shipped
+      2026-02-20 peering `effect >=4.0.0-beta.101`, and Phase 3 bumped edge to `dfx@1.0.15` against
+      v4. A version bump would have cleared the two-runtime problem without new code. The package
+      stays for now (zero deps, avoids `discord-api-types`' broken `.mjs` interop) but that is a
+      much weaker case than the one it was built on — see its README.
 - [x] **Run the test suites** — first full pass since the port; it surfaced 13 real product bugs,
       not test noise. The three widest: `RpcClient.make` takes its client id from a process-global
       counter (the RpcPort protocol hard-coded `0`, so only the first client in a process ever
