@@ -110,6 +110,43 @@ body {
   filter: grayscale(0%);
 }
 
+/*
+ * The original determinate arc (variant 'arc'), in its own nested layer so the
+ * conic fade — opaque at the head, transparent at the 12 o'clock tail, driven
+ * by the eased progress in `--boot-loader-arc` — masks only the arc, never the
+ * head dot or the mark. The -1.16deg start keeps the head unmasked.
+ */
+#boot-loader-arc-layer {
+  overflow: visible;
+  --boot-loader-arc: 0;
+  mask: conic-gradient(
+    from -1.16deg at 50% 50%,
+    transparent 0,
+    transparent calc((100 - var(--boot-loader-arc)) * 1%),
+    #000 calc((100 - var(--boot-loader-arc)) * 1%),
+    transparent 100%
+  );
+  -webkit-mask: conic-gradient(
+    from -1.16deg at 50% 50%,
+    transparent 0,
+    transparent calc((100 - var(--boot-loader-arc)) * 1%),
+    #000 calc((100 - var(--boot-loader-arc)) * 1%),
+    transparent 100%
+  );
+}
+
+.boot-loader-arc-path {
+  fill: none;
+  stroke: rgb(1 122 183);
+  stroke-width: 0.6;
+  stroke-linecap: butt;
+}
+
+.boot-loader-arc-head {
+  fill: rgb(1 122 183);
+  stroke: none;
+}
+
 #boot-loader-status {
   position: absolute;
   top: 50%;

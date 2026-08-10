@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import {
   SWARM_VARIANTS,
   applyOutro,
+  arcPath,
   createDots,
   defaultSwarmConfig,
   dotFill,
@@ -31,9 +32,9 @@ describe('defaultSwarmConfig', () => {
 });
 
 describe('pickRandomVariant', () => {
-  test('covers all four variants uniformly', ({ expect }) => {
+  test('spans the whole variant list', ({ expect }) => {
     expect(pickRandomVariant(() => 0)).toBe(SWARM_VARIANTS[0]);
-    expect(pickRandomVariant(() => 0.99)).toBe(SWARM_VARIANTS[3]);
+    expect(pickRandomVariant(() => 0.99)).toBe(SWARM_VARIANTS[SWARM_VARIANTS.length - 1]);
   });
 });
 
@@ -105,6 +106,25 @@ describe('projectNogo', () => {
     expect(Math.hypot(inside.x - config.centerX, inside.y - config.centerY)).toBeCloseTo(config.nogoRadius);
     const outside = projectNogo(config, config.centerX + 200, config.centerY);
     expect(outside).toEqual({ x: config.centerX + 200, y: config.centerY });
+  });
+});
+
+describe('arcPath', () => {
+  test("sweeps anticlockwise from 12 o'clock and never degenerates at 100%", ({ expect }) => {
+    const config = defaultSwarmConfig('arc');
+    expect(config.dotCount).toBe(0);
+    expect(arcPath(config, 0)).toBeUndefined();
+    const quarter = arcPath(config, 25);
+    expect(quarter).toBeDefined();
+    // Anticlockwise: at 25% the head sits at 9 o'clock (left of center).
+    expect(quarter?.headX).toBeCloseTo(config.centerX - config.ringRadius);
+    expect(quarter?.headY).toBeCloseTo(config.centerY);
+    const full = arcPath(config, 100);
+    // Capped just shy of a full turn: the head approaches, but never equals, the start.
+    expect(full?.headX).not.toBeCloseTo(config.centerX, 5);
+    expect(
+      Math.hypot((full?.headX ?? 0) - config.centerX, (full?.headY ?? 0) - (config.centerY - config.ringRadius)),
+    ).toBeLessThan(1);
   });
 });
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export const SWARM_VARIANTS = ['wander', 'orbit', 'trails', 'linked'] as const;
+export const SWARM_VARIANTS = ['wander', 'orbit', 'trails', 'linked', 'arc'] as const;
 export type SwarmVariant = (typeof SWARM_VARIANTS)[number];
 
 export type SwarmConfig = {
@@ -78,7 +78,39 @@ export const defaultSwarmConfig = (variant: SwarmVariant): SwarmConfig => {
       return { ...BASE, variant, dotCount: 48, dotSize: 1.6, ringRotationSpeed: 0 };
     case 'linked':
       return { ...BASE, variant, dotCount: 64, dotSize: 1.3, ringRotationSpeed: 0 };
+    case 'arc':
+      // The original determinate ring — no dots, a single swept path.
+      return { ...BASE, variant, dotCount: 0, dotSize: 0, ringRotationSpeed: 0 };
   }
+};
+
+export type ArcGeometry = { d: string; headX: number; headY: number };
+
+/**
+ * The original loader's determinate arc: an anticlockwise sweep from 12 o'clock
+ * whose angle grows with progress, capped just shy of a full turn so the single
+ * arc command never degenerates at 100%. Returns undefined until progress is
+ * positive (no zero-length path).
+ */
+export const arcPath = (config: SwarmConfig, progressPct: number): ArcGeometry | undefined => {
+  const fraction = Math.min(Math.max(progressPct, 0) / 100, 0.9999);
+  if (fraction <= 0.0001) {
+    return undefined;
+  }
+  const sweep = fraction * 2 * Math.PI;
+  const start = -Math.PI / 2;
+  const end = start - sweep;
+  const startX = config.centerX + config.ringRadius * Math.cos(start);
+  const startY = config.centerY + config.ringRadius * Math.sin(start);
+  const headX = config.centerX + config.ringRadius * Math.cos(end);
+  const headY = config.centerY + config.ringRadius * Math.sin(end);
+  const largeArc = sweep > Math.PI ? 1 : 0;
+  // Sweep-flag 0 draws in the negative-angle (anticlockwise on screen) direction.
+  return {
+    d: `M ${startX} ${startY} A ${config.ringRadius} ${config.ringRadius} 0 ${largeArc} 0 ${headX} ${headY}`,
+    headX,
+    headY,
+  };
 };
 
 export const pickRandomVariant = (random: () => number = Math.random): SwarmVariant =>
