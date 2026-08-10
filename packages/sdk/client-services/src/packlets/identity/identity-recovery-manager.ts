@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
+import { synchronized } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { generateSeedPhrase, getCredentialAssertion, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
@@ -114,7 +115,13 @@ export class EdgeIdentityRecoveryManager {
    *
    * Refuses the last un-revoked credential. Doing so would leave the holder unable to recover their
    * identity with no self-service way back — the replacement has to be added first.
+   *
+   * `@synchronized` so two revocations on this device cannot both observe two active credentials and
+   * each cancel a different one. It cannot serialize across devices: the control feed is append-only
+   * with no consensus, so two devices revoking at once can still drive the count to zero. The agents
+   * service is the authority there — it re-checks the active count before flipping a row to REVOKED.
    */
+  @synchronized
   public async revokeRecoveryCredential({ lookupKey }: { lookupKey: PublicKey }): Promise<void> {
     const identity = this._identityProvider();
     invariant(identity);

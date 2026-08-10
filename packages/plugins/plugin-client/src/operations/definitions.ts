@@ -125,8 +125,12 @@ export const RevokeRecoveryCredential = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    /** Lookup key of the credential to revoke, as hex. */
-    lookupKey: Schema.String,
+    /**
+     * Lookup key of the credential to revoke, as hex. Constrained to a full key because
+     * `PublicKey.from` silently drops non-hex characters rather than rejecting them, so an
+     * unvalidated string would decode to some other key instead of failing.
+     */
+    lookupKey: Schema.String.pipe(Schema.pattern(/^[0-9a-fA-F]{64}$/)),
   }),
   output: Schema.Void,
 });

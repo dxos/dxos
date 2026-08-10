@@ -113,6 +113,7 @@ const pluginTranslations = [
         'recovery-kind-unknown.label': 'Recovery credential',
         'credential-revoked.label': 'Revoked',
         'revoke-credential.label': 'Revoke',
+        'revoke-failed.message': 'Could not revoke that credential. Reconnect and try again.',
         'revoke-credential-confirm.message':
           'Revoke this credential?\n\nIt will no longer be accepted for recovering your account, and this cannot be undone.\n\nThe passkey itself is not deleted — it stays in your password manager or on your device until you remove it there too.',
         'last-credential.message':

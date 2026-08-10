@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import { Icon, IconButton, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
@@ -34,18 +35,25 @@ export const RecoveryCredentialsContainer = () => {
     (credential) => credential.type === 'dxos.halo.credentials.IdentityRecovery',
   );
   const activeCount = recoveryCredentials.filter((credential) => !credential.recovery?.revoked).length;
+  const [revokeError, setRevokeError] = useState<string | null>(null);
 
   // The account page is where a revocation can also be confirmed with a fresh passkey assertion.
   const { openAccountPage } = useAccountUrl();
 
   const handleRevoke = useCallback(
-    async (lookupKey: string) => {
+    (lookupKey: string) => {
       // Revoking is not undoable and the passkey survives in the authenticator, so say both before
       // writing anything.
       if (!window.confirm(t('revoke-credential-confirm.message'))) {
         return;
       }
-      await invokePromise(ClientOperation.RevokeRecoveryCredential, { lookupKey });
+      setRevokeError(null);
+      // Surfaced rather than rethrown: `onClick` does not await, so an escaping rejection would only
+      // reach the console and the row would silently stay.
+      void invokePromise(ClientOperation.RevokeRecoveryCredential, { lookupKey }).catch((error) => {
+        log.warn('failed to revoke recovery credential', { error });
+        setRevokeError(t('revoke-failed.message'));
+      });
     },
     [invokePromise, t],
   );
@@ -113,6 +121,13 @@ export const RecoveryCredentialsContainer = () => {
                   })}
                 </Listbox.Content>
               </Listbox.Root>
+            )}
+            {revokeError && (
+              <Message.Root valence='error'>
+                <Message.Content>
+                  <Message.Body>{revokeError}</Message.Body>
+                </Message.Content>
+              </Message.Root>
             )}
             {activeCount === 1 && (
               <Message.Root valence='warning'>
