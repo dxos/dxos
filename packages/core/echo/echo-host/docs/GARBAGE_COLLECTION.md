@@ -31,8 +31,9 @@ storage (automerge documents + feeds) behind a different physical store.
 | Automatic reclamation on peers                     | implemented                     |
 | `retainObjects()` — drop all but the retained ids  | implemented (client-side)       |
 
-The EDGE host implements neither API yet (both return a not-implemented error);
-this document is the reference for that work.
+The EDGE host implements neither of the two RPC APIs yet (each returns a
+not-implemented error); this document is the reference for that work.
+`retainObjects` runs on the client and needs no host counterpart.
 
 ## Why GC is needed
 
@@ -371,6 +372,11 @@ differs. When implementing on EDGE:
   dies between them leaves rows describing storage that is gone; nothing
   recomputes them. A stale row, not lost data. The document wipe itself is
   atomic — see the interruption note under step 2.
+- **Reclaim pages to the filesystem.** Deleting rows returns pages to SQLite's
+  freelist, so collection frees space for the database to reuse but does not
+  shrink the file on disk. `VACUUM` would, at the cost of rewriting the whole
+  file, and it cannot run inside a transaction — so it belongs to a maintenance
+  path rather than to a collection pass.
 - **Two-peer convergence tests.** Automatic reclamation is covered single-host;
   the replicated path is exercised only by construction.
 - **Age guard on the orphan scan.** Document creation and the link write are

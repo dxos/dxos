@@ -613,20 +613,6 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Reclaims free pages back to the filesystem. Deleting rows only returns pages to SQLite's
-   * freelist, so without this a garbage-collection pass frees no disk at all. Cannot run inside a
-   * transaction, and rewrites the whole database file — call it sparingly.
-   */
-  async vacuum(): Promise<void> {
-    await RuntimeProvider.runPromise(this._runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`VACUUM`;
-      }),
-    );
-  }
-
-  /**
    * Create new persisted document.
    */
   async createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): Promise<DocHandle<T>> {
