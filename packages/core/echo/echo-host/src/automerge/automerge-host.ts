@@ -63,7 +63,7 @@ import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from
 import { getHandleState } from './handle-state';
 import { tryGetSpaceIdFromCollectionId } from './space-collection';
 import { SqliteHeadsStore } from './sqlite-heads-store';
-import { SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX, SqliteStorageAdapter } from './sqlite-storage-adapter';
+import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter';
 
 export type PeerIdProvider = () => string | undefined;
 
