@@ -66,7 +66,7 @@ export const ResetDialog = ({
   onRefresh,
   onReset,
 }: ResetDialogProps) => {
-  const { t } = useTranslation('composer'); // TODO(burdon): Const.
+  const { t } = useTranslation('composer');
   const [isNotMobile] = useMediaQuery('md');
   const error = errorProp && parseError(t, errorProp);
   const [showStack, setShowStack] = useState(false);
@@ -78,6 +78,7 @@ export const ResetDialog = ({
     if (!feedbackSent) {
       return;
     }
+
     const timeout = setTimeout(() => setFeedbackSent(false), 3_000);
     return () => clearTimeout(timeout);
   }, [feedbackSent]);
