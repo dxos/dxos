@@ -21,7 +21,7 @@ import { CreatePasskey } from './definitions';
  * available at creation time; the user can rename it on the account page.
  */
 const defaultPasskeyLabel = (): string => {
-  const platform = (navigator as any).userAgentData?.platform ?? navigator.platform;
+  const platform = NativePasskey.getPlatform();
   return platform ? `Passkey on ${platform}` : 'Passkey';
 };
 
