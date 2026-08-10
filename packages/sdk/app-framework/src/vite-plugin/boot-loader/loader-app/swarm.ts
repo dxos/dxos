@@ -41,9 +41,10 @@ export type SwarmDot = {
 };
 
 const BRAND_RGB = [5, 40, 61] as const;
-const GREY_LOOSE = 64;
-const GREY_DOCKED = 140;
-const LINK_GREY = 120;
+// Boot-time palette carries a subtle navy cast rather than pure grey.
+const LOOSE_RGB = [56, 64, 72] as const;
+const DOCKED_RGB = [118, 138, 158] as const;
+const LINK_RGB = [105, 125, 145] as const;
 
 const BASE: Omit<SwarmConfig, 'variant' | 'dotCount' | 'dotSize' | 'ringRotationSpeed'> = {
   centerX: 200,
@@ -148,18 +149,19 @@ export const smoothstep = (x: number): number => {
 
 const lerp = (from: number, to: number, fraction: number): number => from + (to - from) * fraction;
 
-export const dotFill = (settleEased: number, colorFactor: number): string => {
-  const greyChannelUnrounded = lerp(GREY_LOOSE, GREY_DOCKED, settleEased);
-  const redChannel = Math.round(lerp(greyChannelUnrounded, lerp(GREY_LOOSE, BRAND_RGB[0], settleEased), colorFactor));
-  const greenChannel = Math.round(lerp(greyChannelUnrounded, lerp(GREY_LOOSE, BRAND_RGB[1], settleEased), colorFactor));
-  const blueChannel = Math.round(lerp(greyChannelUnrounded, lerp(GREY_LOOSE, BRAND_RGB[2], settleEased), colorFactor));
-  return `rgb(${redChannel},${greenChannel},${blueChannel})`;
+const dotChannel = (channel: 0 | 1 | 2, settleEased: number, colorFactor: number): number => {
+  const tinted = lerp(LOOSE_RGB[channel], DOCKED_RGB[channel], settleEased);
+  const branded = lerp(LOOSE_RGB[channel], BRAND_RGB[channel], settleEased);
+  return Math.round(lerp(tinted, branded, colorFactor));
 };
 
+export const dotFill = (settleEased: number, colorFactor: number): string =>
+  `rgb(${dotChannel(0, settleEased, colorFactor)},${dotChannel(1, settleEased, colorFactor)},${dotChannel(2, settleEased, colorFactor)})`;
+
 export const linkStroke = (colorFactor: number): string => {
-  const redChannel = Math.round(lerp(LINK_GREY, BRAND_RGB[0], colorFactor));
-  const greenChannel = Math.round(lerp(LINK_GREY, BRAND_RGB[1], colorFactor));
-  const blueChannel = Math.round(lerp(LINK_GREY, BRAND_RGB[2], colorFactor));
+  const redChannel = Math.round(lerp(LINK_RGB[0], BRAND_RGB[0], colorFactor));
+  const greenChannel = Math.round(lerp(LINK_RGB[1], BRAND_RGB[1], colorFactor));
+  const blueChannel = Math.round(lerp(LINK_RGB[2], BRAND_RGB[2], colorFactor));
   return `rgb(${redChannel},${greenChannel},${blueChannel})`;
 };
 

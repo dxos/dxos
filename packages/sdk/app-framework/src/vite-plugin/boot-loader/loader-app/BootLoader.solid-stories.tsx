@@ -115,7 +115,7 @@ const BootLoaderStory = (props: StoryProps) => {
           'color': 'inherit',
           'border': '1px solid currentColor',
           'border-radius': '4px',
-          'opacity': 1.0,
+          'opacity': 0.2,
         }}
       >
         Restart

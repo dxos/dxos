@@ -33,8 +33,8 @@ existing disc viewBox.
   never regresses; the store already guarantees this).
 - **Docked dots do not move.** Sole exception: variant B, where the docked ring rotates
   anticlockwise as a single rigid structure (0.00015 rad/ms) and dots dock onto the moving slots.
-- **Colour**: dots are grey during boot — `rgb(64,64,64)` loose, brightening toward
-  `rgb(140,140,140)` as they dock; opacity 0.55 → 1.0. On ready (or pointer-over, as a preview) a
+- **Colour**: dots carry a grey-blue navy tint during boot — `rgb(56,64,72)` loose, brightening
+  toward `rgb(118,138,158)` as they dock; opacity 0.55 → 1.0. On ready (or pointer-over, as a preview) a
   global factor eases (~500 ms) every docked dot and the mark to full colour. Dot/link brand colour
   is the mark's outer ring: `rgb(5,40,61)`. The mark renders greyscale via CSS filter until then.
   No percentage indicator: the docked fraction is the progress display.
