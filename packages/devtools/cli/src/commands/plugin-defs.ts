@@ -33,7 +33,9 @@ export const getDefaults = (): string[] => [
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
   return [
     ChessPlugin(),
-    ClientPlugin({ config }),
+    // Commands are imperative and run straight through, so the service must hand them a client
+    // that is already initialized rather than one whose `halo` getter still throws.
+    ClientPlugin({ config, awaitInitialization: true }),
     ConnectorPlugin(),
     InboxPlugin(),
     MarkdownPlugin(),
