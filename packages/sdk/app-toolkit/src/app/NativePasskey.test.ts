@@ -135,6 +135,11 @@ describe('getRelyingPartyId', () => {
     vi.stubGlobal('location', { hostname });
     expect(NativePasskey.getRelyingPartyId()).toBe(expected);
   });
+
+  test('falls back to the app domain outside a browser', ({ expect }) => {
+    vi.stubGlobal('location', undefined);
+    expect(NativePasskey.getRelyingPartyId()).toBe(NativePasskey.APP_DOMAIN);
+  });
 });
 
 describe('extractPublicKeyFromAttestation', () => {
