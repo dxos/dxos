@@ -86,31 +86,34 @@ export const DevicesContainer = ({ createInvitationUrl, identityRecovery }: Devi
                   {t('logout.label')}
                 </Button>
               </Form.Row>
-              {identityRecovery && (
-                <>
-                  <Form.Row
-                    label={t('recover-identity.label')}
-                    description={t('recover-identity.description', { ns: meta.profile.key })}
-                  >
-                    <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
-                      {t('recover-identity.label')}
-                    </Button>
-                  </Form.Row>
-                  <Form.Row
-                    label={t('join-new-identity.label')}
-                    description={t('join-new-identity.description', { ns: meta.profile.key })}
-                  >
-                    <Button
-                      variant='destructive'
-                      onClick={handleJoinNewIdentity}
-                      data-testid='devicesContainer.joinExisting'
-                    >
-                      {t('join-new-identity.label')}
-                    </Button>
-                  </Form.Row>
-                </>
-              )}
             </Form.Section>
+            {identityRecovery && (
+              <Form.Section
+                title={t('identity-recovery-section.title', { ns: meta.profile.key })}
+                description={t('identity-recovery-section.description', { ns: meta.profile.key })}
+              >
+                <Form.Row
+                  label={t('recover-identity.label')}
+                  description={t('recover-identity.description', { ns: meta.profile.key })}
+                >
+                  <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
+                    {t('recover-identity.label')}
+                  </Button>
+                </Form.Row>
+                <Form.Row
+                  label={t('join-new-identity.label')}
+                  description={t('join-new-identity.description', { ns: meta.profile.key })}
+                >
+                  <Button
+                    variant='destructive'
+                    onClick={handleJoinNewIdentity}
+                    data-testid='devicesContainer.joinExisting'
+                  >
+                    {t('join-new-identity.label')}
+                  </Button>
+                </Form.Row>
+              </Form.Section>
+            )}
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

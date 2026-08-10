@@ -82,13 +82,14 @@ const pluginTranslations = [
         'available-invitations.title': 'Available invitations',
         'redeemed-invitations.title': 'Redeemed invitations',
         'logout.description': 'Log out and erase all data on this device.',
-        'join-new-identity.description':
-          'Log out from this device, erasing all the data currently on this device, and use a QR code or URL to log in.',
-        'recover-identity.description':
-          'Log out from this device, erasing all the data currently on this device, and use a passkey or recovery code to log in.',
+        'join-new-identity.description': 'Erase this device and join an existing identity with a QR code or URL.',
+        'recover-identity.description': 'Erase this device and log in with a passkey or recovery code.',
         'logout-section.title': 'Log out',
         'logout-section.description':
           'Logging out erases all data on this device. Anything that has not synced to another device or to the cloud will be lost.',
+        'identity-recovery-section.title': 'Testing',
+        'identity-recovery-section.description':
+          'Shown only when no hub is configured. These adopt a different identity on this device, erasing all data on it first.',
         'display-name.label': 'Display name',
         'display-name.description': 'Your name as it appears in the app.',
         'display-name-input.placeholder': 'Enter a name',
