@@ -117,6 +117,20 @@ export const CreatePasskey = Operation.make({
   output: Schema.Void,
 });
 
+export const RevokeRecoveryCredential = Operation.make({
+  meta: {
+    key: makeKey('revokeRecoveryCredential'),
+    name: 'Revoke Recovery Credential',
+    icon: 'ph--key--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    /** Lookup key of the credential to revoke, as hex. */
+    lookupKey: Schema.String,
+  }),
+  output: Schema.Void,
+});
+
 export const RedeemPasskey = Operation.make({
   meta: { key: makeKey('redeemPasskey'), name: 'Redeem Passkey', icon: 'ph--key--regular' },
   services: [Capability.Service],

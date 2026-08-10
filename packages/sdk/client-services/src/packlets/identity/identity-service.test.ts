@@ -11,6 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { subscribeStream } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -63,6 +64,65 @@ describe('IdentityService', () => {
   });
 
   describe.skip('recoverIdentity', () => {});
+
+  describe('revokeRecoveryCredential', () => {
+    const createCredential = async () => {
+      const lookupKey = PublicKey.random();
+      await EffectEx.runPromise(
+        identityService['IdentityService.createRecoveryCredential']({
+          data: {
+            recoveryKey: PublicKey.random(),
+            lookupKey,
+            algorithm: 'ED25519',
+            label: 'Test passkey',
+            kind: IdentityRecovery.Kind.PASSKEY,
+          },
+        }),
+      );
+      return lookupKey;
+    };
+
+    test('records the label and kind on the credential', async () => {
+      await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
+      await createCredential();
+
+      const [{ assertion }] = serviceContext.recoveryManager.listActiveRecoveryCredentials();
+      expect(assertion.label).to.equal('Test passkey');
+      expect(assertion.kind).to.equal(IdentityRecovery.Kind.PASSKEY);
+    });
+
+    test('revoking removes the credential from the active list', async () => {
+      await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
+      const first = await createCredential();
+      const second = await createCredential();
+
+      await EffectEx.runPromise(identityService['IdentityService.revokeRecoveryCredential']({ lookupKey: first }));
+
+      const active = serviceContext.recoveryManager.listActiveRecoveryCredentials();
+      expect(active).to.have.length(1);
+      expect(active[0].assertion.lookupKey?.equals(second)).to.be.true;
+    });
+
+    test('refuses to revoke the only remaining credential', async () => {
+      await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
+      const only = await createCredential();
+
+      await expect(
+        EffectEx.runPromise(identityService['IdentityService.revokeRecoveryCredential']({ lookupKey: only })),
+      ).rejects.toThrowError('add another one first');
+    });
+
+    test('refuses to revoke a credential twice', async () => {
+      await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
+      const first = await createCredential();
+      await createCredential();
+
+      await EffectEx.runPromise(identityService['IdentityService.revokeRecoveryCredential']({ lookupKey: first }));
+      await expect(
+        EffectEx.runPromise(identityService['IdentityService.revokeRecoveryCredential']({ lookupKey: first })),
+      ).rejects.toThrowError('already revoked');
+    });
+  });
 
   describe('updateProfile', () => {
     test('updates profile', async () => {
