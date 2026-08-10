@@ -31,6 +31,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveAllObjects> = S
       }
       yield* Database.flush();
 
+      // Unlike a per-object soft delete, an epoch can only be committed through a client-attached
+      // space, so this operation is unavailable on a bare database.
       const space = properties && getSpace(properties);
       if (!space) {
         return yield* Effect.die(new Error('Cannot clear a space that is not attached to a client.'));

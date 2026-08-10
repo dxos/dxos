@@ -50,9 +50,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/agent-runtime"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {
