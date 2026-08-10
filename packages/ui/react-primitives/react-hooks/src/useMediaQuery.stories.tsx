@@ -40,25 +40,15 @@ const MediaQueryDemo = ({ query }: MediaQueryDemoProps) => {
   const width = useWindowWidth();
 
   return (
-    <div className='border flex flex-col w-full gap-4 p-4 font-mono text-sm'>
-      <table className='max-w-md border border-separator w-full'>
-        <tbody>
-          <tr className='border-b border-separator'>
-            <td className='p-2 text-description'>query</td>
-            <td className='p-2'>{query}</td>
-          </tr>
-          <tr className='border-b border-separator'>
-            <td className='p-2 text-description'>window width</td>
-            <td className='p-2'>{width}px</td>
-          </tr>
-          <tr>
-            <td className='p-2 text-description'>matches</td>
-            <td className='p-2' data-testid='matches'>
-              {String(matches)}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div className='flex flex-col w-full gap-4 p-4 font-mono text-sm'>
+      <div className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 max-w-md'>
+        <span className='text-description'>query</span>
+        <span>{query}</span>
+        <span className='text-description'>window width</span>
+        <span>{width}px</span>
+        <span className='text-description'>matches</span>
+        <span data-testid='matches'>{String(matches)}</span>
+      </div>
       <AllBreakpoints />
     </div>
   );
