@@ -33,11 +33,8 @@ describe('useExtensions content binding guard', () => {
     await client.destroy();
   });
 
-  // Regression: while a Document's content ref has not resolved, the editor mounted without a
-  // persistence binding, accepted input, and the automerge extension's attach-reconcile then
-  // replaced the whole document with the loaded value — silently destroying everything typed in
-  // the window (CI run 31344270360: a document filled with three paragraphs reading 0 chars).
-  // An editor without a binding must not be editable.
+  // Without a persistence binding, the automerge extension's attach-reconcile can replace the whole
+  // document with the loaded value, silently destroying anything typed while unresolved.
   test('an unresolved content ref renders the editor non-editable', ({ expect }) => {
     // Content pointed at an object that is not in the database: a ref that never resolves, a
     // permanent stand-in for the load window.

@@ -68,13 +68,9 @@ export function useKanbanColumnEventHandler<T extends KanbanLayout.BaseKanbanIte
           return;
         }
 
-        // 2. Resolve drop target to an index in the column list. For a tile target the index is
-        // derived from the tile's id against the CURRENT column list, never from its `location`
-        // payload: that number is captured at the last dragover, and when a release beats the
-        // post-drag-start re-render it still holds the pre-reflow position — one too high once the
-        // dragged column left `useVisibleItems`. That off-by-one landed the column one slot too far
-        // in 3 of 20 instrumented webkit drags (drop target verified correct in `Root.onDrop`, only
-        // the stale location wrong) and is what deferred `rearrange columns`.
+        // 2. Resolve drop target to an index in the column list. A tile target's index comes from its
+        // id against the CURRENT list, never from its `location` — see `useEventHandlerAdapter`, which
+        // resolves the same stale-location off-by-one.
         let targetIndex: number;
         if (target?.type === 'tile') {
           // Insert after the hovered column, in post-removal index space (`arrayMove` inserts after

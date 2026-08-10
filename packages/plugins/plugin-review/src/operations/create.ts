@@ -47,10 +47,8 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
 
       const state = registry.get(stateAtom);
       const existingDrafts = state.drafts[subjectId];
-      // Select in the same write that adds the draft, rather than through a nested `Select`
-      // invocation. That invocation resolved on its own schedule and could land after a click the
-      // reader had since made, reverting the selection to this draft for good — measured stomping a
-      // just-clicked thread ~450ms later, which is the comments e2e's missing `aria-current`.
+      // Selected in the same write that adds the draft: a nested `Select` invocation resolves on its
+      // own schedule and can land after a click the reader has since made.
       registry.set(stateAtom, {
         ...state,
         current: Obj.getURI(thread),

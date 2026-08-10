@@ -36,16 +36,15 @@ const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/$
 export const INITIAL_SPACE_COUNT = 1;
 
 /**
- * Budget for `joinNewIdentity()` to come back up on the join dialog. It spans a storage reset, a full
- * page load and an app boot — post-reset boot alone measures ~8-11s — so it is sized well above the
- * 30s `actionTimeout` a single interaction gets. Both callers set a test timeout above this.
+ * Budget for `joinNewIdentity()`: spans a storage reset, page reload and app boot, so it is sized well
+ * above the 30s `actionTimeout` a single interaction gets.
  */
 const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
 
 /**
- * Typenames behind the friendly names the specs pass to `createObject()`. The type-picker option's
- * testid is keyed by typename because its label is localized, so a spec cannot name it directly.
- * A name missing here yields `…type.undefined`, which fails on the locator rather than silently.
+ * Typenames behind the friendly names specs pass to `createObject()`, keyed by typename since the
+ * type-picker's testid uses it (its label is localized). A missing name fails on the locator instead
+ * of silently.
  */
 const OBJECT_TYPENAMES: Record<string, string> = {
   Collection: 'org.dxos.type.collection',
@@ -63,9 +62,8 @@ export class AppManager {
   private _initialized = false;
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
-  // Rolling tail of browser console errors, for failure diagnostics: the app reports operation
-  // failures to the user generically (e.g. `create-space-dialog.error.message`) and logs the real
-  // cause via `log.catch`, so without this the test cannot say WHICH operation failed.
+  // Rolling tail of console errors: the app reports operation failures generically to the user, and
+  // the real cause only reaches `log.catch`.
   private _consoleErrors: string[] = [];
 
   // prettier-ignore
@@ -159,13 +157,9 @@ export class AppManager {
 
   async joinNewIdentity(confirmInput = 'RESET'): Promise<void> {
     await this.page.getByTestId('devicesContainer.joinExisting').click();
-    // Type the confirmation the way a user does, then wait for the confirm action to actually open
-    // before clicking it. The button gates on `inputValue === confirmationValue` via the native
-    // `disabled` attribute (shell `steps/ConfirmReset.tsx`), and that gate is the product's
-    // intended guard — but `fill()` sets the value in one event, so the enabled state can still be
-    // settling when Playwright's actionability check passes, and a click that lands while the
-    // attribute is re-asserted is swallowed by the browser with no handler run. Asserting enabled
-    // first satisfies every step of the guard instead of racing it.
+    // The confirm button's `disabled` gate reads `inputValue === confirmationValue`, but `fill()` sets
+    // the value in one event, so the enabled state can still be settling when Playwright's
+    // actionability check passes; asserting enabled first avoids racing that gate.
     const confirmInputLocator = this.page.getByTestId('join-new-identity.reset-identity-input');
     await confirmInputLocator.click();
     await confirmInputLocator.pressSequentially(confirmInput);
@@ -173,11 +167,7 @@ export class AppManager {
     await expect(confirmButton).toBeEnabled();
     await confirmButton.click();
 
-    // Confirming runs `client.reset()` and reloads into the join dialog, so this returns mid-boot.
-    // Leaving that to the caller's first action hides a whole reset + page load + app boot inside a
-    // `fill()`, which is bounded by the preset's 30s `actionTimeout` — a fixed deadline, despite the
-    // note this replaces claiming otherwise. That is what timed out on `halo-invitation-input` in
-    // runs 31131235658 and 31137756950. Wait for the input the reload is supposed to produce, with a
+    // Confirming reloads into the join dialog mid-boot; wait for the input the reload produces with a
     // budget sized to the boot rather than to a single interaction.
     await this.shell.shell
       .getByTestId('halo-invitation-input')
@@ -236,10 +226,8 @@ export class AppManager {
   //
 
   async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
-    // Wait for the rail before counting it. The baseline has to describe a state the app has actually
-    // reached: `init()` only waits for `treeView.userAccount`, so the space list is still empty for a
-    // moment after boot, and a baseline of 0 taken there made every attempt look like it had created
-    // nothing — three of them ran and left four spaces in run 31144928080.
+    // `init()` only waits for `treeView.userAccount`, so the space list is still empty for a moment
+    // after boot and a baseline taken there undercounts.
     await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
     const initialCount = await this.getSpaceItems().count();
 
@@ -260,10 +248,8 @@ export class AppManager {
 
     const form = this.page.getByTestId('create-space-form');
     const save = form.getByTestId('save-button');
-    // Gate on ENABLED, not merely visible: `Form.Submit` derives `disabled` from the form's own
-    // `canSave`, so an enabled button is the form stating it has resolved its fields (they arrive
-    // through a Surface lookup, which is what remounted the control mid-click) and will accept a
-    // submit. Playwright's own actionability wait then absorbs a remount, rather than a retry loop.
+    // Gate on ENABLED, not merely visible: fields arrive through a Surface lookup and can remount the
+    // control mid-click, so waiting for `disabled` to clear absorbs that remount.
     await expect(save).toBeEnabled({ timeout: 15_000 });
     await save.click();
 
@@ -273,24 +259,19 @@ export class AppManager {
     try {
       await form.waitFor({ state: 'detached', timeout: 30_000 });
     } catch (err) {
-      // `CreateSpaceDialog` only closes after `SpaceOperation.Create` resolves, and its `catchAll`
-      // leaves the dialog open showing `create-space-dialog.error.message` when it fails. Those are
-      // different bugs — a slow create versus a failed one — and a bare detach timeout cannot tell
-      // them apart, which is what made this flake (seen across `edit message`, `guest joins` and
-      // `selecting comment`) unattributable. Report the error text when the dialog is showing one.
+      // The dialog stays open showing `create-space-dialog.error.message` on a failed create, which a
+      // bare detach timeout cannot distinguish from a slow one; report the error text when present.
       const error = await form
         .getByTestId('form.error')
         .first()
         .textContent()
         .catch(() => null);
-      // The dialog's message is generic by design (it catches Create, Open, and UpdateDialog alike),
-      // so the console tail — where `log.catch` puts the squashed cause — is what attributes it.
+      // The dialog's message is generic by design, so the console tail (where `log.catch` puts the
+      // squashed cause) is what attributes it.
       throw new Error(
         error
           ? `create-space failed: ${error.trim()} — console: ${this.recentConsoleErrors()}`
-          : // No error rendered and the submit was clicked while enabled, so the operation is still
-            // pending rather than rejected — which is what made this surface in unrelated tests as
-            // a bare detach timeout.
+          : // No error rendered and the submit was clicked while enabled, so the operation is still pending.
             'create-space never completed: dialog still open with no error — SpaceOperation.Create did not resolve',
         { cause: err },
       );

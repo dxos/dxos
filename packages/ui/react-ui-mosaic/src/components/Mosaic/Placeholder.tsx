@@ -69,19 +69,13 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
     [containerId, location],
   );
 
-  // Scrolling suspends a placeholder, it does not unregister it. Tearing the drop target down
-  // mid-drag erases the pointer's aim: pragmatic drops the element from
-  // `location.current.dropTargets`, so a release inside the container's 500ms scroll window
-  // resolves to the container and the drop becomes "move to end" instead of landing in the gap
-  // under the cursor. That is what destroyed a card in `rearrange within column` on firefox —
-  // expanding this placeholder scrolls the viewport, and the scroll then unregistered every
-  // placeholder one frame after the aim was acquired.
+  // Scrolling suspends a placeholder rather than unregistering it: pragmatic drops an unregistered
+  // element from `location.current.dropTargets`, so a release inside the container's scroll window
+  // resolves to the container and lands at the end instead of in the aimed gap.
   //
-  // Suspension is per-placeholder rather than blanket, because registration alone is too permissive
-  // the other way: an idle placeholder is ~8px of collapsed padding, and letting one accept a drop
-  // mid-scroll lets it steal a release that used to fall through to the container. Only the
-  // placeholder already aimed at stays droppable — it is the expanded one under the cursor, and
-  // pragmatic evaluates `canDrop` on entry, so a target the pointer is already inside keeps it.
+  // Suspension is per-placeholder because an idle one is ~8px of collapsed padding, and letting that
+  // accept a drop mid-scroll steals a release owed to the container. The aimed placeholder keeps its
+  // target because pragmatic evaluates `canDrop` on entry, not per frame.
   const scrollingRef = useRef(scrolling);
   scrollingRef.current = scrolling;
   const activeLocationRef = useRef(activeLocation);

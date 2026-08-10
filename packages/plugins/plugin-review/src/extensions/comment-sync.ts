@@ -92,13 +92,9 @@ export const commentSync = (
         //   Fix at the source: have the query defer/await source resolution (or expose a resolved
         //   flag) so callers don't guard each `getSource`; then remove this try/catch.
         try {
-          // A deleted thread is filtered here rather than waited out. `CommentOperation.Delete`
-          // batches `db.remove(anchor)` and `db.remove(thread)` into one reactive notification, so
-          // this subscriber can run while `query.results` still holds the removed anchor — and since
-          // nothing notifies again, a stale entry would keep its inline mark alive indefinitely.
-          // That is what left `cm-comment` on screen after a delete in runs 31146797167 and
-          // 31147369398, on every browser and at budgets up to 30s. Checking the thread rather than
-          // the anchor covers it either way: a stale anchor still resolves to the removed thread.
+          // Deletion is filtered on the THREAD, not the anchor: `CommentOperation.Delete` batches
+          // both removals into one notification, so this subscriber can run while `query.results`
+          // still holds the removed anchor, and nothing notifies again to clear its inline mark.
           const thread = Relation.getSource(anchor);
           return Obj.instanceOf(Thread.Thread, thread) && !Obj.isDeleted(thread) && thread.status !== 'resolved';
         } catch {
@@ -107,11 +103,8 @@ export const commentSync = (
       })
       .concat(registry.get(stateAtom).drafts[objectId] ?? [])
       .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'))
-      // Dedupe by source thread, committed first — the same dedupe the companion does. Persisting a
-      // draft creates a new relation while its draft entry is still listed, so both name one thread
-      // for a frame, and without this the editor decorated it twice: two `cm-comment` spans with the
-      // same `data-comment-id`, which is a strict-mode violation for any test (or a11y tree) that
-      // addresses a comment by its text.
+      // Dedupe by source thread, committed first: persisting a draft creates a new relation while its
+      // draft entry is still listed, so for a frame both name one thread and it decorates twice.
       .filter(
         (anchor, index, all) =>
           all.findIndex((candidate) => Relation.getSource(candidate).id === Relation.getSource(anchor).id) === index,
@@ -144,14 +137,9 @@ export const commentSync = (
       readonly: suggestionBranch,
       // `getAnchors()` is already branch-scoped, so selection-style highlights show only the review
       // branch's comments.
-      // The editor comment id is the thread's stable OBJECT id, never its URI: a draft thread's URI
-      // gains its space when its first message persists it (`echo:///<id>` → `echo://<spaceId>/<id>`),
-      // and every id comparison downstream (decoration `data-current`, `scrollCommentIntoView`'s
-      // lookup, the delete/update matching below) breaks for the whole persist window if the two
-      // sides hold different spellings. Measured: clicking a thread while a sibling persisted made
-      // `scrollCommentIntoView` miss its lookup and silently no-op, so the debounced proximity
-      // selection restored the previous thread — a terminal wrong-marker state (firefox 3-of-3 under
-      // worker contention).
+      // The editor's comment id is the thread's OBJECT id, never its URI: a URI's spelling changes as
+      // a draft persists (see `CommentState`), which breaks every id comparison downstream —
+      // decoration `data-current`, `scrollCommentIntoView`'s lookup, the delete/update matching below.
       getComments: () =>
         getAnchors()
           .filter((anchor) => anchor.anchor)
@@ -230,9 +218,8 @@ export const commentSync = (
       onSelect: ({ selection }) => {
         const current = selection.current ?? selection.closest;
         if (current) {
-          // Direct atom write, not an operation: proximity fires on every caret move, and async
-          // invocations complete out of order — a click's selection was overwritten by an earlier,
-          // slower invocation, leaving the wrong thread current (comments e2e, 1-in-5).
+          // Direct atom write, not an operation: proximity fires on every caret move and async
+          // invocations complete out of order, so a slower earlier one overwrites a click's selection.
           registry.set(stateAtom, { ...registry.get(stateAtom), current });
         }
       },

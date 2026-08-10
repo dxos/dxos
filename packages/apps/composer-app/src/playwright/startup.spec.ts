@@ -52,10 +52,8 @@ const observeLongTasks = (page: Page): Promise<void> =>
 test.describe.serial('Startup timing harness', () => {
   // First-paint and module-graph evaluation each take real wall clock; webkit can be much slower.
   test.setTimeout(120_000);
-  // No retries: `e2ePreset` sets `retries: 0` suite-wide so shard timings mean something, and a
-  // local override here would reintroduce the 3x cost it exists to remove. The warm-reload race
-  // this used to paper over — an intermittent ResetDialog ("System Error") instead of the user
-  // account — is deferred via `test.fixme` on the affected scenario instead.
+  // No retries: `e2ePreset` sets `retries: 0` suite-wide so shard timings mean something, and a local
+  // override here would reintroduce the 3x cost it exists to remove.
 
   test('cold start (cleared storage)', async ({ browser, browserName }, testInfo) => {
     const context = await browser.newContext();
@@ -133,11 +131,9 @@ test.describe.serial('Startup timing harness', () => {
     await context.close();
   });
 
-  // TODO(wittjosiah): The warm-reload path is the one the ResetDialog race was documented against,
-  //   and it only survived on the retries removed above. Deferred until the race is root-caused.
-  //   NOTE: `check-startup-budget` greps this scenario and reads the samples it writes, so that task
-  //   exits 1 with a "no startup samples" error while this stays deferred. It is a manual task, not
-  //   wired into CI, so nothing is silently green — but re-enabling this restores that gate too.
+  // TODO(wittjosiah): Deferred until the warm-reload ResetDialog race is root-caused.
+  //   NOTE: `check-startup-budget` greps this scenario for its samples and exits 1 while it stays
+  //   deferred; that task is manual, not wired into CI, so nothing is silently green.
   test('warm-cold start (persisted identity, fresh tab)', async ({ playwright, browserName }, testInfo) => {
     test.skip(browserName !== 'chromium', 'persistent context flow currently exercised only on chromium');
 

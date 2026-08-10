@@ -69,9 +69,8 @@ export default Capability.makeModule(
         rootCollection.objects.push(Ref.make(welcomeDoc));
       });
 
-      // First run lands on the README itself: the Home node's welcome panel resolves the default
-      // space through the settings-space designation, which is not readable at this point in the
-      // bootstrap, so landing there greets a new user with an empty Home.
+      // The README itself, not Home: its welcome panel resolves the default space through the
+      // settings-space designation, which is not readable this early in the bootstrap.
       const readmePath = GraphPath.getObjectPathFromObject(welcomeDoc);
       yield* Operation.invoke(LayoutOperation.Set, { subject: [readmePath] }).pipe(
         Effect.provideService(Operation.Service, operationInvoker),

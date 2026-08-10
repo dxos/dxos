@@ -21,9 +21,7 @@ import { SpaceOperation } from './definitions';
 
 describe('SpaceOperation.Create', () => {
   // `updateSpace` commits the preference on the host, so what can fail afterwards is only the local
-  // snapshot catching up. Failing the create on that discarded a space that already existed and left
-  // the dialog on a generic error — measured on firefox in CI run 31313863039. The space must come
-  // back regardless; the preference converges on its own.
+  // snapshot catching up; the space must come back regardless, since the preference converges on its own.
   test('a failing edge replication preference does not fail the create', async ({ expect }) => {
     const harness = await createComposerTestApp({ plugins: [ClientPlugin({}), SpacePlugin({})] });
     await using _harness = harness;

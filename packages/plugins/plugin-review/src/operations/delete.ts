@@ -34,10 +34,8 @@ const handler: Operation.WithHandler<typeof CommentOperation.Delete> = CommentOp
               [subjectId]: state.drafts[subjectId]?.filter((_, draftIndex) => draftIndex !== index),
             },
           });
-          // Dropping the entry above consumes the draft's claim, which makes a concurrent
-          // `add-message` roll its persist back. That comment was submitted, so it still deserves an
-          // undo entry; a draft that was never submitted has nothing to restore. `add-message` marks
-          // the transition by setting `status` before it persists.
+          // Only a submitted comment deserves an undo entry, and `add-message` marks that transition
+          // by setting `status` before it persists.
           return thread.status === 'active' ? { thread, anchor } : {};
         }
       }
@@ -47,14 +45,9 @@ const handler: Operation.WithHandler<typeof CommentOperation.Delete> = CommentOp
         return {};
       }
 
-      // Resolve the anchor from the database rather than trusting the one passed in. `add-message`
-      // persists a submitted draft as a *new* relation, so until the anchors query re-emits, the
-      // rendered thread still carries the draft object — and by then the draft's claim is consumed,
-      // so the branch above misses it. Removing that stale object threw `Invalid argument \`obj\``
-      // (`remove` asserts `isEchoObject`), which aborted this batch before the thread was removed and
-      // left the thread and its inline mark on screen with nothing left to notify the editor.
-      // Querying by source thread finds whichever relation is actually persisted, so the caller's
-      // reference no longer has to be the current one.
+      // Resolve the anchor from the database rather than trusting the caller's: `add-message` persists
+      // a submitted draft as a *new* relation, so until the anchors query re-emits the rendered thread
+      // still carries the draft object, and `remove` rejects that as not an ECHO object.
       const anchors = yield* Effect.promise(() =>
         db.query(Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo)).run(),
       );
@@ -73,9 +66,8 @@ const handler: Operation.WithHandler<typeof CommentOperation.Delete> = CommentOp
         db.remove(thread);
       });
 
-      // Undo re-adds exactly what came out, so report the relation that was removed rather than the
-      // one the caller held; `restore` adding a stale draft alongside the real one is what produced a
-      // duplicate mark on undo.
+      // Undo re-adds exactly what came out, so report the relation actually removed — restoring the
+      // caller's stale draft alongside the real one duplicates the mark.
       const removed = persisted[0] ?? anchor;
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {

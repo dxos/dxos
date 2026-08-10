@@ -148,12 +148,10 @@ export const useExtensions = ({
             identity,
           }),
 
-        // Never editable before the binding: input typed into the unbound editor lives only in
-        // CodeMirror state, and the automerge extension's attach-reconcile then REPLACES the whole
-        // document with the loaded value — destroying it (measured in CI as a document filled with
-        // three paragraphs reading 0 chars, run 31344270360; a user typing into a slow-loading
-        // document loses those keystrokes the same way). `editable(false)` (not only the advisory
-        // readOnly) so the DOM is not contenteditable and callers' editability waits hold.
+        // Never editable before the binding: input typed into an unbound editor lives only in
+        // CodeMirror state, which the automerge extension's attach-reconcile then replaces wholesale
+        // with the loaded value. `editable(false)` as well as the advisory `readOnly`, so the DOM is
+        // not contenteditable and a caller's editability wait holds.
         contentPending && [EditorState.readOnly.of(true), EditorView.editable.of(false)],
 
         // TODO(burdon): Reconcile with effect in parent.

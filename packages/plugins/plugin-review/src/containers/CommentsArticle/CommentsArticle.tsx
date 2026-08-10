@@ -224,21 +224,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [setCommentsView],
   );
 
-  // Reactive membership gate, not an attention gate. `state.current` is the shared comment
-  // selection, only ever set to a thread of the focused document (by the editor's cursor proximity
-  // or a click in this companion). Show it as current whenever it names one of THIS article's
-  // threads. The earlier attention gate (`hasAttention || isAncestor || isRelated`) was racy:
-  // clicking a comment moves attention to the editor, so this plank's gate momentarily closed in
-  // the window between the click recording `state.current` and attention settling — dropping the
-  // just-set marker (chromium ~1 in 5, worse on webkit, where CI caught it). Keying on thread
-  // membership instead recomputes purely from `anchors` + `state.current`, both reactive, so no
-  // timing is involved; a thread from another document simply is not in this set.
-  // Compare by OBJECT ID on both sides. A draft thread's URI gains its space when its first message
-  // persists it (`echo:///<id>` → `echo://<spaceId>/<id>`), and both spellings end in the id — so the
-  // last path segment identifies the thread whichever spelling either side happens to hold. Matching
-  // URI strings instead drops the marker for the whole persist window: any value captured before the
-  // flip cannot equal an `Obj.getURI` read after it (measured on firefox at 6 in 15, and it is the
-  // `aria-current` null in CI run 31313848871).
+  // Membership, not attention: an attention gate closes in the window between a click recording
+  // `state.current` and attention settling on the editor, dropping the just-set marker. Recomputing
+  // from `anchors` + `state.current`, both reactive, involves no timing.
+  //
+  // The last path segment, since `state.current` may hold either spelling (see `CommentState`).
   const currentObjectId = state.current?.split('/').pop();
 
   // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
@@ -249,15 +239,13 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const threadId = Obj.getURI(thread);
-      // Recording and revealing are guarded differently, and conflating them broke one or the other.
-      // Always record: a thread's URI gains its space on persist (`echo:///<id>` →
-      // `echo://<spaceId>/<id>`), and skipping the write left the selection on the draft spelling, so
-      // a freshly created comment never showed the current marker.
+      // Recorded unconditionally, revealed only on a change: skipping the write leaves the selection
+      // on a stale spelling, so a freshly persisted comment never shows the marker.
       const sameThread = state.current?.split('/').pop() === thread.id;
       registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
       if (sameThread) {
-        // Already the current thread — re-revealing its plank pulls focus there ~170ms later, which
-        // was measured landing mid-keystroke in a message edit and losing the typed text.
+        // Re-revealing the plank pulls focus there ~170ms later, which lands mid-keystroke in an
+        // open message edit and loses the typed text.
         return;
       }
 
@@ -277,15 +265,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return;
       }
 
-      // The stable OBJECT id, matching the id the comment-sync extension registers comments under.
-      // Passing the URI here broke the lookup for the whole persist window (`echo:///<id>` →
-      // `echo://<spaceId>/<id>`): `scrollCommentIntoView` missed and silently no-op'd, so the editor
-      // never marked the clicked thread current and the previous thread's highlight survived.
+      // The object id, matching what the comment-sync extension registers comments under; a URI
+      // misses that lookup and `scrollCommentIntoView` then silently no-ops.
       const threadId = (Relation.getSource(anchor) as Thread.Thread).id;
 
-      // Scroll within content to anchor (comment config per typename). This is what tells the editor
-      // which thread is current, so skipping it when the companion has no attendable id leaves the
-      // previous comment highlighted while the app selection moves on.
+      // This is what tells the editor which thread is current, so skipping it leaves the previous
+      // comment highlighted while the app selection moves on.
       const typename = Obj.getTypename(subject);
       const commentConfig = commentConfigs.find(({ id }) => id === typename);
       if (commentConfig?.scrollToAnchor) {

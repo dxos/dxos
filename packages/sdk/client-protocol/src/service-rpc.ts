@@ -239,10 +239,8 @@ export const makeClientServicesHandlers = ({
     const [serviceKey] = parseTag(tag);
     // The host service is itself in the Handlers shape, keyed by the full prefixed tag; invoking it
     // returns the Effect/Stream directly, so no protobuf encode/decode adapter is needed.
-    // A missing handler is a TYPED failure, never a throw: a thrown defect makes the worker-pool
-    // client treat the shared connection as crashed and fail every in-flight call with it — a
-    // background `FeedService.getSyncState` poll hitting torn-down services was rejecting the
-    // unrelated in-flight `client.reset()` (composer's device-join flow, ~1 in 8).
+    // A missing handler is a TYPED failure, never a throw: the worker-pool client reads a defect as
+    // the shared connection crashing and fails every unrelated in-flight call with it.
     const resolve = (): ((payload: unknown) => unknown) | Error => {
       const service = services()[serviceKey] as Record<string, (payload: unknown) => unknown> | undefined;
       const handler = service?.[tag];

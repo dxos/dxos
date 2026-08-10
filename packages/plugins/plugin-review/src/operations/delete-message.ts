@@ -20,8 +20,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.DeleteMessage> = Co
       invariant(db, 'Database not found');
 
       // Match on the reference's own id, not `ref.target?.id`: `target` reads undefined until the
-      // message object is loaded, so an unresolved ref made this find nothing and return quietly —
-      // the delete no-opped and the thread outlived its last message (comments e2e, 1 in 8).
+      // message loads, so an unresolved ref finds nothing and the delete silently no-ops.
       const msgIndex = thread.messages.findIndex(Ref.hasEntityId(messageId));
       if (msgIndex === -1) {
         return { messageIndex: -1 };

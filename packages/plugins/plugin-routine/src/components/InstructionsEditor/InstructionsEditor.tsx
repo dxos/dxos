@@ -41,10 +41,8 @@ export const InstructionsEditor = ({
   readonly,
   fields = DEFAULT_FIELDS,
 }: InstructionsEditorProps) => {
-  // Skill definitions are contributed by modules gated on the assistant's start event, so the demand
-  // signal belongs here rather than on each surface that embeds this editor — a `skills` row resolves
-  // its label from that registry and renders blank until the modules load. `ProjectArticle` embedded
-  // it without signalling, which is why the project's Skills rows were empty.
+  // Signalled here rather than by each embedding surface: a `skills` row renders blank until the
+  // modules gated on this event contribute their definitions.
   useActivationSignal(AppActivationEvents.AssistantStart);
 
   // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.

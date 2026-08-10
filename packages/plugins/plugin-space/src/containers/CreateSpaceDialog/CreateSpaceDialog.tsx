@@ -47,8 +47,7 @@ export const CreateSpaceDialog = () => {
         yield* invoke(LayoutOperation.UpdateDialog, { state: false });
       }).pipe(
         // `catchAllCause`, not `catchAll`: a defect (any rejected promise the create chain wraps with
-        // `Effect.promise`) is invisible to `catchAll`, and the dialog then neither closes nor shows
-        // an error — it just stays open, which is how this surfaced as a hung create.
+        // `Effect.promise`) is invisible to `catchAll`, leaving the dialog open with no error shown.
         Effect.catchAllCause((cause) =>
           Effect.sync(() => {
             log.catch(Cause.squash(cause));

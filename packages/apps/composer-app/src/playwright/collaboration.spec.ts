@@ -21,14 +21,9 @@ const navigateToNewDocument = async (app: AppManager) => {
   await app.navigateToObject(0); // New document.
 };
 
-// Two-peer WebRTC runs on ALL browsers in CI: todomvc's de-aliased suite measured every
-// invitation connecting there (run 31263921597 — chromium 8/8, firefox 8/8, webkit 7/8, the one
-// failure an app-boot stall, not transport), which retired this suite's firefox/webkit skip. The
-// remaining limitation is the Claude cloud sandbox only: chromium two-peer works locally with the
-// e2ePreset launch fixes, while sandbox webkit peers time out waiting for the transport
-// (`connection.ts "timeout waiting 10s"`), so cross-browser results come from CI, not local runs.
-// Ignore webkit's `'allow-presentation'` console flood during this flow — it comes from
-// MediaPlayer's iframe sandbox, unrelated.
+// Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception — webkit peers
+// there time out waiting for transport, so cross-browser results come from CI, not local runs. Ignore
+// webkit's `'allow-presentation'` console flood here, from MediaPlayer's iframe sandbox.
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
@@ -52,13 +47,9 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Deferred on the REPLICATION step, not the invitation — the guest reached the
-  //   document and its editor stayed on the "Enter text…" placeholder instead of the host's text
-  //   (firefox, CI run 31313863039, 15s budget). Distinct from the invitation stall that
-  //   `authenticateInvitation` now attributes: here the join succeeded. Not reproducible outside CI —
-  //   the sandbox fails this suite 11 in 16 for its own reasons (external STUN times out, TURN is
-  //   policy-blocked), so a local run measures the environment rather than the defect, and CI
-  //   artifacts are unreachable through the proxy (403). Re-enable with a trace from a CI failure.
+  // TODO(wittjosiah): Deferred on REPLICATION, not the invitation — guest joins but the editor stays on
+  //   the placeholder instead of the host's text (firefox, CI run 31313863039). Not reproducible outside
+  //   CI (sandbox STUN/TURN unavailable); re-enable with a trace from a CI failure.
   test.fixme("guest joins host's space", async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();

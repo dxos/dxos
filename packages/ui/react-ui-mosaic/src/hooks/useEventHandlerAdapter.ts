@@ -77,13 +77,10 @@ export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown 
 
         const mutate = (items: TItem[]) => {
           const from = items.findIndex((item) => getId(item) === source.id);
-          // A tile target's index is derived from its id against the CURRENT list, never from its
-          // `location` payload: that number is captured at the last dragover, and a release that
-          // beats the post-drag-start re-render still carries the pre-reflow position — one too
-          // high once the source left `useVisibleItems`. Instrumented on kanban's column drag
-          // (webkit, 3 of 20): `Root.onDrop` resolved the correct tile while its stale location
-          // landed the drop one slot too far. Placeholders keep `location` — it names the gap
-          // itself, and the aimed placeholder is re-rendered by its activation.
+          // A tile target's index comes from its id against the CURRENT list, never from its
+          // `location`: that number is captured at the last dragover, so a release beating the
+          // post-drag-start re-render still holds the pre-reflow position, one too high. Placeholders
+          // keep `location`, which names the gap itself.
           let insertIndex: number;
           if (target?.type === 'tile') {
             const withoutSource = from === -1 ? items : items.filter((item) => getId(item) !== source.id);
@@ -99,11 +96,9 @@ export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown 
           }
 
           if (from !== -1) {
-            // `to` is measured against the list as the user sees it, which still counts the dragged
-            // item; the insert happens after it has been spliced out, so the index can be one past
-            // the end. A plain array appends, but an ECHO array throws ("index N is out of bounds")
-            // — and since the removal has already committed, the item is destroyed. Dropping on the
-            // container body (`to === items.length`) hits this on every browser.
+            // Clamped because the index is measured against the list including the dragged item but
+            // applied after it is spliced out: one past the end, an ECHO array throws rather than
+            // appending, and the removal has already committed, so the item would be destroyed.
             const [item] = items.splice(from, 1);
             items.splice(Math.min(insertIndex, items.length), 0, item);
           } else {

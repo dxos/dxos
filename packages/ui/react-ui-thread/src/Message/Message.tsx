@@ -225,11 +225,8 @@ const TextBlock = ({
     () => ({
       initialValue: block.text,
       extensions: [
-        // Being in edit mode is authorisation enough: the control that gets here is already gated on
-        // `isAuthor`. Re-deriving read-only from it let a change in the asynchronously-loaded member
-        // list flip the editor read-only mid-edit, and `createBasicExtensions` answers that by
-        // silently DROPPING user input and delete transactions — so the typing landed nowhere at all
-        // and the edit was lost without an error.
+        // Edit mode is authorisation enough — the control that gets here is already gated on
+        // `isAuthor` — and a mid-edit flip to read-only makes the editor drop input silently.
         createBasicExtensions({ readOnly: !editing }),
         createThemeExtensions({ themeMode }),
         command,
@@ -240,10 +237,8 @@ const TextBlock = ({
         }),
       ],
     }),
-    // While editing, the editor owns both its content and its authorisation: pin them so neither an
-    // incoming `block.text` update nor a member-list refresh rebuilds the view the reader is typing
-    // in — that rebuild destroyed the CodeMirror instance mid-edit and took focus with it (comments
-    // e2e, load-dependent: 4 in 10 at two workers, 0 in 6 at one).
+    // While editing, the editor owns its content and its authorisation: pinning both keeps an incoming
+    // `block.text` update or member-list refresh from rebuilding the view being typed in.
     [editing ? EDITING_DEP : block.text, editing, editing ? EDITING_DEP : isAuthor, themeMode, handleDocumentChange],
   );
 
@@ -334,10 +329,8 @@ const MessageTextbox = forwardRef<MessageTextboxHandle, MessageTextboxProps>(
     return (
       <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
         {/*
-          The reply composer is the only textbox in a thread that is not a message body, but nothing
-          distinguished it in the DOM — e2e had to reach it as the *last* `role=textbox`, which is a
-          guess about editor order. When it was wrong, a reply was typed into an existing message
-          instead of creating one, which is how `delete message` failed at `addMessage`.
+          Addressable: the reply composer is the only textbox in a thread that is not a message body,
+          so without a testid a test can only guess at it by editor order.
         */}
         <div
           ref={parentRef}

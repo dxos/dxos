@@ -43,12 +43,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         ),
       );
       if (edgeReplication) {
-        // Best-effort, and deliberately not fatal. `updateSpace` commits the preference on the host;
-        // what can fail here is only the local snapshot catching up over `querySpaces`, behind every
-        // other space's synchronized `_processSpaceUpdate`. Failing the whole operation on that threw
-        // away a space that had already been created and left the dialog showing a generic error —
-        // measured on firefox in CI run 31313863039 (`delete message`) and locally at ~1 in 15. The
-        // preference converges on its own; a create must not hinge on observing it.
+        // Best-effort, and deliberately not fatal: the preference is committed on the host and
+        // converges on its own, so only the local snapshot can fail here — and failing the operation
+        // on that discards a space that already exists.
         yield* Effect.tryPromise({
           try: () => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED),
           catch: EdgeReplicationError.wrap(),

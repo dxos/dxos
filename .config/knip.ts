@@ -326,25 +326,9 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
-  // `index.html` links these by path (`node_modules/todomvc-app-css/index.css`) rather than
-  // importing them, so no module graph reaches them. Dropping them renders the app unstyled, which
-  // leaves `#spaces` a full-flow block over the todo list intercepting every click — 5 of 7 todomvc
-  // e2e tests failed that way on all three browsers in run 31134237965.
+  // `index.html` links these by path rather than importing them, so no module graph reaches them —
+  // and unstyled, `#spaces` becomes a full-flow block over the todo list that swallows every click.
   'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
-  // `@opentui/core` reaches its native library through
-  // `await import(`@opentui/core-${process.platform}-${process.arch}/index.ts`)`, which Bun resolves
-  // statically once per `--compile` target. `cli:bundle` cross-compiles all five targets from one
-  // Linux runner, so all five must be installed — and `@opentui/core` only declares them as
-  // `optionalDependencies` gated by `os`/`cpu`, which installs just the host's. Listing them here is
-  // what pulls the other four in; nothing imports them, so knip cannot see that. Dropping them broke
-  // `cli:bundle` with `Could not resolve: "@opentui/core-darwin-arm64/index.ts"`.
-  'packages/devtools/cli': [
-    '@opentui/core-darwin-arm64',
-    '@opentui/core-darwin-x64',
-    '@opentui/core-linux-arm64',
-    '@opentui/core-linux-x64',
-    '@opentui/core-win32-x64',
-  ],
   // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
   // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
   // dependency is not reachable from the emitted chunk.

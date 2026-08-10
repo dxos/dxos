@@ -53,9 +53,7 @@ const withDelayedQuerySpaces = (rpc: ClientServicesRpc, delaying: () => boolean)
 
 describe('SpaceProxy', () => {
   // The `updateSpace` RPC commits the setting on the host; the wait that follows is only the local
-  // snapshot catching up. Failing it on a 2s deadline turned an ordinary backlog into a rejection
-  // that reached `SpaceOperation.Create` as a defect, leaving Composer's create-space dialog open
-  // with no error (~1 in 12 locally).
+  // snapshot catching up, and a 2s deadline can turn an ordinary backlog into a rejected defect.
   test('setting the edge replication preference survives a snapshot echo slower than 2s', async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());

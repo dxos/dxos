@@ -26,9 +26,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isRefLike = (value: unknown): value is { uri: { toString(): string } } =>
   value !== null && typeof value === 'object' && RefTypeId in value;
 
-// `Ref` mints a fresh wrapper on every property read (see RefImpl), so `Object.is` never matches
-// two reads of the same element and a `Ref[]` property (e.g. `Thread.messages`) would defeat the
-// array dedupe entirely. Refs compare by URI instead.
+// Refs compare by URI: `RefImpl` mints a fresh wrapper on every property read, so `Object.is` never
+// matches two reads of the same element.
 const elementEquals = (a: unknown, b: unknown): boolean => {
   if (Object.is(a, b)) {
     return true;
@@ -40,17 +39,12 @@ const elementEquals = (a: unknown, b: unknown): boolean => {
 };
 
 /**
- * Change-detection equality between a live value and a previously emitted snapshot. The atom
- * families cannot compare snapshots by identity: `snapshotForComparison` mints a fresh reference
- * on every read, so two snapshots of *unchanged* content still fail `===` and the atom re-fires on
- * every mutation of the owning object — which is how one message delete produced a 5-20x render
- * storm in the comments thread (the `messages` atom re-fired for every unrelated property write).
+ * Change-detection equality between a live value and a previously emitted snapshot. Identity cannot
+ * serve, because `snapshotForComparison` mints a fresh reference on every read, so unchanged content
+ * still fails `===` and the atom re-fires on every mutation of the owning object.
  *
- * Arrays compare by shallow content: their elements are leaves in practice (refs, primitives), and
- * array-valued atoms are the ones that stormed. Records deliberately keep the legacy always-fire
- * behavior: consumers mutate nested fields in place (e.g. kanban's `arrangement.columns[x].ids`),
- * a shallow top-level comparison cannot see those writes, and suppressing them broke
- * `useKanbanBoardModel`'s arrangement ordering.
+ * Records always compare unequal: consumers mutate nested fields in place (e.g. kanban's
+ * `arrangement.columns[x].ids`), which a shallow top-level comparison cannot see.
  */
 export const snapshotEquals = (value: unknown, snapshot: unknown): boolean => {
   if (Array.isArray(value) && Array.isArray(snapshot)) {

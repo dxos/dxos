@@ -8,11 +8,8 @@ import { type Locator, type Page } from '@playwright/test';
 export const Markdown = {
   select: async (locator: Locator, text: string) => {
     // Resolve the offset and dispatch the selection in ONE evaluate: across two calls
-    // `composer.editorView` can change (it names whichever editor mounted last), and an offset from
-    // the first call then pointed past the end of the document the second dispatched against
-    // (`RangeError: Selection points outside of document`). Polling because `fill()` resolves when
-    // the DOM write lands, which can precede the editor state holding the text; bounded so a
-    // document that never receives it fails by name rather than eating the test's budget.
+    // `composer.editorView` can name a different editor, invalidating the offset. Polling because
+    // `fill()` can resolve before the editor state holds the text; bounded so it fails by name.
     await locator.evaluate(async (_element, text) => {
       const deadline = performance.now() + 15_000;
       for (;;) {

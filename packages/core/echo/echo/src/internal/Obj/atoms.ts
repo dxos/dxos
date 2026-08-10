@@ -93,9 +93,8 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
 
       const unsubscribe2 = subscribe(obj, () => {
         const newValue = obj[key];
-        // Content comparison against the last emitted snapshot — identity comparison of two fresh
-        // snapshots is always unequal for arrays/objects, which made this atom fire on every
-        // mutation of `obj` rather than only when this property changed (see `snapshotEquals`).
+        // Content comparison against the last emitted snapshot: identity would be unequal for every
+        // array/object, firing on any mutation of `obj` (see `snapshotEquals`).
         if (!snapshotEquals(newValue, previousSnapshot)) {
           previousSnapshot = snapshotForComparison(newValue);
           get.setSelf(previousSnapshot);

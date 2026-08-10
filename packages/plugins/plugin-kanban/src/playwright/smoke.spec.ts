@@ -16,16 +16,9 @@ test.describe('Kanban MutableSchema', () => {
   let board: BoardManager;
 
   test.beforeEach(async ({ browser, browserName }) => {
-    // TODO(wittjosiah): Deferred on webkit — the story intermittently never paints a column, and the
-    //   45s budget then expires in `waitUntilReady` (CI run 31313740371). `storybook dev` serves
-    //   source and evaluates story graphs in arrival order; the losing order enters a mid-evaluation
-    //   `ReferenceError: Cannot access 'makeSpaceService' before initialization`, which storybook's
-    //   error boundary swallows into an eternally "preparing" story. The `.storybook/preview.mts`
-    //   preload lowered the rate but cannot make arrival order deterministic, and `check-cycles`
-    //   reports no static cycle to break. Serving a BUILT storybook was measured and is WORSE — the
-    //   build succeeds but no story renders at all (4/4 timeouts), so that avenue is closed. Gated at
-    //   `beforeEach` rather than per test because the stall lands in setup, so any of the five can
-    //   draw it.
+    // TODO(wittjosiah): Deferred on webkit — the story intermittently never paints a column within the
+    //   45s budget, an arrival-order race that storybook's error boundary swallows into an eternally
+    //   "preparing" story (CI run 31313740371). A built storybook was tried and is worse (no story renders).
     test.skip(browserName === 'webkit');
 
     // Larger viewport to avoid triggering scroll-assist behaviour on simple drag operations.

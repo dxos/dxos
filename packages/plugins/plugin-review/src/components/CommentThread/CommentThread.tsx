@@ -92,11 +92,9 @@ export const CommentThread = ({
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
   const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);
-  // Activating reveals the thread in the anchored document, which moves focus to that plank. Operating
-  // the thread's own controls is not that gesture: routing the edit button's click through here stole
-  // focus mid-keystroke from the message editor it had just opened, so the typing landed on a
-  // container div and the edit was lost (comments e2e, 2 in 8 — the captured `activeElement` went from
-  // `DIV[cm-content]` to `DIV[dx-container … dx-attention-surface …]` across the keypresses).
+  // Activating reveals the thread in the anchored document, moving focus to that plank. Operating the
+  // thread's own controls is not that gesture: it would pull focus out of the editor a control just
+  // opened, mid-keystroke.
   const handleContentClickCapture = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {
       if (event.target instanceof Element && event.target.closest('button')) {
@@ -211,11 +209,8 @@ export const CommentThread = ({
           them at full width so their controls align with the header's controls.
         */}
         {/*
-          Keyed by the stable object id, NOT the URI: a message's URI gains its space when the thread
-          persists (`echo:///<id>` → `echo://<spaceId>/<id>`), and keying by URI remounted the tile at
-          that moment — which resets `editing` to false and destroys the editor holding the reader's
-          in-progress text, so an edit typed across the persist landed nowhere and its save control
-          disappeared. Same defect the companion already fixed for threads.
+          Keyed by the object id, not the URI (see `CommentState`): a URI's spelling changes as the
+          thread persists, remounting the tile and destroying an editor holding in-progress text.
         */}
         {loadedMessages.map((message) => (
           <MessageComponent.Tile key={message.id} message={message} />

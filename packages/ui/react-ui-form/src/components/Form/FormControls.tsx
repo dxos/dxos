@@ -388,8 +388,8 @@ export const FormError = ({ children, classNames }: FormErrorProps) => {
 
   return (
     <Input.Root validationValence='error'>
-      {/* Addressable so a test can report WHY a submit failed: a form that fails keeps its dialog
-          open, which otherwise surfaces only as an unattributable "dialog never closed" timeout. */}
+      {/* Addressable so a test can report why a submit failed, rather than only that a dialog stayed
+          open. */}
       <Input.Validation classNames={classNames} data-testid='form.error'>
         {children}
       </Input.Validation>

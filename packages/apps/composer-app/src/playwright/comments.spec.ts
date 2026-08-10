@@ -63,10 +63,9 @@ test.describe('Comments tests', () => {
 
     const editedText = 'Edited';
 
-    // Edit mode autofocuses the message editor; wait for that rather than clicking into it, since a
-    // click inside the thread is the "reveal in the document" gesture and moves focus to that plank.
-    // The keys stay page-level: clearing the text makes `message`'s hasText filter stop matching, so
-    // a locator-scoped press would wait out the test on its own edit.
+    // Edit mode autofocuses the message editor; wait for that rather than clicking, since a click
+    // inside the thread is the "reveal in the document" gesture and moves focus elsewhere. Keys stay
+    // page-level because clearing the text stops `message`'s hasText filter from matching.
     await expect(messageTextbox).toBeFocused();
     await host.page.keyboard.press('ControlOrMeta+A');
     await host.page.keyboard.press('Backspace');
@@ -167,10 +166,9 @@ test.describe('Comments tests', () => {
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    // Unique tokens rather than lorem slices: faker repeats words across paragraphs, so a slice
-    // can match two cm-comment decorations and fail the strict-mode locators below (measured
-    // locally: 'Consequatur pra' resolved to 2 elements). One paragraph per anchor — cm-comment
-    // decorations are per-line and cannot match text spanning newlines.
+    // Unique tokens rather than lorem slices: faker repeats words across paragraphs, so a slice can
+    // match two cm-comment decorations and fail the strict-mode locators below. One anchor per line,
+    // since cm-comment decorations cannot match text spanning newlines.
     const firstMessage = 'anchor-alpha';
     const secondMessage = 'anchor-bravo';
     const thirdMessage = 'anchor-charlie';

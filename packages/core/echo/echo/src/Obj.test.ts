@@ -605,10 +605,8 @@ describe('Obj', () => {
       // Mounting may notify once with the initial value; only the delta after this matters.
       const baseline = fires;
 
-      // Writes to other properties must not re-fire an array-valued atom. Change detection used to
-      // compare two fresh snapshots by identity, which is unequal for arrays/objects on every
-      // notification — one message delete re-fired a thread's `messages` atom for every unrelated
-      // write, producing the render storm behind composer's `delete message` e2e instability.
+      // Writes to other properties must not re-fire an array-valued atom: comparing fresh snapshots by
+      // identity is unequal for arrays/objects on every notification.
       Obj.update(obj, (obj) => {
         obj.name = 'Bob';
       });
@@ -626,9 +624,8 @@ describe('Obj', () => {
       expect(fires).toBe(baseline + 1);
       expect(registry.get(tasksAtom)).toHaveLength(1);
 
-      // Still silent for unrelated writes once the array holds refs: `Ref` mints a fresh wrapper
-      // per property read, so identity comparison would re-fire here every time (see
-      // `elementEquals`) — which is how `Thread.messages` kept storming after the array dedupe.
+      // Still silent for unrelated writes once the array holds refs: `Ref` mints a fresh wrapper per
+      // property read, so identity comparison would re-fire here every time (see `elementEquals`).
       Obj.update(obj, (obj) => {
         obj.name = 'Dana';
       });

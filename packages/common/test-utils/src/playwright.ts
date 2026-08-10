@@ -58,12 +58,9 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
   const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${packageDirName}.json`);
 
   const browser = process.env.PLAYWRIGHT_BROWSER || (process.env.CI ? 'all' : 'chromium');
-  // In the Claude Code cloud sandbox chromium needs three launch fixes (see the cloud-sandbox
-  // skill): the pinned executable (the image ships an older build than Playwright's pin, which
-  // otherwise refuses to launch), the egress proxy via ARGS — Playwright's `proxy:` option drops
-  // its bypass list for pages in a non-default context, sending the app's own localhost URL
-  // through the proxy — and a TLS 1.2 cap (the proxy resets chromium's TLS 1.3 ClientHello).
-  // Gated so real dev and CI runs are never silently downgraded; firefox/webkit need nothing.
+  // In the Claude Code cloud sandbox chromium needs a pinned executable, the egress proxy passed via
+  // ARGS (Playwright's `proxy:` option drops its bypass list for non-default contexts), and a TLS 1.2
+  // cap (see the cloud-sandbox skill). Gated so real dev/CI runs are never silently downgraded.
   const sandboxProxy = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
   const sandboxChromium = sandboxProxy
     ? {
@@ -106,14 +103,11 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     fullyParallel: true,
     // Fail the build on CI if you accidentally left test.only in the source code.
     forbidOnly: !!process.env.CI,
-    // No retries anywhere. Retrying hid flakes behind a 3x time cost — three `inbox.spec.ts` tests
-    // alone spent ~9 minutes of a shard failing three times each — which made shard timings
-    // unusable for sizing the suite. A flake now fails loudly and gets skipped with a TODO until
-    // it is fixed, so measured time reflects the tests that actually work.
+    // No retries anywhere: retrying hides flakes behind a 3x time cost, making shard timings unusable
+    // for sizing the suite. A flake now fails loudly and gets skipped with a TODO instead.
     retries: 0,
-    // Every test pays a ~15s app boot, and 4 workers starved shared setup into false
-    // "not stable"/"detached" failures, so 2 is the compromise.
-    // `|| 2` rather than `??`: an env var set to the empty string is common in Actions and would
+    // 4 workers starved shared setup into false "not stable"/"detached" failures, so 2 is the
+    // compromise. `|| 2`, not `??`: an env var set to the empty string (common in Actions) would
     // otherwise coerce to 0 workers.
     workers: Number(process.env.PLAYWRIGHT_WORKERS) || 2,
     // Reporter to use. See https://playwright.dev/docs/test-reporters.
@@ -195,3 +189,14 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
 
 export const storybookUrl = (storyId: string, port = 9009) =>
   `http://localhost:${port}/iframe.html?id=${storyId}&viewMode=story`;
+
+/**
+ * Playwright `webServer` for a Storybook-backed suite. Readiness is probed by `url` rather than
+ * `port` because a `port` probe is a bare TCP check, which `storybook dev` satisfies by binding the
+ * socket before it can serve — tests starting in that gap get ERR_CONNECTION_REFUSED.
+ */
+export const storybookWebServer = (port: number) => ({
+  command: `pnpm storybook dev --ci --quiet --port=${port} --config-dir=.storybook`,
+  url: `http://localhost:${port}`,
+  reuseExistingServer: false,
+});

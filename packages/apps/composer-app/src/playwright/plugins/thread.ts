@@ -19,10 +19,8 @@ export const Thread = {
     try {
       await currentThread.waitFor({ state: 'visible' });
     } catch (err) {
-      // No current thread means the marker landed on nothing, or on a DIFFERENT thread — and those
-      // are different bugs that a bare locator timeout cannot separate. Report every thread with its
-      // marker state; read from the DOM so this costs nothing until it fails (instrumenting the
-      // component itself perturbed the very timing under test).
+      // No current thread means the marker landed on nothing or on a DIFFERENT thread, which a bare
+      // locator timeout cannot separate; report every thread's marker state instead.
       throw new Error(`no thread is current after creating a comment; threads: ${await Thread.describeThreads(page)}`, {
         cause: err,
       });
@@ -76,8 +74,8 @@ export const Thread = {
 
   /**
    * Asserts the marker is on the thread AND the comment naming `text`, reporting the whole marker
-   * state on failure. A bare `toHaveAttribute` cannot say whether the marker went missing or landed
-   * on a different thread, which is what made this failure unattributable across CI runs.
+   * state on failure since a bare `toHaveAttribute` cannot say whether it went missing or landed
+   * elsewhere.
    */
   expectCurrent: async (page: Page, text: string): Promise<void> => {
     try {
@@ -98,9 +96,8 @@ export const Thread = {
   getMessage: (thread: Locator, current: string) => thread.getByTestId('thread.message').filter({ hasText: current }),
 
   /**
-   * The thread's reply composer. Scoped by `thread.reply` rather than picking the last
-   * `role=textbox`: message bodies are CodeMirror editors too, so ordering decided which editor was
-   * typed into, and getting it wrong edited an existing message instead of adding one.
+   * The thread's reply composer, scoped by `thread.reply` rather than the last `role=textbox`: message
+   * bodies are CodeMirror editors too, so ordering could pick the wrong one to type into.
    */
   getReplyInput: (thread: Locator) => thread.getByTestId('thread.reply').getByRole('textbox'),
 

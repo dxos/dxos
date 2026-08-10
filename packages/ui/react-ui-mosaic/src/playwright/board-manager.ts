@@ -319,9 +319,8 @@ export class ItemManager {
       }
     }
 
-    // Auto-scroll never brought the target into view. Releasing here drops the card at whatever
-    // position the cursor happens to hold, which is how this helper used to report a successful drag
-    // that moved nothing (or moved the wrong way) — the shape behind runs 31107630885 and 31151115830.
+    // Auto-scroll never brought the target into view; releasing here would drop the card at whatever
+    // position the cursor holds instead of failing loudly.
     await this._page.mouse.up();
     throw new Error('auto-scroll did not bring the drop target into view within 40 nudges');
   }

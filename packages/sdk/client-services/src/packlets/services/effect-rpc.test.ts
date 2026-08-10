@@ -185,11 +185,8 @@ describe('client services effect-rpc', () => {
   });
 
   test('a missing handler fails only its own call, not other in-flight calls', async ({ expect }) => {
-    // Regression: composer's device-join flow saw `client.reset()` reject with
-    // `Service handler not available: FeedService.getSyncState` — a background sync-status poll
-    // hitting a torn-down service killed the UNRELATED in-flight reset call on the same
-    // connection. The missing-handler dispatch throws a defect, and a defect must not take the
-    // connection (and every pending request) down with it.
+    // The missing-handler dispatch throws a defect, and a defect must not take the connection (and
+    // every pending request) down with it.
     const gate = new Trigger();
     const proxy = await setup(() => ({
       SystemService: mockService<SystemService.Handlers>({

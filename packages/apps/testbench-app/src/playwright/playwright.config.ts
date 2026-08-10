@@ -11,8 +11,8 @@ export default defineConfig({
   // TODO(wittjosiah): Avoid hard-coding ports.
   webServer: {
     command: 'pnpm vite preview --port=9007',
-    // `port` makes Playwright's probe a bare TCP check, and `storybook dev` binds the socket before
-    // it can serve, so tests starting in that gap get ERR_CONNECTION_REFUSED.
+    // `url`, not `port`: a `port` probe is a bare TCP check, satisfied as soon as the server binds
+    // the socket, so tests starting before it can serve get ERR_CONNECTION_REFUSED.
     url: 'http://localhost:9007',
     reuseExistingServer: false,
   },

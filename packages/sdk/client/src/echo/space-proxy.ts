@@ -714,12 +714,9 @@ export class SpaceProxy implements Space, CustomInspectable {
       { timeout: RPC_TIMEOUT, label: 'SpacesService.updateSpace' },
     );
     // TODO(dmaretskyi): Might cause a race-condition if the property is updated multiple times.
-    // The RPC above has already committed the setting on the host; this only waits for the local
-    // snapshot to catch up over the `querySpaces` stream, which is queued behind every other space's
-    // `_processSpaceUpdate` — a synchronized method that awaits the database opening on first init.
-    // Budget it like the RPC it confirms rather than the 2s it used to get: on a cold app with
-    // several spaces initializing, convergence measured just past 2s and the rejection reached
-    // `SpaceOperation.Create` as a defect, hanging Composer's create-space dialog open with no error.
+    // Budgeted like the RPC it confirms, because the setting is already committed on the host and this
+    // only waits for the local snapshot, queued behind every other space's synchronized
+    // `_processSpaceUpdate` — on a cold app with several spaces, convergence exceeds a short deadline.
     await asyncTimeout(
       this._anySpaceUpdate.waitForCondition(() => {
         return this._data.edgeReplication === setting;
