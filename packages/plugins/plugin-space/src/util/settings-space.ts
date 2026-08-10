@@ -6,21 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
-
-/**
- * The space list and factory this needs from a `Client`. Structural so a test can present a list
- * that changes between calls — the concurrent-creation race this function exists to resolve.
- */
-type SpaceHost = {
-  spaces: {
-    get(): Space[];
-    create(...args: Parameters<Client['spaces']['create']>): ReturnType<Client['spaces']['create']>;
-  };
-};
 
 /**
  * Find the settings space, creating it if the profile does not have one yet.
@@ -28,7 +16,7 @@ type SpaceHost = {
  * Profiles created through {@link AppSpace.setupIdentitySpaces} already have one; this covers the
  * profiles that predate the settings space, whose first sight of it is the migration.
  */
-export const ensureSettingsSpace = Effect.fnUntraced(function* (client: SpaceHost) {
+export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) {
   const existing = AppSpace.getSettingsSpace(client);
   if (existing) {
     yield* Effect.promise(() => existing.waitUntilReady());
