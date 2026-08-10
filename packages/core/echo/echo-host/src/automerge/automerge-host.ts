@@ -572,19 +572,14 @@ export class AutomergeHost extends Resource {
   async removeDocument(id: AnyDocumentId): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
-    // Evicted before anything is deleted (draining its pending save) so the handle cannot
-    // re-persist the document afterwards — collection loads the document to inspect ownership, so a
-    // live handle typically exists at this point.
+    // Evicted first, draining its pending save, so the handle cannot re-persist what is deleted
+    // below — collection loads the document to check ownership, so one is usually live here.
     if (this._repo.handles[documentId]) {
       await this._repo.removeFromCache(documentId);
     }
 
-    // One transaction, because a partial wipe is unrecoverable rather than merely incomplete: the
-    // orphan scan enumerates the heads table, so chunks that outlive their heads row can never be
-    // found again. Committing together also denies the indexer, which loads whatever that table
-    // lists, any state in which the document is half-deleted. The subduction transport stores the
-    // same document as sedimentree records under a disjoint key space — most of its bytes on that
-    // transport — so those ranges are swept here too.
+    // One transaction: the orphan scan enumerates the heads table, so chunks outliving their heads
+    // row could never be found again.
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
     await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(this, function* () {
@@ -601,8 +596,7 @@ export class AutomergeHost extends Resource {
       }),
     );
 
-    // These sets are otherwise append-only for the process lifetime, and the classical share
-    // policy answers from them — a wiped document left behind here keeps being announced to peers.
+    // The classical share policy answers from these, so an id left behind keeps being announced.
     this._createdDocuments.delete(documentId);
     this._documentsToSync.delete(documentId);
     this._documentsToRequest.delete(documentId);
@@ -1365,11 +1359,10 @@ const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId =>
   bs58check.encode(sedimentreeId.toBytes().slice(0, 16)) as DocumentId;
 
 /**
- * Matches `toSedimentreeId` (zero-pad the 16-byte DocumentId to 32 bytes) followed by the
- * lowercase-hex rendering `SedimentreeId.toString()` produces, which is what
- * `SubductionStorageBridge` embeds in its storage keys. Derived arithmetically rather than through
- * the WASM type so that sweeping never depends on the subduction module being initialized;
- * `sqlite-storage-adapter.test.ts` pins the two representations against each other.
+ * The sedimentree id `SubductionStorageBridge` embeds in its storage keys: the 16-byte DocumentId
+ * zero-padded to 32, lowercase hex. Derived arithmetically so sweeping never requires the
+ * subduction WASM module to be initialized; `sqlite-storage-adapter.test.ts` pins the two against
+ * each other.
  */
 export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string => {
   const bytes = new Uint8Array(32);

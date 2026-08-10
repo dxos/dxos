@@ -197,9 +197,8 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * {@link removeRange} as an effect, so callers deleting several ranges can commit them as one
-   * transaction. Wiping a document spans many ranges, and a partial wipe that loses the document's
-   * heads row strands the surviving chunks: nothing enumerates them afterwards.
+   * {@link removeRange} as an effect, so a caller deleting the several ranges a document spans can
+   * commit them as one transaction.
    */
   removeRangeEffect(keyPrefix: StorageKey): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     const prefix = encodeKey(keyPrefix);
@@ -212,12 +211,10 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
 }
 
 /**
- * Storage-key prefix every subduction sedimentree key is written under, and the per-sedimentree
- * key families beneath it. Mirrors `SubductionStorageBridge` in `@automerge/automerge-repo`, which
- * writes `[SUBDUCTION_PREFIX, <family>, <sedimentreeId>, ...]` into this same table. Garbage
- * collection has to sweep these explicitly: a document's classical `<documentId>-*` keys and its
- * sedimentree records are disjoint, and on the subduction transport the latter hold the bulk of
- * the bytes.
+ * Key space `SubductionStorageBridge` writes into this same table, as
+ * `[SUBDUCTION_PREFIX, <family>, <sedimentreeId>, ...]`. Disjoint from a document's classical
+ * `<documentId>-*` keys, so collection has to sweep it explicitly — on the subduction transport it
+ * holds most of the document's bytes.
  */
 export const SUBDUCTION_PREFIX = 'subduction';
 
