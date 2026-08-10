@@ -29,9 +29,9 @@ describe('defaultSwarmConfig', () => {
     expect(defaultSwarmConfig('linked')).toMatchObject({ dotCount: 64, dotSize: 1.3 });
     expect(defaultSwarmConfig('halo')).toMatchObject({
       dotCount: 24,
-      dotSize: 2.2,
+      dotSize: 0.9,
       ringRadius: 66,
-      ringRotationSpeed: 0.00035,
+      ringRotationSpeed: 0.0008,
     });
   });
 });
@@ -168,15 +168,22 @@ describe('dotPosition', () => {
     }
   });
 
-  test('halo variant: dots ride their rotating slot at every settle level', ({ expect }) => {
+  test('halo variant: dots stay on the tight ring, orbiting at differing rates', ({ expect }) => {
     const config = defaultSwarmConfig('halo');
-    const dot = createDots(config, () => 0.5)[2];
+    // Distinct random draws give each dot a distinct orbitSpeed.
+    const randomSequence = [0.1, 0.9, 0.5, 0.3, 0.7];
+    let draw = 0;
+    const dots = createDots(config, () => randomSequence[draw++ % randomSequence.length]);
+    const bearingOf = (position: { x: number; y: number }) =>
+      Math.atan2(position.y - config.centerY, position.x - config.centerX);
     for (const settle of [0, 0.5, 1]) {
-      const position = dotPosition(config, dot, settle, 4321);
-      const slot = slotPosition(config, dot, 4321);
-      expect(position.x).toBeCloseTo(slot.x);
-      expect(position.y).toBeCloseTo(slot.y);
+      const position = dotPosition(config, dots[0], settle, 4321);
+      expect(Math.hypot(position.x - config.centerX, position.y - config.centerY)).toBeCloseTo(config.ringRadius);
     }
+    // Different per-dot rates: the angular gap between two dots changes over time.
+    const gapEarly = bearingOf(dotPosition(config, dots[0], 1, 0)) - bearingOf(dotPosition(config, dots[1], 1, 0));
+    const gapLate = bearingOf(dotPosition(config, dots[0], 1, 5000)) - bearingOf(dotPosition(config, dots[1], 1, 5000));
+    expect(Math.abs(gapLate - gapEarly)).toBeGreaterThan(0.01);
   });
 
   test('orbit variant: settled dots track the rotating slot (never static)', ({ expect }) => {

@@ -55,7 +55,7 @@ Shared engine, one position function each. Per-variant dot count/size (viewBox u
 | B — Orbital        | Anticlockwise circulation at a personal radius (uniform in [74, 128]), slight radial wobble; docked ring keeps rotating rigidly.                                                             | 32  | 2.0  |
 | C — Comet trails   | Orbital motion plus 4 fading afterimage ghosts sampled every ~45 ms; a dot's tail extinguishes when it docks.                                                                                | 48  | 1.6  |
 | D — Linked         | Firefly wander; transient links (opacity ∝ closeness, max ~40 at once) flash between unsettled dots within range 46; adjacent docked dots weld permanent links, closing the ring as a chain. | 64  | 1.3  |
-| E — Halo           | Dots fade in directly on a tight ring (radius 66, hugging the no-go rim) that rotates rigidly anticlockwise at 0.00035 rad/ms — no wander phase.                                             | 24  | 2.2  |
+| E — Halo           | Tiny dots fade in directly on a tight ring (radius 66, hugging the no-go rim), each orbiting fast anticlockwise at its own rate (base 0.0008 rad/ms + per-dot variation) — no wander phase.  | 24  | 0.9  |
 | F — Arc            | The ORIGINAL pre-swarm ring, restored verbatim (`ClassicRing.tsx`): own 384px disc, viewBox-100 arc, conic fade mask, accent palette, 300px mark with host-driven reveal. No dots.           | —   | —    |
 
 Random pick: uniform over all variants at mount (`Math.random()`), no persistence, no

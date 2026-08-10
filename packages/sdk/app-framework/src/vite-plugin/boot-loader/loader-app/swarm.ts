@@ -79,8 +79,10 @@ export const defaultSwarmConfig = (variant: SwarmVariant): SwarmConfig => {
     case 'linked':
       return { ...BASE, variant, dotCount: 64, dotSize: 1.3, ringRotationSpeed: 0 };
     case 'halo':
-      // A tight ring hugging the no-go rim; dots fade in on their rotating slots.
-      return { ...BASE, variant, dotCount: 24, dotSize: 2.2, ringRotationSpeed: 0.00035, ringRadius: 66 };
+      // A tight ring hugging the no-go rim; tiny dots orbit fast, each at its
+      // own rate (ringRotationSpeed is the shared base; per-dot orbitSpeed adds
+      // the variation).
+      return { ...BASE, variant, dotCount: 24, dotSize: 0.9, ringRotationSpeed: 0.0008, ringRadius: 66 };
     case 'arc':
       // The original determinate ring (`ClassicRing.tsx`) — no dots.
       return { ...BASE, variant, dotCount: 0, dotSize: 0, ringRotationSpeed: 0 };
@@ -201,11 +203,16 @@ export const dotPosition = (
   settleEased: number,
   nowMs: number,
 ): { x: number; y: number } => {
-  // Halo dots never wander: they sit on their rotating slot from the first
-  // frame and only fade in as they dock.
+  // Halo dots never wander: each orbits the tight ring at its own fast rate
+  // (base speed + per-dot variation, all anticlockwise) and only fades in as it
+  // docks.
   if (config.variant === 'halo') {
-    const slot = slotPosition(config, dot, nowMs);
-    return projectNogo(config, slot.x, slot.y);
+    const bearing = dot.angle - nowMs * (config.ringRotationSpeed + dot.orbitSpeed);
+    return projectNogo(
+      config,
+      config.centerX + config.ringRadius * Math.cos(bearing),
+      config.centerY + config.ringRadius * Math.sin(bearing),
+    );
   }
 
   let waitingX: number;
