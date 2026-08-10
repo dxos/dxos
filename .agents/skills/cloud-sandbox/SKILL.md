@@ -80,6 +80,20 @@ worktrees.
 It is reclaimed after inactivity or when the session ends. Anything not committed and pushed is
 gone. Push early rather than at the end of a long task.
 
+### The container's size can change across restarts
+
+A worker-process restart can land the session on a **different-sized container**: one session went
+from a box that sustained 2-worker composer e2e (all green) to a 4-core box (`nproc` = 4) where the
+same command starved itself — load average 6.5, planks never rendering, boots timing out — and 12 of
+18 tests failed for reasons that had nothing to do with the code under test. Measurements taken on
+different boxes are not comparable, and a 4-core box cannot run 2-worker composer e2e at all.
+
+After any restart, before trusting or comparing a local test result:
+
+```bash
+nproc && uptime   # cores changed or load already high => re-baseline, or move validation to CI
+```
+
 ### The checkout can silently revert mid-session
 
 Twice in one session the working tree was found at an **older commit than the branch it had already
