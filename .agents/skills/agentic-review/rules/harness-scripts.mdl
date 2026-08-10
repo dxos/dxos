@@ -29,7 +29,6 @@ rule harness-script-hygiene: Harness scripts stay dependency-free and honest
   scope: repo
   files:
     - .agents/skills/agentic-review/**/*.mjs
-  grep: catch|import |export
   severity: warn
 ```
 
