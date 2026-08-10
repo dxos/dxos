@@ -153,11 +153,28 @@ type MethodParams = {
 };
 
 /**
- * Email sign-up, mirroring the gate's sign-up tab (`WelcomeScreen.handleCreateAccount`): bind a
- * local identity to the access code plus the address the user wants to register with. Hub-service
- * mails the verification link out-of-band; the identity is admitted immediately either way.
+ * Email sign-up, mirroring the gate's sign-up tab (`WelcomeScreen.handleCreateAccount`): reject an
+ * address that already has an account, then bind a local identity to the access code plus that
+ * address. Hub-service mails the verification link out-of-band; the identity is admitted either way.
  */
 const signUpWithEmail = Effect.fn(function* ({ client, hub, invoke, code, email }: MethodParams & { email: string }) {
+  // Probe before creating anything: redemption rejects an address that already has an account, and
+  // an identity created first would be stranded with no account. An inconclusive probe (rate limit,
+  // timeout, transport error) is not permission to proceed, so it stops here too.
+  const { exists } = yield* Effect.tryPromise({
+    try: () => hub.checkEmailExists(DxContext.default(), { email }),
+    catch: (cause) =>
+      new Error(
+        `Could not check whether ${email} already has an account: ` +
+          `${cause instanceof Error ? cause.message : String(cause)}. Nothing was created — try again.`,
+      ),
+  });
+  if (exists) {
+    return yield* Effect.fail(
+      new Error(`${email} already has an account. Run \`dx account login\` to sign in to it instead.`),
+    );
+  }
+
   const identity = yield* ensureIdentity(client, invoke, email.split('@')[0]);
   return yield* redeemAccessCode(hub, { code, email, identity });
 });
