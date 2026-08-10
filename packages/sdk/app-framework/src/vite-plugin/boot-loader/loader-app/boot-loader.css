@@ -22,11 +22,11 @@ body {
  */
 #boot-loader {
   /*
-   * Caps the disc at the design pixel size on roomy viewports while shrinking
-   * proportionally on narrow ones (`vmin` follows the smaller of width /
-   * height) so the swarm field doesn't crop on phones.
+   * Half the rendered mark height: the mark is 84 units of the swarm's
+   * 400×300 viewBox scaled with `xMidYMid meet`, i.e. 42·min(vw/400, vh/300)
+   * — the status block anchors just below it at every viewport.
    */
-  --boot-loader-disc-size: min(384px, 80vmin);
+  --boot-loader-mark-half: min(10.5vw, 14vh);
   --boot-loader-status-gap: 32px;
 
   position: fixed;
@@ -104,10 +104,8 @@ body {
   top: 50%;
   left: 0;
   right: 0;
-  /* 
-   * Sit just below the centered disc — half the disc plus the configured gap.
-   */
-  transform: translate(0, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
+  /* Sit just below the centered mark — half the mark plus the configured gap. */
+  transform: translate(0, calc(var(--boot-loader-mark-half) + var(--boot-loader-status-gap)));
   /*
    * Slightly de-emphasised vs body text so the brand mark + swarm stay the
    * dominant focus, but high enough to remain legible on both light and dark
