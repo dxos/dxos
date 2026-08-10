@@ -28,6 +28,7 @@ storage (automerge documents + feeds) behind a different physical store.
 | GC step 2 — wipe unreachable owned documents       | implemented                     |
 | GC step 5 — delete stale index rows                | implemented (`index` option)    |
 | GC steps 3–4 — feed purge                          | specified, deferred (see below) |
+| Automatic reclamation on peers                     | implemented (`autoReclaim`)     |
 | `retainObjects()` — drop all but the retained ids  | implemented (client-side)       |
 
 The EDGE host implements neither API yet (both return a not-implemented error);
@@ -225,6 +226,35 @@ Correctness note: query correctness for deleted objects already holds before GC
 (soft-deleted objects carry `deleted = 1` and are filtered out). Step 5 is
 space reclamation, not a correctness fix — it is gated by `options.index`.
 
+## Automatic reclamation
+
+Collection is explicit, but its _result_ propagates. Removing an object's entry
+from the space directory is an ordinary automerge change, so it replicates like
+any other; a peer that receives it wipes the documents that change orphaned,
+without being asked and without running a pass of its own. One collection
+therefore frees the same bytes everywhere. Disable with `autoReclaim: false` on
+`EchoHost`.
+
+The hook is the space's document-list update. Two cases reach it:
+
+- **A document left the directory** — an unlink replicating in from the peer that
+  collected. The departed set is diffed against the previous listing.
+- **A new root was applied** (an epoch). The retired root is expanded to its
+  whole closure rather than trusting the diff: the listing is debounced, so a
+  document linked and orphaned in quick succession may never appear in one at
+  all. Walking the retired root makes an epoch deterministic regardless of what
+  this peer happened to observe.
+
+Both re-check reachability against the _live_ directory before deleting, because
+a document can be re-linked between the event and the deferred task. Failures are
+logged rather than propagated — a peer that fails to reclaim is only still
+holding disk.
+
+This is safe because a directory change is atomic and causally delivered.
+Concurrent removals of several keys arrive as one change, and automerge holds a
+change whose dependencies are missing rather than applying it, so no peer ever
+observes a half-unlinked directory and reclaims something still referenced.
+
 ## `retainObjects()`
 
 `retainObjects(keep)` replaces the set of objects the space directory tracks.
@@ -297,6 +327,9 @@ differs. When implementing on EDGE:
 - Step 4's positioned-tombstone invariant is storage-independent and must be
   preserved.
 - Step 5 targets whatever index EDGE maintains.
+- **Prerequisite:** `SpaceStateMachine.getAutomergeRoot` selects the root by
+  DO-KV key order, which is arbitrary once a space has more than one epoch. It
+  must order by `Epoch.number` before anything GC-critical runs there.
 
 ## Deferred / future work
 
@@ -313,4 +346,26 @@ differs. When implementing on EDGE:
 - Incremental / budgeted GC (bounded work per call) for very large spaces.
 - Automerge document **compaction** (rewrite a live document to drop deleted
   history) — distinct from wiping whole documents.
-- A scheduled/automatic GC trigger (this spec covers only the explicit API).
+- A scheduled/automatic GC **trigger** (this spec covers only the explicit API;
+  automatic _reclamation_ of an already-collected result is implemented above).
+- **Reconcile a client's working set on same-root content changes.** A peer that
+  applies a replicated `retainObjects` reclaims the storage but keeps showing the
+  dropped objects until reload: `_handleSpaceRootDocumentChange` is reached only
+  from `updateSpaceState`, which early-returns unless the root url changed, so it
+  fires on an epoch and never on a content change to the same root. Any fix must
+  be guarded against the window in `_createDocumentForObject` where an object is
+  bound before its link is written.
+- **Two-peer convergence tests.** Automatic reclamation is covered single-host;
+  the replicated path is exercised only by construction.
+- **Age guard on the orphan scan.** Document creation and the link write are
+  separate operations across the network, so a document created but not yet
+  linked is theoretically collectable. Narrowed by the storage-only load and the
+  `access.spaceId` check, not closed.
+- **Space purge.** Deleting a space leaves its documents and `echo_spaces` row on
+  disk. Prerequisite: `acceptSpace` asserts `!isSpaceDeleted`, so a space you
+  deleted can never be re-joined — a tombstone must become re-joinable by
+  explicit invitation before any purge lands, or the data is unrecoverable.
+- **`MigrationBuilder._buildNewRoot` drops only links.** Deleted ids are removed
+  from `links` but the inline `objects` map is copied wholesale, so an object
+  inlined in the root survives the migration that deleted it. Affects
+  `REPLACE_AUTOMERGE_ROOT` migrations and `compactDocumentsEpochMigration`.
