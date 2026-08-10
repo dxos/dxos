@@ -12,6 +12,7 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Panel, ScrollArea, ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
@@ -84,6 +85,11 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     useAsyncEffect(updateInfo, [updateInfo]);
 
+    const handleReset = useCallback(async () => {
+      await invokePromise(SpaceOperation.RemoveAllObjects, undefined, { spaceId: space.id });
+      await updateInfo();
+    }, [invokePromise, space, updateInfo]);
+
     const handleCreateData = useCallback(
       async (typename: string) => {
         const constructor = typeMap.get(typename);
@@ -101,6 +107,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         <Panel.Toolbar>
           <Toolbar.Root classNames='dx-document'>
             <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
+            <IconButton icon='ph--trash--regular' iconOnly label='Reset space' onClick={handleReset} />
             <Toolbar.Separator />
             <Input.Root>
               <Input.TextInput
