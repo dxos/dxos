@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useProgress } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
@@ -28,6 +29,8 @@ import { meta } from '#meta';
 // TODO(burdon): Make extensible.
 const staticTypes = [Markdown.Document, Drawing.Drawing, Sheet.Sheet, ComputeGraph];
 const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
+
+const TOAST_DURATION = 5_000;
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -86,14 +89,26 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     useAsyncEffect(updateInfo, [updateInfo]);
 
+    // TODO(wittjosiah): Custom toast required — `notify` labels are fixed at invocation, so a
+    //  result-dependent count cannot be reported through it. Drop these once operation notify
+    //  supports dynamic labels.
     const handleReset = useCallback(async () => {
       if (!window.confirm('Remove all objects from this space? This cannot be undone.')) {
         return;
       }
-      await invokePromise(SpaceOperation.RemoveAllObjects, undefined, {
+      const { data } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, {
         spaceId: space.id,
-        notify: { start: 'Removing objects…', success: 'Space cleared.', error: 'Failed to remove objects.' },
+        notify: { error: 'Failed to remove objects.' },
       });
+      if (data) {
+        await invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/remove-all-objects`,
+          icon: 'ph--trash--regular',
+          duration: TOAST_DURATION,
+          title: 'Space cleared',
+          description: `Removed ${data.objectIds.length} object(s).`,
+        });
+      }
       await updateInfo();
     }, [space, invokePromise, updateInfo]);
 
@@ -101,10 +116,22 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       if (!window.confirm("Permanently reclaim this space's deleted objects? This cannot be undone.")) {
         return;
       }
-      await invokePromise(SpaceOperation.CollectGarbage, undefined, {
+      const { data } = await invokePromise(SpaceOperation.CollectGarbage, undefined, {
         spaceId: space.id,
-        notify: { start: 'Collecting garbage…', success: 'Garbage collected.', error: 'Garbage collection failed.' },
+        notify: { error: 'Garbage collection failed.' },
       });
+      if (data) {
+        await invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/collect-garbage`,
+          icon: 'ph--recycle--regular',
+          duration: TOAST_DURATION,
+          title: 'Garbage collected',
+          description:
+            data.removedDocuments === 0
+              ? 'Nothing to reclaim.'
+              : `Reclaimed ${data.removedDocuments} document(s) from ${data.unlinkedObjects} object(s).`,
+        });
+      }
       await updateInfo();
     }, [space, invokePromise, updateInfo]);
 
