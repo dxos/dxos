@@ -213,6 +213,26 @@ export namespace SpaceOperation {
     output: RemoveObjectsOutput,
   });
 
+  /**
+   * Reclaim the storage held by a space's deleted objects. Permanent — the objects are removed
+   * from the space directory and their documents wiped, on this peer and, as the change
+   * replicates, on every other.
+   */
+  export const CollectGarbage = Operation.make({
+    meta: {
+      key: makeKey('collectGarbage'),
+      name: 'Collect Garbage',
+      description: "Permanently reclaim the storage held by a space's deleted objects.",
+      icon: 'ph--recycle--regular',
+    },
+    services: [Database.Service],
+    input: Schema.Void,
+    output: Schema.Struct({
+      unlinkedObjects: Schema.Number.annotations({ description: 'Deleted objects removed from the space.' }),
+      removedDocuments: Schema.Number.annotations({ description: 'Documents wiped from storage.' }),
+    }),
+  });
+
   export const DeleteFieldOutput = Schema.Struct({
     field: View.FieldSchema.annotations({ description: 'The deleted field schema.' }),
     // TODO(wittjosiah): This creates a type error with PropertySchema.

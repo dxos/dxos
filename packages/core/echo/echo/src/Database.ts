@@ -497,6 +497,22 @@ export const flush = (opts?: FlushOptions) =>
   );
 
 /**
+ * Reclaims storage held by soft-deleted objects and the documents they orphan.
+ * @see {@link Database.runGarbageCollection}
+ */
+export const runGarbageCollection = (options?: GarbageCollectionOptions) =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.runGarbageCollection(options)))).pipe(
+    Effect.withSpan('Database.runGarbageCollection'),
+  );
+
+/**
+ * Per-space storage metrics.
+ * @see {@link Database.stats}
+ */
+export const stats = () =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.stats()))).pipe(Effect.withSpan('Database.stats'));
+
+/**
  * Creates a `QueryResult` object that can be subscribed to.
  */
 export const query: {

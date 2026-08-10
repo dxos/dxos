@@ -655,7 +655,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     } = {},
   ): Promise<void> {
     log('create epoch', { migration, automergeRootUrl });
-    const { controlTimeframe: targetTimeframe } = await runServiceCall(
+    const { controlTimeframe: targetTimeframe, epochCredential } = await runServiceCall(
       this._runtime,
       this._clientServices.rpc.SpacesService.createEpoch({
         spaceKey: this.key,
@@ -671,6 +671,19 @@ export class SpaceProxy implements Space, CustomInspectable {
           const currentTimeframe = this._data.pipeline?.currentControlTimeframe;
           return (currentTimeframe && Timeframe.dependencies(targetTimeframe, currentTimeframe).isEmpty()) ?? false;
         }),
+      );
+    }
+
+    // Applying the epoch clears the database's root handle before loading the replacement, so the
+    // space is briefly unwritable. Resolving only once the swap has landed keeps that window
+    // invisible to callers, who would otherwise have to guess when the space is usable again.
+    const newRoot =
+      epochCredential && checkCredentialType(epochCredential, 'dxos.halo.credentials.Epoch')
+        ? epochCredential.subject.assertion.automergeRoot
+        : undefined;
+    if (newRoot && this._db.rootUrl !== newRoot) {
+      await warnAfterTimeout(5_000, 'Waiting for the created epoch root to be applied', () =>
+        this._anySpaceUpdate.waitForCondition(() => this._db.rootUrl === newRoot),
       );
     }
   }

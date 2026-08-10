@@ -12,6 +12,7 @@ export const SpaceOperationHandlerSet = OperationHandlerSet.lazy([
   SpaceOperation.AddRelation.pipe(Operation.lazyHandler(() => import('./add-relation'))),
   SpaceOperation.AddType.pipe(Operation.lazyHandler(() => import('./add-type'))),
   SpaceOperation.Close.pipe(Operation.lazyHandler(() => import('./close'))),
+  SpaceOperation.CollectGarbage.pipe(Operation.lazyHandler(() => import('./collect-garbage'))),
   SpaceOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
   SpaceOperation.Delete.pipe(Operation.lazyHandler(() => import('./delete'))),
   SpaceOperation.DeleteField.pipe(Operation.lazyHandler(() => import('./delete-field'))),
