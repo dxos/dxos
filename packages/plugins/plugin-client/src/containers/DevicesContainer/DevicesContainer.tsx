@@ -23,11 +23,11 @@ import { ClientOperation } from '#operations';
 
 import * as ClientOptions from '../../types/ClientOptions';
 
-export type DevicesContainerProps = Pick<ClientOptions.ClientPluginOptions, 'identityRecovery'> & {
+export type DevicesContainerProps = Pick<ClientOptions.ClientPluginOptions, 'identityTestActions'> & {
   createInvitationUrl?: (invitationCode: string) => string;
 };
 
-export const DevicesContainer = ({ createInvitationUrl, identityRecovery }: DevicesContainerProps) => {
+export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: DevicesContainerProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const devices = useDevices();
@@ -77,33 +77,24 @@ export const DevicesContainer = ({ createInvitationUrl, identityRecovery }: Devi
                 )}
               </Form.Group>
             </Form.Section>
-            <Form.Section
-              title={t('logout-section.title', { ns: meta.profile.key })}
-              description={t('logout-section.description', { ns: meta.profile.key })}
-            >
-              <Form.Row label={t('logout.label')} description={t('logout.description', { ns: meta.profile.key })}>
+            <Form.Section title={t('logout-section.title')} description={t('logout-section.description')}>
+              <Form.Row label={t('logout.label')} description={t('logout.description')}>
                 <Button variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
                   {t('logout.label')}
                 </Button>
               </Form.Row>
             </Form.Section>
-            {identityRecovery && (
+            {identityTestActions && (
               <Form.Section
-                title={t('identity-recovery-section.title', { ns: meta.profile.key })}
-                description={t('identity-recovery-section.description', { ns: meta.profile.key })}
+                title={t('identity-test-section.title')}
+                description={t('identity-test-section.description')}
               >
-                <Form.Row
-                  label={t('recover-identity.label')}
-                  description={t('recover-identity.description', { ns: meta.profile.key })}
-                >
+                <Form.Row label={t('recover-identity.label')} description={t('recover-identity.description')}>
                   <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
                     {t('recover-identity.label')}
                   </Button>
                 </Form.Row>
-                <Form.Row
-                  label={t('join-new-identity.label')}
-                  description={t('join-new-identity.description', { ns: meta.profile.key })}
-                >
+                <Form.Row label={t('join-new-identity.label')} description={t('join-new-identity.description')}>
                   <Button
                     variant='destructive'
                     onClick={handleJoinNewIdentity}

@@ -21,13 +21,13 @@ export type ClientPluginOptions = ClientOptions & {
   shareableLinkOrigin?: string;
 
   /**
-   * Surface the destructive flows for adopting an existing identity on this device (join via
-   * device invitation, restore from a recovery code). Both wipe local storage first, so they
-   * duplicate — and are strictly worse than — an onboarding gate that offers the same flows
-   * before any data exists. Apps that show such a gate pass the inverse of its condition.
+   * Surface the identity-swapping actions kept for testing: join another identity by device
+   * invitation, or restore one from a recovery code. Both wipe local storage before they run, so
+   * an app whose onboarding gate offers the same flows on a clean profile should pass the inverse
+   * of that gate's condition rather than expose them to real users.
    * @default false
    */
-  identityRecovery?: boolean;
+  identityTestActions?: boolean;
 
   /**
    * Path for the invitation link.

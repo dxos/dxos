@@ -30,7 +30,6 @@ export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
 
 export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }: ResetDialogProps) => {
   const { t } = useTranslation(translationKey);
-  const { t: tClient } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   // The bare storage reset is presented as logging out; the other modes swap to a new identity.
@@ -57,16 +56,16 @@ export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }:
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{isLogout ? tClient('logout.label') : t('reset-dialog.title')}</Dialog.Title>
+        <Dialog.Title>{isLogout ? t('logout.label', { ns: meta.profile.key }) : t('reset-dialog.title')}</Dialog.Title>
       </Dialog.Header>
       <Dialog.Body>
         <Dialog.Description classNames='sr-only'>
-          {isLogout ? tClient('logout.description') : t('reset-dialog.description')}
+          {isLogout ? t('logout.description', { ns: meta.profile.key }) : t('reset-dialog.description')}
         </Dialog.Description>
         <ConfirmReset
           active
           mode={mode}
-          confirmLabel={isLogout ? tClient('logout.label') : undefined}
+          confirmLabel={isLogout ? t('logout.label', { ns: meta.profile.key }) : undefined}
           onConfirm={handleReset}
           onCancel={handleCancel}
         />

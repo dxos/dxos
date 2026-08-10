@@ -87,8 +87,8 @@ const pluginTranslations = [
         'logout-section.title': 'Log out',
         'logout-section.description':
           'Logging out erases all data on this device. Anything that has not synced to another device or to the cloud will be lost.',
-        'identity-recovery-section.title': 'Testing',
-        'identity-recovery-section.description':
+        'identity-test-section.title': 'Testing',
+        'identity-test-section.description':
           'Shown only when no hub is configured. These adopt a different identity on this device, erasing all data on it first.',
         'display-name.label': 'Display name',
         'display-name.description': 'Your name as it appears in the app.',
