@@ -506,7 +506,7 @@ export const AnalyzeMailbox = Operation.make({
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore],
+  services: [AiService.AiService, Database.Service, FactStore, Trace.TraceService],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
       description: 'Mailbox whose feed messages are analyzed.',
@@ -537,6 +537,9 @@ export const AnalyzeMailbox = Operation.make({
  * so it coexists with the `#sync` monitor. `MailboxArticle` and the toolbar action subscribe to it.
  */
 export const createProcessProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#process';
+
+/** Progress-registry key for a mailbox's fact-analysis monitor ({@link AnalyzeMailbox}). */
+export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#analyze';
 
 /** Default page size for {@link ProcessMailbox} cursor commits. */
 export const DEFAULT_PROCESS_MAILBOX_PAGE_SIZE = 10;

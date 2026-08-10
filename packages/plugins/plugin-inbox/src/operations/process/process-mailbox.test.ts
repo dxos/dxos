@@ -109,6 +109,36 @@ describe('ProcessMailbox operation', () => {
   );
 
   it.effect(
+    "never adopts another consumer's cursor on the same feed",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { db, mailbox, feed, messages } = yield* seedMailbox();
+
+        // An untagged feed cursor (the `AnalyzeMailbox` shape) already tracking this feed.
+        const foreign = db.add(
+          Cursor.make({
+            max: Cursor.formatKey(Date.parse(messages[2].created)),
+            spec: { kind: 'feed', source: Ref.make(feed), target: Ref.make(mailbox) },
+          }),
+        );
+        yield* Effect.promise(() => db.flush());
+
+        // The pipeline creates its own tagged cursor and processes from position 0 — the foreign
+        // cursor's advanced position must not suppress the run, and its state must stay untouched.
+        const result = yield* Operation.invoke(InboxOperation.ProcessMailbox, { mailbox: Ref.make(mailbox) });
+        expect(result.processed).toBe(3);
+        const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
+        expect(cursors).toHaveLength(2);
+        expect(Cursor.parseKey(foreign.max)).toBe(Date.parse(messages[2].created));
+        const tagged = cursors.find((cursor) => Obj.getKeys(cursor, PROCESS_CURSOR_KEY_SOURCE).length > 0);
+        expect(tagged?.id).not.toBe(foreign.id);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'skips messages with a malformed created timestamp',
     Effect.fnUntraced(
       function* ({ expect }) {

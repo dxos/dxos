@@ -27,6 +27,22 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
 - [x] **Tests** — 3 node unit tests (`process-mailbox.test.ts`: cursor tag + advance, incremental,
       reset cycle, malformed `created` skip) + stories-inbox `ProcessPipeline.stories.tsx` play test
       (run 3 → rerun 0 → reset → run 3) green.
+- [x] **Storybook driven from the `@dxos/fixtures` mailbox corpus** — `.storybook/main.mts` vite
+      middleware serves `/fixtures/<name>.json` (node-side `fixturePath`, `DX_FIXTURES_DIR`
+      override); the story seeds from it (391 real messages) with a demo fallback so CI stays
+      green; play test made count-agnostic + load-stabilized. Verified live on :9016 and headless
+      with/without the fixture.
+- [x] **Progress monitor in the story** — ProgressPlugin + `useProgressMonitors` meters (with
+      cancel) in the harness statusbar; verified live (meter + cancel → interrupted run, committed
+      facts + cursor survive).
+- [x] **Fact-pipeline variant** — Analyze button runs `AnalyzeMailbox` against local Ollama
+      (`StoryAiPlugin`, strict:false, pageSize 1); `runFactPipeline` gained an `onProgress` seam and
+      `AnalyzeMailbox` now emits `#analyze` progress. Live-verified: meter ticks, facts committed.
+      Found + fixed TWO real bugs en route: (1) `AnalyzeMailbox` adopted other consumers' tagged
+      cursors on the same feed (it resumed from the process pipeline's position) — its finder now
+      matches only untagged cursors; (2) `runFactPipeline` streamed in feed order, so a newest-first
+      feed (archive import) advanced the cursor past everything after one message — messages are now
+      sorted ascending. Regression tests for both.
 - [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
 - [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /

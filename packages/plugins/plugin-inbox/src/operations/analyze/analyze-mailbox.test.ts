@@ -93,4 +93,32 @@ describe('runFactPipeline', () => {
     // Re-run against the same store + cursor skips every message (cursor + source dedup).
     expect(result.second.processed).toBe(0);
   });
+
+  test('processes every message of a newest-first feed (archive import order)', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Message.Message, Mailbox.Mailbox, Feed.Feed, Cursor.Cursor],
+    });
+
+    const mailbox = Mailbox.make({ name: 'Inbox' });
+    db.add(mailbox);
+    const feed = mailbox.feed.target!;
+    // Appended newest-first: without the ascending sort, the first commit advances the cursor past
+    // the two older messages and the run ends at processed 1.
+    await db.appendToFeed(feed, [
+      makeMessage('3', '2026-06-03T00:00:00.000Z'),
+      makeMessage('2', '2026-06-02T00:00:00.000Z'),
+      makeMessage('1', '2026-06-01T00:00:00.000Z'),
+    ]);
+    await db.flush();
+
+    const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
+    const result = await runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 1 }).pipe(
+      Effect.provide(Database.layer(db)),
+      Effect.provide(FactStoreLive.layerMemory),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect(result.processed).toBe(3);
+    expect(Cursor.parseKey(cursor.max)).toBe(Date.parse('2026-06-03T00:00:00.000Z'));
+  });
 });

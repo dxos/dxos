@@ -84,9 +84,11 @@ export const runFactPipeline = (options: {
   readonly pageSize: number;
   /** In-flight parallelism for the per-message extraction stage (defaults to 1 = serial). */
   readonly concurrency?: number;
+  /** Called after each committed page with the running totals — the live-progress seam (e.g. a UI meter). */
+  readonly onProgress?: (progress: { processed: number; facts: number }) => void;
 }): Effect.Effect<{ processed: number; facts: number }, never, FactStore | Database.Service> =>
   Effect.gen(function* () {
-    const { feed, cursor, extract, pageSize, concurrency = 1 } = options;
+    const { feed, cursor, extract, pageSize, concurrency = 1, onProgress } = options;
     const store = yield* FactStore;
 
     // Sources (== `messageSource`) already indexed — the precise skip; the cursor is only a coarse
@@ -102,7 +104,12 @@ export const runFactPipeline = (options: {
 
     let processed = 0;
     let facts = 0;
-    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    // Ascending key order is load-bearing: the sink advances `cursorKey` per committed page and the
+    // dedup stage reads it live, so on an unordered feed (e.g. an archive imported newest-first) the
+    // first-committed newest message would advance the cursor past every older one.
+    const messages = (yield* Feed.query(feed, Filter.type(Message.Message)).run)
+      .slice()
+      .sort((a, b) => Date.parse(a.created) - Date.parse(b.created));
     log.info('analyze: pipeline start', {
       messages: messages.length,
       cursorKey,
@@ -152,6 +159,7 @@ export const runFactPipeline = (options: {
               facts,
               cursorKey,
             });
+            onProgress?.({ processed, facts });
           }),
       }),
     );
