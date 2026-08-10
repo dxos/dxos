@@ -21,14 +21,6 @@ body {
  * to the rendered React shell.
  */
 #boot-loader {
-  /*
-   * The swarm's outer start circle: radius 136 units of the 400×300 viewBox
-   * scaled with `xMidYMid meet`, i.e. 136·min(vw/400, vh/300) — the status
-   * block anchors just below it, clear of the whole animation.
-   */
-  --boot-loader-outer-radius: min(34vw, 45.34vh);
-  --boot-loader-status-gap: 24px;
-
   position: fixed;
   inset: 0;
   z-index: 10;
@@ -231,11 +223,11 @@ body {
 
 #boot-loader-status {
   position: absolute;
-  top: 50%;
+  /* Log centred at 75% viewport height — clear of the animation at any aspect. */
+  top: 75%;
   left: 0;
   right: 0;
-  /* Sit just below the swarm's outer circle plus the configured gap. */
-  transform: translate(0, calc(var(--boot-loader-outer-radius) + var(--boot-loader-status-gap)));
+  transform: translate(0, -50%);
   /*
    * Slightly de-emphasised vs body text so the brand mark + swarm stay the
    * dominant focus, but high enough to remain legible on both light and dark
