@@ -388,8 +388,6 @@ export const FormError = ({ children, classNames }: FormErrorProps) => {
 
   return (
     <Input.Root validationValence='error'>
-      {/* Addressable so a test can report why a submit failed, rather than only that a dialog stayed
-          open. */}
       <Input.Validation classNames={classNames} data-testid='form.error'>
         {children}
       </Input.Validation>
