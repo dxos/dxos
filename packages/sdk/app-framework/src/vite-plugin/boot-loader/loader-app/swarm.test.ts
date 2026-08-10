@@ -109,10 +109,9 @@ describe('projectNogo', () => {
 });
 
 describe('dotFill', () => {
-  test('grey-blue tint while colourless, brand navy when docked and colourized', ({ expect }) => {
-    expect(dotFill(0, 0)).toBe('rgb(56,64,72)');
-    expect(dotFill(1, 0)).toBe('rgb(118,138,158)');
-    expect(dotFill(1, 1)).toBe('rgb(5,40,61)');
+  test('sweeps the mark palette: mid-ring blue loose, outer-ring navy docked', ({ expect }) => {
+    expect(dotFill(0)).toBe('rgb(1,122,183)');
+    expect(dotFill(1)).toBe('rgb(5,40,61)');
   });
 });
 

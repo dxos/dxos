@@ -6,15 +6,16 @@ import { type Component, onCleanup, onMount } from 'solid-js';
 
 import { type LoaderStore } from './store';
 import {
+  RING_LINK_COLOR,
   type SwarmConfig,
   type SwarmDot,
   type SwarmVariant,
+  TRANSIENT_LINK_COLOR,
   applyOutro,
   createDots,
   defaultSwarmConfig,
   dotFill,
   dotPosition,
-  linkStroke,
   litCount,
   outroFactor,
   pickRandomVariant,
@@ -33,12 +34,13 @@ export type SwarmProps = {
 
 const MARK_SIZE = 84;
 const MARK_HALF = MARK_SIZE / 2;
+// The composer glyph paints x 20..176 of its 256 viewBox (visual centre 98, not
+// 128); shift the nested svg so the glyph — not its box — centres on the ring.
+const MARK_GLYPH_SHIFT_X = (MARK_SIZE * (128 - 98)) / 256;
 
 // Snaps `shown` to the target within 5% so a large progress jump doesn't leave a visible eased trail.
 const SHOWN_SNAP_THRESHOLD = 0.05;
 const SHOWN_EASE_RATE = 0.18;
-// Duration (ms) of the grayscale ↔ colour cross-fade the mark drives via `colorFactor`.
-const COLOR_EASE_MS = 500;
 const MAX_FRAME_DELTA_MS = 50;
 
 type GhostPoint = { x: number; y: number };
@@ -74,7 +76,6 @@ export const Swarm: Component<SwarmProps> = (props) => {
     : [];
 
   let hover = false;
-  let colorFactor = 0;
   let dismissingSince: number | undefined;
   let shown = props.store.progress();
   let ghostElapsedMs = 0;
@@ -109,13 +110,8 @@ export const Swarm: Component<SwarmProps> = (props) => {
     }
     const outro = outroFactor(config, dismissingSince === undefined ? undefined : nowMs - dismissingSince);
 
+    // The CSS filter transition on `#boot-loader-swarm` does the actual cross-fade.
     const wantColor = phase === 'dismissing' || hover;
-    const colorTarget = wantColor ? 1 : 0;
-    const colorStep = dtMs / COLOR_EASE_MS;
-    colorFactor =
-      colorTarget > colorFactor
-        ? Math.min(colorTarget, colorFactor + colorStep)
-        : Math.max(colorTarget, colorFactor - colorStep);
 
     const lit = litCount(config, shown);
     ghostElapsedMs += dtMs;
@@ -162,7 +158,7 @@ export const Swarm: Component<SwarmProps> = (props) => {
         circle.setAttribute('cx', String(x));
         circle.setAttribute('cy', String(y));
         circle.setAttribute('r', String(config.dotSize * radiusScale));
-        circle.setAttribute('fill', dotFill(settleEased, colorFactor));
+        circle.setAttribute('fill', dotFill(settleEased));
         circle.setAttribute('opacity', String(baseOpacity * opacityScale));
       }
 
@@ -187,7 +183,6 @@ export const Swarm: Component<SwarmProps> = (props) => {
     }
 
     if (hasLinks) {
-      const stroke = linkStroke(colorFactor);
       // Unlit dots sit invisibly on their slots and are still in link range, so skip transient links entirely.
       const links = reducedMotion ? [] : transientLinks(config, dots);
       for (let index = 0; index < linkRefs.length; index++) {
@@ -200,7 +195,6 @@ export const Swarm: Component<SwarmProps> = (props) => {
           line.setAttribute('y1', String(dotA.y));
           line.setAttribute('x2', String(dotB.x));
           line.setAttribute('y2', String(dotB.y));
-          line.setAttribute('stroke', stroke);
           line.setAttribute('opacity', String(0.25 * link.closeness));
         } else {
           line.setAttribute('opacity', '0');
@@ -217,7 +211,6 @@ export const Swarm: Component<SwarmProps> = (props) => {
           line.setAttribute('y1', String(dotA.y));
           line.setAttribute('x2', String(dotB.x));
           line.setAttribute('y2', String(dotB.y));
-          line.setAttribute('stroke', stroke);
           line.setAttribute('opacity', String(ringOpacity));
         } else {
           line.setAttribute('opacity', '0');
@@ -225,7 +218,7 @@ export const Swarm: Component<SwarmProps> = (props) => {
       }
     }
 
-    markRef?.classList.toggle('boot-loader-mark-color', wantColor);
+    fieldRef?.classList.toggle('boot-loader-color', wantColor);
 
     raf = requestAnimationFrame(animate);
   };
@@ -254,11 +247,16 @@ export const Swarm: Component<SwarmProps> = (props) => {
     >
       {hasLinks &&
         Array.from({ length: config.maxLinks }, (_, index) => (
-          <line ref={(element) => (linkRefs[index] = element)} opacity={0} />
+          <line ref={(element) => (linkRefs[index] = element)} opacity={0} stroke={TRANSIENT_LINK_COLOR} />
         ))}
       {hasLinks &&
         dots.map((_, index) => (
-          <line ref={(element) => (ringLinkRefs[index] = element)} opacity={0} stroke-width={0.5} />
+          <line
+            ref={(element) => (ringLinkRefs[index] = element)}
+            opacity={0}
+            stroke={RING_LINK_COLOR}
+            stroke-width={0.5}
+          />
         ))}
       {hasTrails &&
         dots.flatMap((dot, dotIndex) =>
@@ -270,7 +268,7 @@ export const Swarm: Component<SwarmProps> = (props) => {
               cx={dot.startX}
               cy={dot.startY}
               r={config.dotSize}
-              fill={dotFill(0, 0)}
+              fill={dotFill(0)}
               opacity={0}
             />
           )),
@@ -281,13 +279,13 @@ export const Swarm: Component<SwarmProps> = (props) => {
           cx={dot.startX}
           cy={dot.startY}
           r={config.dotSize}
-          fill={dotFill(0, 0)}
+          fill={dotFill(0)}
         />
       ))}
       <svg
         id='boot-loader-swarm-mark'
         ref={markRef}
-        x={config.centerX - MARK_HALF}
+        x={config.centerX - MARK_HALF + MARK_GLYPH_SHIFT_X}
         y={config.centerY - MARK_HALF}
         width={MARK_SIZE}
         height={MARK_SIZE}

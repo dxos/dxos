@@ -40,11 +40,15 @@ export type SwarmDot = {
   y: number;
 };
 
-const BRAND_RGB = [5, 40, 61] as const;
-// Boot-time palette carries a subtle navy cast rather than pure grey.
-const LOOSE_RGB = [56, 64, 72] as const;
-const DOCKED_RGB = [118, 138, 158] as const;
-const LINK_RGB = [105, 125, 145] as const;
+// Dots wear the mark's own palette — the field-level grayscale filter (see
+// `boot-loader.css`) greys them identically to the mark until ready/hover.
+const LOOSE_RGB = [1, 122, 183] as const; // The mark's mid ring.
+const DOCKED_RGB = [5, 40, 61] as const; // The mark's outer ring.
+
+/** Stroke for the transient proximity links between swarming dots. */
+export const TRANSIENT_LINK_COLOR = 'rgb(1,122,183)';
+/** Stroke for the welded chain between docked ring neighbours. */
+export const RING_LINK_COLOR = 'rgb(5,40,61)';
 
 const BASE: Omit<SwarmConfig, 'variant' | 'dotCount' | 'dotSize' | 'ringRotationSpeed'> = {
   centerX: 200,
@@ -149,19 +153,10 @@ export const smoothstep = (x: number): number => {
 
 const lerp = (from: number, to: number, fraction: number): number => from + (to - from) * fraction;
 
-const dotChannel = (channel: 0 | 1 | 2, settleEased: number, colorFactor: number): number => {
-  const tinted = lerp(LOOSE_RGB[channel], DOCKED_RGB[channel], settleEased);
-  const branded = lerp(LOOSE_RGB[channel], BRAND_RGB[channel], settleEased);
-  return Math.round(lerp(tinted, branded, colorFactor));
-};
-
-export const dotFill = (settleEased: number, colorFactor: number): string =>
-  `rgb(${dotChannel(0, settleEased, colorFactor)},${dotChannel(1, settleEased, colorFactor)},${dotChannel(2, settleEased, colorFactor)})`;
-
-export const linkStroke = (colorFactor: number): string => {
-  const redChannel = Math.round(lerp(LINK_RGB[0], BRAND_RGB[0], colorFactor));
-  const greenChannel = Math.round(lerp(LINK_RGB[1], BRAND_RGB[1], colorFactor));
-  const blueChannel = Math.round(lerp(LINK_RGB[2], BRAND_RGB[2], colorFactor));
+export const dotFill = (settleEased: number): string => {
+  const redChannel = Math.round(lerp(LOOSE_RGB[0], DOCKED_RGB[0], settleEased));
+  const greenChannel = Math.round(lerp(LOOSE_RGB[1], DOCKED_RGB[1], settleEased));
+  const blueChannel = Math.round(lerp(LOOSE_RGB[2], DOCKED_RGB[2], settleEased));
   return `rgb(${redChannel},${greenChannel},${blueChannel})`;
 };
 

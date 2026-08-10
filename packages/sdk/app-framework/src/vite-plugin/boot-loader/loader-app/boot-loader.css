@@ -85,17 +85,28 @@ body {
 }
 
 #boot-loader-swarm {
+  /*
+   * Absolutely pinned: an svg with only `width/height: 100%` falls back to its
+   * intrinsic 4:3 viewBox ratio in some layouts, overflowing (and de-centering)
+   * the scene on wide viewports.
+   */
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   overflow: visible;
 }
 
-/* Mark greyscale until ready/hover; percentage (not the `none`/`grayscale` keyword) keeps `transition: filter` interpolable. */
-#boot-loader-swarm-mark {
+/*
+ * The whole field (mark, dots, links) greyscales as one until ready/hover, so
+ * the swarm's grey levels match the mark's by construction; percentage (not the
+ * `none`/`grayscale` keyword) keeps `transition: filter` interpolable.
+ */
+#boot-loader-swarm {
   filter: grayscale(100%);
   transition: filter 500ms ease-out;
 }
-#boot-loader-swarm-mark.boot-loader-mark-color {
+#boot-loader-swarm.boot-loader-color {
   filter: grayscale(0%);
 }
 
