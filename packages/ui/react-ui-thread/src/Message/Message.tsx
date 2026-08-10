@@ -194,9 +194,6 @@ const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) =
 
 MessageBody.displayName = 'Message.Body';
 
-/** Stand-in for the dependencies an in-progress edit must not be rebuilt by. */
-const EDITING_DEP = Symbol('editing');
-
 const TextBlock = ({
   block,
   isAuthor,
@@ -238,8 +235,9 @@ const TextBlock = ({
       ],
     }),
     // While editing, the editor owns its content and its authorisation: pinning both keeps an incoming
-    // `block.text` update or member-list refresh from rebuilding the view being typed in.
-    [editing ? EDITING_DEP : block.text, editing, editing ? EDITING_DEP : isAuthor, themeMode, handleDocumentChange],
+    // `block.text` update or member-list refresh from rebuilding the view being typed in. `editing` is
+    // itself a dep, so the flip still rebuilds.
+    [editing, editing ? undefined : block.text, editing ? undefined : isAuthor, themeMode, handleDocumentChange],
   );
 
   useEffect(() => {
