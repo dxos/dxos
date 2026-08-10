@@ -205,10 +205,10 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
    do not adjust severity.
 4. **PR-comment idempotency** mechanism (hidden marker vs delete-and-repost) —
    still open, deferred to Phase 3.
-5. **Incremental persistence.** The run store is git-ignored, so incremental base
-   resolution (newest finalized ancestor) has nothing to read across fresh clones
-   and the base is the merge-base with main (whole branch diff). Committing
-   finalized reviews for true incrementality is a Phase 3 decision.
+5. ~~**Incremental persistence.**~~ **Resolved: the finalized `REVIEW.md` is
+   committed** (only the transient staging/manifest/fragments stay git-ignored),
+   so base resolution reads prior reviews across clones and reviews only the delta
+   since the newest finalized ancestor.
 
 ## Decisions log
 
@@ -232,8 +232,8 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
 - Scripts are dependency-free Node ESM `.mjs` — a hand-rolled frontmatter parser
   is used because a standalone script can't resolve a pnpm-hoisted YAML package.
 - Subagents run on **Sonnet**.
-- The run store (`.agents/reviews/`) is **git-ignored** — runs are ephemeral
-  artifacts.
+- The finalized `REVIEW.md` is **committed** for incremental base resolution; the
+  transient run inputs (STAGING.md, groups.json, groups/) stay git-ignored.
 
 ## Status
 

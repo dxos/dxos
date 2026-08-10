@@ -134,9 +134,10 @@ definition.
 
 ## Notes
 
-- **Diff base** is incremental in principle (the newest finalized ancestor
-  review), but the run store is git-ignored, so in practice the base is the
-  merge-base with `origin/main` — the whole branch diff. Persisting finalized
-  reviews for true incrementality is a later phase.
+- **Diff base is incremental.** The finalized `REVIEW.md` is committed (only the
+  transient staging/manifest/fragments are git-ignored), so base resolution finds
+  the newest finalized review whose commit is an ancestor of HEAD and reviews only
+  what changed since — falling back to the merge-base with `origin/main` on the
+  first run.
 - **PR-comment posting** from `finalize.mjs` is a later phase; today finalize
   writes `REVIEW.md` only.
