@@ -223,8 +223,8 @@ body {
 
 #boot-loader-status {
   position: absolute;
-  /* Log centred at 75% viewport height — clear of the animation at any aspect. */
-  top: 75%;
+  /* Log centred at 87.5% viewport height — clear of the animation at any aspect. */
+  top: 87.5%;
   left: 0;
   right: 0;
   transform: translate(0, -50%);
