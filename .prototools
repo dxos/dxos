@@ -1,18 +1,18 @@
 # https://moonrepo.dev/docs/proto/config
 
-# IMPORTANT: every pin below is duplicated outside this file — CI workflows and composite actions pin
-# moon/proto and the container image tag, `.github/Dockerfile` installs node and pnpm, and the root
-# `package.json` + catalog carry pnpm and moon for the non-proto entrypoints. None of those read
-# `.prototools`, and a divergence only surfaces on a cold cache, so bumping a version here is half the
-# change. Sweep for the old one and update every hit:
+# IMPORTANT — this file is the intended source of truth for every version below, but not all of them can
+# live only here: a container image is built before proto exists, a GitHub Action takes its version as an
+# input, an npm manifest needs a literal. Those copies are kept to a minimum and each survivor is one that
+# could not be removed, so a bump here is only the first half of the change — sweep the repo for the old
+# version and update every hit:
 #
 #   git grep -n '<old version>' -- ':!pnpm-lock.yaml'
 #
+# Divergence is silent, which is why the sweep matters: the copy outside this file typically wins early in
+# a CI job and the pin here wins once moon's toolchain cache exists, so a mismatch first bites on a cold
+# cache, long after the commit that introduced it.
+
 proto = "0.58.2"
-# NOTE: Keep node and pnpm in sync with `.github/Dockerfile`, which installs them too.
-#  CI's setup action runs `pnpm install` before any moon task, so the image supplies them until moon's
-#  toolchain cache exists. Everything after that uses the versions here, which is why a mismatch stays
-#  invisible until a cache miss.
 node = "24.11.1"
 pnpm = "10.28.0"
 # 1.3.4 leaks `--smol` into `process.argv` of every `--compile`d binary, which makes the published
@@ -20,10 +20,8 @@ pnpm = "10.28.0"
 bun = "1.3.11"
 
 # Upgrading moon: https://moonrepo.dev/docs/install#upgrading
-# NOTE: Moon is also included in the npm packages at the repo root.
-#  This is only for compability purposes (i.e., supporting Cloudflare Pages deploys).
-#  It is expected that developers will be using moon via proto, but they should be kept in sync.
-# NOTE: Make sure those versions match!
+# The root npm packages carry moon too, purely so Cloudflare Pages deploys work — they never run proto.
+# Developers are expected to use moon via proto.
 moon = "2.4.5"
 rust = "1.93.0"
 
