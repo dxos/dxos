@@ -89,7 +89,7 @@ const pluginTranslations = [
           'Logging out erases all data on this device. Anything that has not synced to another device or to the cloud will be lost.',
         'identity-test-section.title': 'Testing',
         'identity-test-section.description':
-          'Shown only when no hub is configured. These adopt a different identity on this device, erasing all data on it first.',
+          'Enabled for testing. These switch this device to a different identity, erasing all data on it first.',
         'display-name.label': 'Display name',
         'display-name.description': 'Your name as it appears in the app.',
         'display-name-input.placeholder': 'Enter a name',
@@ -130,8 +130,6 @@ const pluginTranslations = [
         'qr.label': 'QR Code',
         'recover-identity.label': 'Use a recovery code',
         'logout.label': 'Log out',
-        'reset-dialog.description': 'Reset storage',
-        'reset-dialog.title': 'Reset storage',
         'navigation-failed-toast.title': 'Link could not be processed',
         'navigation-failed-toast.description': 'Something went wrong while handling this link. Please try again.',
       },
