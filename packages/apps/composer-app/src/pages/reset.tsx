@@ -16,15 +16,23 @@ import { ResetDialog } from '../components';
 import { resetComposerStorage } from '../recovery';
 import { LOG_STORE_DB_NAME, translations } from '../util';
 
-// Minimal bootstrap — theme, translations, and the dialog only; no client services or plugins.
-// The wipe runs only after the dialog's explicit confirm (previously a bare `confirm()` alert
-// wiped storage immediately on load).
+const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
+
+// Minimal bootstrap — theme, translations, and the dialog only; no client services or plugins, so
+// the page renders even when the app itself cannot boot.
 const handleReset = async () => {
-  await resetComposerStorage((message) => log.info(message));
+  try {
+    // The wipe deletes every IndexedDB database for the origin; the log store's open connection
+    // would block that deletion.
+    await logStore.close();
+    await resetComposerStorage((message) => log.info(message));
+  } catch (error) {
+    log.catch(error);
+    return;
+  }
+
   window.location.href = '/';
 };
-
-const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
 
 const root = document.getElementById('root');
 invariant(root);

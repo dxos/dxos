@@ -20,9 +20,10 @@ export const resetComposerStorage = async (onProgress: ResetProgress): Promise<v
   };
 
   onProgress('Clearing all storage…');
-  localStorage.clear();
-  sessionStorage.clear();
-  onProgress('localStorage and sessionStorage cleared');
+  await attempt('localStorage and sessionStorage', async () => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
 
   await attempt('IndexedDB', clearIndexedDB);
   await attempt('OPFS', clearOPFS);

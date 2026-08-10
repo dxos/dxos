@@ -9,6 +9,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useProgress } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
@@ -95,9 +96,16 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     useAsyncEffect(updateInfo, [updateInfo]);
 
     const handleReset = useCallback(async () => {
-      await invokePromise(SpaceOperation.RemoveAllObjects, undefined, { spaceId: space.id });
-      await updateInfo();
-    }, [invokePromise, space, updateInfo]);
+      try {
+        const { error } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, { spaceId: space.id });
+        if (error) {
+          log.catch(error);
+        }
+        await updateInfo();
+      } catch (error) {
+        log.catch(error);
+      }
+    }, [space, invokePromise, updateInfo]);
 
     const handleCreateData = useCallback(
       async (typename: string) => {
@@ -108,7 +116,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
           await updateInfo();
         }
       },
-      [typeMap, count, space, onCreateObjects, updateInfo],
+      [space, typeMap, count, updateInfo, onCreateObjects],
     );
 
     return (
