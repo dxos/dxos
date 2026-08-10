@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { Provider } from '@dxos/ai';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -15,7 +16,7 @@ const meta = {
   title: 'plugins/plugin-assistant/containers/AssistantSettings',
   tags: ['settings'],
   component: AssistantSettings,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({})],
   parameters: {
     layout: 'fullscreen',
     translations,

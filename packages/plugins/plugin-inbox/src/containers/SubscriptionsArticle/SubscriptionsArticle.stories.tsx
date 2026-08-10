@@ -29,8 +29,7 @@ const SENDERS: { email: string; name: string; count: number }[] = [
 ];
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   if (!mailbox) {
     return <Loading />;

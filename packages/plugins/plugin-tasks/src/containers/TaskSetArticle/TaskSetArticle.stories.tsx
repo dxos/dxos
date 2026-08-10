@@ -46,7 +46,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='dx-container is-full bs-full'>
+    <div className='dx-container w-full h-full'>
       <TaskSetArticle role='article' subject={subject} attendableId='story' />
     </div>
   );

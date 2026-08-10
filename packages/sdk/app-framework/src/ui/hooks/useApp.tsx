@@ -19,6 +19,7 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
+import { setupDevtools } from '../../devtools';
 import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
@@ -333,11 +334,6 @@ export const useApp = ({
     ),
     [fallback, manager, surfaces, ready, error],
   );
-};
-
-const setupDevtools = (manager: PluginManager.PluginManager) => {
-  (globalThis as any).composer ??= {};
-  (globalThis as any).composer.manager = manager;
 };
 
 /**

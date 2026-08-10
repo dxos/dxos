@@ -12,16 +12,17 @@
 
 import type { ProfilerSnapshot } from '../util/profiler';
 
-declare global {
-  var composer:
-    | {
-        profiler?: { snapshot?: () => ProfilerSnapshot };
-        /** The plugin manager; shape is framework-internal, so readers narrow what they use. */
-        manager?: { getModules?: () => unknown[] };
-        changeStorageVersionInMetadata?: (version: number) => void;
-      }
-    | undefined;
+// `globalThis.composer` itself is declared by `@dxos/app-framework`; a second `var composer` here
+// would collide with it and resolve every member to `{}`. Merge the app-only hooks onto its
+// interface instead.
+declare module '@dxos/app-framework' {
+  interface ComposerDevtools {
+    profiler?: { snapshot?: () => ProfilerSnapshot };
+    changeStorageVersionInMetadata?: (version: number) => void;
+  }
+}
 
+declare global {
   /** Long-task samples accumulated by the observer the startup spec installs. */
   var __longTasks: Array<{ start: number; duration: number }> | undefined;
 

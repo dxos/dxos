@@ -23,9 +23,9 @@ import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
+import { createSyncProgressKey } from '#sync';
 
 import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
-import { createSyncProgressKey } from '../operations/mail/mail-sync';
 import {
   getAllMailId,
   getCalendarsPath,

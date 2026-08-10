@@ -6,8 +6,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { Obj, Ref, Tag, Type } from '@dxos/echo';
-import { useType } from '@dxos/echo-react';
+import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { useQuery, useType } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -17,7 +17,7 @@ import { FactoryAnnotation } from '@dxos/schema';
 import { translationKey } from '#translations';
 import { type FormFieldMap, type RefFieldDataProps } from '#types';
 
-import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
+import { Form, META_TAGS_KEY, partitionMetaTags, withMetaTags } from '../Form';
 
 export type ObjectPropertiesProps = PropsWithChildren<
   { object: Obj.Unknown } & Pick<RefFieldDataProps, 'getCreateDefaults' | 'resolveCreateEntry'>
@@ -28,8 +28,13 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
   ({ children, object, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
     const meta = Obj.getMeta(object);
-    // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler).
-    const tags = [...meta.tags];
+    // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler). Provider-owned tags
+    // are held out of the form and written back untouched — see `partitionMetaTags`.
+    const spaceTags = useQuery(db, Filter.type(Tag.Tag));
+    const { editable: tags, preserved: preservedTags } = useMemo(
+      () => partitionMetaTags([...meta.tags], spaceTags),
+      [meta.tags, spaceTags],
+    );
     const values = useMemo(
       () => ({
         [META_TAGS_KEY]: tags,
@@ -93,8 +98,10 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         const hasTagsChange = changedPaths.some((path) => SchemaEx.splitJsonPath(path)[0] === META_TAGS_KEY);
         if (hasTagsChange) {
           Obj.update(object, (object) => {
-            // Copy so later in-place form mutations don't bypass the `Obj.update` boundary.
-            Obj.getMeta(object).tags = Array.isArray(metaTags) ? [...(metaTags as Ref.Ref<Tag.Tag>[])] : [];
+            // Copy so later in-place form mutations don't bypass the `Obj.update` boundary. The
+            // provider-owned tags the form never saw are restored, since this replaces `tags` wholesale.
+            const edited = Array.isArray(metaTags) ? (metaTags as Ref.Ref<Tag.Tag>[]) : [];
+            Obj.getMeta(object).tags = [...preservedTags, ...edited];
           });
         }
 
@@ -110,7 +117,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
           });
         }
       },
-      [object],
+      [object, preservedTags],
     );
 
     if (!formSchema) {
