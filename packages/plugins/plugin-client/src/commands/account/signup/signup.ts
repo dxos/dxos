@@ -22,8 +22,8 @@ import { Context as DxContext } from '@dxos/context';
 import { Ref } from '@dxos/echo';
 import { type HubHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { AccessToken, Atmosphere, Connection } from '@dxos/link';
-import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
+import { AccessToken, Connection } from '@dxos/link';
+import { ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
 
 import { ClientOperation } from '#operations';
 
@@ -214,7 +214,7 @@ const signUpWithAtmosphere = Effect.fn(function* ({
   const accessToken = defaultSpace.db.add(
     AccessToken.make({
       id: registration.accessTokenId,
-      source: Atmosphere.SOURCE,
+      source: ATMOSPHERE_SOURCE,
       account: registration.identifier,
       token: registration.accessToken,
       scopes: registration.scopes,
@@ -225,7 +225,7 @@ const signUpWithAtmosphere = Effect.fn(function* ({
   defaultSpace.db.add(
     Connection.make({
       name: registration.email,
-      connectorId: Atmosphere.PROVIDER_ID,
+      connectorId: OAuthProvider.ATPROTO,
       accessToken: Ref.make(accessToken),
     }),
   );

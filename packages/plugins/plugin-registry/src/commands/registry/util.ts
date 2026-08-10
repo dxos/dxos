@@ -13,8 +13,8 @@ import * as Schema from 'effect/Schema';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
-import { AccessToken, Atmosphere } from '@dxos/link';
-import { ALL_NSIDS, NSID } from '@dxos/protocols';
+import { AccessToken } from '@dxos/link';
+import { ALL_NSIDS, ATMOSPHERE_SOURCE, NSID } from '@dxos/protocols';
 
 export { ALL_NSIDS, NSID };
 
@@ -263,7 +263,7 @@ const resolveDefaultSpaceSession = (client: Client) =>
     const tokens = (yield* Effect.promise(() =>
       space.db.query(Filter.type(AccessToken.AccessToken)).run(),
     )) as AccessToken.AccessToken[];
-    const token = tokens.find((object) => object.source === Atmosphere.SOURCE && !!object.account && !!object.token);
+    const token = tokens.find((object) => object.source === ATMOSPHERE_SOURCE && !!object.account && !!object.token);
     if (!token?.account) {
       return undefined;
     }

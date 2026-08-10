@@ -344,6 +344,15 @@ export enum OAuthProvider {
 /** atproto OAuth scopes for the Atmosphere integration and account-recovery flows. */
 export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'] as const;
 
+/**
+ * `AccessToken.source` for the Atmosphere connection — the atproto account bound to a DXOS identity.
+ * atproto accounts are portable (both PDS and handle can change), so this is not a hostname. Every
+ * subsystem that looks up the account's credential matches on it, hence its home beside
+ * {@link OAuthProvider}. The connector that operates the connection is identified separately, by
+ * {@link OAuthProvider.ATPROTO} as its `Connector.id`.
+ */
+export const ATMOSPHERE_SOURCE = 'atproto.local';
+
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   provider: Schema.Enums(OAuthProvider),
   spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.

@@ -10,9 +10,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Context as DxContext } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { AccessToken, Atmosphere, Connection } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { ATMOSPHERE_SOURCE, OAuthProvider } from '@dxos/protocols';
 
 import { CompleteOAuthRegistration } from './definitions';
 import { createEdgeHttpClient } from './shared';
@@ -57,7 +58,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
       // OAuth recovery is atproto-only; the token belongs to the Atmosphere integration.
       const tokenObject = Obj.make(AccessToken.AccessToken, {
         id: result.accessTokenId,
-        source: Atmosphere.SOURCE,
+        source: ATMOSPHERE_SOURCE,
         account: result.identifier,
         token: result.accessToken,
         scopes: result.scopes,
@@ -76,7 +77,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
       defaultSpace.db.add(
         Connection.make({
           name: result.email ?? result.identifier,
-          connectorId: Atmosphere.PROVIDER_ID,
+          connectorId: OAuthProvider.ATPROTO,
           accessToken: Ref.make(tokenObject),
         }),
       );
