@@ -2,6 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
+import type {
+  GuildChannelResponse,
+  MessageResponse,
+  PrivateChannelResponse,
+  PrivateGroupChannelResponse,
+  ThreadResponse,
+} from 'dfx/types';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -12,17 +20,6 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import {
-  DiscordConfig,
-  DiscordREST,
-  DiscordRESTLive,
-  type GuildChannelResponse,
-  isMissingAccess,
-  type MessageResponse,
-  type PrivateChannelResponse,
-  type PrivateGroupChannelResponse,
-  type ThreadResponse,
-} from '@dxos/discord-client';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -117,7 +114,9 @@ export default FetchMessages.pipe(
               const messages = yield* rest.listMessages(channel.id, options).pipe(
                 Effect.map(Array.map(makeMessage)),
                 Effect.map((collected: ReadonlyArray<ReturnType<typeof makeMessage>>) => Array.reverse(collected)),
-                // A channel the credential cannot read should not abort the whole fetch.
+                // `dfx` is pinned to Effect 3, so its tagged errors do not type against a v4 error
+                // channel; Discord's "Missing Access" code is matched structurally instead. See the
+                // dfx note in the effect-smol project — the skill needs a v4-capable client.
                 Effect.catch((error) => (isMissingAccess(error) ? Effect.succeed([]) : Effect.fail(error))),
               );
               if (messages.length > 0) {
@@ -151,7 +150,7 @@ export default FetchMessages.pipe(
           .join('\n');
       },
       Effect.provide(
-        DiscordRESTLive.pipe(Layer.provideMerge(DiscordConfigFromCredential)).pipe(
+        DiscordRESTMemoryLive.pipe(Layer.provideMerge(DiscordConfigFromCredential)).pipe(
           Layer.provide(FetchHttpClient.layer),
         ),
       ),
@@ -167,6 +166,18 @@ const generateSnowflake = (unixTimestamp: number): bigint => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)
   return (BigInt(unixTimestamp * 1000) - discordEpoch) << 22n;
 };
+
+/** Discord's "Missing Access" error code, reported on a channel the bot cannot read. */
+const MISSING_ACCESS_CODE = 50001;
+
+const isMissingAccess = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  'cause' in error &&
+  typeof error.cause === 'object' &&
+  error.cause !== null &&
+  'code' in error.cause &&
+  error.cause.code === MISSING_ACCESS_CODE;
 
 const parseSnowflake = (snowflake: string): Date => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)

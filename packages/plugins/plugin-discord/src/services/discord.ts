@@ -2,44 +2,35 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DiscordConfig, type DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { DiscordConfig, type DiscordREST, DiscordRESTLive } from '@dxos/discord-client';
 import { Database, Err, type Ref } from '@dxos/echo';
 import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { DISCORD_API_BASE } from '../constants';
-import { edgeProxyFetchLayer } from './proxy-http-client';
-
-/**
- * Build a `DiscordREST` layer pinned to a specific credential.
- *
- * `baseUrl` stays at the real Discord host so the proxy's URL rewrite and
- * `Authorization` → `X-Cors-Proxy-Authorization` remap fire uniformly for
- * every request.
- */
-const makeLayer = (token: string, tokenKind: 'Bot' | 'Bearer'): Layer.Layer<DiscordREST> =>
-  DiscordRESTLive.pipe(
-    Layer.provide(DiscordConfig.layer({ token: Redacted.make(token), tokenKind, rest: { baseUrl: DISCORD_API_BASE } })),
-    Layer.provide(FetchHttpClient.layer.pipe(Layer.provide(edgeProxyFetchLayer))),
-  );
+import { makeEdgeProxyHttpClientLayer } from './proxy-http-client';
 
 /**
  * Build a `DiscordREST` layer pinned to a specific bot token.
  *
+ * Composes dfx's `DiscordRESTMemoryLive` (which brings its own in-memory
+ * rate-limit store) with a `DiscordConfig` carrying the token and our edge
+ * proxy `FetchHttpClient`. `baseUrl` stays at the real Discord host so the
+ * proxy's URL rewrite and `Authorization` → `X-Cors-Proxy-Authorization`
+ * remap fire uniformly for every request dfx emits.
+ *
  * Used by the credential-form validation flow, which holds a raw token that
  * hasn't yet been persisted as an `AccessToken`.
  */
-export const makeDiscordLayerFromToken = (token: string): Layer.Layer<DiscordREST> => makeLayer(token, 'Bot');
-
-/**
- * Build a `DiscordREST` layer pinned to a specific user OAuth token, which Discord requires be sent
- * as `Bearer` rather than the `Bot` scheme.
- */
-export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<DiscordREST> => makeLayer(token, 'Bearer');
+export const makeDiscordLayerFromToken = (token: string): Layer.Layer<DiscordREST> =>
+  DiscordRESTMemoryLive.pipe(
+    Layer.provide(DiscordConfig.layer({ token: Redacted.make(token), rest: { baseUrl: DISCORD_API_BASE } })),
+    Layer.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
+  );
 
 /**
  * Build a `DiscordREST` layer from a persisted {@link Connection} ref.
@@ -52,7 +43,26 @@ export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<Discor
 export const makeDiscordLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
-  makeLayerFromConnection(connectionRef, makeDiscordLayerFromToken);
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return makeDiscordLayerFromToken(accessToken.token);
+    }),
+  );
+
+/**
+ * Build a `DiscordREST` layer pinned to a specific user OAuth token.
+ *
+ * Identical to `makeDiscordLayerFromToken` except the edge-proxy fetch layer
+ * is configured to rewrite dfx's `Bot <token>` Authorization header to
+ * `Bearer <token>`, which is what Discord requires for user OAuth credentials.
+ */
+export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<DiscordREST> =>
+  DiscordRESTMemoryLive.pipe(
+    Layer.provide(DiscordConfig.layer({ token: Redacted.make(token), rest: { baseUrl: DISCORD_API_BASE } })),
+    Layer.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer({ tokenKind: 'Bearer' })))),
+  );
 
 /**
  * Build a `DiscordREST` layer from a persisted {@link Connection} ref, for use
@@ -61,16 +71,10 @@ export const makeDiscordLayer = (
 export const makeDiscordUserLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
-  makeLayerFromConnection(connectionRef, makeDiscordUserLayerFromToken);
-
-const makeLayerFromConnection = (
-  connectionRef: Ref.Ref<Connection.Connection>,
-  build: (token: string) => Layer.Layer<DiscordREST>,
-): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
   Layer.unwrap(
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);
       const accessToken = yield* Database.load(connection.accessToken);
-      return build(accessToken.token);
+      return makeDiscordUserLayerFromToken(accessToken.token);
     }),
   );

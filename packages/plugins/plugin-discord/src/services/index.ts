@@ -15,4 +15,4 @@ export {
   mapDiscordMessage,
   threadRefsOf,
 } from './discord-source';
-export { edgeProxyFetchLayer } from './proxy-http-client';
+export { type EdgeProxyHttpClientOptions, makeEdgeProxyHttpClientLayer } from './proxy-http-client';

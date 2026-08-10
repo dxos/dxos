@@ -46,7 +46,6 @@
       "@dxos/devtools",
       "@dxos/devtools-extension",
       "@dxos/discord-bot",
-      "@dxos/discord-client",
       "@dxos/discord-worker",
       "@dxos/display-name",
       "@dxos/dx-build",

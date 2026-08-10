@@ -100,7 +100,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/crawler": "workspace:*",
-    "@dxos/discord-client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/edge-client": "workspace:*",
@@ -118,6 +117,7 @@
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "dfx": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

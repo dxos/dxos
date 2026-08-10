@@ -70,11 +70,11 @@ await EffectEx.runPromise(
   program.pipe(
     Effect.provide(makeDiscordLayerFromToken(token)),
     Effect.catch((err) => {
-      // The Discord client surfaces the API body as a `cause` property on the wrapper error.
-      const cause = typeof err === 'object' && err !== null && 'cause' in err ? err.cause : err;
-      if (isDiscordError(cause)) {
-        console.error(`Discord API error: ${cause.message} (code ${cause.code})`);
-        if (cause.code === 50001) {
+      // `DiscordRestError` carries the decoded Discord body on `data`.
+      const body = typeof err === 'object' && err !== null && 'data' in err ? err.data : err;
+      if (isDiscordError(body)) {
+        console.error(`Discord API error: ${body.message} (code ${body.code})`);
+        if (body.code === 50001) {
           console.error(
             'Hint: the bot lacks READ_MESSAGE_HISTORY permission on this channel, or has not been invited to the server.',
           );

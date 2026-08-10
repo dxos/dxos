@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DiscordREST } from 'dfx';
+import type { GuildChannelResponse, MyGuildResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { DiscordREST, type GuildChannelResponse, type MyGuildResponse } from '@dxos/discord-client';
 import { log } from '@dxos/log';
 
 import { makeDiscordLayer } from '../services';

@@ -44,7 +44,7 @@ const FAILING_SOURCE = Layer.succeed(Source, {
   fetchMessages: () => Effect.fail(new CrawlError({ message: 'Missing Access' })),
 });
 
-/** A source whose fetch DIES (defect) — exercises defect isolation (a proxy can surface a 403 this way). */
+/** A source whose fetch DIES (defect) — exercises defect isolation (dfx can surface a 403 this way). */
 const DYING_SOURCE = Layer.succeed(Source, {
   listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
   fetchMessages: () => Effect.die(new Error('Missing Access')),

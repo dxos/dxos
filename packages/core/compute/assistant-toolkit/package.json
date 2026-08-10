@@ -60,7 +60,6 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
-    "@dxos/discord-client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
@@ -73,7 +72,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "dfx": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

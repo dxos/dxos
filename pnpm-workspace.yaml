@@ -403,6 +403,7 @@ catalog:
   defuddle: ^0.18.1
   del: ^5.1.0
   depcheck: ^1.4.7
+  dfx: ^1.0.15
   diff: ^8.0.3
   discord.js: ^14.14.1
   domain-browser: ^4.22.0

@@ -85,9 +85,6 @@
     },
     {
       "path": "../compute-runtime"
-    },
-    {
-      "path": "../discord-client"
     }
   ]
 }

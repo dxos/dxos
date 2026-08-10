@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DiscordREST } from 'dfx';
+import type { MessageResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 
-import { DiscordREST, type MessageResponse } from '@dxos/discord-client';
 import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
 

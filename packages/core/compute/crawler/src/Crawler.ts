@@ -99,7 +99,7 @@ const advance = (
       );
     }
 
-    // A source fetch can fail (typed error) OR die (defect — e.g. a proxy surfacing a 403 as a
+    // A source fetch can fail (typed error) OR die (defect — e.g. dfx/proxy surfacing a 403 as a
     // throw). Either way it is isolated to this target: mark it errored and continue with the rest
     // of the frontier rather than aborting the whole crawl.
     const fetched = yield* Effect.exit(

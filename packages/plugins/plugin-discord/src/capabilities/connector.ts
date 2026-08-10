@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DiscordREST } from 'dfx';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { DiscordREST, getStatus, isErrorResponse } from '@dxos/discord-client';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { ConnectionTestError } from '@dxos/plugin-connector';
@@ -22,7 +22,7 @@ import {
   DISCORD_USER_LABEL,
   DISCORD_USER_PROVIDER_ID,
 } from '../constants';
-import { formatDiscordSyncFailure } from '../errors';
+import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
 import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
 import * as DiscordOperation from '../types/DiscordOperation';
 import * as DiscordTargetOptions from '../types/DiscordTargetOptions';
@@ -62,13 +62,13 @@ const validateToken = (token: string) =>
   }).pipe(
     Effect.provide(makeDiscordLayerFromToken(token)),
     Effect.mapError((error) => {
-      if (isErrorResponse(error) && getStatus(error) === 401) {
+      if (isDiscordErrorResponse(error) && discordErrorStatus(error) === 401) {
         return new Error(
           'Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.',
         );
       }
       // Preserve Discord's code/message for 403/404/5xx etc. via formatDiscordSyncFailure
-      // — `String(error)` would collapse a tagged error to its `_tag` string.
+      // — `String(error)` would collapse a dfx tagged error to its `_tag` string.
       return error instanceof Error ? error : new Error(formatDiscordSyncFailure(error));
     }),
   );
@@ -158,8 +158,8 @@ const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
  * Both connectors share the same `GetDiscordChannels` discovery,
  * `materializeTarget` (empty feed-backed Channel per remote channel), and
  * `SyncDiscordChannel` sync operation. The auth difference is handled
- * transparently at the layer level: `makeDiscordUserLayerFromToken` pins the
- * client's `Authorization` scheme to `Bearer` instead of `Bot`.
+ * transparently at the layer level: `makeDiscordUserLayerFromToken` rewrites
+ * dfx's `Bot <token>` header to `Bearer <token>` inside the proxy fetch layer.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
