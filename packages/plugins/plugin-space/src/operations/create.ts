@@ -8,6 +8,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
@@ -16,7 +17,7 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { hues } from '@dxos/ui-types';
 import { iconValues } from '@dxos/ui-types';
 
-import { EdgeReplicationError, SpaceNotReadyError } from '../errors';
+import { SpaceNotReadyError } from '../errors';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
 import * as SpaceEvents from '../types/SpaceEvents';
 import { SpaceOperation } from './definitions';
@@ -46,10 +47,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         // Best-effort, and deliberately not fatal: the preference is committed on the host and
         // converges on its own, so only the local snapshot can fail here — and failing the operation
         // on that discards a space that already exists.
-        yield* Effect.tryPromise({
-          try: () => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED),
-          catch: EdgeReplicationError.wrap(),
-        }).pipe(Effect.catchAll((error) => Effect.logWarning('edge replication preference not observed', error)));
+        yield* Effect.tryPromise(() =>
+          space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED),
+        ).pipe(Effect.catchAll((error) => Effect.sync(() => log.catch(error))));
       }
       yield* Effect.tryPromise({
         try: () => space.waitUntilReady(),

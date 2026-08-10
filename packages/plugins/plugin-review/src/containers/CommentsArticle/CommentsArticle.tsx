@@ -227,9 +227,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // Membership, not attention: an attention gate closes in the window between a click recording
   // `state.current` and attention settling on the editor, dropping the just-set marker. Recomputing
   // from `anchors` + `state.current`, both reactive, involves no timing.
-  //
-  // The last path segment, since `state.current` may hold either spelling (see `CommentState`).
-  const currentObjectId = state.current?.split('/').pop();
+  const currentObjectId = ReviewCapabilities.currentObjectId(state.current);
 
   // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
   // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
@@ -241,7 +239,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       const threadId = Obj.getURI(thread);
       // Recorded unconditionally, revealed only on a change: skipping the write leaves the selection
       // on a stale spelling, so a freshly persisted comment never shows the marker.
-      const sameThread = state.current?.split('/').pop() === thread.id;
+      const sameThread = ReviewCapabilities.currentObjectId(state.current) === thread.id;
       registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
       if (sameThread) {
         // Re-revealing the plank pulls focus there ~170ms later, which lands mid-keystroke in an

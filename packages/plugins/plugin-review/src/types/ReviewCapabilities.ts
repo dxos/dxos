@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { ViewState } from '@dxos/react-ui-attention/types';
 import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
@@ -113,9 +114,20 @@ export type CommentState = {
   /** In-memory draft threads. */
   drafts: Record<string, AnchoredTo.AnchoredTo[]>;
   /**
-   * The current thread, as an object id or a URI — writers differ, and a URI's spelling changes when
-   * a draft persists (`echo:///<id>` → `echo://<spaceId>/<id>`), so readers MUST compare by the last
-   * path segment (the object id), never by string equality.
+   * The current thread, as an object id or an EID — writers differ, and an EID's spelling changes
+   * when a draft persists (`echo:///<id>` → `echo://<spaceId>/<id>`), so readers MUST compare via
+   * {@link currentObjectId}, never by string equality.
    */
   current?: string | undefined;
+};
+
+/**
+ * The object id named by {@link CommentState.current}, whichever spelling it holds.
+ */
+export const currentObjectId = (current: string | undefined): string | undefined => {
+  if (current === undefined) {
+    return undefined;
+  }
+  const eid = EID.tryParse(current);
+  return eid ? EID.getEntityId(eid) : current;
 };

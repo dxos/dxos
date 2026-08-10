@@ -16,12 +16,6 @@ export class DefaultSpaceDeletionError extends BaseError.extend(
   'The default space cannot be deleted; designate another space first.',
 ) {}
 
-/** Applying the space's edge-replication preference failed; the space itself was still created. */
-export class EdgeReplicationError extends BaseError.extend(
-  'EdgeReplicationError',
-  'Failed to apply the edge replication preference.',
-) {}
-
 /** The space's properties object never became available, so it cannot be safely used yet. */
 export class SpaceNotReadyError extends BaseError.extend(
   'SpaceNotReadyError',

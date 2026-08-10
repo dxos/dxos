@@ -16,7 +16,6 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SpacePlugin } from '#plugin';
 
-import { EdgeReplicationError } from '../errors';
 import { SpaceOperation } from './definitions';
 
 describe('SpaceOperation.Create', () => {
@@ -40,8 +39,7 @@ describe('SpaceOperation.Create', () => {
       ),
     );
 
-    expect(outcome).not.toBeInstanceOf(EdgeReplicationError);
-    expect((outcome as { space?: Space }).space).toBeDefined();
+    expect(outcome).toMatchObject({ space: expect.anything() });
   });
 });
 
