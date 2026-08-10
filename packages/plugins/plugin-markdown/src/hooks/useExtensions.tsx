@@ -19,6 +19,7 @@ import { Domino } from '@dxos/ui';
 import {
   AnchorWidget,
   Cursor,
+  EditorState,
   type EditorStateStore,
   EditorView,
   type Extension,
@@ -131,6 +132,9 @@ export const useExtensions = ({
     ],
   );
 
+  // The content ref exists but its target has not loaded: the editor has no persistence binding yet.
+  const contentPending = !!contentRef && !target;
+
   return useMemo<Extension[]>(
     () =>
       [
@@ -144,6 +148,14 @@ export const useExtensions = ({
             identity,
           }),
 
+        // Never editable before the binding: input typed into the unbound editor lives only in
+        // CodeMirror state, and the automerge extension's attach-reconcile then REPLACES the whole
+        // document with the loaded value — destroying it (measured in CI as a document filled with
+        // three paragraphs reading 0 chars, run 31344270360; a user typing into a slow-loading
+        // document loses those keystrokes the same way). `editable(false)` (not only the advisory
+        // readOnly) so the DOM is not contenteditable and callers' editability waits hold.
+        contentPending && [EditorState.readOnly.of(true), EditorView.editable.of(false)],
+
         // TODO(burdon): Reconcile with effect in parent.
         Obj.instanceOf(Markdown.Document, object) &&
           listener({
@@ -155,7 +167,7 @@ export const useExtensions = ({
         baseExtensions,
         selectionState(editorStateStore),
       ].filter(isTruthy),
-    [identity, space, id, object, target, baseExtensions],
+    [identity, space, id, object, target, contentPending, baseExtensions],
   );
 };
 
