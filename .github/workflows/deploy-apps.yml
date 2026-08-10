@@ -47,9 +47,11 @@ on:
         default: patch
 
 concurrency:
-  # One in-flight deploy per environment.
+  # One in-flight deploy per environment. Superseding is right everywhere except production, where the
+  # `release` job has already pushed a commit and a `composer-v*` tag by the time the artifacts build —
+  # cancelling there would strand a tagged release with nothing published against it.
   group: deploy-${{ inputs.environment || 'nightly' }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ inputs.environment != 'production' }}
 
 permissions:
   contents: read # `deploy` (pointer tags) and `tauri` (build-counter tags) opt in; the bump uses a PAT.
@@ -419,9 +421,10 @@ jobs:
       # Unconditional, nightly included — a silent nightly is only safe to read as success if a broken one
       # says so.
       - name: Notify Discord — deploy failed
-        # Skip when it was the "app targets this environment" check that failed — that's an invalid
-        # app/environment combo caught before any deploy was attempted, not a real deploy failure.
-        if: failure() && steps.validate.conclusion == 'success'
+        # Skip only when it was the "app targets this environment" check that failed — that's an invalid
+        # app/environment combo caught before any deploy was attempted, not a real deploy failure. Anything
+        # earlier (Checkout, Setup) leaves `validate` skipped and must still notify.
+        if: failure() && steps.validate.conclusion != 'failure'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
