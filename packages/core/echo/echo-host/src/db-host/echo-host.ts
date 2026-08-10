@@ -2,7 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import {
+  type AnyDocumentId,
+  type AutomergeUrl,
+  type DocHandle,
+  type DocumentId,
+  interpretAsDocumentId,
+} from '@automerge/automerge-repo';
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -11,7 +17,7 @@ import * as Layer from 'effect/Layer';
 import { DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
@@ -43,12 +49,10 @@ import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { FeedDataSource } from './feed-data-source';
-import { runSpaceGarbageCollection } from './garbage-collector';
 import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalFeedServiceImpl } from './local-feed-service';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
-import { allSpaceDocumentIds, collectSpaceDocuments, countSpaceObjects } from './space-storage';
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -82,6 +86,19 @@ export type FeedSyncHandlers = {
    * Callback to read feed sync backlog per namespace.
    */
   getSyncState: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+};
+
+/**
+ * The automerge documents that make up a space directory. Used by storage metrics and garbage
+ * collection to enumerate and attribute a space's documents.
+ */
+type SpaceDocumentSet = {
+  /** The space root document id. */
+  rootDocumentId: DocumentId;
+  /** Document ids that embed objects (root inlined objects live in the root document itself). */
+  linkedDocumentIds: DocumentId[];
+  /** Branch member document ids (occupy storage but are not object-link targets). */
+  branchDocumentIds: DocumentId[];
 };
 
 /**
@@ -476,14 +493,14 @@ export class EchoHost extends Resource {
    */
   async getSpaceStats(spaceId: SpaceId): Promise<DataService.DatabaseStats> {
     const root = await this._ensureSpaceRootLoaded(spaceId);
-    const documents = collectSpaceDocuments(root);
-    const objects = await countSpaceObjects(this._ctx, this._automergeHost, root, documents);
+    const documents = this._collectSpaceDocuments(root);
+    const objects = await this._countSpaceObjects(root, documents);
     const feeds = await this.getAllFeedsForSpace(spaceId);
     const feedBlocks = feeds.reduce((sum, feed) => sum + feed.blocks.length, 0);
 
     return {
       objects,
-      documents: allSpaceDocumentIds(documents).size,
+      documents: this._allSpaceDocumentIds(documents).size,
       feeds: feeds.length,
       feedBlocks,
     };
@@ -491,21 +508,19 @@ export class EchoHost extends Resource {
 
   /**
    * Reclaim storage held by soft-deleted objects and unreachable documents for a space.
-   * See `docs/GARBAGE_COLLECTION.md`.
+   * See `docs/GARBAGE_COLLECTION.md` for the full algorithm and its safety invariants: unlink
+   * soft-deleted objects from the space directory (step 1), wipe every document owned by the space
+   * that is no longer reachable from the post-unlink directory (step 2), then drop the reclaimed
+   * documents' index rows (step 5).
    */
   async runGarbageCollection(
     spaceId: SpaceId,
     options: DataService.RunGarbageCollectionRequest = { spaceId },
   ): Promise<DataService.GarbageCollectionReport> {
     const root = await this._ensureSpaceRootLoaded(spaceId);
-    const { unlinkedObjects, wipedDocumentIds, removedInlineObjects } = await runSpaceGarbageCollection({
-      ctx: this._ctx,
-      spaceId,
-      root,
-      automergeHost: this._automergeHost,
-    });
+    const { unlinkedObjects, removedInlineObjects } = await this._unlinkDeletedObjects(root);
+    const wipedDocumentIds = await this._wipeUnreachableDocuments(spaceId, root);
 
-    // Step 5: drop stale index rows for the reclaimed documents and objects.
     let removedIndexEntries = 0;
     if (options.index !== false && (wipedDocumentIds.length > 0 || removedInlineObjects.length > 0)) {
       removedIndexEntries = await RuntimeProvider.runPromise(this._runtime)(
@@ -519,6 +534,157 @@ export class EchoHost extends Resource {
       removedIndexEntries,
       purgedFeedBlocks: 0,
     };
+  }
+
+  /** Enumerate the documents reachable from a space root (root + object links + branch members). */
+  private _collectSpaceDocuments(root: DatabaseRoot): SpaceDocumentSet {
+    const doc = root.doc();
+    if (!doc) {
+      return { rootDocumentId: root.documentId, linkedDocumentIds: [], branchDocumentIds: [] };
+    }
+
+    const linkedDocumentIds = Object.values(doc.links ?? {}).map((url) =>
+      interpretAsDocumentId(url.toString() as AutomergeUrl),
+    );
+    const branchDocumentIds = DatabaseDirectory.getAllBranchDocUrls(doc).map((url) =>
+      interpretAsDocumentId(url as AutomergeUrl),
+    );
+
+    return { rootDocumentId: root.documentId, linkedDocumentIds, branchDocumentIds };
+  }
+
+  /** Distinct set of every document id owned by the space directory. */
+  private _allSpaceDocumentIds(docs: SpaceDocumentSet): Set<DocumentId> {
+    return new Set<DocumentId>([docs.rootDocumentId, ...docs.linkedDocumentIds, ...docs.branchDocumentIds]);
+  }
+
+  /**
+   * Count live/soft-deleted objects across the root and every object-bearing linked document.
+   * Branch documents are skipped to avoid double-counting an object across its branches.
+   */
+  private async _countSpaceObjects(
+    root: DatabaseRoot,
+    docs: SpaceDocumentSet,
+  ): Promise<{ alive: number; deleted: number }> {
+    const counts = { alive: 0, deleted: 0 };
+    const addCounts = (doc: DatabaseDirectory) => {
+      for (const object of Object.values(doc.objects ?? {}) as EntityStructure[]) {
+        if (EntityStructure.isDeleted(object)) {
+          counts.deleted += 1;
+        } else {
+          counts.alive += 1;
+        }
+      }
+    };
+
+    const rootDoc = root.doc();
+    if (rootDoc) {
+      addCounts(rootDoc);
+    }
+
+    for (const documentId of docs.linkedDocumentIds) {
+      // Storage-only: `stats()` is a local metric and must always resolve. A default load would
+      // wait on the network for a linked document that is not on disk, hanging `stats()` for an
+      // offline space; an unavailable document is simply not counted.
+      const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+        fetchFromNetwork: false,
+      });
+      const doc = handle?.doc();
+      if (doc) {
+        addCounts(doc);
+      }
+    }
+
+    return counts;
+  }
+
+  /**
+   * GC step 1: remove soft-deleted objects from the space directory — deleted inlined objects are
+   * dropped from the root document; deleted linked objects (and links dangling to a missing
+   * document) have their `links` entry removed, orphaning the document for step 2.
+   */
+  private async _unlinkDeletedObjects(
+    root: DatabaseRoot,
+  ): Promise<{ unlinkedObjects: number; removedInlineObjects: { documentId: string; objectId: string }[] }> {
+    const rootDoc = root.doc();
+    if (!rootDoc) {
+      return { unlinkedObjects: 0, removedInlineObjects: [] };
+    }
+
+    const deletedInlineIds = Object.entries(rootDoc.objects ?? {})
+      .filter(([, object]) => EntityStructure.isDeleted(object as EntityStructure))
+      .map(([id]) => id);
+
+    const deletedLinkIds: string[] = [];
+    for (const [objectId, url] of Object.entries(rootDoc.links ?? {})) {
+      const documentId = interpretAsDocumentId(url.toString() as AutomergeUrl);
+      const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+        fetchFromNetwork: false,
+      });
+      const doc = handle?.doc();
+      if (!doc) {
+        // Link points to a document that is not on disk — drop the dangling pointer.
+        deletedLinkIds.push(objectId);
+        continue;
+      }
+      const object = doc.objects?.[objectId];
+      if (object && EntityStructure.isDeleted(object)) {
+        deletedLinkIds.push(objectId);
+      }
+    }
+
+    if (deletedInlineIds.length === 0 && deletedLinkIds.length === 0) {
+      return { unlinkedObjects: 0, removedInlineObjects: [] };
+    }
+
+    root.handle.change((draft: DatabaseDirectory) => {
+      for (const id of deletedInlineIds) {
+        if (draft.objects) {
+          delete draft.objects[id];
+        }
+      }
+      for (const id of deletedLinkIds) {
+        if (draft.links) {
+          delete draft.links[id];
+        }
+      }
+    });
+
+    return {
+      unlinkedObjects: deletedInlineIds.length + deletedLinkIds.length,
+      removedInlineObjects: deletedInlineIds.map((objectId) => ({ documentId: root.documentId, objectId })),
+    };
+  }
+
+  /**
+   * GC step 2: wipe every document owned by the space that is no longer reachable from the (post
+   * step-1) directory. Reachability is recomputed here so just-unlinked documents fall out of the
+   * set. Attribution is the safety boundary — a document is wiped only when its `access.spaceId`
+   * matches; a document that cannot be loaded (offline) or carries no owner is left untouched.
+   */
+  private async _wipeUnreachableDocuments(spaceId: SpaceId, root: DatabaseRoot): Promise<DocumentId[]> {
+    const reachable = this._allSpaceDocumentIds(this._collectSpaceDocuments(root));
+    const wipedDocumentIds: DocumentId[] = [];
+    for await (const { documentId } of this._automergeHost.listDocumentHeads()) {
+      if (reachable.has(documentId)) {
+        continue;
+      }
+      const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+        fetchFromNetwork: false,
+      });
+      const doc = handle?.doc();
+      if (!doc) {
+        continue;
+      }
+      const owner = await DatabaseDirectory.getSpaceId(doc);
+      if (owner !== spaceId) {
+        continue;
+      }
+      await this._automergeHost.removeDocument(documentId);
+      wipedDocumentIds.push(documentId);
+      log('gc: wiped orphaned document', { spaceId, documentId });
+    }
+    return wipedDocumentIds;
   }
 
   /** Resolve the space root, opening (and loading) it if it is not already loaded on the host. */
