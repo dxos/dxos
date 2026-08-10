@@ -1,6 +1,6 @@
 # Garbage Collection — Tasks
 
-_Resume: Phases 2-5 IMPLEMENTED (all dxos-side work), PR #12535; next is Phase 6 (edge, dxos/edge repo). Uncommitted: none. Last: keep-set moved OFF createEpoch and reframed as `clearSpaceEpochMigration` in @dxos/migrations — no enumeration, no RPC surface change._
+_Resume: DIRECTION CHANGED (2026-08-10, Josiah) — the epoch-based approach is abandoned in favour of building on dmaretskyi's #12529 (unlink + wipe), after verifying that link removal is atomic and causally delivered so remote peers can reclaim automatically. PR #12535 is now BASED ON #12529 and carries only the delta: correctness fixes, automatic reclamation, and the salvaged clear migration / race fixes / operations. Next: Phase 6 (edge). Uncommitted: none._
 
 Phase numbers are shared with DESIGN.md §5 — "Phase N" means the same thing in
 both documents.
@@ -37,7 +37,19 @@ changes.
 - [x] **VACUUM step** — `AutomergeHost.vacuum()`, opt-in via `sweepSpace({ vacuum: true })`.
 - [x] **Tests** — `space-sweeper.test.ts`, 5 passing: retired-root sweep keeps survivors, idempotent second pass, branch docs retained, foreign/unattributed docs untouched, no-root refused.
 
-## Phase 3: GC epoch — bare `createEpoch()`
+## Phase 3: GC mechanism (SUPERSEDED — see resume note)
+
+Delivered as the delta on top of #12529 rather than as an epoch: the unlink
+promotes soft deletes, and reclamation propagates because peers react to the
+replicated unlink. What landed:
+
+- [x] **Transitive deletion rule** — `DeletionResolver` (echo-host `deletion.ts`) applied in the unlink step; without it a child of a deleted parent, or a relation with a deleted endpoint, is invisible to every query yet retained forever.
+- [x] **Subduction key families** — `removeDocument` wipes the six `subduction-*` families as well as the classical keys; on the default transport those are most of the bytes (verified: 3 of 4 chunks for a fresh document).
+- [x] **Announce sets + heads ordering** — cleared on wipe; heads row dropped first so an indexer pass cannot re-create the document mid-wipe.
+- [x] **Automatic reclamation** — documents departing a space directory are wiped locally; a retired epoch root is expanded to its closure rather than trusting the debounced listing.
+- [x] **`vacuum()`** — without it no wipe returns pages to the filesystem.
+
+### Superseded: bare `createEpoch()`
 
 The mark half. Creating an epoch is a plain, invokable operation with fixed
 built-in semantics — new root materialized from current state, soft-deleted

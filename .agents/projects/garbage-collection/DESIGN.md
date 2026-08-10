@@ -1,6 +1,12 @@
 # ECHO Garbage Collection — Design
 
-Status: research complete (2026-08-10); plan proposed in §5, not yet reviewed.
+Status: research complete (2026-08-10). **Direction changed 2026-08-10**: the
+epoch-based mechanism in §2/§5.2 is superseded. Collection is built on the
+in-place unlink from dxos/dxos#12529, which the atomicity analysis in §5.3
+showed can propagate reclamation to every peer just as well; epochs remain only
+for what needs a root swap (history compaction, clear-space, import). §2's
+no-ambient-hard-deletion rule and §5.3's analysis still govern; the rest of §5
+is kept for the record.
 
 ## 1. Problem
 
