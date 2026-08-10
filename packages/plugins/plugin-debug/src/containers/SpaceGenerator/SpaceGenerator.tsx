@@ -9,14 +9,13 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useProgress } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { log } from '@dxos/log';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Panel, ScrollArea, ThemedClassName, Toast, useAsyncEffect } from '@dxos/react-ui';
+import { IconButton, Input, Panel, ScrollArea, ThemedClassName, useAsyncEffect } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Organization, Person, Task } from '@dxos/types';
@@ -41,9 +40,6 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     const client = useClient();
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
-    // Both destructive actions report only through the object counts, which do not move when a pass
-    // reclaims nothing — leaving the button indistinguishable from one that did not fire.
-    const [toast, setToast] = useState<{ title: string; description?: string }>();
     const presets = useMemo(() => generator(), []);
 
     // Register types.
@@ -90,80 +86,29 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     useAsyncEffect(updateInfo, [updateInfo]);
 
-    const showToast = useCallback((title: string, description?: string) => {
-      setToast({ title, description });
-      const timer = setTimeout(() => setToast(undefined), 5_000);
-      return () => clearTimeout(timer);
-    }, []);
-
     const handleReset = useCallback(async () => {
       if (!window.confirm('Remove all objects from this space? This cannot be undone.')) {
         return;
       }
-      try {
-        const { data, error } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, { spaceId: space.id });
-        if (error) {
-          log.catch(error);
-          showToast('Failed to remove objects', error.message);
-          return;
-        }
-        showToast('Space cleared', `Removed ${data?.objectIds.length ?? 0} objects.`);
-        await updateInfo();
-      } catch (error: any) {
-        log.catch(error);
-        showToast('Failed to remove objects', error?.message ?? String(error));
-      }
-    }, [space, invokePromise, updateInfo, showToast]);
+      await invokePromise(SpaceOperation.RemoveAllObjects, undefined, {
+        spaceId: space.id,
+        notify: { start: 'Removing objects…', success: 'Space cleared.', error: 'Failed to remove objects.' },
+      });
+      await updateInfo();
+    }, [space, invokePromise, updateInfo]);
 
     const handleCollectGarbage = useCallback(async () => {
       if (!window.confirm("Permanently reclaim this space's deleted objects? This cannot be undone.")) {
         return;
       }
-      try {
-        const { data, error } = await invokePromise(SpaceOperation.CollectGarbage, undefined, { spaceId: space.id });
-        if (error) {
-          log.catch(error);
-          showToast('Garbage collection failed', error.message);
-          return;
-        }
-        const { removedDocuments = 0, unlinkedObjects = 0 } = data ?? {};
-        showToast(
-          'Garbage collected',
-          removedDocuments === 0
-            ? 'Nothing to reclaim.'
-            : `Reclaimed ${removedDocuments} document${removedDocuments === 1 ? '' : 's'} from ${unlinkedObjects} object${unlinkedObjects === 1 ? '' : 's'}.`,
-        );
-        await updateInfo();
-      } catch (error: any) {
-        log.catch(error);
-        showToast('Garbage collection failed', error?.message ?? String(error));
-      }
-    }, [space, invokePromise, updateInfo, showToast]);
+      await invokePromise(SpaceOperation.CollectGarbage, undefined, {
+        spaceId: space.id,
+        notify: { start: 'Collecting garbage…', success: 'Garbage collected.', error: 'Garbage collection failed.' },
+      });
+      await updateInfo();
+    }, [space, invokePromise, updateInfo]);
 
-    // The toolbar's own action items own the pending state: each awaits its invoke, disables only
-    // itself while in flight, and guards re-entry — so nothing here tracks that.
-    const menuActions = useMenuBuilder(
-      (): ActionGraphProps =>
-        MenuBuilder.make()
-          .action(
-            'refresh',
-            { label: 'Refresh', icon: 'ph--arrow-clockwise--regular', testId: 'spaceGenerator.refresh' },
-            () => void updateInfo(),
-          )
-          .action(
-            'reset',
-            { label: 'Reset space', icon: 'ph--trash--regular', testId: 'spaceGenerator.reset' },
-            handleReset,
-          )
-          .action(
-            'collect',
-            { label: 'Collect garbage', icon: 'ph--recycle--regular', testId: 'spaceGenerator.collectGarbage' },
-            handleCollectGarbage,
-          )
-          .separator('gap')
-          .build(),
-      [updateInfo, handleReset, handleCollectGarbage],
-    );
+    const menuActions = useSpaceGeneratorMenu({ updateInfo, handleReset, handleCollectGarbage });
 
     const handleCreateData = useCallback(
       async (typename: string) => {
@@ -227,14 +172,6 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Panel.Content>
-          {toast && (
-            <Toast.Root>
-              <Toast.Title icon='ph--recycle--duotone'>
-                <span>{toast.title}</span>
-              </Toast.Title>
-              {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-            </Toast.Root>
-          )}
         </Panel.Root>
       </Menu.Root>
     );
@@ -242,6 +179,44 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 );
 
 SpaceGenerator.displayName = 'SpaceGenerator';
+
+/**
+ * Toolbar actions for the space generator. The toolbar's own action items hold the pending state —
+ * each awaits its invoke, disables only itself while in flight, and guards re-entry — so nothing
+ * here tracks that. The trailing gap separator pushes any sibling rendered after `Menu.Items` to the
+ * end of the toolbar.
+ */
+const useSpaceGeneratorMenu = ({
+  updateInfo,
+  handleReset,
+  handleCollectGarbage,
+}: {
+  updateInfo: () => Promise<void>;
+  handleReset: () => Promise<void>;
+  handleCollectGarbage: () => Promise<void>;
+}) =>
+  useMenuBuilder(
+    (): ActionGraphProps =>
+      MenuBuilder.make()
+        .action(
+          'refresh',
+          { label: 'Refresh', icon: 'ph--arrow-clockwise--regular', testId: 'spaceGenerator.refresh' },
+          () => void updateInfo(),
+        )
+        .action(
+          'reset',
+          { label: 'Reset space', icon: 'ph--trash--regular', testId: 'spaceGenerator.reset' },
+          handleReset,
+        )
+        .action(
+          'collect',
+          { label: 'Collect garbage', icon: 'ph--recycle--regular', testId: 'spaceGenerator.collectGarbage' },
+          handleCollectGarbage,
+        )
+        .separator('gap')
+        .build(),
+    [updateInfo, handleReset, handleCollectGarbage],
+  );
 
 // Stable key for the test progress monitor within the shared registry.
 const TEST_PROGRESS_NAME = `${meta.profile.key}.test-progress`;
