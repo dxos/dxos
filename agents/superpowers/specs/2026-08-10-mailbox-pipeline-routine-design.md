@@ -75,10 +75,10 @@ trivial (log the title) so no models are needed and stages (facts/tag/summarize)
 ### 5. Routine template (plugin-inbox capability)
 
 - `RoutineCapabilities.Template` `{ id: 'org.dxos.routine.processMailbox', label: 'Process
-  Mailbox', appliesTo: Mailbox }`.
+Mailbox', appliesTo: Mailbox }`.
 - Scaffold: `makeRoutine({ spec: { kind: 'runnable', runnable:
-  Ref.fromURI(InboxOperation.ProcessMailbox.meta.key) }, trigger: Trigger.make({ enabled: false,
-  spec: Trigger.specTimer(cron), input: { mailbox } }) })` — the durable routine definition; manual
+Ref.fromURI(InboxOperation.ProcessMailbox.meta.key) }, trigger: Trigger.make({ enabled: false,
+spec: Trigger.specTimer(cron), input: { mailbox } }) })` — the durable routine definition; manual
   runs also work from the Automations companion (`RunRoutine`). The toolbar button schedules the
   operation directly (decision 2a) and does not require the routine to exist.
 
@@ -105,9 +105,7 @@ trivial (log the title) so no models are needed and stages (facts/tag/summarize)
 - **Storybook** (stories-inbox): a `ProcessMailbox` story seeding a mailbox feed, exercising the
   toolbar button + meter (play test where the headless env allows; manual numbered `Test:` script
   otherwise, per repo convention).
-- **Manual script** (numbered): 1. seed/sync a mailbox; 2. Start — meter appears, titles logged;
-  3. Stop mid-run — meter clears; 4. Start — resumes after the cursor (only unprocessed titles);
-  5. Reset cursor; 6. Start — all titles logged again.
+- **Manual script** (numbered): 1. seed/sync a mailbox; 2. Start — meter appears, titles logged; 3. Stop mid-run — meter clears; 4. Start — resumes after the cursor (only unprocessed titles); 5. Reset cursor; 6. Start — all titles logged again.
 
 ## Out of scope (v1)
 

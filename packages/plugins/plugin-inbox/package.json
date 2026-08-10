@@ -262,6 +262,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
+    "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
@@ -288,6 +289,7 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
@@ -299,6 +301,7 @@
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/platform": "catalog:",
+    "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/mailparser": "catalog:",
     "@types/react": "catalog:",

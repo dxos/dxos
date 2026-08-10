@@ -532,6 +532,58 @@ export const AnalyzeMailbox = Operation.make({
   }),
 });
 
+/**
+ * Progress-registry key for a mailbox's process-pipeline monitor — the mailbox URI plus `#process`,
+ * so it coexists with the `#sync` monitor. `MailboxArticle` and the toolbar action subscribe to it.
+ */
+export const createProcessProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#process';
+
+/** Default page size for {@link ProcessMailbox} cursor commits. */
+export const DEFAULT_PROCESS_MAILBOX_PAGE_SIZE = 10;
+
+export const ProcessMailbox = Operation.make({
+  meta: {
+    key: makeKey('processMailbox'),
+    name: 'Process Mailbox',
+    description:
+      'Runs the cursored processing pipeline over the mailbox feed, resuming after the last processed message.',
+    icon: 'ph--play--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed messages are processed.',
+    }),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Number of messages processed per cursor advance.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    processed: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
+
+export const ResetProcessCursor = Operation.make({
+  meta: {
+    key: makeKey('resetProcessCursor'),
+    name: 'Reset Process Cursor',
+    description: 'Clears the process-pipeline cursor so the next run re-processes the whole mailbox feed.',
+    icon: 'ph--arrow-counter-clockwise--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose process cursor is reset.',
+    }),
+  }),
+  output: Schema.Struct({
+    /** False when no cursor existed yet (nothing to reset). */
+    reset: Schema.Boolean,
+  }),
+}).pipe(Operation.idempotent);
+
 export const CreateProjectFromMessage = Operation.make({
   meta: {
     key: makeKey('createProjectFromMessage'),

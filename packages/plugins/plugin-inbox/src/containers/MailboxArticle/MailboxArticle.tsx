@@ -92,8 +92,12 @@ export const MailboxArticle = ({
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Gmail sync registers a monitor keyed by the mailbox URI (`#sync`); show it in the statusbar.
-  const progress = useProgress(createSyncProgressKey(mailbox));
+  // Gmail sync (`#sync`) and the process pipeline (`#process`) register monitors keyed by the
+  // mailbox URI; the statusbar shows whichever run is active (sync wins when both are).
+  const syncProgress = useProgress(createSyncProgressKey(mailbox));
+  const processProgress = useProgress(InboxOperation.createProcessProgressKey(mailbox));
+  const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
+  const progress = isActive(syncProgress) ? syncProgress : isActive(processProgress) ? processProgress : undefined;
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
