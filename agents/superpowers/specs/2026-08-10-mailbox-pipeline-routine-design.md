@@ -31,10 +31,15 @@ trivial (log the title) so no models are needed and stages (facts/tag/summarize)
 
 ### 1. `InboxOperation.ProcessMailbox` (plugin-inbox, `operations/process-mailbox.ts`)
 
-- Input `{ mailbox: Ref<Mailbox>, pageSize? }`; output `{ processed }`.
-- Finds-or-creates the feed cursor tagged `source: 'org.dxos.plugin-inbox'`, `id: 'process-mailbox'`
-  (`spec: { kind: 'feed', source: feed, target: mailbox }`) — same shape as the CRM precedent, so it
-  coexists with the `AnalyzeMailbox` and CRM cursors on the same feed.
+- Input `{ mailbox: Ref<Mailbox>, pageSize? }`; output `{ processed }`. Operation key via the
+  plugin's `makeKey('processMailbox')` → `dxn:org.dxos.plugin.inbox.operation.processMailbox`
+  (DXN-validated; final segment camelCase per the ATProto-style grammar in `@dxos/keys` `dxn.ts` —
+  hyphens are legal in middle segments only).
+- Finds-or-creates the feed cursor tagged `source: meta.profile.key` (`'org.dxos.plugin.inbox'`, a
+  valid DXN name), `id: 'processMailbox'` (`spec: { kind: 'feed', source: feed, target: mailbox }`)
+  — the CRM tagging pattern, but with DXN-conformant identifiers (the CRM precedent's
+  `org.dxos.plugin-crm` / `process-mailbox` are not), so it coexists with the `AnalyzeMailbox` and
+  CRM cursors on the same feed.
 - Queries feed messages, drops `Date.parse(created) < cursorKey` (malformed dates skipped), sorts
   ascending, then streams through a `@dxos/pipeline` assembly:
   - `log-title` stage: `log.info('process: message', { title, created })` per message — the
