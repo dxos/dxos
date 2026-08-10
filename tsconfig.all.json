@@ -76,9 +76,6 @@
       "path": "packages/apps/composer-crx/tsconfig.json"
     },
     {
-      "path": "packages/apps/composer-dxos-org/tsconfig.json"
-    },
-    {
       "path": "packages/core/compute/compute/tsconfig.json"
     },
     {
@@ -160,6 +157,9 @@
       "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-panproto/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-protocol/tsconfig.json"
     },
     {
@@ -217,6 +217,9 @@
       "path": "packages/common/feed-store/tsconfig.json"
     },
     {
+      "path": "tools/fixtures/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/functions-runtime-cloudflare/tsconfig.json"
     },
     {
@@ -269,9 +272,6 @@
     },
     {
       "path": "packages/common/keys/tsconfig.json"
-    },
-    {
-      "path": "packages/common/kv-store/tsconfig.json"
     },
     {
       "path": "packages/core/compute/link/tsconfig.json"
@@ -346,6 +346,9 @@
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-atproto/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-attention/tsconfig.json"
     },
     {
@@ -412,6 +415,9 @@
       "path": "packages/plugins/plugin-duffel/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
@@ -427,6 +433,9 @@
       "path": "packages/plugins/plugin-github/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-google/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-graph/tsconfig.json"
     },
     {
@@ -439,13 +448,22 @@
       "path": "packages/plugins/plugin-ideogram/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-illustrator/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-jmap/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-library/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-linear/tsconfig.json"
@@ -485,9 +503,6 @@
     },
     {
       "path": "packages/plugins/plugin-osrm/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-payments/tsconfig.json"
@@ -547,9 +562,6 @@
       "path": "packages/plugins/plugin-simple-layout/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-sketch/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-slack/tsconfig.json"
     },
     {
@@ -577,6 +589,9 @@
       "path": "packages/plugins/plugin-table/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-tasks/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-template/tsconfig.json"
     },
     {
@@ -592,7 +607,7 @@
       "path": "packages/plugins/plugin-thread/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-tictactoe/tsconfig.json"
+      "path": "packages/plugins/plugin-tldraw/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-transcription/tsconfig.json"
@@ -703,6 +718,9 @@
       "path": "packages/ui/react-ui-debug/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-diagram/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-dnd/tsconfig.json"
     },
     {
@@ -766,6 +784,12 @@
       "path": "packages/ui/react-ui-tabs/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-task/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-terminal/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
     },
     {
@@ -803,6 +827,12 @@
     },
     {
       "path": "packages/stories/stories-inbox/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-lens/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-projects/tsconfig.json"
     },
     {
       "path": "packages/common/storybook-addon-logger/tsconfig.json"

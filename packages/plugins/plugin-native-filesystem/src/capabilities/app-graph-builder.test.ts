@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
@@ -11,9 +11,9 @@ import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { type FilesystemEntry, type FilesystemFile, type NativeFilesystemState } from '#types';
 
 import { MockFilesystemManager } from '../testing/mock-filesystem-manager';
+import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
 import { createFilesystemEntryExtensions } from './app-graph-builder';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
@@ -122,7 +122,7 @@ describe('native filesystem app graph builder', () => {
   });
 });
 
-const setupTestContext = (state: NativeFilesystemState) => {
+const setupTestContext = (state: NativeFilesystemCapabilities.NativeFilesystemState) => {
   const registry = Registry.make();
   const stateAtom = Atom.make(state);
 
@@ -130,7 +130,7 @@ const setupTestContext = (state: NativeFilesystemState) => {
     registry,
     stateAtom,
     graphBuilder: setupNativeFilesystemGraphBuilder({ registry, stateAtom }),
-    setDirectoryChildren: (directoryId: string, children: FilesystemEntry[]) => {
+    setDirectoryChildren: (directoryId: string, children: NativeFilesystemCapabilities.FilesystemEntry[]) => {
       registry.update(stateAtom, (currentState) => ({
         ...currentState,
         workspaces: currentState.workspaces.map((workspace) => ({
@@ -147,7 +147,7 @@ const setupNativeFilesystemGraphBuilder = ({
   stateAtom,
 }: {
   registry: Registry.Registry;
-  stateAtom: Atom.Writable<NativeFilesystemState>;
+  stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>;
 }) => {
   const initialState = registry.get(stateAtom);
   const rootExtensions = Effect.runSync(createWorkspaceRootExtensions(stateAtom));
@@ -165,7 +165,7 @@ const setupNativeFilesystemGraphBuilder = ({
   });
 };
 
-const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<NativeFilesystemState>) =>
+const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>) =>
   GraphBuilder.createExtension({
     id: 'testWorkspaces',
     match: NodeMatcher.whenRoot,
@@ -184,7 +184,10 @@ const createMarkdownFile = ({
   name,
   path,
   text,
-}: Pick<FilesystemFile, 'id' | 'name' | 'path' | 'text'>): FilesystemFile => ({
+}: Pick<
+  NativeFilesystemCapabilities.FilesystemFile,
+  'id' | 'name' | 'path' | 'text'
+>): NativeFilesystemCapabilities.FilesystemFile => ({
   id,
   name,
   path,
@@ -194,10 +197,10 @@ const createMarkdownFile = ({
 });
 
 const replaceDirectoryChildren = (
-  entries: FilesystemEntry[],
+  entries: NativeFilesystemCapabilities.FilesystemEntry[],
   directoryId: string,
-  children: FilesystemEntry[],
-): FilesystemEntry[] =>
+  children: NativeFilesystemCapabilities.FilesystemEntry[],
+): NativeFilesystemCapabilities.FilesystemEntry[] =>
   entries.map((entry) => {
     if (!('children' in entry)) {
       return entry;

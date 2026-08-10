@@ -1,0 +1,179 @@
+# @dxos/devtools
+
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/ai@0.11.1
+- @dxos/assistant@0.11.1
+- @dxos/async@0.11.1
+- @dxos/client@0.11.1
+- @dxos/codec-protobuf@0.11.1
+- @dxos/compute@0.11.1
+- @dxos/compute-runtime@0.11.1
+- @dxos/conductor@0.11.1
+- @dxos/config@0.11.1
+- @dxos/context@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/display-name@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/echo-host@0.11.1
+- @dxos/echo-protocol@0.11.1
+- @dxos/edge-client@0.11.1
+- @dxos/edge-compute@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/graph@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/messaging@0.11.1
+- @dxos/network-manager@0.11.1
+- @dxos/observability@0.11.1
+- @dxos/protocols@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-edge-client@0.11.1
+- @dxos/react-hooks@0.11.1
+- @dxos/react-ui-components@0.11.1
+- @dxos/react-ui-debug@0.11.1
+- @dxos/react-ui-graph@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/react-ui-syntax-highlighter@0.11.1
+- @dxos/react-ui-table@0.11.1
+- @dxos/react-ui-tabs@0.11.1
+- @dxos/rpc@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/timeframe@0.11.1
+- @dxos/tracing@0.11.1
+- @dxos/util@0.11.1
+
+## 0.11.0
+
+### Patch Changes
+
+- Updated dependencies [f9ba47a]
+- Updated dependencies [4e64123]
+- Updated dependencies [c035062]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [9da013f]
+- Updated dependencies [e0e1a9f]
+- Updated dependencies [46ec569]
+- Updated dependencies [b5ecf54]
+- Updated dependencies [3f6ac61]
+- Updated dependencies [091ebe4]
+- Updated dependencies [eec72c5]
+- Updated dependencies [ed992c2]
+- Updated dependencies [1a9bca1]
+- Updated dependencies [ed992c2]
+- Updated dependencies [bf013a1]
+- Updated dependencies [a83d98a]
+- Updated dependencies [a19443b]
+- Updated dependencies [3f1fc67]
+- Updated dependencies [6df314a]
+- Updated dependencies [962c8cd]
+- Updated dependencies [856c4f0]
+- Updated dependencies [46ec569]
+- Updated dependencies [ae18615]
+- Updated dependencies [14983db]
+- Updated dependencies [f8637f1]
+- Updated dependencies [b8c0825]
+- Updated dependencies [4e64123]
+- Updated dependencies [d79482a]
+- Updated dependencies [6a03a30]
+- Updated dependencies [2fe5a7a]
+- Updated dependencies [7b270f2]
+- Updated dependencies [7b270f2]
+- Updated dependencies [af5fbf4]
+- Updated dependencies [d547045]
+- Updated dependencies [277e365]
+- Updated dependencies [ba7aabf]
+- Updated dependencies [410a019]
+- Updated dependencies [d958118]
+- Updated dependencies [2a68c3b]
+- Updated dependencies [e65432c]
+- Updated dependencies [f6a01e3]
+- Updated dependencies [c9651f1]
+- Updated dependencies [5e7839e]
+- Updated dependencies [923d5be]
+- Updated dependencies [85893fe]
+- Updated dependencies [c727a43]
+- Updated dependencies [6067460]
+- Updated dependencies [717edc0]
+- Updated dependencies [12fd785]
+- Updated dependencies [51aaffe]
+- Updated dependencies [801b77f]
+- Updated dependencies [d547045]
+- Updated dependencies [f7d7735]
+- Updated dependencies [5f08a6a]
+- Updated dependencies [114fb98]
+- Updated dependencies [37874ce]
+- Updated dependencies [b591791]
+- Updated dependencies [848ba1b]
+- Updated dependencies [f15c632]
+- Updated dependencies [3761762]
+- Updated dependencies [c9da903]
+- Updated dependencies [bf055c8]
+- Updated dependencies [55bb048]
+- Updated dependencies [bdf9f68]
+- Updated dependencies [c727a43]
+- Updated dependencies [b3a3fcf]
+- Updated dependencies [4bb7e3b]
+- Updated dependencies [4df6cf3]
+- Updated dependencies [41141d8]
+- Updated dependencies [da66270]
+- Updated dependencies [7b270f2]
+- Updated dependencies [686fac1]
+- Updated dependencies [41d1e4a]
+- Updated dependencies [105dac4]
+- Updated dependencies [96109be]
+- Updated dependencies [37c17cc]
+- Updated dependencies [08a3eea]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ed992c2]
+- Updated dependencies [c58ebb7]
+- Updated dependencies [4f24c4e]
+- Updated dependencies [ac51564]
+  - @dxos/echo@0.11.0
+  - @dxos/async@0.11.0
+  - @dxos/schema@0.11.0
+  - @dxos/react-ui-list@0.11.0
+  - @dxos/react-ui@0.11.0
+  - @dxos/client@0.11.0
+  - @dxos/compute-runtime@0.11.0
+  - @dxos/echo-client@0.11.0
+  - @dxos/compute@0.11.0
+  - @dxos/util@0.11.0
+  - @dxos/protocols@0.11.0
+  - @dxos/echo-host@0.11.0
+  - @dxos/edge-compute@0.11.0
+  - @dxos/keys@0.11.0
+  - @dxos/react-ui-components@0.11.0
+  - @dxos/ui-theme@0.11.0
+  - @dxos/log@0.11.0
+  - @dxos/react-ui-debug@0.11.0
+  - @dxos/react-client@0.11.0
+  - @dxos/ai@0.11.0
+  - @dxos/messaging@0.11.0
+  - @dxos/config@0.11.0
+  - @dxos/observability@0.11.0
+  - @dxos/react-ui-tabs@0.11.0
+  - @dxos/edge-client@0.11.0
+  - @dxos/graph@0.11.0
+  - @dxos/assistant@0.11.0
+  - @dxos/conductor@0.11.0
+  - @dxos/react-ui-table@0.11.0
+  - @dxos/codec-protobuf@0.11.0
+  - @dxos/tracing@0.11.0
+  - @dxos/network-manager@0.11.0
+  - @dxos/rpc@0.11.0
+  - @dxos/react-hooks@0.11.0
+  - @dxos/react-ui-graph@0.11.0
+  - @dxos/react-ui-syntax-highlighter@0.11.0
+  - @dxos/react-edge-client@0.11.0
+  - @dxos/context@0.11.0
+  - @dxos/effect@0.11.0
+  - @dxos/timeframe@0.11.0
+  - @dxos/echo-protocol@0.11.0
+  - @dxos/display-name@0.11.0
+  - @dxos/debug@0.11.0
+  - @dxos/invariant@0.11.0

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -16,7 +16,9 @@ import { EditMessage } from '#components';
 import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 
-import { InboxOperation, Mailbox } from '../../types';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 import { REPLY_REGEXP } from '../../util';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
@@ -28,7 +30,8 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   // `components`/`hooks` and must not call capability hooks themselves.
   const runtime = useProcessManagerRuntime();
   const extensions = useEmailComposerExtensions(runtime, subject);
-  const onSend = useSendEmail(runtime, subject);
+  const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
+  const onSend = useSendEmail(runtime, subject, sendOperations);
 
   // Generate: fill the reply draft's body from the message it replies to (thread + facts grounded).
   // Only offered for reply drafts scoped to a resolvable mailbox.
@@ -86,10 +89,12 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   );
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Toolbar>
         <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

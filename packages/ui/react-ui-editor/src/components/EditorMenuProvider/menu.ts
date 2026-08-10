@@ -25,13 +25,15 @@ export const getMenuItem = (groups: EditorMenuGroup[], id?: string): EditorMenuI
   return groups.flatMap((group) => group.items).find((item) => item.id === id);
 };
 
-export const getNextMenuItem = (groups: EditorMenuGroup[], id?: string): EditorMenuItem => {
+/** Undefined when the menu is empty; at either end the current item is returned unchanged. */
+export const getNextMenuItem = (groups: EditorMenuGroup[], id?: string): EditorMenuItem | undefined => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return index < items.length - 1 ? items[index + 1] : items[index];
 };
 
-export const getPreviousMenuItem = (groups: EditorMenuGroup[], id?: string): EditorMenuItem => {
+/** Undefined when the menu is empty; at either end the current item is returned unchanged. */
+export const getPreviousMenuItem = (groups: EditorMenuGroup[], id?: string): EditorMenuItem | undefined => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return index > 0 ? items[index - 1] : items[index];

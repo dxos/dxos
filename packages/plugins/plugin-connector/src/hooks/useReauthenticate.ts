@@ -11,7 +11,7 @@ import { Connection } from '@dxos/link';
 
 import { useConnector } from '#hooks';
 
-import { ConnectorCoordinator } from '../types';
+import * as ConnectorCoordination from '../types/ConnectorCoordination';
 
 export type UseReauthenticateResult = {
   /** True when the connection's connector exposes an OAuth flow (drives button visibility). */
@@ -20,7 +20,7 @@ export type UseReauthenticateResult = {
   readonly reauthenticating: boolean;
   /**
    * Re-run OAuth for the connection, replacing its stored token in place via the
-   * {@link ConnectorCoordinator}. No-op when `available` is false.
+   * {@link ConnectorCoordination.ConnectorCoordinator}. No-op when `available` is false.
    */
   readonly reauthenticate: () => void;
 };
@@ -43,7 +43,7 @@ export const useReauthenticate = (connection: Connection.Connection | undefined)
     if (!db) {
       return;
     }
-    const coordinator = manager.capabilities.get(ConnectorCoordinator);
+    const coordinator = manager.capabilities.get(ConnectorCoordination.ConnectorCoordinator);
     if (!coordinator) {
       return;
     }

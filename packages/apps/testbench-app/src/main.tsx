@@ -67,7 +67,7 @@ const useThemeWatcher = () => {
 const App = () => {
   const themeMode = useThemeWatcher();
   return (
-    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations} noCache>
+    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations}>
       <RouterProvider router={router} />
     </ThemeProvider>
   );

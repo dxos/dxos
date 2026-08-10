@@ -2,20 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
-type EditorPreviewPopoverValue = Partial<{
-  link: PreviewLinkRef;
-  target: PreviewLinkTarget;
-  pending: boolean;
-}>;
-
-const [EditorPreviewContextProvider, useEditorPreview] = createContext<EditorPreviewPopoverValue>('PreviewPopover', {});
+import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext';
 
 export type EditorPreviewProviderProps = PropsWithChildren<{
   onLookup?: (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;
@@ -76,5 +69,3 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
     </EditorPreviewContextProvider>
   );
 };
-
-export { useEditorPreview };

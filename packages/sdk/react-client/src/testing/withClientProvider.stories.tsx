@@ -27,7 +27,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='flex flex-col divide-y divide-separator border border-separator'>
+    <div className='flex flex-col divide-y divide-subdued-separator border border-separator'>
       <JsonHighlighter data={client.toJSON()} />
       {spaces.map((space) => (
         <SpaceInfo key={space.id} space={space} />

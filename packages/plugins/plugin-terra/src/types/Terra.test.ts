@@ -6,7 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { generatePlanet } from '../engine';
 import { buildNavGrid, isPassable, planRoute, toUnit } from '../sim';
-import { Terra, TerraObject } from './index';
+import * as Terra from './Terra';
+import * as TerraObject from './TerraObject';
 
 /** Resolves `terra.objects` (an array of refs) to their loaded definitions. */
 const resolveDefinitions = (terra: Terra.Terra): TerraObject.TerraObject[] =>

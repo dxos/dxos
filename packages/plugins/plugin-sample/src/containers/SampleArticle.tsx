@@ -13,7 +13,8 @@ import React, { useCallback } from 'react';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type Node, useActionRunner } from '@dxos/plugin-graph';
+import { type Node } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel } from '@dxos/react-ui';
 import {
   type ActionExecutor,
@@ -27,7 +28,8 @@ import {
 
 import { SampleItemView } from '#components';
 import { meta } from '#meta';
-import type { SampleItem } from '#types';
+
+import type * as SampleItem from '../types/SampleItem';
 
 export type SampleArticleProps = AppSurface.ObjectArticleProps<SampleItem.SampleItem>;
 
@@ -64,7 +66,9 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
     <Panel.Root role={role}>
       <Panel.Toolbar>
         <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content>

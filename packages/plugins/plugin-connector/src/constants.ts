@@ -3,7 +3,7 @@
 //
 
 import { DXN } from '@dxos/keys';
-import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { ATPROTO_OAUTH_SCOPES } from '@dxos/protocols';
 
 import { meta } from './meta';
@@ -51,4 +51,4 @@ export const CONNECTIONS_SECTION_TYPE = `org.dxos.plugin.connector.space-setting
  * subject must include the `settings` segment to resolve through the graph.
  */
 export const connectionDeckSubject = (spacePath: string, connectionId: string): string =>
-  `${spacePath}/${SETTINGS_SECTION_ID}/${CONNECTIONS_SECTION_ID}/${connectionId}`;
+  `${spacePath}/${SpaceSchema.SETTINGS_SECTION_ID}/${CONNECTIONS_SECTION_ID}/${connectionId}`;

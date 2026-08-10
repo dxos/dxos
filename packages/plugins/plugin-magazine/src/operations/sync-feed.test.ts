@@ -7,12 +7,13 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
-import { FeedOperation, Subscription } from '../types';
+import * as FeedOperation from '../types/FeedOperation';
+import * as Subscription from '../types/Subscription';
 import { MagazineOperationHandlerSet } from './index';
 
 EntityId.dangerouslyDisableRandomness();

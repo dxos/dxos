@@ -8,7 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { type ContactLookup, buildContactFromActor, buildContactLookup } from '@dxos/extractor-lib';
+import { type IdentityIndex, overlayIdentityIndex } from '@dxos/extractor';
+import { buildContactFromActor, getIdentityIndex, identitySpecs } from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
@@ -102,19 +103,23 @@ export type Attachment = {
 /**
  * Builds a Person (+ Organization link by domain) from the message sender and records it on the
  * item as {@link Insert.contact} — the stage writes nothing itself; {@link toCommitUnit} defers
- * the actual `db.add` to commit. A stage factory: call it once per pipeline run so its
- * {@link ContactLookup} is scoped to that run.
+ * the actual `db.add` to commit.
  *
- * Dedups against both the space (contacts present before the run) and contacts created earlier in the
- * same run (the lookup is maintained as each is built, since a not-yet-committed contact wouldn't show
- * in a fresh query), so a repeat sender never yields a duplicate Person.
+ * Dedup is the space's shared identity index (see `getIdentityIndex`), refreshed once at the start
+ * of the run: it covers contacts committed before the run, contacts built earlier in it, and — since
+ * the index is shared per database — contacts a concurrently-syncing mailbox is building right now.
+ *
+ * Not every sender earns a record: {@link senderSignals} feeds the allow-list in
+ * `shouldExtractContact`, so bulk and automated mail no longer fills the space with contacts nobody
+ * will look at. NOTE: no provider records an outbound signal yet, so in practice the allow-list is
+ * "the domain matches a known Organization" — stricter than the policy intends. Extracting the
+ * recipients of sent mail is what closes that gap.
  */
 export const extractContacts = (): Stage.Stage<Change, Change, never, Database.Service> => {
-  // Run-scoped contact/org lookup, seeded once on the first item and maintained by
-  // `buildContactFromActor` as it creates contacts. Without it, each message re-queried every Person
-  // and Organization in the space (O(#contacts) per message → O(n²) over a large sync) — the dominant
-  // upstream cost measured in profiling.
-  let lookup: ContactLookup | undefined;
+  // Run-scoped overlay over the space's shared index: reads see everything committed (including by a
+  // concurrent sync), writes stay local, so a run that dies mid-way leaves nothing claiming a contact
+  // it never committed.
+  let index: IdentityIndex | undefined;
   return Stage.map('extract-contacts', (change: Change) =>
     Effect.gen(function* () {
       // Only new messages carry a body/sender; retag/delete pass through untouched.
@@ -122,14 +127,31 @@ export const extractContacts = (): Stage.Stage<Change, Change, never, Database.S
         return change;
       }
       const { db } = yield* Database.Service;
-      if (!lookup) {
-        lookup = yield* buildContactLookup(db);
+      if (!index) {
+        // Re-seed once per run so the shared index picks up whatever was committed since it was built.
+        index = overlayIdentityIndex(identitySpecs, yield* getIdentityIndex(db, { refresh: true }));
       }
       const sender = change.message.sender;
-      const contact = sender ? yield* buildContactFromActor(sender, db, lookup) : undefined;
+      const contact = sender
+        ? yield* buildContactFromActor(sender, db, { signals: senderSignals(change.message), index })
+        : undefined;
       return contact ? { ...change, contact } : change;
     }),
   );
+};
+
+/**
+ * The sender signals the shared extraction gate reads, taken from the fields provider mappers
+ * already record on `properties`. `Precedence`/`Auto-Submitted` are folded into `bulk` by the mapper
+ * where available.
+ */
+const senderSignals = (message: Message.Message) => {
+  const properties = message.properties ?? {};
+  return {
+    noReply: properties.noReply === true,
+    listUnsubscribe: typeof properties.listUnsubscribe === 'string' ? properties.listUnsubscribe : undefined,
+    bulk: properties.bulk === true,
+  };
 };
 
 /**

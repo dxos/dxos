@@ -3,4 +3,3 @@ language: typescript
 tags:
   - ts-test
   - typecheck
-  - memoized-llm

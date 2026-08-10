@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-chess-com",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Chess.com account integration for Composer",
   "homepage": "https://dxos.org",
@@ -15,8 +15,12 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -54,11 +58,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -78,13 +77,37 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    }
+    "./ChessComAccount": {
+      "source": "./src/types/ChessComAccount.ts",
+      "types": "./dist/types/src/types/ChessComAccount.d.ts",
+      "import": "./dist/lib/ChessComAccount.mjs"
+    },
+    "./ChessComEvents": {
+      "source": "./src/types/ChessComEvents.ts",
+      "types": "./dist/types/src/types/ChessComEvents.d.ts",
+      "import": "./dist/lib/ChessComEvents.mjs"
+    },
+    "./ChessComOperation": {
+      "source": "./src/types/ChessComOperation.ts",
+      "types": "./dist/types/src/types/ChessComOperation.d.ts",
+      "import": "./dist/lib/ChessComOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ChessComAccount": [
+        "dist/types/src/types/ChessComAccount.d.ts"
+      ],
+      "ChessComEvents": [
+        "dist/types/src/types/ChessComEvents.d.ts"
+      ],
+      "ChessComOperation": [
+        "dist/types/src/types/ChessComOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -104,7 +127,6 @@
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -117,9 +139,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

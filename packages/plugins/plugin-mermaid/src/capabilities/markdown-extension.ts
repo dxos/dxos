@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
 import { mermaid } from '../extensions';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(MarkdownCapabilities.ExtensionProvider, [mermaid])),
+  Effect.succeed(Capability.contribute(MarkdownCapabilities.ExtensionProvider, [mermaid])),
 );

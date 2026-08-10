@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry } from '@effect-atom/atom';
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
+
+import { EffectEx } from '@dxos/effect';
 
 import * as Graph from './graph';
 import * as GraphBuilder from './graph-builder';
@@ -145,6 +148,57 @@ describe('Graph', () => {
     expect(result).toEqual(graph);
     const node = registry.get(graph.node(EXAMPLE_ID));
     assert.ok(Option.isNone(node));
+  });
+
+  test('waitFor resolves immediately when the node is already present', async () => {
+    const graph = Graph.make();
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+
+    const node = await EffectEx.runPromise(Graph.waitFor(graph, EXAMPLE_ID));
+    expect(node.id).toEqual(EXAMPLE_ID);
+  });
+
+  test('waitFor resolves when the node arrives later', async () => {
+    const graph = Graph.make();
+    const pending = EffectEx.runPromise(Graph.waitFor(graph, EXAMPLE_ID));
+
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+
+    const node = await pending;
+    expect(node.id).toEqual(EXAMPLE_ID);
+  });
+
+  test('waitFor ignores other nodes', async () => {
+    const graph = Graph.make();
+    const pending = EffectEx.runPromise(Graph.waitFor(graph, EXAMPLE_ID));
+
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+
+    expect((await pending).id).toEqual(EXAMPLE_ID);
+  });
+
+  test('waitFor stays pending while the node is absent', async () => {
+    const graph = Graph.make();
+    const settled = await EffectEx.runPromise(
+      Graph.waitFor(graph, EXAMPLE_ID).pipe(
+        Effect.map(() => 'settled' as const),
+        Effect.timeoutTo({ duration: '50 millis', onTimeout: () => 'pending' as const, onSuccess: (value) => value }),
+      ),
+    );
+    expect(settled).toEqual('pending');
+  });
+
+  test('waitFor is interruptible and releases its subscription', async () => {
+    const graph = Graph.make();
+    const interrupted = await EffectEx.runPromise(
+      Graph.waitFor(graph, EXAMPLE_ID).pipe(Effect.timeout('20 millis'), Effect.option),
+    );
+    expect(Option.isNone(interrupted)).toBe(true);
+
+    // A later arrival must not reach the released listener (it would throw on a settled resume).
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+    expect(Option.isSome(Graph.getNode(graph, EXAMPLE_ID))).toBe(true);
   });
 
   test('onNodeChanged', () => {

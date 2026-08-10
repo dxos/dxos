@@ -2,34 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, DebugSettings, ReactSurface, StatsPanel } from '#capabilities';
+import { AppGraphBuilder, DebugSettings, LogRecording, ReactSurface, StatsPanel } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type DebugPluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Debug from './types/Debug';
 
-export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSettingsModule({ activate: DebugSettings }),
-  Plugin.addModule(({ logStore }) => ({
-    id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => ReactSurface({ logStore }),
-  })),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ persistStats }) => ({
-    id: 'stats-panel',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => StatsPanel({ persist: persistStats ?? true }),
-  })),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+export const DebugPlugin = Plugin.define<Debug.DebugPluginOptions>(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(DebugSettings),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(LogRecording),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(StatsPanel),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

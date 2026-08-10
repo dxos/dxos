@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AgentService } from '@dxos/agent-runtime';
-import { AssistantTestLayer, runMemoizedTests } from '@dxos/agent-runtime/testing';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { OpaqueToolkit } from '@dxos/ai';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 
 import { Memory } from '../../types/Memory';
 import { WebSearchToolkit } from '../websearch';
@@ -21,7 +21,11 @@ import MemorySkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();
 
+// Recorded model fixtures use sonnet to keep regeneration cost down.
+const FIXTURE_MODEL = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
+
 const TestLayer = AssistantTestLayer({
+  model: FIXTURE_MODEL,
   operationHandlers: MemoryHandlers,
   types: [Memory, Skill.Skill, Feed.Feed],
   skills: [MemorySkill.make()],
@@ -29,6 +33,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 const TestLayerWithWebSearch = AssistantTestLayer({
+  model: FIXTURE_MODEL,
   operationHandlers: MemoryHandlers,
   toolkits: [OpaqueToolkit.make(WebSearchToolkit, Layer.empty)],
   types: [Memory, Skill.Skill, Feed.Feed],
@@ -36,7 +41,7 @@ const TestLayerWithWebSearch = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-describe.skipIf(!runMemoizedTests())('Memory Skill', () => {
+describe('Memory Skill', { tags: ['model-fixture'] }, () => {
   it.effect(
     'save: saves a memory',
     Effect.fnUntraced(

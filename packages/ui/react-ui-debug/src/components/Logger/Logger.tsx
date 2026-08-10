@@ -2,20 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
-import {
-  type LogConfig,
-  type LogEntry,
-  LogLevel,
-  type LogOptions,
-  log,
-  logFileRegistry,
-  parseFilter,
-  shouldLog,
-} from '@dxos/log';
+import { logFileRegistry } from '@dxos/log';
 import {
   ErrorStack,
   Icon,
@@ -33,7 +30,7 @@ import {
   parseCaptureOwnerStack,
   useTranslation,
 } from '@dxos/react-ui';
-import { ViewState, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -41,145 +38,16 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '../../translations';
 import { formatLogEntry, packageName } from './format';
+import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer';
+import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext';
+import { type LevelName, LEVELS, composeFilter } from './recorder';
 
 //
 // Shared
 //
 
-export const LEVELS = ['trace', 'debug', 'verbose', 'info', 'warn', 'error'] as const;
-export type LevelName = (typeof LEVELS)[number];
-
 /** Per-file level overrides are global to the logger, not scoped to an attention context. */
 const LOG_LEVELS_CONTEXT = 'logger';
-
-/**
- * Per-file log level overrides, keyed by source path. Persisted (localStorage) via react-ui-attention
- * view state so the levels a developer dials in survive reloads; requires a `ViewStateProvider` ancestor
- * to persist (degrades to session defaults without one).
- */
-export const logLevelsAspect = ViewState.define<Record<string, LevelName>>({
-  key: 'debug-logger-levels',
-  backend: 'local',
-  schema: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Literal(...LEVELS) })),
-  defaultValue: () => ({}),
-});
-
-const DEFAULT_MAX_LINES = 1_000;
-
-export const levelColor = (level: LogLevel) =>
-  level > LogLevel.WARN
-    ? 'text-error-text'
-    : level > LogLevel.INFO
-      ? 'text-warning-text'
-      : level > LogLevel.VERBOSE
-        ? 'text-info-text'
-        : 'text-success-text';
-
-// Registry of active recording sessions; each contributes its own filter so concurrent panels
-// compose the shared @dxos/log config instead of the last writer clobbering it.
-type ActiveRecorder = { filter: string };
-const activeRecorders = new Set<ActiveRecorder>();
-let sharedSavedOptions: LogOptions | undefined;
-
-// Union of every active recorder's filter so the shared config (and other processors, e.g. the
-// console) capture at least what every panel wants; each recorder still self-filters its own view.
-const composeGlobalFilter = (): string =>
-  [...activeRecorders]
-    .map((recorder) => recorder.filter)
-    .filter(Boolean)
-    .join(', ');
-
-const applyGlobalFilter = (): void => {
-  log.config({ filter: composeGlobalFilter() });
-};
-
-export interface LogRecorder {
-  /** Update this recorder's filter and recompose the shared global config. */
-  setFilter(filter: string): void;
-  /** Unregister; restores the saved global config once the last recorder stops. */
-  dispose(): void;
-}
-
-/**
- * Register a recording session that self-filters its own entries (via its own parsed filter)
- * while contributing that filter to the shared @dxos/log config. Because every entry is
- * delivered to every processor, self-filtering — not the shared config — is what keeps
- * concurrent recorders with divergent filters from clobbering each other's view.
- */
-export const startLogRecording = (
-  filter: string,
-  onEntry: (entry: LogEntry, matched: boolean) => void,
-): LogRecorder => {
-  const recorder: ActiveRecorder = { filter };
-  if (activeRecorders.size === 0) {
-    sharedSavedOptions = log.runtimeConfig.options;
-  }
-  activeRecorders.add(recorder);
-  applyGlobalFilter();
-
-  let filters = parseFilter(filter);
-  const dispose = log.addProcessor((_config: LogConfig, entry: LogEntry) => onEntry(entry, shouldLog(entry, filters)));
-
-  return {
-    setFilter: (next) => {
-      recorder.filter = next;
-      filters = parseFilter(next);
-      applyGlobalFilter();
-    },
-    dispose: () => {
-      dispose();
-      activeRecorders.delete(recorder);
-      if (activeRecorders.size === 0) {
-        if (sharedSavedOptions) {
-          log.config(sharedSavedOptions);
-          sharedSavedOptions = undefined;
-        }
-      } else {
-        applyGlobalFilter();
-      }
-    },
-  };
-};
-
-// Guard clipboard writes so rejected or unavailable writes surface rather than dangling as unhandled rejections.
-export const copyToClipboard = (text: string): void => {
-  void navigator.clipboard?.writeText(text)?.catch((err) => console.warn('clipboard write failed', err));
-};
-
-type LogRow = { id: number; entry: LogEntry };
-
-// Compose the base filter with per-file overrides into a single @dxos/log filter string.
-// Order-independent: an override below the base level raises that file's verbosity; above, it quiets it.
-export const composeFilter = (base: string, fileLevels: Map<string, LevelName>): string =>
-  [base, ...[...fileLevels].map(([file, level]) => `${file}:${level}`)].filter(Boolean).join(', ');
-
-//
-// Context
-//
-
-type LoggerContextValue = {
-  rows: LogRow[];
-  filter: string;
-  setFilter: (filter: string) => void;
-  textFilter: string;
-  setTextFilter: (value: string) => void;
-  recording: boolean;
-  setRecording: (fn: (value: boolean) => boolean) => void;
-  files: string[];
-  fileLevels: Map<string, LevelName>;
-  setFileLevel: (file: string, level: LevelName | undefined) => void;
-  clearFileLevels: () => void;
-  expanded: Set<number>;
-  toggleExpand: (id: number) => void;
-  current: number | undefined;
-  setCurrent: (id: number) => void;
-  checked: Set<number>;
-  toggleChecked: (id: number) => void;
-  clear: () => void;
-  copyAll: () => void;
-};
-
-const [LoggerProvider, useLoggerContext] = createContext<LoggerContextValue>('Logger');
 
 //
 // Root
@@ -189,6 +57,14 @@ type LoggerRootProps = PropsWithChildren<{
   maxLines?: number;
   initialFilter?: string;
   defaultRecording?: boolean;
+  /**
+   * Narrows which captured rows this instance displays, for a panel scoped to one subsystem.
+   *
+   * Distinct from `initialFilter`, which sets what the process-wide buffer *captures*: a scoped
+   * panel must not narrow capture, or it starves every other panel reading the same buffer.
+   * Must be stable across renders — hoist it or memoize it.
+   */
+  rowFilter?: (row: LogRow) => boolean;
 }>;
 
 const LoggerRoot = ({
@@ -196,11 +72,10 @@ const LoggerRoot = ({
   maxLines = DEFAULT_MAX_LINES,
   initialFilter = 'info',
   defaultRecording = true,
+  rowFilter,
 }: LoggerRootProps) => {
   const [filter, setFilter] = useState(initialFilter);
   const [textFilter, setTextFilter] = useState('');
-  const [recording, setRecording] = useState(defaultRecording);
-  const [rows, setRows] = useState<LogRow[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [current, setCurrent] = useState<number>();
   const [checked, setChecked] = useState<Set<number>>(new Set());
@@ -212,83 +87,45 @@ const LoggerRoot = ({
     LOG_LEVELS_CONTEXT,
   );
   const fileLevels = useMemo(() => new Map(Object.entries(fileLevelsRecord)), [fileLevelsRecord]);
-  // Set membership is O(1); the sorted view is memoized so a high-volume stream never re-sorts per entry.
-  const filesRef = useRef<Set<string>>(new Set(logFileRegistry.getFiles()));
-  const [filesEpoch, setFilesEpoch] = useState(0);
-  const addFile = useCallback((file: string) => {
-    if (file && !filesRef.current.has(file)) {
-      filesRef.current.add(file);
-      setFilesEpoch((epoch) => epoch + 1);
-    }
-  }, []);
+
+  // Rows, files and the recorder live in the process-wide buffer, not here: this panel is a deck
+  // companion, so mounting is not the lifetime we want recording to follow.
+  const allRows = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRows);
+  // Applied here rather than in `Logger.List` so row pruning, selection and copy all agree on the
+  // same set — a scoped panel should never copy out rows it never showed.
+  const rows = useMemo(() => (rowFilter ? allRows.filter(rowFilter) : allRows), [allRows, rowFilter]);
+  const files = useSyncExternalStore(logBuffer.subscribe, logBuffer.getFiles);
+  const recording = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRecording);
 
   // Absorb files registered at module load (dev registry) plus any registered after mount.
   useEffect(() => {
-    const sync = () => {
-      let changed = false;
-      for (const file of logFileRegistry.getFiles()) {
-        if (!filesRef.current.has(file)) {
-          filesRef.current.add(file);
-          changed = true;
-        }
-      }
-      if (changed) {
-        setFilesEpoch((epoch) => epoch + 1);
-      }
-    };
+    const sync = () => logBuffer.addFiles(logFileRegistry.getFiles());
     sync();
     return logFileRegistry.subscribe(sync);
   }, []);
 
-  // Cache the sorted list; recomputed only when the file set actually grows.
-  const files = useMemo(() => [...filesRef.current].sort(), [filesEpoch]);
-
-  // Normalize the public prop: a non-positive or non-finite bound would defeat `slice(-capacity)`.
-  const capacity = useMemo(
-    () => (Number.isFinite(maxLines) && maxLines >= 1 ? Math.floor(maxLines) : DEFAULT_MAX_LINES),
-    [maxLines],
-  );
-
-  // Monotonic id so list keys stay stable once `slice(-capacity)` drops older rows.
-  const nextRowId = useRef(0);
+  useEffect(() => logBuffer.setCapacity(maxLines), [maxLines]);
 
   const effectiveFilter = useMemo(() => composeFilter(filter, fileLevels), [filter, fileLevels]);
+  useEffect(() => logBuffer.setFilter(filter, fileLevels), [filter, fileLevels, effectiveFilter]);
 
-  // Latest capacity/filter read from refs so the recording session (keyed on `recording`) never
-  // resubscribes its processor on every keystroke; filter changes are pushed via setFilter below.
-  const capacityRef = useRef(capacity);
-  capacityRef.current = capacity;
-  const effectiveFilterRef = useRef(effectiveFilter);
-  effectiveFilterRef.current = effectiveFilter;
-
-  // Register a self-filtering recording session for the recording lifetime; discover every file
-  // regardless of the display filter (every entry is delivered, only matches become rows).
-  const recorderRef = useRef<LogRecorder | undefined>(undefined);
+  // `defaultRecording` seeds the buffer the first time a panel mounts; thereafter the buffer's own
+  // state wins, so reopening the panel does not silently resume a stream the user paused.
+  const seeded = useRef(false);
   useEffect(() => {
-    if (!recording) {
-      return;
+    if (!seeded.current) {
+      seeded.current = true;
+      if (defaultRecording) {
+        logBuffer.start();
+      }
     }
+  }, [defaultRecording]);
 
-    const recorder = startLogRecording(effectiveFilterRef.current, (entry, matched) => {
-      const file = entry.meta?.F;
-      if (file) {
-        addFile(file);
-      }
-      if (matched) {
-        setRows((prev) => [...prev, { id: nextRowId.current++, entry }].slice(-capacityRef.current));
-      }
-    });
-    recorderRef.current = recorder;
-    return () => {
-      recorder.dispose();
-      recorderRef.current = undefined;
-    };
-  }, [recording, addFile]);
-
-  // Push filter changes into the active recorder without tearing down the processor.
-  useEffect(() => {
-    recorderRef.current?.setFilter(effectiveFilter);
-  }, [effectiveFilter]);
+  const setRecording = useCallback((fn: (value: boolean) => boolean) => {
+    const next = fn(logBuffer.recording);
+    logBuffer.start();
+    logBuffer.setPaused(!next);
+  }, []);
 
   // Drop per-row state (expansion, selection) for evicted rows so the sets stay bounded.
   useEffect(() => {
@@ -320,7 +157,7 @@ const LoggerRoot = ({
   );
   const clearFileLevels = useCallback(() => clearFileLevelsAction(), [clearFileLevelsAction]);
   const clear = useCallback(() => {
-    setRows([]);
+    logBuffer.clear();
     setExpanded(new Set());
     setChecked(new Set());
     setCurrent(undefined);
@@ -498,7 +335,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                     )}
                     {visibleFiles.length > 0 && (
                       <Listbox.Root>
-                        <Listbox.Content>
+                        <Listbox.Content classNames='dx-density-sm'>
                           {visibleFiles.map((file) => {
                             const basename = file.split('/').pop() ?? file;
                             const pkg = packageName(file);
@@ -509,8 +346,12 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                 id={file}
                                 classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
                               >
-                                <Listbox.ItemLabel classNames='flex flex-col text-xs' title={file}>
-                                  {pkg && <div className='text-subdued'>{pkg}</div>}
+                                {/* One line so the row can honour the compact density; the package
+                                    and full path are carried in the tooltip instead of a second line. */}
+                                <Listbox.ItemLabel
+                                  classNames='truncate text-xs'
+                                  title={pkg ? `${pkg} · ${file}` : file}
+                                >
                                   {basename}
                                 </Listbox.ItemLabel>
                                 <Select.Root
@@ -633,7 +474,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
           }
         }}
       >
-        <Listbox.Content classNames={mx(classNames)}>
+        <Listbox.Content classNames={mx('dx-density-sm', classNames)}>
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
@@ -670,7 +511,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 <IconButton
                   icon='ph--clipboard--regular'
                   iconOnly
-                  density='xs'
+                  density='sm'
                   tabIndex={-1}
                   label={t('copy-entry.label')}
                   variant='ghost'
@@ -687,7 +528,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                         context: record.context,
                       }}
                     />
-                    {frames && <ErrorStack classNames='p-1 bg-input-surface' frames={frames} />}
+                    {frames && <ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
                   </div>
                 )}
               </Listbox.Item>
@@ -712,7 +553,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
   const { textFilter, setTextFilter } = useLoggerContext('Logger.Filter');
 
   return (
-    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+    <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent p-1.5' })} ref={forwardedRef}>
       <Input.Root>
         <Input.TextInput
           placeholder={t('search.placeholder')}
@@ -749,8 +590,6 @@ export const Logger = {
   Levels: LoggerLevels,
   Filter: LoggerFilter,
 };
-
-export { useLoggerContext };
 
 export type {
   LoggerContentProps,

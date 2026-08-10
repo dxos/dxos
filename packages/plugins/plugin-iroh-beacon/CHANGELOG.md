@@ -1,0 +1,71 @@
+# @dxos/plugin-iroh-beacon
+
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/async@0.11.1
+- @dxos/context@0.11.1
+- @dxos/halo@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/plugin-client@0.11.1
+- @dxos/plugin-status-bar@0.11.1
+
+## 0.11.0
+
+### Patch Changes
+
+- Updated dependencies [aea1e6e]
+- Updated dependencies [e0e1a9f]
+- Updated dependencies [5b05d75]
+- Updated dependencies [a77e1a2]
+- Updated dependencies [eec72c5]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ed992c2]
+- Updated dependencies [fe63f19]
+- Updated dependencies [3f1fc67]
+- Updated dependencies [2048cb3]
+- Updated dependencies [382d00d]
+- Updated dependencies [382d00d]
+- Updated dependencies [6a03a30]
+- Updated dependencies [2fe5a7a]
+- Updated dependencies [6439417]
+- Updated dependencies [d958118]
+- Updated dependencies [30ae5eb]
+- Updated dependencies [e65432c]
+- Updated dependencies [f6a01e3]
+- Updated dependencies [c9651f1]
+- Updated dependencies [9f7d5ad]
+- Updated dependencies [717edc0]
+- Updated dependencies [51aaffe]
+- Updated dependencies [bda1a02]
+- Updated dependencies [832d150]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [f10b1ce]
+- Updated dependencies [717edc0]
+- Updated dependencies [37874ce]
+- Updated dependencies [848ba1b]
+- Updated dependencies [55bb048]
+- Updated dependencies [4df6cf3]
+- Updated dependencies [ed992c2]
+- Updated dependencies [08a3eea]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ed992c2]
+- Updated dependencies [c58ebb7]
+- Updated dependencies [5585ec8]
+- Updated dependencies [499dde4]
+  - @dxos/async@0.11.0
+  - @dxos/react-ui@0.11.0
+  - @dxos/app-toolkit@0.11.0
+  - @dxos/plugin-client@0.11.0
+  - @dxos/app-framework@0.11.0
+  - @dxos/keys@0.11.0
+  - @dxos/halo@0.11.0
+  - @dxos/ui-theme@0.11.0
+  - @dxos/log@0.11.0
+  - @dxos/plugin-status-bar@0.11.0
+  - @dxos/context@0.11.0

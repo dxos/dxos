@@ -5,23 +5,26 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
+import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
+import { createSyncProgressKey } from '#sync';
 
 import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
-import { createSyncProgressKey } from '../operations/mail/mail-sync';
 import {
   getAllMailId,
   getCalendarsPath,
@@ -32,7 +35,12 @@ import {
   getSentId,
   getSubscriptionsId,
 } from '../paths';
-import { getMessageLabel, syncTarget } from '../util';
+import * as Calendar from '../types/Calendar';
+import * as DraftEvent from '../types/DraftEvent';
+import * as InboxOperation from '../types/InboxOperation';
+import * as Mailbox from '../types/Mailbox';
+import * as SystemTags from '../types/SystemTags';
+import { getMessageLabel } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -387,6 +395,8 @@ export default Capability.makeModule(
                   // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  // The toolbar emits `data-testid` only for actions that set one; browser-e2e waits on it.
+                  testId: 'inbox.mailbox.sync',
                 },
               },
             ];
@@ -430,6 +440,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

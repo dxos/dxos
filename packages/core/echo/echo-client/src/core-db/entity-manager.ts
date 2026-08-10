@@ -203,9 +203,13 @@ export class EntityManager implements IDatabaseBinding {
    */
   async open(ctx: Context): Promise<void> {
     this._ctx = ctx;
-    this._updateScheduler = new UpdateScheduler(ctx, async () => this._emitDbUpdateEvents(ctx), {
-      maxFrequency: THROTTLED_UPDATE_FREQUENCY,
-    });
+    this._updateScheduler = new UpdateScheduler(
+      ctx,
+      async () => this._emitDbUpdateEvents(ctx),
+      // Throttling is disabled by bypassing it at every call site; configuring a rate and then always
+      // overriding it just made the two disagree.
+      DISABLE_THROTTLING ? {} : { maxFrequency: THROTTLED_UPDATE_FREQUENCY },
+    );
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
@@ -306,6 +310,7 @@ export class EntityManager implements IDatabaseBinding {
       const spaceRootDocHandle = this.getSpaceRootDocHandle();
       await this._handleSpaceRootDocumentChange(spaceRootDocHandle, objectIdsToLoad);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
+      this._updateScheduler.trigger(); // Flush notifications from the swap window.
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return;
@@ -668,6 +673,37 @@ export class EntityManager implements IDatabaseBinding {
           entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
         },
       }),
+    );
+
+    await this._waitUntilRootDocHasHeads(heads);
+  }
+
+  /**
+   * Waits for this client's replica of the space root document to carry the given heads.
+   *
+   * The service call is a host-side barrier only, but the root document carries the object ->
+   * document routing table that index-hit hydration validates against
+   * (`EchoClient._loadObjectFromDocument`), so a query run before this replica catches up drops the
+   * hits it cannot route and comes back empty. Cf. dxos/dxos#7240.
+   */
+  private async _waitUntilRootDocHasHeads(heads: SpaceDocumentHeads): Promise<void> {
+    const rootHandle = this._spaceRootDocHandle;
+    const rootDocumentId = rootHandle?.documentId;
+    if (!rootHandle || !rootDocumentId) {
+      return;
+    }
+    const rootHeads = heads.heads[rootDocumentId];
+    if (!rootHeads?.length) {
+      return;
+    }
+
+    await asyncTimeout(
+      Event.wrap<ChangeEvent<DatabaseDirectory>>(rootHandle, 'change').waitForCondition(() => {
+        const doc = rootHandle.doc();
+        return doc != null && A.hasHeads(doc, rootHeads);
+      }),
+      RPC_TIMEOUT,
+      'waiting for the space root document to replicate to the client',
     );
   }
 
@@ -1668,6 +1704,11 @@ export class EntityManager implements IDatabaseBinding {
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private _emitDbUpdateEvents(_ctx: Context): void {
+    // Mid root-document swap there is nothing to emit against — listeners resolve cores through the
+    // root. Pending ids are kept; `updateSpaceState` re-triggers after the swap.
+    if (!this._spaceRootDocHandle) {
+      return;
+    }
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
     this._objectsForNextUpdate.clear();
@@ -1688,22 +1729,14 @@ export class EntityManager implements IDatabaseBinding {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
-    if (DISABLE_THROTTLING) {
-      this._updateScheduler.forceTrigger();
-    } else {
-      this._updateScheduler.trigger();
-    }
+    this._updateScheduler.trigger();
   }
 
   private _scheduleThrottledDbUpdate(objectId: string[]): void {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
     }
-    if (DISABLE_THROTTLING) {
-      this._updateScheduler.forceTrigger();
-    } else {
-      this._updateScheduler.trigger();
-    }
+    this._updateScheduler.trigger();
   }
 }
 

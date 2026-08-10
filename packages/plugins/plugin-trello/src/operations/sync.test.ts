@@ -9,7 +9,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
+import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
 import { Expando } from '@dxos/schema';
 
 import { TRELLO_SOURCE } from '../constants';
@@ -129,7 +130,7 @@ describe('reconcileBoardCards (pull)', () => {
     expect(snapshots.board1?.name).toBe('Test Board');
     expect(snapshots.board1?.columns?.['To Do']?.ids).toHaveLength(1);
     expect(snapshots.board1?.columns?.['Done']?.ids).toHaveLength(1);
-    expect(kanban.arrangement.columns[UNCATEGORIZED_VALUE]?.hidden).toBe(true);
+    expect(kanban.arrangement.columns[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden).toBe(true);
   });
 
   test('remote columns merge keeps uncategorized hidden by default', async ({ expect }) => {
@@ -141,7 +142,7 @@ describe('reconcileBoardCards (pull)', () => {
         name: 'Test Board',
         arrangement: {
           order: [],
-          columns: { [UNCATEGORIZED_VALUE]: { ids: [], hidden: false } },
+          columns: { [KanbanConstants.UNCATEGORIZED_VALUE]: { ids: [], hidden: false } },
         },
         spec: { kind: 'items' as const, pivotField: 'listName', items: [] },
       }),
@@ -156,7 +157,7 @@ describe('reconcileBoardCards (pull)', () => {
       return yield* reconcileBoardCards(binding, kanban, board, cards, lists);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
-    expect(kanban.arrangement.columns[UNCATEGORIZED_VALUE]?.hidden).toBe(false);
+    expect(kanban.arrangement.columns[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden).toBe(false);
   });
 
   test('second run is idempotent (snapshot equals remote → no writes)', async ({ expect }) => {

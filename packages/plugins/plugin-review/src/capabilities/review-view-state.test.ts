@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom';
 import { describe, test } from 'vitest';
 
 import { ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
 
-import { ReviewCapabilities } from '#types';
+import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 describe('ReviewCapabilities.viewAspect', () => {
   const make = () => {

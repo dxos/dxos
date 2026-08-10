@@ -78,6 +78,10 @@ export const runDx = (args: string[], options: RunDxOptions = {}): RunDxResult =
       PATH: process.env.PATH ?? '',
       DX_DEBUG: 'error',
       NO_COLOR: '1',
+      // These assertions are about the CLI's own stdout: proto's shims switch to an NDJSON
+      // reporter when they detect an agent environment (`AI_AGENT`) and announce that on stdout,
+      // once per HOME — which every isolated HOME here is.
+      PROTO_REPORTER: 'text',
       ...options.env,
     },
   });

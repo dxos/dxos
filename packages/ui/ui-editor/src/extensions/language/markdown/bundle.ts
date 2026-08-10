@@ -14,6 +14,7 @@ import { type MarkdownConfig } from '@lezer/markdown';
 
 import { isTruthy } from '@dxos/util';
 
+import { mermaidHighlighting, mermaidLanguageDescription } from '../mermaid';
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
 
 export type MarkdownBundleOptions = {
@@ -47,8 +48,10 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
 
       // Languages for syntax highlighting fenced code blocks.
       // Caller-supplied languages are checked first so they can override defaults.
+      // Mermaid is registered here rather than by plugin-mermaid: `codeLanguages` is read once when
+      // the parser is built, so an extension contributed later cannot add a fenced-code language.
       defaultCodeLanguage: jsonLanguage,
-      codeLanguages: [...(options.codeLanguages ?? []), ...languages],
+      codeLanguages: [...(options.codeLanguages ?? []), mermaidLanguageDescription, ...languages],
 
       // Don't complete HTML tags.
       completeHTMLTags: false,
@@ -66,6 +69,8 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
     }),
 
     // Custom styles.
+    // Fenced mermaid uses custom tags, so it needs its own style alongside markdown's.
+    mermaidHighlighting(),
     syntaxHighlighting(markdownHighlightStyle()),
 
     keymap.of(

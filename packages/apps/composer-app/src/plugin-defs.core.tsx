@@ -4,18 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
-import { NativePasskey } from '@dxos/app-toolkit';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { DeckPlugin } from '@dxos/plugin-deck/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
 import { OnboardingPlugin } from '@dxos/plugin-onboarding/plugin';
+import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
@@ -38,6 +41,8 @@ export type State = {
 };
 
 export type PluginConfig = State & {
+  /** Raises a fatal client-initialization failure to the entry point (see `onFatalError` in main.tsx). */
+  onFatalError?: (error: unknown) => void;
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;
@@ -58,7 +63,7 @@ export const getCorePlugins = ({
   services,
   observability,
   logStore,
-  isDev,
+  onFatalError,
   isLocal,
   isTauri,
   isPopover,
@@ -72,11 +77,22 @@ export const getCorePlugins = ({
       config,
       services,
       shareableLinkOrigin: origin,
+      // plugin-onboarding owns invitation URL params in Composer.
+      invitationUrlHandler: false,
+      // The forked init is outside the render tree, so a failure or a stalled handshake reaches
+      // the user only if the entry point raises it — React never sees one.
+      onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),
       onReset: ({ target }) =>
         Effect.sync(() => {
           localStorage.clear();
           if (target === 'deviceInvitation') {
-            window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+            // Carry a pending invitation code across the reset so the join can complete.
+            const url = new URL('/', window.location.origin);
+            url.searchParams.set(
+              'deviceInvitationCode',
+              new URLSearchParams(window.location.search).get('deviceInvitationCode') ?? '',
+            );
+            window.location.assign(url);
           } else if (target === 'recoverIdentity') {
             window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
           } else {
@@ -84,6 +100,11 @@ export const getCorePlugins = ({
           }
         }),
     }),
+    // Core because it owns the connector machinery itself, not any one integration: it fires
+    // `SetupConnectors` (the event every connector-contributing plugin activates on), registers the
+    // Connection/AccessToken/Cursor schema, and runs the coordinator that materializes and binds
+    // targets. Without it a plugin like Inbox contributes connectors nobody ever asks for.
+    ConnectorPlugin(),
     GraphPlugin(),
     layoutPlugin,
     NavTreePlugin(),
@@ -94,17 +115,19 @@ export const getCorePlugins = ({
     }),
     OnboardingPlugin({ generateExemplarSpace: !isLocal }),
     ProcessManagerPlugin(),
+    ProgressPlugin(),
     RegistryPlugin(),
     RoutinePlugin(),
     SettingsPlugin(),
     SpacePlugin({
       observability: true,
       shareableLinkOrigin: origin,
+      // plugin-onboarding owns invitation URL params in Composer.
+      invitationUrlHandler: false,
     }),
     StatusBarPlugin(),
     ThemePlugin({
       appName: 'Composer',
-      noCache: isDev,
       platform: isMobile ? 'mobile' : 'desktop',
     }),
   ];

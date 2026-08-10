@@ -2,9 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin, UrlLoader } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 
 export type PluginPredicate = (plugin: Plugin.Plugin) => boolean;
+
+/** Quality tiers surfaced in `recommended`; an untagged plugin is excluded rather than assumed ready. */
+const RECOMMENDED_TIERS: readonly string[] = ['beta', 'alpha'];
 
 export type CategoryFilterContext = {
   /** Core (bundled-by-default) plugin ids. */
@@ -30,7 +34,9 @@ export const getCategoryPredicate = (
       return ({ meta }) => !core.includes(meta.profile.key) && enabled.includes(meta.profile.key);
     case 'recommended':
       return ({ meta }) =>
-        !core.includes(meta.profile.key) && !remoteIds.has(meta.profile.key) && !meta.profile.tags?.includes('labs');
+        !core.includes(meta.profile.key) &&
+        !remoteIds.has(meta.profile.key) &&
+        (meta.profile.tags?.some((tag) => RECOMMENDED_TIERS.includes(tag)) ?? false);
     case 'labs':
       return ({ meta }) => meta.profile.tags?.includes('labs') ?? false;
     default:

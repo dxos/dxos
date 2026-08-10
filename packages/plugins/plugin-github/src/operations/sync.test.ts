@@ -9,7 +9,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
-import { ExternalProject, Organization, Person, Task } from '@dxos/types';
+import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';
 import { GitHubApi } from '../services';
@@ -57,13 +57,13 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       Cursor.Cursor,
       Organization.Organization,
       Person.Person,
-      ExternalProject.ExternalProject,
+      TaskSet.TaskSet,
       Task.Task,
     ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: GITHUB_SOURCE, token: 'tok' }));
     const connection = db.add(Obj.make(Connection.Connection, { connectorId: 'github', accessToken: Ref.make(token) }));
     const project = db.add(
-      Obj.make(ExternalProject.ExternalProject, {
+      Obj.make(TaskSet.TaskSet, {
         [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: String(repo().id) }] },
         name: repo().full_name,
         // Seed description to match a prior pull so tests that only diverge `name`

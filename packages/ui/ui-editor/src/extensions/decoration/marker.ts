@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { Decoration, EditorView } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
-import { hues } from '@dxos/ui-theme';
+import { hues } from '@dxos/ui-types';
 import { type ChromaticPalette } from '@dxos/ui-types';
 
 /**

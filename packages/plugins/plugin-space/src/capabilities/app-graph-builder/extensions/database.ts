@@ -2,18 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import { type CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { EffectEx } from '@dxos/effect';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
@@ -21,8 +28,9 @@ import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities } from '#types';
 
+import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
+import * as SpaceEvents from '../../../types/SpaceEvents';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
@@ -40,6 +48,11 @@ import {
 /** Creates database extensions: types section, schema nodes, schema children, and schema actions. */
 export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
+  const pluginManager = yield* Plugin.Service;
+  // Fired from the schema-actions evaluation below, which re-runs reactively; the scheduler
+  // short-circuits a dispatch with nothing left to activate, so repeats cost a lookup.
+  const requestCreateObjectEntries = () =>
+    EffectEx.runDetached(pluginManager.activate(SpaceEvents.CreateObjectRequested));
 
   return yield* Effect.all([
     // System section group — created alongside database/settings so the group always
@@ -87,7 +100,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
       connector: (space, get) => {
         // Read settings reactively — same pattern as the translator read below.
-        const settingsAtom = get(capabilities.atom(SpaceCapabilities.Settings)).at(0);
+        const settingsAtom = get(capabilities.atom(SpaceCapabilities.SettingsAtom)).at(0);
         const showHidden = settingsAtom ? get(settingsAtom).showHidden : false;
 
         // Persisted types live in the space db; static/runtime types live in the shared registry.
@@ -248,7 +261,14 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const viewIndex = buildViewIndex(get, space, schemas);
         const deletable = Type.getDatabase(schema) != null && viewIndex.getViewsForTypeUri(targetUri).length === 0;
 
-        return Effect.succeed(createSchemaActions({ type: schema, space, deletable, capabilities }));
+        // Tracked read (not a one-shot `getAll`): entry providers may be policy-parked, and the
+        // computed actions must refresh when their contributions arrive. Evaluating a schema
+        // node's actions is itself a create-flow demand signal, so fire it (outside the reactive
+        // computation) to pull the parked providers.
+        const createEntries = get(capabilities.atom(SpaceCapabilities.CreateObjectEntry));
+        queueMicrotask(() => requestCreateObjectEntries());
+
+        return Effect.succeed(createSchemaActions({ type: schema, space, deletable, capabilities, createEntries }));
       },
     }),
   ]);
@@ -336,16 +356,16 @@ const createSchemaActions = ({
   space,
   deletable,
   capabilities,
+  createEntries,
 }: {
   type: Type.AnyEntity;
   space: Space;
   deletable: boolean;
   capabilities: CapabilityManager.CapabilityManager;
+  createEntries: readonly SpaceCapabilities.CreateObjectEntry[];
 }) => {
   const typename = Type.getTypename(type);
-  const createEntry = capabilities
-    .getAll(SpaceCapabilities.CreateObjectEntry)
-    .find((entry: SpaceCapabilities.CreateObjectEntry) => entry.id === typename);
+  const createEntry = createEntries.find((entry: SpaceCapabilities.CreateObjectEntry) => entry.id === typename);
 
   // For database-persisted object schemas without a dedicated capability, synthesize a generic entry.
   const resolvedEntry: SpaceCapabilities.CreateObjectEntry | undefined =

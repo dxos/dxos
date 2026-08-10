@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry } from '@effect-atom/atom';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
@@ -701,6 +702,44 @@ export function initialize<T extends ExpandableGraph | WritableGraph>(
 }
 
 /**
+ * Resolves when the node exists in the graph; immediately if it already does.
+ *
+ * The graph is populated asynchronously — connectors expand a level at a time and the objects
+ * behind them load out of band — and {@link expand} is fire-and-forget, so a consumer that needs
+ * a specific node has no completion to await and would otherwise poll for it.
+ *
+ * Deliberately unbounded: whether a node is merely late or will never arrive is the caller's
+ * question, so the deadline belongs at the call site (`Effect.timeout`). Interrupting is safe —
+ * the subscription is released on interruption.
+ */
+export const waitFor = (graph: BaseGraph, id: string): Effect.Effect<Node.Node> =>
+  Effect.suspend(() => {
+    const current = getNodeImpl(graph, id);
+    if (Option.isSome(current)) {
+      return Effect.succeed(current.value);
+    }
+
+    return Effect.async<Node.Node>((resume) => {
+      const unsubscribe = graph.onNodeChanged.on(({ id: changed, node }) => {
+        if (changed === id && Option.isSome(node)) {
+          unsubscribe();
+          resume(Effect.succeed(node.value));
+        }
+      });
+
+      // Re-read after subscribing: a node added between the read above and the subscription
+      // emits nothing further, and the wait would hang on an event that already happened.
+      const raced = getNodeImpl(graph, id);
+      if (Option.isSome(raced)) {
+        unsubscribe();
+        resume(Effect.succeed(raced.value));
+      }
+
+      return Effect.sync(() => unsubscribe());
+    });
+  });
+
+/**
  * Implementation helper for expand.
  * If the node does not exist yet, the expand is recorded as pending and applied when the node is added.
  */
@@ -880,13 +919,17 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       const typeChanged = existing.type !== type;
       const dataChanged = !shallowEqual(existing.data, data);
       const propertiesChanged = Object.keys(properties).some((key) => existing.properties[key] !== properties[key]);
+      // `changed` is on the visit log because counting `existing node` lines alone measures how often a
+      // node was re-offered, not how often it actually changed — two very different costs.
+      const changed = typeChanged || dataChanged || propertiesChanged;
       log('existing node', {
         id,
+        changed,
         typeChanged,
         dataChanged,
         propertiesChanged,
       });
-      if (typeChanged || dataChanged || propertiesChanged) {
+      if (changed) {
         log('updating node', { id, type, data, properties });
         const newNode = Option.some({
           ...existing,

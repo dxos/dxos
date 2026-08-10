@@ -25,9 +25,9 @@ import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { type Notebook } from '#types';
 
 import { type ComputeGraph } from '../../notebook';
+import type * as Notebook from '../../types/Notebook';
 import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';
 import { type NotebookMenuProps } from './NotebookMenu';
 
@@ -177,7 +177,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full bg-group-surface text-description border-y border-subdued-separator', valueStyles)}>
+    <div className={mx('flex w-full dx-group-surface text-description border-y border-subdued-separator', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );

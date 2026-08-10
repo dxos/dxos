@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Script } from '@dxos/compute';
+import type * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
@@ -15,7 +15,8 @@ import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-edito
 
 import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
 import { useDeployState, useToolbarState } from '#hooks';
-import { type Settings } from '#types';
+
+import type * as Settings from '../../types/Settings';
 
 export type ScriptEditorProps = AppSurface.ObjectArticleProps<
   Script.Script,

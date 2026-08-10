@@ -10,15 +10,11 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import {
-  type Credential,
-  FunctionError,
-  Header,
-  InvalidOperationInputError,
-  InvalidOperationOutputError,
-  Operation,
-  Trace,
-} from '@dxos/compute';
+import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Header from '@dxos/compute/Header';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
@@ -30,7 +26,7 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
+import { accessTokenResolverFromService, configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
@@ -205,8 +201,13 @@ class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
+    // A function context has no identity to sign a presentation with, so managed tokens resolve
+    // through the space-bound EDGE binding rather than the HTTP endpoint the client uses.
+    const accessTokenResolver = this.context.services.accessTokenService
+      ? accessTokenResolverFromService(this.context.services.accessTokenService)
+      : Credential.AccessTokenResolver.notAvailable;
     const credentials = dbLayer
-      ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
+      ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer), Layer.provide(accessTokenResolver))
       : configuredCredentialsLayer([]);
 
     const aiLayer = this.context.services.functionsAiService

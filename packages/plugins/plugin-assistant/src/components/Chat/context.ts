@@ -11,7 +11,7 @@ import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { type Message } from '@dxos/types';
 
 import { type AiChatProcessor } from '../../processor';
-import { type MessageRange } from '../ChatThread';
+import { type MessageSpan } from '../ChatThread';
 import { type ChatEvent } from './events';
 
 /**
@@ -37,8 +37,8 @@ export type ChatContextValue = {
   controller: MarkdownStreamController | null;
   setController: (controller: MarkdownStreamController | null) => void;
   /** Per-message document offset ranges, published by `Chat.Thread`'s syncer. */
-  messageRanges: MessageRange[];
-  setMessageRanges: (ranges: MessageRange[]) => void;
+  messageRanges: MessageSpan[];
+  setMessageRanges: (ranges: MessageSpan[]) => void;
 };
 
 // Internal: not re-exported from `Chat/index.ts`. Accessed by sibling components in this

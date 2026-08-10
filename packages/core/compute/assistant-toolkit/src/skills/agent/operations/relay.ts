@@ -8,13 +8,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
 import { getSession } from '@dxos/compute/AgentService';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { Chat, Plan } from '../../../types';
+import { Agent, Chat } from '../../../types';
 import { Relay } from './definitions';
 
 /**
@@ -69,7 +69,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
 /** Cheap-model relevance check, ported from the retired Qualifier's prompt (chat-centric per phase B). */
 const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
   Effect.gen(function* () {
-    const agent = chat.agent ? yield* Database.load(chat.agent).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
+    const agent = yield* Agent.loadForChat(chat);
     const instructions = chat.instructions
       ? yield* Database.load(chat.instructions).pipe(Effect.orElseSucceed(() => undefined))
       : undefined;
@@ -79,12 +79,7 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
           Effect.catchTag('EntityNotFoundError', () => Effect.succeed('')),
         )
       : '';
-    const planText = chat.plan
-      ? yield* Database.load(chat.plan).pipe(
-          Effect.map(Plan.formatPlan),
-          Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No plan found.')),
-        )
-      : 'No plan found.';
+    const checklistText = yield* Chat.formatChecklist(chat);
 
     const { value } = yield* Effect.scoped(
       LanguageModel.generateObject({
@@ -102,9 +97,9 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
                 <instructions>
                 ${instructionsText}
                 </instructions>
-                <plan>
-                  ${planText}
-                </plan>
+                <checklist>
+                  ${checklistText}
+                </checklist>
               </agent>
             `,
           }),

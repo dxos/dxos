@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc-tunnel-e2e",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,7 +29,6 @@
     "react-json-tree": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "catalog:",
     "@dxos/test-utils": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

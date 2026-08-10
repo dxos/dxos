@@ -25,16 +25,7 @@
       "path": "../../common/errors"
     },
     {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/test-utils"
     },
     {
       "path": "../../common/util"
@@ -53,9 +44,6 @@
     },
     {
       "path": "../../core/echo/echo-client"
-    },
-    {
-      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../core/echo/echo-react"
@@ -88,9 +76,6 @@
       "path": "../../ui/react-ui-board"
     },
     {
-      "path": "../../ui/react-ui-editor"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -103,9 +88,6 @@
       "path": "../../ui/react-ui-menu"
     },
     {
-      "path": "../../ui/ui-editor"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -113,9 +95,6 @@
     },
     {
       "path": "../plugin-connector"
-    },
-    {
-      "path": "../plugin-file"
     },
     {
       "path": "../plugin-graph"
@@ -128,9 +107,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

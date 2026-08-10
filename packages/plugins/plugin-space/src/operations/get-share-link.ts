@@ -2,8 +2,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
@@ -11,7 +11,7 @@ import { SpaceOperationConfig } from './helpers';
 const handler: Operation.WithHandler<typeof SpaceOperation.GetShareLink> = SpaceOperation.GetShareLink.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const { Invitation, InvitationEncoder } = yield* Effect.promise(() => import('@dxos/react-client/invitations'));
+      const { Invitation, InvitationEncoder } = yield* Effect.promise(() => import('@dxos/client/invitations'));
 
       const invitation = yield* Operation.invoke(SpaceOperation.Share, {
         space: input.space,

@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { meta } from '#meta';
 
@@ -26,7 +27,7 @@ const STORAGE_KEY = `${meta.profile.key}.statsPanel`;
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ persist = true }: StatsPanelOptions = {}) {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
     const canPersist = persist && typeof localStorage !== 'undefined';
 
     const hydrate = (): Record<string, unknown> => {
@@ -55,7 +56,7 @@ export default Capability.makeModule(
       }
     };
 
-    return Capability.contributes(AppCapabilities.StatsPanel, {
+    return Capability.contribute(AppCapabilities.StatsPanel, {
       statsAtom,
       get: (pluginKey) => registry.get(statsAtom)[pluginKey],
       compartment: (pluginKey) => ({

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
@@ -26,8 +26,18 @@ export const translations = [
         'project.label': 'Project',
         'projects.label': 'Projects',
         'instructions.label': 'Instructions',
+        'context.label': 'Context',
+        'goals.label': 'Goals',
+        'tasks.label': 'Tasks',
         'routines.label': 'Routines',
         'artifacts.label': 'Artifacts',
+        'create-panel.name.placeholder': 'Project name (optional)',
+        'create-panel.template.placeholder': 'Filter templates…',
+        'setup-project.label': 'Set up project',
+        'create-chat.label': 'New chat',
+        'create-routine.label': 'New routine',
+        'object-card.untitled.label': 'Untitled',
+        'object-card.delete.label': 'Delete',
       },
     },
   },

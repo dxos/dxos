@@ -6,9 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Collection, type Database, Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { type SpaceId } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Column, Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -17,8 +16,8 @@ import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
-import { type SpaceCapabilities } from '#types';
 
+import type * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import { getSpaceDisplayName } from '../../util';
 
 /** Display-ready option for the create object search list. */
@@ -41,7 +40,6 @@ export type CreateObjectPanelProps = {
   typename?: string;
   target?: Database.Database | Collection.Collection;
   initialFormValues?: Partial<AnyProperties>;
-  defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Metadata | undefined;
   onTargetChange?: (target: Database.Database) => void;
   onTypenameChange?: (typename: string) => void;
@@ -54,7 +52,6 @@ export const CreateObjectPanel = ({
   typename,
   target,
   initialFormValues: initialFormValuesProp,
-  defaultSpaceId,
   resolve,
   onTargetChange,
   onTypenameChange,
@@ -100,7 +97,7 @@ export const CreateObjectPanel = ({
   }
 
   if (!target) {
-    return <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />;
+    return <SelectSpace spaces={spaces} onChange={onTargetChange} />;
   }
 
   if (metadata.customPanel) {
@@ -115,27 +112,23 @@ export const CreateObjectPanel = ({
   }
 
   if (metadata.inputSchema) {
-    // The host (Dialog.Body) already owns the gutter Column. Use Column.Center to place the form in
-    // the same center column as the dialog title — NOT a subgrid wrapper or Form.Viewport's own
-    // Column.Root. Subgrid can't propagate through Form.Root's `display: contents` wrapper (the form
-    // would fall back to a stray track and inset), and a nested Column.Root would double-gutter it.
     return (
-      <Column.Center>
-        <Form.Root
-          autoFocus
-          schema={inputSchema}
-          defaultValues={initialFormValues}
-          fieldProvider={inputSurfaceLookup}
-          db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
-          onSave={handleCreateObject}
-          testId='create-object-form'
-        >
+      <Form.Root
+        autoFocus
+        schema={inputSchema}
+        defaultValues={initialFormValues}
+        fieldProvider={inputSurfaceLookup}
+        db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
+        onSave={handleCreateObject}
+        testId='create-object-form'
+      >
+        <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />
             <Form.Submit />
           </Form.Content>
-        </Form.Root>
-      </Column.Center>
+        </Form.Viewport>
+      </Form.Root>
     );
   }
 
@@ -194,42 +187,26 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
   );
 };
 
-type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'> & {
+type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces'> & {
   onChange?: (db: Database.Database) => void;
 };
 
-const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => {
+const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   const sortedSpaces = useMemo(
     () =>
       [...spaces].sort((a, b) => {
-        const labelA = toLocalizedString(
-          getSpaceDisplayName(a, {
-            personal: a.id === defaultSpaceId,
-          }),
-          t,
-        );
-        const labelB = toLocalizedString(
-          getSpaceDisplayName(b, {
-            personal: b.id === defaultSpaceId,
-          }),
-          t,
-        );
+        const labelA = toLocalizedString(getSpaceDisplayName(a), t);
+        const labelB = toLocalizedString(getSpaceDisplayName(b), t);
         return labelA.localeCompare(labelB);
       }),
-    [spaces, defaultSpaceId, t],
+    [spaces, t],
   );
 
   const { results, handleSearch } = useSearchListResults({
     items: sortedSpaces,
-    extract: (space) =>
-      toLocalizedString(
-        getSpaceDisplayName(space, {
-          personal: space.id === defaultSpaceId,
-        }),
-        t,
-      ),
+    extract: (space) => toLocalizedString(getSpaceDisplayName(space), t),
   });
 
   return (
@@ -246,7 +223,7 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
             <SearchList.Item
               key={space.id}
               value={space.id}
-              label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              label={toLocalizedString(getSpaceDisplayName(space), t)}
               onSelect={() => onChange?.(space.db)}
             />
           );

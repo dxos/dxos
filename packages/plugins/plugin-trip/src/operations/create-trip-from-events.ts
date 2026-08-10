@@ -4,18 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Calendar } from '@dxos/plugin-inbox';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Event } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { TRIP_SKILL_KEY } from '../skills';
-import { TripOperation } from '../types';
+import * as TripOperation from '../types/TripOperation';
 import { buildTripFromEvents } from './events-to-segments';
 
 export default TripOperation.CreateTripFromEvents.pipe(

@@ -7,7 +7,8 @@ import * as Layer from 'effect/Layer';
 import { OpaqueToolkit } from '@dxos/ai';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
-import { OperationHandlerSet, Skill } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
 import { Feed, Tag, type Type } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 // Narrow subpath imports (`/skills` and `/types`) so the CLI's
@@ -17,27 +18,30 @@ import { makeRegistry } from '@dxos/echo-client';
 // whose `source` export condition advertises a TS file that isn't shipped in
 // its dist, causing Bun resolution to fail).
 import { AssistantSkill } from '@dxos/plugin-assistant/skills';
-import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
+import * as Chess from '@dxos/plugin-chess/Chess';
+import { ChessOperationHandlerSet } from '@dxos/plugin-chess/operations';
 import { ChessSkill } from '@dxos/plugin-chess/skills';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Game } from '@dxos/plugin-game/types';
-import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
+import * as Game from '@dxos/plugin-game/Game';
+import { GoogleOperationHandlerSet } from '@dxos/plugin-google/plugin';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { CalendarSkill, InboxSendSkill, InboxSkill } from '@dxos/plugin-inbox/skills';
-import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
-import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/plugin';
+import { JmapOperationHandlerSet } from '@dxos/plugin-jmap/plugin';
+import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/operations';
 import { KanbanSkill } from '@dxos/plugin-kanban/skills';
-import { MapOperationHandlerSet } from '@dxos/plugin-map/plugin';
+import { MapOperationHandlerSet } from '@dxos/plugin-map/operations';
 import { MapSkill } from '@dxos/plugin-map/skills';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { MarkdownSkill } from '@dxos/plugin-markdown/skills';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { CommentOperationHandlerSet } from '@dxos/plugin-review/plugin';
+import { CommentOperationHandlerSet } from '@dxos/plugin-review/operations';
 import { CommentSkill } from '@dxos/plugin-review/skills';
-import { ScriptOperationHandlerSet } from '@dxos/plugin-script/plugin';
+import { ScriptOperationHandlerSet } from '@dxos/plugin-script/operations';
 import { ScriptSkill } from '@dxos/plugin-script/skills';
-import { TableOperationHandlerSet } from '@dxos/plugin-table/plugin';
+import { TableOperationHandlerSet } from '@dxos/plugin-table/operations';
 import { TableSkill } from '@dxos/plugin-table/skills';
-import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/plugin';
+import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/operations';
 import { TranscriptionSkill } from '@dxos/plugin-transcription/skills';
 import { DataTypes } from '@dxos/schema';
 import {
@@ -84,6 +88,10 @@ export const operationHandlers = OperationHandlerSet.merge(
   DatabaseHandlers,
   ChessOperationHandlerSet,
   InboxOperationHandlerSet,
+  // Mail-provider handlers: InboxSendSkill / CalendarSkill reference provider ops, and a missing
+  // handler set surfaces only at runtime as "tool not found".
+  GoogleOperationHandlerSet,
+  JmapOperationHandlerSet,
   KanbanOperationHandlerSet,
   MapOperationHandlerSet,
   MarkdownOperationHandlerSet,

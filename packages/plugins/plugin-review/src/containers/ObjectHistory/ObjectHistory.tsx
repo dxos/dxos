@@ -9,14 +9,14 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
-import { ReviewCapabilities } from '#types';
 
+import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline';
 
 export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;
@@ -35,7 +35,9 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
 
   // Selection is session-local: collaborators each view their own version.
   const objectId = subject.id;
-  const selection = useViewState(ReviewCapabilities.viewAspect, objectId).selection ?? { kind: 'current' as const };
+  const selection = useViewState(ReviewCapabilities.viewAspect, objectId).selection ?? {
+    kind: 'current' as const,
+  };
   const { update } = useViewStateActions(ReviewCapabilities.viewAspect, objectId);
   const setSelection = useCallback(
     (next: ReviewCapabilities.VersionSelection) => update((prev) => ({ ...prev, selection: next })),
@@ -215,8 +217,12 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
           )}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='overflow-y-auto'>
-        <Timeline commits={commits} branches={branches} currentBranch={currentBranch} onSelect={handleSelect} />
+      <Panel.Content asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
+            <Timeline commits={commits} branches={branches} currentBranch={currentBranch} onSelect={handleSelect} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Panel.Content>
     </Panel.Root>
   );

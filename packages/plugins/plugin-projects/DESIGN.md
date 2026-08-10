@@ -13,6 +13,39 @@ automation scoping, and project-scoped assistance, and other plugins are expecte
 to extend it (via artifacts, templates) or use projects directly. It is intended
 to be one of the core aspects of Composer.
 
+## Product model: two forms of work (decided 2026-08-01)
+
+> **Markdown checklists are the cheap, fluid form of work; ECHO `Task` objects in a
+> `TaskSet` are the durable, assignable form; promotion links the two.**
+
+- **Ad hoc**: a markdown checklist (an `Outline` in a project; a chat-owned outline in a
+  standalone chat) is where work is brainstormed — cheap to write, reorder, and discard,
+  and equally editable by humans and agents as plain text. This is the in-product form of
+  the repo's own `TASKS.md` workflow.
+- **Durable**: when an item becomes real it is **promoted** to an ECHO `Task` (the
+  outliner's convert-to-task pattern, #12423): the markdown line carries the `echo://`
+  link back and its label follows renames. Tasks are assignable (`assignee: Actor` —
+  human by Person ref, agent by DID), syncable (GitHub/Linear mirrors), and queryable.
+- **Containment is the ECHO parent edge, not ref fields**: a `TaskSet` parents its root
+  tasks; a task parents its sub-tasks (one tree: `TaskSet → Task → sub-Task`; set
+  membership of a sub-task is transitive). No membership arrays, no backrefs; deletion
+  cascades structurally.
+- **Delegation is the promotion moment for agents**: only a durable `Task` can be
+  delegated to a sub-agent — delegating is exactly when scratch becomes real. There is
+  no separate `Plan` type; the conversation's working set IS its outline plus the open
+  tasks it has promoted.
+- **A project tracks both forms**: `Project.outline` (scratch surface) and
+  `Project.taskSet` (the durable container). Project chats write the project's outline;
+  standalone chats own theirs.
+
+**Status (2026-08-03).** The loop is proven in CI by two play stories in
+`stories-assistant/Chat.stories.tsx`: `WithPlanningScripted` (the planning skill's
+title-keyed upsert rewrites checklist items in place rather than duplicating them) and
+`WithSubAgentsTest2` (delegation adds an unchecked item; the supervisor's `onComplete`
+checks it off). **Open gap:** promotion is still delegation-only — there is no
+`promote-task` verb, so an agent cannot turn a checklist line into a durable `Task`
+except by delegating it. Human convert-to-task is the only other path.
+
 ## Background: Project, Agent, Chat, AiSession
 
 **Agent**: a durable named actor (`org.dxos.type.agent@0.1.0`,
@@ -50,6 +83,34 @@ conversation by replaying the feed. The consequence that shapes this design:
 anything a session needs beyond its feed has to be handed to it explicitly.
 
 ## Types
+
+### Type inventory (by package)
+
+All types relevant to the project/task/plan model in one place. "M5 target" is the Milestone 5
+end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01); blank = unchanged.
+
+| Type              | Package (today)           | Role                                                             | M5 target                                                                                                |
+| ----------------- | ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats     | 0.3.0 adds `goals` / `outline` / `taskSet: Ref<TaskSet>` / `plan`; stays in compute                      |
+| `Instructions`    | `@dxos/compute`           | Prompt text + skills + objects + commands                        |                                                                                                          |
+| `Routine`         | `@dxos/compute`           | Triggered automation (instructions or runnable operation)        |                                                                                                          |
+| `Skill`           | `@dxos/compute`           | Toolkit definition bound into sessions                           |                                                                                                          |
+| `ExternalProject` | `@dxos/types`             | Task container (name lies — used natively since #12423)          | **Renamed `TaskSet`** (`org.dxos.type.taskSet@0.2.0`): lightweight, possibly externally synced           |
+| `Task`            | `@dxos/types`             | Work item: title/status/priority/assigned/estimate/project       | 0.2.0: `assignee: Actor` (was `assigned: Ref<Person>`), `taskSet` (was `project`), +`failed`/`cancelled` |
+| `Actor`           | `@dxos/types` (struct)    | Identity shape (`Message.sender`): role/contact/DID/email/name   | Also `Task.assignee` — agents by DID, no `Ref<Agent>` variant                                            |
+| `Person`          | `@dxos/types`             | Contact record; target of `Actor.contact`                        |                                                                                                          |
+| `Milestone`       | — (does not exist)        | Phasing marker                                                   | DEFERRED; when added: ECHO type, `Task.milestone?: Ref<Milestone>`, owned by TaskSet                     |
+| `Outline`         | `plugin-outliner`         | `{name, content: Ref<Text>}` hierarchical checklist document     | **Moves to `@dxos/types`**; `project` field renamed `taskSet`                                            |
+| `Plan`            | `@dxos/assistant-toolkit` | Conversation working set: embedded tasks driving supervisor loop | `Plan.Task` gains `taskRef?: Ref<Task>` (promotion / write-through)                                      |
+| `Chat`            | `@dxos/assistant-toolkit` | Conversation: feed + `instructions` ref + `plan`                 |                                                                                                          |
+| `Agent`           | `@dxos/assistant-toolkit` | Identity/preset owning no conversation state                     | Assignment target only via DID on `Actor`                                                                |
+| `Collection`      | `@dxos/echo`              | Ordered ref collection (used by `Project.artifacts`)             |                                                                                                          |
+| `Text`            | `@dxos/schema`            | CRDT text (content of `Outline`, documents)                      |                                                                                                          |
+
+Plugin ownership after M5: **plugin-tasks** (renamed plugin-outliner) owns the TaskSet/Task/
+Outline surfaces and `TaskOperation.*`; **plugin-projects** owns Project lifecycle, agentic
+wiring, and composition; **plugin-github / plugin-linear** sync into `TaskSet`/`Task` via meta
+foreign keys; **plugin-kanban** adopts the plugin-tasks model.
 
 ### `Project` (`@dxos/compute`)
 
@@ -210,6 +271,45 @@ objects, so it is not the default.
 
 Creating artifacts of other types from a project chat (Outline, Sheet,
 Organization/Contact) builds on the same skill and is tracked separately.
+
+### The delegation strategy, and why `Plan` is not an artifact
+
+`Chat.plan` is the one piece of durable state that stays on the conversation
+rather than graduating to the project, because the supervisor loop is keyed on it.
+
+The loop lives in `assistant-toolkit/src/supervisor/delegation-strategy.ts` and
+runs after every turn:
+
+1. **Reconcile.** Resolve the chat backed by this conversation feed, read its
+   plan, and select tasks that are `delegated === true`, `in-progress`, and not
+   already running. Only explicitly delegated tasks spawn sub-agents — a task
+   created by ordinary planning (`update-tasks`) stays in the plan and is not
+   double-delegated.
+2. **Synthesize.** For each, build a minimal `Instructions` whose goal is the task
+   text, bound with the supervisor's own skills **minus the delegation skill** —
+   otherwise a sub-agent could recursively delegate.
+3. **Spawn.** Invoke `RunInstructions` as its own process, recording the pid on
+   the task record so a resumed session can reattach rather than re-spawn.
+4. **Complete.** On exit, update the task's status, extract any artifact ids the
+   sub-agent reported, and post a templated message back into the conversation.
+
+That shape is why the plan is conversation-scoped. The dispatcher's unit of work
+is a feed: `reconcile` and `onComplete` both receive one and resolve the chat from
+it. `activeIds` — the set of running delegations — is likewise per-feed. A plan
+shared by every chat in a project would put concurrent supervisors on one task
+list, and nothing in the model arbitrates two agents claiming the same task or
+reconciles their status writes.
+
+So the plan is correctly the conversation's task ledger, and the artifact question
+is really about **lifecycle, not schema**: should a _completed_ plan graduate into
+the project's artifacts collection as a record of what was done? That is worth
+doing — it is exactly the kind of durable work product the collection is for — but
+it is a promotion step at completion, not a relocation of the live field. Open
+until the completion signal is defined (there is no "plan is finished" state
+today; tasks complete individually).
+
+Note the field is a plain `Ref` with no relation: unlike the agent linkage, the
+plan is owned by exactly one chat, so a field is the right encoding.
 
 ## Project chats
 
@@ -459,6 +559,9 @@ ECHO types for the harness client) to host it.
   `Routine` lives in `@dxos/compute`.
 - Project-scoped agent roster (relation or parenting), and artifact provenance
   (which routine or agent produced what).
+- Promote a completed `Plan` into the project's artifacts collection — needs a
+  plan-level completion signal, which does not exist today (see "The delegation
+  strategy, and why `Plan` is not an artifact").
 - Remove plugin-sidekick, which this plugin obviates.
 
 Task-level follow-ups live in `./TASKS.md`.

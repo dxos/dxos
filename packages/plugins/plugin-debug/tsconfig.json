@@ -40,9 +40,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/tracing"
     },
     {
@@ -112,13 +109,22 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-illustrator"
     },
     {
       "path": "../plugin-inbox"
@@ -130,9 +136,6 @@
       "path": "../plugin-sheet"
     },
     {
-      "path": "../plugin-sketch"
-    },
-    {
       "path": "../plugin-space"
     },
     {
@@ -140,6 +143,9 @@
     },
     {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }

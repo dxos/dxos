@@ -6,13 +6,13 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Button, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -22,7 +22,11 @@ import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
-import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
+
+import type * as Artifact from '../../types/Artifact';
+import * as StudioCapabilities from '../../types/StudioCapabilities';
+import * as StudioOperation from '../../types/StudioOperation';
+import * as Variant from '../../types/Variant';
 
 export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
 
@@ -372,7 +376,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar classNames='dx-document' />
+          <Menu.Toolbar classNames='dx-document'>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>

@@ -8,9 +8,9 @@ import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type Mailbox } from '#types';
 
 import { Initialize } from '../../components';
+import type * as Mailbox from '../../types/Mailbox';
 
 export type InitializeMailboxProps = {
   mailbox: Mailbox.Mailbox;

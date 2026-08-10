@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-thread",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,8 +14,12 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -58,11 +62,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -71,7 +70,28 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./ChannelBackend": {
+      "source": "./src/types/ChannelBackend.ts",
+      "types": "./dist/types/src/types/ChannelBackend.d.ts",
+      "import": "./dist/lib/ChannelBackend.mjs"
+    },
+    "./ThreadCapabilities": {
+      "source": "./src/types/ThreadCapabilities.ts",
+      "types": "./dist/types/src/types/ThreadCapabilities.d.ts",
+      "import": "./dist/lib/ThreadCapabilities.mjs"
+    },
+    "./ThreadEvents": {
+      "source": "./src/types/ThreadEvents.ts",
+      "types": "./dist/types/src/types/ThreadEvents.d.ts",
+      "import": "./dist/lib/ThreadEvents.mjs"
+    },
+    "./ThreadOperation": {
+      "source": "./src/types/ThreadOperation.ts",
+      "types": "./dist/types/src/types/ThreadOperation.d.ts",
+      "import": "./dist/lib/ThreadOperation.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -81,14 +101,25 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ChannelBackend": [
+        "dist/types/src/types/ChannelBackend.d.ts"
+      ],
+      "ThreadCapabilities": [
+        "dist/types/src/types/ThreadCapabilities.d.ts"
+      ],
+      "ThreadEvents": [
+        "dist/types/src/types/ThreadEvents.d.ts"
+      ],
+      "ThreadOperation": [
+        "dist/types/src/types/ThreadOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -98,22 +129,16 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
-    "@dxos/echo-react": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -121,12 +146,15 @@
     "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

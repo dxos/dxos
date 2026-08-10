@@ -2,28 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryContext, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Feed, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Panel } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { Message, Person } from '@dxos/types';
+import { DraftMessage, Message, Person } from '@dxos/types';
 
 import { type MessageOptions } from '#components';
 import { initializeMailbox } from '#testing';
 import { translations } from '#translations';
-import { Mailbox } from '#types';
 
+import * as Mailbox from '../../types/Mailbox';
+import { createDraftMessage } from '../../util';
 import { ConversationStack } from './ConversationStack';
 
 type StoryArgs = {
   length?: number;
+  /** Show a story-only Reply button that appends a reply draft to the thread. */
+  reply?: boolean;
 };
 
 /** Tags applied to the seeded messages by index (some messages carry several tags). */
@@ -45,7 +48,7 @@ const MESSAGE_TAGS: { label: string; hue: string }[][] = [
  * Starts with every message collapsed; expand one by clicking its summary. (Deciding which message is
  * expanded by default — the most recent — is `MessageArticle`'s concern, exercised in its own story.)
  */
-const DefaultStory = () => {
+const DefaultStory = ({ reply }: StoryArgs) => {
   const { space } = useClientStory();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = useResolveRef(mailbox?.feed);
@@ -72,6 +75,15 @@ const DefaultStory = () => {
     });
   }, []);
 
+  // Story-only stand-in for the message toolbar's Reply action: appends a reply draft to the
+  // thread's last message, exercising the append-scroll-autofocus path in `ConversationStack.Content`.
+  const handleReply = useCallback(() => {
+    const last = messages.filter((message) => !DraftMessage.instanceOf(message)).at(-1);
+    if (space && mailbox && last) {
+      space.db.add(Obj.make(Message.Message, createDraftMessage({ mode: 'reply', message: last, mailbox })));
+    }
+  }, [space, mailbox, messages]);
+
   if (!space?.db || !mailbox) {
     return <Loading />;
   }
@@ -88,6 +100,15 @@ const DefaultStory = () => {
     >
       <Dnd.Root>
         <Panel.Root role='article'>
+          {reply && (
+            <Panel.Toolbar asChild>
+              <Toolbar.Root>
+                <Toolbar.Button onClick={handleReply} data-testid='story-reply'>
+                  Reply
+                </Toolbar.Button>
+              </Toolbar.Root>
+            </Panel.Toolbar>
+          )}
           <Panel.Content asChild>
             <ConversationStack.Content />
           </Panel.Content>
@@ -148,3 +169,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * Test:
+ * 1. Press "Reply" in the toolbar. A draft tile appears after the thread's last message, scrolled
+ *    fully into view, with To and `Re:` subject prefilled from that message.
+ * 2. The BODY editor has focus — typing immediately lands in the draft body, not a recipient field.
+ * 3. The draft's header fields (To / Cc / Bcc / subject) render as an aligned label/field grid with
+ *    vertical separation; reveal Cc and Bcc via the links on the To row to see all rows align.
+ */
+export const ReplyDraftManual: Story = {
+  args: {
+    reply: true,
+  },
+};

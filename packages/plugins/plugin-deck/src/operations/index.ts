@@ -2,22 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const DeckOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-toast'),
-  () => import('./adjust'),
-  () => import('./close'),
-  () => import('./open'),
-  () => import('./revert-workspace'),
-  () => import('./scroll-into-view'),
-  () => import('./set'),
-  () => import('./switch-workspace'),
-  () => import('./update-companion'),
-  () => import('./update-complementary'),
-  () => import('./update-dialog'),
-  () => import('./update-plank-size'),
-  () => import('./update-tiling-size'),
-  () => import('./update-popover'),
-  () => import('./update-sidebar'),
-);
+import * as DeckOperation from '../types/DeckOperation';
+
+export const DeckOperationHandlerSet = OperationHandlerSet.lazy([
+  LayoutOperation.AddToast.pipe(Operation.lazyHandler(() => import('./add-toast'))),
+  DeckOperation.Adjust.pipe(Operation.lazyHandler(() => import('./adjust'))),
+  LayoutOperation.Close.pipe(Operation.lazyHandler(() => import('./close'))),
+  LayoutOperation.Open.pipe(Operation.lazyHandler(() => import('./open'))),
+  LayoutOperation.RevertWorkspace.pipe(Operation.lazyHandler(() => import('./revert-workspace'))),
+  LayoutOperation.ScrollIntoView.pipe(Operation.lazyHandler(() => import('./scroll-into-view'))),
+  LayoutOperation.Set.pipe(Operation.lazyHandler(() => import('./set'))),
+  LayoutOperation.SwitchWorkspace.pipe(Operation.lazyHandler(() => import('./switch-workspace'))),
+  DeckOperation.ToggleExpose.pipe(Operation.lazyHandler(() => import('./toggle-expose'))),
+  LayoutOperation.UpdateCompanion.pipe(Operation.lazyHandler(() => import('./update-companion'))),
+  LayoutOperation.UpdateComplementary.pipe(Operation.lazyHandler(() => import('./update-complementary'))),
+  LayoutOperation.UpdateDialog.pipe(Operation.lazyHandler(() => import('./update-dialog'))),
+  DeckOperation.UpdatePlankSize.pipe(Operation.lazyHandler(() => import('./update-plank-size'))),
+  DeckOperation.UpdatePlankSizes.pipe(Operation.lazyHandler(() => import('./update-plank-sizes'))),
+  LayoutOperation.UpdatePopover.pipe(Operation.lazyHandler(() => import('./update-popover'))),
+  LayoutOperation.UpdateSidebar.pipe(Operation.lazyHandler(() => import('./update-sidebar'))),
+]);

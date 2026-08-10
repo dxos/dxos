@@ -3,7 +3,7 @@
 //
 
 import { FormBuilder } from '@dxos/cli-util';
-import { type Connection } from '@dxos/link';
+import { Connection } from '@dxos/link';
 import { OAuthProvider } from '@dxos/protocols';
 
 /**

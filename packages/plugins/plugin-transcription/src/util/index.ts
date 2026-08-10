@@ -3,3 +3,4 @@
 //
 
 export * from './get-time-str';
+export * from './render-byline';

@@ -7,16 +7,17 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Capability } from '@dxos/app-framework';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppSpace, LayoutOperation, TypeOptions } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
@@ -24,8 +25,9 @@ import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { meta } from '#meta';
-import { SpaceCapabilities } from '#types';
 
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import * as SpaceEvents from '../../types/SpaceEvents';
 import { getSpaceDisplayName } from '../../util';
 
 export const CREATE_OBJECT_DIALOG = `${meta.profile.key}.CreateObjectDialog`;
@@ -48,26 +50,21 @@ export const CreateObjectDialog = ({
 }: CreateObjectDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
+  // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
+  // reactively, so entries pop in as their chunks arrive.
+  useActivationSignal(SpaceEvents.CreateObjectRequested);
   const operationInvoker = useOperationInvoker();
   const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
-  const client = useClient();
-  const spaces = useSpaces();
+  // Spaces the app manages on the user's behalf are never targets for new objects.
+  const spaces = useSpaces().filter((space) => AppSpace.isVisibleSpace(space));
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   const allTypes = useQuery(db, TypeOptions.allTypesQuery);
   const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
-  const spaceLabel = useMemo(
-    () =>
-      space &&
-      toLocalizedString(
-        getSpaceDisplayName(space, { personal: space.id === AppSpace.getPersonalSpace(client)?.id }),
-        t,
-      ),
-    [space, client, t],
-  );
+  const spaceLabel = useMemo(() => space && toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
 
   // Index all types by typename for label/icon lookups.
   const typeByTypename = useMemo(() => {
@@ -237,7 +234,6 @@ export const CreateObjectDialog = ({
           target={target}
           typename={typename}
           initialFormValues={initialFormValues}
-          defaultSpaceId={AppSpace.getPersonalSpace(client)?.id ?? client.spaces.get()[0]?.id}
           resolve={resolve}
           onCreateObject={handleCreateObject}
           onTargetChange={setTarget}

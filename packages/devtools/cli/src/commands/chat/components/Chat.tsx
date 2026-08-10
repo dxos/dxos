@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import { For, Match, Switch, createEffect, createMemo, createSignal, useContext } from 'solid-js';
 
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { isTruthy } from '@dxos/util';
 
 import { AppContext } from '../../../components';

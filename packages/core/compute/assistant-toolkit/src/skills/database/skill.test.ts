@@ -7,11 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AgentService } from '@dxos/agent-runtime';
-import { AssistantTestLayer, runMemoizedTests } from '@dxos/agent-runtime/testing';
-import { Operation, Skill } from '@dxos/compute';
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EID, EntityId } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -26,7 +27,8 @@ const TestLayer = AssistantTestLayer({
   types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Skill.Skill, Feed.Feed],
   skills: [DatabaseSkill.make()],
   tracing: 'pretty',
-  aiServicePreset: 'edge-remote',
+  model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default'),
+  aiServicePreset: 'direct',
 });
 
 // A representative draft-07 JSON Schema as a model would emit for the `add-schema` tool.
@@ -42,7 +44,7 @@ const PROJECT_JSON_SCHEMA = {
   required: ['name'],
 };
 
-describe.skipIf(!runMemoizedTests())('Database Skill', () => {
+describe('Database Skill', { tags: ['model-fixture'] }, () => {
   //
   // Schema
   //
@@ -387,7 +389,7 @@ describe.skipIf(!runMemoizedTests())('Database Skill', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Remove Context Corp' }));
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(Obj.getURI(org)) as Ref.Ref<any>;
+        const ref = db.makeRef<Organization.Organization>(Obj.getURI(org));
         yield* agent.addContext([ref]);
         const uri = Obj.getURI(org);
         yield* agent.submitPrompt(`Remove the organization "Remove Context Corp" from the chat context.`);

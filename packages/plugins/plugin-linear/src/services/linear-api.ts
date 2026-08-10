@@ -17,6 +17,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
+import { type Task } from '@dxos/types';
 
 import { LINEAR_API_URL } from '../constants';
 import { LinearGraphQLError } from '../errors';
@@ -466,16 +467,21 @@ export const taskPriorityToPriorityNumber = (
  * - `todo`        → `unstarted`
  * - `in-progress` → `started`
  * - `done`        → `completed`
+ * - `failed`      → `canceled` (Linear has no failure category)
+ * - `cancelled`   → `canceled`
  *
  * Callers resolve the resulting state-type to an actual workflow-state ID via
  * {@link fetchTeamWorkflowStates} per team.
  */
-export const taskStatusToStateType = (status: 'todo' | 'in-progress' | 'done'): StateType => {
+export const taskStatusToStateType = (status: NonNullable<Task.Task['status']>): StateType => {
   switch (status) {
     case 'in-progress':
       return 'started';
     case 'done':
       return 'completed';
+    case 'failed':
+    case 'cancelled':
+      return 'canceled';
     case 'todo':
     default:
       return 'unstarted';

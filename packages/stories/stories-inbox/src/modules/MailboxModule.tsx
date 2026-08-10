@@ -5,11 +5,13 @@
 import React, { useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { GraphPath, NotFound } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, useActiveSpace, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';
+import { AttendableContainer } from '@dxos/react-ui-attention';
 
 /** LEFT: the mailbox article (includes the connect/sync auth button). */
 export const MailboxModule = ({ data }: { data?: { attendableId?: string } }) => {
@@ -35,5 +37,20 @@ const MailboxModuleContainer = ({ space, attendableId }: { space: Space; attenda
       NotFound.expandPath(graph, GraphPath.getObjectPathFromObject(mailbox));
     }
   }, [graph, mailbox]);
-  return <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: selectionId }} limit={1} />;
+
+  const surface = (
+    <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: selectionId }} limit={1} />
+  );
+
+  // `ModuleContainer` makes each cell attendable under its *positional* id, but the article advertises
+  // the mailbox object path (above), so without this the article is never the attended entity and
+  // anything gated on attention — toolbar menus, selection — stays inert. `contents` keeps the
+  // attendable out of the layout so the cell's height chain is unaffected.
+  return selectionId ? (
+    <AttendableContainer id={selectionId} classNames='contents'>
+      {surface}
+    </AttendableContainer>
+  ) : (
+    surface
+  );
 };

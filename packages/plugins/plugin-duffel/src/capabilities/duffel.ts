@@ -4,18 +4,22 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
-import { type BookingSearch, TripCapabilities } from '@dxos/plugin-trip/types';
+import type * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
+import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
 
 import { meta } from '#meta';
 import { makeDuffelBookingService } from '#services';
-import { DuffelCapabilities, Settings } from '#types';
+
+import * as DuffelCapabilities from '../types/DuffelCapabilities';
+import * as Settings from '../types/Settings';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
     const settingsAtom = createKvsStore({
       key: meta.profile.key,
       schema: Settings.Settings,
@@ -25,13 +29,13 @@ export default Capability.makeModule(
     const service: BookingSearch.BookingService = makeDuffelBookingService(() => registry.get(settingsAtom).apiKey);
 
     return [
-      Capability.contributes(DuffelCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.contribute(DuffelCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),
-      Capability.contributes(TripCapabilities.BookingService, service),
+      Capability.contribute(TripCapabilities.BookingService, service),
     ];
   }),
 );

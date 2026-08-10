@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-debug",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS developer debugging utilities plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -48,11 +48,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -61,7 +56,33 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Debug": {
+      "source": "./src/types/Debug.ts",
+      "types": "./dist/types/src/types/Debug.d.ts",
+      "import": "./dist/lib/Debug.mjs"
+    },
+    "./DebugEvents": {
+      "source": "./src/types/DebugEvents.ts",
+      "types": "./dist/types/src/types/DebugEvents.d.ts",
+      "import": "./dist/lib/DebugEvents.mjs"
+    },
+    "./DebugNodes": {
+      "source": "./src/types/DebugNodes.ts",
+      "types": "./dist/types/src/types/DebugNodes.d.ts",
+      "import": "./dist/lib/DebugNodes.mjs"
+    },
+    "./DebugSurface": {
+      "source": "./src/types/DebugSurface.ts",
+      "types": "./dist/types/src/types/DebugSurface.d.ts",
+      "import": "./dist/lib/DebugSurface.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -74,6 +95,25 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Debug": [
+        "dist/types/src/types/Debug.d.ts"
+      ],
+      "DebugEvents": [
+        "dist/types/src/types/DebugEvents.d.ts"
+      ],
+      "DebugNodes": [
+        "dist/types/src/types/DebugNodes.d.ts"
+      ],
+      "DebugSurface": [
+        "dist/types/src/types/DebugSurface.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -81,8 +121,6 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@antv/graphlib": "catalog:",
-    "@antv/layout": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
@@ -101,12 +139,13 @@
     "@dxos/log-store-idb": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
-    "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -120,17 +159,19 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
-    "@tldraw/tldraw": "catalog:",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

@@ -19,6 +19,7 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
+import { setupDevtools } from '../../devtools';
 import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
@@ -68,7 +69,6 @@ export type UseAppOptions = {
   defaults?: string[];
   /**
    * Additional activation events to fire before startup.
-   * These are fired alongside SetupReactSurface before the Startup event.
    */
   setupEvents?: ActivationEvent.ActivationEvent[];
   cacheEnabled?: boolean;
@@ -284,7 +284,6 @@ export const useApp = ({
 
       yield* Effect.all([
         ...setupEvents.map((event) => manager.activate(event)),
-        manager.activate(ActivationEvents.SetupReactSurface),
         manager.activate(ActivationEvents.Startup),
       ]);
 
@@ -309,7 +308,7 @@ export const useApp = ({
       clearTimeout(timeoutId);
       void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
-        void EffectEx.runAndForwardErrors(manager.shutdown());
+        EffectEx.runDetached(manager.shutdown());
       }
     };
   }, [manager]);
@@ -335,11 +334,6 @@ export const useApp = ({
     ),
     [fallback, manager, surfaces, ready, error],
   );
-};
-
-const setupDevtools = (manager: PluginManager.PluginManager) => {
-  (globalThis as any).composer ??= {};
-  (globalThis as any).composer.manager = manager;
 };
 
 /**

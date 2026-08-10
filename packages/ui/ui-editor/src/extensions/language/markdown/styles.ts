@@ -35,6 +35,9 @@ export const formattingStyles = EditorView.theme({
     display: 'inline-block',
     textAlign: 'right',
     paddingRight: '0.5em',
+    // Being inline-block makes this a block container, so it would otherwise inherit the row's
+    // hanging indent and lay its own glyph out against a shifted line box.
+    textIndent: 0,
     fontVariant: 'tabular-nums',
     // Anchor to the line top (not the baseline) so the inline-block marker — whose height already
     // equals the line-height — fills the line box exactly instead of extending it and making a
@@ -44,6 +47,9 @@ export const formattingStyles = EditorView.theme({
   },
   '& .cm-list-mark-bullet': {
     width: `${bulletListIndentationWidth}px`,
+    // Centered (not right-aligned like an ordered marker, whose digits align on the last column) so
+    // the glyph lands on the same axis as a task checkbox, which fills the same box from its start.
+    textAlign: 'center',
     // The rendered bullet widget sits inside the `ListMark` font-mono highlight span; a direct
     // font-family on the widget overrides that inherited monospace so the bullet uses the body font.
     fontFamily: fontBody,
@@ -135,7 +141,7 @@ export const formattingStyles = EditorView.theme({
     fontFamily: fontMono,
   },
   '.cm-table-head': {
-    padding: '4px 8px',
+    padding: '8px 8px',
     paddingRight: '24px',
     overflowWrap: 'break-word',
     whiteSpace: 'pre-wrap',
@@ -145,8 +151,7 @@ export const formattingStyles = EditorView.theme({
     fontSize: 'small',
     textTransform: 'uppercase',
     color: 'var(--color-description)',
-    backgroundColor: 'var(--color-input-surface)',
-    // borderBottom: '1px solid var(--color-cm-separator)',
+    backgroundColor: 'var(--color-group-alt-surface)',
   },
   '.cm-table-cell': {
     padding: '4px 8px',
@@ -154,7 +159,7 @@ export const formattingStyles = EditorView.theme({
     whiteSpace: 'pre-wrap',
     wordBreak: 'keep-all',
     verticalAlign: 'top',
-    backgroundColor: 'var(--color-base-surface)',
+    backgroundColor: 'var(--color-group-surface)',
     fontVariantNumeric: 'tabular-nums',
   },
 

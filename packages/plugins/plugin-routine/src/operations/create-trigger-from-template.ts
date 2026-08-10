@@ -4,13 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, Script, Trigger } from '@dxos/compute';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { getRoutinesSettingsPath } from '../paths';
-import { RoutineOperation } from '../types';
+import * as RoutineOperation from '../types/RoutineOperation';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTemplate> =
   RoutineOperation.CreateTriggerFromTemplate.pipe(

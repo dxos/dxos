@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
@@ -126,6 +126,8 @@ export const MarkdownEditorProvider = ({
       getMenu: menuOptions.getMenu,
       trigger: menuOptions.trigger,
       placeholder: menuOptions.placeholder,
+      searchTriggers: menuOptions.searchTriggers,
+      searchPlaceholder: menuOptions.searchPlaceholder,
       ...(menuOptions.filter !== undefined ? { filter: menuOptions.filter } : {}),
       ...(menuOptions.triggerKey !== undefined ? { triggerKey: menuOptions.triggerKey } : {}),
     }),

@@ -56,7 +56,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/invariant',
   '@dxos/keyboard',
   '@dxos/keys',
-  '@dxos/kv-store',
   '@dxos/log',
   '@dxos/merkle-search-tree',
   '@dxos/random',

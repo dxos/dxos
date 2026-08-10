@@ -12,7 +12,7 @@ src/
     index.ts
     my-skill.ts
   capabilities/
-    index.ts              # Capability.lazy() exports only
+    index.ts              # makers / Capability.lazyModule() exports only
     react-surface.tsx
     operation-handler.ts
     skill-definition.ts
@@ -29,7 +29,7 @@ src/
       FooArticle.tsx
       FooArticle.stories.tsx
   operations/
-    index.ts              # OperationHandlerSet.lazy(...) + re-export defs
+    index.ts              # OperationHandlerSet.lazy([...]) + re-export defs
     definitions.ts
     create.ts
     move.ts
@@ -47,4 +47,4 @@ src/
 - `src/index.ts` is minimal: re-export the plugin and meta. Other plugins import deep paths (`./types`, `./operations`) instead.
 - Every barrel uses **named exports**. The only default exports are the per-container `index.ts` files (so `React.lazy` works).
 - Container-to-container imports use the default form: `import OtherContainer from '../OtherContainer';`.
-- Each capability lives in its **own file** with a single `default export` of `Capability.makeModule(...)`. The `capabilities/index.ts` barrel uses **only** `Capability.lazy(...)`.
+- Each capability lives in its **own file** with a single `default export` of `Capability.makeModule(...)`. The `capabilities/index.ts` barrel uses **only** makers (`AppCapability.*`) or `Capability.lazyModule(...)`.

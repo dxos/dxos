@@ -7,13 +7,7 @@ import * as Effect from 'effect/Effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import {
-  type FilesystemDirectory,
-  type FilesystemEntry,
-  type FilesystemFile,
-  type FilesystemWorkspace,
-  isFilesystemDirectory,
-} from '#types';
+import * as NativeFilesystemCapabilities from './types/NativeFilesystemCapabilities';
 
 /** Persisted per-workspace metadata stored in `.composer/meta.json`. */
 export type ComposerConfig = { icon?: string; hue?: string; spaceId?: string };
@@ -217,8 +211,11 @@ const readDir = (path: string): Effect.Effect<DirEntry[]> => {
   );
 };
 
-// Convert a single DirEntry into a FilesystemEntry, reading children/content as needed.
-const processEntry = (entry: DirEntry, parentPath: string): Effect.Effect<FilesystemEntry | null> =>
+// Convert a single DirEntry into a NativeFilesystemCapabilities.FilesystemEntry, reading children/content as needed.
+const processEntry = (
+  entry: DirEntry,
+  parentPath: string,
+): Effect.Effect<NativeFilesystemCapabilities.FilesystemEntry | null> =>
   Effect.gen(function* () {
     if (entry.isSymlink) {
       return null;
@@ -237,7 +234,7 @@ const processEntry = (entry: DirEntry, parentPath: string): Effect.Effect<Filesy
         name: entry.name,
         path: entryPath,
         children,
-      } satisfies FilesystemDirectory;
+      } satisfies NativeFilesystemCapabilities.FilesystemDirectory;
     }
 
     if (!isSupportedFile(entry.name)) {
@@ -255,17 +252,17 @@ const processEntry = (entry: DirEntry, parentPath: string): Effect.Effect<Filesy
       text,
       modified: false,
       type: 'markdown',
-    } satisfies FilesystemFile;
+    } satisfies NativeFilesystemCapabilities.FilesystemFile;
   });
 
 // Recursively read a directory tree, sorting directories before files.
-const readDirectoryContents = (path: string): Effect.Effect<FilesystemEntry[]> =>
+const readDirectoryContents = (path: string): Effect.Effect<NativeFilesystemCapabilities.FilesystemEntry[]> =>
   Effect.gen(function* () {
     const entries = yield* readDir(path);
     const visibleEntries = entries.filter((entry) => !entry.name.startsWith('.'));
     const processedEntries = yield* Effect.forEach(visibleEntries, (entry) => processEntry(entry, path));
     return processedEntries
-      .filter((entry): entry is FilesystemEntry => entry !== null)
+      .filter((entry): entry is NativeFilesystemCapabilities.FilesystemEntry => entry !== null)
       .sort((entryA, entryB) => {
         const aIsDir = 'children' in entryA;
         const bIsDir = 'children' in entryB;
@@ -277,7 +274,7 @@ const readDirectoryContents = (path: string): Effect.Effect<FilesystemEntry[]> =
   });
 
 /** Load a workspace tree from disk, reading directory contents and composer config. Returns null on failure. */
-export const loadWorkspace = (path: string): Effect.Effect<FilesystemWorkspace | null> => {
+export const loadWorkspace = (path: string): Effect.Effect<NativeFilesystemCapabilities.FilesystemWorkspace | null> => {
   if (!isTauriAvailable()) {
     return Effect.sync(() => {
       log.warn('Tauri APIs not available');
@@ -311,12 +308,19 @@ export const loadWorkspace = (path: string): Effect.Effect<FilesystemWorkspace |
 };
 
 /** Reload a workspace's directory tree from disk. */
-export const refreshWorkspace = (workspace: FilesystemWorkspace): Effect.Effect<FilesystemWorkspace | null> => {
+export const refreshWorkspace = (
+  workspace: NativeFilesystemCapabilities.FilesystemWorkspace,
+): Effect.Effect<NativeFilesystemCapabilities.FilesystemWorkspace | null> => {
   return loadWorkspace(workspace.path);
 };
 
-const findFileInWorkspace = (workspace: FilesystemWorkspace, fileId: string): FilesystemFile | undefined => {
-  const searchEntries = (entries: FilesystemEntry[]): FilesystemFile | undefined => {
+const findFileInWorkspace = (
+  workspace: NativeFilesystemCapabilities.FilesystemWorkspace,
+  fileId: string,
+): NativeFilesystemCapabilities.FilesystemFile | undefined => {
+  const searchEntries = (
+    entries: NativeFilesystemCapabilities.FilesystemEntry[],
+  ): NativeFilesystemCapabilities.FilesystemFile | undefined => {
     for (const entry of entries) {
       if ('children' in entry) {
         const found = searchEntries(entry.children);
@@ -335,9 +339,11 @@ const findFileInWorkspace = (workspace: FilesystemWorkspace, fileId: string): Fi
 
 /** Find a file by id across all workspaces, returning the containing workspace and file. */
 export const findFileById = (
-  workspaces: FilesystemWorkspace[],
+  workspaces: NativeFilesystemCapabilities.FilesystemWorkspace[],
   fileId: string,
-): { workspace: FilesystemWorkspace; file: FilesystemFile } | undefined => {
+):
+  | { workspace: NativeFilesystemCapabilities.FilesystemWorkspace; file: NativeFilesystemCapabilities.FilesystemFile }
+  | undefined => {
   for (const workspace of workspaces) {
     const file = findFileInWorkspace(workspace, fileId);
     if (file) {
@@ -349,9 +355,9 @@ export const findFileById = (
 
 /** Find a directory by id across all workspaces. */
 export const findDirectoryById = (
-  workspaces: FilesystemWorkspace[],
+  workspaces: NativeFilesystemCapabilities.FilesystemWorkspace[],
   directoryId: string,
-): { directory: FilesystemDirectory; workspaceId: string } | undefined => {
+): { directory: NativeFilesystemCapabilities.FilesystemDirectory; workspaceId: string } | undefined => {
   for (const workspace of workspaces) {
     const directory = findDirectoryInEntries(workspace.children, directoryId);
     if (directory) {
@@ -364,11 +370,11 @@ export const findDirectoryById = (
 
 /** Recursively search entries for a directory by id. */
 export const findDirectoryInEntries = (
-  entries: FilesystemEntry[],
+  entries: NativeFilesystemCapabilities.FilesystemEntry[],
   directoryId: string,
-): FilesystemDirectory | undefined => {
+): NativeFilesystemCapabilities.FilesystemDirectory | undefined => {
   for (const entry of entries) {
-    if (!isFilesystemDirectory(entry)) {
+    if (!NativeFilesystemCapabilities.isFilesystemDirectory(entry)) {
       continue;
     }
 
@@ -387,11 +393,13 @@ export const findDirectoryInEntries = (
 
 /** Immutably update a file's properties within a workspace tree. */
 export const updateFileInWorkspace = (
-  workspace: FilesystemWorkspace,
+  workspace: NativeFilesystemCapabilities.FilesystemWorkspace,
   fileId: string,
-  updates: Partial<FilesystemFile>,
-): FilesystemWorkspace => {
-  const updateEntries = (entries: FilesystemEntry[]): FilesystemEntry[] => {
+  updates: Partial<NativeFilesystemCapabilities.FilesystemFile>,
+): NativeFilesystemCapabilities.FilesystemWorkspace => {
+  const updateEntries = (
+    entries: NativeFilesystemCapabilities.FilesystemEntry[],
+  ): NativeFilesystemCapabilities.FilesystemEntry[] => {
     return entries.map((entry) => {
       if ('children' in entry) {
         return {

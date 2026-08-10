@@ -12,6 +12,8 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     testing: 'src/testing.ts',
     translations: 'src/translations.ts',
+    Settings: 'src/types/Settings.ts',
+    ThemeCapabilities: 'src/types/ThemeCapabilities.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'jsdom' } },

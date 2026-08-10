@@ -28,7 +28,8 @@ import {
   runDiagnostics,
 } from '#diagnostics';
 import { meta } from '#meta';
-import { DoctorCapabilities } from '#types';
+
+import * as DoctorCapabilities from '../../types/DoctorCapabilities';
 
 type RunState =
   | { readonly status: 'idle' }
@@ -114,7 +115,7 @@ export const DiagnosticsPanel = () => {
         <Toolbar.Root>
           <Button variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
             <Icon icon='ph--play--regular' size={4} />
-            <span className='pis-1'>{t('run-diagnostics.label')}</span>
+            <span className='ps-1'>{t('run-diagnostics.label')}</span>
           </Button>
           {isRunning && (
             <Button variant='ghost' onClick={handleCancel}>
@@ -182,7 +183,7 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
   const status = result.error ? 'error' : result.issues.length === 0 ? 'pass' : 'issues';
   const label = toLocalizedString(result.label, t);
   return (
-    <section className='rounded border border-separator bg-baseSurface'>
+    <section className='rounded border border-separator dx-base-surface'>
       <header className='flex items-center justify-between gap-2 p-2'>
         <span className='text-sm font-medium truncate'>{label}</span>
         {status === 'pass' && (
@@ -194,12 +195,14 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
         {status === 'error' && <Tag hue='rose'>{t('result.error.label')}</Tag>}
       </header>
       {result.error && (
-        <Message.Root valence='error' classNames='m-2'>
-          <Message.Content>{result.error}</Message.Content>
+        <Message.Root valence='error'>
+          <Message.Content classNames='m-2'>
+            <Message.Body>{result.error}</Message.Body>
+          </Message.Content>
         </Message.Root>
       )}
       {result.issues.length > 0 && (
-        <ul className='border-t border-separator divide-y divide-separator'>
+        <ul className='border-t border-separator divide-y divide-subdued-separator'>
           {result.issues.map((issue) => (
             <IssueRow key={issue.id} issue={issue} />
           ))}

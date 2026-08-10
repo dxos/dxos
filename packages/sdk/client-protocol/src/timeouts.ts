@@ -13,6 +13,11 @@ export const PROXY_CONNECTION_TIMEOUT = 30_000;
 export const AUTH_TIMEOUT = 30_000;
 
 /**
+ * Timeout for `Client.waitUntilInitialized()`, bounding the wait on a forked `initialize()`.
+ */
+export const INITIALIZE_TIMEOUT = 30_000;
+
+/**
  * Timeout for how long the remote client will wait before assuming the connection is lost.
  */
 export const STATUS_TIMEOUT = 10_000;

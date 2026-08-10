@@ -11,22 +11,28 @@ import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { LayerSpec } from '@dxos/compute';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ExtractedFrom, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
+import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Booking, Segment, Trip } from '@dxos/plugin-trip';
+import * as Booking from '@dxos/plugin-trip/Booking';
+import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
+import * as Trip from '@dxos/plugin-trip/Trip';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -49,10 +55,12 @@ const MockAiServicePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ai-service',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.contribute(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
             Layer.succeed(AiService.AiService, {
@@ -66,7 +74,7 @@ const MockAiServicePlugin = Plugin.define(
             }),
           ),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -152,7 +160,7 @@ const DefaultStory = () => {
           </Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content data-testid='counts' className='dx-container grid grid-cols-2 gap-2 p-2 text-sm'>
+      <Panel.Content data-testid='counts' classNames='dx-container grid grid-cols-2 gap-2 p-2 text-sm'>
         <div className='overflow-auto'>
           <JsonHighlighter
             data={{
@@ -185,7 +193,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, ActivationEvents.Startup],
+      setupEvents: [ActivationEvents.Startup],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -203,8 +211,8 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => seedFeed(personalSpace));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => seedFeed(defaultSpace));
             }),
         }),
         StorybookPlugin({}),
@@ -257,9 +265,10 @@ export const Test: Story = {
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(/"trips":\s*1\b/);
     void expect(afterFirst).toMatch(/"segments":\s*2\b/);
-    // Both travel messages have a visible Message → Trip association on the Mailbox (feed messages
-    // can't be ECHO relation endpoints, so the association is recorded on the Mailbox).
-    void expect(afterFirst).toMatch(/"linked":\s*2\b/);
+    // Every message has a visible Message → extracted-object association on the Mailbox (feed
+    // messages can't be ECHO relation endpoints, so the association is recorded on the Mailbox):
+    // the travel pair to the Trip, the digest to the contact extracted by the on-demand path.
+    void expect(afterFirst).toMatch(/"linked":\s*3\b/);
 
     // Second pass over the same messages must be idempotent — still ONE Trip, TWO Segments
     // (segments updated in place, not duplicated). This is the "extract twice" case.

@@ -4,16 +4,13 @@
 
 // @import-as-namespace
 
-import { ActivationEvent } from '@dxos/app-framework';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
 import { meta } from '#meta';
 
 /**
- * Fired by the `dependencies` module (via `firesAfterActivation`) once it finishes contributing
- * `WnfsCapabilities.Blockstore`/`Instances`. `blob-backend` activates on this event rather than
- * `ClientEvents.ClientReady` directly — `dependencies` also activates on `ClientReady`, and
- * modules activating on the same event load concurrently with capabilities invisible to each
- * other until the whole batch settles, so `blob-backend` couldn't otherwise be guaranteed to run
- * after `dependencies`.
+ * The feature's start event: the plugin's start-gated modules (and cross-plugin
+ * contributions consumed by this feature) activate here. Fired on demand and by the
+ * host's idle trickle.
  */
-export const DependenciesReady = ActivationEvent.make(`${meta.profile.key}.event.dependenciesReady`);
+export const Start = ActivationEvent.pluginStart(meta.profile.key);

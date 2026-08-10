@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 
 import { CrawlError, Source, type SourceApi, type ThreadRef, type Type } from '@dxos/crawler';
 import { type Err, type Ref } from '@dxos/echo';
-import { type Connection } from '@dxos/link';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import { DEFAULT_DAYS, snowflakeForTimestamp } from '../constants';

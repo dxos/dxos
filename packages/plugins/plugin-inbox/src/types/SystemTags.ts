@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
 import { Database, Obj, Ref, Tag } from '@dxos/echo';
@@ -18,12 +18,14 @@ import { Tagging, TagIndex } from '@dxos/schema';
  * `draft` is the one entry with no provider mapping: applied/removed locally at compose/send time
  * (`DraftEmailAndOpen`, `useSendEmail`), never synced from a provider's own draft signal.
  *
- * The source is space-general (`org.dxos.tag`), not mail-specific, so the same tag identities apply to
- * any object in the space.
+ * The source is space-general (`Tag.CANONICAL_ORIGIN`), not mail-specific, so the same tag identities
+ * apply to any object in the space — and `Tag.isProviderTag` reads it to keep these locally toggleable
+ * while foreign provider tags stay read-only (see `Tag.md` §"Tag origin").
  *
- * TODO(wittjosiah): Factor out — these belong in a shared tag package, not plugin-inbox.
+ * TODO(wittjosiah): Factor the registry below out — the *origin* now lives in `@dxos/echo`, but the
+ *   entries themselves are still mail-flavoured and belong in a shared tag package.
  */
-export const SYSTEM_TAG_SOURCE = 'org.dxos.tag';
+export const SYSTEM_TAG_SOURCE = Tag.CANONICAL_ORIGIN;
 
 /** The canonical system-tag registry. Each entry's `id` is the stable foreign-key slug. */
 export const SystemTag = {

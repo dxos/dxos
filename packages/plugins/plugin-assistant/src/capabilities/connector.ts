@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
-import { Connector, type CredentialForm } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE } from '../constants';
 
@@ -47,7 +47,7 @@ const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
     }),
   );
 
-const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenForm>> = {
+const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof AnthropicTokenForm>> = {
   schema: AnthropicTokenForm,
   defaultValues: { token: '' },
   // Validates before the dialog closes so 401/403 errors are shown inline.
@@ -69,7 +69,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenFor
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: ANTHROPIC_PROVIDER_ID,
         source: ANTHROPIC_SOURCE,

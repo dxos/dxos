@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { cleanup, render, renderHook, screen } from '@testing-library/react';
 import React, { type PropsWithChildren, useEffect } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
 import { type MenuItem, type MenuItemsAccessor } from '../types';
 import { createMenuAction } from '../util';
-import { Menu, useMenu, useMenuItems } from './Menu';
+import { Menu } from './Menu';
+import { useMenu, useMenuItems } from './MenuContext';
 
 const TEST_CONTRIBUTOR = 'TestContributor';
 

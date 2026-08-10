@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type Config } from '@dxos/client';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -32,7 +33,9 @@ export const getDefaults = (): string[] => [
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
   return [
     ChessPlugin(),
-    ClientPlugin({ config }),
+    // Commands are imperative and run straight through, so the service must hand them a client
+    // that is already initialized rather than one whose `halo` getter still throws.
+    ClientPlugin({ config, awaitInitialization: true }),
     ConnectorPlugin(),
     InboxPlugin(),
     MarkdownPlugin(),

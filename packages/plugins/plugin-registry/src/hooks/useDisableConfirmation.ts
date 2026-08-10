@@ -4,9 +4,9 @@
 
 import { useCallback } from 'react';
 
-import { type PluginManager } from '@dxos/app-framework';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 import { DISABLE_DEPENDENTS_DIALOG } from '#meta';
 

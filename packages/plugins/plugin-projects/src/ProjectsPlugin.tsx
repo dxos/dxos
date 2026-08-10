@@ -2,20 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
-import { Project } from '@dxos/compute';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Project from '@dxos/compute/Project';
 
-import { AppGraphBuilder, CreateObject, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Templates } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const ProjectsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Project.Project] }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule(AppCapability.schema([Project.Project])),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(Templates),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

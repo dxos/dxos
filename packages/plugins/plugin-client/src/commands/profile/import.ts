@@ -31,7 +31,7 @@ export const handler = Effect.fn(function* ({
   const path = yield* Path.Path;
   const config = yield* ConfigService;
 
-  const { createLevel, createStorageObjects, importProfileData, decodeProfileArchive } = yield* Effect.promise(
+  const { createStorageObjects, importProfileData, decodeProfileArchive } = yield* Effect.promise(
     () => import('@dxos/client-services'),
   );
 
@@ -73,14 +73,10 @@ export const handler = Effect.fn(function* ({
   yield* Console.log(`Importing archive with ${archive.storage.length} entries`);
 
   const { storage } = createStorageObjects(storageConfig);
-  const level = yield* Effect.tryPromise({
-    try: () => createLevel(storageConfig),
-    catch: (error) => new Error(`Failed to create level: ${error}`),
-  });
 
   yield* Console.log('Beginning profile import...');
   yield* Effect.tryPromise({
-    try: () => importProfileData({ storage, level }, archive),
+    try: () => importProfileData({ storage }, archive),
     catch: (error) => new Error(`Failed to import profile data: ${error}`),
   });
   yield* Console.log('Profile import complete');

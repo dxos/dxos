@@ -4,8 +4,8 @@
 
 import React, { Fragment, useEffect, useState } from 'react';
 
-import { type Skill } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -13,12 +13,11 @@ import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { ServiceType } from '#types';
-
 import { type AiChatProcessor } from '../../processor';
+import * as AssistantService from '../../types/AssistantService';
 
 export type ToolboxProps = {
-  services?: { service: ServiceType }[];
+  services?: { service: AssistantService.ServiceType }[];
   functions?: Operation.PersistentOperation[];
   // TODO(burdon): Combine into single array.
   skills?: readonly Skill.Skill[];
@@ -117,8 +116,8 @@ export type ToolboxPanelProps = ThemedClassName<{
 
 export const ToolboxPanel = ({ classNames, db, processor }: ToolboxPanelProps) => {
   // Registered services.
-  const services = useQuery(db, Filter.type(ServiceType));
-  const [serviceTools, setServiceTools] = useState<{ service: ServiceType }[]>([]);
+  const services = useQuery(db, Filter.type(AssistantService.ServiceType));
+  const [serviceTools, setServiceTools] = useState<{ service: AssistantService.ServiceType }[]>([]);
   useEffect(() => {
     log('creating service tools...', { services: services.length });
     queueMicrotask(async () => {

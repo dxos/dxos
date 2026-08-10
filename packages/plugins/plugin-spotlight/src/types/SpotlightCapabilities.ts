@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
@@ -16,4 +16,4 @@ export type SpotlightState = {
   dismissTimeout?: ReturnType<typeof setTimeout>;
 };
 
-export const State = Capability.make<Atom.Writable<SpotlightState>>(`${meta.profile.key}.state`);
+export const State = Capability.makeSingleton<Atom.Writable<SpotlightState>>()(`${meta.profile.key}.state`);

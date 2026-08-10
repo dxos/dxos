@@ -23,9 +23,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -41,16 +38,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/agent-runtime"
-    },
-    {
-      "path": "../../core/compute/ai"
     },
     {
       "path": "../../core/compute/assistant"
@@ -143,10 +134,10 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-preview"
+      "path": "../plugin-illustrator"
     },
     {
-      "path": "../plugin-sketch"
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-space"
@@ -155,7 +146,7 @@
       "path": "../plugin-testing"
     },
     {
-      "path": "../plugin-theme"
+      "path": "../plugin-tldraw"
     }
   ]
 }

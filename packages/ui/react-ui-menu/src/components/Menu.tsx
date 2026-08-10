@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import { type Scope, createContextScope } from '@radix-ui/react-context';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type MouseEvent, type PropsWithChildren, createContext, useCallback, useContext, useMemo } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
-import { log } from '@dxos/log';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -17,62 +15,27 @@ import {
   type MenuContextValue,
   type MenuGroupContext,
   type MenuItem,
-  type MenuItems,
-  type MenuItemsAccessor,
   type MenuItemsMap,
   isSeparator,
 } from '../types';
 import { executeMenuAction } from '../util';
 import { ActionLabel } from './ActionLabel';
-import { ToolbarMenu } from './ToolbarMenu';
-
-//
-// Scoped context.
-//
-
-type MenuScopedProps<P> = P & { __menuScope?: Scope };
-
-const MENU_NAME = 'Menu';
-
-const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME, []);
-
-const nullItemsAtom = Atom.make<MenuItem[] | null>(null);
-const defaultItemsAccessor: MenuItemsAccessor = () => nullItemsAtom;
-
-const menuContextDefaults: MenuContextValue = {
-  iconSize: 5,
-  items: defaultItemsAccessor,
-  onAction: undefined,
-  menuItemsAtom: Atom.make<MenuItemsMap>(new Map()),
-  addMenuItems: () => {},
-  removeMenuItems: () => {},
-};
-
-const [MenuContextProvider, useMenuScoped] = createMenuContext<MenuContextValue>(MENU_NAME, menuContextDefaults);
-
-const useMenuScope = createMenuScope();
-
-//
-// Dropdown context (internal) — allows Menu.Content to close the parent dropdown.
-//
-
-type MenuDropdownContextValue = {
-  closeMenu: () => void;
-  caller?: string;
-};
-
-const MenuDropdownContext = createContext<MenuDropdownContextValue>({
-  closeMenu: () => {},
-});
+import {
+  MenuContextProvider,
+  MenuDropdownContext,
+  type MenuScopedProps,
+  menuContextDefaults,
+  useMenuItems,
+  useMenuScope,
+  useMenuScoped,
+} from './MenuContext';
+import { ToolbarMenu, ToolbarMenuItems } from './ToolbarMenu';
 
 //
 // MenuProvider (internal) — the context provider used by Menu.Root.
 //
 
 const DEFAULT_PRIORITY = 100;
-
-const sortMenuItems = (items: MenuItems[]) =>
-  [...items].sort((a, b) => (a.priority !== b.priority ? a.priority - b.priority : a.id.localeCompare(b.id)));
 
 type MenuProviderProps = PropsWithChildren<Partial<MenuContextValue>>;
 
@@ -124,72 +87,6 @@ const MenuProvider = ({
       {children}
     </MenuContextProvider>
   );
-};
-
-//
-// Item resolution.
-//
-
-const resolveItems = (
-  baseItems: MenuItem[] | null,
-  group: MenuGroupContext | undefined,
-  entries: ReadonlyMap<string, MenuItems>,
-): MenuItem[] | null => {
-  const applicable = [...entries.values()].filter((entry) => !entry.groupFilter || entry.groupFilter(group));
-  if (applicable.length === 0) {
-    return baseItems;
-  }
-
-  const sorted = sortMenuItems(applicable);
-
-  const replacements = sorted.filter((entry) => entry.mode === 'replacement');
-  if (replacements.length > 0) {
-    if (replacements.length > 1) {
-      log.warn('multiple replacement entries found', {
-        ids: replacements.map((r) => r.id).join(', '),
-        using: replacements[0].id,
-      });
-    }
-    return replacements[0].items;
-  }
-
-  const additive = sorted.filter((entry) => entry.mode === 'additive');
-  const additiveItems = additive.flatMap((entry) => entry.items);
-
-  if (!baseItems || baseItems.length === 0) {
-    return additiveItems.length > 0 ? additiveItems : null;
-  }
-
-  return [...baseItems, ...additiveItems];
-};
-
-//
-// Public hooks.
-//
-
-const useMenuItems = (
-  group?: MenuGroupContext,
-  propsItems?: MenuItem[],
-  consumerName: string = 'useMenuItemConsumer',
-  __menuScope?: Scope,
-) => {
-  const { items, menuItemsAtom } = useMenuScoped(consumerName, __menuScope);
-  const groupItems = useAtomValue(items(group));
-  const entries = useAtomValue(menuItemsAtom) ?? new Map();
-
-  const baseItems = useMemo(() => propsItems ?? groupItems ?? null, [propsItems, groupItems]);
-
-  const resolved = useMemo(
-    () => resolveItems(baseItems, group, entries as ReadonlyMap<string, MenuItems>),
-    [baseItems, group, entries],
-  );
-
-  return resolved ?? undefined;
-};
-
-/** Returns the menu context without Radix scope. */
-const useMenu = (consumerName: string): MenuContextValue => {
-  return useMenuScoped(consumerName, undefined);
 };
 
 //
@@ -332,7 +229,9 @@ const MenuContent = ({
  * - `Menu.Root` — context boundary (replaces `MenuProvider`); also provides a dropdown root.
  * - `Menu.Trigger` / `Menu.VirtualTrigger` — dropdown trigger (use with `Menu.Content`).
  * - `Menu.Content` — renders graph-backed dropdown items inside a portal.
- * - `Menu.Toolbar` — flat toolbar component with graph-backed item rendering.
+ * - `Menu.Toolbar` — attention-gated toolbar container; renders only its children.
+ * - `Menu.Items` — the graph-backed toolbar items; place it among `Menu.Toolbar`'s children,
+ *   whose JSX order controls where the items sit.
  */
 const Menu = {
   Root: MenuRoot,
@@ -340,11 +239,12 @@ const Menu = {
   Content: MenuContent,
   VirtualTrigger: NaturalDropdownMenu.VirtualTrigger,
   Toolbar: ToolbarMenu,
+  Items: ToolbarMenuItems,
 };
 
-export { Menu, menuContextDefaults, useMenu, useMenuItems, useMenuScoped };
+export { Menu };
 
-export type { MenuContentProps, MenuRootProps, MenuScopedProps };
+export type { MenuContentProps, MenuRootProps };
 
 export type {
   ToolbarMenuActionGroupProperties,

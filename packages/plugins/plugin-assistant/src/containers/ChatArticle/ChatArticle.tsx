@@ -5,9 +5,10 @@
 import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type Chat as ChatType } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -17,7 +18,9 @@ import { Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets, useSelectionContext } from '#hooks';
-import { type Assistant, AssistantCapabilities, type ChatType } from '#types';
+
+import type * as Assistant from '../../types/Assistant';
+import * as AssistantCapabilities from '../../types/AssistantCapabilities';
 
 export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
   companionTo?: Obj.Unknown;
@@ -91,7 +94,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Toolbar>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
           </Panel.Toolbar>
-          <Panel.Content>
+          <Panel.Content asChild>
             <ChatComponent.Content>
               <div className='dx-container relative'>
                 {viewType !== 'summary' && (

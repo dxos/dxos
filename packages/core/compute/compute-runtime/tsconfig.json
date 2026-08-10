@@ -20,9 +20,6 @@
       "path": "../../../common/keys"
     },
     {
-      "path": "../../../common/kv-store"
-    },
-    {
       "path": "../../../common/log"
     },
     {
@@ -36,6 +33,9 @@
     },
     {
       "path": "../../echo/echo-client"
+    },
+    {
+      "path": "../../mesh/edge-client"
     },
     {
       "path": "../../protocols"

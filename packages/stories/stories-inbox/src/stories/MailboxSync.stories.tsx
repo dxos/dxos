@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { persistentClientServices } from '@dxos/client/testing';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
@@ -18,7 +18,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -59,7 +59,6 @@ const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
-    setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({
@@ -71,9 +70,9 @@ const DECORATORS = [
               return;
             }
 
-            const { personalSpace } = yield* initializeIdentity(client);
-            personalSpace.db.add(Mailbox.make());
-            yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+            const { defaultSpace } = yield* initializeIdentity(client);
+            defaultSpace.db.add(Mailbox.make());
+            yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
           }),
       }),
       SpacePlugin({}),
@@ -97,8 +96,7 @@ const DefaultStory = () => (
       [StoryRole.Mailbox, StoryRole.Message],
       [StoryRole.Archive, StoryRole.Stats, StoryRole.SyncState],
       [StoryRole.Connector, StoryRole.Triggers],
-      [StoryRole.Trace],
-      [StoryRole.SwarmTrace],
+      [StoryRole.Trace, StoryRole.SwarmTrace],
     ]}
     compact
   />

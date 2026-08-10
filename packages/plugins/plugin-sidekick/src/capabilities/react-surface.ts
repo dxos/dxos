@@ -1,0 +1,29 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import { lazy } from 'react';
+
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+
+import * as Sidekick from '../types/Sidekick';
+
+const SidekickArticle = lazy(() => import('#containers'));
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contribute(
+      Capabilities.ReactSurface,
+      Surface.create({
+        id: 'sidekickDashboard',
+        filter: AppSurface.object(AppSurface.Article, Sidekick.Profile),
+        component: SidekickArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+    ),
+  ),
+);

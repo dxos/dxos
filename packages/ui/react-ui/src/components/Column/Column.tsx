@@ -10,6 +10,8 @@ import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { composableProps, slottable } from '../../util';
+import { type ColumnGap } from './Column.theme';
+import { ColumnContext } from './ColumnContext';
 
 //
 // Root
@@ -25,7 +27,12 @@ const gutterSizes: Record<GutterSize, string> = {
   lg: 'var(--dx-gutter-lg)',
 };
 
-type ColumnRootProps = { gutter?: GutterSize; subgrid?: boolean };
+type ColumnRootProps = {
+  gutter?: GutterSize;
+  subgrid?: boolean;
+  /** Vertical gap applied between all rows of the grid. */
+  gap?: ColumnGap;
+};
 
 /**
  * Creates a 3-column CSS grid with left/right gutter columns and a center content column.
@@ -41,36 +48,38 @@ type ColumnRootProps = { gutter?: GutterSize; subgrid?: boolean };
  *
  * Direct children participate in the grid in one of several ways:
  * - **Column.Center** — places element in the center column (col 2). Preferred for plain content.
- * - **Column.Bleed** — spans all 3 columns gutter-to-gutter. Preferred for `ScrollArea` and
- *   other content that should ignore the gutters.
  * - **Column.Row** — 3-col subgrid row (icons in gutters, content in center).
  *
- * Use `withColumn.center()` / `withColumn.bleed()` helpers to apply placement on slotted elements.
+ * Use the `withColumn.center()` helper to apply placement on slotted elements.
  */
 const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
-  ({ children, asChild, role, gutter = 'lg', subgrid, ...props }, forwardedRef) => {
+  ({ children, asChild, role, gutter = 'lg', subgrid, gap, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const gutterSize = gutterSizes[gutter];
+    // The provider wraps `Comp` rather than the children: under `asChild`, `Comp` is a Slot that
+    // merges its props into its single child, and a Provider in that position would swallow them.
     return (
-      <Comp
-        {...rest}
-        role={role ?? 'none'}
-        style={
-          {
-            ...rest.style,
-            '--gutter': gutterSize,
-            '--dx-col': '2 / span 1',
-            'gridTemplateColumns': subgrid ? 'subgrid' : [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
-            ...(subgrid && { gridColumn: '1 / -1' }),
-          } as CSSProperties
-        }
-        className={tx('column.root', { gutter }, className)}
-        ref={forwardedRef}
-      >
-        {children}
-      </Comp>
+      <ColumnContext.Provider value={true}>
+        <Comp
+          {...rest}
+          role={role ?? 'none'}
+          style={
+            {
+              ...rest.style,
+              '--gutter': gutterSize,
+              '--dx-col': '2 / span 1',
+              'gridTemplateColumns': subgrid ? 'subgrid' : [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
+              ...(subgrid && { gridColumn: '1 / -1' }),
+            } as CSSProperties
+          }
+          className={tx('column.root', { gutter, gap }, className)}
+          ref={forwardedRef}
+        >
+          {children}
+        </Comp>
+      </ColumnContext.Provider>
     );
   },
 );
@@ -102,32 +111,6 @@ const ColumnRow = slottable<HTMLDivElement, ColumnRowProps>(({ children, asChild
 });
 
 ColumnRow.displayName = COLUMN_ROW_NAME;
-
-//
-// Bleed
-//
-
-const COLUMN_BLEED_NAME = 'Column.Bleed';
-
-type ColumnBleedProps = SlottableProps;
-
-/**
- * Spans all 3 columns of the parent Column.Root (gutter-to-gutter).
- * Establishes a CSS subgrid so that grandchildren can participate in the parent column tracks.
- * Use for `ScrollArea`, full-width dividers, tables, or any content that should ignore the gutters.
- */
-const ColumnBleed = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  return (
-    <Comp {...rest} className={tx('column.bleed', {}, className)} ref={forwardedRef}>
-      {children}
-    </Comp>
-  );
-});
-
-ColumnBleed.displayName = COLUMN_BLEED_NAME;
 
 //
 // Center
@@ -166,8 +149,9 @@ type ColumnBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; squar
 /**
  * A gutter slot inside a Column.Row. Sized to `--dx-rail-item` and centers its child so a passive
  * `<Icon>` and an interactive `IconButton` align to the pixel. `end` opts into the trailing gutter
- * (column 3); default is the leading gutter (column 1). Placement is via `data-slot`, so it is
- * robust to conditional rendering and source order.
+ * (column 3); default is the leading gutter (column 1). Placement is class-based (`col-start-*`
+ * plus the `dx-gutter` marker — see `Column.theme.ts`), so it is robust to conditional rendering
+ * and source order.
  */
 const ColumnBlock = slottable<HTMLDivElement, ColumnBlockProps>(
   ({ children, asChild, end, compact, square, ...props }, forwardedRef) => {
@@ -175,12 +159,7 @@ const ColumnBlock = slottable<HTMLDivElement, ColumnBlockProps>(
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp
-        {...rest}
-        data-slot={end ? 'end' : 'start'}
-        className={tx('column.block', { end, compact, square }, className)}
-        ref={forwardedRef}
-      >
+      <Comp {...rest} className={tx('column.block', { end, compact, square }, className)} ref={forwardedRef}>
         {children}
       </Comp>
     );
@@ -197,8 +176,7 @@ export const Column = {
   Root: ColumnRoot,
   Row: ColumnRow,
   Block: ColumnBlock,
-  Bleed: ColumnBleed,
   Center: ColumnCenter,
 };
 
-export type { ColumnBleedProps, ColumnBlockProps, ColumnCenterProps, ColumnRootProps, ColumnRowProps };
+export type { ColumnBlockProps, ColumnCenterProps, ColumnRootProps, ColumnRowProps };

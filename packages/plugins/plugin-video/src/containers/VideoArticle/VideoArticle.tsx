@@ -13,7 +13,9 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { meta } from '#meta';
-import { Video, VideoOperation } from '#types';
+
+import * as Video from '../../types/Video';
+import * as VideoOperation from '../../types/VideoOperation';
 
 export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
 
@@ -97,7 +99,9 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
           <Surface.Surface
@@ -179,7 +183,7 @@ const TranscriptTabs = ({
             )}
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content asChild>
           <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
             <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
               <Surface.Surface

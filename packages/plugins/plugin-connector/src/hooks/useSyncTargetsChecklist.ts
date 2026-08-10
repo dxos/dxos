@@ -5,9 +5,9 @@
 import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
-import { type Connection } from '@dxos/link';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import { useConnector } from '#hooks';
@@ -21,7 +21,7 @@ export type UseSyncTargetsChecklistResult = {
   /** True while `openChecklist` is awaiting the operation result. */
   readonly loading: boolean;
   /**
-   * Fetches the available targets via `connector.getSyncTargets` and opens the
+   * Fetches the available targets via `connector.sync.getTargets` and opens the
    * dialog through the layout system. No-op when `available` is false.
    */
   readonly openChecklist: () => Promise<void>;
@@ -42,13 +42,13 @@ export const useSyncTargetsChecklist = (
   const [loading, setLoading] = useState(false);
 
   const openChecklist = useCallback(async () => {
-    if (!connection || !connector?.getSyncTargets) {
+    if (!connection || !connector?.sync?.getTargets) {
       return;
     }
     setLoading(true);
     try {
       const result = await invokePromise(
-        connector.getSyncTargets,
+        connector.sync.getTargets,
         { connection: Ref.make(connection) },
         { spaceId: Obj.getDatabase(connection)?.spaceId },
       );
@@ -80,7 +80,7 @@ export const useSyncTargetsChecklist = (
   }, [connection, connector, invokePromise]);
 
   return {
-    available: !!connector?.getSyncTargets,
+    available: !!connector?.sync?.getTargets,
     loading,
     openChecklist,
   };

@@ -5,14 +5,17 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, Node, useActionRunner, useActions, useNode } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
 import { useBreakpoints, useCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, type ResolvedPart } from '#types';
+
+import * as DeckOperation from '../../types/DeckOperation';
+import * as DeckSchema from '../../types/DeckSchema';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];
@@ -21,16 +24,18 @@ const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-li
 export type PlankCapabilities = {
   /** Eligible for the fullscreen toggle (a main, non-mobile plank). */
   fullscreenToggle?: boolean;
+  /** Eligible for the expand toggle (a main, non-mobile plank in a deck with something to expand into). */
+  expandToggle?: boolean;
   incrementStart?: boolean;
   incrementEnd?: boolean;
-  /** Eligible to open the deck companion (offered on the last plank when the companion is off). */
+  /** Eligible to open the deck companion (offered on any plank that has one, when the companion is off). */
   companion?: boolean;
 };
 
 export type UseDeckPlankOptions = {
   id: string;
   /** Resolved part for the primary plank (`main` | `complementary`). */
-  part: ResolvedPart;
+  part: DeckSchema.ResolvedPart;
   /** Ordered active planks (multi mode); enables the increment affordances. */
   active?: string[];
 };
@@ -42,6 +47,8 @@ export type DeckPlank = {
   sigilActions: AttentionSigilAction[][] | undefined;
   popoverAnchorId?: string;
   scrollIntoView?: string;
+  /** Whether this plank is the one currently expanded to fill the deck. */
+  expanded: boolean;
   onAction: (action: AttentionSigilAction) => void;
   onAdjust: (type: DeckOperation.PartAdjustment) => void;
   onResize: (size: number) => void;
@@ -71,18 +78,18 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const isOrdered = !!active && index >= 0;
   const canIncrementStart = isOrdered && index > 0;
   const canIncrementEnd = isOrdered && index < (active?.length ?? 1) - 1;
-  const isLastPlank = !active || index === active.length - 1;
 
   const capabilities = useMemo<PlankCapabilities>(
     () => ({
       fullscreenToggle: breakpoint !== 'mobile' && part === 'main',
+      // Only worth offering while the deck slides: a lone plank already fills the viewport.
+      expandToggle: breakpoint !== 'mobile' && part === 'main' && (active?.length ?? 0) > 1,
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      // The deck companion is a whole-deck toggle attached to the last plank: offer it on the last
-      // plank when a companion exists there and the companion is not already open.
-      companion: companions.length > 0 && !deck.companionOpen && isLastPlank,
+      // Companions are per-plank: offer the toggle on any plank that has one while its own is off.
+      companion: companions.length > 0 && !deck.companionPlanks.includes(id),
     }),
-    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionOpen, isLastPlank],
+    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionPlanks, id, active?.length],
   );
 
   // Load the node's child actions so the sigil menu is populated.
@@ -148,6 +155,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
     sigilActions,
     popoverAnchorId: state.popoverAnchorId,
     scrollIntoView: state.scrollIntoView,
+    expanded: state.expanded === id,
     onAction,
     onAdjust,
     onResize,

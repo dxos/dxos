@@ -28,6 +28,7 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-table',
     icon: { key: 'ph--table--regular', hue: 'green' },
     spec: 'PLUGIN.mdl',
-    screenshots: [{ dark: 'https://dxos.network/plugin-details-tables-dark.png' }],
+    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-tables-dark.png' }],
+    tags: ['beta'],
   },
 });

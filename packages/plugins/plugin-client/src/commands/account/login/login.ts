@@ -11,8 +11,10 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Plugin } from '@dxos/app-framework';
-import { CommandConfig, performRecoveryOAuthFlow, print } from '@dxos/cli-util';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { CommandConfig, print } from '@dxos/cli-util';
+import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
@@ -136,18 +138,15 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
     const result = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
 
     if (result.needsIdentity) {
-      // `CreateIdentity` fires `IdentityCreated`, which is what provisions the personal space.
+      // `CreateIdentity` fires `IdentityCreated`, which is what provisions the identity's spaces.
       yield* invoke(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] });
       const identity = client.halo.identity.get();
       invariant(identity, 'identity should exist after create');
       // The local identity outlives any failure from here on, and the `Already logged in` guard
-      // above rejects a plain retry, so a rejected request and a non-admitting response both need
-      // the same recovery guidance.
-      const notAdmitted = (detail: string) =>
-        new Error(
-          `Hub did not admit ${email} (${detail}). A local identity was created and remains bound to ` +
-            'this profile; run `dx account logout` to clear it before retrying.',
-        );
+      // above rejects a plain retry, so every failure below carries the same recovery step.
+      const recovery =
+        'A local identity was created and remains bound to this profile; run `dx account logout` ' +
+        'to clear it before retrying.';
 
       const retry = yield* Effect.tryPromise({
         try: () =>
@@ -156,10 +155,19 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
             identityDid: identity.did,
             identityKey: identity.identityKey.toHex(),
           }),
-        catch: (cause) => notAdmitted(cause instanceof Error ? cause.message : String(cause)),
+        catch: (cause) =>
+          new Error(
+            `Login request for ${email} failed (${cause instanceof Error ? cause.message : String(cause)}). ${recovery}`,
+          ),
       });
       if (!retry.admitted) {
-        return yield* Effect.fail(notAdmitted('no admission granted'));
+        return yield* Effect.fail(
+          new Error(
+            `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
+              'run `dx account signup <ACCESS-CODE>` to create one. ' +
+              recovery,
+          ),
+        );
       }
       yield* invoke(ClientOperation.CreateAgent);
       return identity;

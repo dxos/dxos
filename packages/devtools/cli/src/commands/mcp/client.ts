@@ -14,7 +14,7 @@ import { BaseError } from '@dxos/errors';
 /**
  * Minimal MCP client over Streamable HTTP with OAuth 2.1, used by the `dx mcp` commands.
  *
- * The server (`@dxos/space-agent`) currently identifies the user with a dev-only form that takes
+ * The server (`@dxos/mcp-space-service`) currently identifies the user with a dev-only form that takes
  * an identity key and the space ids to bring into session context; this client fills that form
  * from the active profile so nothing has to be pasted by hand. When the server moves to a signed
  * challenge, only {@link authorize} changes.

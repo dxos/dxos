@@ -7,6 +7,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { type SqlTransaction } from '@dxos/sql-sqlite';
+
 import { StateError } from './errors';
 import { makeSql, migrate } from './internal/agent-registry-sql';
 import type * as Type from './types';
@@ -65,15 +67,16 @@ export class AgentRegistry extends Context.Tag('@dxos/crawler/AgentRegistry')<Ag
   static layerMemory: Layer.Layer<AgentRegistry> = Layer.sync(AgentRegistry, () => makeMemory());
 
   /** SQLite-backed registry over a shared SqlClient. */
-  static layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient> = Layer.scoped(
-    AgentRegistry,
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
-      yield* migrate(sql).pipe(Effect.orDie);
-      return makeSql(sql);
-    }),
-  );
+  static layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+    Layer.scoped(
+      AgentRegistry,
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
+        yield* migrate().pipe(Effect.orDie);
+        return makeSql(sql);
+      }),
+    );
 }
 
 /**

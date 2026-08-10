@@ -25,7 +25,7 @@ export class Review extends Type.makeObject<Review>(DXN.make('org.dxos.type.ches
     positionIndex: Ref.Ref(ChessPositionIndex.PositionIndex).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--chart-polar--regular', hue: 'green' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--chart-polar--regular', hue: 'amber' }),
   ),
 ) {}
 

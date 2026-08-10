@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-devtools",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS developer inspector plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,11 +43,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -66,9 +61,30 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Devtools": {
+      "source": "./src/types/Devtools.ts",
+      "types": "./dist/types/src/types/Devtools.d.ts",
+      "import": "./dist/lib/Devtools.mjs"
+    },
+    "./DevtoolsEvents": {
+      "source": "./src/types/DevtoolsEvents.ts",
+      "types": "./dist/types/src/types/DevtoolsEvents.d.ts",
+      "import": "./dist/lib/DevtoolsEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Devtools": [
+        "dist/types/src/types/Devtools.d.ts"
+      ],
+      "DevtoolsEvents": [
+        "dist/types/src/types/DevtoolsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -76,60 +92,37 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@antv/graphlib": "catalog:",
-    "@antv/layout": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/cli-util": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/compute-hyperformula": "workspace:*",
-    "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-host": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/log-store-idb": "workspace:*",
-    "@dxos/operation": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-inbox": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
-    "@dxos/plugin-sheet": "workspace:*",
-    "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/plugin-status-bar": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-canvas-compute": "workspace:*",
-    "@dxos/react-ui-canvas-editor": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-introspect": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/tracing": "workspace:*",
-    "@dxos/types": "workspace:*",
+    "@dxos/react-ui-terminal": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@tldraw/tldraw": "catalog:",
-    "react-resize-detector": "catalog:"
+    "@effect/cli": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -138,7 +131,6 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",

@@ -3,4 +3,5 @@
 //
 
 export * from '../skills/testing';
+export * from './operations';
 export * from './plugins';

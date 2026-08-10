@@ -4,16 +4,19 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, DXN, Entity, Obj, QueryAST, Type, View } from '@dxos/echo';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
 
-import { SpaceForm } from '../types';
+// `Module` suffix because the client's `SpaceSchema` (the Space entity schema) already holds the
+// bare name in this file.
+import * as SpaceSchemaModule from '../types/SpaceSchema';
 
 const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 
@@ -44,7 +47,7 @@ export namespace SpaceOperation {
       icon: 'ph--plus--regular',
     },
     services: [Capability.Service, Plugin.Service],
-    input: SpaceForm,
+    input: SpaceSchemaModule.SpaceForm,
     output: Schema.Struct({
       id: Schema.String,
       subject: Schema.Array(Schema.String),
@@ -208,6 +211,24 @@ export namespace SpaceOperation {
       }),
     }),
     output: RemoveObjectsOutput,
+  });
+
+  /**
+   * Remove every object from a space except its `SpaceProperties`. The root collection is kept —
+   * `RootCollectionAnnotation` must keep resolving for the space to stay navigable — but emptied.
+   */
+  export const RemoveAllObjects = Operation.make({
+    meta: {
+      key: makeKey('removeAllObjects'),
+      name: 'Remove All Objects',
+      description: 'Remove all objects from a space, preserving the space properties.',
+      icon: 'ph--trash--regular',
+    },
+    services: [Database.Service],
+    input: Schema.Void,
+    output: Schema.Struct({
+      objectIds: Schema.Array(Schema.String).annotations({ description: 'IDs of the removed objects.' }),
+    }),
   });
 
   export const DeleteFieldOutput = Schema.Struct({
@@ -518,5 +539,56 @@ export namespace SpaceOperation {
       }),
     }),
     output: Schema.Void,
+  });
+
+  /** A duplicate tuple, addressed by id so the group crosses the operation boundary. */
+  export const DuplicateGroupResult = Schema.Struct({
+    keys: Schema.Array(Schema.String).annotations({ description: 'Identity keys shared by the members.' }),
+    objectIds: Schema.Array(Schema.String).annotations({ description: 'Members, in EntityId order.' }),
+  });
+
+  export type DuplicateGroupResult = Schema.Schema.Type<typeof DuplicateGroupResult>;
+
+  /**
+   * Groups objects of a type that share an identity key. The rule is the `IdentitySpec` the owning
+   * plugin contributes for that typename — the same rule the extractor uses to decide create vs
+   * merge, so a scan never disagrees with what extraction would have done.
+   */
+  export const FindDuplicates = Operation.make({
+    meta: {
+      key: makeKey('findDuplicates'),
+      name: 'Find Duplicates',
+      description: 'Group objects of a type that share an identity key (e.g. an email address).',
+      icon: 'ph--copy--regular',
+    },
+    services: [Capability.Service, Database.Service],
+    input: Schema.Struct({
+      typename: Schema.String.annotations({ description: 'ECHO typename to scan.' }),
+    }),
+    output: Schema.Struct({
+      groups: Schema.Array(DuplicateGroupResult).annotations({ description: 'Largest group first.' }),
+    }),
+  });
+
+  /** Merges a duplicate group into its lowest-EntityId member and removes the others. */
+  export const MergeDuplicates = Operation.make({
+    meta: {
+      key: makeKey('mergeDuplicates'),
+      name: 'Merge Duplicates',
+      description: 'Merge a duplicate group into a single object.',
+      icon: 'ph--arrows-merge--regular',
+    },
+    services: [Capability.Service, Database.Service],
+    input: Schema.Struct({
+      typename: Schema.String,
+      objectIds: Schema.Array(Schema.String).annotations({ description: 'Members of the group to merge.' }),
+      overrides: Schema.optional(Obj.Unknown).annotations({
+        description: 'User-edited preview; folded in last so confirmed edits win.',
+      }),
+    }),
+    output: Schema.Struct({
+      survivorId: Schema.String,
+      removedIds: Schema.Array(Schema.String),
+    }),
   });
 }

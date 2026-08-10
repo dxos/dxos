@@ -11,6 +11,7 @@ import * as Stream from 'effect/Stream';
 import { readFileSync } from 'node:fs';
 
 import { Pipeline } from '@dxos/pipeline';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { SemanticIndexError } from './errors';
 import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
@@ -23,7 +24,7 @@ import {
   normalizeEntityId,
   normalizeFactsStage,
 } from './stages';
-import { FactStore } from './store';
+import { FactStore, FactStoreLive } from './store';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
 import { type ExtractDocument } from './types';
 import { type Fact } from './types';
@@ -86,12 +87,14 @@ const QUESTION_OUTPUT = {
   ],
 };
 
-const TestLayer = FactStore.layer.pipe(
+const TestLayer = FactStoreLive.layer.pipe(
+  Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(mockAiService(LLM_OUTPUT)),
 );
 
-const FailingLayer = FactStore.layer.pipe(
+const FailingLayer = FactStoreLive.layer.pipe(
+  Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(failingAiService()),
 );
@@ -267,7 +270,8 @@ describe('FactPipeline', () => {
       const ai = countingAiService({
         facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
       });
-      const layer = FactStore.layer.pipe(
+      const layer = FactStoreLive.layer.pipe(
+        Layer.provideMerge(SqlTransaction.layer),
         Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
         Layer.provideMerge(ai.layer),
       );
@@ -427,7 +431,7 @@ describe('FactPipeline', () => {
         facts: [{ subject: 'Composer', predicate: 'discussedIn', object: 'Discord', factuality: 'CT+', polarity: '+' }],
       });
       // In-memory (browser/test) store layer — no SQLite.
-      const layer = FactStore.layerMemory.pipe(Layer.provideMerge(ai.layer));
+      const layer = FactStoreLive.layerMemory.pipe(Layer.provideMerge(ai.layer));
       yield* Effect.gen(function* () {
         const docs = loadDiscordDocs();
         yield* FactPipeline.run(docs);

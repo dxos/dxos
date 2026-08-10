@@ -26,6 +26,14 @@ const raise = (err: Error) => {
 
 const JS_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.mts', '.cts'];
 
+/**
+ * Export subpaths that ship a bundler plugin; consumed from dist in every runtime (see `pkg-lint`'s
+ * `build-tool-source-export` rule). A package whose bundler plugin sits at the overloaded `./plugin`
+ * subpath — where `@dxos/plugin-*` packages put browser code — opts out via `withCustomExports`
+ * instead, since moon tags (which `pkg-lint` uses to tell the two apart) aren't visible here.
+ */
+const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin$/;
+
 export type ToolboxConfig = {
   project?: {
     ignored?: string[];
@@ -221,7 +229,6 @@ export class Toolbox {
     const apps = [
       '@dxos/composer-app',
       '@dxos/composer-crx',
-      '@dxos/composer-dxos-org',
       '@dxos/docs',
       '@dxos/todomvc',
       'tasks',
@@ -660,6 +667,13 @@ export class Toolbox {
 
       for (const [key, config] of Object.entries(packageJson.exports ?? {})) {
         if (typeof config !== 'object' || typeof config.types !== 'string') {
+          continue;
+        }
+        // Bundler-plugin entrypoints ship dist only: a `source` condition here lets an app's
+        // importSource resolver pull their Node-only source into a browser bundle (`pkg-lint`
+        // errors on it). Strip rather than skip, so a stale one is removed on the next run.
+        if (BUILD_TOOL_EXPORT.test(key)) {
+          delete config.source;
           continue;
         }
         const src = config.types.replace('./dist/types/src', './src').replace('.d.ts', '.ts');

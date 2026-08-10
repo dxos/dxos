@@ -6,12 +6,12 @@
 // Only exports capabilities that work in headless environments (no React, no browser APIs).
 // The `#capabilities` import resolves to this file in Node.js contexts.
 
-import { Capability } from '@dxos/app-framework';
-import { type OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
-);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});

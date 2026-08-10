@@ -15,6 +15,13 @@ export interface XmlWidgetNotifier {
   mounted(widget: XmlWidgetState): void;
   unmounted(id: string): void;
   /**
+   * Re-render the mounted widget for `id` with updated props. Keyed by id rather than by widget
+   * instance: a rebuild constructs fresh widgets, but `StubWidget.eq` (id equality) makes CodeMirror
+   * keep the previously-rendered DOM, so the instance in the decoration set is not the one holding
+   * the mounted root.
+   */
+  updated(id: string, widgetState: any): void;
+  /**
    * Drop any mounted widgets whose id is not in `liveIds`. Needed because CM reuses a widget's DOM
    * via `updateDOM` (without calling `destroy`) when a decoration's widget changes in place, so an
    * id that is no longer present — e.g. a position-keyed id after an edit shifted the node — would
@@ -129,7 +136,11 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
     if (this.streaming) {
       return false;
     }
-    return this.id === other.id;
+    // Context too, not just the id: props are captured at build time, so an id-only comparison makes
+    // CodeMirror keep the existing widget (and its stale props) when the host publishes the context
+    // after the first build — leaving every widget callback bound to `undefined`.
+    const context = (props: TProps) => (props as XmlWidgetProps).context;
+    return this.id === other.id && context(this.props) === context(other.props);
   }
 
   override ignoreEvent() {

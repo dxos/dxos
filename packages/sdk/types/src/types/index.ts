@@ -10,7 +10,6 @@ import * as ContentBlock from './ContentBlock';
 import * as DraftMessage from './DraftMessage';
 import * as Employer from './Employer';
 import * as Event from './Event';
-import * as ExternalProject from './ExternalProject';
 import * as File from './File';
 import * as Geo from './Geo';
 import * as HasConnection from './HasConnection';
@@ -18,10 +17,12 @@ import * as HasRelationship from './HasRelationship';
 import * as HasSubject from './HasSubject';
 import * as Message from './Message';
 import * as Organization from './Organization';
+import * as Outline from './Outline';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
 import * as Provider from './Provider';
 import * as Task from './Task';
+import * as TaskSet from './TaskSet';
 import * as Thread from './Thread';
 import * as Transcript from './Transcript';
 
@@ -51,7 +52,6 @@ export {
   DraftMessage,
   Employer,
   Event,
-  ExternalProject,
   File,
   Geo,
   HasConnection,
@@ -59,10 +59,12 @@ export {
   HasSubject,
   Message,
   Organization,
+  Outline,
   Person,
   Pipeline,
   Provider,
   Task,
+  TaskSet,
   Thread,
   Transcript,
 };

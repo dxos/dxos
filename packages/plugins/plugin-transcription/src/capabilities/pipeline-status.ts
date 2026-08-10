@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { TranscriptionCapabilities } from '#types';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 /**
  * Observable live-transcription lifecycle phase, written by the driver and read by UI (toolbar
@@ -18,6 +18,6 @@ export default Capability.makeModule(
     const statusAtom = Atom.make<{ phase: TranscriptionCapabilities.PipelinePhase }>({ phase: 'idle' }).pipe(
       Atom.keepAlive,
     );
-    return Capability.contributes(TranscriptionCapabilities.PipelineStatus, statusAtom);
+    return Capability.contribute(TranscriptionCapabilities.PipelineStatus, statusAtom);
   }),
 );

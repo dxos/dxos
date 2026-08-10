@@ -1,6 +1,6 @@
 {
   "name": "@dxos/compute-hyperformula",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "HyperFormula-based compute graph (spreadsheet) engine.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,6 +22,11 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -29,6 +34,9 @@
     "*": {
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
@@ -41,7 +49,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -53,7 +60,6 @@
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@tldraw/indices": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:"
   },

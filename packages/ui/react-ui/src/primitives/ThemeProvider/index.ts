@@ -4,5 +4,13 @@
 
 export { type Label, isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 
+export {
+  type IconRegistry,
+  type IconSource,
+  getIconRegistry,
+  phosphorIconSource,
+  useIconRegistry,
+} from './icon-registry';
+export * from './IconRegistry';
 export * from './ThemeProvider';
-export { TranslationsContext, useTranslation } from './TranslationsProvider';
+export { TranslationsContext, useTranslation } from './TranslationsContext';

@@ -9,7 +9,9 @@ import { translations as componentsTranslations } from '@dxos/react-ui-component
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Calendar, Mailbox } from '#types';
+
+import * as Calendar from './types/Calendar';
+import * as Mailbox from './types/Mailbox';
 
 export const translations = [
   {
@@ -143,6 +145,8 @@ export const translations = [
         'subscriptions.label': 'Subscriptions',
         'subscriptions.toolbar.title': 'Subscriptions toolbar',
         'subscriptions.empty.message': 'No bulk-mail subscriptions found.',
+        'subscriptions.filter.placeholder': 'Filter subscriptions…',
+        'subscriptions.no-results.message': 'No matching subscriptions.',
         'subscriptions.count.label': '{{email}} · {{count}} messages',
         'subscriptions.remove.label_zero': 'Remove',
         'subscriptions.remove.label_one': 'Remove ({{count}})',

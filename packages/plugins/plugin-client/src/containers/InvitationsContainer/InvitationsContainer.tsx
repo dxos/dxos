@@ -12,9 +12,10 @@ import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { type AccountCacheInvitation, ClientCapabilities } from '#types';
 
 import { useHubHttpClient } from '../../hooks';
+import * as AccountCache from '../../types/AccountCache';
+import * as ClientCapabilities from '../../types/ClientCapabilities';
 
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.profile.key);
@@ -115,7 +116,7 @@ export const InvitationsContainer = () => {
   );
 };
 
-const AvailableInvitationItem = ({ row }: { row: AccountCacheInvitation }) => (
+const AvailableInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitation }) => (
   <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
     <Icon icon='ph--paper-plane-tilt--duotone' size={5} classNames='text-description' />
     <div className='flex flex-col min-w-0'>
@@ -126,7 +127,7 @@ const AvailableInvitationItem = ({ row }: { row: AccountCacheInvitation }) => (
   </Listbox.Item>
 );
 
-const RedeemedInvitationItem = ({ row }: { row: AccountCacheInvitation }) => {
+const RedeemedInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitation }) => {
   const date = row.redeemedAt ?? row.createdAt;
   return (
     <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>

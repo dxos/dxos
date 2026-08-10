@@ -14,18 +14,24 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { LanguageModelFixture } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
-import { Instructions, Operation, OperationHandlerSet, Process, ServiceResolver, Skill, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Organization } from '@dxos/types';
 
-import { AssistantTestLayer, runMemoizedTests } from '../testing';
+import { AssistantTestLayer } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
 import { AGENT_PROCESS_KEY } from './agent-process';
 import * as AgentService from './AgentService';
@@ -145,7 +151,7 @@ const DelegationTestLayer = AssistantTestLayer({
   agent: { delegationStrategy: StubDelegationStrategy },
 });
 
-describe.skipIf(!runMemoizedTests())('Agent Service', () => {
+describe('Agent Service', { tags: ['model-fixture'] }, () => {
   it.effect(
     'can answer a question',
     Effect.fnUntraced(
@@ -161,7 +167,7 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -179,7 +185,7 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -225,7 +231,7 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -258,7 +264,7 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -289,7 +295,7 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
   it.scoped(
@@ -349,9 +355,13 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
       Effect.provide(TestLayer({ enableToolBackgrounding: true })),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 120_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : undefined },
   );
 
+  // Superseded by the ungated scripted-model port in `delegation-scripted.test.ts` (and the
+  // real-strategy test in `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`); kept
+  // in place until this file's memoized fixtures are next regenerated, since removing it would
+  // shift the shared deterministic ID stream the later fixtures depend on.
   describe('delegation (stub)', () => {
     it.scoped(
       'delegates work to a sub-agent and folds the result back on completion',
@@ -380,7 +390,7 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
         Effect.provide(DelegationTestLayer),
         TestHelpers.provideTestContext,
       ),
-      { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
     );
   });
 
@@ -430,7 +440,7 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
   // Placed last (like the fork test) so it does not perturb the shared deterministic ID stream of
@@ -472,7 +482,7 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
   // Drives the process control plane directly (no LLM turn), so it is placed after the memoized

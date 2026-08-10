@@ -3,7 +3,7 @@
 //
 
 import { turnToward } from '../sim';
-import { type TerraObject } from '../types';
+import type * as TerraObject from '../types/TerraObject';
 
 /**
  * Max degrees a rendered heading may turn per real second, per kind — a heavy hull turning this

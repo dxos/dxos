@@ -4,17 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Relation } from '@dxos/echo';
+import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { shouldTriggerAgent } from '../should-trigger-agent';
-import { AgentIdentity, CommentCapabilities } from '../types';
-import { CommentOperation } from '../types';
+import * as AgentIdentity from '../types/AgentIdentity';
+import * as CommentCapabilities from '../types/CommentCapabilities';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = CommentOperation.AddMessage.pipe(
   Operation.withHandler(
@@ -46,14 +49,29 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         // which the persisted relation was not yet queryable and the draft was gone — the comment
         // flashed out of the companion. (The render dedupes the brief draft/persisted overlap.)
         yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db });
-        yield* Operation.invoke(SpaceOperation.AddRelation, {
+        const { relation } = yield* Operation.invoke(SpaceOperation.AddRelation, {
           db,
           schema: AnchoredTo.AnchoredTo,
           source: thread,
           target: subject,
           fields: { anchor: draft.anchor, branch: draft.branch },
         });
+
+        // Persisting spans two awaits, during which a `Delete` for this comment can run. It sees the
+        // anchor still listed as a draft, drops that entry, and returns — so without this the thread
+        // persisted above survives a delete the user already issued. The draft entry doubles as the
+        // claim on this comment: finding it already gone means a concurrent delete consumed it, so
+        // undo the persist rather than clearing an entry that is no longer ours.
         const latest = registry.get(stateAtom);
+        const claimed = latest.drafts[subjectId]?.some((a: { id: string }) => a.id === anchor.id) ?? false;
+        if (!claimed) {
+          batchEvents(() => {
+            db.remove(relation as Obj.Unknown);
+            db.remove(thread);
+          });
+          return;
+        }
+
         registry.set(stateAtom, {
           ...latest,
           drafts: {
@@ -84,7 +102,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
       // Gate the comment-thread agent. Identity is optional — if no capability
       // is contributed we simply never trigger. Schedule (not invoke) so the
       // user's message commit returns immediately and the agent runs out-of-band.
-      const identities = yield* Capability.getAll(AgentIdentity);
+      const identities = yield* Capability.getAll(AgentIdentity.AgentIdentity);
       const identity = identities[0];
       if (identity && shouldTriggerAgent(thread, message, identity.name)) {
         yield* Operation.schedule(CommentOperation.RespondToThread, {

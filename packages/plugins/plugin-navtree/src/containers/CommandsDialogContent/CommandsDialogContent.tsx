@@ -5,11 +5,12 @@
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
-import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
-import { useActions } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { useActions } from '@dxos/plugin-graph/hooks';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';

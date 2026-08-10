@@ -6,19 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import {
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  type Connection,
-  Cursor,
-} from '@dxos/link';
-import {
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
+import { Connection, Cursor } from '@dxos/link';
+// Unused by name, but the emitted declarations reference it — dropping the import breaks
+// declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
 
@@ -38,8 +32,8 @@ export const GetTrelloBoards = Operation.make({
     description: 'List Trello boards reachable from a connection without materializing local Kanbans.',
     icon: 'ph--kanban--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
   // TODO(wittjosiah): declare `services: [Database.Service]` once composer's
   //   OperationInvoker is wired with a `databaseResolver`. Today, declaring it
   //   forces DynamicRuntime validation to fail before the handler runs because
@@ -59,8 +53,8 @@ export const MaterializeTrelloTarget = Operation.make({
     description: 'Create the empty local Kanban bound to a selected Trello board.',
     icon: 'ph--kanban--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**

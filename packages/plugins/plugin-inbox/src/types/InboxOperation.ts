@@ -7,17 +7,14 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Capability } from '@dxos/app-framework';
-import { Credential, Operation, Trace } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
-import { FactStore } from '@dxos/pipeline-rdf';
-import {
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
+import { FactStore } from '@dxos/pipeline-rdf/fact-store';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -26,6 +23,7 @@ import { Actor, Event, Message, type Person } from '@dxos/types';
 import { meta } from '#meta';
 
 import * as Mailbox from './Mailbox';
+import * as MailSend from './MailSend';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -39,8 +37,8 @@ export const GetGoogleCalendars = Operation.make({
     description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
     icon: 'ph--calendar--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 export const AddMailbox = Operation.make({
@@ -112,18 +110,6 @@ export const DraftEmailAndOpen = Operation.make({
   output: Schema.Void,
 });
 
-/**
- * The provider's "sent" tag, returned by the send ops so the caller can tag the local draft with the
- * same tag its canonical synced copy will carry — Gmail's `SENT` label (a well-known id) or the JMAP
- * account's Sent folder (a server-assigned id resolved by folder role). The `source`/`id` form the
- * tag's foreign key; `label` is a fallback used only when the tag doesn't exist yet (pre first sync).
- */
-const SentTagOutput = Schema.Struct({
-  source: Schema.String,
-  id: Schema.String,
-  label: Schema.String,
-});
-
 export const GmailSend = Operation.make({
   meta: {
     key: makeKey('googleMailSend'),
@@ -133,16 +119,9 @@ export const GmailSend = Operation.make({
   },
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
-    message: Type.getSchema(Message.Message),
-    connection: Ref.Ref(Connection.Connection).annotations({
-      description: 'Connection to source Gmail credentials from.',
-    }),
+    ...MailSend.Input.fields,
   }),
-  output: Schema.Struct({
-    id: Schema.String,
-    threadId: Schema.String,
-    sentTag: SentTagOutput,
-  }),
+  output: MailSend.Output,
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
 
@@ -183,8 +162,8 @@ export const MaterializeGmailTarget = Operation.make({
     description: 'Create the local Mailbox bound to a Gmail connection.',
     icon: 'ph--envelope--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 export const JmapSync = Operation.make({
@@ -220,8 +199,8 @@ export const MaterializeJmapTarget = Operation.make({
     description: 'Create the local Mailbox bound to a JMAP connection.',
     icon: 'ph--envelope--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 export const JmapSend = Operation.make({
@@ -231,17 +210,8 @@ export const JmapSend = Operation.make({
     description: 'Send an email via a JMAP server.',
     icon: 'ph--paper-plane-tilt--regular',
   },
-  input: Schema.Struct({
-    message: Type.getSchema(Message.Message),
-    connection: Ref.Ref(Connection.Connection).annotations({
-      description: 'Connection to source JMAP credentials from.',
-    }),
-  }),
-  output: Schema.Struct({
-    id: Schema.String,
-    threadId: Schema.String,
-    sentTag: SentTagOutput,
-  }),
+  input: MailSend.Input,
+  output: MailSend.Output,
 }).pipe(Operation.visible);
 
 export const GoogleCalendarSync = Operation.make({
@@ -279,8 +249,8 @@ export const MaterializeCalendarTarget = Operation.make({
     description: 'Create the local Calendar bound to a selected Google calendar.',
     icon: 'ph--calendar--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**
@@ -328,8 +298,8 @@ export const GetGoogleContactGroups = Operation.make({
     description: 'Discover Google Contact Groups reachable from a connection.',
     icon: 'ph--users--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 export const GoogleContactsSync = Operation.make({

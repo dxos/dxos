@@ -10,11 +10,13 @@ import { useQuery } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Transcription, renderByline, useFeedModelAdapter } from '@dxos/react-ui-transcription';
+import { Transcription, useFeedModelAdapter } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
 import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';
+
+import { renderByline } from '../../util';
 
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 
@@ -51,7 +53,9 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>

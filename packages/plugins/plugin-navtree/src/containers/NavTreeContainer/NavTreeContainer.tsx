@@ -8,9 +8,10 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
@@ -18,8 +19,8 @@ import { arrayMove } from '@dxos/util';
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
 import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
-import { type NavTreeItemGraphNode } from '#types';
 
+import * as NavTreeNode from '../../types/NavTreeNode';
 import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
@@ -76,7 +77,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     );
 
     const handleTabChange = useCallback(
-      (node: NavTreeItemGraphNode) => {
+      (node: NavTreeNode.NavTreeItemGraphNode) => {
         Graph.expand(graph, node.id, 'child');
 
         const {
@@ -144,7 +145,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           // handler, which upgrades any disposition to add when shift is held).
           void invokePromise(LayoutOperation.Open, {
             subject: [node.id],
-            key: node.properties.key,
             disposition: 'solo',
             modifiers: { shift },
           });
@@ -180,8 +180,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           const target = location.current.dropTargets[0];
           const instruction: Instruction | null = extractInstruction(target.data);
           if (instruction !== null && instruction.type !== 'instruction-blocked') {
-            const sourceNode = source.data.item as NavTreeItemGraphNode;
-            const targetNode = target.data.item as NavTreeItemGraphNode;
+            const sourceNode = source.data.item as NavTreeNode.NavTreeItemGraphNode;
+            const targetNode = target.data.item as NavTreeNode.NavTreeItemGraphNode;
             const sourcePath = source.data.path as string[];
             const targetPath = target.data.path as string[];
             const sameParent = sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join();

@@ -47,13 +47,19 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/extractor"
+    },
+    {
+      "path": "../../core/compute/extractor-lib"
     },
     {
       "path": "../../core/echo/echo"
@@ -104,9 +110,6 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -144,6 +147,9 @@
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-theme"

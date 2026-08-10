@@ -6,7 +6,8 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Terra } from '#types';
+
+import * as Terra from './types/Terra';
 
 export const translations = [
   {
@@ -29,8 +30,10 @@ export const translations = [
         'add-random-object.label': 'Add random object',
         'show-gizmos.label': 'Show rotation gizmos',
         'hide-gizmos.label': 'Hide rotation gizmos',
-        'object-camera.label': 'Ride a random object',
-        'orbit-camera.label': 'Return to orbit view',
+        'scene-view.label': '3D',
+        'map-view.label': 'Map',
+        'camera-view.label': 'Camera',
+        'camera-target.placeholder': 'Select object',
       },
     },
   },

@@ -5,18 +5,21 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type CallState, type MediaState } from '@dxos/plugin-calls';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Channel } from '@dxos/types';
 
-import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+import * as Meeting from '../types/Meeting';
+import * as MeetingCapabilities from '../types/MeetingCapabilities';
+import * as MeetingOperation from '../types/MeetingOperation';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -27,9 +30,9 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    const store = capabilities.get(MeetingCapabilities.State);
+    const store = yield* MeetingCapabilities.State;
 
-    return Capability.contributes(CallsCapabilities.EventHandler, {
+    return Capability.contribute(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
         const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());

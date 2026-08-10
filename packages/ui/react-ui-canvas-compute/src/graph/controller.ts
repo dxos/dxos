@@ -10,7 +10,9 @@ import * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
-import { type Credential, type Operation, Trace } from '@dxos/compute';
+import type * as Credential from '@dxos/compute/Credential';
+import type * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import {
   ComputeBeginEvent,
   ComputeCustomEvent,

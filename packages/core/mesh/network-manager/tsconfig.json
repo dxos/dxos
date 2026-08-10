@@ -32,19 +32,10 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/tracing"
-    },
-    {
       "path": "../../../common/util"
     },
     {
-      "path": "../../halo/keyring"
-    },
-    {
       "path": "../../protocols"
-    },
-    {
-      "path": "../edge-client"
     },
     {
       "path": "../messaging"

@@ -11,17 +11,11 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Plugin } from '@dxos/app-framework';
-import { AppSpace } from '@dxos/app-toolkit';
-import {
-  CommandConfig,
-  FormBuilder,
-  flushAndSync,
-  performRegisterOAuthFlow,
-  print,
-  spaceLayer,
-  withTypes,
-} from '@dxos/cli-util';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { CommandConfig, FormBuilder, flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
+import { performRegisterOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
 import { type Identity } from '@dxos/client/halo';
 import { Context as DxContext } from '@dxos/context';
@@ -138,7 +132,7 @@ export const signup = Command.make(
   }),
 ).pipe(
   Command.withDescription('Sign up for a new DXOS account with an access code (same methods as Composer).'),
-  // The Atmosphere method writes the connected account's credential to the personal space.
+  // The Atmosphere method writes the connected account's credential to the default space.
   Command.provideEffectDiscard(() => withTypes(AccessToken.AccessToken, Connection.Connection)),
 );
 
@@ -193,16 +187,16 @@ const signUpWithAtmosphere = Effect.fn(function* ({
   // OAuth-first: the local identity is created only once the provider has authenticated the user, so
   // a failed or abandoned auth leaves nothing behind.
   const identity = yield* ensureIdentity(client, invoke);
-  const space = AppSpace.getPersonalSpace(client);
-  invariant(space, 'Personal space not found.');
-  yield* Effect.promise(() => space.waitUntilReady());
+  const defaultSpace = AppSpace.getDefaultSpace(client);
+  invariant(defaultSpace, 'Default space not found.');
+  yield* Effect.promise(() => defaultSpace.waitUntilReady());
 
   const registration = yield* Effect.tryPromise({
     try: () =>
       client.edge.http.completeOAuthRegistration(DxContext.default(), {
         registrationToken,
         identityKey: identity.identityKey.toHex(),
-        spaceKey: space.key.toHex(),
+        spaceKey: defaultSpace.key.toHex(),
       }),
     catch: (cause) =>
       new Error(
@@ -217,7 +211,7 @@ const signUpWithAtmosphere = Effect.fn(function* ({
 
   // Materialize the AccessToken keyed by the returned id so rotated tokens land on it; without it the
   // refresh token Edge stored is treated as orphaned and dropped.
-  const accessToken = space.db.add(
+  const accessToken = defaultSpace.db.add(
     AccessToken.make({
       id: registration.accessTokenId,
       source: Atmosphere.SOURCE,
@@ -228,14 +222,14 @@ const signUpWithAtmosphere = Effect.fn(function* ({
   );
   // Wrap it in a Connection so the connected account surfaces as a first-class object, as the gate
   // does. Registration completes exactly once, so no de-dup query is needed.
-  space.db.add(
+  defaultSpace.db.add(
     Connection.make({
       name: registration.email,
       connectorId: Atmosphere.PROVIDER_ID,
       accessToken: Ref.make(accessToken),
     }),
   );
-  yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
+  yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(defaultSpace.id))));
 
   return yield* redeemAccessCode(hub, { code, email: registration.email, identity });
 });
@@ -250,7 +244,7 @@ const ensureIdentity = Effect.fn(function* (
   if (existing) {
     return existing;
   }
-  // `CreateIdentity` fires `IdentityCreated`, which is what provisions the personal space.
+  // `CreateIdentity` fires `IdentityCreated`, which is what provisions the identity's spaces.
   yield* invoke(ClientOperation.CreateIdentity, { displayName });
   const identity = client.halo.identity.get();
   invariant(identity, 'identity should exist after create');

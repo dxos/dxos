@@ -1,0 +1,18 @@
+import { Atmosphere, Connection } from '@dxos/link';
+//
+// Copyright 2026 DXOS.org
+//
+
+/**
+ * Connector ids that authenticate against the AT Protocol. `atmosphere` is plugin-connector's
+ * built-in atproto connector; `bluesky` is plugin-bluesky's — hardcoded here (rather than imported)
+ * so this system plugin does not depend on the labs bluesky plugin.
+ */
+export const ATPROTO_CONNECTOR_IDS = new Set<string>([Atmosphere.PROVIDER_ID, 'bluesky']);
+
+/** `AccessToken.source` values for atproto accounts (atmosphere + bluesky). */
+export const ATPROTO_SOURCES = new Set<string>(['atproto.local', 'bsky.app']);
+
+/** Whether a connection authenticates against an atproto PDS. */
+export const isAtprotoConnection = (connection: Connection.Connection): boolean =>
+  connection.connectorId !== undefined && ATPROTO_CONNECTOR_IDS.has(connection.connectorId);

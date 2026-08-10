@@ -21,7 +21,17 @@ const modifier = isMac ? 'Meta' : 'Control';
 
 export const INITIAL_URL = 'http://localhost:4173';
 
-// Only the personal space is seeded on every new identity. The exemplar space is skipped on
+// `GraphPath.pinnedWorkspaceId('dxos:plugin-registry')`, restated so this page-object does not import
+// the registry plugin (its module graph reaches packages that fail to load under playwright's loader).
+const REGISTRY_WORKSPACE = '!dxos:plugin-registry';
+
+// `UrlPath.WORKSPACE_KEY` — the pair-chain anchor segment, restated for the same reason.
+const WORKSPACE_KEY = 'w';
+
+/** Builds the pair-chain base for a workspace: `/<anchor>/<workspace>`. */
+const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/${WORKSPACE_KEY}/${workspace}`;
+
+// Only the default space is seeded on every new identity. The exemplar space is skipped on
 // localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
 
@@ -52,7 +62,11 @@ export class AppManager {
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
 
-    await this.isAuthenticated({ timeout: 15_000 });
+    // Assert boot rather than proceed on a swallowed `false`, so a failed boot fails here instead of as
+    // a bare `Test timeout` inside the first action. 30s is ~2x the slowest healthy boot (CI firefox
+    // measures ~16s); past that it is not booting, and waiting only eats the test's budget.
+    const authenticated = await this.isAuthenticated({ timeout: 30_000 });
+    expect(authenticated, 'app did not boot: treeView.userAccount never appeared').toBe(true);
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
@@ -193,15 +207,17 @@ export class AppManager {
   async waitForSpaceReady(timeout = 10_000): Promise<void> {
     await this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout });
     await this.page.waitForFunction(
-      () => {
-        const workspaceId = window.location.pathname.split('/').filter(Boolean)[0];
-        if (!workspaceId) {
+      // Pair-chain URLs are `/<anchor>/<workspace>/…`, so the workspace follows the anchor segment.
+      (anchorKey) => {
+        const [anchor, workspaceId] = window.location.pathname.split('/').filter(Boolean);
+        if (anchor !== anchorKey || !workspaceId) {
           return false;
         }
 
         const selectedSpace = document.querySelector('[data-testid="spacePlugin.space"][aria-selected="true"]');
         return selectedSpace?.getAttribute('data-object-id') === `root/${workspaceId}`;
       },
+      WORKSPACE_KEY,
       { timeout },
     );
     // TODO(wittjosiah): This improves reliability significantly. Find a better thing to wait for.
@@ -234,7 +250,7 @@ export class AppManager {
   }
 
   /**
-   * Deletes the space at the given index (default: the first non-personal space) via its
+   * Deletes the space at the given index (default: the first non-default space) via its
    * settings danger zone, including the confirmation step.
    */
   async deleteSpace(nth = 1): Promise<void> {
@@ -375,12 +391,13 @@ export class AppManager {
     // the click is silently swallowed and the test then times out waiting
     // for the registry tree to render. URL-driven navigation has no such
     // dependency on operation-handler registration.
-    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry`);
+    await this.page.goto(workspaceUrl(REGISTRY_WORKSPACE));
     await this.page.getByTestId('pluginRegistry.recommended').waitFor({ state: 'visible' });
   }
 
   async openRegistryCategory(category: string): Promise<void> {
-    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry/plugin-registry%3E${category}`);
+    // A category node's id is the bare category name, addressed as the `category` key.
+    await this.page.goto(`${workspaceUrl(REGISTRY_WORKSPACE)}/category/${category}`);
     await this.page.getByTestId(`pluginRegistry.${category}`).waitFor({ state: 'visible' });
   }
 
@@ -409,7 +426,7 @@ export class AppManager {
   async changeStorageVersionInMetadata(version: number): Promise<void> {
     await this.page.evaluate(
       ({ version }) => {
-        (window as any).composer.changeStorageVersionInMetadata(version);
+        window.composer?.changeStorageVersionInMetadata?.(version);
       },
       { version },
     );

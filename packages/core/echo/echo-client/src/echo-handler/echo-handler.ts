@@ -376,10 +376,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _handleLinksAssignment(target: ProxyTarget, value: any): any {
     return deepMapValues(value, (value, recurse) => {
-      if (isEchoObjectField(value)) {
-        // The value is a value-object field of another echo-object. We don't want to create a reference
-        // to it or have shared mutability, we need to copy by value.
-        return recurse({ ...value });
+      if (isEchoObjectField(value) || isDetachedObjectField(value)) {
+        // The value is a value-object field of another object — database-backed or detached. We don't
+        // want to create a reference to it or have shared mutability, we need to copy by value.
+        // Arrays are copied as arrays: spreading one into an object literal would turn it into a
+        // record of numeric keys.
+        return recurse(Array.isArray(value) ? [...value] : { ...value });
       } else if (isProxy(value)) {
         throw new Error('Object references must be wrapped with `Ref.make`');
       } else if (Ref.isRef(value)) {
@@ -762,6 +764,15 @@ const isEchoObjectField = (value: any) => {
   return (
     isProxy(value) && getProxyHandler(value) instanceof EchoReactiveHandler && !isRootDataObject(getProxyTarget(value))
   );
+};
+
+/**
+ * @returns True if `value` is a nested record of a detached (never-added) object — an in-memory
+ * reactive proxy rather than an {@link EchoReactiveHandler} one. `isEntity` is the handler-agnostic
+ * root test: only root objects and relations carry an entity kind, so a nested record fails it.
+ */
+const isDetachedObjectField = (value: any) => {
+  return isProxy(value) && !(getProxyHandler(value) instanceof EchoReactiveHandler) && !Entity.isEntity(value);
 };
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];

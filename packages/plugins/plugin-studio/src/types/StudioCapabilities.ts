@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
@@ -17,6 +17,6 @@ import { meta } from '#meta';
  * (imported elsewhere as the `GenerationService` namespace) does not collide with this capability's
  * `GenerationService` export.
  */
-export const GenerationService = Capability.make<import('./GenerationService').GenerationService>(
-  `${meta.profile.key}.capability.generation-service`,
+export const GenerationService = Capability.make<import('./GenerationService').GenerationService>()(
+  `${meta.profile.key}.capability.generationService`,
 );

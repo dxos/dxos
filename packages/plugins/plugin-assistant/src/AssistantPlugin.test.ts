@@ -3,22 +3,23 @@
 //
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import { type TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
-import { TestAiService, runMemoizedTests } from '@dxos/ai/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
-import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
+import * as AgentService from '@dxos/compute/AgentService';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { TestContextService } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
@@ -28,6 +29,7 @@ import { AssistantPlugin } from '#plugin';
 
 import { meta } from './meta';
 import { AssistantSkill } from './skills/assistant';
+import * as AssistantEvents from './types/AssistantEvents';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -42,47 +44,47 @@ describe('AssistantPlugin', () => {
       plugins: [ClientPlugin({}), AssistantPlugin()],
     });
 
-    // After autoStart: AppGraphBuilder, CreateObject, schema, OperationHandler all auto-cascade.
+    // Dependency-mode roots activate immediately during the startup dependency pass.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
+      expect.arrayContaining([
+        moduleId('AppGraphBuilder'),
+        moduleId('schema'),
+        moduleId('OperationHandler'),
+        moduleId('AiService'),
+        moduleId('AiContext'),
+        moduleId('AgentRuntime'),
+      ]),
     );
-
-    // AssistantPlugin fires SetupArtifactDefinition itself, so it can test its own skill.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
+    // Demand-gated modules park until their events fire (CreateObjectRequested).
+    expect(harness.manager.getActive()).not.toContain(moduleId('CreateObject'));
+    // Skills ride the assistant's start event, which the harness fires post-startup.
     expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
 
-    // OperationHandler auto-cascades from ProcessManagerPlugin.
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
-
-    // Process-manager layer specs must activate on SetupProcessManager.
-    expect(harness.manager.getActive()).toContain(moduleId('AiService'));
-    expect(harness.manager.getActive()).toContain(moduleId('AiContext'));
-    expect(harness.manager.getActive()).toContain(moduleId('AgentRuntime'));
-
     // Space-affinity LayerSpec — resolution requires a space context.
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
     await harness.runPromise(
       Effect.gen(function* () {
         const aiService = yield* AiService.AiService;
         expect(aiService).toBeDefined();
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, AiService.AiService))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService))),
     );
   });
 
-  test.skipIf(!runMemoizedTests())('can memoize ai-service requests', async (ctx) => {
-    const { expect } = ctx;
+  test('resolves a language model through the plugin AI service', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [
         ClientPlugin({}),
         AssistantPlugin({
-          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+            { parts: [ScriptedLanguageModel.text('Paris is the capital of France.')] },
+          ]),
         }),
       ],
     });
 
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
     await harness.runPromise(
@@ -94,28 +96,28 @@ describe('AssistantPlugin', () => {
       }).pipe(
         Effect.provide(
           AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
-            Layer.provideMerge(ServiceResolver.provide({ space: personalSpace.id }, AiService.AiService)),
+            Layer.provideMerge(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService)),
           ),
         ),
       ),
     );
   });
 
-  test.skipIf(!runMemoizedTests())('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
-    const { expect } = ctx;
+  test('runs instructions end to end through the plugin', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [
         ClientPlugin({}),
         AssistantPlugin({
-          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+            { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { capital: 'paris' } })] },
+            { parts: [ScriptedLanguageModel.text('Done.')] },
+          ]),
         }),
         RoutinePlugin(),
       ],
     });
 
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
 
@@ -138,33 +140,36 @@ describe('AssistantPlugin', () => {
             },
             model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
           },
-          { spaceId: personalSpace.id },
+          { spaceId: defaultSpace.id },
         );
         expect(result).toEqual({ capital: 'paris' });
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
     );
   });
 
-  test.skipIf(!runMemoizedTests())(
-    'smoke test for agent service with standard skills',
+  test(
+    'boots the agent service with the standard skills and completes a turn',
     { timeout: 120_000 },
-    async (ctx) => {
-      const { expect } = ctx;
+    async ({ expect }) => {
       await using harness = await createComposerTestApp({
         plugins: [
           ClientPlugin({}),
           AssistantPlugin({
-            aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+            aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+              { parts: [ScriptedLanguageModel.text('Hello back.')] },
+            ]),
           }),
           RoutinePlugin(),
         ],
       });
 
-      await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-
-      const { personalSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
+      const { defaultSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
         EffectEx.runAndForwardErrors,
       );
+
+      // Skills ride the assistant's start event; the harness already fired it, but fire
+      // deterministically here to mirror the headless toolkit-materialization path.
+      await EffectEx.runAndForwardErrors(harness.manager.activate(AssistantEvents.Start));
 
       await harness.runPromise(
         Effect.gen(function* () {
@@ -172,6 +177,7 @@ describe('AssistantPlugin', () => {
             [DatabaseSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
             (_) => Skill.resolve(_.key),
           );
+          expect(skills).toHaveLength(4);
 
           const agent = yield* AgentServiceRuntime.createSession({
             skills,
@@ -181,7 +187,7 @@ describe('AssistantPlugin', () => {
         }).pipe(
           Effect.provide(
             ServiceResolver.provide(
-              { space: personalSpace.id },
+              { space: defaultSpace.id },
               Database.Service,
               AgentService.AgentService,
               Registry.Service,
@@ -192,15 +198,3 @@ describe('AssistantPlugin', () => {
     },
   );
 });
-
-const makeMemoizedAiServiceMiddleware = (
-  ctx: TestContext,
-): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.AiService.pipe(
-    Effect.provide(
-      TestAiService({ preset: 'direct' }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
-    ),
-    // Ignoring actual AI service the plugin contructs and using our own.
-    Effect.map((service) => (_upstream: AiService.Service) => service),
-    Effect.runPromise,
-  );

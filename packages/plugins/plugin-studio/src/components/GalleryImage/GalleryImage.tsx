@@ -26,7 +26,7 @@ export const GalleryImage = ({ src, contentType, alt, classNames }: GalleryImage
   return (
     <Card.Root classNames={mx('group relative', classNames)}>
       {/* col-span-full so the poster spans Card.Root's grid (icon|title|menu); fixed ratio reserves height. */}
-      <div className='col-span-full overflow-hidden bg-modalSurface' style={{ aspectRatio: 16 / 9 }}>
+      <div className='col-span-full overflow-hidden bg-modal-surface' style={{ aspectRatio: 16 / 9 }}>
         {src && isVideo ? (
           <video src={src} muted playsInline preload='metadata' className='block w-full h-full object-cover' />
         ) : src ? (

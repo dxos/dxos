@@ -10,14 +10,14 @@ import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/testing';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -27,8 +27,8 @@ import { DataTypes } from '@dxos/schema';
 
 import { createNotebook } from '#testing';
 import { translations } from '#translations';
-import { Notebook } from '#types';
 
+import * as Notebook from '../../types/Notebook';
 import { NotebookArticle } from './NotebookArticle';
 
 const meta: Meta<typeof NotebookArticle> = {
@@ -55,11 +55,11 @@ const meta: Meta<typeof NotebookArticle> = {
           types: [...DataTypes, Notebook.Notebook, Operation.PersistentOperation, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
-              personalSpace.db.add(createNotebook());
-              personalSpace.db.add(Markdown.make({ content: '# Hello World' }));
-              personalSpace.db.add(Operation.serialize(RunInstructions));
+              defaultSpace.db.add(createNotebook());
+              defaultSpace.db.add(Markdown.make({ content: '# Hello World' }));
+              defaultSpace.db.add(Operation.serialize(RunInstructions));
             }),
         }),
         AssistantPlugin(),

@@ -22,7 +22,7 @@ import * as Schema from 'effect/Schema';
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { Database, Obj, type Ref } from '@dxos/echo';
-import { type AccessToken, type Connection } from '@dxos/link';
+import { type AccessToken, Connection } from '@dxos/link';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
 import { MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';

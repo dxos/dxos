@@ -7,16 +7,18 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
+import { useObject } from '@dxos/echo-react';
+import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
 import { meta } from '#meta';
-import { Chess } from '#types';
 
-export type ChessArticleProps = GameVariantSurfaceProps;
+import * as Chess from '../../types/Chess';
+
+export type ChessArticleProps = GameCapabilities.GameVariantSurfaceProps;
 
 export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -28,16 +30,20 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
     controller.current?.setMoveNumber(index);
   }, []);
 
+  const state = Obj.instanceOf(Chess.State, variant) ? variant : undefined;
+  const [pgn] = useObject(state, 'pgn');
+  const [fen] = useObject(state, 'fen');
+
   const isGameOver = (() => {
-    if (!Obj.instanceOf(Chess.State, variant) || (!variant.pgn && !variant.fen)) {
+    if (!pgn && !fen) {
       return false;
     }
     try {
       const chess = new ChessJS();
-      if (variant.pgn) {
-        chess.loadPgn(variant.pgn);
-      } else if (variant.fen) {
-        chess.load(variant.fen);
+      if (pgn) {
+        chess.loadPgn(pgn);
+      } else if (fen) {
+        chess.load(fen);
       }
       return chess.isGameOver();
     } catch {
@@ -46,22 +52,21 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
   })();
 
   const handleNewGame = useCallback(() => {
-    if (!Obj.instanceOf(Chess.State, variant)) {
+    if (!state) {
       return;
     }
-    Obj.update(variant, (variant) => {
-      const mutable = variant as Obj.Mutable<typeof variant>;
-      mutable.pgn = undefined;
-      mutable.fen = undefined;
+    Obj.update(state, (state) => {
+      state.pgn = undefined;
+      state.fen = undefined;
     });
-  }, [variant]);
+  }, [state]);
 
-  if (!Obj.instanceOf(Chess.State, variant)) {
+  if (!state) {
     return null;
   }
 
   return (
-    <Chessboard.Root state={variant} ref={controller}>
+    <Chessboard.Root state={state} ref={controller}>
       <Panel.Root role={role} classNames='@container'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>

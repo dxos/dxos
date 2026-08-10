@@ -10,15 +10,15 @@ import { type Collection, Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { PageNumber, Pager, PresentationShell, Layout as PresenterLayout } from '#components';
-import { PresenterContext } from '#types';
 
+import * as Presenter from '../../types/Presenter';
 import { useExitPresenter } from '../../useExitPresenter';
 
 export type CollectionArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const CollectionArticle = ({ role, subject: collection }: CollectionArticleProps) => {
   const [slide, setSlide] = useState(0);
-  const { running } = useContext(PresenterContext);
+  const { running } = useContext(Presenter.PresenterContext);
   const handleExit = useExitPresenter(collection);
 
   return (

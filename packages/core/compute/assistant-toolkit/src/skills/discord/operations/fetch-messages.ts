@@ -17,7 +17,9 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { Credential, Operation, Trace } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -29,7 +31,8 @@ const DiscordConfigFromCredential = Layer.unwrapEffect(
     return DiscordConfig.layer({
       token: yield* Credential.CredentialsService.getApiKey({ service: 'discord.com' }),
       rest: {
-        baseUrl: 'https://api-proxy.dxos.workers.dev/discord.com/api/v10',
+        // Routed through the DXOS CORS proxy (cors-proxy worker), which forwards `Authorization` verbatim.
+        baseUrl: 'https://cors.dxos.network/discord.com/api/v10',
       },
     });
   }),

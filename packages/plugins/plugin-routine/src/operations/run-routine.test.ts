@@ -2,19 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation, OperationHandlerSet, Routine, Trigger } from '@dxos/compute';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import { RoutineOperation } from '../types';
+import * as RoutineOperation from '../types/RoutineOperation';
 import { makeRoutine } from '../util';
 import RunRoutineHandler from './run-routine';
 

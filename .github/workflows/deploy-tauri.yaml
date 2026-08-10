@@ -26,6 +26,10 @@ permissions:
 
 env:
   CN_APPLICATION: dxos/composer
+  # Released binaries are built from source, never restored from a cache any CI job can write to.
+  # Empty disables moon's remote cache; set here rather than via the setup action's
+  # `remote-cache` input because this workflow does not use that action.
+  MOON_REMOTE_HOST: ''
 
 jobs:
   draft_tauri:
@@ -273,8 +277,6 @@ jobs:
           APPLE_CERTIFICATE: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE || '' }}
           APPLE_CERTIFICATE_PASSWORD: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE_PASSWORD || '' }}
           APPLE_SIGNING_IDENTITY: ${{ matrix.os == 'depot-macos-latest' && env.CERT_ID || '' }}
-          # Omit DEPOT_TOKEN for the production environment, otherwise include it.
-          DEPOT_TOKEN: ${{ inputs.environment == 'production' && '' || secrets.DEPOT_TOKEN }}
           NODE_ENV: production
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -419,8 +421,6 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
-          # Omit DEPOT_TOKEN for the production environment, otherwise include it.
-          DEPOT_TOKEN: ${{ inputs.environment == 'production' && '' || secrets.DEPOT_TOKEN }}
           IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
           IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}

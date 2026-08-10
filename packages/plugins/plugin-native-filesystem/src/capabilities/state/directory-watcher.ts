@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { debounce } from '@dxos/async';
 
-import type { FilesystemWorkspace } from '#types';
-
+import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
 import { watchDirectory } from './disk-io';
 
 const WATCHER_DEBOUNCE_MS = 500;
@@ -26,7 +25,7 @@ type DirectoryWatcherState =
     };
 
 export type DirectoryWatcher = {
-  startWatching: (workspace: FilesystemWorkspace) => Effect.Effect<void>;
+  startWatching: (workspace: NativeFilesystemCapabilities.FilesystemWorkspace) => Effect.Effect<void>;
   stopWatching: (workspaceId: string) => Effect.Effect<void>;
   stopAll: () => Effect.Effect<void>;
 };
@@ -57,7 +56,7 @@ export const createDirectoryWatcher = (onRefresh: (workspaceId: string) => Effec
     }
   };
 
-  const startWatching = (workspace: FilesystemWorkspace): Effect.Effect<void> =>
+  const startWatching = (workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> =>
     Effect.gen(function* () {
       enabledWatchers.add(workspace.id);
       if (watchers.get(workspace.id)) {

@@ -24,9 +24,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/protobuf-compiler"
-    },
-    {
       "path": "../../common/timeframe"
     }
   ]

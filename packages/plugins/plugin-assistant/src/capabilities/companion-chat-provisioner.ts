@@ -2,29 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Graph, type Node } from '@dxos/app-graph';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import {
-  COMPANION_VIEW_STATE_CONTEXT,
-  DeckCapabilities,
-  PLANK_COMPANION_TYPE,
-  type StoredDeckState,
-  companionAspect,
-} from '@dxos/plugin-deck';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import { COMPANION_VIEW_STATE_CONTEXT, companionAspect } from '@dxos/plugin-deck';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
-import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats
@@ -32,16 +31,24 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const deckStateAtom = yield* Capability.get(DeckCapabilities.State);
-    const cacheAtom = yield* Capability.get(AssistantCapabilities.CompanionChatCache);
-    const stateAtom = yield* Capability.get(AssistantCapabilities.State);
+    const operationInvoker = yield* Capabilities.OperationInvoker;
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
+
+    // Optional: provisioning is keyed off deck planks, so a host without a deck has nothing to
+    // provision for.
+    const deckStateOption = yield* Capability.getOption(DeckCapabilities.State);
+    if (Option.isNone(deckStateOption)) {
+      return [];
+    }
+    const deckStateAtom = deckStateOption.value;
+
+    const cacheAtom = yield* AssistantCapabilities.CompanionChatCache;
+    const stateAtom = yield* AssistantCapabilities.State;
     // The selected companion variant moved off deck state into a global view-state aspect; read and
     // observe it directly so a tab switch (which no longer touches deck state) still re-provisions.
     // Project just the variant so a companion resize (same aspect) does not re-fire provisioning.
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
     const variantAtom = Atom.make((get) => get(viewState.atom(companionAspect, COMPANION_VIEW_STATE_CONTEXT)).variant);
 
     const plankSubs = new Map<string, () => void>();
@@ -96,9 +103,9 @@ export default Capability.makeModule(
     };
 
     const provision = () => {
-      const deckState: StoredDeckState = registry.get(deckStateAtom);
+      const deckState: DeckSchema.StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
-      if (!deck?.companionOpen) {
+      if (!deck?.companionPlanks.length) {
         unsubAllPlanks();
         return;
       }
@@ -142,7 +149,7 @@ export default Capability.makeModule(
     const unsub2 = registry.subscribe(stateAtom, provision);
     const unsub3 = registry.subscribe(variantAtom, provision);
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsub1();
         unsub2();
@@ -150,6 +157,7 @@ export default Capability.makeModule(
         unsubAllPlanks();
       }),
     );
+    return [];
   }),
 );
 
@@ -163,7 +171,7 @@ const resolveEffectiveVariant = (
   preferredVariant: string | undefined,
 ): string | undefined => {
   const companions = Graph.getConnections(graph, plankId, 'child')
-    .filter((node) => node.type === PLANK_COMPANION_TYPE)
+    .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   if (companions.length === 0) {

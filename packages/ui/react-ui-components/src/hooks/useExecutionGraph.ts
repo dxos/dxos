@@ -4,7 +4,9 @@
 
 import { useMemo } from 'react';
 
-import { ExecutionGraph } from '@dxos/assistant';
+// Subpath, not the barrel: the assistant barrel drags @effect/ai (fast-check/zod/ajv) into
+// every static consumer — this hook rides the boot path via the react-ui-form closure.
+import { ExecutionGraph } from '@dxos/assistant/ExecutionGraph';
 import { type Obj } from '@dxos/echo';
 
 /**

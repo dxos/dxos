@@ -141,8 +141,8 @@ export const WithCenter: Story = {
 };
 
 /**
- * ScrollArea auto-bleeds inside Column.Root (via [.dx-column_&]:col-span-full).
- * No Column.Bleed wrapper needed.
+ * ScrollArea auto-bleeds inside Column.Root (via `[.dx-column-root_&]:col-span-full` in its theme).
+ * No bleed wrapper needed.
  */
 export const WithScrollAreaAutoBleed: Story = {
   decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],

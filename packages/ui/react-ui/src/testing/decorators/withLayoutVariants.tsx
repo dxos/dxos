@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react-vite';
 import React, { type ComponentType, type PropsWithChildren } from 'react';
 
 import { mx, surfaceShadow } from '@dxos/ui-theme';
@@ -38,9 +38,9 @@ const Panel = ({
 
 export const withLayoutVariants = ({
   elevations = [
-    { elevation: 'dialog', surface: 'bg-modal-surface' },
-    { elevation: 'positioned', surface: 'bg-card-surface' },
-    { elevation: 'base', surface: 'bg-base-surface' },
+    { elevation: 'dialog', surface: 'dx-modal-surface' },
+    { elevation: 'positioned', surface: 'dx-card-surface' },
+    { elevation: 'base', surface: 'dx-base-surface' },
   ],
   densities = ['md'],
 }: Config = {}): Decorator => {

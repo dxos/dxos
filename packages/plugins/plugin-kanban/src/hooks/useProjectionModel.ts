@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom';
 import { useState } from 'react';
 
 import { JsonSchema, Type } from '@dxos/echo';
@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
-import { type Kanban } from '#types';
+import type * as Kanban from '../types/Kanban';
 
 /**
  * Loads the kanban view and builds a ProjectionModel for field projections and pivot.

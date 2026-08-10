@@ -2,13 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const IdentityCreated = Capability.lazy('IdentityCreated', () => import('./identity-created'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+import { SpaceOperationConfig } from '../operations/helpers';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceCapability from '../types/SpaceCapability';
+import * as SpaceSchema from '../types/SpaceSchema';
+import { makeCreateInvitationUrl } from './helpers';
+
+export const Commands = AppCapability.commands(() => import('./commands'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const IdentityCreated = Capability.lazyModule(
+  'IdentityCreated',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [SpaceCapabilities.DefaultSpace],
+    // Runtime event: the default space is created when a local identity is created, not at startup.
+    activatesOn: ClientEvents.IdentityCreated,
+  },
+  () => import('./identity-created'),
+);
+export const OperationHandler = Capability.lazyModule(
   'OperationHandler',
+  { provides: [Capabilities.OperationHandler] },
   () => import('./operation-handler'),
 );
-export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));
+export const UndoMappings = Capability.lazyModule(
+  'UndoMappings',
+  {
+    provides: [Capabilities.UndoMapping, SpaceOperationConfig],
+    props: (options: SpaceSchema.SpacePluginOptions) => ({
+      createInvitationUrl: makeCreateInvitationUrl(options),
+      observability: options.observability,
+    }),
+  },
+  () => import('./undo-mappings'),
+);

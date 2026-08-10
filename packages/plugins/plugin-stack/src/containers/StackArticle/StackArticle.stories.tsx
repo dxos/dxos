@@ -6,19 +6,22 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { Sketch, SketchModel } from '@dxos/plugin-sketch';
-import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { TldrawModel } from '@dxos/plugin-tldraw';
+import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
+import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -29,7 +32,7 @@ import { translations } from '#translations';
 import { StackArticle, type StackArticleProps } from './StackArticle';
 
 // A minimal sketch (tldraw `tldraw.com/2`) snapshot, used as a test image.
-const SKETCH_CONTENT = new SketchModel.SketchBuilder()
+const SKETCH_CONTENT = new TldrawModel.RecordBuilder()
   .rectangle({ id: 'rect', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid', size: 'l' })
   .ellipse({ id: 'echo', x: 320, y: 0, text: 'ECHO', color: 'green' })
   .arrow({ from: 'rect', to: 'echo' })
@@ -54,15 +57,14 @@ const meta: Meta<typeof StackArticle> = {
     withMosaic(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
-      capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
+      capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Collection.Collection, Markdown.Document, Sketch.Sketch, Sketch.Canvas],
+          types: [Collection.Collection, Markdown.Document, Drawing.Drawing, Drawing.Canvas],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
 
               const documents = Array.from({ length: 5 }).map(() =>
                 Ref.make(
@@ -84,11 +86,9 @@ const meta: Meta<typeof StackArticle> = {
               const sketches = [
                 Ref.make(
                   space.db.add(
-                    Sketch.make({
+                    Drawing.make({
                       name: random.lorem.sentence(2),
-                      canvas: {
-                        content: SKETCH_CONTENT,
-                      },
+                      canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content: SKETCH_CONTENT }),
                     }),
                   ),
                 ),
@@ -104,7 +104,8 @@ const meta: Meta<typeof StackArticle> = {
             }),
         }),
         MarkdownPlugin(),
-        SketchPlugin(),
+        IllustratorPlugin(),
+        TldrawPlugin(),
         SpacePlugin({}),
         StorybookPlugin({}),
       ],

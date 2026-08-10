@@ -45,6 +45,34 @@ if (!mainPackage) {
   process.exit(1);
 }
 
+const NPM_REGISTRY = 'https://registry.npmjs.org';
+const REGISTRY_TIMEOUT = 30_000;
+
+/** Whether npm already serves this exact version. */
+async function isPublished(name: string, version: string): Promise<boolean> {
+  let response: Response;
+  try {
+    response = await fetch(`${NPM_REGISTRY}/${encodeURIComponent(name)}`, {
+      headers: { Accept: 'application/vnd.npm.install-v1+json' },
+      // Bounded so an unresponsive registry cannot stall the publish indefinitely.
+      signal: AbortSignal.timeout(REGISTRY_TIMEOUT),
+    });
+  } catch (error) {
+    throw new Error(`failed to query ${name}: ${error instanceof Error ? error.message : error}`);
+  }
+
+  if (response.status === 404) {
+    return false;
+  }
+  if (!response.ok) {
+    throw new Error(`unexpected status ${response.status} querying ${name}`);
+  }
+
+  const body: unknown = await response.json();
+  const versions = typeof body === 'object' && body !== null && 'versions' in body ? body.versions : undefined;
+  return typeof versions === 'object' && versions !== null && Object.hasOwn(versions, version);
+}
+
 // Helper function to publish a package.
 function publishPackage(packageDir: string): boolean {
   const packagePath = join(distDir, packageDir);
@@ -56,14 +84,21 @@ function publishPackage(packageDir: string): boolean {
   }
 
   const packageJson = require(`../${packageJsonPath}`);
+  if (published.has(`${packageJson.name}@${packageJson.version}`)) {
+    console.log(`[Publish] ✓ ${packageJson.name}@${packageJson.version} already published`);
+    return true;
+  }
+
   console.log(`[Publish] Publishing ${packageJson.name}@${packageJson.version}...`);
 
-  const publishArgs = ['publish', '--tag', tag, '--no-git-checks'];
+  // npm, not pnpm: `pnpm publish` normalizes every file in the tarball to 0644, which strips the
+  // executable bit off the platform binary and makes the installed CLI fail with EACCES.
+  const publishArgs = ['publish', '--tag', tag];
   if (dryRun) {
     publishArgs.push('--dry-run');
   }
 
-  const result = spawnSync('pnpm', publishArgs, {
+  const result = spawnSync('npm', publishArgs, {
     cwd: packagePath,
     stdio: 'inherit',
     env: process.env,
@@ -76,6 +111,16 @@ function publishPackage(packageDir: string): boolean {
 
   console.log(`[Publish] ✓ ${packageJson.name}@${packageJson.version}`);
   return true;
+}
+
+// A release makes six publish calls, so one failing partway must not strand the launcher: skipping what
+// already landed lets the run be retried.
+const published = new Set<string>();
+for (const packageDir of packageDirs) {
+  const { name, version } = require(`../${join(distDir, packageDir, 'package.json')}`);
+  if (await isPublished(name, version)) {
+    published.add(`${name}@${version}`);
+  }
 }
 
 // Publish platform packages first (main package depends on them).

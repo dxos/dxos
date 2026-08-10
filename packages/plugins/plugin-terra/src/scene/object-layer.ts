@@ -10,7 +10,7 @@ import { type Scene } from '@babylonjs/core/scene';
 
 import { scale } from '../engine';
 import { type SimObject } from '../sim';
-import { type TerraObject } from '../types';
+import type * as TerraObject from '../types/TerraObject';
 import { easeHeading } from './heading';
 import { createObjectForm } from './object-forms';
 import { SCALE_FACTOR, objectFrame } from './orientation';
@@ -24,7 +24,7 @@ const KINDS: readonly TerraObject.Kind[] = ['boat', 'plane', 'satellite', 'tank'
  */
 const matrixFor = ({ state, definition }: SimObject, heading: number): Matrix => {
   const position = scale(state.unit, state.radius);
-  const { right, up, forward } = objectFrame(state, definition.kind, heading);
+  const { right, up, forward } = objectFrame(state, heading);
   // Build the rotation from an explicit left-handed basis rather than `FromLookDirectionLH`, which
   // returns a view-style rotation that lands the mesh's local +Z on -forward — i.e. every object
   // flies tail-first. Mapping local X/Y/Z onto right/up/forward is unambiguous.
@@ -90,6 +90,10 @@ export class ObjectLayer {
     const byKind = new Map<TerraObject.Kind, SimObject[]>(KINDS.map((kind) => [kind, []]));
     const live = new Set<TerraObject.TerraObject>();
     for (const object of objects) {
+      // A rocket is destroyed by its own impact: past that instant only the explosion is drawn.
+      if (object.state.explosion > 0) {
+        continue;
+      }
       byKind.get(object.definition.kind)?.push(object);
       live.add(object.definition);
     }

@@ -7,27 +7,31 @@ import { createContext } from '@radix-ui/react-context';
 import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { type Graph } from '@dxos/app-graph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
 import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
+import { Html, emailDialect } from '@dxos/react-ui-components';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
-import { useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
+import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
-import { Mailbox, SystemTags } from '#types';
 
+import type * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as Mailbox from '../../types/Mailbox';
+import * as SystemTags from '../../types/SystemTags';
 import { createDraftMessage, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
-import { HtmlViewer } from '../HtmlViewer';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
+import { keyOf } from './key-of';
 import { ExtractorMenuItem } from './useExtractorActions';
 import { useMessageExtractedObjects } from './useMessageExtractedObjects';
 import { useMessageActions } from './useToolbar';
@@ -36,11 +40,7 @@ import { useMessageActions } from './useToolbar';
 // Types
 //
 
-type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
-
-/** Stable id for a message or unresolved ref, keying tiles and collapse state. */
-export const keyOf = (message: MessageOrRef): string =>
-  Ref.isRef(message) ? String(message.uri) : Obj.getURI(message);
+export type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
 
 /**
  * Reactive view options for a rendered message (body render mode + image loading). Passed in as a
@@ -106,6 +106,8 @@ type ConversationStackContextValue = {
   graph?: Graph.ReadableGraph;
   /** Process-manager runtime for draft send / composer AI (container-resolved). */
   runtime?: Capabilities.ProcessManagerRuntime;
+  /** Send operation per installed mail provider, keyed by connector id (container-resolved). */
+  sendOperations?: readonly InboxCapabilities.MailSendOperation[];
   /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
   getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
   onExpandedChange?: (id: string, expanded: boolean) => void;
@@ -136,6 +138,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'expanded'
     | 'graph'
     | 'runtime'
+    | 'sendOperations'
     | 'getExtractActions'
     | 'onExpandedChange'
     | 'onCollapseAll'
@@ -162,6 +165,7 @@ const ConversationStackRoot = ({
   options,
   graph,
   runtime,
+  sendOperations,
   getExtractActions,
   onExpandedChange,
   onCollapseAll,
@@ -188,6 +192,7 @@ const ConversationStackRoot = ({
     graph={graph}
     getExtractActions={getExtractActions}
     runtime={runtime}
+    sendOperations={sendOperations}
   >
     {children}
   </ConversationStackProvider>
@@ -240,11 +245,29 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
+      // Focus the reply's body editor (`.dx-expander` distinguishes it from the recipient editors,
+      // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
+      // editor appears, bounded by the same settle window as the scroll re-pinning below;
+      // `preventScroll` keeps the focus from cutting the smooth scroll short.
+      const focusBody = () => {
+        const content = tile.querySelector<HTMLElement>('.dx-expander .cm-content');
+        if (content) {
+          content.focus({ preventScroll: true });
+          focusObserver.disconnect();
+        }
+      };
+      const focusObserver = new MutationObserver(focusBody);
+      focusObserver.observe(tile, { childList: true, subtree: true });
+      focusBody();
       const observer = new ResizeObserver(scrollIntoView);
       observer.observe(tile);
-      const timeout = setTimeout(() => observer.disconnect(), 1_000);
+      const timeout = setTimeout(() => {
+        observer.disconnect();
+        focusObserver.disconnect();
+      }, 1_000);
       return () => {
         observer.disconnect();
+        focusObserver.disconnect();
         clearTimeout(timeout);
       };
     }, [tileItems]);
@@ -380,9 +403,23 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
 
         <div className='col-start-2 flex flex-col py-1'>
           <h2
-            className='text-lg line-clamp-2 min-w-0 cursor-pointer'
-            data-testid={isExpanded ? undefined : 'message.expand'}
-            onClick={() => onExpandedChange?.(id, !isExpanded)}
+            className={mx('text-lg line-clamp-2 min-w-0', onExpandedChange && 'cursor-pointer')}
+            data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
+            // Focusable and key-activated only when it actually toggles, so a single-message
+            // conversation doesn't put a dead tab stop in the reading order.
+            role={onExpandedChange && 'button'}
+            tabIndex={onExpandedChange && 0}
+            aria-expanded={onExpandedChange && isExpanded}
+            onClick={onExpandedChange && (() => onExpandedChange(id, !isExpanded))}
+            onKeyDown={
+              onExpandedChange &&
+              ((event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onExpandedChange(id, !isExpanded);
+                }
+              })
+            }
           >
             {sender}
           </h2>
@@ -538,16 +575,7 @@ type MessageBodyProps = {
 const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
   const { viewMode, loadRemoteImages = false } = useAtomValue(options);
 
-  // Person-to-person mail carries a provider "personal" tag (e.g. Gmail's "Personal" category,
-  // persisted into the mailbox tag index during label sync); used to decide how aggressively the
-  // HTML view restyles the body.
   const db = Obj.getDatabase(mailbox ?? message);
-  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('personal')]))[0];
-  const isPersonal = useMemo(
-    () =>
-      !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),
-    [mailbox, message, personalTag],
-  );
 
   // Content blocks are typed by mimeType: `text/html` (raw email HTML), `text/markdown` (an authored
   // markdown rendering), `text/plain` or untyped (plaintext). The markdown view prefers an authored
@@ -560,18 +588,14 @@ const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
     return { html: htmlText, markdown: markdownBlock ?? (htmlText ? normalizeText(htmlText) : plainText) };
   }, [message.blocks]);
 
+  // Unconditional: the markdown fallback below is a conditional *return*, not a conditional hook call.
+  const resolveSrc = useCidResolver(message.attachments, db);
+
   // The HTML view needs an html block; without one (e.g. a markdown-only body) fall through to the
-  // markdown renderer.
+  // markdown renderer. The dialect is built inline — `Html` keys rebuilds on `dialect.key`, so it
+  // needs no memoization.
   if (viewMode === 'html' && html) {
-    return (
-      <HtmlViewer
-        html={html}
-        loadRemoteImages={loadRemoteImages}
-        isPersonal={isPersonal}
-        attachments={message.attachments}
-        db={db}
-      />
-    );
+    return <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect({ resolveSrc })} />;
   }
 
   return <MarkdownViewer content={markdown} markdown={viewMode !== 'plain'} loadRemoteImages={loadRemoteImages} />;
@@ -593,7 +617,9 @@ type MessageMenuProps = {
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
   <Menu.Root {...(actions ?? {})} attendableId={attendableId} alwaysActive>
-    <Menu.Toolbar classNames='p-1 bg-transparent' />
+    <Menu.Toolbar classNames='p-1 bg-transparent'>
+      <Menu.Items />
+    </Menu.Toolbar>
   </Menu.Root>
 );
 
@@ -671,12 +697,12 @@ type DraftTileProps = {
  */
 const DraftTile = ({ id, message }: DraftTileProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { mailbox, runtime, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
+  const { mailbox, runtime, sendOperations, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
   const db = Obj.getDatabase(mailbox ? mailbox : message);
   const live = useQuery(db, Filter.id(message.id))[0];
   const draft = live ?? message;
   const extensions = useEmailComposerExtensions(runtime, draft);
-  const onSend = useSendEmail(runtime, draft);
+  const onSend = useSendEmail(runtime, draft, sendOperations);
 
   // Sent once the draft carries the provider sent tag `useSendEmail` recorded on it (`sentTagUri`).
   // Read membership reactively from the tag index: the tag-uri list re-fires the instant the tag is
@@ -805,7 +831,9 @@ const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToo
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 });

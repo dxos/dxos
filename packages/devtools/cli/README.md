@@ -15,15 +15,73 @@ Set `DX_DEBUG=debug` (or `verbose`, `info`, `warn`, `error`) for log output:
 DX_DEBUG=debug ./bin/dx chat
 ```
 
-## Compile standalone binary
+## Where commands live
 
-To produce a single-file binary for distribution:
+`src/commands/*` holds only the CLI's own topics (`admin`, `chat`, `debug`, `function`, `hub`,
+`mailbox`, `mcp`, `reflect`, `reset`). Everything else is contributed by the Composer plugins listed
+in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx registry publish` is
+`packages/plugins/plugin-registry/src/commands/registry/`. Run `dx --help` for the merged topic list.
+
+## Release
 
 ```bash
-moon run cli:compile
+moon run cli:bundle   # Compile per-platform binaries into dist/.
+moon run cli:smoke    # Pack, install, and run the tarballs with node_modules hidden.
+moon run cli:publish  # Publish the platform packages, then the launcher.
 ```
 
-The compiled binaries land under `dist/cli-<platform>-<arch>/dx`.
+`smoke` gates `publish` and covers two independent axes. Packing and installing catches tarball problems
+— file modes, the `files` array, the launcher's platform mapping and its `require.resolve`. Running the
+result with the workspace's `node_modules` bind-mounted away catches a binary reaching back into the tree
+that built it, which nothing else can: a path resolved at bundle time still resolves wherever the binary
+was built, so both this test and CI would otherwise pass. Two shipped defects were visible only there:
+
+- `@automerge/automerge`'s node entry reads its WASM from a `__dirname`-derived path, which Bun resolves
+  at bundle time.
+- `classic-level` binds a native addon that a single-file binary cannot carry. It loaded during startup
+  only because `@dxos/kv-store`'s main entry exported `createLevel` alongside its types, so importing the
+  package for a type pulled the addon in. The value now lives behind `@dxos/kv-store/level`.
+
+Other addons (`sharp`, `koffi`, `node-datachannel`) are still in the graph but are not reached during
+startup. Any command that does reach one will fail off the build machine, so extend `COMMANDS` in
+`scripts/smoke.ts` as coverage grows.
+
+`bundle` produces `dist/cli` (the `@dxos/cli` launcher, published from `bin/dx.js`) plus one
+`dist/cli-<platform>-<arch>/dx` binary per target, each published as its own package and wired into
+the launcher's `optionalDependencies`.
+
+These constraints are easy to break and only observable in the published artifact, which is what
+`smoke` exists to catch:
+
+- The binary must carry mode 755 all the way into the tarball — the launcher `execFileSync`s it by
+  path, so npm never applies the executable bit for us. `pnpm publish` normalizes file modes to
+  0644, hence `scripts/publish.ts` uses `npm publish`.
+- Nothing may be marked `external` in the compiled build unless it is also reachable at runtime.
+  Externals become plain requires inside Bun's embedded filesystem (`/$bunfs`), where no
+  `node_modules` exists, so an external that any command touches fails at startup. Assets are
+  inlined instead — see the `?url`, `node-std`, and `subduction-wasm` plugins in `scripts/build.ts`.
+- A package that reads its own files at runtime (rather than importing them) needs a bundler-friendly
+  entry point; the paths it computes from `import.meta.url` land inside `/$bunfs`, where its siblings
+  do not exist.
+- The pinned bun version is part of the artifact's correctness, so `.prototools` is a `bundle` input.
+  1.3.4 leaked `--smol` into `process.argv` of every compiled binary, which made `dx` reject its own
+  arguments.
+
+## Preview builds
+
+Every push to `main` publishes the generated packages to [pkg.pr.new](https://pkg.pr.new), so a fix is
+installable without waiting for an npm release. Install the package for your own platform:
+
+```bash
+npm i https://pkg.pr.new/@dxos/cli-linux-x64@<commit-sha>
+npx dx --version
+```
+
+Install the platform package rather than the `@dxos/cli` launcher: npm must download a URL
+dependency's tarball to read its `os`/`cpu` fields, so it cannot skip the platforms it will discard,
+and a launcher install fetches all five (~330 MB). Each platform package declares its own `dx` bin for
+this reason. Installing from npm is unaffected — the launcher's `dx` takes precedence when both are
+present, and registry dependencies are platform-filtered without downloading.
 
 ## Admin Commands
 

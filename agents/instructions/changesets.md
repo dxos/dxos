@@ -46,7 +46,7 @@ Fix subscription leak in the query handler.
 
 ✅ `Add streaming variant of Query.run().` &nbsp;&nbsp; ❌ `refactored stuff` / `addresses review comments` / `WIP`
 
-Packages from _different_ groups in one PR → one line each (each still bumps its whole group):
+Packages from _different_ groups in one PR → one line each **in the same file** (each still bumps its whole group):
 
 ```md
 ---
@@ -56,3 +56,17 @@ Packages from _different_ groups in one PR → one line each (each still bumps i
 
 Add streaming query API and surface it in the markdown plugin.
 ```
+
+## How many files
+
+**One per PR.** A changeset is a changelog entry, so the question is how many entries a reader wants —
+not how many packages, groups, or commits you touched. Work spanning two groups is still one story and
+belongs in one file with a line per group, as above; so does a fix that took five commits.
+
+Add a second file **only when the PR genuinely addresses two unrelated things** a reader would look up
+separately — e.g. a query-planner fix that happens to ride along with an unrelated toolbar change. If
+you catch yourself writing "and also" between two unrelated clauses, that's the signal. Splitting one
+piece of work into several files fragments the changelog into entries nobody can follow, and re-reads
+as several releases' worth of change.
+
+When a PR grows and you have accumulated a file per commit, consolidate before opening it.

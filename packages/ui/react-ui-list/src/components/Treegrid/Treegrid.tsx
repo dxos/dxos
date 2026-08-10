@@ -7,15 +7,9 @@ import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  type ComponentPropsWithRef,
-  type CSSProperties,
-  type KeyboardEvent,
-  forwardRef,
-  useCallback,
-} from 'react';
+import React, { type ComponentPropsWithRef, type CSSProperties, type KeyboardEvent, useCallback } from 'react';
 
-import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps, slottable } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { treegridTheme } from './Treegrid.theme';
@@ -123,12 +117,11 @@ type TreegridRowProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.d
   onOpenChange?(open: boolean): void;
 };
 
-const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRowProps>>(
+const TreegridRow = slottable<HTMLDivElement, TreegridRowScopedProps<TreegridRowProps>>(
   (
     {
       __treegridRowScope,
       asChild,
-      classNames,
       children,
       id,
       parentOf,
@@ -151,11 +144,12 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
     return (
       <TreegridRowProvider open={open} onOpenChange={onOpenChange} scope={__treegridRowScope}>
         <Comp
-          role='row'
+          {...composableProps<HTMLDivElement>(props, {
+            classNames: styles.row({ class: treegridTheme.rowLevel(level) }),
+            role: 'row',
+          })}
           aria-level={level}
-          className={styles.row({ class: mx(treegridTheme.rowLevel(level), classNames) })}
           {...(parentOf && { 'aria-expanded': open, 'aria-owns': parentOf })}
-          {...props}
           id={id}
           ref={forwardedRef}
         >
@@ -168,15 +162,16 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
 
 type TreegridCellProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & { indent?: boolean };
 
-const TreegridCell = forwardRef<HTMLDivElement, TreegridCellProps>(
-  ({ classNames, children, indent, ...props }, forwardedRef) => {
-    return (
-      <div role='gridcell' className={styles.cell({ indent, class: mx(classNames) })} {...props} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
+const TreegridCell = composable<HTMLDivElement, TreegridCellProps>(({ children, indent, ...props }, forwardedRef) => {
+  return (
+    <div
+      {...composableProps<HTMLDivElement>(props, { classNames: styles.cell({ indent }), role: 'gridcell' })}
+      ref={forwardedRef}
+    >
+      {children}
+    </div>
+  );
+});
 
 export type { TreegridRootProps, TreegridRowProps };
 

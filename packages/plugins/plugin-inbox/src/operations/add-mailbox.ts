@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CollectionModel } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import { autoBindSingleConnection } from '@dxos/plugin-connector';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { getMailboxPath } from '../paths';
-import { InboxOperation } from '../types';
+import * as InboxOperation from '../types/InboxOperation';
 
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
   Operation.withHandler(
@@ -25,6 +26,11 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
         object,
         target: Database.isDatabase(target) ? undefined : target,
       }).pipe(Effect.provide(Database.layer(db)));
+
+      // A mailbox is inert until a provider binds it, so when exactly one account is already
+      // authorized for this type there is nothing for the user to choose — bind it here rather than
+      // leaving a Connect menu whose single entry is the only possible answer.
+      yield* autoBindSingleConnection({ target: object }).pipe(Effect.provide(Database.layer(db)));
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'space.object.add',

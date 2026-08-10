@@ -2,18 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core';
+import { activateDemandGatedModules } from './demand-gated';
 
 export type TestAppOptions = {
   /**
@@ -24,10 +25,10 @@ export type TestAppOptions = {
   plugins: Plugin.Plugin[];
   /** Plugin ids that are enabled by default in addition to core. Defaults to all non-system plugin ids. */
   enabled?: string[];
-  /** Additional activation events fired alongside SetupReactSurface. */
+  /** Additional activation events fired before Startup. */
   setupEvents?: ActivationEvent.ActivationEvent[];
   /**
-   * Whether to automatically fire SetupReactSurface + Startup during setup.
+   * Whether to automatically fire Startup during setup.
    * Defaults to true.
    */
   autoStart?: boolean;
@@ -93,6 +94,17 @@ const DEFAULT_TIMEOUT_MS = 5_000;
  *
  * For React tests, pass the returned harness to `render` or `renderSurface`
  * from `@dxos/app-framework/testing-react`.
+ *
+ * TODO(wittjosiah): Consider running activation tests under a browser runner.
+ *   A plugin's `#capabilities` resolves to its `capabilities/node.ts` under the `node` export
+ *   condition, so a Node-run activation test asserts the NODE barrel's wiring, not the one the
+ *   app ships. The two are hand-maintained siblings and drifted silently — 35 modules were gated
+ *   in `index.ts` and ungated in `node.ts` (found 2026-08-04; a `CreateObject` module read as
+ *   startup-eager in tests while the browser build gated it correctly). They were realigned, but
+ *   nothing keeps them that way, and a lint rule is the wrong instrument: the barrels legitimately
+ *   diverge (node omits React surfaces entirely), so "same gates" is not a property that holds in
+ *   general. Running these tests in a browser runner exercises the shipped barrel directly and
+ *   makes the question moot.
  */
 export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> => {
   const {
@@ -132,10 +144,13 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
       await EffectEx.runAndForwardErrors(
         Effect.all([
           ...setupEvents.map((event) => manager.activate(event)),
-          manager.activate(ActivationEvents.SetupReactSurface),
           manager.activate(ActivationEvents.Startup),
         ]),
       );
+      // In the app plugins start on demand (surface render), which a headless harness never
+      // triggers — fire every start event before the test body runs so start-gated modules
+      // are present.
+      await EffectEx.runAndForwardErrors(activateDemandGatedModules(manager));
     } catch (err) {
       await EffectEx.runAndForwardErrors(manager.shutdown()).catch(() => undefined);
       throw err;

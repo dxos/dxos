@@ -40,13 +40,9 @@ import {
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
-import { Markdown } from '#types';
-
-import {
-  PreviewComponent,
-  type PreviewComponentProps,
-  parseEmbedLabel,
-} from '../components/PreviewComponent/PreviewComponent';
+import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label';
+import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
+import * as Markdown from '../types/Markdown';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -300,7 +296,9 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
-      .classNames('dx-link flex items-center gap-2')
+      // Not `dx-link`: the tooltip sits on the inverse surface, where the accent link color has no
+      // contrast — inherit the tooltip's own `text-inverse-fg` instead.
+      .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
       .text(safeUrl(url)?.toString() ?? url)
       .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );

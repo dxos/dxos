@@ -26,9 +26,9 @@ import {
   SUBDUCTION_SERVICE_NAME,
   connectAdapters,
   createHostClientRepoTopology,
-  createLevelAdapter,
   createRepo,
   createRepoTopology,
+  createSqliteAdapter,
   disconnectAdapters,
   findInStates,
   reconnectAdapters,
@@ -56,7 +56,7 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
   });
 
   test('documents on disk go to ready state', async () => {
-    const storage = await createLevelAdapter();
+    const storage = await createSqliteAdapter();
     let url: AutomergeUrl | undefined;
 
     {
@@ -160,7 +160,7 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
     });
 
     test('documents loaded from disk get replicated', { timeout: 15_000 }, async () => {
-      const storage = await createLevelAdapter();
+      const storage = await createSqliteAdapter();
       let url: AutomergeUrl | undefined;
 
       {
@@ -190,7 +190,7 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
     });
 
     test('client creates doc and Repo persists it to disk', async () => {
-      const storage = await createLevelAdapter();
+      const storage = await createSqliteAdapter();
       const repo = createRepo({ network: [], storage });
       const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
         repo.import<any>(blob, { docId });

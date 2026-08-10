@@ -15,9 +15,8 @@ import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 import { withTheme } from '@dxos/react-ui/testing';
 import { automerge } from '@dxos/ui-editor';
 
-import { Sheet } from '#types';
-
 import { sheetExtension } from '../../extensions';
+import * as Sheet from '../../types/Sheet';
 
 const DefaultStory = ({ value, ...props }: CellEditorProps) => {
   const extensions = useMemo(() => {

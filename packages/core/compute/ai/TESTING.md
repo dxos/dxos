@@ -5,8 +5,9 @@
 Testing an AI conversation is hard because a single "e2e" run mixes concerns with wildly
 different determinism and cost profiles: pure developer code that should be trivially unit-tested,
 and LLM inference that is slow, costly, and non-deterministic. The current memoization approach
-collapses all of them into one mechanism (`src/testing/memoization/MemoizedLanguageModel.ts`,
-`*.conversations.json` snapshots) and pays for that conflation in brittleness and false confidence.
+collapses all of them into one mechanism (`src/testing/model-fixture/LanguageModelFixture.ts`,
+hash-addressed `.store/conversations/<suite>/<hash>.json` fixtures) and pays for that conflation in
+brittleness and false confidence.
 
 This document defines the **dimensions** of an AI conversation, records **what we do today** and
 what it achieves vs. misses, describes **what we should do** (a tier per dimension), and gives a
@@ -16,18 +17,23 @@ memoization mechanism itself works, see [`DESIGN.md`](./DESIGN.md).
 ## Dimensions of an AI conversation
 
 An agent turn factors into distinct concerns. The first four (A–D) are the ones we usually mean
-by "the agent works"; the rest (E–H) are the seams a four-way split silently omits.
+by "the agent works"; E–H are the seams a four-way split silently omits; I–L are the chat UI, which
+A–H stop short of entirely (see [The UI band](#the-ui-band-il)).
 
-| Dim   | Concern                                                                                                                             | Owner                                           | Determinism       | Right tool                 |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------- | -------------------------- |
-| **A** | **Comprehension** — interpret NL instructions                                                                                       | LLM                                             | Non-deterministic | Eval                       |
-| **B** | **Tool selection & argument synthesis** — pick the tool, emit schema-valid JSON                                                     | LLM                                             | Non-deterministic | Eval                       |
-| **C** | **Operation execution** — the tool handler runs                                                                                     | Developer code                                  | Deterministic     | Unit test                  |
-| **D** | **Turn loop / harness** — feed tool results back, iterate to stop, max-iterations, error and malformed-output handling, persistence | Developer code (`AiSession.run`)                | Deterministic     | Unit test (scripted model) |
-| **E** | **Context assembly** — system prompt + skill instructions + bound objects → the prompt the LLM sees                                 | Developer code                                  | Deterministic     | Unit test / snapshot       |
-| **F** | **Schema & (de)serialization** — tool JSON-schema generation, argument decode, result encode                                        | Developer code                                  | Deterministic     | Unit test (round-trip)     |
-| **G** | **Evaluation / grading** — did the run meet its criteria?                                                                           | Test oracle (must not be the system under test) | —                 | Assertion or graded scorer |
-| **H** | **End-to-end composition** — emergent behavior across A–F on a realistic path                                                       | Whole system                                    | Non-deterministic | Thin integration eval      |
+| Dim   | Concern                                                                                                                             | Owner                                           | Determinism                | Right tool                      |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------- | ------------------------------- |
+| **A** | **Comprehension** — interpret NL instructions                                                                                       | LLM                                             | Non-deterministic          | Eval                            |
+| **B** | **Tool selection & argument synthesis** — pick the tool, emit schema-valid JSON                                                     | LLM                                             | Non-deterministic          | Eval                            |
+| **C** | **Operation execution** — the tool handler runs                                                                                     | Developer code                                  | Deterministic              | Unit test                       |
+| **D** | **Turn loop / harness** — feed tool results back, iterate to stop, max-iterations, error and malformed-output handling, persistence | Developer code (`AiSession.run`)                | Deterministic              | Unit test (scripted model)      |
+| **E** | **Context assembly** — system prompt + skill instructions + bound objects → the prompt the LLM sees                                 | Developer code                                  | Deterministic              | Unit test / snapshot            |
+| **F** | **Schema & (de)serialization** — tool JSON-schema generation, argument decode, result encode                                        | Developer code                                  | Deterministic              | Unit test (round-trip)          |
+| **G** | **Evaluation / grading** — did the run meet its criteria?                                                                           | Test oracle (must not be the system under test) | —                          | Assertion or graded scorer      |
+| **H** | **End-to-end composition** — emergent behavior across A–F on a realistic path                                                       | Whole system                                    | Non-deterministic          | Thin integration eval           |
+| **I** | **Editor extension state** — decorations, widget identity and props, folding ranges, gutter anchors                                 | Developer code                                  | Deterministic              | Unit test (`EditorView`, jsdom) |
+| **J** | **Host↔editor contract** — the controller API (`setContext`/`setContent`/`append`), syncer→document, ranges                         | Developer code                                  | Deterministic              | Unit test (jsdom, no React)     |
+| **K** | **UI projection & interaction** — which turns render, event-bus handlers, ECHO→React reactivity                                     | Developer code                                  | Deterministic              | Unit test (pure functions)      |
+| **L** | **Story composition** — the real user path through the assembled plugin                                                             | Whole UI                                        | Deterministic (mock model) | Storybook play test             |
 
 Key observations that drive everything below:
 
@@ -37,15 +43,55 @@ Key observations that drive everything below:
 - **G is an oracle, not part of the system under test.** If the pass/fail verdict is itself an
   LLM output, the test certifies itself.
 - **C, D, E, F are ordinary deterministic code.** None of them needs an LLM to be tested.
+- **So are I, J, K.** The chat UI is the largest untested band, and none of it needs a browser.
+
+## The UI band (I–L)
+
+A–H stop at `AiSession` and the operations. Everything between the session and the screen — the
+CodeMirror extensions, the controller the host drives them through, and the React projection of
+conversation state — had no tier at all. The chat rewind ("soft fork") feature was built as a case
+study for this, and of its bugs **five sat in that band**:
+
+| Bug                                                                             | Dim |
+| ------------------------------------------------------------------------------- | --- |
+| A context effect did not trigger a decoration rebuild                           | I   |
+| Widget identity compared only ids, so stale props survived a rebuild            | I   |
+| `setContext` was lost when called before the editor view existed                | J   |
+| A document reset cleared the host context                                       | J   |
+| The syncer streamed a suffix, so a shrinking thread left removed turns rendered | K   |
+
+Each was invisible below the browser, so each cost multiple minute-long story cycles to find. With
+I–K in place they are millisecond assertions.
+
+Two rules make the band usable:
+
+- **Geometry needs a browser; state does not.** jsdom performs no layout, so anything measured in
+  pixels — widget height, gutter alignment, margin vs. padding — is only observable at **L**. I
+  covers decorations, props and ranges. Trusting I for geometry is how a margin-vs-padding bug hides.
+- **Never diagnose at L.** Reproduce at the lowest tier that can hold the bug. If no tier can, that
+  is a missing tier, and adding it is part of the fix.
+
+Existing harnesses, so none of this needs building from scratch:
+
+- **I** — `xml-tags.test.ts` builds an `EditorView` in jsdom and reads decorations through the public
+  `EditorView.decorations` facet; `widgetProps(view, id)` returns what a widget was built with.
+- **J** — `controller.test.ts` constructs the controller over the same refs the component holds, with
+  the view attached later, which is what makes the "before the view exists" case expressible.
+- **K** — projection logic is extracted as pure functions (e.g. `projectThread`) precisely so it can
+  be asserted without rendering. Prefer extracting over rendering: React in jsdom fights CodeMirror,
+  and a pure function is a better boundary anyway.
+- **L** — a story with a scripted `LanguageModel` via `AssistantPlugin({ aiServiceMiddleware })`. One
+  per user-visible flow, no more: each play function is a minute and the budget is 15s per test.
 
 ## What we do today
 
-Two mechanisms, both centered on `MemoizedLanguageModel`:
+Two mechanisms, both centered on `LanguageModelFixture`:
 
-1. **Generate a conversation snapshot** (`ALLOW_LLM_GENERATION=1`, run by a developer with
+1. **Generate a conversation snapshot** (`DX_UPDATE_MODEL_FIXTURES=1`, run by a developer with
    `DX_ANTHROPIC_API_KEY`, never in CI). The memoized layer intercepts
-   `LanguageModel.generateText`/`streamText`, calls the real model, and appends
-   `{ parameters, prompt, response }` to a per-test-file `*.conversations.json`. This records
+   `LanguageModel.generateText`/`streamText`, calls the real model, and writes each
+   `{ parameters, prompt, response }` to its hash-addressed store file
+   `.store/conversations/<suite>/<hash>.json`. This records
    dimensions **A + B** (plus the final grading output — see below).
 2. **Replay under CI.** The same layer matches the live prompt against the snapshot (exact
    structural equality after timestamp/date normalization and opt-in dynamic-id canonicalization)
@@ -104,8 +150,8 @@ deterministic code through a frozen LLM recording.
 - **D — harness unit tests over a scripted `LanguageModel`.** Drive `AiSession.run` with a model
   that emits a fixed, scripted sequence of parts/tool-calls, and a fake toolkit. Cover every
   branch: tool-call → result → continue, clean stop, max-iterations, tool error propagation,
-  malformed-output handling, persistence to the feed. The scripted-model primitive already exists
-  in reduced form inside `MemoizedLanguageModel` — extract it (see plan).
+  malformed-output handling, persistence to the feed. The scripted-model primitive exists as
+  `ai/src/testing/ScriptedLanguageModel.ts` (see D below).
 - **E — context-assembly tests.** Assert that the prompt the model would see — system prompt +
   skill instructions + bound objects + tool descriptions, in order — is exactly what the assembly
   code (`formatSystemPrompt`, `AiPreprocessor.preprocessPrompt`) produces for representative inputs.
@@ -170,7 +216,7 @@ analysis below drives the sequencing. Blast-radius facts:
 
 - **Nothing imports `@dxos/assistant-e2e`** — it is a leaf test package, so removing it has zero
   compile/coverage impact anywhere else.
-- The machinery (`MemoizedAiService` / `MemoizedLanguageModel`) is imported only by
+- The machinery (`LanguageModelFixture` / `TestAiService`) is imported only by
   `assistant-e2e/harness.ts` and `ai/src/testing/test-layers.ts` (`TestAiService`). **`TestAiService`
   is the single seam** every other consumer goes through; keep it compiling and consumers are
   unaffected.
@@ -216,8 +262,8 @@ as a long migration.**
 
 ### Phase 1 — deterministic tiers (fast, offline, gates every PR)
 
-G2/G3 memoized replay is already de-gated from PR CI (`runMemoizedTests()`, off by default; opt in
-with `DX_RUN_LLM_TESTS=1` or `ALLOW_LLM_GENERATION=1` to regenerate). A scripted `LanguageModel`
+G2/G3 fixture replay is de-gated from PR CI via the `model-fixture` vitest tag (off by default; opt
+in with `DX_RUN_MODEL_FIXTURE_TESTS=1`, or `DX_UPDATE_MODEL_FIXTURES=1` to regenerate). A scripted `LanguageModel`
 primitive (`ai/src/testing/ScriptedLanguageModel.ts`) and harness (D) unit tests over it
 (`agent-runtime/.../scripted-loop.test.ts`, `assistant/.../AiRequest.test.ts`) cover the clean-stop
 and tool-call → result → continue (including multi-iteration) branches without a live model;
@@ -252,7 +298,7 @@ all 6 cross-plugin scenarios are ported as H integration cases, non-gating. Rema
 6. Convert G3 (agent-runtime session) fixtures to scripted-model (D) tests, then delete them.
 7. Once no consumer depends on frozen-conversation replay, reduce the memoization layer to the
    scripted-model primitive and drop the prompt-matching / canonicalization / closest-match code
-   and `memoization.test.ts`'s dynamic-value suite. `TestAiService` remains the seam.
+   and `LanguageModelFixture.test.ts`'s dynamic-value suite. `TestAiService` remains the seam.
 
 ### Non-goals / risks
 

@@ -4,7 +4,7 @@
 
 import { addressToA1Notation } from '@dxos/compute-hyperformula';
 
-import { Sheet } from '#types';
+import * as Sheet from '../types/Sheet';
 
 // TODO(burdon): Create testing endpoint.
 // TODO(burdon): Move to react-ui-sheet.

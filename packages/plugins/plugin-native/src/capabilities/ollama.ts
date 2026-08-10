@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import { Command } from '@tauri-apps/plugin-shell';
@@ -20,10 +20,12 @@ import * as Stream from 'effect/Stream';
 
 import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { log } from '@dxos/log';
-import { AssistantCapabilities, type Ollama } from '@dxos/plugin-assistant';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import type * as Ollama from '@dxos/plugin-assistant/Ollama';
 
 // NOTE: Running ollama on non-standard port (config Tauri).
 const OLLAMA_HOST = 'http://localhost:21434';
@@ -34,7 +36,7 @@ export type OllamaCapabilities =
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
 
     const runtime = ManagedRuntime.make(OllamaSidecar.layerLive);
 
@@ -259,15 +261,18 @@ export default Capability.makeModule(
       remove,
     };
 
+    // One disposal path: the resolver and the manager close over the same runtime.
+    yield* Effect.addFinalizer(() =>
+      Effect.tryPromise(() => runtime.dispose()).pipe(
+        Effect.catchAll((error) => Effect.sync(() => log.warn('ollama runtime dispose failed', { error }))),
+      ),
+    );
     return [
-      // The runtime-dispose finalizer lives on the resolver contribution only; the manager closes
-      // over the same runtime, so there is a single disposal path.
-      Capability.contributes(
+      Capability.contribute(
         AppCapabilities.AiModelResolver,
         OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
-        () => Effect.tryPromise(() => runtime.dispose()),
       ),
-      Capability.contributes(AssistantCapabilities.OllamaManager, manager),
+      Capability.contribute(AssistantCapabilities.OllamaManager, manager),
     ];
   }),
 );

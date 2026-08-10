@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -16,8 +17,7 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
-import { type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '#types';
-
+import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { createSingleCursor } from './create-single-cursor';
 
 describe('createSingleCursor', () => {
@@ -35,8 +35,8 @@ describe('createSingleCursor', () => {
   // access-token account (real connectors, e.g. Gmail, materialize a Mailbox the same way).
   const MaterializeExampleTarget = Operation.make({
     meta: { key: DXN.make('org.dxos.test.createSingleCursor.materialize') },
-    input: MaterializeTargetInput,
-    output: MaterializeTargetOutput,
+    input: ConnectorSpec.MaterializeTargetInput,
+    output: ConnectorSpec.MaterializeTargetOutput,
   });
 
   const materializeHandler = MaterializeExampleTarget.pipe(
@@ -58,10 +58,18 @@ describe('createSingleCursor', () => {
     ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>,
   );
 
-  const makeConnector = (overrides: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
+  // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
+  // target materialization and binding.
+  const SyncExampleTarget = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.createSingleCursor.sync') },
+    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    output: Schema.Any,
+  });
+
+  const makeConnector = (overrides: Partial<ConnectorSpec.ConnectorEntry> = {}): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
-    materializeTarget: MaterializeExampleTarget,
+    sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },
     ...overrides,
   });
 

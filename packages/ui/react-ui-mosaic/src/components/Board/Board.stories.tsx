@@ -21,7 +21,8 @@ import { translations } from '#translations';
 import { useEventHandlerAdapter } from '../../hooks';
 import { TestColumn, TestItem } from '../../testing';
 import { Focus } from '../Focus';
-import { Board, type BoardModel } from './Board';
+import { Board } from './Board';
+import { type BoardModel } from './BoardContext';
 import { DefaultBoardColumn } from './Column';
 
 random.seed(999);

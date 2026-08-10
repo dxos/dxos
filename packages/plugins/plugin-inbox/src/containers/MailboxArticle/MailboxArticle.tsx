@@ -13,7 +13,8 @@ import {
   useOperationInvoker,
   useOptionalCapability,
 } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, ProgressMeter, useAppGraph, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -21,7 +22,7 @@ import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
@@ -46,11 +47,13 @@ import {
 } from '#components';
 import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
 import { meta } from '#meta';
-import { InboxOperation } from '#types';
-import { InboxCapabilities, Mailbox, SystemTags } from '#types';
+import { createSyncProgressKey } from '#sync';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { createSyncProgressKey } from '../../operations/mail/mail-sync';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
+import * as SystemTags from '../../types/SystemTags';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
 import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
@@ -228,16 +231,20 @@ export const MailboxArticle = ({
   }, [filterProp, builder]);
 
   const handleNavigate = useCallback(
-    (messageId: string) => {
+    (messageId: string, newPlank = false) => {
       const message = messages.find((m) => m.id === messageId);
       if (!message || !db) {
         return;
       }
       // Open the message's conversation as its own plank beside the mailbox (add), never a companion.
       // The conversation node lives under this mailbox view; `MessageArticle` renders the whole thread.
+      // Ordinarily `level` names the rung in the mailbox's declared chain, so reading down the mailbox
+      // reuses one plank; meta/ctrl click asks for a plank of its own, so it opens without a level and
+      // keeps whatever is already there.
       void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
       void invokePromise(LayoutOperation.Open, {
         subject: [`${id}/${message.id}`],
+        ...(newPlank ? {} : { root: id, level: 'message' }),
         pivotId: id,
         disposition: 'add',
         navigation: 'immediate',
@@ -259,7 +266,7 @@ export const MailboxArticle = ({
           const message = messages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
-          handleNavigate(message.id);
+          handleNavigate(message.id, action.type === 'current' && action.newPlank);
           break;
         }
 
@@ -373,7 +380,9 @@ export const MailboxArticle = ({
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
           <Panel.Toolbar asChild>
-            <Menu.Toolbar />
+            <Menu.Toolbar>
+              <Menu.Items />
+            </Menu.Toolbar>
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>

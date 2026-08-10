@@ -27,7 +27,11 @@ import { isTruthy } from '@dxos/util';
 
 import { BuildOutput, CodeToolbar, FileTree } from '#components';
 import { meta } from '#meta';
-import { CodeCapabilities, CodeOperation, type CodeProject, type SourceFile } from '#types';
+
+import * as CodeCapabilities from '../../types/CodeCapabilities';
+import * as CodeOperation from '../../types/CodeOperation';
+import type * as CodeProject from '../../types/CodeProject';
+import type * as SourceFile from '../../types/SourceFile';
 
 export type CodeArticleProps = AppSurface.ObjectArticleProps<CodeProject.CodeProject>;
 
@@ -226,7 +230,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
         </Panel.Toolbar>
         <Panel.Content asChild>
           <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator'>
-            <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-separator'>
+            <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-subdued-separator'>
               <div role='region' aria-label={t('browse-pane.label')} className='dx-container grid overflow-auto'>
                 <FileTree
                   files={fileEntries}

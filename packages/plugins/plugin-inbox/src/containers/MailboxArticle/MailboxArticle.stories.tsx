@@ -9,11 +9,14 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -27,32 +30,34 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
-import { InboxCapabilities, Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as Mailbox from '../../types/Mailbox';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
+const MockDeckOperations = Capability.inlineModule(
+  'operation-handler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.contribute(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(LayoutOperation.Select, () => Effect.void),
+          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+        ),
+      ),
+    ]),
+);
+
 const MockDeckOperationsPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.inbox.story.mockDeckOperations'),
     name: 'Mock Deck Ops',
   }),
-).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(
-            Operation.withHandler(LayoutOperation.Select, () => Effect.void),
-            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-          ),
-        ),
-      ),
-  }),
-  Plugin.make,
-);
+).pipe(Plugin.addModule(MockDeckOperations), Plugin.make);
 
 /** Real term repeated across several `SAMPLE_MESSAGES` entries; used by `SearchFilter`'s play test. */
 const SEARCH_TERM = 'invoice';
@@ -103,7 +108,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false, bound = false } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -118,11 +122,11 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               if (seedSearchTerm) {
                 // Seed the realistic shared corpus (not the lorem builder) so the `SearchFilter` play
                 // test exercises full-text search over real, topic-coherent message bodies.
-                const mailbox = personalSpace.db.add(Mailbox.make());
+                const mailbox = defaultSpace.db.add(Mailbox.make());
                 const feed = yield* Effect.promise(() => mailbox.feed?.tryLoad());
                 if (feed) {
                   // Synced JMAP mail always carries a `threadId` (server-set, RFC 8621); mirror that here
@@ -157,24 +161,24 @@ const meta = {
                     threadId: 'notification-thread',
                   });
                   yield* Feed.append(feed, [...messages, htmlOnlyMessage]).pipe(
-                    Effect.provide(Database.layer(personalSpace.db)),
+                    Effect.provide(Database.layer(defaultSpace.db)),
                   );
                 }
               } else {
-                const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace.db, count, threads));
+                const mailbox = yield* Effect.promise(() => initializeMailbox(defaultSpace.db, count, threads));
                 if (bound) {
-                  const accessToken = personalSpace.db.add(
+                  const accessToken = defaultSpace.db.add(
                     AccessToken.make({ source: 'imap.example.com', account: 'user@example.com', token: 'story-token' }),
                   );
-                  const connection = personalSpace.db.add(
+                  const connection = defaultSpace.db.add(
                     Connection.make({ name: 'Story Mail', accessToken: Ref.make(accessToken) }),
                   );
-                  personalSpace.db.add(
+                  defaultSpace.db.add(
                     Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }),
                   );
                 }
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
 

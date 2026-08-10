@@ -2,28 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Feed } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 
-import { AppGraphBuilder, CreateObject, OperationHandler } from '#capabilities';
+import { AppGraphBuilder, Commands, CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
-import { connector } from './commands';
-
 export const ConnectorPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
-    // TODO(wittjosiah): Find a better place to fire this event.
-    firesBeforeActivation: [AppActivationEvents.SetupConnectors],
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addCommandModule({ commands: [connector] }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({
-    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed],
-  }),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(Commands),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed])),
   Plugin.make,
 );
 

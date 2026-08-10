@@ -4,10 +4,10 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
@@ -15,9 +15,11 @@ import { meta } from '#meta';
 import * as Assistant from './Assistant';
 import * as Ollama from './Ollama';
 
-export const Settings = Capability.make<Atom.Writable<Assistant.Settings>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.makeSingleton<Atom.Writable<Assistant.Settings>>()(
+  `${meta.profile.key}.capability.settings`,
+);
 
-export const OllamaManager = Capability.make<Ollama.Manager>(`${meta.profile.key}.capability.ollama-manager`);
+export const OllamaManager = Capability.makeSingleton<Ollama.Manager>()(`${meta.profile.key}.capability.ollamaManager`);
 
 export const StateSchema = Schema.mutable(
   Schema.Struct({
@@ -30,11 +32,11 @@ export const StateSchema = Schema.mutable(
 
 export type AssistantState = Schema.Schema.Type<typeof StateSchema>;
 
-export const State = Capability.make<Atom.Writable<AssistantState>>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<AssistantState>>()(`${meta.profile.key}.capability.state`);
 
 /** Session-scoped cache of transient (not yet persisted) companion chats keyed by companion DXN string. */
-export const CompanionChatCache = Capability.make<Atom.Writable<Record<string, Obj.Unknown | undefined>>>(
-  `${meta.profile.key}.capability.companion-chat-cache`,
+export const CompanionChatCache = Capability.makeSingleton<Atom.Writable<Record<string, Obj.Unknown | undefined>>>()(
+  `${meta.profile.key}.capability.companionChatCache`,
 );
 
 export const HomeSuggestionsCacheSchema = Schema.mutable(
@@ -51,6 +53,6 @@ export const HomeSuggestionsCacheSchema = Schema.mutable(
 export type HomeSuggestionsCache = Schema.Schema.Type<typeof HomeSuggestionsCacheSchema>;
 
 /** Per-space cache of LLM-generated home starter prompts, persisted across page reloads. */
-export const HomeSuggestionsCache = Capability.make<Atom.Writable<HomeSuggestionsCache>>(
-  `${meta.profile.key}.capability.home-suggestions-cache`,
+export const HomeSuggestionsCache = Capability.makeSingleton<Atom.Writable<HomeSuggestionsCache>>()(
+  `${meta.profile.key}.capability.homeSuggestionsCache`,
 );
