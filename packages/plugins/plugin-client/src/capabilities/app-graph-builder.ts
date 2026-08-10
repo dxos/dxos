@@ -87,6 +87,15 @@ export default Capability.makeModule(
                   },
                 }),
                 Node.make({
+                  id: Account.Security,
+                  data: Account.Security,
+                  type: meta.profile.key,
+                  properties: {
+                    label: ['security.label', { ns: meta.profile.key }],
+                    icon: 'ph--key--regular',
+                  },
+                }),
+                Node.make({
                   id: Account.Devices,
                   data: Account.Devices,
                   type: meta.profile.key,
@@ -94,15 +103,6 @@ export default Capability.makeModule(
                     label: ['devices.label', { ns: meta.profile.key }],
                     icon: 'ph--devices--regular',
                     testId: 'clientPlugin.devices',
-                  },
-                }),
-                Node.make({
-                  id: Account.Security,
-                  data: Account.Security,
-                  type: meta.profile.key,
-                  properties: {
-                    label: ['security.label', { ns: meta.profile.key }],
-                    icon: 'ph--key--regular',
                   },
                 }),
                 Node.make({

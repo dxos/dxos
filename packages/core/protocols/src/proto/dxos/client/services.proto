@@ -161,6 +161,12 @@ message RecoveryCredentialData {
 
   /// Algorithm used to generate the recovery key.
   string algorithm = 3;
+
+  /// User-visible name, without which credentials are told apart only by issuance date.
+  optional string label = 4;
+
+  /// How the recovery key is held.
+  optional dxos.halo.credentials.IdentityRecovery.Kind kind = 5;
 }
 
 message CreateRecoveryCredentialRequest {
@@ -170,6 +176,11 @@ message CreateRecoveryCredentialRequest {
 
 message CreateRecoveryCredentialResponse {
   optional string recovery_code = 1;
+}
+
+message RevokeRecoveryCredentialRequest {
+  /// Lookup key of the credential to revoke.
+  dxos.keys.PublicKey lookup_key = 1;
 }
 
 message QueryIdentityResponse {
@@ -194,6 +205,7 @@ service IdentityService {
   rpc RequestRecoveryChallenge(google.protobuf.Empty) returns (RequestRecoveryChallengeResponse);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
   rpc CreateRecoveryCredential(CreateRecoveryCredentialRequest) returns (CreateRecoveryCredentialResponse);
+  rpc RevokeRecoveryCredential(RevokeRecoveryCredentialRequest) returns (google.protobuf.Empty);
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);

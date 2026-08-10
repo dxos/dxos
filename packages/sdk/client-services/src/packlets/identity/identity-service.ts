@@ -17,6 +17,7 @@ import {
   type QueryIdentityResponse,
   type RecoverIdentityRequest,
   type RequestRecoveryChallengeResponse,
+  type RevokeRecoveryCredentialRequest,
   type SignPresentationRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -80,6 +81,13 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   ): Effect.Effect<CreateRecoveryCredentialResponse, Error> {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.createRecoveryCredential(request),
+      catch: (error) => error as Error,
+    });
+  }
+
+  ['IdentityService.revokeRecoveryCredential'](request: RevokeRecoveryCredentialRequest): Effect.Effect<void, Error> {
+    return Effect.tryPromise({
+      try: async () => this._recoveryManager.revokeRecoveryCredential(request),
       catch: (error) => error as Error,
     });
   }
