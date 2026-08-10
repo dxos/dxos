@@ -184,7 +184,10 @@ Every one of these silently produced confident, wrong results.
 - **A local chromium run clears a test only if chromium is where it was failing.** Three comments
   tests were re-enabled on a green chromium loop and re-deferred when firefox and webkit took them out.
 - **`pnpm format` can report success while leaving a file unformatted.** Verify with `oxfmt --check`,
-  which is what CI runs.
+  which is what CI runs — and note it is not always idempotent: on a markdown list item whose
+  backticked span wraps across the 120-column bound, one `oxfmt` pass still failed `--check` and a
+  second changed the file again. Reflow the prose so the span stays on one line rather than accepting
+  whatever the formatter settles on; a single unformatted file fails the whole Check workflow.
 - **A green Check can be reporting cache hits rather than runs.** Two storybook failures that looked
   like new flakes reproduced locally on the first try and predated the work; they had been passing on
   stale moon cache entries until an unrelated change invalidated the graph.

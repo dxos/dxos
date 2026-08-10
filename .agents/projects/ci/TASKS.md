@@ -1,6 +1,10 @@
 # CI — Tasks
 
-_Resume: branch `claude/depot-vs-self-hosted-cache-3fbd62`, PR #12494 OPEN as a draft — watch Check, then mark ready. The moon remote cache is a self-hosted `bazel-remote` at `cache.dxos.network` (DO NYC3) behind mTLS, and it is now **measured in CI**: a fully-cached 324-task `:build` takes **14 s against 161 s uncached** on a Depot runner, hydrating 324/324 in 13.6 s at 31 ms per task over a 7 ms link. Runners were compared and Depot stays: compute is identical and it sits closest to the cache. Evidence in [`REPORT.md`](./REPORT.md), runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md)._
+_Resume — two streams, two PRs._
+
+_**Cache** (branch `claude/depot-vs-self-hosted-cache-3fbd62`, PR #12494 draft) — watch Check, then mark ready. The moon remote cache is a self-hosted `bazel-remote` at `cache.dxos.network` (DO NYC3) behind mTLS, and it is now **measured in CI**: a fully-cached 324-task `:build` takes **14 s against 161 s uncached** on a Depot runner, hydrating 324/324 in 13.6 s at 31 ms per task over a 7 ms link. Runners were compared and Depot stays: compute is identical and it sits closest to the cache. Evidence in [`REPORT.md`](./REPORT.md), runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md)._
+
+_**E2E** (branch `claude/e2e-test-performance-uf9hq7`, PR #12482 draft, tip `7fb6c887`) — causes B and C are fixed, cause A is root-caused to the production edge and blocked on **DX-1152** (Mykola), cause D needs a CI trace. The open decision is the user's: hold the PR on production edge, point e2e at a dedicated/staging edge tier (recommended), or quarantine the two-peer tests. Phase 3 below is the ledger._
 
 Context and the failure mode that governs this area: [`DESIGN.md`](./DESIGN.md).
 
@@ -163,6 +167,21 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
 
 ### Before landing PR #12482
 
+- [x] **Fold the satellite docs into this project** — `E2E-STABILIZATION.md`,
+      `E2E-FLAKE-ROOT-CAUSES.md` and the moon-cache-slowness superpowers handoff are gone; their
+      content is in DESIGN.md and this file, with `.github/workflows/README.md` and the registry
+      repointed.
+- [x] **Comment audit of the whole diff** (`7fb6c887`) — 231 comment lines cut: no block over three
+      lines, no history narration, and CI run IDs only inside a `TODO` as a reproduction pointer (the
+      evidence lives in DESIGN.md, and Actions logs expire). Three duplication findings were fixed
+      rather than reworded:
+      the `url`-vs-`port` `webServer` block was copy-pasted verbatim into five storybook playwright
+      configs, now `storybookWebServer(port)` in `@dxos/test-utils/playwright`; `testbench-app`'s copy
+      blamed `storybook dev` for a config that runs `vite preview`; and `.config/knip.ts` declared
+      `'packages/devtools/cli'` **twice in one object literal**, so the first entry was dead and the
+      `@opentui` explanation appeared twice. The URI-vs-object-id rule is now stated once, on
+      `CommentState.current`. Verified: knip exit 0, lint 8/8, `Obj.test.ts` 49/49,
+      `useExtensions.test.tsx` 2/2, all five configs load under `--list`.
 - [ ] **Restore `quarantine: true`** on the e2e uploader in `check.yml` (set to `false` for the
       campaign so a masked failure could not make a green cell unfalsifiable).
 - [ ] **Sync with main and drop draft status.**
