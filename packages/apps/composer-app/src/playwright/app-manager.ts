@@ -31,7 +31,7 @@ const WORKSPACE_KEY = 'w';
 /** Builds the pair-chain base for a workspace: `/<anchor>/<workspace>`. */
 const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/${WORKSPACE_KEY}/${workspace}`;
 
-// Only the personal space is seeded on every new identity. The exemplar space is skipped on
+// Only the default space is seeded on every new identity. The exemplar space is skipped on
 // localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
 
@@ -128,8 +128,8 @@ export class AppManager {
     return await this._authCode.wait();
   }
 
-  async resetDevice(confirmInput = 'RESET'): Promise<void> {
-    await this.page.getByTestId('devicesContainer.reset').click();
+  async logout(confirmInput = 'RESET'): Promise<void> {
+    await this.page.getByTestId('devicesContainer.logout').click();
     await this.page.getByTestId('reset-storage.reset-identity-input').fill(confirmInput);
     await this.page.getByTestId('reset-storage.reset-identity-confirm').click();
   }
@@ -250,7 +250,7 @@ export class AppManager {
   }
 
   /**
-   * Deletes the space at the given index (default: the first non-personal space) via its
+   * Deletes the space at the given index (default: the first non-default space) via its
    * settings danger zone, including the confirmation step.
    */
   async deleteSpace(nth = 1): Promise<void> {

@@ -33,8 +33,6 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/hypercore": "workspace:*",
@@ -52,6 +50,8 @@
     "streamx": "catalog:"
   },
   "devDependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/random": "workspace:*",
     "@types/lodash.defaultsdeep": "catalog:"

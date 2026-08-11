@@ -115,11 +115,11 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
               let objects: Obj.Any[] = [];
               if (showObjects) {
-                const createObjects = createObjectFactory(personalSpace.db, generator);
+                const createObjects = createObjectFactory(defaultSpace.db, generator);
                 objects = yield* Effect.promise(() =>
                   createObjects([
                     {
@@ -140,11 +140,11 @@ const meta = {
                   }),
                 );
 
-                objects.forEach((object) => personalSpace.db.add(object));
-                yield* Effect.promise(() => personalSpace.db.flush());
+                objects.forEach((object) => defaultSpace.db.add(object));
+                yield* Effect.promise(() => defaultSpace.db.flush());
               }
 
-              personalSpace.db.add(
+              defaultSpace.db.add(
                 Markdown.make({
                   name: title,
                   content: [
@@ -162,7 +162,7 @@ const meta = {
                 }),
               );
 
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
 

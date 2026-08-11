@@ -40,6 +40,21 @@ A "plugin" is a package whose `src/meta.ts` exports a `Plugin.Meta`, so `ls pack
 
 Reach for these first when answering questions like "how many plugins", "which plugin contributes X surface", or "where is symbol Y defined".
 
+### Reading an operation's key and input shape
+
+`list_operations` does **not** enumerate operations — it returns one row per
+`Capabilities.OperationHandler` contribution, i.e. where each plugin's handler file lives. The
+definitions live under a `<Plugin>Operation` symbol — a `namespace` in `plugin-space`, a module of
+top-level exports in `plugin-markdown` — so go through the symbol tools:
+
+1. `list_plugins({ id: 'space' })` → the exact plugin id, when you only have a loose name.
+2. `find_symbol({ query: 'SpaceOperation' })` → `@dxos/plugin-space#SpaceOperation`.
+3. `get_symbol({ ref: '@dxos/plugin-space#SpaceOperation', include: ['source'] })` → every
+   definition with its `meta.key`, `input`, `output` and `services`.
+
+Read `services` while you are there: a definition listing `Database.Service` needs a `spaceId` at
+invoke time, which is invisible from the key alone.
+
 ### Search idioms before implementing
 
 **Required.** Before writing or refactoring any container, capability, operation, skill, or schema, call `mcp__dxos-introspect__list_idioms` and scan for a slug that matches what you're about to build. An idiom is a JSDoc-tagged pinning of the canonical way to do one thing — when one exists, it is the answer, and you should `get_symbol` on the host artifact and follow the pattern rather than reinventing it.

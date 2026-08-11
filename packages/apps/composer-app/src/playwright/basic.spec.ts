@@ -89,8 +89,8 @@ test.describe('Basic tests', () => {
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
   });
 
-  test('reset device', async ({ browserName }) => {
-    // Reset triggers a full page reload; post-reset boot (HTML + bundle parse +
+  test('logout', async ({ browserName }) => {
+    // Logout wipes storage and triggers a full page reload; post-reset boot (HTML + bundle parse +
     // plugin manager + identity creation) consistently runs ~8-11s, which
     // doesn't fit the default 60s test timeout comfortably alongside setup.
     test.slow();
@@ -104,12 +104,12 @@ test.describe('Basic tests', () => {
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
 
     await host.openUserDevices();
-    await host.resetDevice();
-    // Wait for reset to complete and attempt to reload.
+    await host.logout();
+    // Wait for the reset to complete and attempt to reload.
     await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
     // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
     // 30s gives ~3x headroom over the observed worst case.
-    // After reset the exemplar space is re-seeded alongside the personal space.
+    // After reset the exemplar space is re-seeded alongside the default space.
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
   });
 });

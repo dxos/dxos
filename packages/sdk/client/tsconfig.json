@@ -32,16 +32,10 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/kv-store"
-    },
-    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/node-std"
-    },
-    {
-      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/sql-sqlite"
@@ -60,9 +54,6 @@
     },
     {
       "path": "../../core/echo/echo-client"
-    },
-    {
-      "path": "../../core/echo/echo-host"
     },
     {
       "path": "../../core/echo/echo-protocol"

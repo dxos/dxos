@@ -351,6 +351,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       <Panel.Root role={role}>
         <Panel.Toolbar asChild classNames='dx-container'>
           <Menu.Toolbar>
+            <Menu.Items />
             <div className='grow' />
             {view === 'camera' && (
               <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
@@ -416,7 +417,7 @@ const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelect
       <Select.TriggerButton
         placeholder={t('camera-target.placeholder')}
         data-testid='terra.toolbar.camera-target'
-        classNames='min-is-32'
+        classNames='min-w-32'
       />
       <Select.Portal>
         <Select.Content>

@@ -38,7 +38,9 @@ export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) =
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
             <Message.Root valence='info'>
-              <Message.Body>{t('observability.description')}</Message.Body>
+              <Message.Content>
+                <Message.Body>{t('observability.description')}</Message.Body>
+              </Message.Content>
             </Message.Root>
             <Form.FieldSet />
           </Form.Section>

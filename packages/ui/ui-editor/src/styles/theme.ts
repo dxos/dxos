@@ -113,9 +113,11 @@ export const baseTheme = EditorView.baseTheme({
     // open/close) don't jump the user's view.
     overflowAnchor: 'auto',
   },
+  // The strip is the thumb plus its inset at both ends, matching the ScrollArea overlay thumb
+  // (8px thumb, 2px inset) so the two read identically side by side.
   '.cm-scroller::-webkit-scrollbar': {
-    width: 'var(--scrollbar-size,8px)',
-    height: 'var(--scrollbar-size,8px)',
+    width: 'var(--scrollbar-size,12px)',
+    height: 'var(--scrollbar-size,12px)',
   },
   '.cm-scroller::-webkit-scrollbar-corner': {
     background: 'transparent',
@@ -123,12 +125,19 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-scroller::-webkit-scrollbar-track': {
     background: 'transparent',
   },
+  // Matches the ScrollArea overlay thumb: a pill inset from the edge. The inset is a transparent
+  // border with `background-clip: content-box`, since a scrollbar pseudo-element cannot be offset.
   '.cm-scroller::-webkit-scrollbar-thumb': {
-    background: 'transparent',
-    transition: 'background 0.15s',
+    backgroundColor: 'transparent',
+    borderRadius: 'var(--scrollbar-radius, 9999px)',
+    border: 'var(--scrollbar-inset, 2px) solid transparent',
+    backgroundClip: 'content-box',
+    transition: 'background-color 0.15s',
   },
+  // `backgroundColor`, not the `background` shorthand, which would reset `background-clip` to
+  // `border-box` and paint over the inset exactly when the thumb becomes visible.
   '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
-    background: 'var(--color-scrollbar-thumb)',
+    backgroundColor: 'var(--color-scrollbar-thumb)',
   },
 
   /**

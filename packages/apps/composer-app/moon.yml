@@ -103,7 +103,10 @@ tasks:
       # dist consumed at runtime.
       - '#dist-runtime:build'
       # dist consumed at config-load time: `vite.config.ts` runs in Node, before importSource is
-      # active. The `vite-plugin` tag marks packages that *export a vite plugin this config loads*
+      # active — and the plugin export itself publishes no `source` condition, so the app build
+      # takes its dist too rather than dragging Node-only source into the browser bundle
+      # (`pkg-lint`'s `build-tool-source-export` rule).
+      # The `vite-plugin` tag marks packages that *export a vite plugin this config loads*
       # — not merely anything the config imports. A non-plugin import like `@dxos/util` stays
       # untagged: the plugin packages depend on it, so their own `^:build` builds it first.
       - '#vite-plugin:build'

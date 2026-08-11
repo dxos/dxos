@@ -145,6 +145,12 @@ packages/sdk/observability/src/cli-observability-secrets.json
 .benchmark
 *.cpuprofile
 
+# DX_PROFILE_TESTS / DX_DEBUG_LEAKS test-instrumentation output (see .agents/projects/test-profiling-leaks).
+# `*.cpuprofile` is already ignored above; these cover custom DX_DEBUG_LEAKS_DIR locations too.
+*.heapsnapshot
+heap-samples.ndjson
+profiles/
+
 # Debug logging for require hooks
 .trace-compiled
 
@@ -222,3 +228,9 @@ node_modules
 # encrypted archive staged for upload (see tools/fixtures). Never commit.
 /testing/fixtures/
 *.age
+
+# moon remote-cache mTLS material — never committed (tools/moon-cache/README.md).
+.moon/certs/
+
+# Remote-cache benchmark output (tools/moon-cache/bench).
+.moon-bench/

@@ -29,12 +29,12 @@
     "@dxos/log": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
-    "@radix-ui/react-id": "catalog:",
     "alea": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "mini-virtual-list": "catalog:"
   },
   "devDependencies": {
+    "@storybook/react-vite": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

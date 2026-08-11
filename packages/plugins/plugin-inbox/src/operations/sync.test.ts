@@ -19,7 +19,6 @@ import * as Connection from '@dxos/plugin-connector/Connection';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 
-import { GMAIL_SOURCE } from '../constants';
 import { seedMailboxBinding } from '../testing/sync-fixture';
 import type * as Mailbox from '../types/Mailbox';
 
@@ -436,7 +435,7 @@ describe('reconcileDrafts stage', () => {
   const makeSyncedInsert = (foreignId: string, key: number): EmailStage.Change => ({
     _tag: 'insert',
     message: Obj.make(Message.Message, {
-      [Obj.Meta]: { keys: [{ id: foreignId, source: GMAIL_SOURCE }] },
+      [Obj.Meta]: { keys: [{ id: foreignId, source: TEST_SOURCE }] },
       created: new Date(key).toISOString(),
       sender: { name: 'Alice', email: 'alice@example.com' },
       blocks: [{ _tag: 'text' as const, text: 'Reply body' }],
@@ -468,13 +467,13 @@ describe('reconcileDrafts stage', () => {
           EmailStage.toCommitUnit(),
           Stream.grouped(2),
           Pipeline.run({ sink: Cursor.commit }),
-          Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: GMAIL_SOURCE, maxKey: 0, stats })),
+          Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
         );
       }).pipe(Effect.provide(Database.layer(db))),
     );
 
   test('queryDraftPool pools sent drafts by sentMessageId and excludes unsent drafts', async ({ expect }) => {
-    const { db, mailbox } = await seedMailboxBinding(builder);
+    const { db, mailbox } = await seedMailboxBinding(builder, { source: TEST_SOURCE, connectorId: 'test' });
     const mailboxUri = Obj.getURI(mailbox);
 
     db.add(makeSentDraft(mailboxUri, 'gmail-msg-1'));
@@ -495,7 +494,7 @@ describe('reconcileDrafts stage', () => {
   });
 
   test('removes a sent draft once its canonical copy syncs into the feed', async ({ expect }) => {
-    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { source: TEST_SOURCE, connectorId: 'test' });
     const mailboxUri = Obj.getURI(mailbox);
 
     db.add(makeSentDraft(mailboxUri, 'gmail-msg-1'));
@@ -508,7 +507,7 @@ describe('reconcileDrafts stage', () => {
   });
 
   test('leaves an unsent draft untouched', async ({ expect }) => {
-    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { source: TEST_SOURCE, connectorId: 'test' });
     const mailboxUri = Obj.getURI(mailbox);
 
     db.add(
@@ -528,7 +527,7 @@ describe('reconcileDrafts stage', () => {
   });
 
   test('leaves a sent draft untouched when no matching feed message arrives', async ({ expect }) => {
-    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { source: TEST_SOURCE, connectorId: 'test' });
     const mailboxUri = Obj.getURI(mailbox);
 
     db.add(makeSentDraft(mailboxUri, 'gmail-msg-2'));

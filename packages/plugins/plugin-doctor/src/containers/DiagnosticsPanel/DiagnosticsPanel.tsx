@@ -115,7 +115,7 @@ export const DiagnosticsPanel = () => {
         <Toolbar.Root>
           <Button variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
             <Icon icon='ph--play--regular' size={4} />
-            <span className='pis-1'>{t('run-diagnostics.label')}</span>
+            <span className='ps-1'>{t('run-diagnostics.label')}</span>
           </Button>
           {isRunning && (
             <Button variant='ghost' onClick={handleCancel}>
@@ -195,8 +195,10 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
         {status === 'error' && <Tag hue='rose'>{t('result.error.label')}</Tag>}
       </header>
       {result.error && (
-        <Message.Root valence='error' classNames='m-2'>
-          <Message.Body>{result.error}</Message.Body>
+        <Message.Root valence='error'>
+          <Message.Content classNames='m-2'>
+            <Message.Body>{result.error}</Message.Body>
+          </Message.Content>
         </Message.Root>
       )}
       {result.issues.length > 0 && (

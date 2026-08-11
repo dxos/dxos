@@ -462,8 +462,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         })}
       </div>
     ) : hasSuggestions ? null : (
-      <div className='p-form-padding'>
-        <Message.Root>
+      <Message.Root>
+        <Message.Content classNames='m-trim-md'>
           <Message.Body>
             <span>
               <Trans
@@ -478,8 +478,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               />
             </span>
           </Message.Body>
-        </Message.Root>
-      </div>
+        </Message.Content>
+      </Message.Root>
     );
 
   return (

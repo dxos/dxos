@@ -11,9 +11,6 @@
   ],
   "references": [
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../react-ui"
     },
     {

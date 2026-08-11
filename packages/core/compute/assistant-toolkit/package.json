@@ -21,6 +21,31 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./Agent": {
+      "source": "./src/types/Agent.ts",
+      "types": "./dist/types/src/types/Agent.d.ts",
+      "import": "./dist/lib/Agent.mjs"
+    },
+    "./Chat": {
+      "source": "./src/types/Chat.ts",
+      "types": "./dist/types/src/types/Chat.d.ts",
+      "import": "./dist/lib/Chat.mjs"
+    },
+    "./McpServer": {
+      "source": "./src/types/McpServer.ts",
+      "types": "./dist/types/src/types/McpServer.d.ts",
+      "import": "./dist/lib/McpServer.mjs"
+    },
+    "./Memory": {
+      "source": "./src/types/Memory.ts",
+      "types": "./dist/types/src/types/Memory.d.ts",
+      "import": "./dist/lib/Memory.mjs"
+    },
+    "./AgentOperation": {
+      "source": "./src/operations/definitions.ts",
+      "types": "./dist/types/src/operations/definitions.d.ts",
+      "import": "./dist/lib/AgentOperation.mjs"
     }
   },
   "files": [
@@ -30,7 +55,6 @@
   "dependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
@@ -46,20 +70,19 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
-    "@effect/ai-anthropic": "catalog:",
     "@effect/platform": "catalog:",
-    "dfx": "catalog:",
-    "exa-js": "catalog:"
+    "dfx": "catalog:"
   },
   "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",

@@ -39,7 +39,9 @@ export const ScriptToolbar = composable<HTMLDivElement, ScriptToolbarProps>(
     return (
       <ElevationProvider elevation={role === AppSurface.Section.role ? 'positioned' : 'base'}>
         <Menu.Root {...menuActions} attendableId={attendableId}>
-          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </ElevationProvider>
     );

@@ -22,6 +22,7 @@ export const AccountCache = Capability.lazyModule(
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   activatesOn: ClientEvents.Initialized,
 });
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {
@@ -76,13 +77,14 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     invitationPath = '/',
     invitationProp = 'deviceInvitationCode',
     onReset,
+    identityTestActions,
   }: ClientOptions.ClientPluginOptions) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
       baseUrl.searchParams.set(invitationProp, invitationCode);
       return baseUrl.toString();
     };
-    return { createInvitationUrl, onReset };
+    return { createInvitationUrl, onReset, identityTestActions };
   },
 });
 export const SchemaDefs = Capability.lazyModule(

@@ -4,6 +4,7 @@
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
@@ -13,13 +14,14 @@ import * as SpaceCapability from '../types/SpaceCapability';
 import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
     requires: [ClientCapabilities.Client],
-    provides: [SpaceCapabilities.PersonalSpace],
-    // Runtime event: the personal space is created when a local identity is created, not at startup.
+    provides: [SpaceCapabilities.DefaultSpace],
+    // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
   },
   () => import('./identity-created'),

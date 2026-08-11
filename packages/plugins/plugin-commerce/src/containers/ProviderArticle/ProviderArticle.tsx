@@ -68,7 +68,9 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
     <Panel.Root role={role}>
       <Panel.Toolbar>
         <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col gap-2 p-3'>

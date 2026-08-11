@@ -41,7 +41,9 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
     <Panel.Root role={role}>
       <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>

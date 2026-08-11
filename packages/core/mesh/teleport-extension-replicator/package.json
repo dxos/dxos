@@ -44,7 +44,8 @@
   "devDependencies": {
     "@dxos/keyring": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "fast-check": "catalog:"
+    "fast-check": "catalog:",
+    "hypercore-protocol": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -24,6 +24,7 @@ import { mx } from '@dxos/ui-theme';
 import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 
+import type * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as Mailbox from '../../types/Mailbox';
 import * as SystemTags from '../../types/SystemTags';
 import { createDraftMessage, getMessageProps } from '../../util';
@@ -105,6 +106,8 @@ type ConversationStackContextValue = {
   graph?: Graph.ReadableGraph;
   /** Process-manager runtime for draft send / composer AI (container-resolved). */
   runtime?: Capabilities.ProcessManagerRuntime;
+  /** Send operation per installed mail provider, keyed by connector id (container-resolved). */
+  sendOperations?: readonly InboxCapabilities.MailSendOperation[];
   /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
   getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
   onExpandedChange?: (id: string, expanded: boolean) => void;
@@ -135,6 +138,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'expanded'
     | 'graph'
     | 'runtime'
+    | 'sendOperations'
     | 'getExtractActions'
     | 'onExpandedChange'
     | 'onCollapseAll'
@@ -161,6 +165,7 @@ const ConversationStackRoot = ({
   options,
   graph,
   runtime,
+  sendOperations,
   getExtractActions,
   onExpandedChange,
   onCollapseAll,
@@ -187,6 +192,7 @@ const ConversationStackRoot = ({
     graph={graph}
     getExtractActions={getExtractActions}
     runtime={runtime}
+    sendOperations={sendOperations}
   >
     {children}
   </ConversationStackProvider>
@@ -239,11 +245,29 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
+      // Focus the reply's body editor (`.dx-expander` distinguishes it from the recipient editors,
+      // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
+      // editor appears, bounded by the same settle window as the scroll re-pinning below;
+      // `preventScroll` keeps the focus from cutting the smooth scroll short.
+      const focusBody = () => {
+        const content = tile.querySelector<HTMLElement>('.dx-expander .cm-content');
+        if (content) {
+          content.focus({ preventScroll: true });
+          focusObserver.disconnect();
+        }
+      };
+      const focusObserver = new MutationObserver(focusBody);
+      focusObserver.observe(tile, { childList: true, subtree: true });
+      focusBody();
       const observer = new ResizeObserver(scrollIntoView);
       observer.observe(tile);
-      const timeout = setTimeout(() => observer.disconnect(), 1_000);
+      const timeout = setTimeout(() => {
+        observer.disconnect();
+        focusObserver.disconnect();
+      }, 1_000);
       return () => {
         observer.disconnect();
+        focusObserver.disconnect();
         clearTimeout(timeout);
       };
     }, [tileItems]);
@@ -593,7 +617,9 @@ type MessageMenuProps = {
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
   <Menu.Root {...(actions ?? {})} attendableId={attendableId} alwaysActive>
-    <Menu.Toolbar classNames='p-1 bg-transparent' />
+    <Menu.Toolbar classNames='p-1 bg-transparent'>
+      <Menu.Items />
+    </Menu.Toolbar>
   </Menu.Root>
 );
 
@@ -671,12 +697,12 @@ type DraftTileProps = {
  */
 const DraftTile = ({ id, message }: DraftTileProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { mailbox, runtime, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
+  const { mailbox, runtime, sendOperations, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
   const db = Obj.getDatabase(mailbox ? mailbox : message);
   const live = useQuery(db, Filter.id(message.id))[0];
   const draft = live ?? message;
   const extensions = useEmailComposerExtensions(runtime, draft);
-  const onSend = useSendEmail(runtime, draft);
+  const onSend = useSendEmail(runtime, draft, sendOperations);
 
   // Sent once the draft carries the provider sent tag `useSendEmail` recorded on it (`sentTagUri`).
   // Read membership reactively from the tag index: the tag-uri list re-fires the instant the tag is
@@ -805,7 +831,9 @@ const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToo
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 });

@@ -93,10 +93,10 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(() =>
                 createObjectFactory(
-                  personalSpace.db,
+                  defaultSpace.db,
                   generator,
                 )([
                   { type: Organization.Organization, count: 20 },
@@ -106,15 +106,15 @@ const meta = {
               );
               yield* Effect.promise(() =>
                 createRelationFactory(
-                  personalSpace.db,
+                  defaultSpace.db,
                   generator,
                 )([{ type: HasRelationship.HasRelationship, count: 20, data: { kind: 'friend' } }]),
               );
               const { view } = yield* Effect.promise(() =>
-                ViewModel.makeFromDatabase({ db: personalSpace.db, typename: Type.getTypename(Graph.Graph) }),
+                ViewModel.makeFromDatabase({ db: defaultSpace.db, typename: Type.getTypename(Graph.Graph) }),
               );
-              personalSpace.db.add(Graph.make({ name: 'Test', view }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              defaultSpace.db.add(Graph.make({ name: 'Test', view }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         PreviewPlugin(),

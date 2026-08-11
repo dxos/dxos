@@ -47,9 +47,9 @@ import {
 } from '#components';
 import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
 import { meta } from '#meta';
+import { createSyncProgressKey } from '#sync';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { createSyncProgressKey } from '../../operations/mail/mail-sync';
 import * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as InboxOperation from '../../types/InboxOperation';
 import * as Mailbox from '../../types/Mailbox';
@@ -380,7 +380,9 @@ export const MailboxArticle = ({
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
           <Panel.Toolbar asChild>
-            <Menu.Toolbar />
+            <Menu.Toolbar>
+              <Menu.Items />
+            </Menu.Toolbar>
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>

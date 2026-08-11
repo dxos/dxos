@@ -40,9 +40,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/tracing"
     },
     {
@@ -112,10 +109,16 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"

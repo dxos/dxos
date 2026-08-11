@@ -13,13 +13,7 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"

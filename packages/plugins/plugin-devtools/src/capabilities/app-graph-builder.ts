@@ -34,7 +34,7 @@ export default Capability.makeModule(
               id: 'resetData',
               data: () =>
                 Effect.sync(() => {
-                  window.location.href = '/reset.html#continue';
+                  window.location.href = '/reset.html';
                 }),
               properties: {
                 label: ['reset-data.label', { ns: meta.profile.key }],
@@ -78,6 +78,15 @@ export default Capability.makeModule(
                     properties: {
                       label: ['debug-tools-explorer.label', { ns: meta.profile.key }],
                       icon: 'ph--toolbox--regular',
+                    },
+                  }),
+                  Node.make({
+                    id: Devtools.nodeId(Devtools.Cli),
+                    data: Devtools.Cli,
+                    type: Devtools.id,
+                    properties: {
+                      label: ['cli.label', { ns: meta.profile.key }],
+                      icon: 'ph--terminal-window--regular',
                     },
                   }),
                   Node.make({

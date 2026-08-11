@@ -95,6 +95,15 @@ export type OnTokenCreated = (input: {
 export type ConnectorSync = {
   /** Reconcile one binding's target object with its remote. */
   operation: Operation.Definition<SyncInput, SyncOutput>;
+  /**
+   * Typename of the local object this connector binds as a sync target (e.g. a Mailbox for a mail
+   * connector). Declaring it here is what lets a target *type* ask which connectors can bind it —
+   * `connectorIdsForTarget` — instead of the type naming its providers, so a schema never has to know
+   * that Gmail or JMAP exist and a third-party provider can bind it without touching the domain plugin.
+   * Omit for a targetless connector, which writes objects straight into the space rather than binding a
+   * root (e.g. Google Contacts).
+   */
+  targetTypename?: string;
   /** Discover remote targets reachable from a connection (multi-target connectors). */
   getTargets?: Operation.Definition<GetSyncTargetsInput, GetSyncTargetsOutput>;
   /** Create an empty local root object so a binding can be created eagerly. */
