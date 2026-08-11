@@ -4,7 +4,7 @@ _Resume — two streams, two PRs._
 
 _**Cache** (branch `claude/depot-vs-self-hosted-cache-3fbd62`, PR #12494 draft) — watch Check, then mark ready. The moon remote cache is a self-hosted `bazel-remote` at `cache.dxos.network` (DO NYC3) behind mTLS, and it is now **measured in CI**: a fully-cached 324-task `:build` takes **14 s against 161 s uncached** on a Depot runner, hydrating 324/324 in 13.6 s at 31 ms per task over a 7 ms link. Runners were compared and Depot stays: compute is identical and it sits closest to the cache. Evidence in [`REPORT.md`](./REPORT.md), runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md)._
 
-_**E2E** (branch `claude/e2e-test-performance-uf9hq7`, PR #12482 draft, tip `7fb6c887`) — causes B and C are fixed, cause A is root-caused to the production edge and blocked on **DX-1152** (Mykola), cause D needs a CI trace. The open decision is the user's: hold the PR on production edge, point e2e at a dedicated/staging edge tier (recommended), or quarantine the two-peer tests. Phase 3 below is the ledger._
+_**E2E** (branch `claude/e2e-test-performance-uf9hq7`, PR #12482 draft, tip `fb997f9d`) — causes B and C are fixed, cause A is root-caused to the production edge and blocked on **DX-1152** (Mykola), cause D needs a CI trace. The open decision is the user's: hold the PR on production edge, point e2e at a dedicated/staging edge tier (recommended), or quarantine the two-peer tests. Phase 3 below is the ledger._
 
 Context and the failure mode that governs this area: [`DESIGN.md`](./DESIGN.md).
 
@@ -139,13 +139,15 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       and `toggle all tasks & clear completed` (`toBeChecked` never settled). Same two-peer setup as
       cause A.
 - [ ] **`delete message` on webkit** — `toHaveCount` still fails ~1 in 12, distinct from the marker
-      defect.
+      defect. Also seen once on chromium at 2 workers (`cm-comment` count stuck at 1; trace lost to
+      the outputDir clear).
 - [ ] **`guest joins host's space`** — replication, **not** invitation: the guest reached the doc and
       the editor kept its placeholder (firefox, run 31313863039). Needs a trace from a CI failure; not
       reproducible in the sandbox, where external STUN/TURN are unavailable.
 - [ ] **kanban suite on webkit** — story-boot stall, no column painted in 45 s; gated at `beforeEach`
-      with evidence. Needs a different mechanism, not another workaround: a preload lowered the rate
-      only, `check-cycles` finds no static cycle, and a built storybook is measurably worse.
+      with evidence. A preload lowered the rate only and `check-cycles` finds no static cycle; the
+      decided remedy is the built-storybook follow-up below, and the skip's removal is that item's
+      done-condition.
 - [ ] **Collaboration remainder** — `host and guest can see each others' changes` (markdown textbox
       focus timeout, and a webkit renderer crash under cause A), `cursors` (documented as depending on
       winning a race the test cannot observe; storybook covers it), `presence` ("Fix.").
@@ -208,6 +210,13 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       comparison now lives in DESIGN.md next to "Refuted", and the README points at it rather than the
       other way round. No Knapsack code or dependency remains; the changeset still names the removal,
       which is correct there.
+- [x] **User review pass over the diff** (through `fb997f9d`) — the kanban preload comment corrected
+      (it claimed a cycle that `check-cycles` disproved) and the built-storybook direction decided;
+      the `invokePromise` contract JSDoc dropped (the invoker test is the pin); the slow
+      edge-replication convergence test deleted — its harm (create-space discarding a live space) is
+      pinned by plugin-space `create.test.ts`'s rejecting stub, and the client-side deadline keeps
+      its rationale comment; `currentObjectId` moved out of `ReviewCapabilities` into plugin-review
+      `util/comment-state.ts` (a helper, not a capability).
 - [ ] **Restore `quarantine: true`** on the e2e uploader in `check.yml` (set to `false` for the
       campaign so a masked failure could not make a green cell unfalsifiable).
 - [ ] **Sync with main and drop draft status.**

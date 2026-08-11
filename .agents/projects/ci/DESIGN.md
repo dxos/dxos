@@ -125,8 +125,9 @@ keyed comments by **URI**, and a thread's URI gains its space when its first mes
 `scrollCommentIntoView`'s lookup miss and silently no-op, after which the debounced proximity tracker
 wrote the previous thread back over the click — terminal, no self-heal. Fixed by keying on the stable
 object id at the comment-sync boundary, which also revived `onDelete`'s committed-thread branch (it had
-been comparing a URI against an object id, so it was dead code). `CommentState.current` is documented
-as compare-by-last-segment, since its writers disagree on spelling.
+been comparing a URI against an object id, so it was dead code). `CommentState.current`'s writers
+disagree on spelling, so readers compare via `currentObjectId` (an EID-parsing helper in plugin-review
+`util/comment-state.ts`), never by string equality.
 
 **C — text typed into an unbound editor was destroyed** (fixed). While a `Markdown.Document`'s
 `content` ref is unresolved, `useExtensions` omitted the automerge extension, so the editor mounted
@@ -149,9 +150,9 @@ different storybook.
 
 `invokePromise` dispatch is concurrent: each invocation runs on its own fiber, and handler
 resolution can await a lazy handler's dynamic `import()`, so completion order is not issue order —
-a stalled earlier `Select` can apply after a later click. This is the platform contract, documented
-on `OperationInvoker.invokePromise` and pinned by the "concurrency contract" test in
-`invoker.test.ts` (issued `[stale, newest]`, applied `[newest, stale]`).
+a stalled earlier `Select` can apply after a later click. This is the platform contract, pinned by
+the "concurrency contract" test in `invoker.test.ts` (issued `[stale, newest]`, applied
+`[newest, stale]`); a JSDoc restating it was reviewed away, so the test is the only guard.
 
 Two alternatives were built, validated, and deliberately reverted — do not re-litigate from scratch:
 
@@ -183,6 +184,15 @@ fixed rather than deferred:
 | `todomvc` app-boot contention (2 workers × 2 apps per test)                           | intermittent, any test                    |
 | `plugin-kanban` waited on a story's first paint with too short a budget               | 2 webkit tests                            |
 | `cli:bundle` could not resolve `@opentui/core-darwin-arm64`                           | the whole `cli` job, every run            |
+| the edge-replication wait in create-space had a 2 s deadline ordinary backlog exceeds | firefox create-space callers, dominant    |
+
+The edge-replication row is the rejection the removed retries exposed: `setEdgeReplicationPreference`
+commits host-side, then waited 2 s for the local snapshot — queued behind every other space's
+synchronized `_processSpaceUpdate` — and the timeout aborted create-space, discarding a space that
+already existed. The wait is now budgeted like the RPC it confirms, and plugin-space treats it as
+best-effort (`log.catch`). The guard is plugin-space `create.test.ts`'s rejecting stub (0 in 39
+firefox after the fix); a client-side convergence test was deliberately deleted as a one-off proxy
+harness with an irreducible 3 s delay.
 
 Mosaic drag-and-drop was two **product** bugs, not test flake: `Mosaic.Placeholder` unregistered its
 drop target for 500 ms on scroll (so a release in that window resolved to the container — "move to
