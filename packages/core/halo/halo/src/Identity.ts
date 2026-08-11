@@ -51,6 +51,26 @@ export const DeviceInfo = Schema.Struct({
 });
 export type DeviceInfo = typeof DeviceInfo.Type;
 
+/** How a recovery key is held. Mirrors `dxos.halo.credentials.IdentityRecovery.Kind`. */
+export const RecoveryKind = Schema.Literals(['passkey', 'recovery-code', 'oauth', 'unknown']);
+export type RecoveryKind = typeof RecoveryKind.Type;
+
+/**
+ * Recovery-specific detail, present only on credentials whose `type` is
+ * `dxos.halo.credentials.IdentityRecovery`. Surfaced because a management UI cannot otherwise tell
+ * two recovery credentials apart, nor know which of them is still usable.
+ */
+export const RecoveryInfo = Schema.Struct({
+  /** Hex-encoded lookup key — the public handle used to revoke this credential. */
+  lookupKey: Schema.optional(Schema.String),
+  /** User-visible name assigned at creation. */
+  label: Schema.optional(Schema.String),
+  kind: RecoveryKind,
+  /** Whether an `IdentityRecoveryRevoked` assertion cancels this credential. */
+  revoked: Schema.Boolean,
+});
+export type RecoveryInfo = typeof RecoveryInfo.Type;
+
 /**
  * Public view of a HALO credential. Replaces direct consumption of the protobuf `Credential`:
  * `type` is the subject assertion's `@type`, `id` its hex-encoded credential id.
@@ -61,6 +81,7 @@ export const Credential = Schema.Struct({
   /** The subject assertion's `@type` (e.g. `dxos.halo.credentials.IdentityRecovery`). */
   type: Schema.String,
   issuanceDate: Schema.optional(Schema.Date),
+  recovery: Schema.optional(RecoveryInfo),
 });
 export type Credential = typeof Credential.Type;
 

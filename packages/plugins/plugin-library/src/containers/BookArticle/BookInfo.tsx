@@ -138,17 +138,17 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   return (
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
-        <div role='none' className='mli-auto flex max-is-[48rem] flex-col gap-4 p-4'>
+        <div role='none' className='mx-auto flex max-w-[48rem] flex-col gap-4 p-4'>
           {/* Header — cover + catalog identity. */}
           <section className='flex gap-4 rounded-lg border border-separator p-4'>
             {cover ? (
-              <img src={cover} alt='' className='is-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
+              <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
-              <div role='none' className='grid is-[8rem] aspect-[2/3] shrink-0 place-items-center rounded bg-input'>
+              <div role='none' className='grid w-[8rem] aspect-[2/3] shrink-0 place-items-center rounded bg-input'>
                 <Icon icon='ph--book--regular' size={8} classNames='text-description' />
               </div>
             )}
-            <div role='none' className='flex min-is-0 flex-col gap-2'>
+            <div role='none' className='flex min-w-0 flex-col gap-2'>
               <h1 className='text-xl font-semibold'>{catalog?.title}</h1>
               {authors.length > 0 && (
                 <p className='text-description'>{t('by-author.label', { authors: authors.join(', ') })}</p>
@@ -193,7 +193,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
           {description && (
             <section className='flex flex-col gap-2 rounded-lg border border-separator p-4'>
               <h2 className='text-base font-semibold'>{t('description.label')}</h2>
-              <div ref={descriptionRef} role='none' className={expanded ? '' : 'max-bs-52 overflow-hidden'}>
+              <div ref={descriptionRef} role='none' className={expanded ? '' : 'max-h-52 overflow-hidden'}>
                 <MarkdownView content={description} classNames='text-sm' />
               </div>
               {showDescriptionToggle && (

@@ -38,7 +38,7 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '../../translations';
 import { formatLogEntry, packageName } from './format';
-import { DEFAULT_MAX_LINES, logBuffer } from './log-buffer';
+import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer';
 import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext';
 import { type LevelName, LEVELS, composeFilter } from './recorder';
 
@@ -57,6 +57,14 @@ type LoggerRootProps = PropsWithChildren<{
   maxLines?: number;
   initialFilter?: string;
   defaultRecording?: boolean;
+  /**
+   * Narrows which captured rows this instance displays, for a panel scoped to one subsystem.
+   *
+   * Distinct from `initialFilter`, which sets what the process-wide buffer *captures*: a scoped
+   * panel must not narrow capture, or it starves every other panel reading the same buffer.
+   * Must be stable across renders — hoist it or memoize it.
+   */
+  rowFilter?: (row: LogRow) => boolean;
 }>;
 
 const LoggerRoot = ({
@@ -64,6 +72,7 @@ const LoggerRoot = ({
   maxLines = DEFAULT_MAX_LINES,
   initialFilter = 'info',
   defaultRecording = true,
+  rowFilter,
 }: LoggerRootProps) => {
   const [filter, setFilter] = useState(initialFilter);
   const [textFilter, setTextFilter] = useState('');
@@ -81,7 +90,10 @@ const LoggerRoot = ({
 
   // Rows, files and the recorder live in the process-wide buffer, not here: this panel is a deck
   // companion, so mounting is not the lifetime we want recording to follow.
-  const rows = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRows);
+  const allRows = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRows);
+  // Applied here rather than in `Logger.List` so row pruning, selection and copy all agree on the
+  // same set — a scoped panel should never copy out rows it never showed.
+  const rows = useMemo(() => (rowFilter ? allRows.filter(rowFilter) : allRows), [allRows, rowFilter]);
   const files = useSyncExternalStore(logBuffer.subscribe, logBuffer.getFiles);
   const recording = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRecording);
 

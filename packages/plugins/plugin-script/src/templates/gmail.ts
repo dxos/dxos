@@ -198,18 +198,18 @@ interface Text extends S.Schema.Type<typeof Text> {}
 
 const MessageType = S.Struct({
   id: EntityId,
-  created: S.String.annotations({
+  created: S.String.annotate({
     description: 'ISO date string when the message was sent.',
   }),
-  sender: ActorSchema.annotations({
+  sender: ActorSchema.annotate({
     description: 'Identity of the message sender.',
   }),
-  blocks: S.Array(Text).annotations({
+  blocks: S.Array(Text).annotate({
     description: 'Contents of the message.',
   }),
   properties: S.optional(
     S.mutable(
-      S.Record({ key: S.String, value: S.Any }).annotations({
+      S.Record({ key: S.String, value: S.Any }).annotate({
         description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
       }),
     ),

@@ -32,7 +32,7 @@ const fileType = (file: File): string => {
 };
 
 const Spinner = () => (
-  <div role='none' className='grid bs-full place-items-center text-description'>
+  <div role='none' className='grid h-full place-items-center text-description'>
     <Icon icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
   </div>
 );
@@ -199,12 +199,12 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
         <iframe
           src={resolved.url}
           title={live.catalog?.title ?? t('view-read.label')}
-          className='is-full bs-full border-0'
+          className='w-full h-full border-0'
         />
       );
     }
     return (
-      <div role='none' className='grid bs-full place-items-center p-4'>
+      <div role='none' className='grid h-full place-items-center p-4'>
         <Button asChild>
           <a href={resolved.url} download>
             {t('download-file.label')}
@@ -240,7 +240,7 @@ type UploadPromptProps = {
 };
 
 const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: UploadPromptProps) => (
-  <div role='none' className='flex bs-full flex-col items-center justify-center gap-3 p-4 text-center'>
+  <div role='none' className='flex h-full flex-col items-center justify-center gap-3 p-4 text-center'>
     <Icon icon='ph--book-open--regular' size={10} classNames='text-description' />
     <p className='text-sm text-description'>{message}</p>
     <input

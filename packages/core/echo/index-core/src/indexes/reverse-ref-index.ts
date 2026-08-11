@@ -13,7 +13,7 @@ import { EID } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref';
-import { EscapedPropPath } from '../utils';
+import { EscapedPropPath, chunkArray } from '../utils';
 import type { Index, IndexerObject } from './interface';
 
 /**
@@ -101,6 +101,17 @@ export class ReverseRefIndex implements Index {
         // TODO(mykola): Join objectMeta table here.
         const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDXN = ${normalized}`;
         return rows as ReverseRef[];
+      }),
+  );
+
+  /** Delete reverse-reference rows by record id. Used by garbage collection. */
+  deleteByRecordIds = Effect.fn('ReverseRefIndex.deleteByRecordIds')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(recordIds)) {
+          yield* sql`DELETE FROM reverseRef WHERE ${sql.in('recordId', chunk)}`;
+        }
       }),
   );
 

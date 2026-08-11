@@ -51,6 +51,11 @@ export const createSingleCursor = (
       Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
     );
     invariant(Cursor.isExternal(cursor));
+    log.info('bound single-target connector', {
+      connectorId: connection.connectorId,
+      target: target.id,
+      bound: existingTarget ? 'existing' : 'materialized',
+    });
     // Sets up recurring background sync for the binding, if the connector declares a trigger spec.
     // Its own failure is not special-cased — a defect here is caught by this function's own outer
     // `catchAllDefect` below, same as any other step in this flow.

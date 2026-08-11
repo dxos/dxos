@@ -31,8 +31,8 @@ import { traceBootLeak } from './src/vite/trace-boot-leak';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
-// DX_PLUGIN_SET=minimal (serve-min task) swaps the full plugin registry for
-// plugin-defs.minimal.tsx without touching main.tsx.
+// Opt-in `DX_PLUGIN_SET=minimal` swaps the full plugin registry for plugin-defs.minimal.tsx
+// without touching main.tsx — for a faster boot when the full registry is not needed.
 const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
 const pluginSetFile = isMinimalPluginSet ? 'src/plugin-defs.minimal.tsx' : 'src/plugin-defs.tsx';
 
@@ -85,7 +85,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
   // Packages whose source is not vite-safe publish no `source` condition at all, so they resolve
   // to dist here exactly as they do under node/bun — no app-local exclude list, and no divergence
-  // between runtimes. The `dist-runtime` moon tag keeps their dist built for `serve-min`. The same
+  // between runtimes. The `dist-runtime` moon tag keeps their dist built for `serve`. The same
   // holds per-export for bundler-plugin entrypoints (`./vite-plugin`, `./plugin`) of packages whose
   // remaining exports are vite-safe; the `vite-plugin` tag builds their dist.
   importSource({

@@ -58,7 +58,7 @@ export const StatsPanel = () => {
             <dl className='grid grid-cols-[auto_minmax(0,1fr)] w-full'>
               {flatten(value).map(([key, cell]) => (
                 <Fragment key={key}>
-                  <dt className='border-be border-separator pbe-1 pbs-1 pie-2 text-description self-start'>{key}</dt>
+                  <dt className='border-be border-separator pbe-1 pbs-1 pe-2 text-description self-start'>{key}</dt>
                   <dd className='border-be border-separator pbe-1 pbs-1 truncate font-mono text-end'>
                     {formatValue(cell)}
                   </dd>

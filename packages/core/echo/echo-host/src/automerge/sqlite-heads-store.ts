@@ -109,6 +109,17 @@ export class SqliteHeadsStore {
   }
 
   /**
+   * Deletes the heads row for a document. Paired with wiping the document's chunks during
+   * garbage collection — leaving the row behind would orphan it.
+   */
+  remove(documentId: DocumentId): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM automerge_heads WHERE document_id = ${documentId}`;
+    }).pipe(Effect.withSpan('SqliteHeadsStore.remove'));
+  }
+
+  /**
    * Iterates over all stored document heads.
    */
   async *iterateAll(): AsyncGenerator<{ documentId: DocumentId; heads: Heads }> {

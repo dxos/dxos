@@ -5,6 +5,7 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -30,6 +31,7 @@ export default Capability.makeModule(
     onClientInitializationError,
     onSpacesReady,
     initializeTimeout = INITIALIZE_TIMEOUT,
+    awaitInitialization = false,
     ...options
   }: ClientCapabilityOptions) {
     const capabilityManager = yield* Capability.Service;
@@ -152,11 +154,23 @@ export default Capability.makeModule(
 
     log('client capability ready (initialization in flight)');
 
+    // `waitUntilInitialized` is the completion signal only — a failed `initialize()` rejects at its
+    // own call site and leaves this pending forever, so the wait is bounded by the same budget.
+    const clientServiceLayer = awaitInitialization
+      ? Layer.effect(
+          ClientService,
+          Effect.tryPromise({
+            try: () => client.waitUntilInitialized({ timeout: initializeTimeout }),
+            catch: (error) => new Error(`Client failed to initialize within ${initializeTimeout}ms: ${String(error)}`),
+          }).pipe(Effect.as(client)),
+        )
+      : ClientService.fromClient(client);
+
     return [
       // TODO(wittjosiah): Try to remove and prefer layer?
       //  Perhaps move to using layer has source of truth and add a getter capability for the client.
       Capability.contribute(ClientCapabilities.Client, client),
-      Capability.contribute(Capabilities.Layer, ClientService.fromClient(client)),
+      Capability.contribute(Capabilities.Layer, clientServiceLayer),
       // HALO service instances for imperative consumers (so plugins read identity/spaces
       // through @dxos/halo instead of the client directly).
       Capability.contribute(ClientCapabilities.IdentityService, makeIdentityService(client)),

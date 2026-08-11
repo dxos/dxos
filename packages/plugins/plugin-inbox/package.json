@@ -13,11 +13,6 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
       "source": {
         "node": "./src/capabilities/node.ts",
@@ -62,6 +57,16 @@
       "workerd": "./dist/lib/InboxPlugin.workerd.mjs",
       "node": "./dist/lib/InboxPlugin.node.mjs",
       "default": "./dist/lib/InboxPlugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
+    },
+    "#sync": {
+      "source": "./src/sync/index.ts",
+      "types": "./dist/types/src/sync/index.d.ts",
+      "default": "./dist/lib/sync.mjs"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": {
@@ -111,6 +116,11 @@
       "types": "./dist/types/src/types/Mailbox.d.ts",
       "import": "./dist/lib/Mailbox.mjs"
     },
+    "./MailSend": {
+      "source": "./src/types/MailSend.ts",
+      "types": "./dist/types/src/types/MailSend.d.ts",
+      "import": "./dist/lib/types/MailSend.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
@@ -130,6 +140,11 @@
       "source": "./src/types/SystemTags.ts",
       "types": "./dist/types/src/types/SystemTags.d.ts",
       "import": "./dist/lib/SystemTags.mjs"
+    },
+    "./sync": {
+      "source": "./src/sync/index.ts",
+      "types": "./dist/types/src/sync/index.d.ts",
+      "import": "./dist/lib/sync.mjs"
     },
     "./containers": {
       "source": "./src/containers/index.ts",
@@ -153,13 +168,14 @@
       "import": "./dist/lib/skills.mjs"
     },
     "./testing": {
-      "source": {
-        "node": "./src/testing/node.ts",
-        "default": "./src/testing/index.ts"
-      },
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "node": "./dist/lib/testing/node.mjs",
-      "default": "./dist/lib/testing.mjs"
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./testing/sync": {
+      "source": "./src/testing/sync-fixture.ts",
+      "types": "./dist/types/src/testing/sync-fixture.d.ts",
+      "import": "./dist/lib/testing/sync-fixture.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -224,8 +240,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/compute-runtime": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
@@ -250,7 +264,6 @@
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-calendar": "workspace:*",
@@ -274,9 +287,9 @@
   "devDependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/edge-compute": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

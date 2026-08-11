@@ -14,6 +14,7 @@ import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta';
+import { SQL_CHUNK_SIZE, chunkArray } from '../utils';
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
 
@@ -445,6 +446,53 @@ export class EntityMetaIndex implements Index {
           ...row,
           deleted: !!row.deleted,
         }));
+      }),
+  );
+
+  /**
+   * Record ids of rows belonging to whole documents or specific objects — the set garbage
+   * collection reclaims across the dependent indexes.
+   */
+  selectRecordIdsForRemoval = Effect.fn('EntityMetaIndex.selectRecordIdsForRemoval')(
+    (query: {
+      spaceId: SpaceId;
+      documentIds: readonly string[];
+      objects: readonly { documentId: string; objectId: string }[];
+    }): Effect.Effect<number[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const recordIds = new Set<number>();
+
+        for (const chunk of chunkArray(query.documentIds)) {
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND ${sql.in('documentId', chunk)}`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
+
+        // Two bound variables per object; keep chunks under the SQLite limit.
+        for (const chunk of chunkArray(query.objects, Math.floor(SQL_CHUNK_SIZE / 2))) {
+          const conditions = chunk.map(
+            (object) => sql`(documentId = ${object.documentId} AND objectId = ${object.objectId})`,
+          );
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${sql.or(conditions)})`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
+
+        return [...recordIds];
+      }),
+  );
+
+  /** Delete metadata rows by record id. */
+  deleteByRecordIds = Effect.fn('EntityMetaIndex.deleteByRecordIds')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(recordIds)) {
+          yield* sql`DELETE FROM objectMeta WHERE ${sql.in('recordId', chunk)}`;
+        }
       }),
   );
 

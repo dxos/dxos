@@ -48,9 +48,9 @@ import {
 } from '#components';
 import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
 import { meta } from '#meta';
+import { createSyncProgressKey } from '#sync';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { createSyncProgressKey } from '../../operations/mail/mail-sync';
 import * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as InboxOperation from '../../types/InboxOperation';
 import * as Mailbox from '../../types/Mailbox';

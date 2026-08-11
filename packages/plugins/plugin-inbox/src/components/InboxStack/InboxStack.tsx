@@ -14,7 +14,7 @@ import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/r
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
 import { type Message } from '@dxos/types';
 
-import { useGmailTags } from '#hooks';
+import { useVisibleTags } from '#hooks';
 
 import { getMessageBodyText, getMessageProps } from '../../util';
 import { isMessageGroup } from './is-message-group';
@@ -233,7 +233,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                 pagination={pagination}
               />
               {loading && (
-                <div role='status' className='grid place-items-center pli-2 plb-3'>
+                <div role='status' className='grid place-items-center px-2 py-3'>
                   <Icon
                     icon='ph--spinner-gap--regular'
                     size={5}
@@ -293,7 +293,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
   const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
   const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
-  const messageTags = useGmailTags(tags);
+  const messageTags = useVisibleTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
   // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus

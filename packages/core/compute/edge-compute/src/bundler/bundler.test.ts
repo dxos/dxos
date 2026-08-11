@@ -71,7 +71,7 @@ describe.skip('Bundler', () => {
         //
 
         import { defineFunction } from '@dxos/functions';
-        import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform';
+        import { FetchHttpClient, HttpClient, HttpClientRequest } from 'effect/unstable/http';
         import * as Effect from 'effect/Effect';
         import * as Schedule from 'effect/Schedule';
         import * as Schema from 'effect/Schema';

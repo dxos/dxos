@@ -51,6 +51,9 @@ export default Capability.makeModule(
           }
           const identity = get(CreateAtom.fromObservable(client.halo.identity));
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
+          // Account, invitations, and usage are all hub-service reads; without a hub URL there is
+          // no `HubHttpClient` capability and those panels render empty shells forever.
+          const hub = !!client.config.values?.runtime?.app?.env?.DX_HUB_URL;
 
           return [
             Node.make({
@@ -77,13 +80,26 @@ export default Capability.makeModule(
                     icon: 'ph--user--regular',
                   },
                 }),
+                ...(hub
+                  ? [
+                      Node.make({
+                        id: Account.Account,
+                        data: Account.Account,
+                        type: meta.profile.key,
+                        properties: {
+                          label: ['account-panel.label', { ns: meta.profile.key }],
+                          icon: 'ph--identification-card--regular',
+                        },
+                      }),
+                    ]
+                  : []),
                 Node.make({
-                  id: Account.Account,
-                  data: Account.Account,
+                  id: Account.Security,
+                  data: Account.Security,
                   type: meta.profile.key,
                   properties: {
-                    label: ['account-panel.label', { ns: meta.profile.key }],
-                    icon: 'ph--identification-card--regular',
+                    label: ['security.label', { ns: meta.profile.key }],
+                    icon: 'ph--key--regular',
                   },
                 }),
                 Node.make({
@@ -96,33 +112,28 @@ export default Capability.makeModule(
                     testId: 'clientPlugin.devices',
                   },
                 }),
-                Node.make({
-                  id: Account.Security,
-                  data: Account.Security,
-                  type: meta.profile.key,
-                  properties: {
-                    label: ['security.label', { ns: meta.profile.key }],
-                    icon: 'ph--key--regular',
-                  },
-                }),
-                Node.make({
-                  id: Account.Invitations,
-                  data: Account.Invitations,
-                  type: meta.profile.key,
-                  properties: {
-                    label: ['invitations-panel.label', { ns: meta.profile.key }],
-                    icon: 'ph--ticket--regular',
-                  },
-                }),
-                Node.make({
-                  id: Account.Usage,
-                  data: Account.Usage,
-                  type: meta.profile.key,
-                  properties: {
-                    label: ['usage-panel.label', { ns: meta.profile.key }],
-                    icon: 'ph--chart-bar--regular',
-                  },
-                }),
+                ...(hub
+                  ? [
+                      Node.make({
+                        id: Account.Invitations,
+                        data: Account.Invitations,
+                        type: meta.profile.key,
+                        properties: {
+                          label: ['invitations-panel.label', { ns: meta.profile.key }],
+                          icon: 'ph--ticket--regular',
+                        },
+                      }),
+                      Node.make({
+                        id: Account.Usage,
+                        data: Account.Usage,
+                        type: meta.profile.key,
+                        properties: {
+                          label: ['usage-panel.label', { ns: meta.profile.key }],
+                          icon: 'ph--chart-bar--regular',
+                        },
+                      }),
+                    ]
+                  : []),
               ],
             }),
           ];

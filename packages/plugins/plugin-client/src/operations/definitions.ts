@@ -117,6 +117,24 @@ export const CreatePasskey = Operation.make({
   output: Schema.Void,
 });
 
+export const RevokeRecoveryCredential = Operation.make({
+  meta: {
+    key: makeKey('revokeRecoveryCredential'),
+    name: 'Revoke Recovery Credential',
+    icon: 'ph--key--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    /**
+     * Lookup key of the credential to revoke, as hex. Constrained to a full key because
+     * `PublicKey.from` silently drops non-hex characters rather than rejecting them, so an
+     * unvalidated string would decode to some other key instead of failing.
+     */
+    lookupKey: Schema.String.check(Schema.isPattern(/^[0-9a-fA-F]{64}$/)),
+  }),
+  output: Schema.Void,
+});
+
 export const RedeemPasskey = Operation.make({
   meta: { key: makeKey('redeemPasskey'), name: 'Redeem Passkey', icon: 'ph--key--regular' },
   services: [Capability.Service],

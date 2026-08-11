@@ -708,13 +708,21 @@ export type ValidateInvitationCodeRequest = Schema.Schema.Type<typeof ValidateIn
 export type ValidateInvitationCodeResponse = { valid: boolean };
 
 /**
- * Body of `POST /account/login`. Existing-account email recovery only --
- * unlike `/account/signup`, this never creates new identities or waitlist rows.
+ * Body of `POST /account/login`.
+ *
+ * Two shapes:
+ * - **Recovery** (no `code`): an existing account gets a magic link by email. Never creates
+ *   identities or waitlist rows.
+ * - **Redemption** (`code` + `identityDid`): redeems an invitation code and creates the account.
+ *   The hub replies `{ needsIdentity: true }` when a code arrives without an identity, so the
+ *   caller can create one locally and retry -- the same handshake the recovery path uses.
  */
 export const LoginRequestSchema = Schema.Struct({
   email: Schema.String,
   identityDid: Schema.optional(Schema.String),
   identityKey: Schema.optional(Schema.String),
+  /** Invitation code. When present, this is a redemption rather than a recovery. */
+  code: Schema.optional(Schema.String),
 });
 export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
 

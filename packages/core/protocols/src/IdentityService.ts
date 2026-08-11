@@ -8,6 +8,7 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
+import { IdentityRecovery } from './proto/gen/dxos/halo/credentials.ts';
 import { protoMessage, serviceError } from './service-rpc.ts';
 import { publicKey } from './service-schemas.ts';
 
@@ -41,8 +42,24 @@ export const RecoveryCredentialData = Schema.Struct({
    * Algorithm used to generate the recovery key.
    */
   algorithm: Schema.String,
+  /**
+   * User-visible name, so one credential can be told from another when revoking.
+   */
+  label: Schema.optional(Schema.String),
+  /**
+   * How the recovery key is held.
+   */
+  kind: Schema.optional(Schema.Enum(IdentityRecovery.Kind)),
 });
 export interface RecoveryCredentialData extends Schema.Schema.Type<typeof RecoveryCredentialData> {}
+
+export const RevokeRecoveryCredentialRequest = Schema.Struct({
+  /**
+   * Lookup key of the credential to revoke.
+   */
+  lookupKey: publicKey,
+});
+export interface RevokeRecoveryCredentialRequest extends Schema.Schema.Type<typeof RevokeRecoveryCredentialRequest> {}
 
 export const CreateRecoveryCredentialRequest = Schema.Struct({
   /**
@@ -91,6 +108,11 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('createRecoveryCredential', {
     payload: CreateRecoveryCredentialRequest,
     success: CreateRecoveryCredentialResponse,
+    error: serviceError,
+  }),
+  Rpc.make('revokeRecoveryCredential', {
+    payload: RevokeRecoveryCredentialRequest,
+    success: Schema.Void,
     error: serviceError,
   }),
   Rpc.make('queryIdentity', {

@@ -4,10 +4,11 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
+import { invitation } from './invitation';
 import { login } from './login';
 import { logout } from './logout';
 
 export const account: Command.Command<any, any, any, any, any> = Command.make('account').pipe(
-  Command.withDescription('Log in and out of a DXOS identity.'),
-  Command.withSubcommands([login, logout]),
+  Command.withDescription('Log in and out of a DXOS identity, and issue invitation codes.'),
+  Command.withSubcommands([login, logout, invitation]),
 );

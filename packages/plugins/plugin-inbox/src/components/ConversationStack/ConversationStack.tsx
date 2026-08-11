@@ -25,6 +25,7 @@ import { mx } from '@dxos/ui-theme';
 import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 
+import type * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as Mailbox from '../../types/Mailbox';
 import * as SystemTags from '../../types/SystemTags';
 import { createDraftMessage, getMessageProps } from '../../util';
@@ -106,6 +107,8 @@ type ConversationStackContextValue = {
   graph?: Graph.ReadableGraph;
   /** Process-manager runtime for draft send / composer AI (container-resolved). */
   runtime?: Capabilities.ProcessManagerRuntime;
+  /** Send operation per installed mail provider, keyed by connector id (container-resolved). */
+  sendOperations?: readonly InboxCapabilities.MailSendOperation[];
   /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
   getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
   onExpandedChange?: (id: string, expanded: boolean) => void;
@@ -136,6 +139,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'expanded'
     | 'graph'
     | 'runtime'
+    | 'sendOperations'
     | 'getExtractActions'
     | 'onExpandedChange'
     | 'onCollapseAll'
@@ -162,6 +166,7 @@ const ConversationStackRoot = ({
   options,
   graph,
   runtime,
+  sendOperations,
   getExtractActions,
   onExpandedChange,
   onCollapseAll,
@@ -188,6 +193,7 @@ const ConversationStackRoot = ({
     graph={graph}
     getExtractActions={getExtractActions}
     runtime={runtime}
+    sendOperations={sendOperations}
   >
     {children}
   </ConversationStackProvider>
@@ -692,12 +698,12 @@ type DraftTileProps = {
  */
 const DraftTile = ({ id, message }: DraftTileProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { mailbox, runtime, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
+  const { mailbox, runtime, sendOperations, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
   const db = Obj.getDatabase(mailbox ? mailbox : message);
   const live = useQuery(db, Filter.id(message.id))[0];
   const draft = live ?? message;
   const extensions = useEmailComposerExtensions(runtime, draft);
-  const onSend = useSendEmail(runtime, draft);
+  const onSend = useSendEmail(runtime, draft, sendOperations);
 
   // Sent once the draft carries the provider sent tag `useSendEmail` recorded on it (`sentTagUri`).
   // Read membership reactively from the tag index: the tag-uri list re-fires the instant the tag is

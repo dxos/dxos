@@ -193,16 +193,39 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return;
     }
+    await RuntimeProvider.runPromise(this.#runtime)(this.removeRangeEffect(keyPrefix));
+  }
+
+  /**
+   * {@link removeRange} as an effect, so a caller deleting the several ranges a document spans can
+   * commit them as one transaction.
+   */
+  removeRangeEffect(keyPrefix: StorageKey): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     const prefix = encodeKey(keyPrefix);
     const glob = prefix + '-*';
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR key GLOB ${glob}`;
-      }),
-    );
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR key GLOB ${glob}`;
+    }).pipe(Effect.withSpan('SqliteStorageAdapter.removeRange'));
   }
 }
+
+/**
+ * Key space `SubductionStorageBridge` writes into this same table, as
+ * `[SUBDUCTION_PREFIX, <family>, <sedimentreeId>, ...]`. Disjoint from a document's classical
+ * `<documentId>-*` keys, so collection has to sweep it explicitly — on the subduction transport it
+ * holds most of the document's bytes.
+ */
+export const SUBDUCTION_PREFIX = 'subduction';
+
+export const SUBDUCTION_KEY_FAMILIES = [
+  'ids',
+  'commits',
+  'blobs',
+  'fragments',
+  'fragment-blobs',
+  'remote-heads',
+] as const;
 
 /** Coerces a value to a plain Uint8Array (Buffer is a subclass in Node.js but not identical). */
 const toUint8Array = (value: Uint8Array): Uint8Array =>

@@ -454,6 +454,13 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
     automergeHost: host,
     spaceStateManager: new SpaceStateManager({ runtime }),
     updateIndexes: async () => {},
+    getSpaceStats: async () => ({ objects: { alive: 0, deleted: 0 }, documents: 0, feeds: 0, feedBlocks: 0 }),
+    runGarbageCollection: async () => ({
+      unlinkedObjects: 0,
+      removedDocuments: 0,
+      removedIndexEntries: 0,
+      purgedFeedBlocks: 0,
+    }),
   });
 
   // Bridge the host's DataService handlers to an in-process effect-rpc client (no wire hop).

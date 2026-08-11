@@ -57,8 +57,14 @@ export const login = Command.make(
       Args.withDescription('Method input: email address / atproto handle / invitation code / recovery code.'),
       Args.optional,
     ),
+    code: Options.string('code').pipe(
+      Options.withDescription(
+        'Invitation code (email method). Required to create a new account on a gated hub; omit to recover an existing one.',
+      ),
+      Options.optional,
+    ),
   },
-  Effect.fn(function* ({ method, input }) {
+  Effect.fn(function* ({ method, input, code }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
     const manager = yield* Plugin.Service;
@@ -70,13 +76,19 @@ export const login = Command.make(
       ? method.value
       : yield* Prompt.select({ message: 'Choose a login method:', choices: METHOD_CHOICES }).pipe(Prompt.run);
 
+    // Only the email method redeems an invitation code; the other branches would drop it, and a
+    // login that silently ignores the code the user asked for is worse than one that refuses.
+    if (Option.isSome(code) && resolvedMethod !== 'email') {
+      return yield* Effect.fail(new Error(`\`--code\` applies to \`--method email\`, not \`${resolvedMethod}\`.`));
+    }
+
     const resolvedInput = Option.isSome(input)
       ? input.value
       : yield* Prompt.text({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
 
     const identity = yield* Match.value(resolvedMethod).pipe(
       Match.when('atproto', () => loginWithAtproto(client, resolvedInput)),
-      Match.when('email', () => loginWithEmail(client, resolvedInput, invoke)),
+      Match.when('email', () => loginWithEmail(client, resolvedInput, invoke, Option.getOrUndefined(code))),
       Match.when('recovery-code', () => loginWithRecoveryCode(client, resolvedInput)),
       Match.when('device-invitation', () => loginWithDeviceInvitation(client, resolvedInput)),
       Match.exhaustive,
@@ -124,12 +136,19 @@ const loginWithRecoveryCode = (client: Client, recoveryCode: string) =>
  * - `token`: an Account exists and the hub returned a one-time recovery token inline.
  * - neither: the link went out by email, so prompt for the token from the message.
  */
-const loginWithEmail = (client: Client, email: string, invoke: Capabilities.OperationInvoker['invoke']) =>
+const loginWithEmail = (
+  client: Client,
+  email: string,
+  invoke: Capabilities.OperationInvoker['invoke'],
+  code?: string,
+) =>
   Effect.gen(function* () {
     const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
     invariant(hubUrl, 'Hub URL not configured (runtime.app.env.DX_HUB_URL).');
     const hub = new HubHttpClient(hubUrl);
-    const result = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
+    // The code rides along on both calls: the hub answers `needsIdentity` to the first and
+    // redeems on the second, so omitting it from the retry would lose the account creation.
+    const result = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email, code }));
 
     if (result.needsIdentity) {
       // `CreateIdentity` fires `IdentityCreated`, which is what provisions the identity's spaces.
@@ -137,25 +156,37 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
       const identity = client.halo.identity.get();
       invariant(identity, 'identity should exist after create');
       // The local identity outlives any failure from here on, and the `Already logged in` guard
-      // above rejects a plain retry, so a rejected request and a non-admitting response both need
-      // the same recovery guidance.
-      const notAdmitted = (detail: string) =>
-        new Error(
-          `Hub did not admit ${email} (${detail}). A local identity was created and remains bound to ` +
-            'this profile; run `dx account logout` to clear it before retrying.',
-        );
+      // above rejects a plain retry, so every failure below carries the same recovery step.
+      const recovery =
+        'A local identity was created and remains bound to this profile; run `dx account logout` ' +
+        'to clear it before retrying.';
 
       const retry = yield* Effect.tryPromise({
         try: () =>
           hub.login(DxContext.default(), {
             email,
+            code,
             identityDid: identity.did,
             identityKey: identity.identityKey.toHex(),
           }),
-        catch: (cause) => notAdmitted(cause instanceof Error ? cause.message : String(cause)),
+        // A rejected request says nothing about the code: blaming it during an outage would send
+        // the user hunting for a fresh code when the one they hold is fine.
+        catch: (cause) =>
+          new Error(
+            `Login request for ${email} failed (${cause instanceof Error ? cause.message : String(cause)}). ${recovery}`,
+          ),
       });
+      // A well-formed response that does not admit is the case the code explains.
       if (!retry.admitted) {
-        return yield* Effect.fail(notAdmitted('no admission granted'));
+        return yield* Effect.fail(
+          new Error(
+            `Hub did not admit ${email}. ` +
+              (code
+                ? 'The invitation code may be invalid, already redeemed, or revoked. '
+                : 'A gated hub requires an invitation code — pass `--code <CODE>` to create an account. ') +
+              recovery,
+          ),
+        );
       }
       yield* invoke(ClientOperation.CreateAgent);
       return identity;

@@ -136,6 +136,54 @@ export const GetSpaceSyncStateRequest = Schema.Struct({
 });
 export interface GetSpaceSyncStateRequest extends Schema.Schema.Type<typeof GetSpaceSyncStateRequest> {}
 
+export const DatabaseStatsRequest = Schema.Struct({
+  spaceId: Schema.String,
+});
+export interface DatabaseStatsRequest extends Schema.Schema.Type<typeof DatabaseStatsRequest> {}
+
+/**
+ * Per-space storage metrics. @see `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
+ */
+export const DatabaseStats = Schema.Struct({
+  objects: Schema.Struct({
+    /** Live (non-deleted) objects across the root and all linked documents. */
+    alive: Schema.Number,
+    /** Soft-deleted objects not yet reclaimed. */
+    deleted: Schema.Number,
+  }),
+  /** Automerge documents owned by the space (root + linked + branch documents). */
+  documents: Schema.Number,
+  /** Feeds registered for the space. */
+  feeds: Schema.Number,
+  /** Total feed blocks stored locally for the space. */
+  feedBlocks: Schema.Number,
+});
+export interface DatabaseStats extends Schema.Schema.Type<typeof DatabaseStats> {}
+
+export const RunGarbageCollectionRequest = Schema.Struct({
+  spaceId: Schema.String,
+  /** Also delete stale index rows for reclaimed documents/objects. @default true */
+  index: Schema.optional(Schema.Boolean),
+  /** Reserved for feed-block purge. Not yet effective on the local host. @default true */
+  feeds: Schema.optional(Schema.Boolean),
+});
+export interface RunGarbageCollectionRequest extends Schema.Schema.Type<typeof RunGarbageCollectionRequest> {}
+
+/**
+ * What a garbage-collection pass reclaimed. @see `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
+ */
+export const GarbageCollectionReport = Schema.Struct({
+  /** Soft-deleted objects unlinked from the space directory. */
+  unlinkedObjects: Schema.Number,
+  /** Automerge documents wiped from storage (chunks + heads). */
+  removedDocuments: Schema.Number,
+  /** Index rows deleted. */
+  removedIndexEntries: Schema.Number,
+  /** Feed blocks purged. */
+  purgedFeedBlocks: Schema.Number,
+});
+export interface GarbageCollectionReport extends Schema.Schema.Type<typeof GarbageCollectionReport> {}
+
 /**
  * Effect RPC definitions for `dxos.echo.service.DataService`.
  * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.
@@ -211,6 +259,24 @@ export class Rpcs extends RpcGroup.make(
     success: protoMessage('dxos.echo.service.SpaceSyncState'),
     error: serviceError,
     stream: true,
+  }),
+  /**
+   * Per-space storage metrics (objects, automerge documents, feeds, feed blocks).
+   */
+  Rpc.make('stats', {
+    payload: DatabaseStatsRequest,
+    success: DatabaseStats,
+    error: serviceError,
+  }),
+  /**
+   * Reclaim storage held by soft-deleted objects and unreachable automerge documents (and their
+   * index rows). Feed-block reclamation is deferred on the local host — `purgedFeedBlocks` is
+   * currently always `0` and `feeds` is reserved.
+   */
+  Rpc.make('runGarbageCollection', {
+    payload: RunGarbageCollectionRequest,
+    success: GarbageCollectionReport,
+    error: serviceError,
   }),
 ).prefix('DataService.') {}
 
