@@ -218,9 +218,6 @@ export const commentSync = (
       onSelect: ({ selection }) => {
         const current = selection.current ?? selection.closest;
         if (current) {
-          // Through the operation, which owns the selection write. Dispatch is concurrent by
-          // contract, so a stalled earlier invocation can apply after a later one — tests must
-          // assert the marker has settled between selection intents rather than racing them.
           void invokePromise(CommentOperation.Select, { current });
         }
       },

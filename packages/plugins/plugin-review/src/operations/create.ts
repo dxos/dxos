@@ -54,11 +54,8 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
           [subjectId]: existingDrafts ? [...existingDrafts, anchor] : [anchor],
         },
       });
-      // Selection goes through the operation that owns it. Dispatch is concurrent by contract, so
-      // this can land after a selection the reader has since made — callers and tests wait for the
-      // marker to settle rather than racing it.
-      yield* Operation.invoke(CommentOperation.Select, { current: Obj.getURI(thread) });
 
+      yield* Operation.invoke(CommentOperation.Select, { current: Obj.getURI(thread) });
       yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
         subject: Attention.linkedSegment('comments'),
       });
