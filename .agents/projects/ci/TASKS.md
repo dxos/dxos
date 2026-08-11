@@ -232,9 +232,9 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       stage 1 behind a `trap` that restores `pnpm-lock.yaml` — confirmed empirically that the
       lockfile is a hash input to every task (editing it re-hashed a cached `dx-build:build`).
 - [x] **Measured the cold cost of `check-boot-budget` on the `check` job: 53 s**, of which
-      `composer-app:bundle` built from source in 28 s (run 31539993812 — `284 completed (281
-    cached)`, so the libraries hydrated and only the bundle ran; the script itself is 28 ms). The
-      dedicated-job fallback (`needs: e2e-bundle`) is therefore not needed. Note the e2e cell's
+      `composer-app:bundle` built from source in 28 s. Run 31539993812 reported 284 tasks completed
+      with 281 cached, so the libraries hydrated and only the bundle ran; the script itself is 28 ms.
+      The dedicated-job fallback (`needs: e2e-bundle`) is therefore not needed. Note the e2e cell's
       former 50 s was NOT a cache hit as assumed — building this bundle simply costs ~30 s once its
       closure is warm.
 

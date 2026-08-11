@@ -591,9 +591,6 @@ jobs:
       # No bundle step: the `e2e-ci` targets declare `bundle-e2e` as a dep, so moon hydrates it from the
       # cache `e2e-bundle` warmed.
 
-      # No boot-budget step: this job is gated, so it could only ever check post-merge — it moved to
-      # the `check` job, whose `bundle` build it was paying for here anyway.
-
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
       # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
