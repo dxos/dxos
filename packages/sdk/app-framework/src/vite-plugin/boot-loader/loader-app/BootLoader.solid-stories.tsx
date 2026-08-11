@@ -15,8 +15,6 @@ import { SWARM_VARIANTS, type SwarmConfig, type SwarmVariant } from './swarm';
 type StoryProps = Partial<SwarmConfig> & {
   variant: SwarmVariant | 'random';
   showLog?: boolean;
-  /** 'complete' plays boot → outro → loop; 'indefinite' stops scripting at the plugin phase and holds. */
-  runMode?: 'complete' | 'indefinite';
 };
 
 /** Ticks the "Loading plugins (k/12)" range status advances through. */
@@ -25,26 +23,42 @@ const PLUGIN_TICK_COUNT = 12;
 const FRAMEWORK_START_MS = 0;
 const PLUGIN_TICKS_START_MS = 2000;
 const PLUGIN_TICKS_END_MS = 5500;
-const CLIENT_START_MS = 5500;
-const SPACE_OPEN_MS = 7000;
-const READY_MS = 8000;
 /** How long the outro plays before the story resets and loops. */
 const OUTRO_RESET_MS = 1500;
 
 /**
- * One boot cycle: schedules the scripted status/progress timeline against a
- * fresh {@link createLoaderStore}, plays the outro on `ready()`, then asks the
- * parent to remount so the story loops forever.
+ * One boot cycle: scripts the timeline through the plugin phase, then holds
+ * indefinitely (the store's creep keeps the swarm alive) until the Complete
+ * button plays client → space → ready → outro and asks the parent to remount.
  */
-const BootLoaderRun = (props: StoryProps & { onLoop: () => void }) => {
-  const { variant, onLoop, showLog, runMode, ...overrides } = props;
+const BootLoaderRun = (props: StoryProps & { onLoop: () => void; registerComplete: (run: () => void) => void }) => {
+  const { variant, onLoop, showLog, registerComplete, ...overrides } = props;
   const store = createLoaderStore('Loading framework…');
   const timers: ReturnType<typeof setTimeout>[] = [];
   const schedule = (delayMs: number, run: () => void): void => {
     timers.push(setTimeout(run, delayMs));
   };
 
+  let completing = false;
+  const complete = (): void => {
+    if (completing) {
+      return;
+    }
+    completing = true;
+    store.pushStatus({ humanized: 'Starting client…' });
+    store.setProgress(0.94);
+    schedule(1000, () => {
+      store.pushStatus({ humanized: 'Opening space…' });
+      store.setProgress(1);
+    });
+    schedule(1800, () => {
+      store.ready();
+      schedule(OUTRO_RESET_MS, onLoop);
+    });
+  };
+
   onMount(() => {
+    registerComplete(complete);
     store.setProgress(0.05);
     schedule(FRAMEWORK_START_MS + 700, () => store.setProgress(0.12));
     schedule(FRAMEWORK_START_MS + 1400, () => store.setProgress(0.19));
@@ -58,27 +72,6 @@ const BootLoaderRun = (props: StoryProps & { onLoop: () => void }) => {
         store.setProgress(0.25 + (index * 0.55) / PLUGIN_TICK_COUNT);
       });
     }
-
-    // 'indefinite' ends the script here: the store's creep keeps easing toward
-    // its ceiling and the swarm stays alive for open-ended tuning.
-    if (runMode === 'indefinite') {
-      return;
-    }
-
-    schedule(CLIENT_START_MS, () => {
-      store.pushStatus({ humanized: 'Starting client…' });
-      store.setProgress(0.94);
-    });
-
-    schedule(SPACE_OPEN_MS, () => {
-      store.pushStatus({ humanized: 'Opening space…' });
-      store.setProgress(1);
-    });
-
-    schedule(READY_MS, () => {
-      store.ready();
-      schedule(OUTRO_RESET_MS, onLoop);
-    });
   });
 
   onCleanup(() => {
@@ -102,42 +95,51 @@ const BootLoaderRun = (props: StoryProps & { onLoop: () => void }) => {
   );
 };
 
+const buttonStyle = {
+  'padding': '4px 10px',
+  'font': 'inherit',
+  'cursor': 'pointer',
+  'background': 'transparent',
+  'color': 'inherit',
+  'border': '1px solid currentColor',
+  'border-radius': '4px',
+  'opacity': 0.2,
+} as const;
+
 /**
- * Loops {@link BootLoaderRun} forever: each cycle plays the scripted boot →
- * outro, then this container remounts a fresh run via the `keyed` `<Show>` so
- * every field (dots, timers, store) starts clean rather than fighting leftover
- * animation state from the previous pass.
+ * Hosts the run and the control buttons: Complete plays the finish sequence of
+ * the current run; Restart (and each completed outro) remounts a fresh run via
+ * the `keyed` `<Show>` so every field starts clean.
  */
 const BootLoaderStory = (props: StoryProps) => {
   const [cycle, setCycle] = createSignal(1);
   const restart = () => setCycle((value) => value + 1);
+  let completeCurrentRun: (() => void) | undefined;
   return (
     <>
       <Show when={cycle()} keyed>
         {/* `keyed` only re-invokes this callback (forcing a remount) when it takes an argument. */}
-        {(_cycle) => <BootLoaderRun {...props} onLoop={restart} />}
+        {(_cycle) => (
+          <BootLoaderRun
+            {...props}
+            onLoop={restart}
+            registerComplete={(run) => {
+              completeCurrentRun = run;
+            }}
+          />
+        )}
       </Show>
-      {/* Above the fixed #boot-loader backdrop (z-index 10) so it stays clickable mid-boot. */}
-      <button
-        type='button'
-        onClick={restart}
-        style={{
-          'position': 'fixed',
-          'top': '8px',
-          'right': '8px',
-          'z-index': 20,
-          'padding': '4px 10px',
-          'font': 'inherit',
-          'cursor': 'pointer',
-          'background': 'transparent',
-          'color': 'inherit',
-          'border': '1px solid currentColor',
-          'border-radius': '4px',
-          'opacity': 0.2,
-        }}
+      {/* Above the fixed #boot-loader backdrop (z-index 10) so they stay clickable mid-boot. */}
+      <div
+        style={{ 'position': 'fixed', 'top': '8px', 'right': '8px', 'z-index': 20, 'display': 'flex', 'gap': '8px' }}
       >
-        Restart
-      </button>
+        <button type='button' onClick={() => completeCurrentRun?.()} style={buttonStyle}>
+          Complete
+        </button>
+        <button type='button' onClick={restart} style={buttonStyle}>
+          Restart
+        </button>
+      </div>
     </>
   );
 };
@@ -147,7 +149,7 @@ const meta = {
   render: (args: StoryProps) => <BootLoaderStory {...args} />,
   argTypes: {
     variant: { control: 'select', options: ['random', ...SWARM_VARIANTS] },
-    runMode: { control: 'select', options: ['complete', 'indefinite'] },
+
     showLog: { control: 'boolean' },
     dotCount: { control: { type: 'range', min: 1, max: 200, step: 1 } },
     dotSize: { control: { type: 'range', min: 0.5, max: 6, step: 0.1 } },
@@ -163,7 +165,6 @@ const meta = {
 export default meta;
 
 const defaults: Partial<StoryProps> = {
-  runMode: 'complete',
   showLog: true,
   dotSize: 1,
   dotCount: 50,
@@ -199,7 +200,7 @@ export const Trails: StoryObj<StoryProps> = {
   },
 };
 
-export const Halo: StoryObj<StoryProps> = { args: { variant: 'halo', showLog: true, runMode: 'complete' } };
+export const Halo: StoryObj<StoryProps> = { args: { variant: 'halo', showLog: true } };
 
 export const Arc: StoryObj<StoryProps> = { args: { variant: 'arc', showLog: true } };
 
