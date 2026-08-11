@@ -145,30 +145,29 @@ wait block until the editor is bound, so the tests became deterministic with no 
 evidence in `plugin-kanban/src/playwright/smoke.spec.ts` — but that evidence does not transfer to a
 different storybook.
 
-### Serial operation dispatch (the cause-B follow-through)
+### Operation dispatch is concurrent by contract (serial dispatch: built, then reverted)
 
-The comment-selection race under cause B was, mechanically, a dispatch-ordering defect:
-`invokePromise` runs each invocation on its own fiber, and handler resolution can await a lazy
-handler's dynamic `import()`, so a stalled earlier `Select` overwrote a later click — last-write-wins
-by completion order where the semantics need issue order. Fixed at the invoker:
-`dispatch: 'serial'` on an Operation tail-chains its `invokePromise` calls **synchronously at the
-call site** (a fiber enqueues too late), so applications match issue order; `CommentOperation.Select`
-declares it, and the proximity path invokes the operation again instead of writing the atom directly.
+`invokePromise` dispatch is concurrent: each invocation runs on its own fiber, and handler
+resolution can await a lazy handler's dynamic `import()`, so completion order is not issue order —
+a stalled earlier `Select` can apply after a later click. This is the platform contract, documented
+on `OperationInvoker.invokePromise` and pinned by the "concurrency contract" test in
+`invoker.test.ts` (issued `[stale, newest]`, applied `[newest, stale]`).
 
-Two boundaries, both measured, that the queue must NOT absorb:
+Two alternatives were built, validated, and deliberately reverted — do not re-litigate from scratch:
 
-1. **Passive focus is not intent.** `handleAttend` records attention (a re-render restoring focus, a
-   draft autofocusing). Queued as a Select, a render-triggered attend that _issues_ after a
-   deliberate click _applies_ after it — measured putting the marker on a sibling thread the reader
-   never chose (1 in 5 two-worker runs). It stays a direct write, applied at event time, so any later
-   intent beats it.
-2. **Creation-bound selection has no queue position.** `Create` selects its draft in the same
-   synchronous write that adds it; the intent exists only once the draft does, and a nested/queued
-   Select issues at handler-run time — behind clicks the reader has since made.
+1. **Per-key serial dispatch** (`dispatch: 'serial'`, tail-chained synchronously at the
+   `invokePromise` call site) — commit `16df3608`; resurrect from there if something demands ordered
+   dispatch more strongly. Its validation also measured a boundary worth keeping: passive focus
+   (`handleAttend`) is not intent, and ordering it as intent put the marker on a sibling thread the
+   reader never chose (1 in 5 two-worker runs).
+2. **Direct atom writes bypassing `CommentOperation.Select`** — rejected because the operation owns
+   the selection write; factoring the write out of the operation traded the abstraction for ordering.
 
-Validated: invoker tests prove the inversion under `'concurrent'` and its absence under `'serial'`;
-comments spec 6/6 serial and 4×6/6 at two workers after the boundaries above were restored (the
-first attempt queued `handleAttend` too, and failed exactly as predicted).
+The accepted consequence: comment selection flows through `CommentOperation.Select` under concurrent
+dispatch, and **tests pace selection intents** — assert the marker has settled (`expectCurrent`)
+between steps rather than racing distinct selections. `handleAttend` (passive attention, loses to
+any later intent) and `handleComment`'s compare-and-set re-assert stay direct writes: they were
+never the operation, and their semantics require applying at event time.
 
 ### Earlier shared causes, already fixed
 

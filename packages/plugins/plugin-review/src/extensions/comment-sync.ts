@@ -218,8 +218,9 @@ export const commentSync = (
       onSelect: ({ selection }) => {
         const current = selection.current ?? selection.closest;
         if (current) {
-          // `Select` declares `dispatch: 'serial'`, so this applies in issue order against the
-          // click path below — a stalled earlier proximity update cannot overwrite a later click.
+          // Through the operation, which owns the selection write. Dispatch is concurrent by
+          // contract, so a stalled earlier invocation can apply after a later one — tests must
+          // assert the marker has settled between selection intents rather than racing them.
           void invokePromise(CommentOperation.Select, { current });
         }
       },

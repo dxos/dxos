@@ -47,18 +47,17 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
 
       const state = registry.get(stateAtom);
       const existingDrafts = state.drafts[subjectId];
-      // Selected in the same write that adds the draft — atomic with the state it accompanies, and
-      // deliberately NOT a queued Select: this intent exists only once the draft does, so it has no
-      // meaningful issue-time in the queue, and a nested invocation is what used to stomp clicks the
-      // reader had since made.
       registry.set(stateAtom, {
         ...state,
-        current: Obj.getURI(thread),
         drafts: {
           ...state.drafts,
           [subjectId]: existingDrafts ? [...existingDrafts, anchor] : [anchor],
         },
       });
+      // Selection goes through the operation that owns it. Dispatch is concurrent by contract, so
+      // this can land after a selection the reader has since made — callers and tests wait for the
+      // marker to settle rather than racing it.
+      yield* Operation.invoke(CommentOperation.Select, { current: Obj.getURI(thread) });
 
       yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
         subject: Attention.linkedSegment('comments'),

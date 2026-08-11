@@ -283,22 +283,20 @@ describe('OperationInvoker.invokePromise', () => {
 });
 
 //
-// Serial dispatch: invocations of a `dispatch: 'serial'` operation apply in issue order, even when
-// an earlier invocation stalls (a lazy handler's chunk load, a busy runtime). Last-write-wins state
-// (e.g. a selection) silently keeps a stale value without this.
+// Platform contract: `invokePromise` dispatch is concurrent, so completion order is NOT issue
+// order — an earlier call that stalls (a lazy handler's chunk load, a busy runtime) applies after a
+// later, faster one. Callers owning last-write-wins state (e.g. a selection) must apply it
+// synchronously at the call site rather than routing it through `invokePromise`.
+// (A serial per-key dispatch was implemented, validated, and deliberately reverted — see commit
+// 16df3608 to resurrect it if something demands ordered dispatch.)
 //
 
-describe('OperationInvoker serial dispatch', () => {
-  /** Stand-in for the stall: the first invocation blocks until the test releases it. */
-  const makeStallingSetup = (
-    dispatch: 'concurrent' | 'serial',
-    extraHandlers: Operation.WithHandler<Operation.Definition.Any>[] = [],
-  ) => {
+describe('OperationInvoker.invokePromise concurrency contract', () => {
+  test('a stalled earlier call is overtaken by a later one', async ({ expect }) => {
     const Write = Operation.make({
       input: Schema.Struct({ value: Schema.String, stall: Schema.Boolean }),
       output: Schema.Void,
       meta: { key: DXN.make('org.example.test.write') },
-      dispatch,
     });
 
     const applied: string[] = [];
@@ -314,13 +312,7 @@ describe('OperationInvoker serial dispatch', () => {
         applied.push(input.value);
       }),
     );
-
-    const invoker = OperationInvoker.make(() => Effect.succeed([writeHandler, ...extraHandlers]), testRuntime);
-    return { Write, applied, release, invoker };
-  };
-
-  test('concurrent (default): a stalled earlier call is overtaken — the hazard this exists for', async ({ expect }) => {
-    const { Write, applied, release, invoker } = makeStallingSetup('concurrent');
+    const invoker = OperationInvoker.make(() => Effect.succeed([writeHandler]), testRuntime);
 
     const first = invoker.invokePromise(Write, { value: 'stale', stall: true });
     const second = invoker.invokePromise(Write, { value: 'newest', stall: false });
@@ -328,71 +320,9 @@ describe('OperationInvoker serial dispatch', () => {
     release();
     await first;
 
-    // Issued [stale, newest]; applied [newest, stale] — the stale value wins.
+    // Issued [stale, newest]; applied [newest, stale] — with last-write-wins state the stale value
+    // wins, which is why such state must not be dispatched through invokePromise.
     expect(applied).toEqual(['newest', 'stale']);
-  });
-
-  test('serial: applications match issue order across a stalled predecessor', async ({ expect }) => {
-    const { Write, applied, release, invoker } = makeStallingSetup('serial');
-
-    const first = invoker.invokePromise(Write, { value: 'stale', stall: true });
-    const second = invoker.invokePromise(Write, { value: 'newest', stall: false });
-    release();
-    await Promise.all([first, second]);
-
-    expect(applied).toEqual(['stale', 'newest']);
-  });
-
-  test('serial: a failing invocation releases the queue', async ({ expect }) => {
-    const Flaky = Operation.make({
-      input: Schema.Struct({ fail: Schema.Boolean }),
-      output: Schema.Void,
-      meta: { key: DXN.make('org.example.test.flakyWrite') },
-      dispatch: 'serial',
-    });
-    const applied: boolean[] = [];
-    const flakyHandler = Operation.withHandler(Flaky, (input) =>
-      Effect.gen(function* () {
-        if (input.fail) {
-          return yield* Effect.fail(new Error('boom'));
-        }
-        applied.push(true);
-      }),
-    );
-    const invoker = OperationInvoker.make(() => Effect.succeed([flakyHandler]), testRuntime);
-
-    const first = await invoker.invokePromise(Flaky, { fail: true });
-    const second = await invoker.invokePromise(Flaky, { fail: false });
-
-    expect(first.error).toBeDefined();
-    expect(second.error).toBeUndefined();
-    expect(applied).toEqual([true]);
-  });
-
-  test('serial operations with different keys do not serialize each other', async ({ expect }) => {
-    const Other = Operation.make({
-      input: Schema.Void,
-      output: Schema.Void,
-      meta: { key: DXN.make('org.example.test.otherSerial') },
-      dispatch: 'serial',
-    });
-    const otherApplied: boolean[] = [];
-    const otherHandler = Operation.withHandler(Other, () =>
-      Effect.sync(() => {
-        otherApplied.push(true);
-      }),
-    );
-    const { Write, applied, release, invoker } = makeStallingSetup('serial', [otherHandler]);
-
-    const stalled = invoker.invokePromise(Write, { value: 'stuck', stall: true });
-    const other = await invoker.invokePromise(Other, undefined);
-
-    // `Other` completed while `Write`'s tail was still stalled.
-    expect(other.error).toBeUndefined();
-    expect(otherApplied).toEqual([true]);
-    release();
-    await stalled;
-    expect(applied).toEqual(['stuck']);
   });
 });
 

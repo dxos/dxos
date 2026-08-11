@@ -79,21 +79,6 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
   readonly executionMode: 'sync' | 'async';
 
   /**
-   * Dispatch ordering for fire-and-forget invocations (`invokePromise`).
-   * - 'concurrent' (default): each invocation runs on its own fiber; completion order is not
-   *   guaranteed to match issue order (a lazy handler's chunk load can delay an earlier call past a
-   *   later one).
-   * - 'serial': invocations of THIS operation apply strictly in issue order — required for
-   *   last-write-wins state (e.g. a selection), where completion-order inversion silently keeps the
-   *   older value. A serial handler must not await a nested `invokePromise` of its own key, which
-   *   would deadlock behind itself.
-   *
-   * Honored by `OperationInvoker` (the app runtime). The process-spawning invoker
-   * (`ProcessOperationInvoker`) treats every operation as concurrent.
-   */
-  readonly dispatch: 'concurrent' | 'serial';
-
-  /**
    * ECHO types the operation uses.
    * Ensures types are available when the operation is executed remotely.
    */
@@ -214,12 +199,8 @@ export const isOperationWithHandler = (value: unknown): value is WithHandler<Def
  * Props for creating an Operation definition.
  * Derived from OperationDefinition with executionMode made optional (defaults to 'async').
  */
-export type Props<I, O> = Omit<
-  Definition<I, O>,
-  DefinitionTypeId | 'pipe' | 'executionMode' | 'dispatch' | 'types' | 'services'
-> & {
+export type Props<I, O> = Omit<Definition<I, O>, DefinitionTypeId | 'pipe' | 'executionMode' | 'types' | 'services'> & {
   readonly executionMode?: 'sync' | 'async';
-  readonly dispatch?: 'concurrent' | 'serial';
   readonly types?: Definition<I, O>['types'];
   readonly services?: Definition<I, O>['services'];
 };
@@ -240,7 +221,6 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
     [DefinitionTypeId]: {},
     ...props,
     executionMode: props.executionMode ?? 'async',
-    dispatch: props.dispatch ?? 'concurrent',
     types: props.types ?? [],
     services: props.services ?? [],
     pipe() {
