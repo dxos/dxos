@@ -38,12 +38,8 @@ tasks:
       - $PLAYWRIGHT_BROWSER
 
   # Identical to `e2e` by design: it exists only to give the CI pool a task-name prefix of its own
-  # (`moon exec ':e2e-ci*'`), so a suite too big for one cell can withhold its whole-suite target and
-  # register halves instead (composer-app's `e2e-ci-1of2`/`-2of2`). Globbing `:e2e` would run that
-  # suite's tests twice, once via the full suite and once via the halves.
-  #
-  # Sharding is per-suite, not here: composer-app is the only suite whose runtime exceeds the ~160s a
-  # cell costs to stand up.
+  # (`moon exec ':e2e-ci*'`), so a suite can opt out of the pool by excluding it — composer-app does,
+  # because it runs in its own dedicated CI cell via `e2e` and the glob must not run it twice.
   e2e-ci:
     extends: e2e
 

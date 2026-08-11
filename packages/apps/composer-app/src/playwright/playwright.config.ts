@@ -15,13 +15,12 @@ export default defineConfig({
   testIgnore: ['**/startup.spec.ts', '**/dev-*.spec.ts', '**/welcome-focus.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 10_000 },
+  // Above the preset's 2: this suite has a dedicated CI cell, and `vite preview` is a static server,
+  // so it lacks both the neighbours and the per-request compile that cap the storybook-dev suites.
+  workers: 4,
   webServer: {
     command: 'pnpm vite preview',
     port: 4173,
-    // The suite's CI halves are separate Playwright processes sharing :4173 — the second must
-    // attach rather than error, which is safe because `vite preview` serves a stateless prebuilt
-    // bundle. (With the port free, the command still runs; the flag only governs collisions.)
-    reuseExistingServer: true,
     timeout: 300_000,
   },
 });

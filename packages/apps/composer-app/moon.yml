@@ -1,7 +1,7 @@
 layer: application
 language: typescript
-# Too big for one cell, so this suite opts out of the pool's `e2e-ci` and supplies halves below.
-# Excluding it here rather than in the workflow keeps the pool a plain glob.
+# This suite runs in its own dedicated CI cell (via `e2e`), so it opts out of the pool's `e2e-ci` —
+# excluding it here rather than in the workflow keeps the pool a plain glob.
 workspace:
   inheritedTasks:
     exclude:
@@ -132,18 +132,6 @@ tasks:
       # — not merely anything the config imports. A non-plugin import like `@dxos/util` stays
       # untagged: the plugin packages depend on it, so their own `^:build` builds it first.
       - '#vite-plugin:build'
-  # Halves of `e2e` for CI's sharded pool, replacing the excluded `e2e-ci`. `moon --job` partitions
-  # targets and can never split one, so without these this suite alone sets the floor for the whole
-  # phase. `args` is hashed, so the halves cannot replay each other's cache entry. Two, not more: a half
-  # already runs under what another cell would cost to stand up.
-  e2e-ci-1of2:
-    extends: e2e
-    args:
-      - --shard=1/2
-  e2e-ci-2of2:
-    extends: e2e
-    args:
-      - --shard=2/2
   # Production startup harness — all four `startup.spec.ts` scenarios (cold, warm-cold, throttled,
   # boot-loader paint) against `vite preview`. Its own task because the spec records benchmark rows
   # rather than asserting behaviour: `e2e` ignores it so a timing measurement never gates a merge.

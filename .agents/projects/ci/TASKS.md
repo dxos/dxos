@@ -78,7 +78,8 @@ spending a round-trip here; between them they cover four dead ends and a dozen w
 lies. Each item below is done only when it runs green in CI **without a retry**.
 
 Where the suite stands: 33 iterations of dispatch-fix-redispatch reached five consecutive runs with
-all nine cells green (on `af0b657b`). The bar has since moved to ten green runs, which cause A blocks.
+all nine cells green (on `af0b657b`; the matrix is 6 cells since the composer/rest split). The bar
+has since moved to ten green runs, which cause A blocks.
 
 ### Flake causes in the enabled tests
 

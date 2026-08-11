@@ -43,14 +43,26 @@ runners. Blacksmith was evaluated as an alternative runner and rejected — REPO
 
 ## E2E: how the suite is sharded
 
-Two axes into 9 matrix cells — browser (`PLAYWRIGHT_BROWSER`) × `moon exec --job N --job-total 3`,
-with composer-app opting out of the inherited `e2e-ci` to supply `e2e-ci-1of2` / `-2of2` because it is
-too big for one cell. Job layout and the JUnit paths Trunk reads are in
+Two axes into 6 matrix cells — browser (`PLAYWRIGHT_BROWSER`) × shard (`composer` / `rest`). The
+`composer` cell runs `composer-app:e2e` directly (4 Playwright workers — a dedicated cell serving a
+static `vite preview` has neither the neighbours nor the per-request compile that cap the
+storybook-dev suites at 2); the `rest` cell runs the `:e2e-ci*` pool plus `plugin-script:e2e`, one
+task at a time (`--concurrency=1`), each at the preset's workers. composer-app excludes the inherited
+`e2e-ci` so the pool glob never matches it. Job layout and the JUnit paths Trunk reads are in
 [`.github/workflows/README.md`](../../../.github/workflows/README.md).
 
 The browser rides an env var rather than per-browser task variants (`e2e-chromium`, …) so it does not
-multiply with the shard dimension in the task namespace: a suite that outgrows one cell then needs two
-task definitions, not six. Being a hash input already gives each browser its own cache entry.
+multiply with the shard dimension in the task namespace. Being a hash input already gives each
+browser its own cache entry.
+
+The previous shape — `moon exec --job N --job-total 3` with composer split into `e2e-ci-1of2`/`-2of2`
+halves — was retired by measurement: moon's partitioner assigned both halves to the same cell in
+every observed run, and `--concurrency=1` then ran them back-to-back (2m30 + 45s, serially, one
+machine), so the split delivered no parallelism of any kind while costing two cache entries, two
+webServer lifecycles and a port-collision workaround (`reuseExistingServer`). Splitting one suite's
+tests across _cells_ remains unsolved (Playwright `--shard` can cut the suite, but moon owns cell
+assignment and cannot be told to separate two targets); today composer splits by browser only —
+finer granularity is a possible follow-up.
 
 ### Sharding alternatives measured and rejected
 
@@ -58,11 +70,11 @@ Two other strategies were built out and run head-to-head against the shipped one
 run (9 cells each, same commit). Neither survives in the diff; recorded so the choice is not
 re-litigated from scratch.
 
-|                                             |   critical path | runner-time | targets |            failures |
-| :------------------------------------------ | --------------: | ----------: | ------: | ------------------: |
-| Knapsack Pro queue mode + per-browser split |            297s |       1618s |   27/27 | 5 (only 2 surfaced) |
-| Per-browser moon task variants, 9 cells     | ~335s corrected |      ~1470s |   23/25 |                   2 |
-| **Browser × `--job`, 9 cells (shipped)**    |            364s |       1500s |   27/27 |                   6 |
+|                                               |   critical path | runner-time | targets |            failures |
+| :-------------------------------------------- | --------------: | ----------: | ------: | ------------------: |
+| Knapsack Pro queue mode + per-browser split   |            297s |       1618s |   27/27 | 5 (only 2 surfaced) |
+| Per-browser moon task variants, 9 cells       | ~335s corrected |      ~1470s |   23/25 |                   2 |
+| **Browser × `--job`, 9 cells (then shipped)** |            364s |       1500s |   27/27 |                   6 |
 
 All three landed within ~10% on runner cost and 297–364s on critical path, so speed did not decide it:
 
@@ -87,11 +99,11 @@ Runtime, cold cache: e2e's slowest shard is 7.7 min (6.2 warm) against `test` at
 
 ### Running a campaign, and attributing a red cell
 
-One dispatch of `Check` with `e2e: true` produces the 9 cells; `workflow_dispatch` keys its
+One dispatch of `Check` with `e2e: true` produces the 6 cells (9 before the composer/rest matrix); `workflow_dispatch` keys its
 concurrency group on `github.run_id`, so dispatches do not cancel each other and ten can run at once.
 
 **Count a run only if** the dispatch response echoed `inputs:{"e2e":"true"}` **and** the run contains
-9 `e2e (browser, shard)` jobs — a wrong parameter name (`workflow_inputs`) yields a run that looks
+6 `e2e (browser, shard)` jobs — a wrong parameter name (`workflow_inputs`) yields a run that looks
 normal and silently skips e2e.
 
 **Attribute a failure by grepping the job log for `✘`,** never from the Trunk summary: a cell can exit

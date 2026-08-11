@@ -493,7 +493,10 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
-        job: [0, 1, 2]
+        # `composer` gets a dedicated cell (it dwarfs every other suite); `rest` runs the pool.
+        # Explicit here rather than via `moon --job`, whose partitioner co-located composer's former
+        # halves and (at --concurrency=1) ran them serially — measured in .agents/projects/ci/DESIGN.md.
+        shard: [composer, rest]
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -545,7 +548,7 @@ jobs:
       # so today the check runs post-merge and does not gate the PR that introduces the regression.
       # One cell only: it is a property of the bundle, identical across every cell of the matrix.
       - name: Check boot budget
-        if: ${{ matrix.browser == 'chromium' && matrix.job == 0 }}
+        if: ${{ matrix.browser == 'chromium' && matrix.shard == 'composer' }}
         run: moon run composer-app:check-boot-budget
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
@@ -557,10 +560,18 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
-      # Glob and quoted: a bare `:e2e-ci` matches that task name exactly and would silently skip
-      # composer-app, whose halves are `e2e-ci-1of2`/`-2of2`. The quotes keep the shell out of it.
-      # `plugin-script:e2e` is named explicitly because that project is not `e2e`-tagged, so it has no
-      # `e2e-ci`.
+      # The composer cell runs its suite directly. The rest cell runs the pool, where composer never
+      # appears (its moon.yml excludes `e2e-ci`); `plugin-script:e2e` is named explicitly because that
+      # project is not `e2e`-tagged. The glob stays quoted so the shell cannot expand it.
+      - name: Select shard targets
+        id: shard
+        run: |
+          if [ "${{ matrix.shard }}" = "composer" ]; then
+            echo "targets=composer-app:e2e" >> "$GITHUB_OUTPUT"
+          else
+            echo "targets=':e2e-ci*' plugin-script:e2e" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
         timeout-minutes: 35
@@ -573,8 +584,8 @@ jobs:
           # making the cell unfalsifiable. Unstable tests get `test.fixme`, visible in review.
           quarantine: false
           run: >-
-            moon exec --on-failure continue ':e2e-ci*' plugin-script:e2e --affected remote
-            --job ${{ matrix.job }} --job-total 3 --concurrency=1
+            moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
+            --affected remote --concurrency=1
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
@@ -592,14 +603,14 @@ jobs:
           # See "Test Affected": quarantine masks failures and is deliberately off.
           quarantine: false
           run: >-
-            moon exec --on-failure continue ':e2e-ci*' plugin-script:e2e
-            --job ${{ matrix.job }} --job-total 3 --concurrency=1
+            moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
+            --concurrency=1
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: playwright-report-${{ matrix.browser }}-${{ matrix.job }}
+          name: playwright-report-${{ matrix.browser }}-${{ matrix.shard }}
           path: test-results/playwright
           retention-days: 7
 
