@@ -7,7 +7,7 @@ import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
+import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -113,12 +113,15 @@ const handler = InboxOperation.ProcessMailbox.pipe(
       );
 
       // A failed (not cancelled) run is recorded on the cursor before the error propagates, so the
-      // durable state says why the last run stopped; `Cursor.advance` clears it on the next success.
+      // durable state says why the last run stopped (`Cursor.advance` clears it on the next
+      // success) — and the terminal failure status is emitted so the meter/toolbar never stay stuck
+      // on a running state the process no longer backs.
       yield* pipeline.pipe(
         Effect.onError((cause) =>
           Effect.sync(() => {
             if (!Cause.isInterruptedOnly(cause)) {
               Cursor.recordError(cursor, Cause.pretty(cause).slice(0, 500));
+              reportStatus({ message: PROGRESS_STATUS_FAILED });
             }
           }),
         ),
