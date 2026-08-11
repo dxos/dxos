@@ -729,6 +729,24 @@ export class EntityManager implements IDatabaseBinding {
     await runServiceCall(this._runtime, this._dataService.DataService.updateIndexes());
   }
 
+  async stats(): Promise<Database.DatabaseStats> {
+    return runServiceCall(this._runtime, this._dataService.DataService.stats({ spaceId: this.spaceId }), {
+      timeout: RPC_TIMEOUT,
+    });
+  }
+
+  async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
+    return runServiceCall(
+      this._runtime,
+      this._dataService.DataService.runGarbageCollection({
+        spaceId: this.spaceId,
+        index: options?.index,
+        feeds: options?.feeds,
+      }),
+      { timeout: RPC_TIMEOUT },
+    );
+  }
+
   async getSyncState(): Promise<SpaceSyncState> {
     const value = await runServiceCall(
       this._runtime,

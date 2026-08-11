@@ -189,4 +189,24 @@ export class DataServiceImpl implements DataService.Handlers {
       }),
     );
   }
+
+  ['DataService.stats'](_request: DataService.DatabaseStatsRequest): Effect.Effect<DataService.DatabaseStats, Error> {
+    // TODO(dmaretskyi): Implement per the EDGE section of `echo-host/docs/GARBAGE_COLLECTION.md`.
+    return Effect.fail(
+      new NotImplementedError({
+        message: 'stats is not implemented in the EDGE runtime.',
+      }),
+    );
+  }
+
+  ['DataService.runGarbageCollection'](
+    _request: DataService.RunGarbageCollectionRequest,
+  ): Effect.Effect<DataService.GarbageCollectionReport, Error> {
+    // TODO(dmaretskyi): Implement per the EDGE section of `echo-host/docs/GARBAGE_COLLECTION.md`.
+    return Effect.fail(
+      new NotImplementedError({
+        message: 'runGarbageCollection is not implemented in the EDGE runtime.',
+      }),
+    );
+  }
 }

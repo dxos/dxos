@@ -318,6 +318,20 @@ export interface Database extends Queryable {
    * Subscribe to combined sync state changes.
    */
   subscribeToSyncState(cb: (state: SyncState) => void, options?: GetSyncStateOptions): CleanupFn;
+
+  /**
+   * Per-space storage metrics: objects (alive/deleted), automerge documents, feeds, feed blocks.
+   * Read-only. Intended as an occasional/administrative call. See garbage-collection design notes
+   * in `@dxos/echo-host`.
+   */
+  stats(): Promise<DatabaseStats>;
+
+  /**
+   * Reclaim storage held by soft-deleted objects and the documents / feed blocks that are no longer
+   * reachable. Per-space and destructive; intended as an occasional/administrative call. See
+   * garbage-collection design notes in `@dxos/echo-host`.
+   */
+  runGarbageCollection(options?: GarbageCollectionOptions): Promise<GarbageCollectionReport>;
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
@@ -537,6 +551,55 @@ export interface SyncState {
    * Total blocks stored locally for this namespace in the space.
    */
   readonly totalBlocks: string;
+}
+
+/**
+ * Per-space storage metrics returned by {@link Database.stats}.
+ */
+export interface DatabaseStats {
+  readonly objects: {
+    /** Live (non-deleted) objects across the root and all linked documents. */
+    readonly alive: number;
+    /** Soft-deleted objects not yet reclaimed by garbage collection. */
+    readonly deleted: number;
+  };
+  /** Automerge documents owned by the space (root + linked + branch documents). */
+  readonly documents: number;
+  /** Feeds registered for the space. */
+  readonly feeds: number;
+  /** Total feed blocks stored locally for the space. */
+  readonly feedBlocks: number;
+}
+
+/**
+ * Options for {@link Database.runGarbageCollection}.
+ */
+export interface GarbageCollectionOptions {
+  /**
+   * Also delete stale index rows for reclaimed documents/objects.
+   * @default true
+   */
+  readonly index?: boolean;
+  /**
+   * Reserved for feed-block purge (positioned deletion markers). Not yet effective on the local
+   * host — see the feed-purge deferral in `@dxos/echo-host` garbage-collection design notes.
+   * @default true
+   */
+  readonly feeds?: boolean;
+}
+
+/**
+ * Report of what {@link Database.runGarbageCollection} reclaimed.
+ */
+export interface GarbageCollectionReport {
+  /** Soft-deleted objects unlinked from the space directory. */
+  readonly unlinkedObjects: number;
+  /** Automerge documents wiped from storage (chunks + heads). */
+  readonly removedDocuments: number;
+  /** Index rows deleted. */
+  readonly removedIndexEntries: number;
+  /** Feed blocks purged. */
+  readonly purgedFeedBlocks: number;
 }
 
 /**
