@@ -35,5 +35,11 @@ tasks:
       - $DX_SHARED_WORKER
       - $PLAYWRIGHT_BROWSER
 
+  # Identical to `e2e`, and it exists only to give the CI pool a task name composer-app can opt out of
+  # (that suite has its own cell, and the pool glob must not run it twice). `moon exec`'s `--query` is
+  # NOT an alternative: with a target given it is ignored, and the pool silently ran composer as well.
+  e2e-ci:
+    extends: e2e
+
 inheritedBy:
   tags: e2e

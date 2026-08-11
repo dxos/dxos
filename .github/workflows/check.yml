@@ -565,16 +565,17 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
-      # One `e2e` task per suite, split by MQL rather than by a marker task: the rest cell takes every
-      # project with an `e2e` task except composer, which has its own cell. The glob stays quoted so
-      # the shell cannot expand it. Locally, a single suite is just `moon run <project>:e2e`.
+      # The composer cell runs its suite directly; the rest cell runs the pool, which composer-app is
+      # absent from because its moon.yml excludes `e2e-ci`. `plugin-script:e2e` is named explicitly
+      # because that project is not `e2e`-tagged. The glob stays quoted so the shell cannot expand it.
+      # Locally, a single suite is just `moon run <project>:e2e`.
       - name: Select shard targets
         id: shard
         run: |
           if [ "${{ matrix.shard }}" = "composer" ]; then
             echo "targets=composer-app:e2e" >> "$GITHUB_OUTPUT"
           else
-            echo "targets=':e2e' --query project!=composer-app" >> "$GITHUB_OUTPUT"
+            echo "targets=':e2e-ci' plugin-script:e2e" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Test Affected
