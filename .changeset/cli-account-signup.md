@@ -1,8 +1,6 @@
 ---
 '@dxos/app-toolkit': minor
 '@dxos/plugin-client': minor
-'@dxos/edge-client': minor
-'@dxos/cli-util': patch
 ---
 
 Add `dx account signup <code>`, which validates an access code and then signs up with either email or an Atmosphere (atproto) OAuth account, mirroring Composer's sign-up flow. This replaces `dx account login --code`, which is removed — `login` recovers an existing account again, and account creation lives in `signup`. The `--method` name for the atproto OAuth path is now `atmosphere` in both commands, matching Composer's wording; `--method atproto` is still accepted as an alias.
