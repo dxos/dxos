@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Database, type Key, Obj, type Ref } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 import { type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
-import * as Connection from '../types/Connection';
 import * as ConnectorCoordination from '../types/ConnectorCoordination';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 import { bindConnectionToTarget } from './auto-bind';

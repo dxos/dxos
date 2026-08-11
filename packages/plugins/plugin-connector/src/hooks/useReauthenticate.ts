@@ -7,10 +7,10 @@ import { useCallback, useState } from 'react';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Connection } from '@dxos/link';
 
 import { useConnector } from '#hooks';
 
-import * as Connection from '../types/Connection';
 import * as ConnectorCoordination from '../types/ConnectorCoordination';
 
 export type UseReauthenticateResult = {

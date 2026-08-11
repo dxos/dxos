@@ -7,15 +7,14 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Account from '@dxos/app-toolkit/Account';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Client } from '@dxos/client';
-import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { redeemAccountInvitation } from '../credentials';
 import { OnboardingOperation } from '../operations';
 import {
   OAUTH_RECOVERY_REDIRECT_PATH,
@@ -217,19 +216,12 @@ const finalizeRedirect = Effect.fnUntraced(function* (
     invariant(email, 'email missing from completeRegistration — kms-service should have rejected no-email flows');
 
     // Redeem the invitation code with the email to mint the hub Account.
-    const identityDid = yield* Effect.tryPromise(() => createDidFromIdentityKey(identity.identityKey));
-    const result = yield* Effect.tryPromise(() =>
-      redeemAccountInvitation({
-        hubUrl: snapshot.hubUrl,
-        email,
-        identityDid,
-        identityKey: identity.identityKey.toHex(),
-        code: snapshot.code.replace(/-/g, '').toUpperCase(),
-      }),
-    );
-    if ('accountId' in result) {
-      log.info('account created', { accountId: result.accountId });
-    }
+    yield* Account.redeemAccessCode({
+      hub: Account.createHubClient(snapshot.hubUrl),
+      identity,
+      email,
+      code: snapshot.code,
+    });
     yield* invoker.schedule(ClientOperation.CreateAgent);
     yield* closeDialog;
     return;

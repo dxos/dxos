@@ -7,14 +7,13 @@ import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import * as Connection from '../../types/Connection';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog';
 

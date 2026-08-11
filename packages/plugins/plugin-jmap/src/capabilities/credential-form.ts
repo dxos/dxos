@@ -8,8 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { Jmap } from '../apis';

@@ -3,9 +3,7 @@
 //
 
 import { EID, type Obj, type Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-
-import * as Connection from '../types/Connection';
+import { Connection, Cursor } from '@dxos/link';
 
 /**
  * Entity id a ref addresses, or `undefined` if its URI is not an `echo:` EID.

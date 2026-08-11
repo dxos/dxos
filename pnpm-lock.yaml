@@ -7038,6 +7038,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -8928,6 +8931,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12856,9 +12862,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/link':
-        specifier: workspace:*
-        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15579,6 +15582,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -17714,9 +17720,18 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/credentials':
+        specifier: workspace:*
+        version: link:../../core/halo/credentials
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -17735,6 +17750,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
