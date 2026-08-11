@@ -94,11 +94,12 @@ All three landed within ~10% on runner cost and 297–364s on critical path, so 
 **Retries are absent by policy** (`e2ePreset` sets `retries: 0`; two retry loops were also removed
 from composer's `app-manager.ts`). A retry converts a product defect into a slow pass — removing the
 create-space retries is what exposed the real rejection they had been masking. An unstable test gets
-`test.fixme` with evidence, never a retry. **One deliberate, temporary exception:** the halo and
-collaboration describes carry `retries: 2` scoped to cause A — the defect is known, tracked
+`test.fixme` with evidence, never a retry. **One deliberate, temporary exception:** the three
+two-peer describes — composer's halo and collaboration, and todomvc's `Basic test` (whose
+`beforeEach` runs an invitation) — carry `retries: 2` scoped to cause A. The defect is known, tracked
 (DX-1152) and endemic in production, so a first-attempt failure carries no new information while it
-holds every run red; Trunk still records each first attempt. Both carry a STRICTLY-temporary TODO
-and come out when DX-1152 lands.
+holds every run red; Trunk still records each first attempt. All three carry a STRICTLY-temporary
+TODO and come out when DX-1152 lands. Nothing else in the repo may retry.
 
 Runtime, cold cache: e2e's slowest shard is 7.7 min (6.2 warm) against `test` at 12.8 min and
 `storybook` at 9.4 min. **E2E is no longer the critical path — `test` is.**
