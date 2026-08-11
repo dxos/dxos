@@ -10,7 +10,7 @@ import { assertArgument } from '@dxos/invariant';
 
 import type * as Annotation from '../../Annotation';
 import type * as Entity from '../../Entity';
-import { snapshotForComparison } from '../common/atom-snapshot';
+import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot';
 import { subscribe } from '../common/proxy/reactive';
 import { isEntity } from '../Entity';
 import { get as getAnnotation } from './entity-dictionary';
@@ -62,7 +62,8 @@ const annotationPropertyFamily = Atom.family(
 
       const unsubscribe = subscribe(target, () => {
         const next = read();
-        if (next !== previous) {
+        // Content comparison — `read()` snapshots, so identity never matches for arrays/objects.
+        if (!snapshotEquals(next, previous)) {
           previous = next;
           get.setSelf(next);
         }
@@ -74,9 +75,9 @@ const annotationPropertyFamily = Atom.family(
   },
 );
 
-/** Equal when both empty, or both present with the same (snapshotted) value. */
+/** Equal when both empty, or both present with shallow-equal content (see `snapshotEquals`). */
 const sameOption = <T>(a: Option.Option<T>, b: Option.Option<T>): boolean =>
-  Option.isNone(a) || Option.isNone(b) ? Option.isNone(a) && Option.isNone(b) : a.value === b.value;
+  Option.isNone(a) || Option.isNone(b) ? Option.isNone(a) && Option.isNone(b) : snapshotEquals(a.value, b.value);
 
 /**
  * Reactive atom for an annotation value on an entity instance. Emits a shallow snapshot (a fresh

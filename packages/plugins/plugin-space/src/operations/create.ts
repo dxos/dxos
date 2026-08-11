@@ -8,6 +8,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
@@ -43,7 +44,12 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         ),
       );
       if (edgeReplication) {
-        yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+        // Best-effort, and deliberately not fatal: the preference is committed on the host and
+        // converges on its own, so only the local snapshot can fail here — and failing the operation
+        // on that discards a space that already exists.
+        yield* Effect.tryPromise(() =>
+          space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED),
+        ).pipe(Effect.catchAll((error) => Effect.sync(() => log.catch(error))));
       }
       yield* Effect.tryPromise({
         try: () => space.waitUntilReady(),

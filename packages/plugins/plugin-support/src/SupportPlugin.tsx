@@ -9,7 +9,6 @@ import {
   AppGraphBuilder,
   CreateObject,
   HelpState,
-  OnSpaceCreated,
   OperationHandler,
   ReactRoot,
   ReactSurface,
@@ -36,7 +35,6 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(HelpState),
   Plugin.addModule(ReactRoot),
-  Plugin.addModule(OnSpaceCreated),
   Plugin.addModule(SupportSettings),
   Plugin.addModule(
     AppCapability.pluginAsset({

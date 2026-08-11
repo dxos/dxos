@@ -112,5 +112,10 @@ export type CommentState = {
   toolbar: Record<string, boolean>;
   /** In-memory draft threads. */
   drafts: Record<string, AnchoredTo.AnchoredTo[]>;
+  /**
+   * The current thread, as an object id or an EID — writers differ, and an EID's spelling changes
+   * when a draft persists (`echo:///<id>` → `echo://<spaceId>/<id>`), so readers MUST compare via
+   * `currentObjectId` (`util/comment-state.ts`), never by string equality.
+   */
   current?: string | undefined;
 };
