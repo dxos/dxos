@@ -51,12 +51,6 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<O, NoHandlerError>;
-  /**
-   * Fire-and-forget invocation. Dispatch is CONCURRENT by contract: each call runs on its own
-   * fiber, and handler resolution may await a lazy handler's dynamic import, so completion order is
-   * not issue order — an earlier call can apply after a later one. Do not route last-write-wins
-   * state (e.g. a selection) through this; apply such state synchronously at the call site.
-   */
   invokePromise: <I, O>(
     op: Operation.Definition<I, O>,
     ...args: void extends I
