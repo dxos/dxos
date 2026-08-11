@@ -238,7 +238,9 @@ its plank before that fiber landed, so the switch wiped it and the user got an e
 locally; the trace's last snapshot showed the navtree with a `Home` node and no plank, at
 `/w/<spaceId>` with no plank pairs). Onboarding now switches the workspace itself before setting the
 plank, which also makes the forked switch's `workspace === 'default'` guard false: 6/6 after, and the
-symptom is the "empty Home" that originally motivated landing on the README instead.
+symptom is the "empty Home" that originally motivated landing on the README instead. The clobber
+window closes at identity creation and holds nothing a user could navigate to, so it is not a general
+navigation hazard — the onboarding landing is affected because it is necessarily inside that window.
 
 Mosaic drag-and-drop was two **product** bugs, not test flake: `Mosaic.Placeholder` unregistered its
 drop target for 500 ms on scroll (so a release in that window resolved to the container — "move to
