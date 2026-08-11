@@ -258,7 +258,10 @@ The hook is the space's document-list update. Two cases reach it:
   this peer happened to observe.
 
 Both re-check reachability against the _live_ directory before deleting, because
-a document can be re-linked between the event and the deferred task. Failures are
+a document can be re-linked between the event and the deferred task. A directory
+that cannot be read is treated as unknown reachability and skips the pass, never
+as an empty one — the epoch case expands a whole closure, so reading "nothing is
+reachable" there would wipe documents the new root carried forward. Failures are
 logged rather than propagated — a peer that fails to reclaim is only still
 holding disk.
 

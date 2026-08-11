@@ -600,10 +600,12 @@ export class EchoHost extends Resource {
         // Re-checked against the live directory: between the event and this task the documents
         // could have been re-linked (a concurrent write merging in), and reachable data is never
         // a collection candidate.
+        // An unreadable live directory is unknown reachability, not empty reachability: taking it
+        // as empty would make every candidate — including documents a new root carried forward —
+        // read as collectable. Skipping only defers, since the explicit pass scans for orphans.
         const root = this._spaceStateManager.getRootBySpaceId(spaceId);
-        if (!root) {
-          // Without the live directory nothing is known to be reachable, and every candidate —
-          // including documents a new root carried forward — would read as collectable.
+        if (!root || !(await this.#loadFromStorage(root.documentId))) {
+          log('reclamation skipped, live space directory unavailable', { spaceId });
           return;
         }
         const reachable = await this.#collectClosure(root.documentId);
