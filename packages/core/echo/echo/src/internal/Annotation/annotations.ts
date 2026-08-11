@@ -39,7 +39,7 @@ export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, p
  * ECHO identifier (for a stored schema).
  * Must be an `echo:` URI.
  */
-export const TypeIdentifierAnnotationId = '@dxos/schema/annotation/TypeIdentifier';
+export const TypeIdentifierAnnotationId = '~@dxos/schema/annotation/TypeIdentifier';
 
 export const getTypeIdentifierAnnotation = (schema: Schema.Top): string | undefined =>
   SchemaAST.getAnnotation<string>(schema.ast, TypeIdentifierAnnotationId);
@@ -107,7 +107,7 @@ export interface TypeMeta extends Schema.Schema.Type<typeof TypeMeta> {}
 /**
  * Entity type.
  */
-export const TypeAnnotationId = '@dxos/schema/annotation/Type';
+export const TypeAnnotationId = '~@dxos/schema/annotation/Type';
 
 /**
  * Payload stored under {@link TypeAnnotationId}.

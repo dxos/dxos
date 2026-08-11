@@ -672,8 +672,8 @@ export type InstanceType<T extends AnyEntity> =
  * Only accepts `Type.AnyEntity` — raw `Schema.Schema` values can be used
  * directly without unwrapping.
  */
-export function getSchema<T extends AnyObj>(type: T): Schema.Codec<InstanceType<T>, any>;
-export function getSchema<T extends AnyRelation>(type: T): Schema.Codec<InstanceType<T>, any>;
+export function getSchema<T extends AnyObj>(type: T): Schema.Codec<InstanceType<T>, unknown>;
+export function getSchema<T extends AnyRelation>(type: T): Schema.Codec<InstanceType<T>, unknown>;
 export function getSchema(type: AnyEntity): Schema.Codec<any, any>;
 export function getSchema(type: AnyEntity): Schema.Codec<any, any> {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden

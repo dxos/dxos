@@ -20,13 +20,9 @@ import * as Type from './Type';
  */
 type MigrationSchemaInput = Type.AnyEntity;
 
-type MigrationInstanceType<S> = S extends Type.AnyEntity
-  ? Type.InstanceType<S>
-  : S extends Schema.Codec<any, any>
-    ? Schema.Schema.Type<S>
-    : never;
+type MigrationInstanceType<S extends MigrationSchemaInput> = Type.InstanceType<S>;
 
-export type TransformResult<To> = Omit<MigrationInstanceType<To>, 'id' | Entity.KindId> & {
+export type TransformResult<To extends MigrationSchemaInput> = Omit<MigrationInstanceType<To>, 'id' | Entity.KindId> & {
   [MetaId]?: Partial<EntityMeta>;
 };
 
@@ -58,7 +54,7 @@ export type ObjectMigrationContext = {
   db: Database.Database;
 };
 
-type OnMigrateProps<From, To> = {
+type OnMigrateProps<From extends MigrationSchemaInput, To extends MigrationSchemaInput> = {
   before: MigrationInstanceType<From>;
   object: MigrationInstanceType<To>;
   db: Database.Database;

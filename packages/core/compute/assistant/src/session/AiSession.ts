@@ -13,6 +13,7 @@ import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 import * as Result from 'effect/Result';
 import * as Runtime from 'effect/Runtime';
+import type * as Tool from 'effect/unstable/ai/Tool';
 import { type AtomRegistry } from 'effect/unstable/reactivity';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
@@ -141,11 +142,7 @@ export class Session extends Resource {
     return Array.sort(items.filter(Obj.instanceOf(Message.Message)), byFeedPosition);
   }
 
-  getTools(): Effect.Effect<
-    Record<string, import('effect/unstable/ai/Tool').Any>,
-    never,
-    ToolExecutionService | ToolResolverService
-  > {
+  getTools(): Effect.Effect<Record<string, Tool.Any>, never, ToolExecutionService | ToolResolverService> {
     return Effect.gen({ self: this }, function* () {
       const toolkit = yield* createToolkit({ skills: this.context.getSkills() });
       return toolkit.toolkit.tools;

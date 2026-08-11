@@ -3,6 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 
 import { SchemaAST } from '@dxos/effect';
@@ -10,7 +12,6 @@ import { SchemaAST } from '@dxos/effect';
 import { TypeAnnotationId } from '../Annotation/annotations';
 import { toEffectSchema } from './json-schema';
 import { type JsonSchemaType } from './json-schema-type';
-import corpus from './json-schema-v3-corpus.json';
 
 //
 // Spaces hold JSON Schema written by Effect 3, so `toEffectSchema` stays a permanent read path:
@@ -19,7 +20,11 @@ import corpus from './json-schema-v3-corpus.json';
 // v4 emits none of the `/schemas/*` sentinels below, so they survive only in already-stored data.
 //
 
-const types = corpus as unknown as Record<string, JsonSchemaType>;
+// Read rather than imported: `include: ['src']` does not pick up `.json`, so importing it would
+// need the generated tsconfigs to carry an extra entry.
+const types = JSON.parse(
+  readFileSync(fileURLToPath(new URL('./json-schema-v3-corpus.json', import.meta.url)), 'utf-8'),
+) as Record<string, JsonSchemaType>;
 const typenames = Object.keys(types);
 
 const propertiesOf = (schema: Schema.Codec<any, any>): readonly SchemaAST.PropertySignature[] => {
