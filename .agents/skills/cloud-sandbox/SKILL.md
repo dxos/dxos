@@ -11,33 +11,31 @@ description: >-
 
 # Working in the Claude Code cloud sandbox
 
-The sandbox is an ephemeral Linux container that runs the agent with the repo cloned fresh at
+The sandbox is an ephemeral Linux container running the agent against a fresh clone at
 `/home/user/<repo>`. It is not the environment `AGENTS.md` and `.claude/CLAUDE.md` assume, and
-several of their instructions do not hold here. This skill lists every difference found so far.
-(Facts below were measured in two independent sessions, 2026-08-07.)
+several of their instructions do not hold here.
 
 ## Detect it
 
 `CLAUDE_CODE_REMOTE` is set, alongside `CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE` and a `CCR_*` family
-(`CCR_AGENT_PROXY_ENABLED`, `CCR_EGRESS_GATEWAY_ENABLED`, …). Any of these means you are in the
-sandbox. `/root/.ccr/README.md` also exists and documents the network proxy from the platform side.
+(`CCR_AGENT_PROXY_ENABLED`, `CCR_EGRESS_GATEWAY_ENABLED`, …). Any of these means the sandbox.
+`/root/.ccr/README.md` documents the network proxy from the platform side.
 
 ## Project hooks do NOT run
 
 `.claude/settings.json` hooks are inert in cloud sessions. Consequences:
 
 - `.claude/hooks/mode.sh` never injects the `RESPONSE RULES` block, and `/mode terse|normal` does
-  nothing. **Follow the response rules from `AGENTS.md` → "Responding to the user" by reading them
-  directly** — nothing will re-inject them mid-session.
+  nothing. **Read the response rules from `AGENTS.md` → "Responding to the user" directly** —
+  nothing re-injects them mid-session.
 - `.claude/hooks/track.sh` never fires, so `/project …` does not work. Maintain `TASKS.md` /
-  `DESIGN.md` by hand if the work needs tracking.
-- `guard-branch.sh` and `guard-worktree.sh` do not deny anything. The Non-negotiables they back
-  (never create/switch branches or worktrees, never edit while on `main`) still apply in full —
-  **you are the only thing enforcing them now.** Check `git branch --show-current` before your
-  first edit rather than relying on the guard.
+  `DESIGN.md` by hand when the work needs tracking.
+- `guard-branch.sh` and `guard-worktree.sh` deny nothing. The Non-negotiables they back (never
+  create/switch branches or worktrees, never edit while on `main`) still apply in full — **you are
+  the only thing enforcing them.** Check `git branch --show-current` before the first edit.
 
-There is also no `SessionStart` hook, so no `SESSION CONTEXT` block. `AGENTS.md` already covers
-this: run `git rev-parse --show-toplevel && git branch --show-current` before any file op.
+There is no `SessionStart` hook either, so no `SESSION CONTEXT` block: run
+`git rev-parse --show-toplevel && git branch --show-current` before any file op.
 
 ## Tooling not on PATH
 
@@ -49,44 +47,49 @@ this: run `git rev-parse --show-toplevel && git branch --show-current` before an
 | `gh run list --branch … --workflow "Check"` | `mcp__github__*` tools only — there is no `gh`                        |
 | `pnpm format`                               | works (goes through pnpm); a bare `oxfmt` does not                    |
 
+GitHub's REST API is **also unreachable from the shell**: `curl https://api.github.com/…` returns
+`GitHub access is not enabled for this session`, with or without a token. Never build a poll loop or
+`Monitor` around it — it fails identically whether CI is red, green, or still running, so silence
+means nothing. Read run status through the `mcp__github__*` tools, which go through the server side.
+
 ## Dependencies are installed but not built
 
-The clone ships `node_modules` but no build outputs. The first `moon run <app>:serve` will run a
-pnpm install and then build the whole dependency graph — expect 10+ minutes, not seconds. Bundled
-sub-packages may still be missing afterward: `@dxos/shell` needs `moon run shell:bundle`
-explicitly, or the app's shell entry 500s with
-`Failed to resolve import "@dxos/shell/style.css"`. Build before you try to run anything, and
-budget for it.
+The clone ships `node_modules` but no build outputs. A first `moon run <app>:serve` runs a pnpm
+install and then builds the whole dependency graph — expect 10+ minutes. Bundled sub-packages may
+still be missing afterward: `@dxos/shell` needs `moon run shell:bundle` explicitly, or the app's
+shell entry 500s with `Failed to resolve import "@dxos/shell/style.css"`. Build before running
+anything, and budget for it.
 
-One trap this creates: a task whose inputs have not changed replays its cached result, so after
-editing a library, e2e bundles pick the edit up only after the library actually rebuilds. When a
-fix "doesn't work", first make sure the library rebuilt (plain `moon run <lib>:build` — file-hash
-caching picks up source edits) and then rebuild the app's `bundle-e2e` before concluding anything —
-a stale bundle has already produced one false verdict on a good fix. Do NOT reach for `--force`:
-it cascades cache-bypass through the whole action graph and has raced one package's type-check
-against another's concurrent rebuild (`Cannot find module '@dxos/app-framework/Capability'` on an
-untouched checkout).
+A task whose inputs have not changed replays its cached result, so after editing a library, e2e
+bundles pick the edit up only once the library actually rebuilds. When a fix "doesn't work", confirm
+the library rebuilt (plain `moon run <lib>:build` — file-hash caching picks up source edits) and
+rebuild the app's `bundle-e2e` before concluding anything; a stale bundle reads as a failed fix. Do
+NOT reach for `--force`: it cascades cache-bypass through the whole action graph and can race one
+package's type-check against another's concurrent rebuild (`Cannot find module
+'@dxos/app-framework/Capability'` on an untouched checkout).
+
+A type error in a file your change never touched is usually an unbuilt dependency, not a real error
+— build that package before "fixing" the type.
 
 ## One checkout, no worktrees
 
-The repo lives at `/home/user/<repo>` on a branch the harness assigned (`claude/…`). There are no
-worktrees, so the `branch == claude/<worktree-dir-name>` pairing convention in `AGENTS.md` cannot
-hold — the directory is `dxos`, the branch is something else entirely. That is expected; do not
-try to "fix" it. The rule that survives is the important one: never create or switch branches or
-worktrees.
+The repo lives at `/home/user/<repo>` on a harness-assigned `claude/…` branch. There are no
+worktrees, so `AGENTS.md`'s `branch == claude/<worktree-dir-name>` pairing cannot hold — the
+directory is the repo name and the branch is something else. That is expected; do not try to fix it.
+The rule that survives is the important one: never create or switch branches or worktrees.
 
 ## The container is ephemeral
 
 It is reclaimed after inactivity or when the session ends. Anything not committed and pushed is
 gone. Push early rather than at the end of a long task.
 
-### The container's size can change across restarts
+### Container size can change across restarts
 
-A worker-process restart can land the session on a **different-sized container**: one session went
-from a box that sustained 2-worker composer e2e (all green) to a 4-core box (`nproc` = 4) where the
-same command starved itself — load average 6.5, planks never rendering, boots timing out — and 12 of
-18 tests failed for reasons that had nothing to do with the code under test. Measurements taken on
-different boxes are not comparable, and a 4-core box cannot run 2-worker composer e2e at all.
+A worker restart can land the session on a **different-sized container** — for example from a box
+that sustains 2-worker composer e2e to a 4-core box where the same command starves itself (load
+average above 6, planks never rendering, boots timing out, most failures unrelated to the code under
+test). Measurements from different boxes are not comparable, and a 4-core box cannot run 2-worker
+composer e2e at all.
 
 After any restart, before trusting or comparing a local test result:
 
@@ -96,15 +99,15 @@ nproc && uptime   # cores changed or load already high => re-baseline, or move v
 
 ### The checkout can silently revert mid-session
 
-Twice in one session the working tree was found at an **older commit than the branch it had already
-pushed** — once ~30 commits behind, once back at a commit from before a dozen fixes. `origin` was
-intact both times, so nothing was lost, but every local measurement taken in that window had been
-running **pre-fix code while appearing to test the tip**, and one commit landed on the stale base
-(fixed by rebasing onto `origin/<branch>`).
+The working tree can be found at an **older commit than the branch has already pushed** — tens of
+commits behind, with `origin` intact. Nothing warns you: `git status` reads clean because the tree
+is consistent, just old. Every local measurement taken in that window runs pre-fix code while
+appearing to test the tip, and a commit made there lands on a stale base.
 
-Nothing warns you. `git status` reads clean, because the tree is consistent — just old. The tell is
-indirect: a file lacking an edit you know you made, `git log -- <file>` showing only upstream
-commits, or a commit SHA you created reported as `unknown revision`.
+The tells are indirect: a file missing an edit you know you made, `git log -- <file>` showing only
+upstream commits, or a SHA you created reported as `unknown revision`. **A local
+`unknown revision`/`not a valid object name` means "not fetched", not "does not exist" — `git fetch`
+before concluding a commit is gone.**
 
 Before trusting any local test result, and before committing:
 
@@ -113,29 +116,29 @@ git merge-base --is-ancestor <a-commit-you-know-you-made> HEAD && echo current |
 git fetch origin <branch> && git log --oneline -1 origin/<branch>   # compare with HEAD
 ```
 
-Recover with `git merge --ff-only origin/<branch>` (never a fresh branch or worktree — see below).
-Then **rebuild before re-measuring**: the bundle on disk may have been built from either revision,
-and a stale `out/<app>` presents as `vite preview: directory does not exist`, not as a test failure.
+Recover with `git merge --ff-only origin/<branch>` (never a fresh branch or worktree). Then
+**rebuild before re-measuring**: the bundle on disk may have been built from either revision, and a
+stale `out/<app>` presents as `vite preview: directory does not exist`, not as a test failure.
 
 ## Network: everything HTTPS goes through a local proxy
 
-Outbound HTTPS is only reachable via a local agent proxy on loopback — read the address from
-`$HTTPS_PROXY` (the **port varies per session**; two observed sessions used 34301 and 44027, so
-never hard-code it). Direct egress is refused. Loopback is in `no_proxy`, so localhost is direct
-and unrestricted.
+Outbound HTTPS is reachable only via a local agent proxy on loopback — read the address from
+`$HTTPS_PROXY`; the **port varies per session**, so never hard-code it. Direct egress is refused.
+Loopback is in `no_proxy`, so localhost is direct and unrestricted.
 
-Tools that read `HTTPS_PROXY` (curl, pnpm, node with `NODE_USE_ENV_PROXY=1`) work with no changes.
-See `/root/.ccr/README.md` for per-tool CA configuration. **Never disable TLS verification and
-never unset `HTTPS_PROXY`.**
+Tools that read `HTTPS_PROXY` (curl, pnpm, node with `NODE_USE_ENV_PROXY=1`) work unchanged. See
+`/root/.ccr/README.md` for per-tool CA configuration. **Never disable TLS verification and never
+unset `HTTPS_PROXY`.** Diagnose a blocked host with `curl -sS "$HTTPS_PROXY/__agentproxy/status"`,
+which lists recent relay failures and the reason for each.
 
 ### Chromium and Playwright need two flags
 
-Chromium does not read `HTTPS_PROXY`, so it must be pointed at the proxy explicitly. It then fails
-a second time: the egress proxy resets Chromium's TLS 1.3 ClientHello mid-handshake
-(`ERR_CONNECTION_RESET`; in a netlog, `SSL_HANDSHAKE_ERROR net_error=-101`). curl negotiates TLS
-1.3 through the same proxy without trouble, so this is specific to Chromium's ClientHello.
-Disabling ECH and the post-quantum key agreement (by feature flag and by managed policy) does not
-help. Capping at TLS 1.2 does.
+Chromium does not read `HTTPS_PROXY`, so point it at the proxy explicitly. It then fails a second
+time: the egress proxy resets Chromium's TLS 1.3 ClientHello mid-handshake (`ERR_CONNECTION_RESET`;
+`SSL_HANDSHAKE_ERROR net_error=-101` in a netlog). curl negotiates TLS 1.3 through the same proxy
+fine, so this is specific to Chromium's ClientHello; disabling ECH and post-quantum key agreement
+does not help, and capping at TLS 1.2 does. This is a proxy-side defect rather than a browser
+property — re-test periodically, but it still reproduces.
 
 ```bash
 /opt/pw-browsers/chromium --headless --no-sandbox \
@@ -154,7 +157,7 @@ const browser = await chromium.launch({
   args: [
     '--no-sandbox',
     // Args form, NOT Playwright's `proxy:` option — that option drops its `bypass` list for pages
-    // in a non-default context, sending the app's own localhost URL through the proxy (405, the
+    // in a non-default context, sending the app's own localhost URL through the proxy (405, so the
     // page renders the proxy's error text instead of the app).
     `--proxy-server=${process.env.HTTPS_PROXY}`,
     '--proxy-bypass-list=127.0.0.1;localhost',
@@ -163,63 +166,48 @@ const browser = await chromium.launch({
 });
 ```
 
-Chromium is pre-installed at `/opt/pw-browsers/chromium` with
-`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`. Never run `playwright install` for chromium; firefox
-and webkit are NOT pre-installed but `playwright install firefox webkit` plus
-`playwright install-deps webkit` works, and both browsers then reach EDGE over `wss` with no
-proxy configuration at all.
+Browsers live under `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`, with Chromium always pre-installed
+— never run `playwright install` for it. Check that directory for firefox/webkit before assuming
+they are absent; when they are, `playwright install firefox webkit` plus
+`playwright install-deps webkit` works, and both then reach EDGE over `wss` with no proxy
+configuration at all.
 
-The TLS 1.2 cap is a workaround for a proxy-side defect, not a property of the browser — treat it
-as temporary and re-test periodically.
+`e2ePreset` in `packages/common/test-utils/src/playwright.ts` already applies the chromium launch
+args, gated on `CLAUDE_CODE_REMOTE`, so every `e2e`-tagged suite inherits them. Two call sites in
+`vite.base.config.ts` do not — the `browser:` blocks for storybook tests and for `test-browser` unit
+tests — so those still need the flags passed by hand in the sandbox. Gate any new call site on
+`process.env.CLAUDE_CODE_REMOTE` (or `CCR_AGENT_PROXY_ENABLED`): an unconditional
+`--ssl-version-max=tls1.2` would silently downgrade real dev and CI runs.
 
 ### What works and what does not
 
-Verified working through the proxy: HTTPS to `dxos.network` and `*.dxos.workers.dev`; CORS from a
+Working through the proxy: HTTPS to `dxos.network` and `*.dxos.workers.dev`; CORS from a
 `http://localhost:5173` origin (edge returns `access-control-allow-origin` for it); WebSocket
-upgrades — `101 Switching Protocols` relays, and a Chromium `WebSocket` opened and round-tripped a
-message. (`/root/.ccr/README.md` claims WebSocket upgrades are unsupported; that is outdated.)
-An unauthenticated `wss://dxos.network/ws/<identityKey>/<peerKey>` gets edge's own
+upgrades — `101 Switching Protocols` relays, and a Chromium `WebSocket` round-trips a message.
+(`/root/.ccr/README.md` says WebSocket upgrades are unsupported; that is outdated.) An
+unauthenticated `wss://dxos.network/ws/<identityKey>/<peerKey>` gets edge's own
 `401 WWW-Authenticate: VerifiablePresentation`, which means the handshake reached the worker.
-Do NOT cite todomvc's green non-chromium playwright runs as proof that two-peer invitations work
-here — its beforeEach aliases `guest = host` off chromium, so those runs never open a second peer.
-Space invitations require a real WebRTC swarm connection (edge is signaling only, and
-`@dxos/network-manager` has no edge-relay data transport). Same-host peers CAN connect on host
-candidates (see above) — measured working on chromium with the launch fixes; webkit was measured
-failing with both peers logging `connection.ts "timeout waiting 10s for transport to connect"`,
-cause not yet isolated (webkit-side WebRTC vs. environment).
 
-Does not work:
+Not working:
 
-- **External UDP only** (measured 2026-08-08, superseding an earlier blanket "no WebRTC" claim):
-  STUN binding to public servers times out, and `calls.dxos.network` TURN is policy-blocked — but
-  **same-host WebRTC works**: two peers in the same browser on this host complete ICE on host
-  candidates over the container's own interface, with the real `https://dxos.network/ice` config
-  and its unreachable STUN/TURN listed. Two-peer playwright tests (invitation → WebRTC connect →
-  replication) can therefore pass locally on chromium. Only flows needing NAT traversal to an
-  external peer are impossible.
-- **`calls.dxos.network`** — the egress gateway answers 502 to the CONNECT (policy denial). Calls
-  and transcription features are unavailable.
+- **External UDP.** STUN binding to public servers times out and `calls.dxos.network` TURN is
+  policy-blocked, so any flow needing NAT traversal to an external peer is impossible. **Same-host
+  WebRTC does work**: two peers in the same browser complete ICE on host candidates over the
+  container's own interface, with the real `https://dxos.network/ice` config and its unreachable
+  STUN/TURN listed. Two-peer Playwright tests (invitation → connect → replication) therefore can
+  pass locally on chromium; webkit peers have been measured failing with
+  `connection.ts "timeout waiting 10s for transport to connect"` on both sides, cause unisolated
+  (webkit WebRTC vs. environment).
+- **`calls.dxos.network`** — the egress gateway answers 502 to the CONNECT (policy denial), so calls
+  and transcription are unavailable.
 - **`api.ipfs.dxos.network`, `gateway.ipfs.dxos.network`** — CONNECT is allowed but the origin
   resets; these look decommissioned rather than blocked.
 
-The client logs recurring `EdgeConnectionClosedError` from the dedicated worker. Unexplained, and
-it does NOT prevent invitations or replication from succeeding — do not mistake it for a proxy
-problem or spend time on it when something else is failing.
+Two-peer suites (composer `collaboration.spec.ts`, todomvc `basic.spec.ts`) do open a real second
+peer on every browser, so their local results are meaningful on chromium — but absolute failure
+rates measured here are inflated by the missing STUN/TURN, so treat a local rate as a comparison
+between suites, never as a production number.
 
-Diagnose any blocked host with `curl -sS "$HTTPS_PROXY/__agentproxy/status"`, which lists recent
-relay failures and the reason for each.
-
-## Making the browser flags automatic
-
-Three places in the repo launch Chromium. Adding sandbox-gated launch args means no one has to
-remember this skill exists:
-
-- `packages/common/test-utils/src/playwright.ts` — the chromium project of `e2ePreset`, inherited
-  by every `e2e`-tagged suite (done — gated on `CLAUDE_CODE_REMOTE`).
-- `vite.base.config.ts` — the `browser:` block for storybook tests (~line 390).
-- `vite.base.config.ts` — the `browser:` block for `test-browser` unit tests (~line 504).
-
-Gate on `process.env.CLAUDE_CODE_REMOTE` (or `CCR_AGENT_PROXY_ENABLED`). An unconditional
-`--ssl-version-max=tls1.2` would silently downgrade real dev and CI runs. There is precedent for
-setting a default centrally so callers don't have to remember it: `.moon/tasks/tag-e2e.yml` sets
-`DX_PWA: 'false'` with exactly that rationale.
+The client logs recurring `EdgeConnectionClosedError` from the dedicated worker. It does NOT prevent
+invitations or replication from succeeding — do not mistake it for a proxy problem when something
+else is failing.
