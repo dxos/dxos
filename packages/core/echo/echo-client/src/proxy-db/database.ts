@@ -975,6 +975,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.runGarbageCollection(options);
   }
 
+  retainObjects(keep: Iterable<string>): string[] {
+    return this._entityManager.retainObjects(keep);
+  }
+
   /**
    * Update service references after reconnection.
    */

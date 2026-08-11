@@ -57,6 +57,11 @@ describe('RemoveAllObjects', () => {
         const remaining = yield* Database.query(Query.select(Filter.everything())).run;
         expect(remaining.map((object) => object.id).sort()).toEqual([properties.id, rootCollection.id].sort());
         expect(rootCollection.objects).toHaveLength(0);
+
+        // Dropped, not soft-deleted: nothing is left behind to collect, and a `deleted:` query
+        // finds no tombstone to recover from.
+        const deleted = yield* Database.query(Query.select(Filter.everything()).options({ deleted: 'only' })).run;
+        expect(deleted).toHaveLength(0);
       },
       WithProperties,
       Effect.provide(TestLayer),

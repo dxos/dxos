@@ -63,7 +63,7 @@ import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from
 import { getHandleState } from './handle-state';
 import { tryGetSpaceIdFromCollectionId } from './space-collection';
 import { SqliteHeadsStore } from './sqlite-heads-store';
-import { SqliteStorageAdapter } from './sqlite-storage-adapter';
+import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -446,6 +446,10 @@ export class AutomergeHost extends Resource {
     return this._repo.handles;
   }
 
+  get storage(): SqliteStorageAdapter {
+    return this._storage;
+  }
+
   async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.addReplicator(ctx, replicator);
@@ -572,14 +576,38 @@ export class AutomergeHost extends Resource {
   async removeDocument(id: AnyDocumentId): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
-    // Evict any in-memory handle first (draining its pending save) so it cannot re-persist the
-    // document after we wipe storage below — GC loads the document to inspect ownership, so a live
-    // handle typically exists at this point.
+    // Evicted first, draining its pending save, so the handle cannot re-persist what is deleted
+    // below — collection loads the document to check ownership, so one is usually live here.
     if (this._repo.handles[documentId]) {
       await this._repo.removeFromCache(documentId);
     }
-    await this._storage.removeRange([documentId]);
-    await RuntimeProvider.runPromise(this._runtime)(this._headsStore.remove(documentId));
+
+    // One transaction: the orphan scan enumerates the heads table, so chunks outliving their heads
+    // row could never be found again.
+    const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(this, function* () {
+        const transaction = yield* SqlTransaction.SqlTransaction;
+        yield* transaction.withTransaction(
+          Effect.gen(this, function* () {
+            yield* this._headsStore.remove(documentId);
+            yield* this._storage.removeRangeEffect([documentId]);
+            for (const family of SUBDUCTION_KEY_FAMILIES) {
+              yield* this._storage.removeRangeEffect([SUBDUCTION_PREFIX, family, sedimentreeId]);
+            }
+          }),
+        );
+      }),
+    );
+
+    // The classical share policy answers from these, so an id left behind keeps being announced.
+    this._createdDocuments.delete(documentId);
+    this._documentsToSync.delete(documentId);
+    this._documentsToRequest.delete(documentId);
+    this._headsUpdates.delete(documentId);
+    for (const requested of this._documentsRequested.values()) {
+      requested.delete(documentId);
+    }
   }
 
   /**
@@ -1333,3 +1361,15 @@ const encodeCollectionState = (state: CollectionState): unknown => {
  */
 const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId =>
   bs58check.encode(sedimentreeId.toBytes().slice(0, 16)) as DocumentId;
+
+/**
+ * The sedimentree id `SubductionStorageBridge` embeds in its storage keys: the 16-byte DocumentId
+ * zero-padded to 32, lowercase hex. Derived arithmetically so sweeping never requires the
+ * subduction WASM module to be initialized; `sqlite-storage-adapter.test.ts` pins the two against
+ * each other.
+ */
+export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string => {
+  const bytes = new Uint8Array(32);
+  bytes.set(bs58check.decode(documentId).subarray(0, 16));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+};

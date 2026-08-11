@@ -13,6 +13,7 @@ import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
+import { DatabaseStatsInfo } from './DatabaseStatsInfo';
 import { FeedTable, type FeedTableProps } from './FeedTable';
 import { PipelineTable, type PipelineTableProps } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
@@ -91,6 +92,9 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
             </div>
             <div className='border-t border-separator'>
               <SyncStateInfo space={space} />
+            </div>
+            <div className='border-t border-separator'>
+              <DatabaseStatsInfo space={space} />
             </div>
           </div>
         )}
