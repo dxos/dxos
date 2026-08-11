@@ -37,41 +37,62 @@ const VP_SCHEME = 'VerifiablePresentation';
  * sign — treating it as present would route the request through the auth path only to fail on the
  * missing challenge, masking the original response.
  *
- * The scheme is only recognised at a challenge boundary, never inside a quoted auth-param: a
- * `Bearer realm="VerifiablePresentation challenge=…"` declares Bearer alone, and treating it as a
- * VP challenge would retry an unrelated 401 — running a non-idempotent request twice.
+ * Only the VP challenge's own parameters are read. Two things would otherwise be mistaken for it:
+ * a `Bearer realm="VerifiablePresentation challenge=…"`, which declares Bearer alone, and a
+ * `challenge` belonging to a later scheme when the VP challenge carries none. Signing either would
+ * retry an unrelated 401, running a non-idempotent request twice.
  */
 export const parseChallengeHeader = (header: string | null | undefined): string | undefined => {
   if (!header) {
     return undefined;
   }
-  const schemeIndex = findSchemeOutsideQuotes(header);
-  if (schemeIndex === undefined) {
+
+  // Segment, rather than regex over the whole header: an auth-param value may contain a comma
+  // inside quotes, so no single delimiter separates challenges.
+  const segments = splitOutsideQuotes(header);
+  const schemeIndex = segments.findIndex((segment) => stripVpScheme(segment) !== undefined);
+  if (schemeIndex === -1) {
     return undefined;
   }
-  const match = /challenge=(?:"([^"]*)"|([^\s,]*))/i.exec(header.slice(schemeIndex));
-  if (!match) {
-    return undefined;
+
+  const parameters = [stripVpScheme(segments[schemeIndex])!, ...segments.slice(schemeIndex + 1)];
+  for (const parameter of parameters) {
+    const match = /^\s*challenge\s*=\s*(?:"([^"]*)"|([^\s,]*))/i.exec(parameter);
+    if (match) {
+      return (match[1] ?? match[2]) || undefined;
+    }
+    // A segment that is not an auth-param starts the next challenge, whose params are not ours.
+    if (parameter.trim().length > 0 && !/^\s*[!#$%&'*+\-.^_`|~\w]+\s*=/.test(parameter)) {
+      return undefined;
+    }
   }
-  return (match[1] ?? match[2]) || undefined;
+  return undefined;
 };
 
 /**
- * Index of the VP auth-scheme where it starts a challenge, or undefined.
- *
- * A hand-rolled scan rather than a split on commas: an auth-param value may itself contain a comma
- * inside quotes, so no single delimiter separates challenges.
+ * The segment's text after the VP auth-scheme token, or undefined if it does not start with it.
+ * The scheme must be a whole token, so a longer scheme merely beginning with it does not match.
  */
-const findSchemeOutsideQuotes = (header: string): number | undefined => {
-  const lowered = header.toLowerCase();
-  const scheme = VP_SCHEME.toLowerCase();
+const stripVpScheme = (segment: string): string | undefined => {
+  const trimmed = segment.trimStart();
+  if (!trimmed.toLowerCase().startsWith(VP_SCHEME.toLowerCase())) {
+    return undefined;
+  }
+  const remainder = trimmed.slice(VP_SCHEME.length);
+  return remainder === '' || remainder.startsWith(' ') || remainder.startsWith('\t') ? remainder : undefined;
+};
+
+/** Split on commas that are not inside a quoted string. */
+const splitOutsideQuotes = (header: string): string[] => {
+  const segments: string[] = [];
+  let current = '';
   let inQuotes = false;
-  let atBoundary = true;
   for (let index = 0; index < header.length; index++) {
     const character = header[index];
     if (inQuotes) {
-      if (character === '\\') {
-        index++;
+      current += character;
+      if (character === '\\' && index + 1 < header.length) {
+        current += header[++index];
       } else if (character === '"') {
         inQuotes = false;
       }
@@ -79,23 +100,16 @@ const findSchemeOutsideQuotes = (header: string): number | undefined => {
     }
     if (character === '"') {
       inQuotes = true;
-      atBoundary = false;
-      continue;
-    }
-    if (atBoundary && lowered.startsWith(scheme, index)) {
-      // Must be the whole scheme token, not a prefix of a longer one.
-      const next = header[index + scheme.length];
-      if (next === undefined || next === ' ' || next === '\t') {
-        return index;
-      }
-    }
-    if (character === ',') {
-      atBoundary = true;
-    } else if (character !== ' ' && character !== '\t') {
-      atBoundary = false;
+      current += character;
+    } else if (character === ',') {
+      segments.push(current);
+      current = '';
+    } else {
+      current += character;
     }
   }
-  return undefined;
+  segments.push(current);
+  return segments;
 };
 
 /**
