@@ -16,8 +16,7 @@ import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { type AccessToken, Connection } from '@dxos/link';
 import { type Task } from '@dxos/types';
 
 import { LINEAR_API_URL } from '../constants';

@@ -8,9 +8,8 @@ import * as Layer from 'effect/Layer';
 
 import * as Credential from '@dxos/compute/Credential';
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
+import { type AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 

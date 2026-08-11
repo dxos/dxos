@@ -44,5 +44,5 @@ export const handler = Effect.fn(function* () {
 });
 
 export const create = Command.make('create', {}, handler).pipe(
-  Command.withDescription('Issue an invitation code, redeemable once with `dx account login --code <CODE>`.'),
+  Command.withDescription('Issue an invitation code, redeemable once with `dx account signup <CODE>`.'),
 );

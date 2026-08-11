@@ -12,7 +12,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
@@ -20,7 +20,6 @@ import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { meta } from '#meta';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import * as Connection from '../types/Connection';
 import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
 import * as ConnectorOperation from '../types/ConnectorOperation';
 import * as ConnectorSpec from '../types/ConnectorSpec';

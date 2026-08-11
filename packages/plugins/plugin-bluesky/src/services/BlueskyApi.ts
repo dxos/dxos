@@ -22,8 +22,7 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { Database, Obj, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
-import type * as Connection from '@dxos/plugin-connector/Connection';
+import { type AccessToken, Connection } from '@dxos/link';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
 import { MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';

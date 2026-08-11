@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import type * as Operation from '@dxos/compute/Operation';
 import { type Database, Ref } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import type * as Connection from '../../types/Connection';
 import * as ConnectorOperation from '../../types/ConnectorOperation';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 

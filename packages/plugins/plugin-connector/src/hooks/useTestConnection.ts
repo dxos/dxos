@@ -14,12 +14,11 @@ import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
+import { Connection } from '@dxos/link';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useConnector } from '#hooks';
-
-import type * as Connection from '../types/Connection';
 
 export type TestConnectionStatus =
   /** No test has run yet (connection or its token not resolved). */

@@ -14,7 +14,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { ALL_NSIDS, NSID } from '@dxos/protocols';
+import { ALL_NSIDS, ATMOSPHERE_SOURCE, NSID } from '@dxos/protocols';
 
 export { ALL_NSIDS, NSID };
 
@@ -30,11 +30,6 @@ export { ALL_NSIDS, NSID };
  * - **App password (fallback):** explicit `--handle` / `--app-password` (or `$ATPROTO_HANDLE` /
  *   `$ATPROTO_APP_PASSWORD`) authenticate directly against the PDS with a session token.
  */
-
-// `AccessToken.source` of the default atproto / login integration ("Atmosphere"). Mirrors
-// `ATMOSPHERE_SOURCE` in plugin-connector; inlined to avoid a plugin-registry -> plugin-connector
-// dependency.
-const ATMOSPHERE_SOURCE = 'atproto.local';
 
 // Public read-only XRPC base used for identity resolution. Works for any
 // AT Protocol identity regardless of which PDS hosts it.

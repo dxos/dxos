@@ -9,7 +9,7 @@ import * as Redacted from 'effect/Redacted';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { Database, Err, type Ref } from '@dxos/echo';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 
 import { DISCORD_API_BASE } from '../constants';
 import { makeEdgeProxyHttpClientLayer } from './proxy-http-client';

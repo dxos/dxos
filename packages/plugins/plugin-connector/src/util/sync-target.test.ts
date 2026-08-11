@@ -19,10 +19,9 @@ import { DXN, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Expando } from '@dxos/schema';
 
-import * as Connection from '../types/Connection';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 import { syncTarget } from './sync-target';
 

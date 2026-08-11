@@ -18,14 +18,13 @@ import { Database, EID, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
 import { meta } from '../../meta';
-import * as Connection from '../../types/Connection';
 import * as ConnectorCoordination from '../../types/ConnectorCoordination';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { autoSyncConnection } from './auto-sync';

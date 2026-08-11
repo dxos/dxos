@@ -17,8 +17,8 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
+import { Connection } from '@dxos/link';
 import * as Publisher from '@dxos/plugin-blogger/Publisher';
-import type * as Connection from '@dxos/plugin-connector/Connection';
 
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 

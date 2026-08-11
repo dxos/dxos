@@ -344,6 +344,15 @@ export enum OAuthProvider {
 /** atproto OAuth scopes for the Atmosphere integration and account-recovery flows. */
 export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'] as const;
 
+/**
+ * `AccessToken.source` for the Atmosphere connection — the atproto account bound to a DXOS identity.
+ * atproto accounts are portable (both PDS and handle can change), so this is not a hostname. Every
+ * subsystem that looks up the account's credential matches on it, hence its home beside
+ * {@link OAuthProvider}. The connector that operates the connection is identified separately, by
+ * {@link OAuthProvider.ATPROTO} as its `Connector.id`.
+ */
+export const ATMOSPHERE_SOURCE = 'atproto.local';
+
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   provider: Schema.Enum(OAuthProvider),
   spaceId: Schema.String.pipe(Schema.refine(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
@@ -708,31 +717,25 @@ export type ValidateInvitationCodeRequest = Schema.Schema.Type<typeof ValidateIn
 export type ValidateInvitationCodeResponse = { valid: boolean };
 
 /**
- * Body of `POST /account/login`.
- *
- * Two shapes:
- * - **Recovery** (no `code`): an existing account gets a magic link by email. Never creates
- *   identities or waitlist rows.
- * - **Redemption** (`code` + `identityDid`): redeems an invitation code and creates the account.
- *   The hub replies `{ needsIdentity: true }` when a code arrives without an identity, so the
- *   caller can create one locally and retry -- the same handshake the recovery path uses.
+ * Body of `POST /account/login`. Existing-account email recovery only -- account creation redeems
+ * an invitation code via `/account/invitation-code/redeem` instead, so this never creates
+ * identities or waitlist rows.
  */
 export const LoginRequestSchema = Schema.Struct({
   email: Schema.String,
   identityDid: Schema.optional(Schema.String),
   identityKey: Schema.optional(Schema.String),
-  /** Invitation code. When present, this is a redemption rather than a recovery. */
-  code: Schema.optional(Schema.String),
 });
 export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
 
 /**
  * Response from `POST /account/login`. The shape is identical regardless of
  * whether the email is registered, so the endpoint is safe against enumeration.
- * Regular emails are delivered out-of-band and the response is `{}`.
+ * Regular emails are delivered out-of-band and the response is `{}`; a recovery
+ * token is never returned inline. Test emails in dev-like environments
+ * short-circuit with `needsIdentity` / `admitted` before any token exists.
  */
 export const LoginResponseSchema = Schema.Struct({
-  token: Schema.optional(Schema.String),
   needsIdentity: Schema.optional(Schema.Boolean),
   admitted: Schema.optional(Schema.Boolean),
 });
@@ -901,13 +904,15 @@ export type AdminRevokeInvitationCodeRequest = Schema.Schema.Type<typeof AdminRe
  * Account/invitation-related variants placed in `EdgeFailure.data.type`.
  * EdgeErrorData is open-ended; these are documentation for known values.
  */
-export type AccountErrorType =
-  | 'invitation_code_invalid'
-  | 'invitation_code_already_redeemed'
-  | 'invitation_code_revoked'
-  | 'email_already_registered'
-  | 'identity_already_associated'
-  | 'no_invitations_remaining'
-  | 'identity_not_associated_with_account'
-  | 'no_account'
-  | 'rate_limited';
+export const ACCOUNT_ERROR_TYPES = [
+  'invitation_code_invalid',
+  'invitation_code_already_redeemed',
+  'invitation_code_revoked',
+  'email_already_registered',
+  'identity_already_associated',
+  'no_invitations_remaining',
+  'identity_not_associated_with_account',
+  'no_account',
+  'rate_limited',
+] as const;
+export type AccountErrorType = (typeof ACCOUNT_ERROR_TYPES)[number];
