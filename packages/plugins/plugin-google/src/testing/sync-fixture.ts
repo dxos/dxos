@@ -14,7 +14,7 @@ import type * as Trace from '@dxos/compute/Trace';
 import { Database, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver } from '@dxos/extractor';
-import type * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 

@@ -21,6 +21,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Account": {
+      "source": "./src/account/Account.ts",
+      "types": "./dist/types/src/account/Account.d.ts",
+      "import": "./dist/lib/account/Account.mjs"
+    },
     "./AppActivationEvents": {
       "source": "./src/app-framework/AppActivationEvents.ts",
       "types": "./dist/types/src/app-framework/AppActivationEvents.d.ts",
@@ -171,13 +176,17 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/progress": "workspace:*",
     "@dxos/protocols": "workspace:*",

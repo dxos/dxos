@@ -34,7 +34,7 @@ export default Capability.makeModule(
               id: 'resetData',
               data: () =>
                 Effect.sync(() => {
-                  window.location.href = '/reset.html#continue';
+                  window.location.href = '/reset.html';
                 }),
               properties: {
                 label: ['reset-data.label', { ns: meta.profile.key }],

@@ -9,7 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Button, Dialog, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
@@ -17,7 +17,6 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import type * as Connection from '../../types/Connection';
 import * as ConnectorCoordination from '../../types/ConnectorCoordination';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { isCursorForConnection } from '../../util';

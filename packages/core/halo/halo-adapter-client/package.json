@@ -26,6 +26,7 @@
     "@dxos/halo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "publishConfig": {

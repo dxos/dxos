@@ -104,6 +104,11 @@ jobs:
       - name: Check public packages are published
         run: pnpm run check-packages-published
 
+      # Pre-1.0 a breaking change rides the minor; `major` is reserved for the deliberate 1.0.0 cut. The
+      # groups are `fixed`, so one stray `major` versions every package to 1.0.0. Delete with the cut.
+      - name: Check changeset bump levels
+        run: pnpm run check-changeset-bumps
+
       - name: Check version files in sync
         # version.ts (DXOS_VERSION) + tauri.conf.json are derived from their package versions by
         # sync-versions.mjs during release; fail the PR if a committed copy drifts out of sync.

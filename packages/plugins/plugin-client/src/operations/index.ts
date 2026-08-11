@@ -8,6 +8,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { UpdateProfile } from './definitions';
 import { ShareIdentity } from './definitions';
+import { RevokeRecoveryCredential } from './definitions';
 import { ResetStorage } from './definitions';
 import { RedeemToken } from './definitions';
 import { RedeemPasskey } from './definitions';
@@ -33,6 +34,7 @@ export const ClientOperationHandlerSet = OperationHandlerSet.lazy([
   RedeemPasskey.pipe(Operation.lazyHandler(() => import('./redeem-passkey'))),
   RedeemToken.pipe(Operation.lazyHandler(() => import('./redeem-token'))),
   ResetStorage.pipe(Operation.lazyHandler(() => import('./reset-storage'))),
+  RevokeRecoveryCredential.pipe(Operation.lazyHandler(() => import('./revoke-recovery-credential'))),
   ShareIdentity.pipe(Operation.lazyHandler(() => import('./share-identity'))),
   NavigationOperation.ResolveNavigationTargets.pipe(
     Operation.lazyHandler(() => import('./resolve-navigation-targets')),

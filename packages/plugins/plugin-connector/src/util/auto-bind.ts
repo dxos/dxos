@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import * as Connection from '../types/Connection';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 import { ensureSyncTrigger } from './sync-routine';
 import { connectorIdsForTarget } from './target-connectors';

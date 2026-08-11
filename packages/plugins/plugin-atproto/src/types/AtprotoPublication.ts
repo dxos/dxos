@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Relation, Type } from '@dxos/echo';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 
 /**
  * Record of an ECHO object published to an atproto repo. Source = the {@link Connection} that

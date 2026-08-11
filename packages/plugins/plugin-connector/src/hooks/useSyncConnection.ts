@@ -6,11 +6,11 @@ import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import { useConnector } from '#hooks';
 
-import * as Connection from '../types/Connection';
 import * as ConnectorOperation from '../types/ConnectorOperation';
 
 export type UseSyncConnectionResult = {

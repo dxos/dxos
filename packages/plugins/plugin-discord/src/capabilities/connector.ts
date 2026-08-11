@@ -9,9 +9,8 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { ConnectionTestError } from '@dxos/plugin-connector';
-import * as Connection from '@dxos/plugin-connector/Connection';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 

@@ -10,9 +10,28 @@ import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
+import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { getHostPlatform } from '@dxos/util';
 
 import * as ClientCapabilities from '../types/ClientCapabilities';
 import { CreatePasskey } from './definitions';
+
+/**
+ * Best-effort name for a newly created passkey, so the list is not a column of identical dates.
+ * The authenticator never tells us which it is, so the platform is the only distinguishing thing
+ * available at creation time; the user can rename it on the account page.
+ */
+const PLATFORM_NAMES: Partial<Record<ReturnType<typeof getHostPlatform>, string>> = {
+  macos: 'macOS',
+  windows: 'Windows',
+  ios: 'iOS',
+  linux: 'Linux',
+};
+
+const defaultPasskeyLabel = (): string => {
+  const platform = PLATFORM_NAMES[getHostPlatform()];
+  return platform ? `Passkey on ${platform}` : 'Passkey';
+};
 
 const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
   Operation.withHandler(
@@ -47,7 +66,7 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
               navigator.credentials.create({
                 publicKey: {
                   challenge: new Uint8Array(),
-                  rp: { id: location.hostname, name: 'Composer' },
+                  rp: { id: NativePasskey.getRelyingPartyId(), name: 'Composer' },
                   user: {
                     id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
                     name: identity.did,
@@ -80,6 +99,8 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
             recoveryKey,
             algorithm,
             lookupKey,
+            label: defaultPasskeyLabel(),
+            kind: IdentityRecovery.Kind.PASSKEY,
           },
         }),
       );

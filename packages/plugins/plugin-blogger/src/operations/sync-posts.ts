@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import type * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
