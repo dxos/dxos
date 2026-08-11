@@ -1,11 +1,5 @@
 layer: application
 language: typescript
-# This suite runs in its own dedicated CI cell (via `e2e`), so it opts out of the pool's `e2e-ci` —
-# excluding it here rather than in the workflow keeps the pool a plain glob.
-workspace:
-  inheritedTasks:
-    exclude:
-      - e2e-ci
 tags:
   - e2e
   - tauri

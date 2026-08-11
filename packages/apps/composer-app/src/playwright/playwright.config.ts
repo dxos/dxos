@@ -15,9 +15,9 @@ export default defineConfig({
   testIgnore: ['**/startup.spec.ts', '**/dev-*.spec.ts', '**/welcome-focus.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  // Above the preset's 2 but below the refuted 4: two-peer specs boot two app instances per worker,
-  // and at 4 workers webkit lost renderers ("browser has been closed") and firefox missed
-  // create-space's readiness budget (run 31506532354). 3 is the arm under validation.
+  // Above the preset's 2 but below 4, which was measured overloading the cell: two-peer specs boot
+  // two app instances per worker, and at 4 webkit lost renderers and firefox missed create-space's
+  // readiness budget (run 31506532354) — at 3 every single-peer test passed on all three browsers.
   workers: 3,
   webServer: {
     command: 'pnpm vite preview',

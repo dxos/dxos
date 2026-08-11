@@ -48,9 +48,11 @@ Two axes into 6 matrix cells — browser (`PLAYWRIGHT_BROWSER`) × shard (`compo
 two-peer specs boot two app instances per worker, and at 4 webkit lost renderers and firefox missed
 create-space's 10 s readiness budget, run 31506532354, against 0-in-39 at 2 workers; 4 also bought
 no time, 3m09 vs the halves' serial 3m15, because two-peer waits dominate, not queue depth); the
-`rest` cell runs the `:e2e-ci*` pool plus `plugin-script:e2e`, one
-task at a time (`--concurrency=1`), each at the preset's workers. composer-app excludes the inherited
-`e2e-ci` so the pool glob never matches it. Job layout and the JUnit paths Trunk reads are in
+`rest` cell runs `moon exec ':e2e' --query project!=composer-app`, one task at a
+time (`--concurrency=1`), each at the preset's workers. There is one `e2e` task per suite and the
+split is MQL, not a marker task: the earlier `e2e-ci` clone (plus composer's `inheritedTasks.exclude`
+and an explicit `plugin-script:e2e`, which the query now covers because that project defines `e2e`
+without the tag) existed only to give the pool a name composer could opt out of. Job layout and the JUnit paths Trunk reads are in
 [`.github/workflows/README.md`](../../../.github/workflows/README.md).
 
 The browser rides an env var rather than per-browser task variants (`e2e-chromium`, …) so it does not
