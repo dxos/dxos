@@ -28,12 +28,16 @@ export const discoverRules = (root) => {
   return [...paths].sort().flatMap((relPath) => loadRules(resolve(root, relPath)));
 };
 
-/** Compile a grep pattern as a RegExp, falling back to a literal match. */
+/** Compile a grep pattern as a RegExp, tolerating a pattern that isn't valid
+ * regex by matching it literally — a rule may reasonably write a plain string. */
 const compileGrep = (pattern) => {
   try {
     return new RegExp(pattern);
-  } catch {
-    return new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    }
+    throw error;
   }
 };
 

@@ -36,7 +36,8 @@ more block type. The harness scans every `.mdl` file, extracts the `rule` blocks
 and ignores the rest, so descriptor documents (`SPEC.mdl`, `PLUGIN.mdl`) define no
 rules and are passed over. Put rules wherever they belong — colocated in a
 package's `.mdl`, or in a shared document like `rules/non-negotiables.mdl`. The
-run store is written to `.agents/reviews/<slug>/` (git-ignored).
+run store is written to `.agents/reviews/<slug>/` and committed in full (REVIEW.md
+plus the STAGING.md / groups.json / per-group fragments) so runs stay auditable.
 
 ## Workflow
 

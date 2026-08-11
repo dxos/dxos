@@ -80,8 +80,9 @@ export const isAncestor = (ancestor, descendant) => {
   }
 };
 
-/** Best-effort merge-base of two refs; null if either is unknown. */
-export const mergeBase = (a, b) => git(['merge-base', a, b], { allowFail: true });
+/** Best-effort merge-base of two refs; null if either is unknown. Internal — the
+ * only consumer is `mainMergeBase`. */
+const mergeBase = (a, b) => git(['merge-base', a, b], { allowFail: true });
 
 /**
  * Repo-relative paths changed between `base` and the working tree: committed

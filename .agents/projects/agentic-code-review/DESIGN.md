@@ -232,8 +232,9 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
 - Scripts are dependency-free Node ESM `.mjs` — a hand-rolled frontmatter parser
   is used because a standalone script can't resolve a pnpm-hoisted YAML package.
 - Subagents run on **Sonnet**.
-- The finalized `REVIEW.md` is **committed** for incremental base resolution; the
-  transient run inputs (STAGING.md, groups.json, groups/) stay git-ignored.
+- The run store is **committed in full** — `REVIEW.md` drives incremental base
+  resolution, and STAGING.md / groups.json / the per-group fragments are kept so a
+  run's inputs and raw diagnostics stay auditable.
 
 ## Status
 
