@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './account';
 export * from './app';
 export * from './app-framework';
 export * from './app-graph';

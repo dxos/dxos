@@ -13,17 +13,14 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as Account from '@dxos/app-toolkit/Account';
 import { CommandConfig, FormBuilder, flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { performRegisterOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
 import { type Identity } from '@dxos/client/halo';
-import { Context as DxContext } from '@dxos/context';
-import { Ref } from '@dxos/echo';
-import { type HubHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
-import { ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
+import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
 
 import { ClientOperation } from '#operations';
 
@@ -34,8 +31,6 @@ import {
   METHOD_ALIASES,
   hubClient,
   methodOption,
-  normalizeAccessCode,
-  validAccessCode,
 } from '../util';
 
 type SignupMethod = 'email' | typeof ATMOSPHERE_METHOD;
@@ -50,14 +45,6 @@ const METHOD_CHOICES = [
 const INPUT_PROMPT: Record<SignupMethod, string> = {
   email: 'Email address',
   [ATMOSPHERE_METHOD]: ATMOSPHERE_INPUT_PROMPT,
-};
-
-/** Result of a successful sign-up, from whichever method minted the Account. */
-type SignupResult = {
-  /** Address bound to the Account: user-supplied (email) or provider-verified (atproto). */
-  email: string;
-  accountId: string;
-  emailVerificationSent: boolean;
 };
 
 export const signup = Command.make(
@@ -81,22 +68,19 @@ export const signup = Command.make(
     const manager = yield* Plugin.Service;
     const { invoke } = manager.capabilities.get(Capabilities.OperationInvoker);
 
-    if (!validAccessCode(code)) {
+    if (!Account.isValidAccessCodeFormat(code)) {
       return yield* Effect.fail(
         new Error(`Access code ${code} is malformed — codes are 8 characters (Crockford base32, hyphen optional).`),
       );
     }
 
     const hub = yield* hubClient;
-    const accessCode = normalizeAccessCode(code);
-    const { valid } = yield* Effect.tryPromise({
-      try: () => hub.validateInvitationCode(DxContext.default(), { code: accessCode }),
-      catch: (cause) =>
-        new Error(`Could not validate the access code: ${cause instanceof Error ? cause.message : String(cause)}`),
-    });
-    if (!valid) {
+    if (!(yield* Account.checkAccessCode({ hub, code }))) {
       return yield* Effect.fail(
-        new Error(`Access code ${code} is not valid — it may be unknown, revoked, or already redeemed.`),
+        new Error(
+          `Access code ${code} is not valid — it may be unknown, revoked, already redeemed, ` +
+            'or the hub was unreachable.',
+        ),
       );
     }
 
@@ -109,10 +93,8 @@ export const signup = Command.make(
       : yield* Prompt.text({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
 
     const result = yield* Match.value(resolvedMethod).pipe(
-      Match.when('email', () => signUpWithEmail({ client, hub, invoke, code: accessCode, email: resolvedInput })),
-      Match.when(ATMOSPHERE_METHOD, () =>
-        signUpWithAtmosphere({ client, hub, invoke, code: accessCode, handle: resolvedInput }),
-      ),
+      Match.when('email', () => signUpWithEmail({ client, hub, invoke, code, email: resolvedInput })),
+      Match.when(ATMOSPHERE_METHOD, () => signUpWithAtmosphere({ client, hub, invoke, code, handle: resolvedInput })),
       Match.exhaustive,
     );
 
@@ -136,7 +118,7 @@ export const signup = Command.make(
   Command.provideEffectDiscard(() => withTypes(AccessToken.AccessToken, Connection.Connection)),
 );
 
-const printAccount = (account: SignupResult & { identityDid: string }) =>
+const printAccount = (account: Account.SignUpResult & { identityDid: string }) =>
   FormBuilder.make({ title: 'Account' }).pipe(
     FormBuilder.set('accountId', account.accountId),
     FormBuilder.set('email', account.email),
@@ -147,43 +129,49 @@ const printAccount = (account: SignupResult & { identityDid: string }) =>
 
 type MethodParams = {
   client: Client;
-  hub: HubHttpClient;
+  hub: ReturnType<typeof Account.createHubClient>;
   invoke: Capabilities.OperationInvoker['invoke'];
   code: string;
 };
 
 /**
- * Email sign-up, mirroring the gate's sign-up tab (`WelcomeScreen.handleCreateAccount`): reject an
- * address that already has an account, then bind a local identity to the access code plus that
- * address. Hub-service mails the verification link out-of-band; the identity is admitted either way.
+ * The local identity outlives any failure past its creation, so failures after that point all
+ * carry the same recovery guidance.
+ */
+const RECOVERY =
+  'A local identity was created and remains bound to this profile; run `dx account logout` to ' +
+  'clear it before retrying.';
+
+/**
+ * Email sign-up — {@link Account.signUpWithEmail} with the CLI's identity creation injected, and
+ * the shared flow's typed errors translated to actionable CLI messages.
  */
 const signUpWithEmail = Effect.fn(function* ({ client, hub, invoke, code, email }: MethodParams & { email: string }) {
-  // Probe before creating anything: redemption rejects an address that already has an account, and
-  // an identity created first would be stranded with no account. An inconclusive probe (rate limit,
-  // timeout, transport error) is not permission to proceed, so it stops here too.
-  const { exists } = yield* Effect.tryPromise({
-    try: () => hub.checkEmailExists(DxContext.default(), { email }),
-    catch: (cause) =>
-      new Error(
-        `Could not check whether ${email} already has an account: ` +
-          `${cause instanceof Error ? cause.message : String(cause)}. Nothing was created — try again.`,
+  return yield* Account.signUpWithEmail({
+    hub,
+    email,
+    code,
+    ensureIdentity: ensureIdentity(client, invoke, email.split('@')[0]),
+  }).pipe(
+    Effect.catchTag('EmailAlreadyRegisteredError', () =>
+      Effect.fail(new Error(`${email} already has an account. Run \`dx account login\` to sign in to it instead.`)),
+    ),
+    Effect.catchTag('EmailProbeUnavailableError', () =>
+      Effect.fail(
+        new Error(`Could not check whether ${email} already has an account. Nothing was created — try again.`),
       ),
-  });
-  if (exists) {
-    return yield* Effect.fail(
-      new Error(`${email} already has an account. Run \`dx account login\` to sign in to it instead.`),
-    );
-  }
-
-  const identity = yield* ensureIdentity(client, invoke, email.split('@')[0]);
-  return yield* redeemAccessCode(hub, { code, email, identity });
+    ),
+    Effect.catchTag('AccountRedemptionError', (error) =>
+      Effect.fail(new Error(`Could not redeem the access code for ${email} (${error.message}). ${RECOVERY}`)),
+    ),
+  );
 });
 
 /**
- * Atmosphere (atproto / Bluesky) OAuth sign-up, mirroring the gate's OAuth-first ordering
- * (`WelcomeScreen.handleCreateAccountWithOAuth` plus the redirect finalizer): authenticate with the
- * provider before creating anything locally, register the provider as a recovery method, then redeem
- * the access code with the provider-verified email.
+ * Atmosphere (atproto / Bluesky) OAuth sign-up, keeping the gate's OAuth-first ordering:
+ * authenticate with the provider (local callback server + browser) before creating anything
+ * locally, register the provider as a recovery method, then redeem the access code with the
+ * provider-verified email.
  */
 const signUpWithAtmosphere = Effect.fn(function* ({
   client,
@@ -201,104 +189,33 @@ const signUpWithAtmosphere = Effect.fn(function* ({
     loginHint: handle,
   });
 
-  // OAuth-first: the local identity is created only once the provider has authenticated the user, so
-  // a failed or abandoned auth leaves nothing behind.
+  // OAuth-first: the local identity is created only once the provider has authenticated the user,
+  // so a failed or abandoned auth leaves nothing behind.
   const identity = yield* ensureIdentity(client, invoke);
-  const defaultSpace = AppSpace.getDefaultSpace(client);
-  invariant(defaultSpace, 'Default space not found.');
-  yield* Effect.promise(() => defaultSpace.waitUntilReady());
-
-  const registration = yield* Effect.tryPromise({
-    try: () =>
-      client.edge.http.completeOAuthRegistration(DxContext.default(), {
-        registrationToken,
-        identityKey: identity.identityKey.toHex(),
-        spaceKey: defaultSpace.key.toHex(),
-      }),
-    catch: (cause) =>
-      new Error(
-        `OAuth registration completion failed: ${cause instanceof Error ? cause.message : String(cause)}. ` +
-          'A local identity was created and remains bound to this profile; run `dx account logout` to clear ' +
-          'it before retrying.',
-      ),
-  });
-  // The verified email is re-derived server-side from the registrationToken — it is never carried in
-  // the redirect. kms-service rejects no-email flows before issuing a token, so this cannot fire.
-  invariant(registration.email, 'email missing from completeOAuthRegistration');
-
-  // Materialize the AccessToken keyed by the returned id so rotated tokens land on it; without it the
-  // refresh token Edge stored is treated as orphaned and dropped.
-  const accessToken = defaultSpace.db.add(
-    AccessToken.make({
-      id: registration.accessTokenId,
-      source: ATMOSPHERE_SOURCE,
-      account: registration.identifier,
-      token: registration.accessToken,
-      scopes: registration.scopes,
-    }),
+  const { email } = yield* Account.completeOAuthRegistration({ client, registrationToken }).pipe(
+    Effect.mapError((error) => new Error(`${error.message} ${RECOVERY}`)),
   );
-  // Wrap it in a Connection so the connected account surfaces as a first-class object, as the gate
-  // does. Registration completes exactly once, so no de-dup query is needed.
-  defaultSpace.db.add(
-    Connection.make({
-      name: registration.email,
-      connectorId: OAuthProvider.ATPROTO,
-      accessToken: Ref.make(accessToken),
-    }),
-  );
-  yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(defaultSpace.id))));
 
-  return yield* redeemAccessCode(hub, { code, email: registration.email, identity });
+  const result = yield* Account.redeemAccessCode({ hub, identity, email, code }).pipe(
+    Effect.catchTag('AccountRedemptionError', (error) =>
+      Effect.fail(new Error(`Could not redeem the access code for ${email} (${error.message}). ${RECOVERY}`)),
+    ),
+  );
+  // `spaceLayer(none, true)` resolves to the default space — where the credential was written.
+  yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.none(), true)));
+  return result;
 });
 
 /** Create the local identity unless this profile already has one. */
-const ensureIdentity = Effect.fn(function* (
-  client: Client,
-  invoke: Capabilities.OperationInvoker['invoke'],
-  displayName?: string,
-) {
-  const existing = client.halo.identity.get();
-  if (existing) {
-    return existing;
-  }
-  // `CreateIdentity` fires `IdentityCreated`, which is what provisions the identity's spaces.
-  yield* invoke(ClientOperation.CreateIdentity, { displayName });
-  const identity = client.halo.identity.get();
-  invariant(identity, 'identity should exist after create');
-  return identity;
-});
-
-/**
- * Redeem the access code against hub-service to mint the Account, binding it to the local identity.
- * Codes are anonymous at issue time, so the address is supplied here: user-entered on the email
- * path, provider-verified on the atproto path.
- */
-const redeemAccessCode = Effect.fn(function* (
-  hub: HubHttpClient,
-  { code, email, identity }: { code: string; email: string; identity: Identity },
-) {
-  const result = yield* Effect.tryPromise({
-    try: () =>
-      hub.redeemInvitationCode(DxContext.default(), {
-        code,
-        email,
-        identityDid: identity.did,
-        identityKey: identity.identityKey.toHex(),
-      }),
-    catch: (cause) => redemptionFailed(email, cause instanceof Error ? cause.message : String(cause)),
+const ensureIdentity = (client: Client, invoke: Capabilities.OperationInvoker['invoke'], displayName?: string) =>
+  Effect.gen(function* () {
+    const existing = client.halo.identity.get();
+    if (existing) {
+      return existing;
+    }
+    // `CreateIdentity` fires `IdentityCreated`, which is what provisions the identity's spaces.
+    yield* invoke(ClientOperation.CreateIdentity, { displayName });
+    const identity: Identity | null = client.halo.identity.get();
+    invariant(identity, 'identity should exist after create');
+    return identity;
   });
-  if ('needsIdentity' in result) {
-    return yield* Effect.fail(redemptionFailed(email, 'hub did not accept this identity'));
-  }
-  return { email, accountId: result.accountId, emailVerificationSent: result.emailVerificationSent };
-});
-
-/**
- * The local identity outlives any failure past its creation, and hub rejects a second redemption of
- * the same code against a different identity, so both failure modes need the same guidance.
- */
-const redemptionFailed = (email: string, detail: string) =>
-  new Error(
-    `Could not redeem the access code for ${email} (${detail}). A local identity may have been created ` +
-      'and remains bound to this profile; run `dx account logout` to clear it before retrying.',
-  );

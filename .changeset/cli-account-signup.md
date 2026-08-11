@@ -1,8 +1,8 @@
 ---
+'@dxos/app-toolkit': minor
 '@dxos/plugin-client': minor
-'@dxos/cli-util': minor
 ---
 
-Add `dx account signup <code>`, which validates an access code and then signs up with either email or an Atmosphere (atproto) OAuth account, mirroring Composer's sign-up flow. This replaces `dx account login --code`, which is removed — `login` recovers an existing account again, and account creation lives in `signup`.
+Add `dx account signup <code>`, which validates an access code and then signs up with either email or an Atmosphere (atproto) OAuth account, mirroring Composer's sign-up flow. This replaces `dx account login --code`, which is removed — `login` recovers an existing account again, and account creation lives in `signup`. The `--method` name for the atproto OAuth path is now `atmosphere` in both commands, matching Composer's wording; `--method atproto` is still accepted as an alias.
 
-The `--method` name for the atproto OAuth path is now `atmosphere` in both `signup` and `login`, matching Composer's wording; `--method atproto` is still accepted as an alias.
+The sign-up flows themselves move to `@dxos/app-toolkit/Account`, shared by Composer's welcome screen, the OAuth redirect finalizer, and the CLI: the pre-signup email probe, access-code validation and redemption, and OAuth registration completion are one implementation with typed errors (`EmailAlreadyRegisteredError`, `EmailProbeUnavailableError`, `AccountRedemptionError`). Supporting moves: the `Connection` type joins `AccessToken` and `Cursor` in `@dxos/link` (no longer exported from `@dxos/plugin-connector`), `ATMOSPHERE_SOURCE` joins `OAuthProvider` in `@dxos/protocols`, and the Atmosphere connector is identified by `OAuthProvider.ATPROTO` as its `Connector.id` (`ATMOSPHERE_PROVIDER_ID` is gone; the label is unchanged). Connections created before this carry `connectorId: 'atmosphere'` and no longer resolve to a registered connector — token refresh and source lookups are unaffected, but re-auth and per-connector actions need `connectorId` set to `'atproto'`.

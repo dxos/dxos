@@ -2,12 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as HubAccount from '@dxos/app-toolkit/Account';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createDidFromIdentityKey } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
@@ -20,7 +23,6 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import hero from '../assets/hero.webp?url';
 import { WELCOME_SCREEN } from './constants';
-import { probeEmailExists } from './credentials';
 import { meta } from './meta';
 import { queryAllCredentials, removeQueryParamByValue } from './util';
 
@@ -269,35 +271,35 @@ export class OnboardingManager {
     invariant(this._email);
     invariant(this._hubUrl, 'hubUrl required for redemption');
 
-    // Probe before creating anything: redemption rejects a duplicate email, and an
-    // identity created first would be stranded with no account and no way to retry.
-    const probe = await probeEmailExists({ hubUrl: this._hubUrl, email: this._email });
-    if (probe === 'unavailable') {
+    const { _email: email, _accountInvitationCode: code } = this;
+    const ensureIdentity = Effect.gen(this, function* () {
+      yield* Effect.tryPromise(() => this._createIdentity());
+      invariant(this._identity, 'identity should exist after create');
+      return this._identity;
+    });
+
+    // Errors are mapped inside the Effect — `runPromise` rejects with a FiberFailure, so the
+    // typed errors are not matchable from a catch block.
+    const outcome = await EffectEx.runPromise(
+      HubAccount.signUpWithEmail({ hub: HubAccount.createHubClient(this._hubUrl), email, code, ensureIdentity }).pipe(
+        Effect.map(() => 'redeemed' as const),
+        Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('probe-unavailable' as const)),
+        Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('email-registered' as const)),
+      ),
+    );
+    if (outcome === 'probe-unavailable') {
       log.warn('could not check whether signup email is registered; leaving signup params for retry');
       return false;
     }
-    if (probe === 'exists') {
+    if (outcome === 'email-registered') {
       log.info('signup email already registered; awaiting login');
-      this._accountInvitationCode && removeQueryParamByValue(this._accountInvitationCode);
-      removeQueryParamByValue(this._email);
+      code && removeQueryParamByValue(code);
+      removeQueryParamByValue(email);
       return false;
     }
 
-    await this._createIdentity();
-    invariant(this._identity, 'identity should exist after create');
-
-    const result = await this._postRedeem({
-      email: this._email,
-      identityDid: await createDidFromIdentityKey(this._identity.identityKey),
-      identityKey: this._identity.identityKey.toHex(),
-      code: this._accountInvitationCode,
-    });
-    if ('accountId' in result) {
-      log.info('account redeemed', { accountId: result.accountId });
-    }
-
-    this._accountInvitationCode && removeQueryParamByValue(this._accountInvitationCode);
-    removeQueryParamByValue(this._email);
+    code && removeQueryParamByValue(code);
+    removeQueryParamByValue(email);
     return true;
   }
 
@@ -311,55 +313,23 @@ export class OnboardingManager {
     invariant(this._identity);
     invariant(this._hubUrl);
 
-    try {
-      const result = await this._postRedeem({
+    await EffectEx.runPromise(
+      HubAccount.redeemAccessCode({
+        hub: HubAccount.createHubClient(this._hubUrl),
+        identity: this._identity,
         email: this._email,
-        identityDid: await createDidFromIdentityKey(this._identity.identityKey),
-        identityKey: this._identity.identityKey.toHex(),
         code: this._accountInvitationCode,
-      });
-      if ('accountId' in result) {
-        log.info('account bound to existing identity', { accountId: result.accountId });
-      }
-    } catch (err: any) {
-      log.info('skipped binding existing identity', { error: err?.data?.type ?? err?.message });
-    }
+      }).pipe(
+        Effect.catchAll((err) =>
+          Effect.sync(() => {
+            log.info('skipped binding existing identity', {
+              error: HubAccount.accountErrorType(err) ?? err.message,
+            });
+          }),
+        ),
+      ),
+    );
     removeQueryParamByValue(this._email);
-  }
-
-  private async _postRedeem(body: {
-    email: string;
-    code?: string;
-    identityDid?: string;
-    identityKey?: string;
-  }): Promise<{ accountId: string; emailVerificationSent: boolean } | { needsIdentity: true }> {
-    invariant(this._hubUrl);
-    const url = new URL('/account/invitation-code/redeem', this._hubUrl);
-    log.info('redeeming account invitation', { url: url.href, hasCode: !!body.code, hasIdentity: !!body.identityDid });
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    let envelope: { success: boolean; message?: string; data?: any };
-    try {
-      envelope = (await response.json()) as { success: boolean; message?: string; data?: any };
-    } catch (parseErr) {
-      log.error('redeem response was not JSON', { status: response.status, statusText: response.statusText });
-      throw new Error(`Account redemption failed: HTTP ${response.status} (non-JSON response)`);
-    }
-    if (!envelope.success) {
-      log.error('account redemption failed', {
-        status: response.status,
-        message: envelope.message,
-        data: envelope.data,
-      });
-      const error: any = new Error(`Account redemption failed: ${envelope.message ?? 'unknown error'}`);
-      error.data = envelope.data;
-      throw error;
-    }
-    log.info('account redemption ok', { data: envelope.data });
-    return envelope.data;
   }
 
   private async _showWelcome(): Promise<void> {
