@@ -435,15 +435,13 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
     env:
-      # These four must stay IDENTICAL to the `e2e` job's block: moon hashes the AMBIENT value of any env
-      # var a task lists in `inputs`, even when the task's own `env` overrides it, so two jobs that
-      # disagree hash `bundle-e2e` differently and the warmed entry is never read. Scoped per job because
-      # at workflow level they would also move the hashes of `test`, `storybook`, `workerd` and `cli`.
-      # They do not configure the build — `bundle-e2e` sets that in its own `env`.
+      # Must stay IDENTICAL to the `e2e` job's: moon hashes the AMBIENT value of any env var a task
+      # lists in `inputs`, so jobs that disagree hash `bundle-e2e` differently and never share the
+      # warmed entry. The edge/telemetry/PWA vars live in the task `env`s instead (`tag-e2e.yml`,
+      # `bundle-e2e`), where consistent absence from the ambient environment keeps hashes agreeing
+      # with nothing to keep in sync. Scoped per job because at workflow level it would also move
+      # the hashes of `test`, `storybook`, `workerd` and `cli`.
       DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'https://dxos.network'
-      DX_TELEMETRY_TAG: e2e
-      DX_PWA: false
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -508,9 +506,6 @@ jobs:
     env:
       # Must stay IDENTICAL to `e2e-bundle`'s block above, which explains why.
       DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'https://dxos.network'
-      DX_TELEMETRY_TAG: e2e
-      DX_PWA: false
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ matrix.browser }}

@@ -4,9 +4,10 @@ tasks:
     command: pnpm exec playwright test
     args:
       - --config=src/playwright/playwright.config.ts
-    # Declared here, not only in CI, so a local `moon run <app>:e2e` exercises the same edge and
-    # telemetry target. The workflow repeats them because moon hashes the AMBIENT value of any env var
-    # a task lists in `inputs`, so a job that disagrees hashes `bundle-e2e` differently.
+    # The task `env`, not the workflow, owns these, so a local `moon run <app>:e2e` exercises the
+    # same edge and telemetry target as CI — and since moon hashes the AMBIENT value of env-var
+    # `inputs`, keeping them out of every job's environment is what keeps `bundle-e2e` hashing
+    # identically across jobs. Do not add them to a workflow env block.
     env:
       # Production edge — e2e must exercise what users hit, not a dev-tier worker.
       DX_EDGE_BASE_URL: 'https://dxos.network'
