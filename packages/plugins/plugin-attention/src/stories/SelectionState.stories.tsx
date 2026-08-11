@@ -136,7 +136,7 @@ const SelectionStateStory = () => {
         <OrderedList.Root<StoryItem> items={ITEMS} isItem={isItem} getId={(item) => item.id}>
           {({ items: resolved }) => (
             <OrderedList.Content>
-              {resolved.map((item: StoryItem) => (
+              {resolved.map((item) => (
                 <OrderedList.Item
                   key={item.id}
                   id={item.id}
