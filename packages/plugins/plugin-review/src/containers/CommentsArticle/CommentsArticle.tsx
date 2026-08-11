@@ -35,7 +35,7 @@ import { type SuggestionGroup, useStatus } from '../../hooks';
 import * as CommentCapabilities from '../../types/CommentCapabilities';
 import * as CommentOperation from '../../types/CommentOperation';
 import * as ReviewCapabilities from '../../types/ReviewCapabilities';
-import { getMessageMetadata } from '../../util';
+import { currentObjectId, getMessageMetadata } from '../../util';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -227,7 +227,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // Membership, not attention: an attention gate closes in the window between a click recording
   // `state.current` and attention settling on the editor, dropping the just-set marker. Recomputing
   // from `anchors` + `state.current`, both reactive, involves no timing.
-  const currentObjectId = ReviewCapabilities.currentObjectId(state.current);
+  const currentThreadId = currentObjectId(state.current);
 
   // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
   // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
@@ -241,7 +241,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       // on a stale spelling, so a freshly persisted comment never shows the marker. A direct write,
       // never an invocation: attention is passive (a re-render restoring focus, a draft
       // autofocusing), and applied at event time it loses to any later intent — which is the point.
-      const sameThread = ReviewCapabilities.currentObjectId(state.current) === thread.id;
+      const sameThread = currentObjectId(state.current) === thread.id;
       registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
       if (sameThread) {
         // Re-revealing the plank pulls focus there ~170ms later, which lands mid-keystroke in an
@@ -435,7 +435,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   // Scroll the current thread into view when it changes.
   useEffect(() => {
-    if (!currentObjectId) {
+    if (!currentThreadId) {
       return;
     }
     // The rendered element is keyed by URI, so scroll by whichever spelling is in the DOM now rather
@@ -448,11 +448,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
           return undefined;
         }
       })
-      .find((thread) => thread?.id === currentObjectId);
+      .find((thread) => thread?.id === currentThreadId);
     if (target && Obj.instanceOf(Thread.Thread, target)) {
       document.getElementById(Obj.getURI(target))?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
-  }, [currentObjectId, anchors]);
+  }, [currentThreadId, anchors]);
 
   const filteredAnchors = showResolvedThreads
     ? anchors.filter((anchor) => !!Relation.getSource(anchor))
@@ -486,7 +486,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               getMetadata={getMetadata}
               authorMetadata={authorMetadata}
               identityDid={identity?.did}
-              current={currentObjectId === thread.id}
+              current={currentThreadId === thread.id}
               onAttend={handleAttend}
               onActivate={handleActivate}
               onComment={handleComment}
