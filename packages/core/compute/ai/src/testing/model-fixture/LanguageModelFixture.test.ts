@@ -60,6 +60,9 @@ class TestObjectReadToolkit extends Toolkit.make(
     parameters: Schema.Struct({
       objectId: EntityId,
     }),
+    // Declared because `Tool.make` defaults `success` to `Schema.Void`, which discards the handler's
+    // return value — and the echoed id IS the dynamic value this suite canonicalizes.
+    success: Schema.String,
   }),
 ) {
   static layer = TestObjectReadToolkit.toLayer({
