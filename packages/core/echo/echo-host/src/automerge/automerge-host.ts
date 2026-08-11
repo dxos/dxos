@@ -446,6 +446,10 @@ export class AutomergeHost extends Resource {
     return this._repo.handles;
   }
 
+  get storage(): SqliteStorageAdapter {
+    return this._storage;
+  }
+
   async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.addReplicator(ctx, replicator);

@@ -264,6 +264,13 @@ export class EchoHost extends Resource {
   }
 
   /**
+   * Automerge document store backing every space.
+   */
+  get automergeHost(): AutomergeHost {
+    return this._automergeHost;
+  }
+
+  /**
    * Wires the feed sync handlers after the composing stack is fully constructed.
    */
   setFeedSyncHandlers(handlers: FeedSyncHandlers): void {
@@ -466,6 +473,7 @@ export class EchoHost extends Resource {
   }
 
   async removeSpace(spaceId: SpaceId): Promise<void> {
+    this._spaceDocumentIds.delete(spaceId);
     const root = this._spaceStateManager.getRootBySpaceId(spaceId);
     if (root) {
       void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(spaceId, root.documentId));
@@ -593,7 +601,12 @@ export class EchoHost extends Resource {
         // could have been re-linked (a concurrent write merging in), and reachable data is never
         // a collection candidate.
         const root = this._spaceStateManager.getRootBySpaceId(spaceId);
-        const reachable = root ? await this.#collectClosure(root.documentId) : new Set<DocumentId>();
+        if (!root) {
+          // Without the live directory nothing is known to be reachable, and every candidate —
+          // including documents a new root carried forward — would read as collectable.
+          return;
+        }
+        const reachable = await this.#collectClosure(root.documentId);
 
         const stale: DocumentId[] = [];
         for (const documentId of candidates) {

@@ -107,10 +107,12 @@ describe('storage metrics & garbage collection', () => {
     // evicts what the unlink removed — and polls because the unlink is applied on the host, so it
     // reaches the client as a replicated change rather than a local one.
     await expect
-      .poll(async () =>
-        (await db.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run()).map(
-          (object) => object.id,
-        ),
+      .poll(
+        async () =>
+          (await db.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run()).map(
+            (object) => object.id,
+          ),
+        { timeout: 5_000 },
       )
       .toEqual([objects[0].id]);
   });

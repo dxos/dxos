@@ -5,9 +5,11 @@
 import { next as A } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import * as SqlClient from '@effect/sql/SqlClient';
+import * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -79,7 +81,7 @@ const setup = async () => {
     // The directory listing is debounced (50ms). Settling past it models the real sequence, where
     // an unlink replicates in well after the link it removes; without the wait the link and the
     // unlink coalesce into one listing update and the document is never observed as present.
-    await new Promise((resolve) => setTimeout(resolve, 120));
+    await sleep(120);
     return doc.documentId;
   };
 
@@ -143,11 +145,14 @@ describe('automatic reclamation', () => {
 
     // Fails after the heads row is deleted but before the chunk ranges are — the window that
     // strands chunks if the two are not committed together.
-    const storage = (host as any)._automergeHost._storage;
+    const { storage } = host.automergeHost;
     const removeRangeEffect = storage.removeRangeEffect.bind(storage);
-    storage.removeRangeEffect = () => Effect.fail(new Error('storage failure mid-wipe'));
-    await expect((host as any)._automergeHost.removeDocument(target)).rejects.toThrow();
-    storage.removeRangeEffect = removeRangeEffect;
+    storage.removeRangeEffect = () => Effect.fail(new SqlError.SqlError({ message: 'storage failure mid-wipe' }));
+    try {
+      await expect(host.automergeHost.removeDocument(target)).rejects.toThrow();
+    } finally {
+      storage.removeRangeEffect = removeRangeEffect;
+    }
 
     expect(await countHeads(target)).toEqual(1);
     expect(await countChunks(target)).toEqual(chunksBefore);

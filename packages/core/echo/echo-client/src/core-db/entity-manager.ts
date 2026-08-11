@@ -581,8 +581,11 @@ export class EntityManager implements IDatabaseBinding {
     const retained = new Set(keep);
     const droppedInline = Object.keys(doc.objects ?? {}).filter((id) => !retained.has(id));
     const droppedLinks = Object.keys(doc.links ?? {}).filter((id) => !retained.has(id));
+    // A branch registry entry keeps its member documents reachable, so an entry outliving its root
+    // object pins storage that nothing can reach.
+    const droppedBranches = Object.keys(doc.branches ?? {}).filter((id) => !retained.has(id));
     const dropped = [...droppedInline, ...droppedLinks];
-    if (dropped.length === 0) {
+    if (dropped.length === 0 && droppedBranches.length === 0) {
       return [];
     }
 
@@ -592,6 +595,9 @@ export class EntityManager implements IDatabaseBinding {
       }
       for (const id of droppedLinks) {
         delete draft.links![id];
+      }
+      for (const id of droppedBranches) {
+        delete draft.branches![id];
       }
     });
 

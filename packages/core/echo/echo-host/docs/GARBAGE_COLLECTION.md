@@ -12,7 +12,7 @@ This document specifies three per-space maintenance APIs on the ECHO `Database`:
   directory tracks, dropping the rest for collection to reclaim. Destructive of
   live data, so it is described separately below rather than as a mode of GC.
 
-The first two are **per-space** and routed through the `DataService` RPC, so the client
+The first two are routed through the `DataService` RPC, so the client
 API surface is identical whether the host is in-process (the local client
 worker) or remote (EDGE). Only the **local host implements them today**; the EDGE
 handlers return a not-implemented error (see the status table below). The

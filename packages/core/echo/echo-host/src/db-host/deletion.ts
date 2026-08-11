@@ -19,12 +19,12 @@ const MAX_DELETION_DEPTH = 10;
  * (`ObjectCore.isDeleted`). Garbage collection has to apply the same rule, or those entities are
  * invisible to every query while their documents are retained forever.
  *
- * Memoized across the pass: the walk revisits shared parents constantly, and the memo doubles as
- * the cycle guard.
+ * Memoized per (entity, remaining depth) across the pass: the walk revisits shared parents
+ * constantly.
  */
 export class DeletionResolver {
   readonly #structures = new Map<EntityId, EntityStructure>();
-  readonly #memo = new Map<EntityId, boolean>();
+  readonly #memo = new Map<string, boolean>();
   readonly #spaceId: SpaceId;
 
   constructor(spaceId: SpaceId) {
@@ -48,12 +48,14 @@ export class DeletionResolver {
   }
 
   #isDeleted(objectId: EntityId, remainingDepth: number): boolean {
-    const cached = this.#memo.get(objectId);
+    // Keyed by the remaining budget as well as the id: a `false` that came from exhausting the
+    // budget is not the answer a deeper budget gives, so sharing it across budgets would make the
+    // verdict depend on visit order. The budget also bounds the recursion, so cycles terminate.
+    const key = `${objectId}:${remainingDepth}`;
+    const cached = this.#memo.get(key);
     if (cached !== undefined) {
       return cached;
     }
-    // Provisional `false` breaks reference cycles; the real value overwrites it below.
-    this.#memo.set(objectId, false);
 
     const structure = this.#structures.get(objectId);
     if (!structure) {
@@ -72,7 +74,7 @@ export class DeletionResolver {
       });
     }
 
-    this.#memo.set(objectId, deleted);
+    this.#memo.set(key, deleted);
     return deleted;
   }
 
