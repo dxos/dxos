@@ -355,8 +355,6 @@ export const L0Menu = ({
       </Menu.Root>
 
       {/* Space list. */}
-      {/* No `padding`: the overlay thumb already clears the fixed-width avatars, and reserving its
-          strip would inset the item and push the active-tab indicator under the avatar. */}
       <ScrollArea.Root centered thin orientation='vertical'>
         <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
           {topLevelItems.map((item) => (
