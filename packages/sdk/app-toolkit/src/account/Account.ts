@@ -128,7 +128,7 @@ export const checkAccessCode = Effect.fn(function* ({ hub, code }: { hub: HubHtt
     hub.validateInvitationCode(DxContext.default(), { code: normalizeAccessCode(code) }),
   ).pipe(
     Effect.map(({ valid }) => valid),
-    Effect.catchAll(() => Effect.succeed(false)),
+    Effect.catch(() => Effect.succeed(false)),
   );
 });
 
@@ -148,12 +148,12 @@ const EMAIL_PROBE_TIMEOUT_MS = 10_000;
 /** Probe whether an address already has an Account. Failures resolve to `unavailable` — never throws. */
 export const probeEmail = Effect.fn(function* ({ hub, email }: { hub: HubHttpClient; email: string }) {
   return yield* Effect.tryPromise(() => hub.checkEmailExists(DxContext.default(), { email })).pipe(
-    Effect.timeoutFail({
+    Effect.timeoutOrElse({
       duration: Duration.millis(EMAIL_PROBE_TIMEOUT_MS),
-      onTimeout: () => new EmailProbeUnavailableError({ message: 'Email probe timed out.' }),
+      orElse: () => Effect.fail(new EmailProbeUnavailableError({ message: 'Email probe timed out.' })),
     }),
     Effect.map(({ exists }): EmailProbeResult => (exists ? 'exists' : 'available')),
-    Effect.catchAll(() => Effect.succeed('unavailable' as const)),
+    Effect.catch(() => Effect.succeed('unavailable' as const)),
   );
 });
 
