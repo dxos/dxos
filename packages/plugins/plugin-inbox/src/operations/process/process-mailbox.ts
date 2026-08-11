@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
@@ -65,7 +66,7 @@ const handler = InboxOperation.ProcessMailbox.pipe(
           const key = Date.parse(message.created);
           return Number.isFinite(key) && key > cursorKey;
         })
-        .sort((a, b) => Date.parse(a.created) - Date.parse(b.created));
+        .sort((left, right) => Date.parse(left.created) - Date.parse(right.created));
 
       log.info('process: pipeline start', {
         mailbox: Obj.getURI(mailbox),
@@ -76,7 +77,7 @@ const handler = InboxOperation.ProcessMailbox.pipe(
       reportStatus({ current: 0, total: pending.length });
 
       let processed = 0;
-      yield* Stream.fromIterable(pending).pipe(
+      const pipeline = Stream.fromIterable(pending).pipe(
         // The pipeline-body seam: real stages (facts/tag/summarize) replace or extend this later.
         Stage.map('log-title', (message: Message.Message) =>
           Effect.sync(() => {
@@ -107,6 +108,18 @@ const handler = InboxOperation.ProcessMailbox.pipe(
           Effect.sync(() => {
             log.info('process: pipeline cancelled', { mailbox: Obj.getURI(mailbox), processed });
             reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+          }),
+        ),
+      );
+
+      // A failed (not cancelled) run is recorded on the cursor before the error propagates, so the
+      // durable state says why the last run stopped; `Cursor.advance` clears it on the next success.
+      yield* pipeline.pipe(
+        Effect.onError((cause) =>
+          Effect.sync(() => {
+            if (!Cause.isInterruptedOnly(cause)) {
+              Cursor.recordError(cursor, Cause.pretty(cause).slice(0, 500));
+            }
           }),
         ),
       );

@@ -106,10 +106,12 @@ export const runFactPipeline = (options: {
     let facts = 0;
     // Ascending key order is load-bearing: the sink advances `cursorKey` per committed page and the
     // dedup stage reads it live, so on an unordered feed (e.g. an archive imported newest-first) the
-    // first-committed newest message would advance the cursor past every older one.
+    // first-committed newest message would advance the cursor past every older one. A malformed
+    // `created` (NaN key) is dropped up front — it cannot be ordered against the cursor, and its NaN
+    // would poison the page's `Math.max` cursor advance.
     const messages = (yield* Feed.query(feed, Filter.type(Message.Message)).run)
-      .slice()
-      .sort((a, b) => Date.parse(a.created) - Date.parse(b.created));
+      .filter((message) => Number.isFinite(Date.parse(message.created)))
+      .sort((left, right) => Date.parse(left.created) - Date.parse(right.created));
     log.info('analyze: pipeline start', {
       messages: messages.length,
       cursorKey,

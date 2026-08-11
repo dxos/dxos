@@ -29,7 +29,7 @@ trivial (log the title) so no models are needed and stages (facts/tag/summarize)
 
 ## Components
 
-### 1. `InboxOperation.ProcessMailbox` (plugin-inbox, `operations/process-mailbox.ts`)
+### 1. `InboxOperation.ProcessMailbox` (plugin-inbox, `operations/process/process-mailbox.ts`)
 
 - Input `{ mailbox: Ref<Mailbox>, pageSize? }`; output `{ processed }`. Operation key via the
   plugin's `makeKey('processMailbox')` → `dxn:org.dxos.plugin.inbox.operation.processMailbox`
@@ -40,8 +40,11 @@ trivial (log the title) so no models are needed and stages (facts/tag/summarize)
   — the CRM tagging pattern, but with DXN-conformant identifiers (the CRM precedent's
   `org.dxos.plugin-crm` / `process-mailbox` are not), so it coexists with the `AnalyzeMailbox` and
   CRM cursors on the same feed.
-- Queries feed messages, drops `Date.parse(created) < cursorKey` (malformed dates skipped), sorts
-  ascending, then streams through a `@dxos/pipeline` assembly:
+- Queries feed messages, keeps `Date.parse(created) > cursorKey` (strictly greater, so a rerun never
+  re-logs the boundary message; a message sharing the boundary's exact timestamp is skipped too — an
+  accepted v1 limitation, since the skeleton has no precise dedup backstop and the epoch-ms key has
+  no tie-breaker). Malformed dates are dropped on every run (they cannot be ordered against the
+  cursor). Sorts ascending, then streams through a `@dxos/pipeline` assembly:
   - `log-title` stage: `log.info('process: message', { title, created })` per message — the
     pipeline-body seam where real stages plug in later.
   - `Stream.grouped(pageSize)` → sink advances the cursor per page (`Cursor.advance`), so an
@@ -78,7 +81,7 @@ trivial (log the title) so no models are needed and stages (facts/tag/summarize)
 Mailbox', appliesTo: Mailbox }`.
 - Scaffold: `makeRoutine({ spec: { kind: 'runnable', runnable:
 Ref.fromURI(InboxOperation.ProcessMailbox.meta.key) }, trigger: Trigger.make({ enabled: false,
-spec: Trigger.specTimer(cron), input: { mailbox } }) })` — the durable routine definition; manual
+spec: Trigger.specTimer(cron), input: { mailbox: Ref.make(mailbox) } }) })` — the durable routine definition; manual
   runs also work from the Automations companion (`RunRoutine`). The toolbar button schedules the
   operation directly (decision 2a) and does not require the routine to exist.
 
@@ -92,9 +95,16 @@ spec: Trigger.specTimer(cron), input: { mailbox } }) })` — the durable routine
 
 ## Error handling
 
-- Malformed `message.created` → skipped (never re-scanned), per the CRM precedent.
+- Malformed `message.created` → dropped on every run (cannot be ordered against the cursor), per the
+  CRM precedent.
 - Cancellation mid-run → clean stop; cursor retains the last committed page.
-- Run failure → `Cursor.recordError`; the meter clears when the process exits.
+- Run failure → `Cursor.recordError` (cancellation excluded), then the error propagates; the meter
+  clears when the process exits and `Cursor.advance` clears `lastError` on the next success.
+- Concurrent runs / reset-during-run are **not serialized** in v1: the toolbar disables reset while
+  the monitor shows a run, but nothing at the operation layer prevents a routine-triggered run from
+  overlapping a manual one (both would re-process the same pending messages — idempotent for the
+  log-title body, wasteful for real stages). Operation-level single-flight keyed by mailbox is a
+  tracked follow-up (no such primitive exists in the repo today).
 
 ## Testing
 
@@ -105,7 +115,7 @@ spec: Trigger.specTimer(cron), input: { mailbox } }) })` — the durable routine
 - **Storybook** (stories-inbox): a `ProcessMailbox` story seeding a mailbox feed, exercising the
   toolbar button + meter (play test where the headless env allows; manual numbered `Test:` script
   otherwise, per repo convention).
-- **Manual script** (numbered): 1. seed/sync a mailbox; 2. Start — meter appears, titles logged; 3. Stop mid-run — meter clears; 4. Start — resumes after the cursor (only unprocessed titles); 5. Reset cursor; 6. Start — all titles logged again.
+- **Manual script** (numbered): 1. seed/sync a mailbox; 2. Start — meter appears, titles logged; 3. Stop mid-run — meter clears; 4. Start — resumes after the last committed page (titles from an interrupted page may be replayed); 5. Reset cursor; 6. Start — all titles logged again.
 
 ## Out of scope (v1)
 

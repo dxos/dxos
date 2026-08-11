@@ -24,9 +24,10 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
 - [x] **`MailboxArticle` statusbar** — shows whichever of `#sync` / `#process` is active.
 - [x] **Routine template** — plugin-inbox contributes `org.dxos.routine.processMailbox`
       (Automations companion, Mailbox subjects, disabled hourly timer, runnable = the operation).
-- [x] **Tests** — 3 node unit tests (`process-mailbox.test.ts`: cursor tag + advance, incremental,
-      reset cycle, malformed `created` skip) + stories-inbox `ProcessPipeline.stories.tsx` play test
-      (run 3 → rerun 0 → reset → run 3) green.
+- [x] **Tests** — node unit tests (`process-mailbox.test.ts`: cursor tag + advance, incremental,
+      reset cycle, malformed `created` skip, foreign-cursor isolation) + stories-inbox
+      `ProcessPipeline.stories.tsx` play test (`run N → rerun 0 → reset → run N`, `N` = seeded
+      message count) green.
 - [x] **Storybook driven from the `@dxos/fixtures` mailbox corpus** — `.storybook/main.mts` vite
       middleware serves `/fixtures/<name>.json` (node-side `fixturePath`, `DX_FIXTURES_DIR`
       override); the story seeds from it (391 real messages) with a demo fallback so CI stays
@@ -47,6 +48,11 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
 - [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
       triage work above) once the skeleton is proven live.
+- [ ] **Operation-level single-flight per mailbox** (from PR #12538 review) — nothing serializes a
+      routine-triggered run against a manual one, and a reset issued mid-run (UI-guarded only) could
+      be overwritten by a later page commit. Needs a mailbox-keyed guard at the operation layer (no
+      such primitive exists in the repo today); benign for the log-title body, matters once real
+      stages land. Documented as a v1 limitation in the spec's error-handling section.
 
 ## Overnight model-ladder experiment
 
