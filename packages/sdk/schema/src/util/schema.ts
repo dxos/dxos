@@ -10,7 +10,7 @@ import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
 import { type Mutable } from '@dxos/echo/Obj';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { DXN, PublicKey } from '@dxos/keys';
+import { DXN, PublicKey, type URI } from '@dxos/keys';
 
 export type SelectOptionType = typeof SelectOption.Type;
 
@@ -49,7 +49,10 @@ export const createDefaultSchema = () => {
   return Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0'))(struct);
 };
 
-export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Promise<Type.AnyEntity | undefined> => {
+export const getSchema = async (
+  dxn: URI.URI | DXN.DXN,
+  registry?: Registry.Registry,
+): Promise<Type.AnyEntity | undefined> => {
   if (!DXN.isDXN(dxn) || !registry) {
     return;
   }
