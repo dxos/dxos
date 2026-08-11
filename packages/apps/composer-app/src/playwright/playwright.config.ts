@@ -15,9 +15,10 @@ export default defineConfig({
   testIgnore: ['**/startup.spec.ts', '**/dev-*.spec.ts', '**/welcome-focus.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  // Above the preset's 2: this suite has a dedicated CI cell, and `vite preview` is a static server,
-  // so it lacks both the neighbours and the per-request compile that cap the storybook-dev suites.
-  workers: 4,
+  // Above the preset's 2 but below the refuted 4: two-peer specs boot two app instances per worker,
+  // and at 4 workers webkit lost renderers ("browser has been closed") and firefox missed
+  // create-space's readiness budget (run 31506532354). 3 is the arm under validation.
+  workers: 3,
   webServer: {
     command: 'pnpm vite preview',
     port: 4173,

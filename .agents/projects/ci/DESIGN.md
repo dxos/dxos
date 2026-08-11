@@ -44,9 +44,11 @@ runners. Blacksmith was evaluated as an alternative runner and rejected — REPO
 ## E2E: how the suite is sharded
 
 Two axes into 6 matrix cells — browser (`PLAYWRIGHT_BROWSER`) × shard (`composer` / `rest`). The
-`composer` cell runs `composer-app:e2e` directly (4 Playwright workers — a dedicated cell serving a
-static `vite preview` has neither the neighbours nor the per-request compile that cap the
-storybook-dev suites at 2); the `rest` cell runs the `:e2e-ci*` pool plus `plugin-script:e2e`, one
+`composer` cell runs `composer-app:e2e` directly (3 Playwright workers — 4 was refuted in one run:
+two-peer specs boot two app instances per worker, and at 4 webkit lost renderers and firefox missed
+create-space's 10 s readiness budget, run 31506532354, against 0-in-39 at 2 workers; 4 also bought
+no time, 3m09 vs the halves' serial 3m15, because two-peer waits dominate, not queue depth); the
+`rest` cell runs the `:e2e-ci*` pool plus `plugin-script:e2e`, one
 task at a time (`--concurrency=1`), each at the preset's workers. composer-app excludes the inherited
 `e2e-ci` so the pool glob never matches it. Job layout and the JUnit paths Trunk reads are in
 [`.github/workflows/README.md`](../../../.github/workflows/README.md).
