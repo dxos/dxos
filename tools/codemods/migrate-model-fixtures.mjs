@@ -6,7 +6,7 @@
 // captured provider exchanges, so regenerating them needs live API credentials — the stored payloads
 // are migrated in place instead, as the JSON Schema corpus was.
 //
-// Two independent transforms:
+// Three independent transforms (the third is defined with its data, below):
 //
 //  1. `usage` (every suite). v4's `Response.Usage` nests the counters:
 //       v3: { inputTokens, outputTokens, totalTokens, cachedInputTokens? }
@@ -32,6 +32,26 @@ const root = process.argv[2] ?? '.store/conversations';
 
 // The suite whose model-fixture tests actually execute; see note 2 above.
 const TOOL_SCHEMA_SUITE = 'packages_core_compute_ai_src_testing_model-fixture_LanguageModelFixture';
+
+// 3. Tool-handler error text. A tool whose parameters fail to decode reports the failure back to the
+//    model as the tool result, so v4's rewritten error message lands in the next request and changes
+//    the fixture key. The text is produced locally (not by the provider), so it is deterministic.
+//    Only the replacement below is transcribed from a run; the `assistant-toolkit` fixture carrying
+//    the same v3 shape is left alone because its tests skip, leaving no way to verify a rewrite.
+const ERROR_TEXT_REPLACEMENTS = [
+  {
+    suite: 'packages_core_compute_agent-runtime_src_assistant-session-tests_request',
+    from:
+      'MalformedOutput: { "module": "Toolkit", "method": "Calculator.handle", "description": ' +
+      '"Failed to decode tool call parameters for tool \'Calculator\' from:\\n\'{}\'", "cause": ' +
+      '{ readonly input: string }\n└─ ["input"]\n   └─ is missing }\ncaused by:\nParseError: ' +
+      '{ readonly input: string }\n└─ ["input"]\n   └─ is missing',
+    to:
+      "effect/ai/AiError/AiError: Toolkit.Calculator.handle: Invalid parameters for tool 'Calculator': " +
+      'Missing key\n  at ["input"]\ncaused by:\neffect/ai/AiError/ToolParameterValidationError: ' +
+      'Invalid parameters for tool \'Calculator\': Missing key\n  at ["input"]',
+  },
+];
 
 const jsonFiles = function* (dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -137,6 +157,7 @@ const migrateToolSchema = (schema) => {
 
 let usageParts = 0;
 let toolSchemas = 0;
+let errorTexts = 0;
 let changedFiles = 0;
 let scanned = 0;
 
@@ -165,6 +186,21 @@ for (const file of jsonFiles(root)) {
     }
   }
 
+  for (const { suite, from, to } of ERROR_TEXT_REPLACEMENTS) {
+    if (!file.includes(suite)) {
+      continue;
+    }
+    for (const message of document.prompt?.content ?? []) {
+      for (const part of message.content ?? []) {
+        if (part.type === 'tool-result' && part.result === from) {
+          part.result = to;
+          changed = true;
+          errorTexts++;
+        }
+      }
+    }
+  }
+
   if (changed) {
     // The store encodes through `Schema.fromJsonString`, i.e. compact with no trailing newline.
     // Match it so a later regeneration produces no incidental diff.
@@ -175,5 +211,5 @@ for (const file of jsonFiles(root)) {
 
 // eslint-disable-next-line no-console
 console.log(
-  `migrated ${usageParts} usage records and ${toolSchemas} tool schemas across ${changedFiles} fixtures (${scanned} scanned)`,
+  `migrated ${usageParts} usage records, ${toolSchemas} tool schemas and ${errorTexts} error texts across ${changedFiles} fixtures (${scanned} scanned)`,
 );
