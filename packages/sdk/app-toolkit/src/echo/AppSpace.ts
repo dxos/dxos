@@ -50,20 +50,21 @@ export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS
 /**
  * Find the settings space.
  *
- * A profile is only ever meant to have one, but two clients that both observe none can both create
- * one, so the choice has to be deterministic — every device and every boot must agree, or app
- * configuration would appear to change on its own. The space carrying the default-space
- * designation is the one that has been used; failing that, ids sort stably.
+ * Profiles that hit the duplicate-creation race carry two tagged spaces; the one holding the
+ * default-space designation is canonical, so it wins over list order.
  */
 export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
-  const settingsSpaces = client.spaces
-    .get()
-    .filter((space) => isSettingsSpace(space))
-    .sort((left, right) => (left.id < right.id ? -1 : 1));
-  const designated = settingsSpaces.find(
-    (space) => space.state.get() === SpaceState.SPACE_READY && getDefaultSpaceId(space),
+  const tagged = client.spaces.get().filter((space) => isSettingsSpace(space));
+  if (tagged.length <= 1) {
+    return tagged[0];
+  }
+
+  // Properties are unreadable until the space is ready, so an unopened duplicate cannot be judged
+  // and the first tagged space stands in until one proves canonical.
+  return (
+    tagged.find((space) => space.state.get() === SpaceState.SPACE_READY && getDefaultSpaceId(space) !== undefined) ??
+    tagged[0]
   );
-  return designated ?? settingsSpaces[0];
 };
 
 /**

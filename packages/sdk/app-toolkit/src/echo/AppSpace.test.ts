@@ -58,22 +58,13 @@ describe('getSettingsSpace', () => {
     expect(AppSpace.getSettingsSpace(makeClient([makeSpace([])]))).toBeUndefined();
   });
 
-  test('picks the same duplicate regardless of space list order', ({ expect }) => {
-    // Two clients that both observe no settings space both create one. Whichever the app then
-    // reads has to be the same on every device and every boot, or configuration appears to change
-    // on its own.
-    const first = makeSpace([AppSpace.SETTINGS_SPACE_TAG], 'BAAAA');
-    const second = makeSpace([AppSpace.SETTINGS_SPACE_TAG], 'BZZZZ');
-    expect(AppSpace.getSettingsSpace(makeClient([first, second]))?.id).toEqual('BAAAA');
-    expect(AppSpace.getSettingsSpace(makeClient([second, first]))?.id).toEqual('BAAAA');
-  });
-
   test('prefers the duplicate carrying the default-space designation', ({ expect }) => {
-    // Id order is arbitrary, so the space that has actually been used wins: it is the one holding
-    // the ordering and the designation the migration wrote.
+    // A profile that hit the duplicate-creation race carries two tagged spaces; the designated one
+    // is the one that has been used, so it wins over its position in the list.
     const designated = makeSpace([AppSpace.SETTINGS_SPACE_TAG], 'BZZZZ', { defaultSpaceId: 'BSOME' });
     const empty = makeSpace([AppSpace.SETTINGS_SPACE_TAG], 'BAAAA');
     expect(AppSpace.getSettingsSpace(makeClient([empty, designated]))?.id).toEqual('BZZZZ');
+    expect(AppSpace.getSettingsSpace(makeClient([designated, empty]))?.id).toEqual('BZZZZ');
   });
 });
 

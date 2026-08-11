@@ -967,6 +967,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this._entityManager.updateIndexes();
   }
 
+  async stats(): Promise<Database.DatabaseStats> {
+    return this._entityManager.stats();
+  }
+
+  async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
+    return this._entityManager.runGarbageCollection(options);
+  }
+
+  retainObjects(keep: Iterable<string>): string[] {
+    return this._entityManager.retainObjects(keep);
+  }
+
   /**
    * Update service references after reconnection.
    */
