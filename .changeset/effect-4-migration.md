@@ -1,9 +1,9 @@
 ---
-'@dxos/echo': major
-'@dxos/plugin-markdown': major
+'@dxos/echo': minor
+'@dxos/plugin-markdown': minor
 ---
 
-Migrate the entire monorepo from Effect 3 to Effect 4 (`effect@4.0.0-beta.105`).
+Migrate the entire monorepo from Effect 3 to Effect 4 (`effect@4.0.0-beta.105`). **This is a breaking change**, carried as a minor because the fixed publish group is pre-1.0.
 
 Every `@dxos` package now builds against the consolidated `effect` package — `@effect/platform`, `@effect/rpc`, `@effect/cli`, `@effect/sql-*`, `@effect/ai` and `@effect/printer` usages moved to their `effect/unstable/*` counterparts (or were vendored where v4 ships no counterpart). Consumers embedding `@dxos` packages must be on the Effect 4 line: v3 and v4 cannot coexist in one bundle.
 
