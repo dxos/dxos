@@ -37,14 +37,6 @@ import * as RefAtoms from './atoms';
  */
 export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
-/**
- * Persistence identity for the `Ref` declaration in a `SchemaRepresentation` document.
- *
- * Distinct from {@link JSON_SCHEMA_ECHO_REF_ID}: that is the JSON-schema `$id` on the encoded node,
- * this names the declaration so a reviver can rebuild it.
- */
-export const REF_REPRESENTATION_ID = '@dxos/echo/Ref';
-
 export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
@@ -355,16 +347,6 @@ export const createEchoReferenceSchema = (
   // decoded type, `encodeTo` attaches the wire form and the transformation between them.
   // TODO(dmaretskyi): Add name and description.
   const refSchema = Schema.declare<Ref<any>>(Ref.isRef)
-    .annotate({
-      // Persistence identity for `SchemaRepresentation`: a declaration is opaque to the serializer,
-      // so without this it fails outright with `Missing key at ["references"][…]["representation"]`.
-      // The payload carries the resolved target rather than the constructor arguments, which are not
-      // stable — the same reference reached via `typename` or via `echoUri` must persist identically.
-      representation: {
-        id: REF_REPRESENTATION_ID,
-        payload: { target: referenceInfo.schema.$ref, version: version ?? null },
-      },
-    })
     .pipe(
       Schema.encodeTo(
         // The JSON-schema keys live on the encoded node: `toJsonSchemaDocument` serializes the

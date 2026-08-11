@@ -436,6 +436,32 @@ Raised on the PR and explicitly deferred there.
       `required` (visible throughout the v3 corpus fixture). Removing it is a wire-format change:
       it touches `json-schema-shape.test.ts`, the stored-document read path, and the LLM boundary,
       so it wants its own change with the decoder's tolerance settled first.
+- [ ] **Adopt `SchemaRepresentation` for stored schemas.** Deliberately NOT part of the Effect 4
+      migration — see the correction below — but de-risked, and the findings are worth keeping.
+  - **It is not needed to migrate to v4.** ECHO normalizes v4's emitter defaults back to the v3
+    shape (`stripUndefinedMember`, `inlineAllOf`), so the stored JSON Schema format is unchanged by
+    the migration and **zero** stored data needs rewriting. The `0.1.0` → `0.2.0` migration is not
+    independently necessary: it exists solely as the vehicle for this change. Adopting
+    representations creates the only migration rather than consolidating two.
+  - The standing reason to do it anyway is correctness, not v4: the JSON Schema write path
+    **loses the `Ref` payload**, which representations preserve.
+  - **Proven to round-trip losslessly** over the 18-type stored corpus (schema → representation →
+    JSON → schema, plus idempotence on a second pass), including reference targets. That work was
+    reverted from the migration branch; the corpus test that remains is the oracle for redoing it.
+  - Two things that cost time and will again:
+    - The `Ref` declaration needs a `representation: { id, payload }` annotation or serialization
+      fails outright (`Missing key at ["references"][…]["representation"]`). The payload must be
+      the **resolved** target URI + version, NOT the constructor arguments — a ref built from a
+      `typename` and one built from the equivalent `echoUri` are the same reference and must
+      persist identically, or the round-trip is not idempotent.
+    - Revivers are explicit for **built-in checks too** — roughly 30 of them across string shape,
+      identifier formats, numeric bounds and collections. None are installed implicitly; a missing
+      one fails the load (`Missing reviver for effect/schema/isPattern`) rather than degrading.
+  - Storage and the LLM wire format diverge under this change: D5 keeps `toJsonSchema` emitting
+    v3-style JSON Schema for the model boundary regardless. Guard that internal persistence
+    annotations never leak into the emitted document.
+  - Scope beyond the meta-schema: ~20 `toJsonSchema` producer sites (operations, compute nodes,
+    instructions, table projections), some read cross-repo by EDGE. Needs coordination.
 - [ ] **Evaluate v4's JSON Schema importer against the hand-rolled decoder.** It exists:
       `SchemaRepresentation.fromJsonSchemaDocument(document, options): Schema.Top` (`@since 4.0.0`),
       "imports a JSON Schema Draft 2020-12 document as a runtime schema". Not a drop-in for
