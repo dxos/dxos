@@ -132,4 +132,13 @@ describe('EdgeCredentialsHeaderCodec', () => {
       expect(EdgeCredentialsHeaderCodec.decodeWebSocketProtocol(protocol), JSON.stringify(protocol)).toBeUndefined();
     }
   });
+
+  test('a malformed payload decodes to undefined rather than throwing', ({ expect }) => {
+    // `atob` throws outside the base64 alphabet, which would break the `undefined` contract the
+    // callers rely on to fall through to another auth method.
+    expect(EdgeCredentialsHeaderCodec.decode('VerifiablePresentation pb;base64,not base64!!')).toBeUndefined();
+    expect(
+      EdgeCredentialsHeaderCodec.decodeWebSocketProtocol(`${WS_AUTH_PROTOCOL_PREFIX}.not base64!!`),
+    ).toBeUndefined();
+  });
 });

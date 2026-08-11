@@ -36,16 +36,66 @@ const VP_SCHEME = 'VerifiablePresentation';
  * emits exactly that when its server keypair is unconfigured, and there is nothing a caller can
  * sign — treating it as present would route the request through the auth path only to fail on the
  * missing challenge, masking the original response.
+ *
+ * The scheme is only recognised at a challenge boundary, never inside a quoted auth-param: a
+ * `Bearer realm="VerifiablePresentation challenge=…"` declares Bearer alone, and treating it as a
+ * VP challenge would retry an unrelated 401 — running a non-idempotent request twice.
  */
 export const parseChallengeHeader = (header: string | null | undefined): string | undefined => {
   if (!header) {
     return undefined;
   }
-  const match = new RegExp(`${VP_SCHEME}\\s+challenge=(?:"([^"]*)"|([^\\s,]*))`, 'i').exec(header);
+  const schemeIndex = findSchemeOutsideQuotes(header);
+  if (schemeIndex === undefined) {
+    return undefined;
+  }
+  const match = /challenge=(?:"([^"]*)"|([^\s,]*))/i.exec(header.slice(schemeIndex));
   if (!match) {
     return undefined;
   }
   return (match[1] ?? match[2]) || undefined;
+};
+
+/**
+ * Index of the VP auth-scheme where it starts a challenge, or undefined.
+ *
+ * A hand-rolled scan rather than a split on commas: an auth-param value may itself contain a comma
+ * inside quotes, so no single delimiter separates challenges.
+ */
+const findSchemeOutsideQuotes = (header: string): number | undefined => {
+  const lowered = header.toLowerCase();
+  const scheme = VP_SCHEME.toLowerCase();
+  let inQuotes = false;
+  let atBoundary = true;
+  for (let index = 0; index < header.length; index++) {
+    const character = header[index];
+    if (inQuotes) {
+      if (character === '\\') {
+        index++;
+      } else if (character === '"') {
+        inQuotes = false;
+      }
+      continue;
+    }
+    if (character === '"') {
+      inQuotes = true;
+      atBoundary = false;
+      continue;
+    }
+    if (atBoundary && lowered.startsWith(scheme, index)) {
+      // Must be the whole scheme token, not a prefix of a longer one.
+      const next = header[index + scheme.length];
+      if (next === undefined || next === ' ' || next === '\t') {
+        return index;
+      }
+    }
+    if (character === ',') {
+      atBoundary = true;
+    } else if (character !== ' ' && character !== '\t') {
+      atBoundary = false;
+    }
+  }
+  return undefined;
 };
 
 /**

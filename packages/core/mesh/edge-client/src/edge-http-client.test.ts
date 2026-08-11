@@ -26,10 +26,6 @@ describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   });
 });
 
-/** Narrow a `fetch` input to its URL string, covering all three shapes the contract allows. */
-const requestUrl = (input: RequestInfo | URL): string =>
-  input instanceof URL ? input.toString() : typeof input === 'string' ? input : input.url;
-
 describe('EdgeHttpClient.anthropicAiRequest', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -277,3 +273,7 @@ describe('EdgeHttpClient api key', () => {
     expect((putCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
   });
 });
+
+/** Narrow a `fetch` input to its URL string, covering all three shapes the contract allows. */
+const requestUrl = (input: RequestInfo | URL): string =>
+  input instanceof URL ? input.toString() : typeof input === 'string' ? input : input.url;

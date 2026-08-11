@@ -44,6 +44,24 @@ describe('parseChallengeHeader', () => {
     expect(parseChallengeHeader(null)).toBeUndefined();
   });
 
+  test('the scheme is ignored inside a quoted auth-param', ({ expect }) => {
+    // `Bearer realm="…"` declares Bearer alone. Reading a challenge out of its quoted value would
+    // retry an unrelated 401 and run a non-idempotent request twice.
+    expect(parseChallengeHeader(`Bearer realm="VerifiablePresentation challenge=${CHALLENGE}"`)).toBeUndefined();
+    expect(parseChallengeHeader('Basic realm="use VerifiablePresentation challenge=TODO instead"')).toBeUndefined();
+  });
+
+  test('a longer scheme merely starting with the VP name is not matched', ({ expect }) => {
+    expect(parseChallengeHeader(`VerifiablePresentationV2 challenge="${CHALLENGE}"`)).toBeUndefined();
+  });
+
+  test('a quoted comma does not split the challenge list', ({ expect }) => {
+    // An auth-param value may contain a comma, so the scan cannot key off commas alone.
+    expect(parseChallengeHeader(`Bearer realm="dx,os", VerifiablePresentation challenge="${CHALLENGE}"`)).toBe(
+      CHALLENGE,
+    );
+  });
+
   test('an empty challenge is reported as absent, not as an empty string', ({ expect }) => {
     // Edge emits `challenge=""` when its server keypair is unconfigured. Returning '' would be
     // truthy-adjacent enough to slip past a `!== undefined` guard and route the request into the

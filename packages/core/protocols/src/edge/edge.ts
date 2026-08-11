@@ -652,10 +652,17 @@ const uint8ArrayToBase64 = (bytes: Uint8Array): string => {
   return btoa(binary);
 };
 
-const base64ToUint8Array = (value: string): Uint8Array => {
+const base64ToUint8Array = (value: string): Uint8Array | undefined => {
   // `atob` rejects the stripped padding the WebSocket framing produces; restore it first.
   const padded = value.padEnd(value.length + ((4 - (value.length % 4)) % 4), '=');
-  const binary = atob(padded);
+  // `atob` throws on characters outside the base64 alphabet, which would break the `undefined`
+  // contract both decoders document for anything unrecognised.
+  let binary: string;
+  try {
+    binary = atob(padded);
+  } catch {
+    return undefined;
+  }
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index++) {
     bytes[index] = binary.charCodeAt(index);
