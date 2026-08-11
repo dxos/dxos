@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -92,6 +92,18 @@ export const CommentThread = ({
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
   const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);
+  // Activating reveals the thread in the anchored document, moving focus to that plank. Operating the
+  // thread's own controls is not that gesture: it would pull focus out of the editor a control just
+  // opened, mid-keystroke.
+  const handleContentClickCapture = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (event.target instanceof Element && event.target.closest('button')) {
+        return;
+      }
+      handleActivate();
+    },
+    [handleActivate],
+  );
   const handleResolve = useCallback(() => onResolve?.(anchor), [onResolve, anchor]);
   const handleMessageDelete = useCallback(
     (messageId: string) => onMessageDelete?.(anchor, messageId),
@@ -186,7 +198,7 @@ export const CommentThread = ({
         id={threadUri}
         classNames='pt-2 border-b border-subdued-separator last:border-none'
         current={current}
-        onClickCapture={handleActivate}
+        onClickCapture={handleContentClickCapture}
         onFocusCapture={handleAttend}
       >
         {header}
@@ -196,8 +208,12 @@ export const CommentThread = ({
           scroll area, so render tiles inline (not the virtual stack) — this keeps
           them at full width so their controls align with the header's controls.
         */}
+        {/*
+          Keyed by the object id, not the URI (see `CommentState`): a URI's spelling changes as the
+          thread persists, remounting the tile and destroying an editor holding in-progress text.
+        */}
         {loadedMessages.map((message) => (
-          <MessageComponent.Tile key={Obj.getURI(message)} message={message} />
+          <MessageComponent.Tile key={message.id} message={message} />
         ))}
 
         {/*

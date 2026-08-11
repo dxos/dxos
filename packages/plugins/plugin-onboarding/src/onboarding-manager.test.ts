@@ -5,11 +5,13 @@
 import { describe, onTestFinished, test, vi } from 'vitest';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import type * as Operation from '@dxos/compute/Operation';
 import { ClientOperation } from '@dxos/plugin-client';
 
+import { WELCOME_SCREEN } from './constants';
 import { OnboardingManager } from './onboarding-manager';
 
 // No hubUrl is passed, so auth is skipped — the local/dev Composer configuration.
@@ -22,6 +24,21 @@ describe('OnboardingManager', () => {
       expect.objectContaining({ input: { invitationCode: 'test-code' } }),
     ]);
     expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
+  });
+
+  test('a pending device invitation opens the join dialog without the welcome screen', async ({ expect }) => {
+    // Both dialogs would race through the operation layer, and a welcome update landing second
+    // hides the join dialog — the device-join flow then stalls with no invitation input.
+    const { manager, calls } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      deviceInvitationCode: 'test-code',
+    });
+    await manager.initialize();
+
+    const dialogSubjects = calls
+      .filter((call) => call.key === String(LayoutOperation.UpdateDialog.meta.key))
+      .map((call) => (call.input as { subject?: string }).subject);
+    expect(dialogSubjects).not.toContain(WELCOME_SCREEN);
   });
 
   test('without a device invitation a fresh identity is created', async ({ expect }) => {

@@ -157,8 +157,9 @@ export class OnboardingManager {
       // Ensure that agent is present.
       await this._createAgent();
       return;
-    } else if (!this._skipAuth) {
-      // No identity yet: show welcome screen.
+    } else if (!this._skipAuth && this._deviceInvitationCode === undefined) {
+      // No identity yet: show welcome. Skipped when a device invitation is pending, since both dialog
+      // updates then race through the operation layer and a welcome landing second hides the join.
       await this._showWelcome();
       if (aborted()) {
         return;

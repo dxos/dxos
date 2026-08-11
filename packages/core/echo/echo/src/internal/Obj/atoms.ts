@@ -15,7 +15,7 @@ import type * as Obj from '../../Obj';
 import type * as Ref from '../../Ref';
 import type * as Relation from '../../Relation';
 import { getLabel } from '../Annotation';
-import { snapshotForComparison } from '../common/atom-snapshot';
+import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot';
 import { subscribe } from '../common/proxy/reactive';
 import { getDatabase, isEntity } from '../Entity';
 import { RefTypeId } from '../Ref/ref';
@@ -93,10 +93,11 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
 
       const unsubscribe2 = subscribe(obj, () => {
         const newValue = obj[key];
-        const newSnapshot = snapshotForComparison(newValue);
-        if (newSnapshot !== previousSnapshot) {
-          previousSnapshot = newSnapshot;
-          get.setSelf(newSnapshot);
+        // Content comparison against the last emitted snapshot: identity would be unequal for every
+        // array/object, firing on any mutation of `obj` (see `snapshotEquals`).
+        if (!snapshotEquals(newValue, previousSnapshot)) {
+          previousSnapshot = snapshotForComparison(newValue);
+          get.setSelf(previousSnapshot);
         }
       });
 

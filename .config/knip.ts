@@ -338,6 +338,9 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+  // `index.html` links these by path rather than importing them, so no module graph reaches them —
+  // and unstyled, `#spaces` becomes a full-flow block over the todo list that swallows every click.
+  'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
   // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
   // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
   // dependency is not reachable from the emitted chunk.

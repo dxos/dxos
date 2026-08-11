@@ -7,26 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { SpaceSchema } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, DXN, Format, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Format, Ref, Type } from '@dxos/echo';
 
 import * as Support from './Support';
-
-export const OnCreateSpace = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.support.onCreateSpace'),
-    name: 'On Create Space',
-    icon: 'ph--chat-text--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    space: SpaceSchema,
-    rootCollection: Type.getSchema(Collection.Collection),
-    isDefault: Schema.Boolean.pipe(Schema.optional),
-  }),
-  output: Schema.Void,
-});
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).

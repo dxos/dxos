@@ -19,6 +19,15 @@ tasks:
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
+  # The bundle Playwright serves, as its own target rather than an `env` override on `e2e`'s `bundle`
+  # dep: a dependency-level `env` map is part of that dependency's hash, so the override yields a bundle
+  # no other invocation can hydrate. `DX_PWA` stays on for `bundle`, which production deploys ship.
+  bundle-e2e:
+    extends: bundle
+    env:
+      DX_EDGE_BASE_URL: 'https://dxos.network'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: 'false'
   # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather
   # than a step inside `bundle`: a perf budget must not fail the local build you are running in
   # order to measure the very thing it is budgeting. `check-boot-budget` runs on the `e2e` job

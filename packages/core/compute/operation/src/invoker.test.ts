@@ -283,6 +283,48 @@ describe('OperationInvoker.invokePromise', () => {
 });
 
 //
+// Platform contract: `invokePromise` dispatch is concurrent, so completion order is NOT issue
+// order — an earlier call that stalls (a lazy handler's chunk load, a busy runtime) applies after a
+// later, faster one. Callers owning last-write-wins state (e.g. a selection) must apply it
+// synchronously at the call site rather than routing it through `invokePromise`.
+
+describe('OperationInvoker.invokePromise concurrency contract', () => {
+  test('a stalled earlier call is overtaken by a later one', async ({ expect }) => {
+    const Write = Operation.make({
+      input: Schema.Struct({ value: Schema.String, stall: Schema.Boolean }),
+      output: Schema.Void,
+      meta: { key: DXN.make('org.example.test.write') },
+    });
+
+    const applied: string[] = [];
+    let release: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = () => resolve();
+    });
+    const writeHandler = Operation.withHandler(Write, (input) =>
+      Effect.gen(function* () {
+        if (input.stall) {
+          yield* Effect.promise(() => gate);
+        }
+        applied.push(input.value);
+      }),
+    );
+    const invoker = OperationInvoker.make(() => Effect.succeed([writeHandler]), testRuntime);
+
+    const first = invoker.invokePromise(Write, { value: 'stale', stall: true });
+    const second = invoker.invokePromise(Write, { value: 'newest', stall: false });
+    await second;
+    expect(release).toBeDefined();
+    release?.();
+    await first;
+
+    // Issued [stale, newest]; applied [newest, stale] — with last-write-wins state the stale value
+    // wins, which is why such state must not be dispatched through invokePromise.
+    expect(applied).toEqual(['newest', 'stale']);
+  });
+});
+
+//
 // Type-level tests for Operation.withHandler service constraints.
 //
 

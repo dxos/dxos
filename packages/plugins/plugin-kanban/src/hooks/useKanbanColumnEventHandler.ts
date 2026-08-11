@@ -68,9 +68,17 @@ export function useKanbanColumnEventHandler<T extends KanbanLayout.BaseKanbanIte
           return;
         }
 
-        // 2. Resolve drop target to an index in the column list.
+        // 2. Resolve drop target to an index in the column list. A tile target's index comes from its
+        // id against the CURRENT list, never from its `location` — see `useEventHandlerAdapter`, which
+        // resolves the same stale-location off-by-one.
         let targetIndex: number;
-        if (target?.type === 'tile' || target?.type === 'placeholder') {
+        if (target?.type === 'tile') {
+          // Insert after the hovered column, in post-removal index space (`arrayMove` inserts after
+          // splicing the source out).
+          const withoutSource = currentColumns.filter((c) => model.getColumnId(c) !== sourceColumnId);
+          const tileIndex = withoutSource.findIndex((c) => model.getColumnId(c) === target.id);
+          targetIndex = tileIndex === -1 ? -1 : tileIndex + 1;
+        } else if (target?.type === 'placeholder') {
           targetIndex = typeof target.location === 'number' ? Math.floor(target.location) : -1;
         } else if (target?.type === 'container') {
           targetIndex = currentColumns.length;

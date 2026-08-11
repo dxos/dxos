@@ -184,6 +184,34 @@ describe('client services effect-rpc', () => {
     );
   });
 
+  test('a missing handler fails only its own call, not other in-flight calls', async ({ expect }) => {
+    // A missing handler fails only its own request; it must not end the shared connection.
+    const gate = new Trigger();
+    const proxy = await setup(() => ({
+      SystemService: mockService<SystemService.Handlers>({
+        ['SystemService.getConfig']: () => Effect.promise(() => gate.wait().then(() => ({}))),
+      }),
+    }));
+
+    const systemService = proxy.SystemService;
+    if (!systemService) {
+      throw new Error('setup did not expose SystemService');
+    }
+    // Stand-in for the in-flight `SystemService.reset`: dispatched, awaiting its handler.
+    const inFlight = systemService.getConfig();
+    // Stand-in for the late `FeedService.getSyncState` poll: its handler is gone.
+    const missing = systemService.reset().then(
+      () => 'unexpectedly resolved',
+      (err) => err,
+    );
+
+    await expect(missing).resolves.toSatisfy((err: unknown) =>
+      String(err).includes('Service handler not available: SystemService.reset'),
+    );
+    gate.wake();
+    await expect(inFlight).resolves.toBeDefined();
+  });
+
   test('onRequest gates dispatch until ready', async ({ expect }) => {
     const ready = new Trigger();
     let called = false;

@@ -93,14 +93,23 @@ export const commentSync = (
         //   Fix at the source: have the query defer/await source resolution (or expose a resolved
         //   flag) so callers don't guard each `getSource`; then remove this try/catch.
         try {
+          // Deletion is filtered on the THREAD, not the anchor: `CommentOperation.Delete` batches
+          // both removals into one notification, so this subscriber can run while `query.results`
+          // still holds the removed anchor, and nothing notifies again to clear its inline mark.
           const thread = Relation.getSource(anchor);
-          return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
+          return Obj.instanceOf(Thread.Thread, thread) && !Obj.isDeleted(thread) && thread.status !== 'resolved';
         } catch {
           return false;
         }
       })
       .concat(registry.get(stateAtom).drafts[objectId] ?? [])
-      .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'));
+      .filter((anchor) => (anchor.branch ?? 'main') === (reviewBranch ?? 'main'))
+      // Dedupe by source thread, committed first: persisting a draft creates a new relation while its
+      // draft entry is still listed, so for a frame both name one thread and it decorates twice.
+      .filter(
+        (anchor, index, all) =>
+          all.findIndex((candidate) => Relation.getSource(candidate).id === Relation.getSource(anchor).id) === index,
+      );
 
   return [
     EditorView.updateListener.of((update) => {
@@ -129,11 +138,14 @@ export const commentSync = (
       readonly: suggestionBranch,
       // `getAnchors()` is already branch-scoped, so selection-style highlights show only the review
       // branch's comments.
+      // The editor's comment id is the thread's OBJECT id, never its URI: a URI's spelling changes as
+      // a draft persists (see `CommentState`), which breaks every id comparison downstream —
+      // decoration `data-current`, `scrollCommentIntoView`'s lookup, the delete/update matching below.
       getComments: () =>
         getAnchors()
           .filter((anchor) => anchor.anchor)
           .map((anchor) => ({
-            id: Obj.getURI(Relation.getSource(anchor)),
+            id: Relation.getSource(anchor).id,
             cursor: anchor.anchor,
           })),
       subscribe: (sink) => {
@@ -158,7 +170,8 @@ export const commentSync = (
       onDelete: ({ id }) => {
         const drafts = registry.get(stateAtom).drafts[objectId];
         if (drafts) {
-          const index = drafts.findIndex((draft) => Relation.getURI(draft) === id);
+          // `id` is the source thread's object id (see getComments), so drafts match by source too.
+          const index = drafts.findIndex((draft) => Relation.getSource(draft).id === id);
           if (index !== -1) {
             const current = registry.get(stateAtom);
             registry.set(stateAtom, {
@@ -179,7 +192,7 @@ export const commentSync = (
         }
       },
       onUpdate: ({ id, cursor }) => {
-        const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getURI(d) === id);
+        const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getSource(d).id === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           Obj.update(thread, (thread) => {
