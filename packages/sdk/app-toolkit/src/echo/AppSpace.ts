@@ -47,9 +47,25 @@ export const isExemplarSpace = (space: Space): boolean => hasTag(space, EXEMPLAR
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
 
-/** Find the settings space. */
-export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined =>
-  client.spaces.get().find((space) => isSettingsSpace(space));
+/**
+ * Find the settings space.
+ *
+ * Profiles that hit the duplicate-creation race carry two tagged spaces; the one holding the
+ * default-space designation is canonical, so it wins over list order.
+ */
+export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
+  const tagged = client.spaces.get().filter((space) => isSettingsSpace(space));
+  if (tagged.length <= 1) {
+    return tagged[0];
+  }
+
+  // Properties are unreadable until the space is ready, so an unopened duplicate cannot be judged
+  // and the first tagged space stands in until one proves canonical.
+  return (
+    tagged.find((space) => space.state.get() === SpaceState.SPACE_READY && getDefaultSpaceId(space) !== undefined) ??
+    tagged[0]
+  );
+};
 
 /**
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).

@@ -33,7 +33,7 @@ import { SpaceOperation } from '#operations';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
-import { ensureSettingsSpace } from '../util/settings-space';
+import { resolveSettingsSpace } from '../util/settings-space';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -105,7 +105,7 @@ export default Capability.makeModule(
     let initFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
     const initSettingsSpace = Effect.gen(function* () {
-      const settingsSpace = yield* ensureSettingsSpace(client);
+      const settingsSpace = yield* resolveSettingsSpace(client);
       const defaultSpace = yield* resolveDefaultSpace(client, settingsSpace);
 
       // Only relevant on a cold boot with no workspace in the deck state.
