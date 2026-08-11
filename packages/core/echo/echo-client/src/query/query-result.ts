@@ -200,11 +200,12 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
     log('recomputeResult', { changed });
 
-    // Only swap the caches when the results actually differ. `useSyncExternalStore` reads `results`
-    // as its snapshot on every render, so replacing an equal array would hand React a new reference
-    // without emitting an event — the store would appear to change while nothing had. Both caches
-    // are populated on the first recompute, where `changed` is true because there is no prior cache.
-    if (changed) {
+    // An aggregate query assembles its group records fresh on every recompute, so an unchanged result
+    // still yields a new array — and `useQuery` reads `results` as its `useSyncExternalStore` snapshot
+    // on every render, which would then see a new reference for identical data. Hold the previous
+    // arrays in that case only: on the flat path `changed` compares ids and order alone, so pinning
+    // would serve stale entities and stale per-row match metadata.
+    if (!presented.grouped || changed) {
       this._resultCache = presented.entries;
       this._objectCache = presented.objects;
     }
