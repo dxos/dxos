@@ -2,14 +2,17 @@
 
 Status: **draft / v1**. Tracking: DX-1151.
 
-This document specifies two per-space maintenance APIs on the ECHO `Database`:
+This document specifies three per-space maintenance APIs on the ECHO `Database`:
 
 - `Database.stats()` — a snapshot of what a space occupies on the host (objects,
   automerge documents, feeds, feed blocks).
 - `Database.runGarbageCollection()` — reclaims storage held by soft-deleted
   objects and the documents / feed blocks that are no longer reachable.
+- `Database.retainObjects(keep)` — replaces the set of objects the space
+  directory tracks, dropping the rest for collection to reclaim. Destructive of
+  live data, so it is described separately below rather than as a mode of GC.
 
-Both are **per-space** and routed through the `DataService` RPC, so the client
+The first two are routed through the `DataService` RPC, so the client
 API surface is identical whether the host is in-process (the local client
 worker) or remote (EDGE). Only the **local host implements them today**; the EDGE
 handlers return a not-implemented error (see the status table below). The
@@ -25,9 +28,12 @@ storage (automerge documents + feeds) behind a different physical store.
 | GC step 2 — wipe unreachable owned documents       | implemented                     |
 | GC step 5 — delete stale index rows                | implemented (`index` option)    |
 | GC steps 3–4 — feed purge                          | specified, deferred (see below) |
+| Automatic reclamation on peers                     | implemented                     |
+| `retainObjects()` — drop all but the retained ids  | implemented (client-side)       |
 
-The EDGE host implements neither API yet (both return a not-implemented error);
-this document is the reference for that work.
+The EDGE host implements neither of the two RPC APIs yet (each returns a
+not-implemented error); this document is the reference for that work.
+`retainObjects` runs on the client and needs no host counterpart.
 
 ## Why GC is needed
 
@@ -172,6 +178,13 @@ handle; it replicates like any other change.
 
 ### 2. Wipe unreachable documents owned by the space
 
+Wiping one document commits as a single transaction: its heads row, its
+classical chunks, and its subduction ranges. A partial wipe would be
+unrecoverable rather than merely incomplete — the orphan scan below enumerates
+the heads table, so chunks that outlive their heads row can never be found
+again. Interrupting the pass _between_ documents is safe: what was unlinked but
+not yet wiped is an orphan, which the next pass finds by the same scan.
+
 Compute the **reachable set** by walking the space directory transitively from
 the root: `{ root } ∪ links ∪ branch-member-docs`, following any nested links.
 
@@ -221,6 +234,81 @@ Correctness note: query correctness for deleted objects already holds before GC
 (soft-deleted objects carry `deleted = 1` and are filtered out). Step 5 is
 space reclamation, not a correctness fix — it is gated by `options.index`.
 
+## Automatic reclamation
+
+Collection is explicit, but its _result_ propagates. Removing an object's entry
+from the space directory is an ordinary automerge change, so it replicates like
+any other; a peer that receives it wipes the documents that change orphaned,
+without being asked and without running a pass of its own. One collection
+therefore frees the same bytes everywhere.
+
+This does not make deletion ambient. The soft-to-hard promotion is decided by
+whoever ran the collection and arrives here as replicated data; a receiving peer
+applies a decision already taken rather than taking one, which is why it needs no
+opt-out.
+
+The hook is the space's document-list update. Two cases reach it:
+
+- **A document left the directory** — an unlink replicating in from the peer that
+  collected. The departed set is diffed against the previous listing.
+- **A new root was applied** (an epoch). The retired root is expanded to its
+  whole closure rather than trusting the diff: the listing is debounced, so a
+  document linked and orphaned in quick succession may never appear in one at
+  all. Walking the retired root makes an epoch deterministic regardless of what
+  this peer happened to observe.
+
+Both re-check reachability against the _live_ directory before deleting, because
+a document can be re-linked between the event and the deferred task. A directory
+that cannot be read is treated as unknown reachability and skips the pass, never
+as an empty one — the epoch case expands a whole closure, so reading "nothing is
+reachable" there would wipe documents the new root carried forward. Failures are
+logged rather than propagated — a peer that fails to reclaim is only still
+holding disk.
+
+This is safe because a directory change is atomic and causally delivered.
+Concurrent removals of several keys arrive as one change, and automerge holds a
+change whose dependencies are missing rather than applying it, so no peer ever
+observes a half-unlinked directory and reclaims something still referenced.
+
+## `retainObjects()`
+
+`retainObjects(keep)` replaces the set of objects the space directory tracks.
+It is **not** garbage collection: GC reclaims what was already soft-deleted,
+whereas this drops live objects on the caller's instruction. Collection is what
+reclaims the result, so clearing a space is `retainObjects` followed by
+`runGarbageCollection`.
+
+The directory's `objects` and `links` maps already name every object in the
+space, so the drop set is diffed against their keys and removed in a single
+change — one root write, never a scan of the contents, no object loaded and no
+`deleted` flag written per object. The dropped documents are orphaned, and steps
+2 and 5 above reclaim them. Because the change replicates like any other, peers
+reclaim the same bytes through automatic reclamation without being told to.
+
+**It runs on the client, not the host.** The host can perform the identical
+directory rewrite, and the storage outcome is correct when it does — but the
+objects keep answering queries afterwards. Nothing rebuilds a client's view of a
+space from the directory, so its working set still holds them, and deleting the
+index rows does not help because the working set is consulted first. A drop has
+to originate where the objects live. `retainObjects` therefore evicts the ids it
+removed from the working set, keyed off what the call actually dropped rather
+than re-derived from the directory: `_createDocumentForObject` binds an object
+before writing its link, so a directory-derived eviction set would drop objects
+mid-creation.
+
+Two consequences worth stating plainly:
+
+- **It is permanent.** The objects are dropped, not flagged, so there is no
+  tombstone to restore from and no undo.
+- **Root history is retained.** The directory keeps the change that removed the
+  entries, so the root document itself does not shrink. The bytes reclaimed are
+  the linked documents', which is where a space's size actually lives. Dropping
+  the root's own history requires a new epoch, which is a separate operation.
+
+A remote peer applying the replicated change reclaims the storage but does not
+prune its own working set — same root url, and only a root-url change triggers
+the client's reconciliation today. Its view corrects on reload.
+
 ## Safety & invariants
 
 - **Attribution before deletion.** A document is only wiped when its
@@ -254,6 +342,9 @@ differs. When implementing on EDGE:
 - Step 4's positioned-tombstone invariant is storage-independent and must be
   preserved.
 - Step 5 targets whatever index EDGE maintains.
+- **Prerequisite:** `SpaceStateMachine.getAutomergeRoot` selects the root by
+  DO-KV key order, which is arbitrary once a space has more than one epoch. It
+  must order by `Epoch.number` before anything GC-critical runs there.
 
 ## Deferred / future work
 
@@ -270,4 +361,44 @@ differs. When implementing on EDGE:
 - Incremental / budgeted GC (bounded work per call) for very large spaces.
 - Automerge document **compaction** (rewrite a live document to drop deleted
   history) — distinct from wiping whole documents.
-- A scheduled/automatic GC trigger (this spec covers only the explicit API).
+- A scheduled/automatic GC **trigger** (this spec covers only the explicit API;
+  automatic _reclamation_ of an already-collected result is implemented above).
+- **Reconcile a client's working set on same-root content changes.** A peer that
+  applies a replicated `retainObjects` reclaims the storage but keeps showing the
+  dropped objects until reload: `_handleSpaceRootDocumentChange` is reached only
+  from `updateSpaceState`, which early-returns unless the root url changed, so it
+  fires on an epoch and never on a content change to the same root. Any fix must
+  be guarded against the window in `_createDocumentForObject` where an object is
+  bound before its link is written.
+- **Index rows can outlive their documents.** Wiping a document and deleting its
+  index rows are separate stores and separate transactions, so a process that
+  dies between them leaves rows describing storage that is gone; nothing
+  recomputes them. A stale row, not lost data. The document wipe itself is
+  atomic — see the interruption note under step 2.
+- **Reclaim pages to the filesystem.** Deleting rows returns pages to SQLite's
+  freelist, so collection frees space for the database to reuse but does not
+  shrink the file on disk. `VACUUM` would, at the cost of rewriting the whole
+  file, and it cannot run inside a transaction — so it belongs to a maintenance
+  path rather than to a collection pass.
+- **Two-peer convergence tests.** Automatic reclamation is covered single-host;
+  the replicated path is exercised only by construction.
+- **Age guard on the orphan scan.** Document creation and the link write are
+  separate operations across the network, so a document created but not yet
+  linked is theoretically collectable. Narrowed by the storage-only load and the
+  `access.spaceId` check, not closed.
+- **Space purge.** Deleting a space leaves its documents and `echo_spaces` row on
+  disk. Prerequisite: `acceptSpace` asserts `!isSpaceDeleted`, so a space you
+  deleted can never be re-joined — a tombstone must become re-joinable by
+  explicit invitation before any purge lands, or the data is unrecoverable.
+- **Two races on the epoch root swap.** Applying an epoch clears the client's
+  root handle before loading the replacement, leaving a window in which no
+  document can be attributed: `EntityManager.getObjectDocumentId` asserts on the
+  null handle and fails whichever query is in flight, and
+  `SpaceProxy._createEpochInternal` resolves before the swap lands, so callers
+  cannot tell when the space is writable again. Both are reachable today via
+  `compactDocumentsEpochMigration`; neither is on any path in this document,
+  which is why they are recorded rather than fixed here.
+- **`MigrationBuilder._buildNewRoot` drops only links.** Deleted ids are removed
+  from `links` but the inline `objects` map is copied wholesale, so an object
+  inlined in the root survives the migration that deleted it. Affects
+  `REPLACE_AUTOMERGE_ROOT` migrations and `compactDocumentsEpochMigration`.
