@@ -12,6 +12,38 @@ on `depot-ubuntu-24.04-8`, all inside `ghcr.io/dxos/gh-actions`, with e2e sharde
 
 Everything routes through `moon`, and `.moon/workspace.yml` decides where the remote cache lives.
 
+### The `check` job runs in three stages, ordered by cost
+
+Its steps are cheap-first, because what the ordering buys is time-to-red-signal on a broken PR — not
+a shorter Check, which `storybook` (~20 min) sets, not `check` (~8 min). Stage boundaries are the
+dependency edges:
+
+1. **No-build gates, ~30 s combined** — `format-check` first (one unformatted file fails every job
+   in the workflow), then the packaging scripts, then the peer-dependency resolution.
+2. **The compile gate** — `moon run :lint :build`, ~15 s warm and the job's floor cold.
+   `check-module-structure` belongs here and not in stage 1 despite costing 5 s: it declares
+   `deps: [build]`, so ahead of the gate it would pull the builds along with it.
+3. **The two slow checks** — `knip` (~2m36s, 85% of the job's real work) and `check-boot-budget`
+   (~1 min). Only this stage is report-all (`continue-on-error` plus a gate step): fail-fast costs
+   nothing when steps cost seconds, but here it hides one failure behind the other for a whole
+   further run of the job.
+
+Two facts the ordering depends on, both verified rather than assumed:
+
+- **`pnpm-lock.yaml` is an input to every moon task** (`.moon/tasks/all.yml`). Editing it and
+  re-running a cached task changes the hash, so the peer-dependency step — which passes
+  `--no-frozen-lockfile` and may rewrite the lockfile — restores it under a `trap` instead of
+  invalidating stages 2 and 3. That is why the step could not simply be moved to the front.
+- **The production `bundle` is not otherwise built anywhere in Check.** `:build` does not include it
+  and `e2e-bundle` builds `bundle-e2e`, a separate cache entry by design (`DX_PWA=false` changes the
+  very boot graph the budget measures). So `check-boot-budget` pays for that bundle wherever it
+  lives; on the `check` job it at least follows stage 2, which has warmed the library builds under
+  it. Its former home — one `e2e` cell — could only ever check post-merge, since `e2e` is gated to
+  main/changeset-release/dispatch.
+
+Neither caching the small scripts as moon tasks nor caching `knip` was worth it: the scripts run in
+1–6 s, and knip is a whole-repo analysis that any real PR invalidates, so its hit rate is ~0.
+
 ## The failure mode that governs every decision here
 
 **moon treats every remote-cache failure as non-fatal.** A missing credential, a rejected
