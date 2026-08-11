@@ -17,8 +17,10 @@ test.describe('Kanban MutableSchema', () => {
 
   test.beforeEach(async ({ browser, browserName }) => {
     // TODO(wittjosiah): Deferred on webkit — the story intermittently never paints a column within the
-    //   45s budget, an arrival-order race that storybook's error boundary swallows into an eternally
-    //   "preparing" story (CI run 31313740371). A built storybook was tried and is worse (no story renders).
+    //   45s budget, an arrival-order race in `storybook dev`'s on-demand module serving that storybook's
+    //   error boundary swallows into an eternally "preparing" story (CI run 31313740371). The fix is to
+    //   run e2e against a BUILT storybook — a bundle has a fixed evaluation order, so the race cannot
+    //   exist — but the first spike is blocked: the built story never renders. Fix that, then unskip.
     test.skip(browserName === 'webkit');
 
     // Larger viewport to avoid triggering scroll-assist behaviour on simple drag operations.

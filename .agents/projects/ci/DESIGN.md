@@ -215,7 +215,9 @@ restore the override with a justification written from that failure rather than 
 Each was measured, not reasoned about, and each is worse than the baseline it tried to improve.
 
 1. **Serving a built storybook to Playwright** instead of `storybook dev`: the build succeeds and then
-   no story renders at all (4/4 timeouts). That avenue is closed for the story-boot stalls.
+   no story renders at all (4/4 timeouts). Refuted as a drop-in swap — but it is still the decided
+   end state (a bundle's fixed evaluation order makes the story-boot race impossible), so the
+   follow-up in TASKS.md starts by root-causing the no-render, not by re-trying the swap.
 2. **Instrumenting the render path with console probes** to catch the marker race: the probe perturbs
    the timing under test (failures 4-in-39 → 7-in-16). Diagnostics must be DOM-only and test-side.
 3. **Writing `current` synchronously in comment-sync's `onActivate`** before its nested `Select`:
