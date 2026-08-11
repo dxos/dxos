@@ -273,6 +273,9 @@ export const Test: Story = {
       },
       { interval: 500 },
     );
+    // `waitFor` returns its last observation on timeout; a partial stream must fail here, not
+    // masquerade as the baseline for the processed-count assertions below.
+    void expect(stablePolls).toBeGreaterThanOrEqual(3);
     void expect(messageCount).toBeGreaterThan(0);
 
     // First pass: every seeded message is processed and the tagged cursor is created + advanced.
