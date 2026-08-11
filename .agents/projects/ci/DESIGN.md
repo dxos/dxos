@@ -39,8 +39,8 @@ Two facts the ordering depends on, both verified rather than assumed:
   very boot graph the budget measures). So `check-boot-budget` pays for that bundle wherever it
   lives; on the `check` job it at least follows stage 2, which has warmed the library builds under
   it. Measured there: 53 s for the step, 28 s of it the bundle building from source with its 281
-  dependency tasks hydrated. Its former home — one `e2e` cell — could only ever check post-merge,
-  since `e2e` is gated to main/changeset-release/dispatch.
+  dependency tasks hydrated. Its former home — one `e2e` cell — could never gate a PR automatically:
+  `e2e` runs on main/changeset-release, or on an explicit dispatch someone has to ask for.
 
 Neither caching the small scripts as moon tasks nor caching `knip` was worth it: the scripts run in
 1–6 s, and knip is a whole-repo analysis that any real PR invalidates, so its hit rate is ~0.

@@ -175,9 +175,9 @@ jobs:
       # that relocates the edge silently drops the fix and neither the build nor the tests notice;
       # three separate fixes were undone that way. Not `--affected`-scoped, because the offending edit
       # lands in some other package. Here rather than on an `e2e` cell so that it gates the PR that
-      # introduces the regression: `e2e` is gated to main/changeset-release/dispatch, where the check
-      # could only ever run post-merge. `bundle` is not otherwise built in this workflow, so this step
-      # pays for it; stage 2 has at least warmed the library builds underneath it.
+      # introduces the regression: `e2e` runs on main/changeset-release or an explicit dispatch, so
+      # there it never gated one. `bundle` is not otherwise built in this workflow, so this step pays
+      # for it; stage 2 has at least warmed the library builds underneath it.
       - name: Check boot budget
         id: boot_budget
         continue-on-error: true

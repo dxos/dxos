@@ -224,8 +224,8 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       masked failure could not make a green cell unfalsifiable; all eight uploads now agree.
 - [x] **Sync with main** (Changesets v3 added a `check-changeset-bumps` step whose script the branch
       lacked, so the `check` job failed until the merge) **and drop draft status.**
-- [x] **Move `check-boot-budget` off the e2e cell** — it is now the last step of the `check` job,
-      which also makes it gate the PR rather than only run post-merge. Landed with the `check` job's
+- [x] **Move `check-boot-budget` off the e2e cell** — it is now the last check in the `check` job's
+      stage 3, which also makes it gate the PR. Landed with the `check` job's
       cost-ordered stages (DESIGN.md, "The `check` job runs in three stages"): stage 1 the ~30 s
       no-build gates with `format-check` leading, stage 2 the compile gate, stage 3 `knip` +
       `check-boot-budget` as the only report-all pair. The peer-dependency step moved from last to
