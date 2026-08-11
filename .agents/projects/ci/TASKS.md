@@ -221,9 +221,16 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       pinned by plugin-space `create.test.ts`'s rejecting stub, and the client-side deadline keeps
       its rationale comment; `currentObjectId` moved out of `ReviewCapabilities` into plugin-review
       `util/comment-state.ts` (a helper, not a capability).
-- [ ] **Restore `quarantine: true`** on the e2e uploader in `check.yml` (set to `false` for the
-      campaign so a masked failure could not make a green cell unfalsifiable).
-- [ ] **Sync with main and drop draft status.**
+- [ ] **Decide `quarantine` for the two e2e uploader steps.** Still `false`, unlike the six other
+      jobs: a masked failure makes a green cell unfalsifiable, which is why the campaign wanted it
+      off. Now that the DX-1152 retries absorb the known two-peer stalls, `true` would match the rest
+      of the workflow — a deliberate call either way, not an oversight.
+- [x] **Sync with main** (Changesets v3 added a `check-changeset-bumps` step whose script the branch
+      lacked, so the `check` job failed until the merge) **and drop draft status.**
+- [ ] **Move `check-boot-budget` off the e2e cell.** It is static (a Node script reading
+      `out/composer/index.html`) but depends on the production `bundle`, which the composer cell does
+      not otherwise build — it cost 51 s in one chromium cell. `e2e-bundle` or `check` is the right
+      home; neither installs browsers for it.
 
 ## Phase 4: Storybook failures the cache was hiding
 
