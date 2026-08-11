@@ -18,7 +18,9 @@ export default defineConfig({
   webServer: {
     command: 'pnpm vite preview',
     port: 4173,
-    // `vite preview` serves a prebuilt bundle, so a single instance serves every worker.
+    // The suite's CI halves are separate Playwright processes sharing :4173 — the second must
+    // attach rather than error, which is safe because `vite preview` serves a stateless prebuilt
+    // bundle. (With the port free, the command still runs; the flag only governs collisions.)
     reuseExistingServer: true,
     timeout: 300_000,
   },

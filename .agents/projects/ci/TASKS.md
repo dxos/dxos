@@ -141,17 +141,20 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
 - [ ] **`delete message` on webkit** — `toHaveCount` still fails ~1 in 12, distinct from the marker
       defect. Also seen once on chromium at 2 workers (`cm-comment` count stuck at 1; trace lost to
       the outputDir clear).
-- [ ] **`guest joins host's space`** — replication, **not** invitation: the guest reached the doc and
-      the editor kept its placeholder (firefox, run 31313863039). Needs a trace from a CI failure; not
-      reproducible in the sandbox, where external STUN/TURN are unavailable.
+- [x] **`guest joins host's space` — re-enabled.** Its one failure was replication, **not** invitation
+      (the guest reached the doc and the editor kept its placeholder — firefox, run 31313863039), i.e.
+      cause A. The fixme was self-blocking (its re-enable condition was a CI trace, which only a live
+      test can produce) and bought nothing while its sibling `changes` test ran the same two-peer path
+      live. Expect it to fail at cause A's ambient rate until DX-1152 lands; a failure now yields the
+      trace.
 - [ ] **kanban suite on webkit** — story-boot stall, no column painted in 45 s; gated at `beforeEach`
       with evidence. A preload lowered the rate only and `check-cycles` finds no static cycle; the
       decided remedy is the built-storybook follow-up below, and the skip's removal is that item's
       done-condition.
-- [ ] **Collaboration remainder** — `host and guest can see each others' changes` (markdown textbox
-      focus timeout, and a webkit renderer crash under cause A), `cursors` (documented as depending on
-      winning a race the test cannot observe; storybook covers it), `presence` ("Fix.").
-      `collaboration.spec.ts` has no live tests.
+- [ ] **Collaboration remainder** — live: `changes` and `guest joins host's space`, both riding cause
+      A's rate (DX-1152 noted at the describe block). Still deferred: `cursors` (documented as
+      depending on winning a race the test cannot observe; storybook covers it) and `presence`
+      ("Fix.").
 - [ ] **Startup harness, and the four tests CI never runs.** The pool is
       `moon exec ':e2e-ci*' plugin-script:e2e`, so composer's `e2e-startup`, `e2e-dev` and
       `e2e-welcome-focus` tasks sit outside it — re-enable `warm-cold start` (deferred pending the

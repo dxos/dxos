@@ -24,6 +24,10 @@ const navigateToNewDocument = async (app: AppManager) => {
 // Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception — webkit peers
 // there time out waiting for transport, so cross-browser results come from CI, not local runs. Ignore
 // webkit's `'allow-presentation'` console flood here, from MediaPlayer's iframe sandbox.
+//
+// Stability here waits on DX-1152 (production-edge two-peer stalls: invitations and replication) —
+// these tests stay ENABLED in the meantime, both as sensors for that defect and because skipping one
+// victim of a shared cause just moves the failure to the next test.
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
@@ -47,10 +51,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Deferred on REPLICATION, not the invitation — guest joins but the editor stays on
-  //   the placeholder instead of the host's text (firefox, CI run 31313863039). Not reproducible outside
-  //   CI (sandbox STUN/TURN unavailable); re-enable with a trace from a CI failure.
-  test.fixme("guest joins host's space", async () => {
+  test("guest joins host's space", async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
     await host.createObject({ type: 'Document' });
