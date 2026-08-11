@@ -112,7 +112,14 @@ describe('runFactPipeline', () => {
     await db.flush();
 
     const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
-    const result = await runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 1 }).pipe(
+    const progress: { processed: number; facts: number; total: number }[] = [];
+    const result = await runFactPipeline({
+      feed,
+      cursor,
+      extract: stubExtract,
+      pageSize: 1,
+      onProgress: (update) => progress.push(update),
+    }).pipe(
       Effect.provide(Database.layer(db)),
       Effect.provide(FactStoreLive.layerMemory),
       EffectEx.runAndForwardErrors,
@@ -120,6 +127,11 @@ describe('runFactPipeline', () => {
 
     expect(result.processed).toBe(3);
     expect(Cursor.parseKey(cursor.max)).toBe(Date.parse('2026-06-03T00:00:00.000Z'));
+
+    // Determinate progress: the exact pending count arrives with the first report (before any page),
+    // and the final report converges on it.
+    expect(progress[0]).toEqual({ processed: 0, facts: 0, total: 3 });
+    expect(progress.at(-1)).toEqual({ processed: 3, facts: 3, total: 3 });
   });
 
   test('drops a malformed created timestamp instead of poisoning the cursor', async ({ expect }) => {

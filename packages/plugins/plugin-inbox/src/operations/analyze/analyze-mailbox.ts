@@ -64,15 +64,18 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       const aiService = yield* AiService.AiService;
 
       // Live progress via trace `status.update` events (`#analyze` key), projected into the runtime
-      // ProgressRegistry — same seam as mail sync and the process pipeline. No total: the candidate
-      // count is only known post-dedup, so the meter is indeterminate.
+      // ProgressRegistry — same seam as mail sync and the process pipeline. The pipeline's first
+      // `onProgress` delivers the exact pending count, so the meter is determinate.
       const traceWriter = yield* Trace.TraceService;
       const progressKey = InboxOperation.createAnalyzeProgressKey(mailbox);
-      const reportStatus = (patch: { message?: string; current?: number } = {}) =>
+      let total: number | undefined;
+      const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
+        total = patch.total ?? total;
         traceWriter.write(Trace.StatusUpdate, {
           message: patch.message ?? mailbox.name ?? 'Mailbox',
-          progress: { key: progressKey, current: patch.current ?? 0 },
+          progress: { key: progressKey, current: patch.current ?? 0, total },
         });
+      };
       reportStatus({ current: 0 });
 
       // Extract options: the email rules plus optional model/provider/strict overrides so callers can
@@ -98,7 +101,7 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
         cursor,
         extract,
         pageSize,
-        onProgress: ({ processed }) => reportStatus({ current: processed }),
+        onProgress: ({ processed, total }) => reportStatus({ current: processed, total }),
       });
       reportStatus({ message: PROGRESS_STATUS_COMPLETE });
       return result;
