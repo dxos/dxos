@@ -68,17 +68,6 @@ export default Capability.makeModule(
       Obj.update(rootCollection, (rootCollection) => {
         rootCollection.objects.push(Ref.make(welcomeDoc));
       });
-
-      // Navigating from here rather than an `OnCreateSpace` callback orders the landing after the
-      // seeding, so Home's recent-objects query already sees the README.
-      const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
-      yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] }).pipe(
-        Effect.provideService(Operation.Service, operationInvoker),
-      );
-      // Expose is scheduled because the navtree may not have rendered yet at this point.
-      yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath }).pipe(
-        Effect.provideService(Operation.Service, operationInvoker),
-      );
     }
 
     if (generateExemplarSpace) {
@@ -94,6 +83,24 @@ export default Capability.makeModule(
     } else {
       graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(defaultSpace.id, 'child'));
     }
+
+    // Claim the workspace before setting the plank: `plugin-space` switches to the default space
+    // from a forked fiber, and a switch restores the target workspace's (empty) persisted deck, so
+    // a plank set first is wiped. Switching here also satisfies that fiber's `workspace === default`
+    // guard, leaving it a no-op.
+    yield* Operation.invoke(LayoutOperation.SwitchWorkspace, {
+      subject: GraphPath.getSpacePath(defaultSpace.id),
+    }).pipe(Effect.provideService(Operation.Service, operationInvoker));
+
+    // Land on the default space's Home, which surfaces the seeded README among its recent objects.
+    const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
+    yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] }).pipe(
+      Effect.provideService(Operation.Service, operationInvoker),
+    );
+    // Expose is scheduled because the navtree may not have rendered yet at this point.
+    yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath }).pipe(
+      Effect.provideService(Operation.Service, operationInvoker),
+    );
 
     return [];
   }),
