@@ -112,13 +112,19 @@ export const signup = Command.make(
 
     const identity = client.halo.identity.get();
     invariant(identity, 'identity should exist after signup');
+    // Hub keys accounts by identity DID, so redeem's `accountId` is that same DID -- reporting both
+    // printed one value under two names.
+    // TODO(wittjosiah): No way to finish email verification outside Composer: the emailed link
+    // resolves in the app, and the hub exposes only `resendVerificationEmail`, so an account created
+    // here stays unverified until the user opens Composer.
+    const account = { email: result.email, emailVerificationSent: result.emailVerificationSent };
     if (json) {
       yield* Console.log(
-        JSON.stringify({ ...result, identityDid: identity.did, displayName: identity.profile?.displayName }, null, 2),
+        JSON.stringify({ ...account, identityDid: identity.did, displayName: identity.profile?.displayName }, null, 2),
       );
     } else {
       yield* Console.log('Signed up successfully');
-      yield* Console.log(print(printAccount({ ...result, identityDid: identity.did })));
+      yield* Console.log(print(printAccount({ ...account, identityDid: identity.did })));
     }
   }),
 ).pipe(
@@ -127,9 +133,8 @@ export const signup = Command.make(
   Command.provideEffectDiscard(() => withTypes(AccessToken.AccessToken, Connection.Connection)),
 );
 
-const printAccount = (account: Account.SignUpResult & { identityDid: string }) =>
+const printAccount = (account: Omit<Account.SignUpResult, 'accountId'> & { identityDid: string }) =>
   FormBuilder.make({ title: 'Account' }).pipe(
-    FormBuilder.set('accountId', account.accountId),
     FormBuilder.set('email', account.email),
     FormBuilder.set('emailVerificationSent', String(account.emailVerificationSent)),
     FormBuilder.set('identityDid', account.identityDid),

@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { getEdgeUrlWithProtocol } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
 import { EntityId, SpaceId } from '@dxos/keys';
 
@@ -16,7 +17,7 @@ export class OAuthFlowError extends BaseError.extend('OAuthFlowError', 'OAuth fl
 const RECOVERY_CALLBACK_PATH = '/redirect/oauth-recovery';
 
 export type RecoveryOAuthParams = {
-  /** Edge services base URL (from client config `runtime.services.edge.url`). */
+  /** Edge services base URL (from client config `runtime.services.edge.url`); `ws(s)` or `http(s)`. */
   readonly edgeBaseUrl: string;
   /** OAuth provider id (e.g. `'atproto'`). */
   readonly provider: string;
@@ -43,7 +44,9 @@ const performOAuthRoundTrip = Effect.fn(function* (params: RecoveryOAuthParams, 
     Effect.mapError(OAuthFlowError.wrap({ ifTypeDiffers: true })),
   );
   return yield* Effect.gen(function* () {
-    const initiateUrl = new URL('/oauth/initiate', params.edgeBaseUrl).toString();
+    // Config carries the edge URL in the client's socket form (`wss://`), which `fetch` rejects
+    // outright -- the HTTP clients normalize it the same way.
+    const initiateUrl = new URL('/oauth/initiate', getEdgeUrlWithProtocol(params.edgeBaseUrl, 'http')).toString();
     const response = yield* Effect.tryPromise({
       try: () =>
         fetch(initiateUrl, {
