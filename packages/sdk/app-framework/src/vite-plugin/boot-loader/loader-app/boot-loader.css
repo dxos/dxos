@@ -1,9 +1,9 @@
 /*
  * Boot loader stylesheet — injected into the host's `<head>` by `bootLoaderPlugin`
  * so the full-screen backdrop paints before any JS bundle is fetched. The Solid
- * `Loader` renders the ring + status into the `#boot-loader` backdrop; this
- * sheet styles both. Class/id names here form a contract with `Loader.tsx`,
- * guarded by `BootLoader.solid-stories.tsx` (it mounts the real component).
+ * `Loader` renders the swarm + status into the `#boot-loader` backdrop; this
+ * sheet styles both. Class/id names here form a contract with `Loader.tsx` and
+ * `SwarmField.tsx`, guarded by `BootLoader.solid-stories.tsx` (it mounts the real component).
  */
 
 body {
@@ -21,26 +21,6 @@ body {
  * to the rendered React shell.
  */
 #boot-loader {
-  --color-composer-100: rgb(5 40 61);
-  --color-composer-200: rgb(10 75 105);
-  --color-composer-300: rgb(1 122 183);
-  --color-composer-400: rgb(6 197 253);
-
-  /*
-   * Caps the disc / mark at the design pixel sizes on roomy viewports while
-   * shrinking proportionally on narrow ones (`vmin` follows the smaller of
-   * width / height) so neither the ring nor the mark crops on phones.
-   */
-  --boot-loader-disc-size: min(384px, 80vmin);
-  /*
-   * Match the React `Placeholder`'s logo box (`h-[300px] w-[300px]` at the
-   * `stage >= 1` keyframe) so the brand mark doesn't visibly jump size when
-   * the loader hands off — the responsive cap keeps the same 300/384 ratio
-   * (≈78%) at any viewport width.
-   */
-  --boot-loader-mark-size: min(300px, 62.5vmin);
-  --boot-loader-status-gap: 32px;
-
   position: fixed;
   inset: 0;
   z-index: 10;
@@ -64,14 +44,12 @@ body {
 #boot-loader {
   background: var(--boot-loader-bg-light, #fafafa);
   color: var(--boot-loader-fg-light, #0a0a0a);
-  --boot-loader-accent: var(--boot-loader-accent-light, var(--color-composer-200));
 }
 
 @media (prefers-color-scheme: dark) {
   #boot-loader {
     background: var(--boot-loader-bg-dark, #0a0a0a);
     color: var(--boot-loader-fg-dark, #f0f0f0);
-    --boot-loader-accent: var(--boot-loader-accent-dark, var(--color-composer-300));
   }
 }
 
@@ -79,17 +57,66 @@ body {
   opacity: 0;
 }
 
-/* Gently shrink the disc + mark as the loader fades, echoing the prior handoff. */
-#boot-loader[data-dismissing] #boot-loader-disc {
-  transform: translate(-50%, -50%) scale(0.92);
-  transition: transform 500ms ease-out;
+/*
+ * Widen the disc to the full backdrop so the swarm field has room to spiral —
+ * the explode outro (see `SwarmField.tsx`'s `applyOutro`) replaces the old
+ * uniform-scale dismissal, so there is no `data-dismissing` transform rule here.
+ */
+#boot-loader-disc {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: auto;
+  height: auto;
+}
+
+#boot-loader-disc > * {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+#boot-loader-swarm {
+  /*
+   * Absolutely pinned: an svg with only `width/height: 100%` falls back to its
+   * intrinsic 4:3 viewBox ratio in some layouts, overflowing (and de-centering)
+   * the scene on wide viewports.
+   */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
 /*
- * Stack the ring (the SVG `#boot-loader-ring`) and the brand mark in the same
- * grid cell so the mark sits centered inside the circle.
+ * The whole field (mark, dots, links) greyscales as one until ready/hover, so
+ * the swarm's grey levels match the mark's by construction; percentage (not the
+ * `none`/`grayscale` keyword) keeps `transition: filter` interpolable.
  */
-#boot-loader-disc {
+#boot-loader-swarm {
+  filter: grayscale(100%);
+  transition: filter 500ms ease-out;
+}
+#boot-loader-swarm.boot-loader-color {
+  filter: grayscale(0%);
+}
+
+/*
+ * The `'arc'` variant: the ORIGINAL boot loader, restored verbatim from the
+ * pre-swarm implementation (`ClassicRing.tsx`) for side-by-side comparison —
+ * its own disc box, brand-palette accent, conic fade mask, and mark reveal,
+ * all self-contained under the `-classic` ids so the swarm styles never leak in.
+ */
+#boot-loader-disc-classic {
+  --color-composer-200: rgb(10 75 105);
+  --color-composer-300: rgb(1 122 183);
+  --boot-loader-accent: var(--color-composer-200);
+  /* Caps the disc / mark at the design pixel sizes on roomy viewports while
+     shrinking proportionally on narrow ones. */
+  --boot-loader-disc-size: min(384px, 80vmin);
+  --boot-loader-mark-size: min(300px, 62.5vmin);
+
   position: absolute;
   top: 50%;
   left: 50%;
@@ -100,69 +127,35 @@ body {
   transform: translate(-50%, -50%);
 }
 
-#boot-loader-disc > * {
+@media (prefers-color-scheme: dark) {
+  #boot-loader-disc-classic {
+    --boot-loader-accent: var(--color-composer-300);
+  }
+}
+
+#boot-loader-disc-classic > * {
   grid-column: 1;
   grid-row: 1;
 }
 
-/*
- * Default to grayscale so the mark reads as a quiet monochrome silhouette
- * before any host-driven progress lands; the brand palette swaps in once
- * `Loader.tsx` sets `data-host-driven` on the disc (the first
- * `__bootLoader.progress()` call). Hover keeps a parallel reveal affordance
- * for inspection in the storybook. The 1000ms ease lets the grayscale → color
- * transition play through the activation phase rather than snapping.
- */
-#boot-loader-mark {
-  width: var(--boot-loader-mark-size);
-  height: var(--boot-loader-mark-size);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  filter: grayscale(100%);
-  transition: filter 1000ms ease-out;
-}
-
-/*
- * `grayscale(0%)` (identity) rather than `none` — `filter: none` changes
- * the filter function list and most engines treat that as a discrete
- * transition (snap, not ease). Keeping `grayscale(...)` on both sides of
- * the rule lets the browser interpolate the percentage smoothly.
- */
-#boot-loader-disc[data-host-driven] #boot-loader-mark,
-#boot-loader-mark:hover {
-  filter: grayscale(0%);
-}
-
-#boot-loader-mark svg {
-  width: 100%;
-  height: 100%;
-  /*
-   * The host SVG carries its own brand-palette fills, so we don't apply a
-   * `color` cascade here. SVGs that intentionally use `fill="currentColor"`
-   * still pick up the loader's text colour via `#boot-loader`'s `color`.
-   */
+/* Gently shrink the disc + mark as the loader fades, echoing the original handoff. */
+#boot-loader[data-dismissing] #boot-loader-disc-classic {
+  transform: translate(-50%, -50%) scale(0.92);
+  transition: transform 500ms ease-out;
 }
 
 /*
  * Circular determinate progress — a single SVG `<path>` arc that sweeps
- * anticlockwise from 12 o'clock, its angle growing with progress (the `d` is
- * recomputed by the component each tick). There is no static track;
- * `stroke-linecap: round` rounds the trailing edge, and `marker-end` paints the
- * leading-edge dot. Stroke width is in viewBox units so it scales with the disc.
+ * anticlockwise from 12 o'clock, its angle growing with progress. There is no
+ * static track; `marker-end` is replaced by the separate head layer. The conic
+ * mask fades the arc linearly from the head (opaque) back to the 12 o'clock
+ * tail (transparent); `ClassicRing` writes the eased progress into
+ * `--boot-loader-arc` (0–100). The -1.16deg start keeps the head unmasked.
  */
 #boot-loader-ring {
   width: var(--boot-loader-disc-size);
   height: var(--boot-loader-disc-size);
   overflow: visible;
-  /*
-   * Fade the arc linearly from the head (the marker, fully opaque) back to the
-   * tail (12 o'clock, transparent). A conic-gradient mask does this along the
-   * curve — `Loader.tsx` writes the eased progress into `--boot-loader-arc`
-   * (0–100), and the arc occupies the conic range `(100 - arc)%`…`100%`, so the
-   * head sits at `(100 - arc)%` (opaque) and the tail at `100%` (transparent).
-   * NOTE: We start at -1.16deg so that we don't mask the marker.
-   */
   --boot-loader-arc: 0;
   mask: conic-gradient(
     from -1.16deg at 50% 50%,
@@ -180,11 +173,7 @@ body {
   );
 }
 
-/*
- * The leading-edge dot's layer — same geometry as `#boot-loader-ring` but with no
- * mask, so the dot renders as a full circle (the ring's conic fade mask would
- * otherwise bisect it where it sits on the mask's transparent→opaque edge).
- */
+/* The head dot's layer — same geometry, no mask, so the dot renders whole. */
 #boot-loader-ring-head {
   width: var(--boot-loader-disc-size);
   height: var(--boot-loader-disc-size);
@@ -199,29 +188,48 @@ body {
   opacity: 0.5;
   stroke-linecap: butt;
   overflow: visible;
-  /* Dashed line: dash + gap lengths in viewBox units (~2 units ≈ 7.7px @384px). */
-  /* stroke-dasharray: 2 1; */
 }
 
-/* The `marker-end` dot at the arc's leading edge. */
 .boot-loader-ring-marker {
   fill: var(--boot-loader-accent);
   stroke: none;
   overflow: visible;
-  /* opacity: 0.5; */
+}
+
+/*
+ * The classic mark: grayscale until the first host-driven progress lands
+ * (`data-host-driven` on the disc), with a hover reveal; percentage keeps the
+ * transition interpolable.
+ */
+#boot-loader-mark {
+  width: var(--boot-loader-mark-size);
+  height: var(--boot-loader-mark-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: grayscale(100%);
+  transition: filter 1000ms ease-out;
+}
+
+#boot-loader-disc-classic[data-host-driven] #boot-loader-mark,
+#boot-loader-mark:hover {
+  filter: grayscale(0%);
+}
+
+#boot-loader-mark svg {
+  width: 100%;
+  height: 100%;
 }
 
 #boot-loader-status {
   position: absolute;
-  top: 50%;
+  /* Log centred at 87.5% viewport height — clear of the animation at any aspect. */
+  top: 87.5%;
   left: 0;
   right: 0;
-  /* 
-   * Sit just below the centered disc — half the disc plus the configured gap.
-   */
-  transform: translate(0, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
+  transform: translate(0, -50%);
   /*
-   * Slightly de-emphasised vs body text so the brand mark + ring stay the
+   * Slightly de-emphasised vs body text so the brand mark + swarm stay the
    * dominant focus, but high enough to remain legible on both light and dark
    * backgrounds without a custom palette.
    */
