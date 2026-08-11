@@ -261,16 +261,18 @@ export class Toolbox {
     groupB.sort();
 
     const config = {
-      $schema: 'https://unpkg.com/@changesets/config@3.1.4/schema.json',
+      $schema: 'https://unpkg.com/@changesets/config@4.0.0/schema.json',
       // git-based, not GitHub API-based — see .github/RELEASE-SPEC.md for why.
       changelog: '@changesets/changelog-git',
       commit: false,
+      // Pinned rather than left on `auto` so a generated CHANGELOG matches what CI's `oxfmt --check` expects.
+      format: 'oxfmt',
       access: 'public',
       baseBranch: 'main',
       updateInternalDependencies: 'patch',
       // Only workspace-protocol ranges drive dependent bumps; pnpm rewrites them at pack time. Regular and
-      // dev deps stay `workspace:*`; intra-repo peerDependencies use `workspace:^` (caret) so an in-range
-      // minor does not force a major on the dependent.
+      // dev deps stay `workspace:*`; intra-repo peerDependencies use `workspace:^` (caret) so a published
+      // consumer resolving the group is not pinned to one exact version.
       bumpVersionsWithWorkspaceProtocolOnly: true,
       // Two lockstep version groups: [A] published core/SDK + all other versioned private @dxos packages
       // (internal tooling/tests — versioned in sync with core but not published), [B] plugins + cli. Apps
@@ -286,14 +288,6 @@ export class Toolbox {
       // @next ships as snapshot releases (manual `changeset version --snapshot next`); calculated base
       // version + commit suffix yields e.g. `0.10.0-next-<commit>`.
       snapshot: { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{commit}' },
-      // Only bump a peerDependent when the dependency actually leaves its range. The default (`false`)
-      // forces a *major* on the dependent for ANY non-patch change, which a fixed group then propagates to
-      // the whole group. Paired with the local `@changesets/assemble-release-plan` patch (a 0.x breaking
-      // peer change is a minor, not a major), this yields correct semver: 0.x minor → 0.(n+1), post-1.0
-      // minor → stays in place, breaking → major.
-      ___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH: {
-        onlyUpdatePeerDependentsWhenOutOfRange: true,
-      },
     };
 
     const changesetDir = join(this.rootDir, '.changeset');

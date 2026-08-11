@@ -32,6 +32,8 @@ Standard semver, the same rules pre- and post-1.0:
 
 A `minor` does **not** cascade the group to `1.0.0` (the tooling keeps standard semver at every version — mechanics live in the spec). Note breaking changes in the **body** so they reach the changelog.
 
+**`major` is rejected by CI while we are pre-1.0** (`pnpm check-changeset-bumps`, a gate in **Check**). The groups are `fixed`, so one stray `major` versions all ~300 packages to `1.0.0` in a single release — and nothing surfaces the mistake until `changeset version` runs on `main`. Write `minor` and describe the break in the body.
+
 ## Body + format
 
 `.changeset/<slug>.md` (any unique slug). One or two sentences, **changelog quality** — the body ships verbatim in `CHANGELOG.md` (via `@changesets/changelog-git`), so write it from the **consumer's** point of view and end with a period.
