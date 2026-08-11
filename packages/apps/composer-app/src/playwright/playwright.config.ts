@@ -15,9 +15,7 @@ export default defineConfig({
   testIgnore: ['**/startup.spec.ts', '**/dev-*.spec.ts', '**/welcome-focus.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  // Above the preset's 2 but below 4, which was measured overloading the cell: two-peer specs boot
-  // two app instances per worker, and at 4 webkit lost renderers and firefox missed create-space's
-  // readiness budget (run 31506532354) — at 3 every single-peer test passed on all three browsers.
+  // Two-peer specs boot two app instances per worker, so 4 overloads the cell.
   workers: 3,
   webServer: {
     command: 'pnpm vite preview',
