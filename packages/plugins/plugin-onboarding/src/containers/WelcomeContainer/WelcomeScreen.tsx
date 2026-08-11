@@ -74,17 +74,10 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           return;
         }
 
-        if (result.token) {
-          // Inline token: server matched the email and handed us a recovery
-          // token. Redeem it to restore the existing identity.
-          await invokePromise(ClientOperation.RedeemToken, { token: result.token });
-          await invokePromise(LayoutOperation.UpdateDialog, { state: false });
-          return;
-        }
-        // No inline token: either no Account for this email or production env
-        // mailed the link out-of-band. Show the same "check your email" UI in
-        // both cases so the response stays enumeration-safe. When no Account
-        // exists hub-service silently submits the email to the waitlist.
+        // Either no Account for this email or the link went out by email.
+        // Show the same "check your email" UI in both cases so the response
+        // stays enumeration-safe. When no Account exists hub-service silently
+        // submits the email to the waitlist.
         setState(WelcomeState.LOGIN_SENT);
       } catch (err) {
         log.catch(err);

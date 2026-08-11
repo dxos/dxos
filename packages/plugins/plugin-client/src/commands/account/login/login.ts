@@ -124,13 +124,13 @@ const loginWithRecoveryCode = (client: Client, recoveryCode: string) =>
 
 /**
  * Email login, mirroring the gate's login tab (`WelcomeScreen.handleLogin`). Hub-service answers in
- * one of three ways:
+ * one of two ways:
  *
  * - `needsIdentity`: the address may bind a fresh Account but has no identity yet. Create one
  *   locally and retry with its DID; the hub then admits it directly — there is no token because
  *   there is nothing to recover — and we provision the agent as the gate does.
- * - `token`: an Account exists and the hub returned a one-time recovery token inline.
- * - neither: the link went out by email, so prompt for the token from the message.
+ * - otherwise: the link went out by email (a token is never returned inline), so prompt for the
+ *   token from the message.
  */
 const loginWithEmail = (client: Client, email: string, invoke: Capabilities.OperationInvoker['invoke']) =>
   Effect.gen(function* () {
@@ -173,11 +173,8 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
       return identity;
     }
 
-    let token = result.token;
-    if (!token) {
-      yield* Console.log(`A login link was sent to ${email}. Paste the token from the email below.`);
-      token = yield* Prompt.text({ message: 'Login token' }).pipe(Prompt.run);
-    }
+    yield* Console.log(`A login link was sent to ${email}. Paste the token from the email below.`);
+    const token = yield* Prompt.text({ message: 'Login token' }).pipe(Prompt.run);
     return yield* Effect.tryPromise(() => client.halo.recoverIdentity({ token }));
   });
 

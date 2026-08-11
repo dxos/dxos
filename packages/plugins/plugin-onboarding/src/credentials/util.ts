@@ -27,9 +27,10 @@ export const joinWaitlist = async ({
 
 /**
  * POST `/account/login` on hub-service. Existing-account email recovery only;
- * never creates new accounts (other than the test-email carve-out). Regular
- * emails are delivered out-of-band and the response is `{}`. The response
- * shape is identical for unknown emails (enumeration-safe).
+ * never creates new accounts (other than the test-email carve-out). The link
+ * is delivered out-of-band and the response is `{}` — a recovery token is
+ * never returned inline. The response shape is identical for unknown emails
+ * (enumeration-safe).
  *
  * Test-email carve-out: test accounts are never restored. The server always
  * returns `{ needsIdentity: true }` when no `identityDid` is supplied. The
@@ -49,7 +50,7 @@ export const login = async ({
   identityDid?: string;
   identityKey?: string;
   redirectUrl?: string;
-}): Promise<{ token?: string; needsIdentity?: boolean; admitted?: boolean }> => {
+}): Promise<{ needsIdentity?: boolean; admitted?: boolean }> => {
   const response = await fetch(new URL('/account/login', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

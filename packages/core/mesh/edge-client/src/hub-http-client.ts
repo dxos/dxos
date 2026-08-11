@@ -75,9 +75,10 @@ export class HubHttpClient extends BaseHttpClient {
   }
 
   /**
-   * Existing-account email recovery. The link is delivered out of band, so the response carries no
-   * token except for test emails, where the server inlines one. Enumeration-safe: the response is
-   * identical for unknown emails. Account creation goes through {@link redeemInvitationCode}.
+   * Existing-account email recovery. The link is delivered out of band — the response never carries
+   * a token. Test emails in dev-like environments short-circuit instead with `needsIdentity` /
+   * `admitted` before any token exists. Enumeration-safe: the response is identical for unknown
+   * emails. Account creation goes through {@link redeemInvitationCode}.
    */
   public async login(ctx: Context, body: LoginRequest, args?: EdgeHttpCallArgs): Promise<LoginResponse> {
     return this._call(ctx, new URL('/account/login', this.baseUrl), { ...args, body, method: 'POST' });

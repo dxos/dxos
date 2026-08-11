@@ -731,10 +731,11 @@ export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
 /**
  * Response from `POST /account/login`. The shape is identical regardless of
  * whether the email is registered, so the endpoint is safe against enumeration.
- * Regular emails are delivered out-of-band and the response is `{}`.
+ * Regular emails are delivered out-of-band and the response is `{}`; a recovery
+ * token is never returned inline. Test emails in dev-like environments
+ * short-circuit with `needsIdentity` / `admitted` before any token exists.
  */
 export const LoginResponseSchema = Schema.Struct({
-  token: Schema.optional(Schema.String),
   needsIdentity: Schema.optional(Schema.Boolean),
   admitted: Schema.optional(Schema.Boolean),
 });
