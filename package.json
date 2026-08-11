@@ -22,6 +22,7 @@
     "changeset:publish": "changeset publish",
     "changeset:version": "changeset version && node scripts/sync-versions.mjs && pnpm install --lockfile-only",
     "check-changeset": "node scripts/check-changeset.mjs",
+    "check-changeset-bumps": "node scripts/check-changeset-bumps.mjs",
     "check-cycles": "node scripts/check-cycles.mjs",
     "check-packages-published": "node scripts/check-packages-published.mjs",
     "check-public-dependencies": "node scripts/check-public-dependencies.mjs",
