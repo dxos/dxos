@@ -128,14 +128,14 @@ describe('haloLinks', () => {
       dot.y = 1000;
     });
     dots[0].x = 100;
-    dots[0].y = 100; // inner
+    dots[0].y = 100; // ring 0
     dots[1].x = 110;
-    dots[1].y = 100; // outer — within linkRange (18) of dots[0]
-    dots[2].x = 90;
-    dots[2].y = 112; // inner — close to dots[0] (same ring, no link), out of range of dots[1]
-    dots[3].settle = 0.1;
-    dots[3].x = 100;
-    dots[3].y = 104; // outer but not yet visible
+    dots[1].y = 100; // ring 1 — within linkRange (18) of dots[0]
+    dots[3].x = 90;
+    dots[3].y = 112; // ring 0 — close to dots[0] (same ring, no link), out of range of dots[1]
+    dots[4].settle = 0.1;
+    dots[4].x = 100;
+    dots[4].y = 104; // ring 1 but not yet visible
 
     // Probe a few buckets: any produced link must be the staged inner/outer pair,
     // and every bucket must give the same answer when asked twice.
@@ -210,7 +210,7 @@ describe('dotPosition', () => {
     }
   });
 
-  test('halo variant: two counter-rotating rings at differing per-dot rates', ({ expect }) => {
+  test('halo variant: three alternating-direction rings at differing per-dot rates', ({ expect }) => {
     const config = defaultSwarmConfig('halo');
     // Distinct random draws give each dot a distinct orbitSpeed.
     const randomSequence = [0.1, 0.9, 0.5, 0.3, 0.7];
@@ -220,19 +220,21 @@ describe('dotPosition', () => {
       Math.atan2(position.y - config.centerY, position.x - config.centerX);
     const radiusOf = (position: { x: number; y: number }) =>
       Math.hypot(position.x - config.centerX, position.y - config.centerY);
-    // Even slots ride the inner ring, odd slots the outer, at every settle level.
+    // Slot index modulo three picks the ring, at every settle level.
     for (const settle of [0, 0.5, 1]) {
       expect(radiusOf(dotPosition(config, dots[0], settle, 4321))).toBeCloseTo(config.ringRadius);
       expect(radiusOf(dotPosition(config, dots[1], settle, 4321))).toBeCloseTo(config.ringRadius + HALO_RING_GAP);
+      expect(radiusOf(dotPosition(config, dots[2], settle, 4321))).toBeCloseTo(config.ringRadius + 2 * HALO_RING_GAP);
     }
-    // Opposite directions: inner bearing decreases (anticlockwise on screen), outer increases.
-    const innerDelta = bearingOf(dotPosition(config, dots[0], 1, 200)) - bearingOf(dotPosition(config, dots[0], 1, 0));
-    const outerDelta = bearingOf(dotPosition(config, dots[1], 1, 200)) - bearingOf(dotPosition(config, dots[1], 1, 0));
-    expect(innerDelta).toBeLessThan(0);
-    expect(outerDelta).toBeGreaterThan(0);
+    // Alternating directions: rings 0 and 2 anticlockwise (bearing decreases), ring 1 clockwise.
+    const bearingDelta = (dotIndex: number) =>
+      bearingOf(dotPosition(config, dots[dotIndex], 1, 200)) - bearingOf(dotPosition(config, dots[dotIndex], 1, 0));
+    expect(bearingDelta(0)).toBeLessThan(0);
+    expect(bearingDelta(1)).toBeGreaterThan(0);
+    expect(bearingDelta(2)).toBeLessThan(0);
     // Different per-dot rates: dots on the same ring drift apart over time.
-    const gapEarly = bearingOf(dotPosition(config, dots[0], 1, 0)) - bearingOf(dotPosition(config, dots[2], 1, 0));
-    const gapLate = bearingOf(dotPosition(config, dots[0], 1, 5000)) - bearingOf(dotPosition(config, dots[2], 1, 5000));
+    const gapEarly = bearingOf(dotPosition(config, dots[0], 1, 0)) - bearingOf(dotPosition(config, dots[3], 1, 0));
+    const gapLate = bearingOf(dotPosition(config, dots[0], 1, 5000)) - bearingOf(dotPosition(config, dots[3], 1, 5000));
     expect(Math.abs(gapLate - gapEarly)).toBeGreaterThan(0.01);
   });
 

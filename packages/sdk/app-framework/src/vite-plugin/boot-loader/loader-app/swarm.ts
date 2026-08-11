@@ -50,8 +50,10 @@ export const TRANSIENT_LINK_COLOR = 'rgb(1,122,183)';
 /** Stroke for the welded chain between docked ring neighbours. */
 export const RING_LINK_COLOR = 'rgb(5,40,61)';
 
-/** Radial gap between the halo variant's two counter-rotating rings. */
+/** Radial gap between the halo variant's counter-rotating rings. */
 export const HALO_RING_GAP = 12;
+/** Number of concentric halo rings; slot index modulo this picks a dot's ring. */
+export const HALO_RING_COUNT = 3;
 /** Chance that a close inner/outer halo pass draws a link. */
 const HALO_LINK_PROBABILITY = 0.5;
 /** How long (ms) a halo pass keeps its random link decision. */
@@ -225,16 +227,17 @@ export const dotPosition = (
   settleEased: number,
   nowMs: number,
 ): { x: number; y: number } => {
-  // Halo dots never wander: alternating dots ride two tight counter-rotating
-  // rings (inner anticlockwise, outer clockwise), each at its own fast rate
+  // Halo dots never wander: dots split across HALO_RING_COUNT tight concentric
+  // rings with alternating rotation directions, each dot at its own fast rate
   // (base speed + per-dot variation), and only fade in as they dock.
   if (config.variant === 'halo') {
     // Recover the dot's slot index from its bearing to split rings deterministically.
     const slotIndex = Math.round(((-Math.PI / 2 - dot.angle) * config.dotCount) / (2 * Math.PI));
-    const onOuterRing = slotIndex % 2 === 1;
-    const radius = onOuterRing ? config.ringRadius + HALO_RING_GAP : config.ringRadius;
+    const ringIndex = slotIndex % HALO_RING_COUNT;
+    const radius = config.ringRadius + ringIndex * HALO_RING_GAP;
     const rate = config.ringRotationSpeed + dot.orbitSpeed;
-    const bearing = onOuterRing ? dot.angle + nowMs * rate : dot.angle - nowMs * rate;
+    const clockwise = ringIndex % 2 === 1;
+    const bearing = clockwise ? dot.angle + nowMs * rate : dot.angle - nowMs * rate;
     return projectNogo(
       config,
       config.centerX + radius * Math.cos(bearing),
@@ -293,24 +296,28 @@ export const haloLinks = (
 ): { first: number; second: number; closeness: number }[] => {
   const links: { first: number; second: number; closeness: number }[] = [];
   const bucket = Math.floor(nowMs / HALO_LINK_DECISION_MS);
-  for (let inner = 0; inner < dots.length && links.length < config.maxLinks; inner += 2) {
-    if (dots[inner].settle < 0.3) {
+  for (let first = 0; first < dots.length && links.length < config.maxLinks; first++) {
+    if (dots[first].settle < 0.3) {
       continue;
     }
-    for (let outer = 1; outer < dots.length && links.length < config.maxLinks; outer += 2) {
-      if (dots[outer].settle < 0.3) {
+    for (let second = first + 1; second < dots.length && links.length < config.maxLinks; second++) {
+      // Same-ring neighbours keep constant spacing — only cross-ring passes link.
+      if (first % HALO_RING_COUNT === second % HALO_RING_COUNT) {
         continue;
       }
-      const dx = dots[inner].x - dots[outer].x;
-      const dy = dots[inner].y - dots[outer].y;
+      if (dots[second].settle < 0.3) {
+        continue;
+      }
+      const dx = dots[first].x - dots[second].x;
+      const dy = dots[first].y - dots[second].y;
       const distance = Math.hypot(dx, dy);
       if (distance > config.linkRange) {
         continue;
       }
-      if (pairHash(inner, outer, bucket) > HALO_LINK_PROBABILITY) {
+      if (pairHash(first, second, bucket) > HALO_LINK_PROBABILITY) {
         continue;
       }
-      links.push({ first: inner, second: outer, closeness: 1 - distance / config.linkRange });
+      links.push({ first, second, closeness: 1 - distance / config.linkRange });
     }
   }
   return links;

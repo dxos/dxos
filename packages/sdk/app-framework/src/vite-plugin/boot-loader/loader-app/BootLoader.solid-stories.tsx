@@ -7,7 +7,7 @@ import './boot-loader.css';
 import { Show, createSignal, onCleanup, onMount } from 'solid-js';
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
-import markSvg from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
+import markSvg from './composer-icon.svg?raw';
 import { Loader } from './Loader';
 import { createLoaderStore } from './store';
 import { SWARM_VARIANTS, type SwarmConfig, type SwarmVariant } from './swarm';
