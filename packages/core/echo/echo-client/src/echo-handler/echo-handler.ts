@@ -3,6 +3,7 @@
 //
 
 import * as A from '@automerge/automerge';
+import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
@@ -1001,6 +1002,14 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
 
   const obj = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
   assertObjectModel(obj);
+
+  // Identity, not structure, is this proxy's equality. Effect compares and hashes an unmarked object
+  // by walking its properties, so two proxies over the same entity — a branch binding and the live
+  // object, or two bindings of one branch — collapse into a single `Atom.family` entry keyed on
+  // whichever came first. The survivor's `subscribe` targets a proxy the caller may already have
+  // disposed, so the other binding's updates are never delivered.
+  Equal.byReferenceUnsafe(obj);
+
   core.rootProxy = obj;
   return obj;
 };
