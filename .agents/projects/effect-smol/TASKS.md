@@ -428,6 +428,31 @@ Order matters — EDGE ships before Composer.
       `withTransaction`; left because it changes production transaction semantics.
 - [ ] MCP sessions remain isolate-local; durable sessions need a Durable Object.
 
+## PR review follow-ups (dmaretskyi, #12521)
+
+Raised on the PR and explicitly deferred there.
+
+- [ ] **Drop `id` from serialized JSON schemas.** It is emitted today as a property and listed in
+      `required` (visible throughout the v3 corpus fixture). Removing it is a wire-format change:
+      it touches `json-schema-shape.test.ts`, the stored-document read path, and the LLM boundary,
+      so it wants its own change with the decoder's tolerance settled first.
+- [ ] **Evaluate v4's JSON Schema importer against the hand-rolled decoder.** It exists:
+      `SchemaRepresentation.fromJsonSchemaDocument(document, options): Schema.Top` (`@since 4.0.0`),
+      "imports a JSON Schema Draft 2020-12 document as a runtime schema". Not a drop-in for
+      `toEffectSchema`, for three reasons worth checking before committing to it:
+  - ECHO's stored documents are draft-07 (`$schema: .../draft-07/schema#`), so they would route
+    through `JsonSchema.fromSchemaDraft07` first — that path exists but is untested here.
+  - Its own docs call import "best-effort", with built-in declarations and checks reconstructed
+    via **importer-owned revivers** — the same explicit-reviver requirement the write path has.
+  - It knows nothing of ECHO's `/schemas/echo/ref` or the v3-only `/schemas/any|unknown|{}`
+    sentinels; those need custom revivers, and the sentinels exist only in already-stored data.
+    The v3 corpus test is the oracle for any such swap — it pins exactly these cases.
+- [ ] **`QueryResultEffect` → `Yieldable`.** Blocked upstream, not by us: `effect@4.0.0-beta.105`
+      exports no `Yieldable` and no `asEffect`; the interface in `migration/yieldable.md` is not in
+      this beta. `Effectable.Prototype` (`@since 4.0.0`) is the current sanctioned mechanism and is
+      what v4's own `Config` uses. Revisit when `Yieldable` ships.
+- [ ] **Support constructor defaults in `Obj.make` for echo types** — dmaretskyi, own PR.
+
 ## Open questions
 
 - [ ] Ride the beta, or wait for `effect` GA? No GA after ~6 months and 105 betas.
