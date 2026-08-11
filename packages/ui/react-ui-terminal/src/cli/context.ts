@@ -7,7 +7,7 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import * as Path from 'effect/Path';
 import type * as Command from 'effect/unstable/cli/Command';
-import { ChildProcessSpawner } from 'effect/unstable/process';
+import * as ChildProcessSpawner from 'effect/unstable/process/ChildProcessSpawner';
 
 import type { XtermBridge } from './bridge';
 import * as XtermConsole from './console';
