@@ -10,7 +10,6 @@ import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
 import * as HttpRouter from 'effect/unstable/http/HttpRouter';
-import * as HttpServer from 'effect/unstable/http/HttpServer';
 import * as HttpServerRequest from 'effect/unstable/http/HttpServerRequest';
 import * as HttpServerResponse from 'effect/unstable/http/HttpServerResponse';
 import { getPort } from 'get-port-please';

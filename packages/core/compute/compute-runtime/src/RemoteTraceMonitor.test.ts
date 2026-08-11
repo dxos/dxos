@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 

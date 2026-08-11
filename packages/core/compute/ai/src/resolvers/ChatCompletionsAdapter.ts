@@ -4,12 +4,10 @@
 
 // @import-as-namespace
 
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 import * as AiError from 'effect/unstable/ai/AiError';

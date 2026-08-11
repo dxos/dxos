@@ -3,7 +3,6 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Struct from 'effect/Struct';
 
 import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

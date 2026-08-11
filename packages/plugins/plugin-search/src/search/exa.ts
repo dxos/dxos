@@ -4,7 +4,6 @@
 
 // ISSUE(burdon): deprecated types: MixedStreamParser => effect
 
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { type Entity, Key, Obj, type Type } from '@dxos/echo';

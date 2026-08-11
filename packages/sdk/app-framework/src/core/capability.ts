@@ -9,7 +9,6 @@ import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { GlobalValue } from '@dxos/effect';
 import type { DXN } from '@dxos/keys';
 
 import type * as ActivationEvent from './activation-event';

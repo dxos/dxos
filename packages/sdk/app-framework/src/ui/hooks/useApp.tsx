@@ -6,7 +6,6 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EffectEx } from '@dxos/effect';

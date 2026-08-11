@@ -4,7 +4,6 @@
 
 import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
 import * as Duration from 'effect/Duration';

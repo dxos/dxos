@@ -3,7 +3,6 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Struct from 'effect/Struct';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Routine from '@dxos/compute/Routine';

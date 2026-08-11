@@ -6,7 +6,6 @@
 
 import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';

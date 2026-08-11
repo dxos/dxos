@@ -11,7 +11,6 @@ import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
-import * as Result from 'effect/Result';
 import * as Runtime from 'effect/Runtime';
 import type * as Tool from 'effect/unstable/ai/Tool';
 import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';

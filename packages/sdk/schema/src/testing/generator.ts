@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { type Database, DXN, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { GeneratorAnnotationId, type GeneratorAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';

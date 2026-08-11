@@ -4,7 +4,6 @@
 
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';

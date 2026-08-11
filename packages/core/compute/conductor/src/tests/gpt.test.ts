@@ -3,10 +3,8 @@
 //
 
 import { it } from '@effect/vitest';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';

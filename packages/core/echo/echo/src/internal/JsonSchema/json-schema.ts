@@ -5,9 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as JSONSchema from 'effect/JsonSchema';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';

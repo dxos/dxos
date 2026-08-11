@@ -5,7 +5,6 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import type * as Operation from '@dxos/compute/Operation';

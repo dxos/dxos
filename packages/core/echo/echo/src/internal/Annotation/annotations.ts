@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';

@@ -4,7 +4,6 @@
 
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Schedule from 'effect/Schedule';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';

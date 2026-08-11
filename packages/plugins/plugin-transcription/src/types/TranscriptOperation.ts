@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
-import * as Struct from 'effect/Struct';
 
 import { AiService } from '@dxos/ai';
 import { SpaceSchema } from '@dxos/client/echo';

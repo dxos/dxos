@@ -3,7 +3,6 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Struct from 'effect/Struct';
 
 import { raise } from '@dxos/debug';
 import { SchemaAST } from '@dxos/effect';

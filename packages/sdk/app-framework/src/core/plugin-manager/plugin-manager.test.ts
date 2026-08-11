@@ -12,7 +12,6 @@ import * as Fiber from 'effect/Fiber';
 import * as Latch from 'effect/Latch';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import * as TestClock from 'effect/testing/TestClock';
 import type * as Atom from 'effect/unstable/reactivity/Atom';

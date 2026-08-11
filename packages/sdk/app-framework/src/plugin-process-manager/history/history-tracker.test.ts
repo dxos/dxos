@@ -8,7 +8,6 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import * as TestClock from 'effect/testing/TestClock';
 import { describe, expect } from 'vitest';
 

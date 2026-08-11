@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';

@@ -42,7 +42,6 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
-import { SchemaAST } from '@dxos/effect';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';

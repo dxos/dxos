@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';

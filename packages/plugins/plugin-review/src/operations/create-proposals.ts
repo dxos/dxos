@@ -4,7 +4,6 @@
 
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
 import { computeDiffsWithCursors } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';

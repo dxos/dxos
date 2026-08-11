@@ -6,7 +6,6 @@ import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Result from 'effect/Result';
 import type * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 

@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import type * as JSONSchema from 'effect/JsonSchema';
-import * as Option from 'effect/Option';
 
 import { SchemaAST } from '@dxos/effect';
 

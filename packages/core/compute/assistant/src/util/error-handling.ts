@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as AiError from 'effect/unstable/ai/AiError';
-import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 
 import { AiModelError } from './errors';
 

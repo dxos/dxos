@@ -3,7 +3,6 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as Struct from 'effect/Struct';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import * as Instructions from '@dxos/compute/Instructions';

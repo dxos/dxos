@@ -4,7 +4,6 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';

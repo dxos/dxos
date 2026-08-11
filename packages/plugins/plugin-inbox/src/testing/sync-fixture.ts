@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { CapabilityManager } from '@dxos/app-framework';

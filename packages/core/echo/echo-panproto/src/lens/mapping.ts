@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';

@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
-import type * as Command$ from 'effect/unstable/cli/Command';
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
