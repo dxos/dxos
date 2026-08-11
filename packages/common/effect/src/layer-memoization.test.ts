@@ -1,7 +1,13 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect, test } from 'vitest';
+
+import * as EffectEx from './EffectEx';
 
 //
 // Effect 4 shares the layer memo map across `Effect.provide` calls, where v3 gave each call its own.
@@ -21,8 +27,8 @@ const CounterLayer = Layer.effect(
 const read = Effect.map(Counter, (counter) => counter.id);
 
 test('separate root runs each build the layer', async () => {
-  const a = await Effect.runPromise(read.pipe(Effect.provide(CounterLayer)));
-  const b = await Effect.runPromise(read.pipe(Effect.provide(CounterLayer)));
+  const a = await EffectEx.runPromise(read.pipe(Effect.provide(CounterLayer)));
+  const b = await EffectEx.runPromise(read.pipe(Effect.provide(CounterLayer)));
   expect([a, b]).toEqual([1, 2]);
 });
 
@@ -30,6 +36,6 @@ test('two provides within one run share the build', async () => {
   builds = 0;
   const inner = read.pipe(Effect.provide(CounterLayer));
   const outer = Effect.all([inner, read]).pipe(Effect.provide(CounterLayer));
-  const [x, y] = await Effect.runPromise(outer);
+  const [x, y] = await EffectEx.runPromise(outer);
   expect([x, y, builds]).toEqual([1, 1, 1]);
 });

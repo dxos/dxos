@@ -11,6 +11,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { describe, expect, test } from 'vitest';
 
 import * as DynamicRuntime from './dynamic-runtime';
+import * as EffectEx from './EffectEx';
 import { runAndForwardErrors } from './internal/errors';
 
 // Test service tags
@@ -163,7 +164,7 @@ describe('DynamicRuntime', () => {
         const db = yield* Database;
         return yield* db.query('test');
       });
-      const result = await Effect.runPromise(Effect.provideContext(program, rt));
+      const result = await EffectEx.runPromise(Effect.provideContext(program, rt));
       expect(result).toEqual(['result: test']);
     });
 

@@ -9,7 +9,7 @@ import type * as Fiber from 'effect/Fiber';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 
-import { unwrapExit } from './internal/errors';
+import { runAndForwardErrors, unwrapExit } from './internal/errors';
 
 /**
  * Helper type to construct a union of tag identifiers from an array of tags.
@@ -137,7 +137,7 @@ export function make<const Tags extends ReadonlyArray<Context.Key<any, any>>>(
     managedRuntime: managedRuntimeAny,
     runPromise: async <A, E>(effect: Effect.Effect<A, E, RequiredContext>): Promise<A> => {
       const runtime = await getValidatedRuntimeAsync();
-      return Effect.runPromise(Effect.provideContext(effect, runtime));
+      return runAndForwardErrors(Effect.provideContext(effect, runtime));
     },
     runSync: <A, E>(effect: Effect.Effect<A, E, RequiredContext>): A => {
       const runtime = getValidatedRuntime();
