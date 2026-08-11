@@ -29,13 +29,15 @@ const isRefLike = (value: unknown): value is { uri: { toString(): string } } =>
 // Refs compare by URI: `RefImpl` mints a fresh wrapper on every property read, so `Object.is` never
 // matches two reads of the same element.
 const elementEquals = (a: unknown, b: unknown): boolean => {
-  if (Object.is(a, b)) {
-    return true;
-  }
   if (isRefLike(a) && isRefLike(b)) {
     return a.uri.toString() === b.uri.toString();
   }
-  return false;
+  // Records before `Object.is`: the snapshot shallow-copies the array, so a record element mutated in
+  // place is the same reference on both sides and would otherwise read as unchanged.
+  if (isRecord(a) || isRecord(b)) {
+    return false;
+  }
+  return Object.is(a, b);
 };
 
 /**

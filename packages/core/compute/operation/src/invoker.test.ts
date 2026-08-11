@@ -287,9 +287,6 @@ describe('OperationInvoker.invokePromise', () => {
 // order — an earlier call that stalls (a lazy handler's chunk load, a busy runtime) applies after a
 // later, faster one. Callers owning last-write-wins state (e.g. a selection) must apply it
 // synchronously at the call site rather than routing it through `invokePromise`.
-// (A serial per-key dispatch was implemented, validated, and deliberately reverted — see commit
-// 16df3608 to resurrect it if something demands ordered dispatch.)
-//
 
 describe('OperationInvoker.invokePromise concurrency contract', () => {
   test('a stalled earlier call is overtaken by a later one', async ({ expect }) => {
@@ -300,7 +297,7 @@ describe('OperationInvoker.invokePromise concurrency contract', () => {
     });
 
     const applied: string[] = [];
-    let release!: () => void;
+    let release: (() => void) | undefined;
     const gate = new Promise<void>((resolve) => {
       release = () => resolve();
     });
@@ -317,7 +314,8 @@ describe('OperationInvoker.invokePromise concurrency contract', () => {
     const first = invoker.invokePromise(Write, { value: 'stale', stall: true });
     const second = invoker.invokePromise(Write, { value: 'newest', stall: false });
     await second;
-    release();
+    expect(release).toBeDefined();
+    release?.();
     await first;
 
     // Issued [stale, newest]; applied [newest, stale] — with last-write-wins state the stale value

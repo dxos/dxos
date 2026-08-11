@@ -4,7 +4,7 @@ _Resume — two streams, two PRs._
 
 _**Cache** (branch `claude/depot-vs-self-hosted-cache-3fbd62`, PR #12494 draft) — watch Check, then mark ready. The moon remote cache is a self-hosted `bazel-remote` at `cache.dxos.network` (DO NYC3) behind mTLS, and it is now **measured in CI**: a fully-cached 324-task `:build` takes **14 s against 161 s uncached** on a Depot runner, hydrating 324/324 in 13.6 s at 31 ms per task over a 7 ms link. Runners were compared and Depot stays: compute is identical and it sits closest to the cache. Evidence in [`REPORT.md`](./REPORT.md), runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md)._
 
-_**E2E** (branch `claude/e2e-test-performance-uf9hq7`, PR #12482 draft, tip `fb997f9d`) — causes B and C are fixed, cause A is root-caused to the production edge and blocked on **DX-1152** (Mykola), cause D needs a CI trace. The open decision is the user's: hold the PR on production edge, point e2e at a dedicated/staging edge tier (recommended), or quarantine the two-peer tests. Phase 3 below is the ledger._
+_**E2E** (branch `claude/e2e-test-performance-uf9hq7`, PR #12482, ready for review) — causes B and C are fixed, cause A is root-caused to the production edge and blocked on **DX-1152** (Mykola), cause D needs a CI trace. The open decision is the user's: hold the PR on production edge, point e2e at a dedicated/staging edge tier (recommended), or quarantine the two-peer tests. Phase 3 below is the ledger._
 
 Context and the failure mode that governs this area: [`DESIGN.md`](./DESIGN.md).
 
@@ -156,9 +156,8 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       A's rate (DX-1152 noted at the describe block). Still deferred: `cursors` (documented as
       depending on winning a race the test cannot observe; storybook covers it) and `presence`
       ("Fix.").
-- [ ] **Startup harness, and the four tests CI never runs.** The pool is
-      `moon exec ':e2e-ci*' plugin-script:e2e`, so composer's `e2e-startup`, `e2e-dev` and
-      `e2e-welcome-focus` tasks sit outside it — re-enable `warm-cold start` (deferred pending the
+- [ ] **Startup harness, and the four tests CI never runs.** The pool is every project with an `e2e`
+      task, so composer's `e2e-startup`, `e2e-dev` and `e2e-welcome-focus` tasks sit outside it — re-enable `warm-cold start` (deferred pending the
       ResetDialog race; only ever passed on the retries since removed), `warm start` (30 s
       `waitForReady` too tight under load) and `Welcome focus` for their own sake, not to make Check
       green.
@@ -221,10 +220,8 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       pinned by plugin-space `create.test.ts`'s rejecting stub, and the client-side deadline keeps
       its rationale comment; `currentObjectId` moved out of `ReviewCapabilities` into plugin-review
       `util/comment-state.ts` (a helper, not a capability).
-- [ ] **Decide `quarantine` for the two e2e uploader steps.** Still `false`, unlike the six other
-      jobs: a masked failure makes a green cell unfalsifiable, which is why the campaign wanted it
-      off. Now that the DX-1152 retries absorb the known two-peer stalls, `true` would match the rest
-      of the workflow — a deliberate call either way, not an oversight.
+- [x] **Restore `quarantine: true`** on both e2e uploader steps — `false` was for the campaign, so a
+      masked failure could not make a green cell unfalsifiable; all eight uploads now agree.
 - [x] **Sync with main** (Changesets v3 added a `check-changeset-bumps` step whose script the branch
       lacked, so the `check` job failed until the merge) **and drop draft status.**
 - [ ] **Move `check-boot-budget` off the e2e cell.** It is static (a Node script reading

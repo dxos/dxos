@@ -185,8 +185,7 @@ describe('client services effect-rpc', () => {
   });
 
   test('a missing handler fails only its own call, not other in-flight calls', async ({ expect }) => {
-    // The missing-handler dispatch throws a defect, and a defect must not take the connection (and
-    // every pending request) down with it.
+    // A missing handler fails only its own request; it must not end the shared connection.
     const gate = new Trigger();
     const proxy = await setup(() => ({
       SystemService: mockService<SystemService.Handlers>({
@@ -194,10 +193,14 @@ describe('client services effect-rpc', () => {
       }),
     }));
 
+    const systemService = proxy.SystemService;
+    if (!systemService) {
+      throw new Error('setup did not expose SystemService');
+    }
     // Stand-in for the in-flight `SystemService.reset`: dispatched, awaiting its handler.
-    const inFlight = proxy.SystemService!.getConfig();
+    const inFlight = systemService.getConfig();
     // Stand-in for the late `FeedService.getSyncState` poll: its handler is gone.
-    const missing = proxy.SystemService!.reset().then(
+    const missing = systemService.reset().then(
       () => 'unexpectedly resolved',
       (err) => err,
     );

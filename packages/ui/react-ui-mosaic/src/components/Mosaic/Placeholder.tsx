@@ -80,6 +80,10 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
   scrollingRef.current = scrolling;
   const activeLocationRef = useRef(activeLocation);
   activeLocationRef.current = activeLocation;
+  // `useEventHandlerAdapter` mints a new handler whenever `items` changes, so `canDrop` must read the
+  // current one rather than the value captured when the target was registered.
+  const eventHandlerRef = useRef(eventHandler);
+  eventHandlerRef.current = eventHandler;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -95,7 +99,7 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
           return false;
         }
         const sourceData = getSourceData(source);
-        return (sourceData && eventHandler.canDrop?.({ source: sourceData })) || false;
+        return (sourceData && eventHandlerRef.current.canDrop?.({ source: sourceData })) || false;
       },
       // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
       getDropEffect: () => 'move',

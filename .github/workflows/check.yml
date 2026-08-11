@@ -565,18 +565,20 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
-      # The composer cell runs its suite directly; the rest cell runs the pool, which composer-app is
-      # absent from because its moon.yml excludes `e2e-ci`. `plugin-script:e2e` is named explicitly
-      # because that project is not `e2e`-tagged. The glob stays quoted so the shell cannot expand it.
-      # Locally, a single suite is just `moon run <project>:e2e`.
+      # The pool list is computed, not globbed: `:e2e` would match composer-app too, and only
+      # `moon query` honours MQL negation (`moon exec --query` ignores it). Empty is fatal — a bad
+      # query would otherwise run nothing and report green.
       - name: Select shard targets
         id: shard
         run: |
           if [ "${{ matrix.shard }}" = "composer" ]; then
-            echo "targets=composer-app:e2e" >> "$GITHUB_OUTPUT"
+            targets=composer-app:e2e
           else
-            echo "targets=':e2e-ci' plugin-script:e2e" >> "$GITHUB_OUTPUT"
+            targets=$(moon query tasks "task=e2e && project!=composer-app" |
+              node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).sort().map((project)=>project+':e2e').join(' ')))")
           fi
+          [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
@@ -586,9 +588,7 @@ jobs:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
-          # Failures are surfaced, not absorbed: quarantine can report a cell green while a test fails,
-          # making the cell unfalsifiable. Unstable tests get `test.fixme`, visible in review.
-          quarantine: false
+          quarantine: true
           run: >-
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
             --affected remote --concurrency=1
@@ -606,8 +606,7 @@ jobs:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
-          # See "Test Affected": quarantine masks failures and is deliberately off.
-          quarantine: false
+          quarantine: true
           run: >-
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
             --concurrency=1
