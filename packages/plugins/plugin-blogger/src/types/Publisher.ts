@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Ref } from '@dxos/echo';
-import type * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 
 // Provider-neutral draft DTO exchanged across the publisher capability boundary.
 // NOT an ECHO object — a plain Effect schema.

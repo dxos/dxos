@@ -10,8 +10,7 @@ import { Database, DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
-import { AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { AccessToken, Connection } from '@dxos/link';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 
 import { computePublishedValues } from './field-values';

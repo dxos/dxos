@@ -388,7 +388,9 @@ export const FormError = ({ children, classNames }: FormErrorProps) => {
 
   return (
     <Input.Root validationValence='error'>
-      <Input.Validation classNames={classNames}>{children}</Input.Validation>
+      <Input.Validation classNames={classNames} data-testid='form.error'>
+        {children}
+      </Input.Validation>
     </Input.Root>
   );
 };

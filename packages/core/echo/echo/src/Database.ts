@@ -318,6 +318,32 @@ export interface Database extends Queryable {
    * Subscribe to combined sync state changes.
    */
   subscribeToSyncState(cb: (state: SyncState) => void, options?: GetSyncStateOptions): CleanupFn;
+
+  /**
+   * Per-space storage metrics: objects (alive/deleted), automerge documents, feeds, feed blocks.
+   * Read-only. Intended as an occasional/administrative call. See garbage-collection design notes
+   * in `@dxos/echo-host`.
+   */
+  stats(): Promise<DatabaseStats>;
+
+  /**
+   * Reclaim storage held by soft-deleted objects and the documents / feed blocks that are no longer
+   * reachable. Per-space and destructive; intended as an occasional/administrative call. See
+   * garbage-collection design notes in `@dxos/echo-host`.
+   */
+  runGarbageCollection(options?: GarbageCollectionOptions): Promise<GarbageCollectionReport>;
+
+  /**
+   * Replaces the set of objects the space directory tracks, dropping everything not retained.
+   *
+   * Derived from the directory's own maps, so clearing a space costs one change rather than a scan
+   * of its contents. The objects are dropped, not soft-deleted: they are gone from the space and
+   * their documents are reclaimed by garbage collection, on this peer and — as the change
+   * replicates — on every other. Permanent; there is nothing left to restore from.
+   *
+   * @returns Ids of the objects dropped from the directory.
+   */
+  retainObjects(keep: Iterable<string>): string[];
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
@@ -483,6 +509,29 @@ export const flush = (opts?: FlushOptions) =>
   );
 
 /**
+ * Reclaims storage held by soft-deleted objects and the documents they orphan.
+ * @see {@link Database.runGarbageCollection}
+ */
+export const runGarbageCollection = (options?: GarbageCollectionOptions) =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.runGarbageCollection(options)))).pipe(
+    Effect.withSpan('Database.runGarbageCollection'),
+  );
+
+/**
+ * Drops every object in the space except the retained ones. Permanent.
+ * @see {@link Database.retainObjects}
+ */
+export const retainObjects = (keep: Iterable<string>) =>
+  Service.pipe(Effect.map(({ db }) => db.retainObjects(keep))).pipe(Effect.withSpan('Database.retainObjects'));
+
+/**
+ * Per-space storage metrics.
+ * @see {@link Database.stats}
+ */
+export const stats = () =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.stats()))).pipe(Effect.withSpan('Database.stats'));
+
+/**
  * Creates a `QueryResult` object that can be subscribed to.
  */
 export const query: {
@@ -537,6 +586,55 @@ export interface SyncState {
    * Total blocks stored locally for this namespace in the space.
    */
   readonly totalBlocks: string;
+}
+
+/**
+ * Per-space storage metrics returned by {@link Database.stats}.
+ */
+export interface DatabaseStats {
+  readonly objects: {
+    /** Live (non-deleted) objects across the root and all linked documents. */
+    readonly alive: number;
+    /** Soft-deleted objects not yet reclaimed by garbage collection. */
+    readonly deleted: number;
+  };
+  /** Automerge documents owned by the space (root + linked + branch documents). */
+  readonly documents: number;
+  /** Feeds registered for the space. */
+  readonly feeds: number;
+  /** Total feed blocks stored locally for the space. */
+  readonly feedBlocks: number;
+}
+
+/**
+ * Options for {@link Database.runGarbageCollection}.
+ */
+export interface GarbageCollectionOptions {
+  /**
+   * Also delete stale index rows for reclaimed documents/objects.
+   * @default true
+   */
+  readonly index?: boolean;
+  /**
+   * Reserved for feed-block purge (positioned deletion markers). Not yet effective on the local
+   * host — see the feed-purge deferral in `@dxos/echo-host` garbage-collection design notes.
+   * @default true
+   */
+  readonly feeds?: boolean;
+}
+
+/**
+ * Report of what {@link Database.runGarbageCollection} reclaimed.
+ */
+export interface GarbageCollectionReport {
+  /** Soft-deleted objects unlinked from the space directory. */
+  readonly unlinkedObjects: number;
+  /** Automerge documents wiped from storage (chunks + heads). */
+  readonly removedDocuments: number;
+  /** Index rows deleted. */
+  readonly removedIndexEntries: number;
+  /** Feed blocks purged. */
+  readonly purgedFeedBlocks: number;
 }
 
 /**

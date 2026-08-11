@@ -11,8 +11,7 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { InternalError } from '@dxos/errors';
-import { AccessToken, Cursor } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import { Expando } from '@dxos/schema';
 

@@ -12,9 +12,8 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';
-import * as Connection from '@dxos/plugin-connector/Connection';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.

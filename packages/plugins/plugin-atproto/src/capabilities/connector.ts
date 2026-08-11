@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES } from '@dxos/plugin-connector';
+import { ATPROTO_OAUTH_SCOPES } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { OAuthProvider } from '@dxos/protocols';
+import { ATMOSPHERE_SOURCE, OAuthProvider } from '@dxos/protocols';
 
 /** Pre-flight form for the atproto OAuth flow: the user's handle becomes the login hint. */
 const AtprotoPreflightForm = Schema.Struct({
@@ -34,7 +34,9 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(ConnectorSpec.Connector, [
       {
-        id: ATMOSPHERE_PROVIDER_ID,
+        // The connector is identified by the OAuth provider it wraps; `label` carries the
+        // user-facing name.
+        id: OAuthProvider.ATPROTO,
         source: ATMOSPHERE_SOURCE,
         label: 'Atmosphere',
         oauth: {

@@ -225,6 +225,42 @@ export class IndexEngine {
     return this.#objectMetaIndex.queryObjectIds(query);
   }
 
+  /**
+   * Delete index rows for garbage-collected documents and objects: whole documents (all their
+   * rows) plus individual objects removed from a surviving document. Cascades from `objectMeta`
+   * (by record id) into the FTS and reverse-ref indexes, and drops the tracker cursors for wiped
+   * documents. See `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
+   *
+   * @returns Number of `objectMeta` rows deleted.
+   */
+  deleteObjects(opts: {
+    spaceId: SpaceId;
+    documentIds: readonly string[];
+    objects: readonly { documentId: string; objectId: string }[];
+  }): Effect.Effect<number, SqlError.SqlError, SqlTransaction.SqlTransaction | SqlClient.SqlClient> {
+    return Effect.gen(this, function* () {
+      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
+      return yield* sqlTransaction.withTransaction(
+        Effect.gen(this, function* () {
+          const recordIds = yield* this.#objectMetaIndex.selectRecordIdsForRemoval({
+            spaceId: opts.spaceId,
+            documentIds: opts.documentIds,
+            objects: opts.objects,
+          });
+          if (recordIds.length > 0) {
+            yield* this.#ftsIndex.deleteByRecordIds(recordIds);
+            yield* this.#reverseRefIndex.deleteByRecordIds(recordIds);
+            yield* this.#objectMetaIndex.deleteByRecordIds(recordIds);
+          }
+          if (opts.documentIds.length > 0) {
+            yield* this.#tracker.deleteCursors({ spaceId: opts.spaceId, resourceIds: opts.documentIds });
+          }
+          return recordIds.length;
+        }),
+      );
+    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'));
+  }
+
   update(
     ctx: Context,
     dataSource: IndexDataSource,

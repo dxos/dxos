@@ -239,24 +239,38 @@ export const makeClientServicesHandlers = ({
     const [serviceKey] = parseTag(tag);
     // The host service is itself in the Handlers shape, keyed by the full prefixed tag; invoking it
     // returns the Effect/Stream directly, so no protobuf encode/decode adapter is needed.
-    const invoke = (payload: unknown) => {
+    // A missing handler is a TYPED failure, never a throw: the worker-pool client reads a defect as
+    // the shared connection crashing and fails every unrelated in-flight call with it.
+    const resolve = (): ((payload: unknown) => unknown) | Error => {
       const service = services()[serviceKey] as Record<string, (payload: unknown) => unknown> | undefined;
       const handler = service?.[tag];
       if (typeof handler !== 'function') {
-        throw new Error(`Service handler not available: ${tag}`);
+        return new Error(`Service handler not available: ${tag}`);
       }
-      return handler.call(service, payload);
+      return handler.bind(service);
     };
 
     if (RpcSchema.isStreamSchema(rpc.successSchema)) {
       handlers[tag] = (payload: unknown) =>
         gate.pipe(
-          Effect.map(() => invoke(payload) as Stream.Stream<unknown, unknown>),
+          Effect.flatMap(() => {
+            const handler = resolve();
+            return handler instanceof Error
+              ? Effect.fail(handler)
+              : Effect.succeed(handler(payload) as Stream.Stream<unknown, unknown>);
+          }),
           Stream.unwrap,
         );
     } else {
       handlers[tag] = (payload: unknown) =>
-        gate.pipe(Effect.flatMap(() => invoke(payload) as Effect.Effect<unknown, unknown>));
+        gate.pipe(
+          Effect.flatMap(() => {
+            const handler = resolve();
+            return handler instanceof Error
+              ? Effect.fail(handler)
+              : (handler(payload) as Effect.Effect<unknown, unknown>);
+          }),
+        );
     }
   }
 

@@ -163,6 +163,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",

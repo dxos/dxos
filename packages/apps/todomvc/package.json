@@ -26,7 +26,9 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router-dom": "catalog:"
+    "react-router-dom": "catalog:",
+    "todomvc-app-css": "catalog:",
+    "todomvc-common": "catalog:"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",

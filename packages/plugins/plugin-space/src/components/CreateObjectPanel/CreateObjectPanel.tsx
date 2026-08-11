@@ -166,6 +166,8 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             value={option.id}
             onSelect={() => onChange(option.id)}
             classNames='flex gap-3 items-center px-2 py-2 rounded-xs'
+            // Keyed by typename, since the label is localized and, for database types, user-authored.
+            data-testid={`create-object-form.type.${option.id}`}
           >
             <Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}

@@ -8,11 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 // Referenced only from a JSDoc {@link}, which the rule cannot see; the suppression rode the
 // pre-subpath barrel import too.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import type * as Connection from '@dxos/plugin-connector/Connection';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';

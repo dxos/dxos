@@ -214,14 +214,37 @@ export namespace SpaceOperation {
   });
 
   /**
+   * Reclaim the storage held by a space's deleted objects. Permanent — the objects are removed
+   * from the space directory and their documents wiped, on this peer and, as the change
+   * replicates, on every other.
+   */
+  export const CollectGarbage = Operation.make({
+    meta: {
+      key: makeKey('collectGarbage'),
+      name: 'Collect Garbage',
+      description: "Permanently reclaim the storage held by a space's deleted objects.",
+      icon: 'ph--recycle--regular',
+    },
+    services: [Database.Service],
+    input: Schema.Void,
+    output: Schema.Struct({
+      unlinkedObjects: Schema.Number.annotations({ description: 'Deleted objects removed from the space.' }),
+      removedDocuments: Schema.Number.annotations({ description: 'Documents wiped from storage.' }),
+    }),
+  });
+
+  /**
    * Remove every object from a space except its `SpaceProperties`. The root collection is kept —
    * `RootCollectionAnnotation` must keep resolving for the space to stay navigable — but emptied.
+   *
+   * The cleared objects are reclaimed rather than left as tombstones, so unlike
+   * {@link RemoveObjects} this is permanent and deliberately has no undo mapping.
    */
   export const RemoveAllObjects = Operation.make({
     meta: {
       key: makeKey('removeAllObjects'),
       name: 'Remove All Objects',
-      description: 'Remove all objects from a space, preserving the space properties.',
+      description: 'Permanently remove all objects from a space, preserving the space properties.',
       icon: 'ph--trash--regular',
     },
     services: [Database.Service],

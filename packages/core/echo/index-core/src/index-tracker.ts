@@ -12,6 +12,7 @@ import { SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/tracker';
+import { chunkArray } from './utils';
 
 export const IndexCursor = Schema.Struct({
   /**
@@ -103,6 +104,20 @@ export class IndexTracker {
           },
           { discard: true },
         );
+      }),
+  );
+
+  /** Delete cursors for documents (resource ids) wiped by garbage collection. */
+  deleteCursors = Effect.fn('IndexTracker.deleteCursors')(
+    (query: {
+      spaceId: SpaceId;
+      resourceIds: readonly string[];
+    }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(query.resourceIds)) {
+          yield* sql`DELETE FROM indexCursor WHERE spaceId = ${query.spaceId} AND ${sql.in('resourceId', chunk)}`;
+        }
       }),
   );
 }
