@@ -229,10 +229,6 @@ node_modules
 # Remote-cache benchmark output (tools/moon-cache/bench).
 .moon-bench/
 
-# Agentic-review run store: the finalized REVIEW.md is committed so incremental
-# base resolution finds the newest reviewed commit across clones; the transient
-# inputs (staging, manifest, per-group fragments) are regenerated each run and
-# stay out of git.
-/.agents/reviews/*/STAGING.md
-/.agents/reviews/*/groups.json
-/.agents/reviews/*/groups/
+# Agentic-review run store is committed in full — REVIEW.md drives incremental
+# base resolution, and STAGING.md / groups.json / the per-group fragments are
+# kept so a run's inputs and raw diagnostics stay auditable.
