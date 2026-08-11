@@ -5,8 +5,8 @@
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 
-import * as ansi from './ansi';
-import * as doc from './doc';
+import * as Ansi from './Ansi';
+import * as Doc from './Doc';
 
 export type FormBuilderOptions = {
   title?: string;

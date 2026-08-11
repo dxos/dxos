@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
@@ -16,7 +16,7 @@ describe('DataServiceImpl', () => {
     // The beacon path never touches the underlying binding, so an empty stub suffices.
     const impl = new DataServiceImpl({} as EdgeFunctionEnv.TraceContext, {} as EdgeFunctionEnv.DataService);
 
-    const first = await Effect.runPromise(
+    const first = await EffectEx.runPromise(
       Stream.runHead(impl['DataService.subscribe']({ subscriptionId: 'test-subscription', spaceId: SpaceId.random() })),
     );
 

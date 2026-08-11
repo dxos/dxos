@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 

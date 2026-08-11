@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import * as ansi from './ansi';
+import * as Ansi from './Ansi';
 
 /**
  * Minimal stand-in for `@effect/printer/Doc` (and `AnsiDoc`'s renderer).
@@ -84,9 +84,9 @@ export const indent = <A>(self: Doc<A>, columns: number): Doc<A> =>
   });
 
 /** Applies an ANSI style to every non-empty line, leaving the measured width untouched. */
-export const annotate = <A>(self: Doc<A>, ansi: ansi.Ansi): Doc<A> =>
+export const annotate = <A>(self: Doc<A>, style: Ansi.Ansi): Doc<A> =>
   make(() =>
-    self.lines().map(({ text, width }) => ({ text: text === '' ? text : ansi.open + text + ansi.close, width })),
+    self.lines().map(({ text, width }) => ({ text: text === '' ? text : style.open + text + style.close, width })),
   );
 
 /**

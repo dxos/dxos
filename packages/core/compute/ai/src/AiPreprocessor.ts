@@ -9,7 +9,6 @@ import type {} from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import { flow } from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
 import * as Prompt from 'effect/unstable/ai/Prompt';
@@ -779,7 +778,7 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
 /**
  * Groups consecutive assistant messages into a single message.
  */
-const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly Message.Message[] = flow(
+const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly Message.Message[] = Function.flow(
   (messages) =>
     Array.isReadonlyArrayNonEmpty(messages)
       ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)

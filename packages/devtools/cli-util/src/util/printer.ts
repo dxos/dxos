@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as doc from './doc';
+import * as Doc from './Doc';
 
 /**
  * Pretty print document.
