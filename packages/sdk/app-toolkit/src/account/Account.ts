@@ -18,7 +18,13 @@ import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { type AccountErrorType, ATMOSPHERE_SOURCE, InvitationCodeSchema, OAuthProvider } from '@dxos/protocols';
+import {
+  ACCOUNT_ERROR_TYPES,
+  type AccountErrorType,
+  ATMOSPHERE_SOURCE,
+  InvitationCodeSchema,
+  OAuthProvider,
+} from '@dxos/protocols';
 
 import * as AppSpace from '../echo/AppSpace';
 
@@ -57,20 +63,34 @@ export class EmailProbeUnavailableError extends BaseError.extend(
 /** Hub-service refused to redeem the access code / mint the Account. */
 export class AccountRedemptionError extends BaseError.extend('AccountRedemptionError', 'Account redemption failed.') {}
 
+/** Edge refused to complete OAuth recovery registration. */
+export class OAuthRegistrationError extends BaseError.extend(
+  'OAuthRegistrationError',
+  'OAuth registration completion failed.',
+) {}
+
 /**
  * The hub `AccountErrorType` discriminator carried by a failed call, when the failure was a known
  * account error rather than a transport problem. Read from the error's own context or its cause
  * chain (hub failures surface as `EdgeCallFailedError` with the envelope's `data.type`).
  */
 export const accountErrorType = (error: unknown): AccountErrorType | undefined => {
+  // Wrapped errors can produce cyclic cause chains, so track what has been seen.
+  const seen = new Set<unknown>();
   for (
     let current: unknown = error;
-    typeof current === 'object' && current !== null;
+    typeof current === 'object' && current !== null && !seen.has(current);
     current = (current as Error).cause
   ) {
+    seen.add(current);
     const data = (current as { data?: unknown; context?: unknown }).data ?? (current as { context?: unknown }).context;
     if (typeof data === 'object' && data !== null && 'type' in data && typeof data.type === 'string') {
-      return data.type as AccountErrorType;
+      // Only a known discriminator counts — an unrelated `type` field on an intermediate error must
+      // not resolve as an account error.
+      const match = ACCOUNT_ERROR_TYPES.find((type) => type === data.type);
+      if (match) {
+        return match;
+      }
     }
   }
   return undefined;
@@ -130,7 +150,7 @@ export const probeEmail = Effect.fn(function* ({ hub, email }: { hub: HubHttpCli
   return yield* Effect.tryPromise(() => hub.checkEmailExists(DxContext.default(), { email })).pipe(
     Effect.timeoutFail({
       duration: Duration.millis(EMAIL_PROBE_TIMEOUT_MS),
-      onTimeout: () => new Error('email probe timed out'),
+      onTimeout: () => new EmailProbeUnavailableError({ message: 'Email probe timed out.' }),
     }),
     Effect.map(({ exists }): EmailProbeResult => (exists ? 'exists' : 'available')),
     Effect.catchAll(() => Effect.succeed('unavailable' as const)),
@@ -174,12 +194,10 @@ export const redeemAccessCode = Effect.fn(function* ({
         identityDid: await createDidFromIdentityKey(identity.identityKey),
         identityKey: identity.identityKey.toHex(),
       }),
-    catch: AccountRedemptionError.wrap({ context: { email } }),
+    catch: AccountRedemptionError.wrap(),
   });
   if ('needsIdentity' in result) {
-    return yield* Effect.fail(
-      new AccountRedemptionError({ message: 'Hub did not accept this identity.', context: { email } }),
-    );
+    return yield* Effect.fail(new AccountRedemptionError({ message: 'Hub did not accept this identity.' }));
   }
   log.info('account redeemed', { accountId: result.accountId });
   return { email, accountId: result.accountId, emailVerificationSent: result.emailVerificationSent };
@@ -206,10 +224,10 @@ export const signUpWithEmail = Effect.fn(function* <E>({
 }) {
   const probe = yield* probeEmail({ hub, email });
   if (probe === 'exists') {
-    return yield* Effect.fail(new EmailAlreadyRegisteredError({ context: { email } }));
+    return yield* Effect.fail(new EmailAlreadyRegisteredError());
   }
   if (probe === 'unavailable') {
-    return yield* Effect.fail(new EmailProbeUnavailableError({ context: { email } }));
+    return yield* Effect.fail(new EmailProbeUnavailableError());
   }
 
   const identity = yield* ensureIdentity;
@@ -258,8 +276,7 @@ export const completeOAuthRegistration = Effect.fn(function* ({
         identityKey: identity.identityKey.toHex(),
         spaceKey: defaultSpace.key.toHex(),
       }),
-    catch: (error) =>
-      new Error(`OAuth registration completion failed: ${error instanceof Error ? error.message : String(error)}`),
+    catch: OAuthRegistrationError.wrap(),
   });
   // The verified email is re-derived server-side from the registrationToken — it is never carried
   // in a redirect. kms-service rejects no-email flows before issuing a token, so this cannot fire.

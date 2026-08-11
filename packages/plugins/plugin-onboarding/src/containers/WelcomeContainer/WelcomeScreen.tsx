@@ -163,9 +163,14 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           if (identity) {
             return identity;
           }
-          yield* Effect.tryPromise(() =>
+          // `invokePromise` resolves with `{ error }` rather than rejecting, so fail explicitly —
+          // otherwise a failed creation only surfaces via the invariant below, as a defect.
+          const { error: createError } = yield* Effect.promise(() =>
             invokePromise(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] }),
           );
+          if (createError) {
+            return yield* Effect.fail(createError);
+          }
           const created = client.halo.identity.get();
           invariant(created, 'identity should exist after create');
           return created;

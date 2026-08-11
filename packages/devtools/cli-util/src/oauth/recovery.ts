@@ -4,9 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { BaseError } from '@dxos/errors';
 import { EntityId, SpaceId } from '@dxos/keys';
 
 import { OAUTH_TIMEOUT_MS, startOAuthCallbackServer } from './server';
+
+/** A gate OAuth flow (recovery or registration) failed to initiate or complete. */
+export class OAuthFlowError extends BaseError.extend('OAuthFlowError', 'OAuth flow failed.') {}
 
 /** Path Edge redirects the browser to after a recovery/register OAuth round-trip. */
 const RECOVERY_CALLBACK_PATH = '/redirect/oauth-recovery';
@@ -35,7 +39,9 @@ type InitiateEnvelope = { success: boolean; data?: { authUrl?: string }; error?:
  * (random values satisfy request validation).
  */
 const performOAuthRoundTrip = Effect.fn(function* (params: RecoveryOAuthParams, purpose: 'recovery' | 'register') {
-  const server = yield* startOAuthCallbackServer(RECOVERY_CALLBACK_PATH);
+  const server = yield* startOAuthCallbackServer(RECOVERY_CALLBACK_PATH).pipe(
+    Effect.mapError(OAuthFlowError.wrap({ ifTypeDiffers: true })),
+  );
   return yield* Effect.gen(function* () {
     const initiateUrl = new URL('/oauth/initiate', params.edgeBaseUrl).toString();
     const response = yield* Effect.tryPromise({
@@ -54,20 +60,23 @@ const performOAuthRoundTrip = Effect.fn(function* (params: RecoveryOAuthParams, 
             ...(purpose === 'register' ? { registerRecovery: true } : {}),
           }),
         }),
-      catch: (error) =>
-        new Error(`OAuth initiate request failed: ${error instanceof Error ? error.message : String(error)}`),
+      catch: OAuthFlowError.wrap({ message: 'OAuth initiate request failed.' }),
     });
 
     const envelope = yield* Effect.tryPromise({
       try: () => response.json() as Promise<InitiateEnvelope>,
-      catch: (error) => new Error(`OAuth initiate response parse failed: ${String(error)}`),
+      catch: OAuthFlowError.wrap({ message: 'OAuth initiate response parse failed.' }),
     });
     if (!envelope.success || !envelope.data?.authUrl) {
-      return yield* Effect.fail(new Error(`OAuth initiation failed: ${envelope.error?.message ?? 'unknown error'}`));
+      return yield* Effect.fail(
+        new OAuthFlowError({ message: `OAuth initiation failed: ${envelope.error?.message ?? 'unknown error'}` }),
+      );
     }
 
-    yield* server.open(envelope.data.authUrl);
-    return yield* server.waitForResult(OAUTH_TIMEOUT_MS);
+    yield* server.open(envelope.data.authUrl).pipe(Effect.mapError(OAuthFlowError.wrap({ ifTypeDiffers: true })));
+    return yield* server
+      .waitForResult(OAUTH_TIMEOUT_MS)
+      .pipe(Effect.mapError(OAuthFlowError.wrap({ ifTypeDiffers: true })));
   }).pipe(Effect.ensuring(server.stop()));
 });
 
@@ -80,7 +89,9 @@ export const performRecoveryOAuthFlow = Effect.fn(function* (params: RecoveryOAu
   const callbackParams = yield* performOAuthRoundTrip(params, 'recovery');
   const recoveryProof = callbackParams.recoveryProof;
   if (!recoveryProof) {
-    return yield* Effect.fail(new Error('OAuth recovery completed but no recoveryProof was returned.'));
+    return yield* Effect.fail(
+      new OAuthFlowError({ message: 'OAuth recovery completed but no recoveryProof was returned.' }),
+    );
   }
   return { recoveryProof };
 });
@@ -95,7 +106,9 @@ export const performRegisterOAuthFlow = Effect.fn(function* (params: RecoveryOAu
   const callbackParams = yield* performOAuthRoundTrip(params, 'register');
   const registrationToken = callbackParams.registrationToken;
   if (!registrationToken) {
-    return yield* Effect.fail(new Error('OAuth registration completed but no registrationToken was returned.'));
+    return yield* Effect.fail(
+      new OAuthFlowError({ message: 'OAuth registration completed but no registrationToken was returned.' }),
+    );
   }
   return { registrationToken };
 });

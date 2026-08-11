@@ -903,13 +903,15 @@ export type AdminRevokeInvitationCodeRequest = Schema.Schema.Type<typeof AdminRe
  * Account/invitation-related variants placed in `EdgeFailure.data.type`.
  * EdgeErrorData is open-ended; these are documentation for known values.
  */
-export type AccountErrorType =
-  | 'invitation_code_invalid'
-  | 'invitation_code_already_redeemed'
-  | 'invitation_code_revoked'
-  | 'email_already_registered'
-  | 'identity_already_associated'
-  | 'no_invitations_remaining'
-  | 'identity_not_associated_with_account'
-  | 'no_account'
-  | 'rate_limited';
+export const ACCOUNT_ERROR_TYPES = [
+  'invitation_code_invalid',
+  'invitation_code_already_redeemed',
+  'invitation_code_revoked',
+  'email_already_registered',
+  'identity_already_associated',
+  'no_invitations_remaining',
+  'identity_not_associated_with_account',
+  'no_account',
+  'rate_limited',
+] as const;
+export type AccountErrorType = (typeof ACCOUNT_ERROR_TYPES)[number];

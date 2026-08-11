@@ -262,10 +262,10 @@ export class OnboardingManager {
    * supported on this path -- magic-link login (`/account/login`) handles
    * recovery for real emails, and test emails are always fresh (no restore).
    *
-   * Resolves false when no identity was created — either the email already has an
-   * account (the welcome dialog stays open so the user can log in instead) or the
-   * probe was inconclusive, in which case the URL params are left intact so a reload
-   * retries the signup.
+   * Resolves false when the signup did not complete — the email already has an
+   * account (the welcome dialog stays open so the user can log in instead), the
+   * probe was inconclusive, or identity creation / redemption failed; in the latter
+   * cases the URL params are left intact so a reload retries the signup.
    */
   private async _redeemAccountInvitation(): Promise<boolean> {
     invariant(this._email);
@@ -279,16 +279,25 @@ export class OnboardingManager {
     });
 
     // Errors are mapped inside the Effect — `runPromise` rejects with a FiberFailure, so the
-    // typed errors are not matchable from a catch block.
+    // typed errors are not matchable from a catch block. The catch-all matters: `initialize()` is a
+    // fire-and-forget background side-effect, so a rejection here would vanish unhandled.
     const outcome = await EffectEx.runPromise(
       HubAccount.signUpWithEmail({ hub: HubAccount.createHubClient(this._hubUrl), email, code, ensureIdentity }).pipe(
         Effect.map(() => 'redeemed' as const),
         Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('probe-unavailable' as const)),
         Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('email-registered' as const)),
+        Effect.catchAll((error) =>
+          Effect.sync(() => {
+            log.warn('signup failed; leaving signup params for retry', {
+              error: HubAccount.accountErrorType(error) ?? String(error),
+            });
+            return 'failed' as const;
+          }),
+        ),
       ),
     );
-    if (outcome === 'probe-unavailable') {
-      log.warn('could not check whether signup email is registered; leaving signup params for retry');
+    if (outcome === 'probe-unavailable' || outcome === 'failed') {
+      log.warn('could not complete signup; leaving signup params for retry');
       return false;
     }
     if (outcome === 'email-registered') {
@@ -350,7 +359,12 @@ export class OnboardingManager {
   }
 
   private async _createIdentity(): Promise<void> {
-    await this._invokePromise(ClientOperation.CreateIdentity, {});
+    // `invokePromise` resolves with `{ error }` rather than rejecting, so rethrow it — otherwise a
+    // failed creation only surfaces later as an invariant defect.
+    const { error } = await this._invokePromise(ClientOperation.CreateIdentity, {});
+    if (error) {
+      throw error;
+    }
   }
 
   private async _createAgent(): Promise<void> {
