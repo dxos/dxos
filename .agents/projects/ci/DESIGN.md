@@ -137,6 +137,13 @@ the socket instead of dropping a frame. Consequence for planning: with ~30 two-p
 and a ~2 % stall tail, **no ten-run campaign can be green until this is fixed** — and VM sizing
 measured against it would be meaningless.
 
+The "composer-specific, not the edge" hypothesis was tested and refuted by a controlled local
+comparison (same box, same production edge, chromium, 1 worker, first-attempt counts, 16 two-peer
+sequences per arm): composer collaboration failed 1/16, todomvc basic failed 2/16 — statistically
+indistinguishable, and the dominant signature is byte-identical in both apps (the shell's auth-code
+input disabled at `connectingSpaceInvitation`). Composer is ~3× heavier per sequence (15.7 vs 5.4
+min for the same count) but no more failure-prone; the stall lives in the shared invitation path.
+
 **B — the comment marker landed on the wrong thread** (~25 % of firefox samples, fixed). The editor
 keyed comments by **URI**, and a thread's URI gains its space when its first message persists it
 (`echo:///<id>` → `echo://<spaceId>/<id>`). Clicking a thread while a sibling persisted made
