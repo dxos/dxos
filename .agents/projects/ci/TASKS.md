@@ -164,6 +164,18 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       (~12), `plugin-sheet` (3), `lit-grid` (3), `welcome-focus` (2). Kanban and mosaic are excluded:
       drag-and-drop does not work as a storybook test. Composer and todomvc are genuinely end-to-end
       and stay in Playwright.
+- [ ] **Follow-up, not this PR: root-cause the storybook-dev TDZ** — the kanban/mosaic story-boot
+      stall, `Cannot access 'makeSpaceService' before initialization`. The graph is cycle-free, so
+      the TDZ is impossible under spec evaluation order — the mechanism must be one of: (1) a
+      poisoned module record (an earlier evaluation error, swallowed by storybook's boundary, leaves
+      bindings permanently uninitialized — the TDZ is a symptom, find the first throw), or (2)
+      duplicate module identities from vite dev (source-alias vs optimized-dep URL for the same
+      file). Probe: console recorder on a losing run, capture whatever throws before the TDZ. Known:
+      the preload in `plugin-kanban/.storybook/preview.mts` drops the rate 8/14 → 0/14 but is
+      per-package; built storybook is refuted (story never renders). Candidate remedy if (2):
+      `optimizeDeps.include` or `server.warmup` for `@dxos/halo-adapter-client` in
+      `tools/storybook-react`'s vite config — centralizes the pin and retires the per-package
+      preloads.
 
 ### Before landing PR #12482
 
