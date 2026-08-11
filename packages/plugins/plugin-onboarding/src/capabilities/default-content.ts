@@ -69,14 +69,14 @@ export default Capability.makeModule(
         rootCollection.objects.push(Ref.make(welcomeDoc));
       });
 
-      // The README itself, not Home: its welcome panel resolves the default space through the
-      // settings-space designation, which is not readable this early in the bootstrap.
-      const readmePath = GraphPath.getObjectPathFromObject(welcomeDoc);
-      yield* Operation.invoke(LayoutOperation.Set, { subject: [readmePath] }).pipe(
+      // Navigating from here rather than an `OnCreateSpace` callback orders the landing after the
+      // seeding, so Home's recent-objects query already sees the README.
+      const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
+      yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] }).pipe(
         Effect.provideService(Operation.Service, operationInvoker),
       );
       // Expose is scheduled because the navtree may not have rendered yet at this point.
-      yield* Operation.schedule(LayoutOperation.Expose, { subject: readmePath }).pipe(
+      yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath }).pipe(
         Effect.provideService(Operation.Service, operationInvoker),
       );
     }

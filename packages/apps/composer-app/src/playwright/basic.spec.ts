@@ -30,12 +30,10 @@ test.describe('Basic tests', () => {
 
   test('create identity, space is created by default', async () => {
     await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
-    // First run opens the README document as the first plank (plugin-onboarding navigates there
-    // after seeding it). `first()` because the name appears twice — the plank header and the
-    // document-title heading in the editor body, which renders a beat later.
+    // First run lands on Home, and onboarding seeds the README, so it appears under Recent.
     const plank = host.deck.plank();
-    await expect(plank.locator.getByRole('heading', { name: 'README' }).first()).toBeVisible();
-    await expect(plank.locator.getByText('Welcome to Composer').first()).toBeVisible();
+    await expect(plank.locator.getByRole('heading', { name: 'Recent' })).toBeVisible();
+    await expect(plank.locator.getByText('README')).toBeVisible();
   });
 
   test('create space, which is displayed in tree', async () => {
