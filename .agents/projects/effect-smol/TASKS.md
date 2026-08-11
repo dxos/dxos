@@ -260,6 +260,14 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
     proposal's text is newline-only (`core.length === 0`) — a plausible way to render "zero
     widgets" that is worth eliminating first, though neither scenario's proposal looks newline-only
     on paper.
+  - **These are FLAKY, not deterministic (2026-08-11).** CI has now run the suite on consecutive
+    commits: `c8d9b4b6` failed four of them across all three moon attempts, and `cf745a8b` passed
+    the whole storybook job with no relevant change between. A local run gave three failures on one
+    attempt and four on the next, alongside `Browser connection was closed` errors. The set also
+    varies — `Scenario Table Cell Edit` and `Suggesting Swap` both failed on `c8d9b4b6` even though
+    the note above records `tableCellEdit` as passing, so "which scenarios fail" is not a stable
+    signal to reason from. Treat the timing (each failure burns its full 15s `waitFor` twice, ~33s)
+    as the primary clue and re-verify any hypothesis across several runs before believing it.
 - [x] **Close out the storybook/browser tail** — browser and workerd suites pass; the browser CLI
       host (`react-ui-terminal`, `plugin-devtools/CliPanel`) landed from main after the branch cut
       and needed porting off `@effect/cli`/`@effect/platform`. Form validation now runs against the
