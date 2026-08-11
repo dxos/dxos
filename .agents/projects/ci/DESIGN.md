@@ -217,8 +217,10 @@ Probing by `url` makes it an HTTP fetch, so the dep scan is done before any test
 24/24 tests over 8 runs at the preset's 2 workers, **firefox 3/3 and webkit 3/3** — the two browsers it
 originally failed on, where it had lost 1 of 3 tests in 5 of 6 cells — plus chromium 2/2, each run
 restarting storybook so the compile window was recreated rather than warmed. The condition **not**
-reproduced is CI cell contention (other moon targets running alongside it), so if it recurs there,
-restore the override with a justification written from that failure rather than from the `port` probe.
+reproduced was CI cell contention — and it recurred there on the next dispatched run (31501206028):
+`mouse access` never painted within 30 s on **both** the firefox and webkit cells at 2 workers. The
+override is restored with that run as its justification; the local 24/24 stands as proof the limit is
+contention, not the suite.
 
 ## Refuted — do not retry these
 
