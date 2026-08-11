@@ -103,11 +103,13 @@ const DefaultStory = () => {
       return;
     }
 
+    // A failure is rendered as a terminal error state (never swallowed to undefined): the play test
+    // asserts on the result payload, so an error can never satisfy a success assertion.
     const result = await invoker
       .invokePromise(InboxOperation.ProcessMailbox, { mailbox: Ref.make(mailbox) }, { spaceId: space.id })
       .catch((err) => {
         log.warn('process mailbox failed', { err });
-        return undefined;
+        return { error: String(err) };
       });
     setLast(result);
     setRuns((count) => count + 1);
@@ -122,7 +124,7 @@ const DefaultStory = () => {
       .invokePromise(InboxOperation.ResetProcessCursor, { mailbox: Ref.make(mailbox) }, { spaceId: space.id })
       .catch((err) => {
         log.warn('reset process cursor failed', { err });
-        return undefined;
+        return { error: String(err) };
       });
     setLast(result);
     setRuns((count) => count + 1);
@@ -143,7 +145,7 @@ const DefaultStory = () => {
       )
       .catch((err) => {
         log.warn('analyze mailbox failed', { err });
-        return undefined;
+        return { error: String(err) };
       });
     setLast(result);
     setRuns((count) => count + 1);
@@ -257,15 +259,17 @@ export const Test: Story = {
 
     // Wait for the seeded messages to finish loading — the query streams results in, so capturing
     // on first sight of a nonzero count reads a partial corpus (e.g. 100 of 391). Require the count
-    // to hold steady across consecutive polls before trusting it.
+    // to hold steady across several consecutive polls (the stream can pause between batches for
+    // longer than one interval) before trusting it.
     const countOf = (text: string): number => Number(/"messages":\s*(\d+)/.exec(text)?.[1] ?? 0);
     let messageCount = 0;
+    let stablePolls = 0;
     await waitFor(
       (text) => {
         const count = countOf(text);
-        const stable = count > 0 && count === messageCount;
+        stablePolls = count > 0 && count === messageCount ? stablePolls + 1 : 0;
         messageCount = count;
-        return stable;
+        return stablePolls >= 3;
       },
       { interval: 500 },
     );
