@@ -500,9 +500,13 @@ cannot reach the preview host.
 
 **Hosting.** Nothing uploads to GitHub's CDN over the API, so commit the PNGs to the branch, take
 `https://raw.githubusercontent.com/dxos/dxos/<full-sha>/<path>` from that commit, then delete them in the
-next commit. The URL is pinned to the SHA and keeps resolving, so the images render permanently while the
-PR's final diff carries no binaries — confirm with `curl -o /dev/null -w '%{http_code}'` once the deleting
-commit lands. A `.../<branch>/<path>` URL 404s the moment the file goes.
+next commit — the URL is pinned to the SHA, so the images keep rendering while the PR's final diff carries
+no binaries. Confirm with `curl -o /dev/null -w '%{http_code}'` once the deleting commit lands.
+
+What holds the blob after the delete is `refs/pull/<n>/head`, which GitHub retains, so it also survives the
+branch being deleted at merge. The URL is exactly that durable and no more: keep it to PR descriptions,
+and use a committed path under `assets/` for anything that must outlive the PR (a README, docs). Never
+link `.../<branch>/<path>` — that 404s the moment the file goes.
 
 ## Checklist
 
