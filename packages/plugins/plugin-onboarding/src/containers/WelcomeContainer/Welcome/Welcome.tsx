@@ -16,6 +16,7 @@ import React, {
   useState,
 } from 'react';
 
+import * as Account from '@dxos/app-toolkit/Account';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, DropdownMenu, Icon, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -23,7 +24,7 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta';
-import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
+import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 
 const supportsPasskeys =
   (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
@@ -162,7 +163,7 @@ export const Welcome = ({
   //
 
   const handleValidateCode = useCallback(async () => {
-    if (!validInvitationCode(code)) {
+    if (!Account.isValidAccessCodeFormat(code)) {
       setCodeError(t('invitation-code-format-error.message'));
       codeRef.current?.focus();
       return;
@@ -360,7 +361,7 @@ export const Welcome = ({
                         onKeyDown: handleCodeKeyDown,
                       }}
                       submitLabel={t('continue-button.label')}
-                      submitDisabled={!validInvitationCode(code) || pending}
+                      submitDisabled={!Account.isValidAccessCodeFormat(code) || pending}
                       onSubmit={handleValidateCode}
                       validation={codeError}
                     />

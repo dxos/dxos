@@ -14,12 +14,16 @@ describe('access codes', () => {
     expect(Account.isValidAccessCodeFormat('  ABCD-2345  ')).toBe(true);
   });
 
-  test('rejects wrong lengths, ambiguous letters, and misplaced hyphens', () => {
+  test('forgives hyphen placement — normalization strips them all', () => {
+    expect(Account.isValidAccessCodeFormat('ABC-D2345')).toBe(true);
+    expect(Account.isValidAccessCodeFormat('AB-CD-23-45')).toBe(true);
+  });
+
+  test('rejects wrong lengths and ambiguous letters', () => {
     expect(Account.isValidAccessCodeFormat('ABCD234')).toBe(false);
     expect(Account.isValidAccessCodeFormat('ABCD23456')).toBe(false);
     // I, L, O and U are absent from the Crockford alphabet.
     expect(Account.isValidAccessCodeFormat('ABCI2345')).toBe(false);
-    expect(Account.isValidAccessCodeFormat('ABC-D2345')).toBe(false);
     expect(Account.isValidAccessCodeFormat('')).toBe(false);
   });
 

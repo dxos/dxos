@@ -6,6 +6,7 @@
 
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { type Client } from '@dxos/client';
 import { type Identity } from '@dxos/client/halo';
@@ -17,7 +18,7 @@ import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { type AccountErrorType, ATMOSPHERE_SOURCE, OAuthProvider } from '@dxos/protocols';
+import { type AccountErrorType, ATMOSPHERE_SOURCE, InvitationCodeSchema, OAuthProvider } from '@dxos/protocols';
 
 import * as AppSpace from '../echo/AppSpace';
 
@@ -93,12 +94,13 @@ export const createHubClient = (clientOrUrl: Client | string): HubHttpClient => 
 // Access codes
 //
 
-/** Crockford base32 (no I/L/O/U), 8 characters, case-insensitive, hyphen optional. */
-export const isValidAccessCodeFormat = (code: string): boolean =>
-  /^[0-9A-HJ-KM-NP-TV-Z]{4}-?[0-9A-HJ-KM-NP-TV-Z]{4}$/i.test(code.trim());
-
-/** Hub-service matches the canonical form only: no hyphen, upper case. */
+/** Hub-service matches the canonical form only ({@link InvitationCodeSchema}): no hyphens, upper case. */
 export const normalizeAccessCode = (code: string): string => code.trim().replace(/-/g, '').toUpperCase();
+
+const isCanonicalAccessCode = Schema.is(InvitationCodeSchema);
+
+/** Whether user input normalizes to a well-formed access code — hyphens and case are forgiven. */
+export const isValidAccessCodeFormat = (code: string): boolean => isCanonicalAccessCode(normalizeAccessCode(code));
 
 /** Validate an access code against hub-service. Resolves false on any failure — never throws. */
 export const checkAccessCode = Effect.fn(function* ({ hub, code }: { hub: HubHttpClient; code: string }) {
