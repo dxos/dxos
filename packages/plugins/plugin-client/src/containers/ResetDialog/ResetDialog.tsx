@@ -12,7 +12,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
-import { ConfirmReset, type ConfirmResetProps, translationKey } from '@dxos/shell/react';
+import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
+
+import { meta } from '#meta';
 
 import * as ClientOptions from '../../types/ClientOptions';
 
@@ -27,7 +29,7 @@ export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
   };
 
 export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }: ResetDialogProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
 
@@ -52,11 +54,17 @@ export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }:
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('reset-dialog.title')}</Dialog.Title>
+        <Dialog.Title>{t('logout.label')}</Dialog.Title>
       </Dialog.Header>
       <Dialog.Body>
-        <Dialog.Description classNames='sr-only'>{t('reset-dialog.description')}</Dialog.Description>
-        <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
+        <Dialog.Description classNames='sr-only'>{t('logout.description')}</Dialog.Description>
+        <ConfirmReset
+          active
+          mode={mode}
+          confirmLabel={t('logout.label')}
+          onConfirm={handleReset}
+          onCancel={handleCancel}
+        />
       </Dialog.Body>
     </Dialog.Content>
   );
