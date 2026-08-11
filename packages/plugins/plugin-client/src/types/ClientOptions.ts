@@ -21,6 +21,15 @@ export type ClientPluginOptions = ClientOptions & {
   shareableLinkOrigin?: string;
 
   /**
+   * Surface the identity-swapping actions kept for testing: join another identity by device
+   * invitation, or restore one from a recovery code. Both wipe local storage before they run, so
+   * an app whose onboarding gate offers the same flows on a clean profile should pass the inverse
+   * of that gate's condition rather than expose them to real users.
+   * @default false
+   */
+  identityTestActions?: boolean;
+
+  /**
    * Path for the invitation link.
    */
   invitationPath?: string;

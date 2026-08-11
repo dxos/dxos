@@ -6205,6 +6205,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       effect:
         specifier: 3.21.4
         version: 3.21.4
