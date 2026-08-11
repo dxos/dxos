@@ -211,16 +211,17 @@ never the operation, and their semantics require applying at event time.
 Deferring one victim of a shared cause just moves the failure to another test next run, so these were
 fixed rather than deferred:
 
-| defect                                                                                | tests it was taking out                   |
-| :------------------------------------------------------------------------------------ | :---------------------------------------- |
-| `createSpace()` clicked a remounting form                                             | ~24 composer tests, all browsers          |
-| `createSpace()` could not tell a successful submit from a dialog that created nothing | any caller, intermittently                |
-| todomvc shipped unstyled — knip stripped `todomvc-app-css` from `index.html`          | 5 tests × 3 browsers                      |
-| `lit-grid` storybook readiness probed by `port`, a bare TCP check                     | 1 of 3 tests in 5 of 6 non-chromium cells |
-| `todomvc` app-boot contention (2 workers × 2 apps per test)                           | intermittent, any test                    |
-| `plugin-kanban` waited on a story's first paint with too short a budget               | 2 webkit tests                            |
-| `cli:bundle` could not resolve `@opentui/core-darwin-arm64`                           | the whole `cli` job, every run            |
-| the edge-replication wait in create-space had a 2 s deadline ordinary backlog exceeds | firefox create-space callers, dominant    |
+| defect                                                                                | tests it was taking out                        |
+| :------------------------------------------------------------------------------------ | :--------------------------------------------- |
+| `createSpace()` clicked a remounting form                                             | ~24 composer tests, all browsers               |
+| `createSpace()` could not tell a successful submit from a dialog that created nothing | any caller, intermittently                     |
+| todomvc shipped unstyled — knip stripped `todomvc-app-css` from `index.html`          | 5 tests × 3 browsers                           |
+| `lit-grid` storybook readiness probed by `port`, a bare TCP check                     | 1 of 3 tests in 5 of 6 non-chromium cells      |
+| `todomvc` app-boot contention (2 workers × 2 apps per test)                           | intermittent, any test                         |
+| `plugin-kanban` waited on a story's first paint with too short a budget               | 2 webkit tests                                 |
+| `cli:bundle` could not resolve `@opentui/core-darwin-arm64`                           | the whole `cli` job, every run                 |
+| the edge-replication wait in create-space had a 2 s deadline ordinary backlog exceeds | firefox create-space callers, dominant         |
+| the first-run landing raced `plugin-space`'s forked workspace switch                  | `create identity, space is created by default` |
 
 The edge-replication row is the rejection the removed retries exposed: `setEdgeReplicationPreference`
 commits host-side, then waited 2 s for the local snapshot — queued behind every other space's
@@ -229,6 +230,15 @@ already existed. The wait is now budgeted like the RPC it confirms, and plugin-s
 best-effort (`log.catch`). The guard is plugin-space `create.test.ts`'s rejecting stub (0 in 39
 firefox after the fix); a client-side convergence test was deliberately deleted as a one-off proxy
 harness with an irreducible 3 s delay.
+
+The first-run row is a **product** bug the landing change surfaced. `plugin-space`'s `spaces-ready`
+switches to the default space from a fiber forked off a `client.spaces.subscribe` callback, and
+`SwitchWorkspace` restores the target workspace's persisted deck — empty on first run. Onboarding set
+its plank before that fiber landed, so the switch wiped it and the user got an empty deck (2 of 5
+locally; the trace's last snapshot showed the navtree with a `Home` node and no plank, at
+`/w/<spaceId>` with no plank pairs). Onboarding now switches the workspace itself before setting the
+plank, which also makes the forked switch's `workspace === 'default'` guard false: 6/6 after, and the
+symptom is the "empty Home" that originally motivated landing on the README instead.
 
 Mosaic drag-and-drop was two **product** bugs, not test flake: `Mosaic.Placeholder` unregistered its
 drop target for 500 ms on scroll (so a release in that window resolved to the container — "move to
