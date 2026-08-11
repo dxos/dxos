@@ -200,8 +200,14 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
     log('recomputeResult', { changed });
 
-    this._resultCache = presented.entries;
-    this._objectCache = presented.objects;
+    // Only swap the caches when the results actually differ. `useSyncExternalStore` reads `results`
+    // as its snapshot on every render, so replacing an equal array would hand React a new reference
+    // without emitting an event — the store would appear to change while nothing had. Both caches
+    // are populated on the first recompute, where `changed` is true because there is no prior cache.
+    if (changed) {
+      this._resultCache = presented.entries;
+      this._objectCache = presented.objects;
+    }
     return changed;
   }
 
