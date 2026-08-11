@@ -17,6 +17,7 @@ export type SwarmConfig = {
   spiralLead: number;
   settleMs: number;
   unsettleMs: number;
+  /** Normalized ring rotation in [-10, 10]: 1 ≈ 0.0001 rad/ms anticlockwise; negative reverses. */
   ringRotationSpeed: number;
   wanderAmplitude: number;
   ghostCount: number;
@@ -54,6 +55,8 @@ export const RING_LINK_COLOR = 'rgb(5,40,61)';
 export const HALO_RING_GAP = 12;
 /** Number of concentric halo rings; slot index modulo this picks a dot's ring. */
 export const HALO_RING_COUNT = 3;
+/** rad/ms per normalized `ringRotationSpeed` unit. */
+const RING_SPEED_UNIT = 0.0001;
 /** Chance that a close inner/outer halo pass draws a link. */
 const HALO_LINK_PROBABILITY = 0.5;
 /** How long (ms) a halo pass keeps its random link decision. */
@@ -89,7 +92,7 @@ export const defaultSwarmConfig = (variant: SwarmVariant): SwarmConfig => {
     case 'wander':
       return { ...BASE, variant, dotCount: 20, dotSize: 2.8, ringRotationSpeed: 0 };
     case 'orbit':
-      return { ...BASE, variant, dotCount: 32, dotSize: 2.0, ringRotationSpeed: 0.00015 };
+      return { ...BASE, variant, dotCount: 32, dotSize: 2.0, ringRotationSpeed: 1.5 };
     case 'trails':
       return { ...BASE, variant, dotCount: 48, dotSize: 1.6, ringRotationSpeed: 0 };
     case 'linked':
@@ -103,7 +106,7 @@ export const defaultSwarmConfig = (variant: SwarmVariant): SwarmConfig => {
         variant,
         dotCount: 24,
         dotSize: 0.9,
-        ringRotationSpeed: 0.0008,
+        ringRotationSpeed: 8,
         ringRadius: 66,
         linkRange: 18,
       };
@@ -146,7 +149,7 @@ export const createDots = (config: SwarmConfig, random: () => number = Math.rand
 export const litCount = (config: SwarmConfig, progressPct: number): number => (progressPct / 100) * config.dotCount;
 
 export const slotPosition = (config: SwarmConfig, dot: SwarmDot, nowMs: number): { x: number; y: number } => {
-  const rotation = -nowMs * config.ringRotationSpeed;
+  const rotation = -nowMs * config.ringRotationSpeed * RING_SPEED_UNIT;
   return {
     x: config.centerX + config.ringRadius * Math.cos(dot.angle + rotation),
     y: config.centerY + config.ringRadius * Math.sin(dot.angle + rotation),
@@ -235,7 +238,10 @@ export const dotPosition = (
     const slotIndex = Math.round(((-Math.PI / 2 - dot.angle) * config.dotCount) / (2 * Math.PI));
     const ringIndex = slotIndex % HALO_RING_COUNT;
     const radius = config.ringRadius + ringIndex * HALO_RING_GAP;
-    const rate = config.ringRotationSpeed + dot.orbitSpeed;
+    // Per-dot variation scales with |base| direction-agnostically, so -10 and
+    // +10 spin equally fast in opposite directions.
+    const direction = config.ringRotationSpeed < 0 ? -1 : 1;
+    const rate = direction * (Math.abs(config.ringRotationSpeed) * RING_SPEED_UNIT + dot.orbitSpeed);
     const clockwise = ringIndex % 2 === 1;
     const bearing = clockwise ? dot.angle + nowMs * rate : dot.angle - nowMs * rate;
     return projectNogo(

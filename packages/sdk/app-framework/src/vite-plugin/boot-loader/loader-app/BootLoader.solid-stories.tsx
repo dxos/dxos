@@ -12,7 +12,12 @@ import { Loader } from './Loader';
 import { createLoaderStore } from './store';
 import { SWARM_VARIANTS, type SwarmConfig, type SwarmVariant } from './swarm';
 
-type StoryProps = Partial<SwarmConfig> & { variant: SwarmVariant | 'random'; showLog?: boolean };
+type StoryProps = Partial<SwarmConfig> & {
+  variant: SwarmVariant | 'random';
+  showLog?: boolean;
+  /** 'complete' plays boot → outro → loop; 'indefinite' stops scripting at the plugin phase and holds. */
+  runMode?: 'complete' | 'indefinite';
+};
 
 /** Ticks the "Loading plugins (k/12)" range status advances through. */
 const PLUGIN_TICK_COUNT = 12;
@@ -32,7 +37,7 @@ const OUTRO_RESET_MS = 1500;
  * parent to remount so the story loops forever.
  */
 const BootLoaderRun = (props: StoryProps & { onLoop: () => void }) => {
-  const { variant, onLoop, showLog, ...overrides } = props;
+  const { variant, onLoop, showLog, runMode, ...overrides } = props;
   const store = createLoaderStore('Loading framework…');
   const timers: ReturnType<typeof setTimeout>[] = [];
   const schedule = (delayMs: number, run: () => void): void => {
@@ -52,6 +57,12 @@ const BootLoaderRun = (props: StoryProps & { onLoop: () => void }) => {
         store.pushStatus({ humanized: 'Loading plugins', range: { index, total: PLUGIN_TICK_COUNT } });
         store.setProgress(0.25 + (index * 0.55) / PLUGIN_TICK_COUNT);
       });
+    }
+
+    // 'indefinite' ends the script here: the store's creep keeps easing toward
+    // its ceiling and the swarm stays alive for open-ended tuning.
+    if (runMode === 'indefinite') {
+      return;
     }
 
     schedule(CLIENT_START_MS, () => {
@@ -136,10 +147,11 @@ const meta = {
   render: (args: StoryProps) => <BootLoaderStory {...args} />,
   argTypes: {
     variant: { control: 'select', options: ['random', ...SWARM_VARIANTS] },
+    runMode: { control: 'select', options: ['complete', 'indefinite'] },
     showLog: { control: 'boolean' },
-    dotCount: { control: { type: 'range', min: 8, max: 96, step: 1 } },
+    dotCount: { control: { type: 'range', min: 1, max: 200, step: 1 } },
     dotSize: { control: { type: 'range', min: 0.5, max: 6, step: 0.1 } },
-    ringRotationSpeed: { control: { type: 'range', min: 0, max: 0.0006, step: 0.00005 } },
+    ringRotationSpeed: { control: { type: 'range', min: -10, max: 10, step: 0.5 } },
     ringRadius: { control: { type: 'range', min: 40, max: 140, step: 2 } },
     outerRadius: { control: { type: 'range', min: 80, max: 220, step: 2 } },
     nogoRadius: { control: { type: 'range', min: 20, max: 100, step: 2 } },
@@ -151,11 +163,12 @@ const meta = {
 export default meta;
 
 const defaults: Partial<StoryProps> = {
+  runMode: 'complete',
   showLog: true,
   dotSize: 1,
   dotCount: 50,
   ringRadius: 40,
-  ringRotationSpeed: 0.0002,
+  ringRotationSpeed: 2,
 };
 
 export const Default: StoryObj<StoryProps> = {
@@ -186,7 +199,7 @@ export const Trails: StoryObj<StoryProps> = {
   },
 };
 
-export const Halo: StoryObj<StoryProps> = { args: { variant: 'halo', showLog: true } };
+export const Halo: StoryObj<StoryProps> = { args: { variant: 'halo', showLog: true, runMode: 'complete' } };
 
 export const Arc: StoryObj<StoryProps> = { args: { variant: 'arc', showLog: true } };
 

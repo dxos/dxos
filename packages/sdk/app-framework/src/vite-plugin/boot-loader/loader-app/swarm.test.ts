@@ -26,14 +26,14 @@ import {
 describe('defaultSwarmConfig', () => {
   test('per-variant dot counts and sizes match the spec', ({ expect }) => {
     expect(defaultSwarmConfig('wander')).toMatchObject({ dotCount: 20, dotSize: 2.8, ringRotationSpeed: 0 });
-    expect(defaultSwarmConfig('orbit')).toMatchObject({ dotCount: 32, dotSize: 2.0, ringRotationSpeed: 0.00015 });
+    expect(defaultSwarmConfig('orbit')).toMatchObject({ dotCount: 32, dotSize: 2.0, ringRotationSpeed: 1.5 });
     expect(defaultSwarmConfig('trails')).toMatchObject({ dotCount: 48, dotSize: 1.6 });
     expect(defaultSwarmConfig('linked')).toMatchObject({ dotCount: 64, dotSize: 1.3 });
     expect(defaultSwarmConfig('halo')).toMatchObject({
       dotCount: 24,
       dotSize: 0.9,
       ringRadius: 66,
-      ringRotationSpeed: 0.0008,
+      ringRotationSpeed: 8,
     });
   });
 });
