@@ -50,12 +50,17 @@ export const parseChallengeHeader = (header: string | null | undefined): string 
   // Segment, rather than regex over the whole header: an auth-param value may contain a comma
   // inside quotes, so no single delimiter separates challenges.
   const segments = splitOutsideQuotes(header);
-  const schemeIndex = segments.findIndex((segment) => stripVpScheme(segment) !== undefined);
-  if (schemeIndex === -1) {
+  let parameters: string[] | undefined;
+  for (let index = 0; index < segments.length && parameters === undefined; index++) {
+    const afterScheme = stripVpScheme(segments[index]);
+    if (afterScheme !== undefined) {
+      parameters = [afterScheme, ...segments.slice(index + 1)];
+    }
+  }
+  if (parameters === undefined) {
     return undefined;
   }
 
-  const parameters = [stripVpScheme(segments[schemeIndex])!, ...segments.slice(schemeIndex + 1)];
   for (const parameter of parameters) {
     const match = /^\s*challenge\s*=\s*(?:"([^"]*)"|([^\s,]*))/i.exec(parameter);
     if (match) {
