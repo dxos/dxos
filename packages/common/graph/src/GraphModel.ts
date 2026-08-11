@@ -4,7 +4,8 @@
 
 // @import-as-namespace
 
-import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';

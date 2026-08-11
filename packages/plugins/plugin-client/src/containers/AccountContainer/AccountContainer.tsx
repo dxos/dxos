@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtom, useAtomSet } from '@effect/atom-react';
+import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { type FormEvent, useCallback, useState } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type RenderOptions, type RenderResult, render as rtlRender } from '@testing-library/react';
 import React, { type FC, Fragment, type PropsWithChildren, type ReactNode, useMemo } from 'react';
 

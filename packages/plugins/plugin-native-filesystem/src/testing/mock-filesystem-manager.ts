@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Text } from '@dxos/schema';
 

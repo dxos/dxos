@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import { Surface as SurfaceInternals } from '@dxos/app-framework/ui';

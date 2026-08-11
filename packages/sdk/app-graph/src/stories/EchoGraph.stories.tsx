@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RegistryContext, useAtomValue } from '@effect/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';

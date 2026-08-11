@@ -9,7 +9,8 @@ import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import type * as Runtime$ from 'effect/Runtime';
 import type * as Command$ from 'effect/unstable/cli/Command';
-import { type Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {

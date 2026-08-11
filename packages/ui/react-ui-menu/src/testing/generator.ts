@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react';
-import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';

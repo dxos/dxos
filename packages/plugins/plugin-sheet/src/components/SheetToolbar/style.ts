@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react';
-import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';

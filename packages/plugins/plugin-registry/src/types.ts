@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import { type Atom } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 

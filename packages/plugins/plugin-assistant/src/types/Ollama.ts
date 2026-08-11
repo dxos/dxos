@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import type * as Effect from 'effect/Effect';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type OllamaAdmin } from '@dxos/ai/resolvers';
 

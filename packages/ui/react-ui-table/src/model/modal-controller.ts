@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { type MutableRefObject, type RefObject } from 'react';
 
 export type ColumnSettingsMode = { type: 'create' } | { type: 'edit'; fieldId: string };

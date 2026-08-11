@@ -15,7 +15,8 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import * as TestClock from 'effect/testing/TestClock';
-import { type Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

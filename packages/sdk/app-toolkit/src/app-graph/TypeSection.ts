@@ -6,7 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import { type Atom } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
 import { type Space, isSpace } from '@dxos/client/echo';

@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

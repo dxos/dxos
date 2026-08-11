@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';

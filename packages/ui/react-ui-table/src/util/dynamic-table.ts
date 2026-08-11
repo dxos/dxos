@@ -3,7 +3,7 @@
 //
 
 import type * as Types from 'effect/Types';
-import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import {

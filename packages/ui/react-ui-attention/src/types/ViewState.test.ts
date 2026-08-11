@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { createDefaultBackends } from '../core';

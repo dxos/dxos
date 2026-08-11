@@ -10,7 +10,8 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import type * as Scope from 'effect/Scope';
-import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client, ClientService } from '@dxos/client';
 import { RemoteTriggerManager } from '@dxos/compute-runtime';

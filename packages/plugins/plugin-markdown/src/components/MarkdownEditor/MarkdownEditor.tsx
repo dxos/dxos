@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import { createContext } from '@radix-ui/react-context';
-import { type Atom } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';

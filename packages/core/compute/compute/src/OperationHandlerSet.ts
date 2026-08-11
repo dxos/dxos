@@ -8,7 +8,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
-import { type Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { EffectEx } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';

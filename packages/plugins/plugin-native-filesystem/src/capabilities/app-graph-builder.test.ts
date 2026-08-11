@@ -3,7 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';

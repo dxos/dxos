@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useState } from 'react';
 
 import { Type } from '@dxos/echo';

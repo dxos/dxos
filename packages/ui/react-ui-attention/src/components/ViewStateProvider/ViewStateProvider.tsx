@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { type PropsWithChildren, useContext } from 'react';
 
 import { useDefaultValue } from '@dxos/react-hooks';

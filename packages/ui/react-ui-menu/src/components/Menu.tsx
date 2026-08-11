@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';

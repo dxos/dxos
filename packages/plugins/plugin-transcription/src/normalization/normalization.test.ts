@@ -5,7 +5,7 @@
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { ProcessManager } from '@dxos/compute-runtime';

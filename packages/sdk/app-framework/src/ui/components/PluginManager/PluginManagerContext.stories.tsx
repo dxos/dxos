@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { DXN } from '@dxos/keys';

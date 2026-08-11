@@ -5,7 +5,7 @@
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';

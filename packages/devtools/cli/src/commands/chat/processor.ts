@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
-import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';

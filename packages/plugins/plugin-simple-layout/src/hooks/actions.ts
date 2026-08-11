@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { type Atom } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Node } from '@dxos/plugin-graph';

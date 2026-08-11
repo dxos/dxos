@@ -3,7 +3,7 @@
 //
 
 import { cleanup, render, renderHook, screen } from '@testing-library/react';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useEffect } from 'react';
 import { afterEach, describe, test } from 'vitest';
 

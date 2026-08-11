@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { renderHook, waitFor } from '@testing-library/react';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { type PropsWithChildren } from 'react';

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { ChessModel } from '@dxos/react-ui-gameboard';
 

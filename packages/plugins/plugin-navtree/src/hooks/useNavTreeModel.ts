@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react';
-import { Atom } from 'effect/unstable/reactivity';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Column, Icon, IconBlock, IconButton, Panel, ScrollArea, type ThemedClassName, Tooltip } from '@dxos/react-ui';

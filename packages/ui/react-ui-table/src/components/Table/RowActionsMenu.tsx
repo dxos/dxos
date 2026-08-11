@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
 import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';

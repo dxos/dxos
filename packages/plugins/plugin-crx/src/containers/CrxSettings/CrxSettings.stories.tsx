@@ -3,7 +3,7 @@
 //
 
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useEffect, useMemo } from 'react';
 
 import { Proxy } from '@dxos/crx-protocol';

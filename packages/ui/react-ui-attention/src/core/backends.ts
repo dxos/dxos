@@ -3,7 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { ViewState } from '../types';
 

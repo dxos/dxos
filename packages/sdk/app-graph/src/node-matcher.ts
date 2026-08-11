@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Entity, Obj, type Type } from '@dxos/echo';
 

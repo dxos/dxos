@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Atom } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';

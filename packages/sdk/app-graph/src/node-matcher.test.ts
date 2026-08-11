@@ -3,7 +3,8 @@
 //
 
 import * as Option from 'effect/Option';
-import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';

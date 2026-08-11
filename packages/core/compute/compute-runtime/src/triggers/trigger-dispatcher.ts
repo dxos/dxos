@@ -20,8 +20,8 @@ import * as Schedule from 'effect/Schedule';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
-import { Atom } from 'effect/unstable/reactivity';
-import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';

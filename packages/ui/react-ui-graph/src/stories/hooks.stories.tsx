@@ -4,7 +4,7 @@
 
 import '../../styles/graph.css';
 
-import { RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type PropsWithChildren, useContext, useEffect, useMemo, useRef } from 'react';

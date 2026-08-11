@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { createDefaultBackends } from '../core';

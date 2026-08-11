@@ -3,7 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { Atom, type AtomRegistry } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';

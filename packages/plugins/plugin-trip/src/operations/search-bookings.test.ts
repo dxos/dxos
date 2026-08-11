@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { CapabilityManager } from '@dxos/app-framework';

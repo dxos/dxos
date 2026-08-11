@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext, useAtomValue } from '@effect/atom-react';
-import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useContext, useMemo } from 'react';
 
 import { type AlignState } from './align';

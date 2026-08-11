@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';

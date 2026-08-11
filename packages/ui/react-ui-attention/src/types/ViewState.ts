@@ -3,7 +3,8 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import { type Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 /**
  * Persistence backend identifier. `personal` (ECHO/personal-space) is reserved for a future backend.

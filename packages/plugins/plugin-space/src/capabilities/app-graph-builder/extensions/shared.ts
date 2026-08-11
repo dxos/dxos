@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import { type Atom } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';

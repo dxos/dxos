@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from 'effect/unstable/reactivity';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React from 'react';
 
 import { Panel } from '@dxos/react-ui';

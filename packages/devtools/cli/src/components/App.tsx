@@ -4,7 +4,7 @@
 
 import { DebugOverlayCorner, type KeyEvent, hexToRgb } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
-import { type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import {
   type Accessor,
   ErrorBoundary,

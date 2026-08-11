@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import { Atom } from 'effect/unstable/reactivity';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useEffect, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';

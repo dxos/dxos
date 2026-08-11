@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Graph from '../graph';
 import * as GraphBuilder from '../graph-builder';
