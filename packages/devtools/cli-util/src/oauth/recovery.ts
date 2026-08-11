@@ -99,7 +99,7 @@ export const performRecoveryOAuthFlow = Effect.fn(function* (params: RecoveryOAu
 /**
  * Runs the gate's OAuth account-registration flow and resolves with the opaque `registrationToken`
  * Edge carries back in its redirect. The caller exchanges it via
- * `EdgeHttpClient.completeOAuthRegistration`, which routes the OAuth refresh token into the personal
+ * `EdgeHttpClient.completeOAuthRegistration`, which routes the OAuth refresh token into the default
  * space, records the recovery binding, and returns the provider-verified email.
  */
 export const performRegisterOAuthFlow = Effect.fn(function* (params: RecoveryOAuthParams) {
