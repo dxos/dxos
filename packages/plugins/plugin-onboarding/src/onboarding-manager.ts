@@ -272,7 +272,7 @@ export class OnboardingManager {
     invariant(this._hubUrl, 'hubUrl required for redemption');
 
     const { _email: email, _accountInvitationCode: code } = this;
-    const ensureIdentity = Effect.gen(this, function* () {
+    const ensureIdentity = Effect.gen({ self: this }, function* () {
       yield* Effect.tryPromise(() => this._createIdentity());
       invariant(this._identity, 'identity should exist after create');
       return this._identity;
