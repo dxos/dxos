@@ -9,6 +9,7 @@ import { DXN } from '@dxos/keys';
 
 import * as Format from '../../Format';
 import * as Type from '../../Type';
+import { Ref } from '../Ref';
 import { toJsonSchema } from './json-schema';
 
 //
@@ -96,5 +97,19 @@ describe('toJsonSchema wire shape', () => {
     for (const key of ['plain', 'refined', 'numeric']) {
       expect(typeof properties![key].description, key).toBe('string');
     }
+  });
+
+  test('internal persistence annotations do not reach the document', () => {
+    // `Ref` carries a `representation` annotation so `SchemaRepresentation` can persist the
+    // declaration. That is storage-side only: leaking it here would change the shape handed to
+    // model providers, which is the contract the rest of this suite pins.
+    const Referencing = Type.makeObject(DXN.make('com.example.type.Referencing', '0.1.0'))(
+      Schema.Struct({ contact: Ref(Contact) }),
+    );
+
+    const jsonSchema = toJsonSchema(Referencing);
+    expect(JSON.stringify(jsonSchema)).not.toContain('representation');
+    // The reference itself still serializes, as its own `$id` / `reference` keys.
+    expect(jsonSchema.properties!.contact).toMatchObject({ $id: '/schemas/echo/ref' });
   });
 });
