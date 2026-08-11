@@ -102,7 +102,7 @@ export const signup = Command.make(
     // already redeemed and the Account minted, so a provisioning failure must not fail the command
     // (a retry could not redeem again). Composer re-provisions the agent on every boot.
     yield* invoke(ClientOperation.CreateAgent).pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Console.log(
           `Warning: account created, but the EDGE agent could not be provisioned (${String(error)}). ` +
             'Opening Composer will retry automatically.',
@@ -219,7 +219,7 @@ const signUpWithAtmosphere = Effect.fn(function* ({
   // Non-fatal: the Account is already minted; the credential syncs on the next client run anyway.
   yield* flushAndSync({ indexes: true }).pipe(
     Effect.provide(spaceLayer(Option.none(), true)),
-    Effect.catchAll((error) => Console.log(`Warning: could not flush the credential to EDGE (${String(error)}).`)),
+    Effect.catch((error) => Console.log(`Warning: could not flush the credential to EDGE (${String(error)}).`)),
   );
   return result;
 });
