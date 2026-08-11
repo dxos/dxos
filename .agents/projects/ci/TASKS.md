@@ -231,12 +231,12 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       `check-boot-budget` as the only report-all pair. The peer-dependency step moved from last to
       stage 1 behind a `trap` that restores `pnpm-lock.yaml` — confirmed empirically that the
       lockfile is a hash input to every task (editing it re-hashed a cached `dx-build:build`).
-- [ ] **Measure the cold cost of `check-boot-budget` on the `check` job.** Its 50 s in the chromium
-      cell was a cache hit on `composer-app:bundle`; nothing else in Check builds the production
-      bundle, so a PR touching composer's dependency closure builds it from source on the job's
-      critical path. If that proves too expensive, the fallback is its own job with
-      `needs: e2e-bundle` — pointing it at `bundle-e2e` is refuted, `DX_PWA=false` changes the boot
-      graph being budgeted.
+- [x] **Measured the cold cost of `check-boot-budget` on the `check` job: 53 s**, of which
+      `composer-app:bundle` built from source in 28 s (run 31539993812 — `284 completed (281
+    cached)`, so the libraries hydrated and only the bundle ran; the script itself is 28 ms). The
+      dedicated-job fallback (`needs: e2e-bundle`) is therefore not needed. Note the e2e cell's
+      former 50 s was NOT a cache hit as assumed — building this bundle simply costs ~30 s once its
+      closure is warm.
 
 ## Phase 4: Storybook failures the cache was hiding
 
