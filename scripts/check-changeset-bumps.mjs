@@ -29,8 +29,9 @@ const GROUP_ANCHORS = [
   { group: 'B (plugins + cli)', packageFile: join(ROOT, 'packages/devtools/cli/package.json') },
 ];
 
-// `'@dxos/react-ui-menu': major`, `"@dxos/x": major`, and the unquoted form. Package names contain no colon.
-const BUMP_LINE = /^\s*(['"]?)(?<pkg>[^'":]+)\1\s*:\s*(['"]?)(?<bump>major|minor|patch)\3\s*$/;
+// `'@dxos/react-ui-menu': major`, `"@dxos/x": major`, and the unquoted form. Package names contain no
+// colon. The trailing group matches a YAML line comment, which would otherwise smuggle a bump past this.
+const BUMP_LINE = /^\s*(['"]?)(?<pkg>[^'":]+)\1\s*:\s*(['"]?)(?<bump>major|minor|patch)\3\s*(#.*)?$/;
 
 const readVersion = (packageFile) => JSON.parse(readFileSync(packageFile, 'utf8')).version;
 
