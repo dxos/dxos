@@ -43,7 +43,7 @@ export const getDefaults = ({ isDev }: PluginConfig): string[] =>
     .flat();
 
 /**
- * Minimal plugin registry for fast dev startup (`serve-min`, DX_PLUGIN_SET=minimal):
+ * Minimal plugin registry for fast dev startup (opt-in via DX_PLUGIN_SET=minimal):
  * core infrastructure + Assistant, Debug, Devtools, Google, Inbox, Markdown, Preview,
  * Projects, Review, Routine, Tasks, and Thread. Google is the Inbox's mail provider —
  * a mailbox is inert without one, and the provider is a separate plugin.

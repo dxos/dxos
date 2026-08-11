@@ -116,8 +116,10 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     // Local
     isLocal && SamplePlugin.meta.profile.key,
 
-    // Labs
-    (isDev || isLabs) && [
+    // Labs. Enabled only under the labs flag — a local dev build should not start with a
+    // different (larger) default set than production, which is what `isDev` here used to produce.
+    // They stay in the registry either way, so enabling one is still a settings toggle away.
+    isLabs && [
       BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
