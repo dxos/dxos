@@ -4,7 +4,11 @@
 
 // @import-as-namespace
 
-// Side-effect import: the provider augments `Prompt.ReasoningPartOptions` with its `anthropic` key.
+// Side-effect import: the provider augments `Prompt.ReasoningPartOptions` with its `anthropic` key,
+// which line ~438 reads. It has to stay type-only so the provider is not pulled into the bundle, and
+// a type-only side-effect import has no form that satisfies both rules — a namespace binding would
+// be unused, and a runtime import would ship the module.
+// oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import type {} from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
