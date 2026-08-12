@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, ProgressMeter, useAppGraph, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, ProgressMeter, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -94,8 +94,8 @@ export const MailboxArticle = ({
 
   // Gmail sync (`#sync`) and the process pipeline (`#process`) register monitors keyed by the
   // mailbox URI; the statusbar shows whichever run is active (sync wins when both are).
-  const syncProgress = useProgress(createSyncProgressKey(mailbox));
-  const processProgress = useProgress(InboxOperation.createProcessProgressKey(mailbox));
+  const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
+  const processProgress = useProgressMonitor(InboxOperation.createProcessProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
   const progress = isActive(syncProgress) ? syncProgress : isActive(processProgress) ? processProgress : undefined;
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.

@@ -4,8 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useState } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import React, { useCallback, useMemo, useState } from 'react';
+import { expect, screen, userEvent, within } from 'storybook/test';
 
 import { Provider } from '@dxos/ai';
 import { Role } from '@dxos/app-framework';
@@ -49,7 +49,7 @@ import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import * as Trip from '@dxos/plugin-trip/Trip';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { Panel, Select, Toolbar } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -85,6 +85,13 @@ const INVESTOR_DOMAINS = ['backed.vc', 'blueyard.com', 'dispersion.xyz', 'sequoi
 /** Role token for the story-local process module, referenced by the `ModuleContainer` layout. */
 const ProcessRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.process');
 
+/** A selectable workbench pipeline: `run` returns the payload rendered as the `last` count. */
+type StoryAction = {
+  id: string;
+  label: string;
+  run: () => Promise<unknown>;
+};
+
 /**
  * Story-local module: drives the cursored `ProcessMailbox` pipeline, `ResetProcessCursor`, and the
  * `AnalyzeMailbox` fact variant via the OperationInvoker (the same operations the mailbox toolbar
@@ -114,6 +121,8 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   const linked = messages.filter((message) => Mailbox.getExtractedObjectIds(mailbox, message.id).length > 0).length;
 
   const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
+
+  const organizations = useQuery(space.db, Filter.type(Organization.Organization));
   const contacts = useQuery(space.db, Filter.type(Person.Person));
   const projects = useQuery(space.db, Filter.type(Project.Project));
   const tasks = useQuery(space.db, Filter.type(Task.Task));
@@ -125,14 +134,14 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);
   const [factStores] = useCapabilities(BrainCapabilities.FactStoreRegistry);
 
-  const [runs, setRuns] = useState(0);
-  const [last, setLast] = useState<unknown>();
-  const [facts, setFacts] = useState(0);
-
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
   // Every invoker run is a process emitting `status.update` trace events; the progress sink projects
   // them into the registry, so the meters below mirror the app's statusbar (incl. cancel).
   const monitors = useProgressMonitors();
+
+  const [runs, setRuns] = useState(0);
+  const [last, setLast] = useState<unknown>();
+  const [facts, setFacts] = useState(0);
 
   const handleReset = useCallback(async () => {
     if (!invoker || !mailbox) {
@@ -150,240 +159,203 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     setFacts(0);
   }, [space, invoker, mailbox]);
 
-  const handleProcess = useCallback(async () => {
+  /**
+   * The selectable workbench pipelines. Each action's `run` returns the payload rendered as `last`;
+   * side-effects beyond the operation itself (the analyze fact refresh, the projects composition)
+   * live inside the action so the execute callback stays uniform.
+   */
+  const actions = useMemo<StoryAction[]>(() => {
     if (!invoker || !mailbox) {
+      return [];
+    }
+
+    return [
+      {
+        // The cursored log-title pipeline (resumes after the cursor; Reset clears it).
+        id: 'process',
+        label: 'InboxOperation.ProcessMailbox',
+        run: () =>
+          invoker.invokePromise(InboxOperation.ProcessMailbox, { mailbox: Ref.make(mailbox) }, { spaceId: space.id }),
+      },
+      {
+        // Correspondent pipeline: Person (+ derived Organization) per sender the user has sent or
+        // replied to — the outbound signal is derived from the feed, so no allow-list is needed.
+        id: 'people',
+        label: 'ExtractCorrespondents',
+        run: () =>
+          invoker.invokePromise(
+            InboxOperation.ExtractCorrespondents,
+            { mailbox: Ref.make(mailbox), me: USER_EMAILS },
+            { spaceId: space.id },
+          ),
+      },
+      {
+        // Subscription pipeline: unsubscribe affordances (header + body links) aggregated per
+        // sender onto `mailbox.subscriptions`.
+        id: 'links',
+        label: 'InboxOperation.ExtractSubscriptions',
+        run: () =>
+          invoker.invokePromise(
+            InboxOperation.ExtractSubscriptions,
+            { mailbox: Ref.make(mailbox) },
+            { spaceId: space.id },
+          ),
+      },
+      {
+        // CRM pipeline: cursored contact extraction + per-contact Profile scaffold (pairs with the
+        // `crm` seed, whose Organizations satisfy the extraction gate).
+        id: 'crm',
+        label: 'CrmOperation.ProcessMailbox',
+        run: () =>
+          invoker.invokePromise(
+            CrmOperation.ProcessMailbox,
+            { mailbox: Ref.make(mailbox), research: true },
+            { spaceId: space.id },
+          ),
+      },
+      {
+        // Contact extractor over every feed message (explicitly selected, no dispatch).
+        id: 'extract',
+        label: 'InboxOperation.ExtractMailbox',
+        run: () =>
+          invoker.invokePromise(
+            InboxOperation.ExtractMailbox,
+            { mailbox: Ref.make(mailbox), extractorId: ContactMessageExtractor.id },
+            { spaceId: space.id },
+          ),
+      },
+      {
+        // Auto-dispatch: `ExtractMessage` per message with no extractor named — the dispatcher
+        // selects by match confidence (pairs with the `trip` seed's same-PNR collapse).
+        id: 'dispatch',
+        label: 'InboxOperation.ExtractMessage',
+        run: async () => {
+          let dispatched = 0;
+          let failed = 0;
+          for (const message of messages) {
+            await invoker
+              .invokePromise(InboxOperation.ExtractMessage, { source: message }, { spaceId: space.id })
+              .then(() => {
+                dispatched += 1;
+              })
+              .catch((err) => {
+                failed += 1;
+                log.warn('dispatch extract failed', { err, messageId: message.id });
+              });
+          }
+          return failed > 0 ? { dispatched, failed } : { dispatched };
+        },
+      },
+      {
+        // Image enrichment: Gravatar avatars + domain logos via the hardened CRM attach path
+        // (needs the CORS proxy / image service).
+        id: 'images',
+        label: 'CrmOperation.EnrichImages',
+        run: () => invoker.invokePromise(CrmOperation.EnrichImages, {}, { spaceId: space.id }),
+      },
+      {
+        // Spam/label classification: cursored ≤100-message batches; known-Person senders are
+        // short-circuited. Ollama, so `strict: false` skips the structured-output pass.
+        id: 'classify',
+        label: 'InboxOperation.ClassifyMailbox',
+        run: () =>
+          invoker.invokePromise(
+            InboxOperation.ClassifyMailbox,
+            { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL, strict: false },
+            { spaceId: space.id },
+          ),
+      },
+      {
+        // Fact analysis against local Ollama; the in-memory FactStore is not ECHO-reactive, so the
+        // fact count refresh is explicit.
+        id: 'analyze',
+        label: 'InboxOperation.AnalyzeMailbox',
+        run: async () => {
+          const result = await invoker.invokePromise(
+            InboxOperation.AnalyzeMailbox,
+            {
+              mailbox: Ref.make(mailbox),
+              model: OLLAMA_MODEL,
+              provider: Provider.ollama.id,
+              strict: false,
+              pageSize: 1,
+            },
+            { spaceId: space.id },
+          );
+          const stored = await EffectEx.runPromise(
+            factStores
+              .forSpace(space.id)
+              .query({})
+              .pipe(Effect.orElseSucceed(() => [])),
+          );
+          setFacts(stored.length);
+          return result;
+        },
+      },
+      {
+        // Projects composition: create the admin tracking project from a tracked sender's message
+        // (once; reruns reuse it), then run the travel-log and investor-log artifact pipelines
+        // against it — the routine→operation→artifact pattern, driven manually.
+        id: 'projects',
+        label: 'Projects',
+        run: async () => {
+          const anchor =
+            messages.find((message) => TRACKED_SENDER_RE.test(message.sender?.email ?? '')) ??
+            messages.find((message) => !!message.sender?.email);
+          if (!anchor) {
+            return { error: 'no anchor message' };
+          }
+
+          let project = projects.find((candidate) => candidate.name?.endsWith('— Requests'));
+          let created;
+          if (!project) {
+            created = await invoker.invokePromise(
+              ProjectOperation.CreateTrackingProject,
+              { mailbox: Ref.make(mailbox), message: anchor },
+              { spaceId: space.id },
+            );
+            const fresh = await space.db.query(Filter.type(Project.Project)).run();
+            project = fresh.find((candidate) => candidate.name?.endsWith('— Requests'));
+          }
+          if (!project) {
+            return { error: 'tracking project not found after creation', created };
+          }
+
+          const travel = await invoker.invokePromise(
+            ProjectOperation.UpdateTravelLog,
+            { project: Ref.make(project), mailbox: Ref.make(mailbox) },
+            { spaceId: space.id },
+          );
+          const investors = await invoker.invokePromise(
+            ProjectOperation.UpdateInvestorLog,
+            { project: Ref.make(project), mailbox: Ref.make(mailbox), domains: INVESTOR_DOMAINS },
+            { spaceId: space.id },
+          );
+
+          return { created, travel, investors };
+        },
+      },
+    ];
+  }, [space, invoker, mailbox, messages, projects, factStores]);
+
+  const [actionId, setActionId] = useState('process');
+
+  // The single invoker seam: every pipeline runs through here, so result/error handling and the
+  // run counter are uniform. A failure is rendered as a terminal error state (never swallowed to
+  // undefined): the play tests assert on the payload, so an error can never satisfy a success
+  // assertion.
+  const handleExecute = useCallback(async () => {
+    const action = actions.find((candidate) => candidate.id === actionId);
+    if (!action) {
       return;
     }
-
-    // A failure is rendered as a terminal error state (never swallowed to undefined): the play test
-    // asserts on the result payload, so an error can never satisfy a success assertion.
-    const result = await invoker
-      .invokePromise(InboxOperation.ProcessMailbox, { mailbox: Ref.make(mailbox) }, { spaceId: space.id })
-      .catch((err) => {
-        log.warn('process mailbox failed', { err });
-        return { error: String(err) };
-      });
-    setLast(result);
-    setRuns((count) => count + 1);
-  }, [space, invoker, mailbox]);
-
-  // Correspondent pipeline: Person per sender the user has sent or replied to (mechanical — the
-  // outbound signal is derived from the feed, so no Organization allow-list is needed).
-  const handlePeople = useCallback(async () => {
-    if (!invoker || !mailbox) {
-      return;
-    }
-
-    const result = await invoker
-      .invokePromise(
-        InboxOperation.ExtractCorrespondents,
-        { mailbox: Ref.make(mailbox), me: USER_EMAILS },
-        { spaceId: space.id },
-      )
-      .catch((err) => {
-        log.warn('extract correspondents failed', { err });
-        return { error: String(err) };
-      });
-    setLast(result);
-    setRuns((count) => count + 1);
-  }, [space, invoker, mailbox]);
-
-  // Subscription pipeline: unsubscribe affordances (header + body links) aggregated per sender onto
-  // `mailbox.subscriptions` (visible on the Mailbox object in the Database/Objects modules).
-  const handleLinks = useCallback(async () => {
-    if (!invoker || !mailbox) {
-      return;
-    }
-
-    const result = await invoker
-      .invokePromise(InboxOperation.ExtractSubscriptions, { mailbox: Ref.make(mailbox) }, { spaceId: space.id })
-      .catch((err) => {
-        log.warn('extract subscriptions failed', { err });
-        return { error: String(err) };
-      });
-    setLast(result);
-    setRuns((count) => count + 1);
-  }, [space, invoker, mailbox]);
-
-  // Contact-extraction pipeline: runs the deterministic contact extractor over every feed message
-  // (a Person per sender, linked to a known Organization by domain); results land in the space and
-  // are visible in the Database module.
-  const handleExtract = useCallback(async () => {
-    if (!invoker || !mailbox) {
-      return;
-    }
-
-    const result = await invoker
-      .invokePromise(
-        InboxOperation.ExtractMailbox,
-        { mailbox: Ref.make(mailbox), extractorId: ContactMessageExtractor.id },
-        { spaceId: space.id },
-      )
-      .catch((err) => {
-        log.warn('extract contacts failed', { err });
-        return { error: String(err) };
-      });
-    setLast(result);
-    setRuns((count) => count + 1);
-  }, [space, invoker, mailbox]);
-
-  // Auto-dispatch pipeline: `ExtractMessage` per feed message with no extractor named — the
-  // dispatcher selects by match confidence (the composer toolbar path). Pairs with the `trip` seed,
-  // where the two same-PNR legs must collapse into one Trip.
-  const handleAutoExtract = useCallback(async () => {
-    if (!invoker || !mailbox) {
-      return;
-    }
-
-    let dispatched = 0;
-    let failed = 0;
-    for (const message of messages) {
-      await invoker
-        .invokePromise(InboxOperation.ExtractMessage, { source: message }, { spaceId: space.id })
-        .then(() => {
-          dispatched += 1;
-        })
-        .catch((err) => {
-          failed += 1;
-          log.warn('dispatch extract failed', { err, messageId: message.id });
-        });
-    }
-    setLast(failed > 0 ? { dispatched, failed } : { dispatched });
-    setRuns((count) => count + 1);
-  }, [space, invoker, mailbox, messages]);
-
-  // CRM pipeline: cursored contact extraction + per-contact Profile scaffold (deterministic; the
-  // extraction gate needs the seeded Organizations, so it pairs with the `crm` seed).
-  const handleCrm = useCallback(async () => {
-    if (!invoker || !mailbox) {
-      return;
-    }
-
-    const result = await invoker
-      .invokePromise(CrmOperation.ProcessMailbox, { mailbox: Ref.make(mailbox), research: true }, { spaceId: space.id })
-      .catch((err) => {
-        log.warn('crm process mailbox failed', { err });
-        return { error: String(err) };
-      });
-    setLast(result);
-    setRuns((count) => count + 1);
-  }, [space, invoker, mailbox]);
-
-  // Projects pipelines: create the admin tracking project from a tracked sender's message (once),
-  // then run the travel-log and investor-log artifact pipelines against it — the routine→operation→
-  // artifact pattern, driven manually from the workbench.
-  const handleProjects = useCallback(async () => {
-    if (!invoker || !mailbox) {
-      return;
-    }
-
-    const anchor =
-      messages.find((message) => TRACKED_SENDER_RE.test(message.sender?.email ?? '')) ??
-      messages.find((message) => !!message.sender?.email);
-    if (!anchor) {
-      return;
-    }
-
-    try {
-      // Tracking project (admin example): created once, reruns reuse it.
-      let project = projects.find((candidate) => candidate.name?.endsWith('— Requests'));
-      let created;
-      if (!project) {
-        created = await invoker.invokePromise(
-          ProjectOperation.CreateTrackingProject,
-          { mailbox: Ref.make(mailbox), message: anchor },
-          { spaceId: space.id },
-        );
-        const fresh = await space.db.query(Filter.type(Project.Project)).run();
-        project = fresh.find((candidate) => candidate.name?.endsWith('— Requests'));
-      }
-      if (!project) {
-        setLast({ error: 'tracking project not found after creation', created });
-        return;
-      }
-
-      const travel = await invoker.invokePromise(
-        ProjectOperation.UpdateTravelLog,
-        { project: Ref.make(project), mailbox: Ref.make(mailbox) },
-        { spaceId: space.id },
-      );
-      const investors = await invoker.invokePromise(
-        ProjectOperation.UpdateInvestorLog,
-        { project: Ref.make(project), mailbox: Ref.make(mailbox), domains: INVESTOR_DOMAINS },
-        { spaceId: space.id },
-      );
-      setLast({ created, travel, investors });
-    } catch (err) {
-      log.warn('projects pipelines failed', { err });
-      setLast({ error: String(err) });
-    }
-    setRuns((count) => count + 1);
-  }, [space, invoker, mailbox, messages, projects]);
-
-  // Image enrichment: avatars (Gravatar) for Persons and logos (domain services) for Organizations
-  // missing an image, via the hardened CRM attach path. Needs the CORS proxy / image service.
-  const handleImages = useCallback(async () => {
-    if (!invoker || !mailbox) {
-      return;
-    }
-
-    const result = await invoker.invokePromise(CrmOperation.EnrichImages, {}, { spaceId: space.id }).catch((err) => {
-      log.warn('enrich images failed', { err });
+    const result = await action.run().catch((err) => {
+      log.warn('action failed', { action: action.id, err });
       return { error: String(err) };
     });
     setLast(result);
     setRuns((count) => count + 1);
-  }, [space, invoker, mailbox]);
-
-  // Spam/label classification: cursored ≤100-message batches; senders with a Person record are
-  // short-circuited (tagged personal, never spam, no LLM call). Runs against the story's Ollama
-  // AiService, so `strict: false` skips the structured-output pass local models never honor.
-  const handleClassify = useCallback(async () => {
-    if (!invoker || !mailbox) {
-      return;
-    }
-
-    const result = await invoker
-      .invokePromise(
-        InboxOperation.ClassifyMailbox,
-        { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL, strict: false },
-        { spaceId: space.id },
-      )
-      .catch((err) => {
-        log.warn('classify mailbox failed', { err });
-        return { error: String(err) };
-      });
-    setLast(result);
-    setRuns((count) => count + 1);
-  }, [space, invoker, mailbox]);
-
-  const handleAnalyze = useCallback(async () => {
-    if (!invoker || !mailbox) {
-      return;
-    }
-
-    const result = await invoker
-      .invokePromise(
-        InboxOperation.AnalyzeMailbox,
-        { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL, provider: Provider.ollama.id, strict: false, pageSize: 1 },
-        { spaceId: space.id },
-      )
-      .catch((err) => {
-        log.warn('analyze mailbox failed', { err });
-        return { error: String(err) };
-      });
-    setLast(result);
-    setRuns((count) => count + 1);
-
-    // The in-memory FactStore is not ECHO-reactive, so refreshes are explicit (after each run).
-    const stored = await EffectEx.runPromise(
-      factStores
-        .forSpace(space.id)
-        .query({})
-        .pipe(Effect.orElseSucceed(() => [])),
-    );
-    setFacts(stored.length);
-  }, [space, invoker, mailbox, factStores]);
+  }, [actions, actionId]);
 
   return (
     <Panel.Root>
@@ -392,40 +364,23 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Button data-testid='reset' disabled={!invoker || !mailbox} onClick={() => void handleReset()}>
             Reset
           </Toolbar.Button>
-          <Toolbar.Button data-testid='process' disabled={!invoker || !mailbox} onClick={() => void handleProcess()}>
-            Process
+          <Toolbar.Button data-testid='execute' disabled={!invoker || !mailbox} onClick={() => void handleExecute()}>
+            Execute
           </Toolbar.Button>
-          <Toolbar.Button data-testid='people' disabled={!invoker || !mailbox} onClick={() => void handlePeople()}>
-            People
-          </Toolbar.Button>
-          <Toolbar.Button data-testid='links' disabled={!invoker || !mailbox} onClick={() => void handleLinks()}>
-            Links
-          </Toolbar.Button>
-          <Toolbar.Button data-testid='crm' disabled={!invoker || !mailbox} onClick={() => void handleCrm()}>
-            CRM
-          </Toolbar.Button>
-          <Toolbar.Button data-testid='extract' disabled={!invoker || !mailbox} onClick={() => void handleExtract()}>
-            Extract
-          </Toolbar.Button>
-          <Toolbar.Button
-            data-testid='dispatch'
-            disabled={!invoker || !mailbox}
-            onClick={() => void handleAutoExtract()}
-          >
-            Auto Extract
-          </Toolbar.Button>
-          <Toolbar.Button data-testid='projects' disabled={!invoker || !mailbox} onClick={() => void handleProjects()}>
-            Projects
-          </Toolbar.Button>
-          <Toolbar.Button data-testid='images' disabled={!invoker || !mailbox} onClick={() => void handleImages()}>
-            Images
-          </Toolbar.Button>
-          <Toolbar.Button data-testid='classify' disabled={!invoker || !mailbox} onClick={() => void handleClassify()}>
-            Classify
-          </Toolbar.Button>
-          <Toolbar.Button data-testid='analyze' disabled={!invoker || !mailbox} onClick={() => void handleAnalyze()}>
-            Analyze
-          </Toolbar.Button>
+          <Select.Root value={actionId} onValueChange={setActionId}>
+            <Select.TriggerButton data-testid='action-select' placeholder='Action' />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {actions.map((action) => (
+                    <Select.Option key={action.id} value={action.id}>
+                      {action.label}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content data-testid='counts' classNames='dx-container overflow-auto p-2 text-sm'>
@@ -436,18 +391,21 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             messages: messages.length,
             cursors: cursors.length,
             cursorMax: Cursor.parseKey(cursors[0]?.max),
-            contacts: contacts.length,
-            images: contacts.filter((contact) => !!contact.image).length,
-            subscriptions: mailbox?.subscriptions?.length ?? 0,
-            profiles: profiles.length,
-            trips: trips.length,
-            segments: segments.length,
-            relations: relations.length,
             linked,
             facts,
-            projects: projects.length,
-            tasks: tasks.length,
             last,
+            objects: {
+              organizations: organizations.length,
+              contacts: contacts.length,
+              images: contacts.filter((contact) => !!contact.image).length,
+              subscriptions: mailbox?.subscriptions?.length ?? 0,
+              profiles: profiles.length,
+              trips: trips.length,
+              segments: segments.length,
+              relations: relations.length,
+              projects: projects.length,
+              tasks: tasks.length,
+            },
           }}
         />
       </Panel.Content>
@@ -669,15 +627,16 @@ export const FixtureTest: Story = {
     void expect(stablePolls).toBeGreaterThanOrEqual(3);
     void expect(messageCount).toBeGreaterThan(0);
 
-    // First pass: every seeded message is processed and the tagged cursor is created + advanced.
-    await userEvent.click(canvas.getByTestId('process'));
+    // First pass (Process is the default selection): every seeded message is processed and the
+    // tagged cursor is created + advanced.
+    await userEvent.click(canvas.getByTestId('execute'));
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(new RegExp(`"processed":\\s*${messageCount}\\b`));
     void expect(afterFirst).toMatch(/"cursors":\s*1\b/);
     void expect(afterFirst).not.toMatch(/"cursorMax":\s*0\b/);
 
     // Second pass: strictly-greater skip — nothing new to process.
-    await userEvent.click(canvas.getByTestId('process'));
+    await userEvent.click(canvas.getByTestId('execute'));
     const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
     void expect(afterSecond).toMatch(/"processed":\s*0\b/);
 
@@ -687,11 +646,17 @@ export const FixtureTest: Story = {
     const afterReset = await waitFor((text) => /"reset":\s*true\b/.test(text));
     void expect(afterReset).toMatch(/"runs":\s*0\b/);
     void expect(afterReset).toMatch(/"cursorMax":\s*0\b/);
-    await userEvent.click(canvas.getByTestId('process'));
+    await userEvent.click(canvas.getByTestId('execute'));
     const afterRerun = await waitFor((text) => /"runs":\s*1\b/.test(text) && /"processed":/.test(text));
     void expect(afterRerun).toMatch(new RegExp(`"processed":\\s*${messageCount}\\b`));
     void expect(afterRerun).toMatch(/"cursors":\s*1\b/);
   },
+};
+
+/** Picks a workbench action in the toolbar select (Radix portals the options to `document.body`). */
+const selectAction = async (canvas: ReturnType<typeof within>, label: string) => {
+  await userEvent.click(canvas.getByTestId('action-select'));
+  await userEvent.click(await screen.findByRole('option', { name: label }));
 };
 
 /** The CRM demo seed: 3 demo messages plus the extraction-gate Organizations. */
@@ -735,7 +700,8 @@ export const CrmTest: Story = {
 
     // First pass: one Person + one Profile per allow-listed demo sender (the unknown-org Wayne
     // sender is denied by the gate), all provenance recorded, cursor created.
-    await userEvent.click(canvas.getByTestId('crm'));
+    await selectAction(canvas, 'CRM');
+    await userEvent.click(canvas.getByTestId('execute'));
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(/"contacts":\s*3\b/);
     void expect(afterFirst).toMatch(/"profiles":\s*3\b/);
@@ -743,7 +709,7 @@ export const CrmTest: Story = {
     void expect(afterFirst).toMatch(/"cursors":\s*1\b/);
 
     // Second pass: idempotent catch-up — nothing new is created (`last.contacts` reports 0).
-    await userEvent.click(canvas.getByTestId('crm'));
+    await userEvent.click(canvas.getByTestId('execute'));
     const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
     void expect(afterSecond).toMatch(/"profiles":\s*3\b/);
     void expect(afterSecond).toMatch(/"contacts":\s*0\b/);
@@ -790,7 +756,8 @@ export const TripTest: Story = {
 
     // First pass: both same-PNR legs collapse into ONE Trip with TWO Segments. Every message ends
     // linked (the travel pair to the Trip, the digest to the contact extracted on dispatch).
-    await userEvent.click(canvas.getByTestId('dispatch'));
+    await selectAction(canvas, 'Auto Extract');
+    await userEvent.click(canvas.getByTestId('execute'));
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(/"trips":\s*1\b/);
     void expect(afterFirst).toMatch(/"segments":\s*2\b/);
@@ -798,7 +765,7 @@ export const TripTest: Story = {
 
     // Second pass over the same messages must be idempotent — still ONE Trip, TWO Segments
     // (segments updated in place, not duplicated). This is the "extract twice" case.
-    await userEvent.click(canvas.getByTestId('dispatch'));
+    await userEvent.click(canvas.getByTestId('execute'));
     const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
     void expect(afterSecond).toMatch(/"trips":\s*1\b/);
     void expect(afterSecond).toMatch(/"segments":\s*2\b/);
