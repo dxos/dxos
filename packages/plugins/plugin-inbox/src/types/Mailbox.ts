@@ -362,7 +362,9 @@ export const makeSummary = ({
     parentMessage: message.id,
     created,
     sender: {},
-    blocks: [{ _tag: 'text', text, disposition: 'summary', mimeType: 'text/plain' }],
+    // Markdown, not plain: generated summaries may carry inline emphasis or links, and the text-block
+    // renderers select the markdown view over the plaintext one.
+    blocks: [{ _tag: 'text', text, disposition: 'summary', mimeType: 'text/markdown' }],
     properties: model ? { model } : undefined,
   });
 

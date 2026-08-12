@@ -8,12 +8,16 @@ import { mx } from '@dxos/ui-theme';
 
 type StackProps = PropsWithChildren<{ orientation?: 'horizontal' | 'vertical' }> & ComponentPropsWithoutRef<'div'>;
 
+const Root = ({ children }: PropsWithChildren) => {
+  return <div className='dx-container grid p-3'>{children}</div>;
+};
+
 const Stack = ({ children, orientation = 'horizontal', className, ...props }: StackProps) => {
   const count = Children.count(children);
   return (
     <div
       {...props}
-      className={mx('dx-container grid p-3 gap-3', className)}
+      className={mx('dx-container grid gap-3', className)}
       style={
         orientation === 'horizontal'
           ? { gridTemplateColumns: `repeat(${count}, 1fr)` }
@@ -36,6 +40,7 @@ const Panel = ({ children, className, ...props }: PropsWithChildren<ComponentPro
 };
 
 export const TestGrid = {
+  Root,
   Stack,
   Panel,
 };

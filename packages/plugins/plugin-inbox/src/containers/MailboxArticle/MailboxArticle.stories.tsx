@@ -146,11 +146,11 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
   }
 
   return (
-    <TestGrid.Stack>
-      <TestGrid.Panel {...attentionAttributes}>
-        <MailboxArticle role='article' subject={mailbox} attendableId={ATTENDABLE_ID} />
-      </TestGrid.Panel>
-      <TestGrid.Panel>
+    <TestGrid.Root>
+      <TestGrid.Stack>
+        <TestGrid.Panel {...attentionAttributes}>
+          <MailboxArticle role='article' subject={mailbox} attendableId={ATTENDABLE_ID} />
+        </TestGrid.Panel>
         {selected && (
           <TestGrid.Stack orientation='vertical'>
             <TestGrid.Panel className='overflow-auto'>
@@ -166,8 +166,8 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
             </TestGrid.Panel>
           </TestGrid.Stack>
         )}
-      </TestGrid.Panel>
-    </TestGrid.Stack>
+      </TestGrid.Stack>
+    </TestGrid.Root>
   );
 };
 

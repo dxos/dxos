@@ -95,14 +95,16 @@ const DefaultStory = () => {
   }
 
   return (
-    <TestGrid.Stack>
-      <TestGrid.Panel>
-        <MessageArticle role='article' subject={subject} mailbox={mailbox} attendableId={ATTENDABLE_ID} />
-      </TestGrid.Panel>
-      <TestGrid.Panel>
-        <JsonHighlighter data={messageJson(selected, summaries.get(selected.id))} />
-      </TestGrid.Panel>
-    </TestGrid.Stack>
+    <TestGrid.Root>
+      <TestGrid.Stack>
+        <TestGrid.Panel>
+          <MessageArticle role='article' subject={subject} mailbox={mailbox} attendableId={ATTENDABLE_ID} />
+        </TestGrid.Panel>
+        <TestGrid.Panel>
+          <JsonHighlighter data={messageJson(selected, summaries.get(selected.id))} />
+        </TestGrid.Panel>
+      </TestGrid.Stack>
+    </TestGrid.Root>
   );
 };
 
