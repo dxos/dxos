@@ -637,6 +637,34 @@ export const CreateProjectFromMessage = Operation.make({
   }),
 });
 
+/** Progress-registry key for a mailbox's subscription-extraction monitor ({@link ExtractSubscriptions}). */
+export const createSubscriptionsProgressKey = (mailbox: Mailbox.Mailbox) =>
+  Obj.getURI(mailbox).toString() + '#subscriptions';
+
+export const ExtractSubscriptions = Operation.make({
+  meta: {
+    key: makeKey('extractSubscriptions'),
+    name: 'Extract Subscriptions',
+    description:
+      'Extracts unsubscribe links (header and body) from the mailbox feed and records the per-sender subscriptions on the mailbox.',
+    icon: 'ph--link--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed is scanned and whose subscriptions record is replaced.',
+    }),
+  }),
+  output: Schema.Struct({
+    /** Feed messages scanned. */
+    scanned: Schema.Number,
+    /** Messages carrying an unsubscribe affordance (header or body). */
+    matched: Schema.Number,
+    /** Distinct subscriptions recorded on the mailbox. */
+    subscriptions: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
+
 export const UnsubscribeSender = Operation.make({
   meta: {
     key: makeKey('unsubscribeSender'),

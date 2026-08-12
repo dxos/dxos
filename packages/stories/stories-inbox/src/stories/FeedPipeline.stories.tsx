@@ -176,6 +176,23 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     setRuns((count) => count + 1);
   }, [space, invoker, mailbox]);
 
+  // Subscription pipeline: unsubscribe affordances (header + body links) aggregated per sender onto
+  // `mailbox.subscriptions` (visible on the Mailbox object in the Database/Objects modules).
+  const handleLinks = useCallback(async () => {
+    if (!invoker || !mailbox) {
+      return;
+    }
+
+    const result = await invoker
+      .invokePromise(InboxOperation.ExtractSubscriptions, { mailbox: Ref.make(mailbox) }, { spaceId: space.id })
+      .catch((err) => {
+        log.warn('extract subscriptions failed', { err });
+        return { error: String(err) };
+      });
+    setLast(result);
+    setRuns((count) => count + 1);
+  }, [space, invoker, mailbox]);
+
   // Contact-extraction pipeline: runs the deterministic contact extractor over every feed message
   // (a Person per sender, linked to a known Organization by domain); results land in the space and
   // are visible in the Database module.
@@ -281,6 +298,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Button data-testid='people' disabled={!invoker || !mailbox} onClick={() => void handlePeople()}>
             People
           </Toolbar.Button>
+          <Toolbar.Button data-testid='links' disabled={!invoker || !mailbox} onClick={() => void handleLinks()}>
+            Links
+          </Toolbar.Button>
           <Toolbar.Button data-testid='crm' disabled={!invoker || !mailbox} onClick={() => void handleCrm()}>
             CRM
           </Toolbar.Button>
@@ -308,6 +328,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             cursors: cursors.length,
             cursorMax: Cursor.parseKey(cursors[0]?.max),
             contacts: contacts.length,
+            subscriptions: mailbox?.subscriptions?.length ?? 0,
             profiles: profiles.length,
             trips: trips.length,
             segments: segments.length,

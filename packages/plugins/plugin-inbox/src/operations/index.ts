@@ -25,6 +25,9 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy([
   InboxOperation.ExtractContact.pipe(Operation.lazyHandler(() => import('./extractor/extract-contact'))),
   InboxOperation.ExtractMailbox.pipe(Operation.lazyHandler(() => import('./extractor/extract-mailbox'))),
   InboxOperation.ExtractMessage.pipe(Operation.lazyHandler(() => import('./extractor/extract-message'))),
+  InboxOperation.ExtractSubscriptions.pipe(
+    Operation.lazyHandler(() => import('./subscriptions/extract-subscriptions')),
+  ),
   InboxOperation.ExtractSummaryFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/summarize-extractor'))),
   InboxOperation.ProcessMailbox.pipe(Operation.lazyHandler(() => import('./process/process-mailbox'))),
   InboxOperation.ReadEmail.pipe(Operation.lazyHandler(() => import('./read-email'))),
