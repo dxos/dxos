@@ -4,6 +4,8 @@
 
 import React, { PropsWithChildren } from 'react';
 
+import { mx } from '@dxos/ui-theme';
+
 const Stack = ({
   children,
   direction = 'horizontal',
@@ -20,5 +22,6 @@ const Panel = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const TestGrid = {
+  Stack,
   Panel,
 };

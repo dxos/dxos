@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { PropsWithChildren, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
