@@ -63,7 +63,7 @@ describe('wrapFunctionHandler', () => {
   });
 });
 
-describe('makeOperationServiceLayer', () => {
+describe('EDGE Operation.Service', () => {
   const Deployed = Operation.make({
     meta: { key: DXN.make('org.example.operation.deployed'), name: 'Deployed', deployedId: 'fn-deployed' },
     input: Schema.Struct({ value: Schema.String }),
@@ -78,28 +78,13 @@ describe('makeOperationServiceLayer', () => {
     output: Schema.Void,
   });
 
-  // Results cross a Cloudflare RPC boundary in production, so every one carries `Symbol.dispose`.
-  const disposable = { [Symbol.dispose]: () => {} };
-
-  const makeFunctionsService = (
-    calls: { deploymentId: string; input: unknown }[],
-  ): EdgeFunctionEnv.FunctionsService => ({
-    query: async () => Object.assign([], disposable),
-    invoke: async (deploymentId, input) => {
-      calls.push({ deploymentId, input });
-      return { _kind: 'success' as const, data: undefined, ...disposable };
-    },
-  });
-
-  const scheduleWith = async (
-    op: Operation.Definition<{ readonly value: string }, void>,
-    calls: { deploymentId: string; input: unknown }[],
-  ) =>
-    EffectEx.runPromise(
-      Effect.flatMap(Operation.Service, (service) => service.schedule(op, { value: 'x' })).pipe(
-        Effect.provide(makeOperationServiceLayer(makeFunctionsService(calls))),
-      ),
-    );
+  // Scheduling from inside a wrapped handler exercises the service the EDGE runtime actually
+  // installs, including the branch taken when no `functionsService` is configured.
+  const Scheduler = Operation.make({
+    meta: { key: DXN.make('org.example.operation.scheduler'), name: 'Scheduler' },
+    input: Schema.Void,
+    output: Schema.Void,
+  }).pipe(Operation.withHandler(() => Operation.schedule(Local, { value: 'x' })));
 
   test('routes a scheduled operation by deployedId', async ({ expect }) => {
     const calls: { deploymentId: string; input: unknown }[] = [];
@@ -117,4 +102,37 @@ describe('makeOperationServiceLayer', () => {
 
     expect(calls).toEqual([]);
   });
+
+  // The same contract on the other variant: a context with no `functionsService` cannot route
+  // anything, and must still not fail the handler that scheduled the followup.
+  test('drops a scheduled followup when no functionsService is configured', async ({ expect }) => {
+    const wrapped = wrapFunctionHandler(Scheduler);
+
+    await expect(wrapped.handler({ data: undefined, context: { services: {} } })).resolves.toBeUndefined();
+  });
 });
+
+//
+// Helpers.
+//
+
+// Results cross a Cloudflare RPC boundary in production, so every one carries `Symbol.dispose`.
+const disposable = { [Symbol.dispose]: () => {} };
+
+const makeFunctionsService = (calls: { deploymentId: string; input: unknown }[]): EdgeFunctionEnv.FunctionsService => ({
+  query: async () => Object.assign([], disposable),
+  invoke: async (deploymentId, input) => {
+    calls.push({ deploymentId, input });
+    return { _kind: 'success' as const, data: undefined, ...disposable };
+  },
+});
+
+const scheduleWith = async (
+  op: Operation.Definition<{ readonly value: string }, void>,
+  calls: { deploymentId: string; input: unknown }[],
+) =>
+  EffectEx.runPromise(
+    Effect.flatMap(Operation.Service, (service) => service.schedule(op, { value: 'x' })).pipe(
+      Effect.provide(makeOperationServiceLayer(makeFunctionsService(calls))),
+    ),
+  );
