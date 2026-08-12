@@ -73,8 +73,17 @@ const HTML_ONLY_TERM = 'htmlonlyterm';
 
 const ATTENDABLE_ID = 'story';
 
-/** The message's content blocks, spread off the proxies so every field renders. */
-const blocksJson = (message: Message.Message) => message.blocks.map((block) => ({ ...block }));
+/**
+ * Every content block that belongs to a message — its own, plus the blocks of the annotations
+ * derived from it. Summaries are `Text` blocks with `disposition: 'summary'` living on a second
+ * feed, so a view that reads only `message.blocks` never shows them.
+ */
+const blocksJson = (message: Message.Message, annotations: readonly Message.Message[]) => [
+  ...message.blocks.map((block) => ({ ...block })),
+  ...annotations
+    .filter((annotation) => annotation.parentMessage === message.id)
+    .flatMap((annotation) => annotation.blocks.map((block) => ({ ...block, model: annotation.properties?.model }))),
+];
 
 type StoryArgs = {
   /** Number of messages to seed. */
@@ -153,7 +162,7 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
               <JsonHighlighter data={selected} />
             </TestGrid.Panel>
             <TestGrid.Panel className='overflow-auto p-2 text-sm'>
-              <JsonHighlighter data={blocksJson(selected)} />
+              <JsonHighlighter data={blocksJson(selected, annotations)} />
             </TestGrid.Panel>
           </TestGrid.Stack>
         )}
