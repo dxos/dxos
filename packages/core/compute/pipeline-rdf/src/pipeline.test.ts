@@ -3,11 +3,11 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readFileSync } from 'node:fs';
 
 import { Pipeline } from '@dxos/pipeline';

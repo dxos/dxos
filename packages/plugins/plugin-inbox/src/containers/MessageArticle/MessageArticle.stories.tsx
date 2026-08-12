@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -14,7 +14,9 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { useSelection } from '@dxos/react-ui-attention';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
@@ -23,15 +25,37 @@ import { InboxPlugin } from '../../InboxPlugin';
 import * as Mailbox from '../../types/Mailbox';
 import { MessageArticle } from './MessageArticle';
 
+const ATTENDABLE_ID = 'story';
+
 type StoryArgs = {
   /** Number of messages seeded into the single fake thread. */
   length?: number;
 };
 
+/** Plain projection of the selected message — the live proxy carries internals that add noise. */
+const messageJson = (message: Message.Message, summary?: string) => ({
+  id: message.id,
+  created: message.created,
+  threadId: message.threadId,
+  parentMessage: message.parentMessage,
+  sender: message.sender,
+  properties: message.properties,
+  blocks: message.blocks.map((block) =>
+    block._tag === 'text'
+      ? { _tag: block._tag, disposition: block.disposition, length: block.text.length }
+      : { _tag: block._tag },
+  ),
+  summary,
+});
+
 /**
  * Renders the seeded mailbox's one thread from its most recent message, the way the `mailboxMessage`
  * graph connector opens one: the article looks the conversation up itself, so a reply added at the db
  * root (see `MessageArticle`'s `openDraft`) is picked up reactively.
+ *
+ * Two columns: the article, and the JSON of the selected message beside it, so what the article
+ * displays can be read against the object behind it — summaries in particular come from a separate
+ * annotation feed rather than from the message.
  */
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -46,12 +70,41 @@ const DefaultStory = () => {
       : Query.select(Filter.nothing()),
   );
 
+  // Summaries live on the mailbox's annotation feed, keyed by `parentMessage`, so the JSON shows
+  // everything the article knows about the message rather than just the message object.
+  const annotationsFeed = useResolveRef(mailbox?.annotations);
+  const annotations = useQuery(
+    space?.db,
+    annotationsFeed
+      ? Query.select(Filter.type(Message.Message)).from([
+          Scope.feed(Obj.getURI(annotationsFeed, { prefer: 'absolute' })),
+        ])
+      : Query.select(Filter.nothing()),
+  );
+  const summaries = useMemo(() => Mailbox.summaryIndex(annotations), [annotations]);
+
+  // The conversation stack publishes no per-tile selection yet (PLAN.md phase 5 — `useSelected` /
+  // `AttentionOperation.Select` semantics are still unsettled), so this falls back to the message the
+  // article was opened for: the subject it renders the thread around.
+  const selectedId = useSelection(ATTENDABLE_ID, 'single');
+  const subject = messages[messages.length - 1];
+  const selected = messages.find((message) => message.id === selectedId) ?? subject;
+
   if (!space?.db || !mailbox || messages.length === 0) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox, messages: messages.length }} />;
   }
 
   return (
-    <MessageArticle role='article' subject={messages[messages.length - 1]} mailbox={mailbox} attendableId='story' />
+    <TestGrid.Root>
+      <TestGrid.Stack>
+        <TestGrid.Panel>
+          <MessageArticle role='article' subject={subject} mailbox={mailbox} attendableId={ATTENDABLE_ID} />
+        </TestGrid.Panel>
+        <TestGrid.Panel>
+          <JsonHighlighter data={messageJson(selected, summaries.get(selected.id))} />
+        </TestGrid.Panel>
+      </TestGrid.Stack>
+    </TestGrid.Root>
   );
 };
 

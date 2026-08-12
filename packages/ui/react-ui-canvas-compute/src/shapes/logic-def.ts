@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '@dxos/conductor';
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -18,18 +19,16 @@ import { IfComponent, IfElseComponent } from './Logic';
 // Data
 //
 
-export const IfShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const IfShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('if'),
   }),
 );
 
 export type IfShape = Schema.Schema.Type<typeof IfShape>;
 
-export const IfElseShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const IfElseShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('if-else'),
   }),
 );

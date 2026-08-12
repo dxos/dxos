@@ -77,7 +77,7 @@ export const CustomTokenDialog = ({
               yield* coordinator.submitCredentialForm({ db, spaceId, connectorId, values, existingTarget });
             }),
           ),
-          Effect.catchAll((failure) =>
+          Effect.catch((failure) =>
             Effect.sync(() => {
               log.catch(failure);
               setError(String(failure instanceof Error ? failure.message : failure));

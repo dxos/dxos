@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { print, waitForSync } from '@dxos/cli-util';
@@ -37,18 +37,15 @@ export const handler = Effect.fn(function* ({
   const invitation = yield* acceptInvitation({
     observable: client.spaces.join(encoded),
     callbacks: {
-      onReadyForAuth: (invitation) => {
+      onReadyForAuth: (invitation): Effect.Effect<string | undefined> => {
         if (Option.isSome(authCode)) {
-          return Effect.succeed(Option.getOrUndefined(authCode) ?? undefined) as Effect.Effect<
-            string | void,
-            never,
-            never
-          >;
+          return Effect.succeed(Option.getOrUndefined(authCode));
         }
+        // TODO(dxos): `acceptInvitation` runs callbacks without a context, so the prompt's terminal
+        // requirement cannot be provided here — the interactive path dies without a terminal.
         return Prompt.text({ message: 'Enter the authentication code' })
           .pipe(Prompt.run)
-          .pipe(Effect.mapError(() => undefined as never))
-          .pipe(Effect.catchAll(() => Effect.succeed(undefined))) as Effect.Effect<string | void, never, never>;
+          .pipe(Effect.catch(() => Effect.succeed(undefined))) as Effect.Effect<string | undefined>;
       },
     },
   });
@@ -115,8 +112,8 @@ export const handler = Effect.fn(function* ({
 export const join = Command.make(
   'join',
   {
-    invitationCode: Args.text({ name: 'invitationCode' }).pipe(Args.withDescription('The invitation code.')),
-    authCode: Options.text('authCode').pipe(Options.withDescription('The authentication code.'), Options.optional),
+    invitationCode: Args.string('invitationCode').pipe(Args.withDescription('The invitation code.')),
+    authCode: Options.string('authCode').pipe(Options.withDescription('The authentication code.'), Options.optional),
   },
   handler,
 ).pipe(Command.withDescription('Join a space via invitation.'));

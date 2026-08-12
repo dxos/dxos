@@ -5,7 +5,6 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
-import * as TestContext from 'effect/TestContext';
 
 import { type StreamerOptions, createStreamer, splitFragments, splitSentences, splitSpans } from './stream';
 
@@ -58,7 +57,7 @@ describe('stream', () => {
       const text = 'Hello <b>World</b>!';
       const result = yield* testStreamer(text);
       expect(result).toEqual(['Hello ', '<b>World</b>', '!']);
-    }).pipe(Effect.provide(TestContext.TestContext)),
+    }),
   );
 
   it.effect('stream keeps hyphenated custom elements intact', ({ expect }) =>
@@ -66,7 +65,7 @@ describe('stream', () => {
       const text = 'Before <dom-widget>Hello</dom-widget> after';
       const result = yield* testStreamer(text);
       expect(result).toEqual(['Before ', '<dom-widget>Hello</dom-widget>', ' after']);
-    }).pipe(Effect.provide(TestContext.TestContext)),
+    }),
   );
 
   it.effect('stream with self-closing tags', ({ expect }) =>
@@ -74,7 +73,7 @@ describe('stream', () => {
       const text = 'Hello<br/>world<img src="test.jpg"/>';
       const result = yield* testStreamer(text);
       expect(result).toEqual(['Hello', '<br/>', 'world', '<img src="test.jpg"/>']);
-    }).pipe(Effect.provide(TestContext.TestContext)),
+    }),
   );
 
   it.effect('stream with incomplete tag fragment', ({ expect }) =>
@@ -82,7 +81,7 @@ describe('stream', () => {
       const text = 'Hello <div class="test';
       const result = yield* testStreamer(text);
       expect(result).toEqual(['Hello ', '<div class="test']);
-    }).pipe(Effect.provide(TestContext.TestContext)),
+    }),
   );
 
   // chunkSize: 'word' subdivides plain-text spans at whitespace boundaries while keeping XML
@@ -91,7 +90,7 @@ describe('stream', () => {
     Effect.gen(function* () {
       const result = yield* testStreamer('Hello brave new <b>world</b>!', { chunkSize: 'word' });
       expect(result).toEqual(['Hello', ' ', 'brave', ' ', 'new', ' ', '<b>world</b>', '!']);
-    }).pipe(Effect.provide(TestContext.TestContext)),
+    }),
   );
 
   // chunkSize: 'character' is the smallest cadence — one CM dispatch per character of plain
@@ -100,7 +99,7 @@ describe('stream', () => {
     Effect.gen(function* () {
       const result = yield* testStreamer('Hi <b>X</b>!', { chunkSize: 'character' });
       expect(result).toEqual(['H', 'i', ' ', '<b>X</b>', '!']);
-    }).pipe(Effect.provide(TestContext.TestContext)),
+    }),
   );
 
   // Default `chunkSize: 'span'` preserves the original behaviour — tests above already cover it.
@@ -108,7 +107,7 @@ describe('stream', () => {
     Effect.gen(function* () {
       const result = yield* testStreamer('Hello world');
       expect(result).toEqual(['Hello world']);
-    }).pipe(Effect.provide(TestContext.TestContext)),
+    }),
   );
 });
 

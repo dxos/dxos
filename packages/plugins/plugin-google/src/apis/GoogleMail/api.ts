@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -23,18 +22,16 @@ import {
 
 // TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client.
 const decodeAndHandleErrors =
-  <S extends Schema.Schema.Any>(schema: S) =>
-  (
-    data: unknown,
-  ): Effect.Effect<Schema.Schema.Type<S>, GoogleError | ParseResult.ParseError, Schema.Schema.Context<S>> =>
-    Schema.decodeUnknown(Schema.Union(schema, ErrorResponse))(data).pipe(
-      Effect.flatMap((response) => {
-        if ('error' in response) {
-          return Effect.fail(GoogleError.fromErrorResponse(response));
-        } else {
-          return Effect.succeed(response);
-        }
-      }),
+  <S extends Schema.Top>(schema: S) =>
+  (data: unknown): Effect.Effect<S['Type'], GoogleError | Schema.SchemaError, S['DecodingServices']> =>
+    // The API error envelope is checked first: v4 decodes the union to `S['Type'] | ErrorResponse`,
+    // and an `in` test cannot narrow a generic member out of that.
+    Schema.decodeUnknownEffect(Schema.Union([ErrorResponse, schema]))(data).pipe(
+      Effect.flatMap((response) =>
+        Schema.is(ErrorResponse)(response)
+          ? Effect.fail(GoogleError.fromErrorResponse(response))
+          : Effect.succeed(response as S['Type']),
+      ),
     );
 
 /**

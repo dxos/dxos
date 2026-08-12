@@ -14,10 +14,10 @@ export const formatGitHubSyncFailure = (error: unknown): string => {
     const keys = Object.keys(error.context);
     return keys.length > 0 ? `${error.name}: ${JSON.stringify(error.context)}` : error.name;
   }
-  if (Predicate.isRecord(error) && typeof error._tag === 'string') {
+  if (Predicate.isObject(error) && typeof error._tag === 'string') {
     if (
       error._tag === 'ResponseError' &&
-      Predicate.isRecord(error.response) &&
+      Predicate.isObject(error.response) &&
       typeof error.response.status === 'number'
     ) {
       return `HTTP ${error.response.status}`;

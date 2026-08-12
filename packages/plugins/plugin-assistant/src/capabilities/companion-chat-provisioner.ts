@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -33,7 +34,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
-    const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
+    const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
 
     // Optional: provisioning is keyed off deck planks, so a host without a deck has nothing to
     // provision for.

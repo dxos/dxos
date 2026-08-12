@@ -18,11 +18,11 @@ export class HasRelationship extends Type.makeRelation<HasRelationship>(
 })(
   Schema.Struct({
     id: Obj.ID,
-    kind: Schema.String.annotations({
+    kind: Schema.String.annotate({
       description: 'The kind of relationship.',
       examples: ['friend', 'colleague', 'family', 'parent', 'spouse'],
     }),
-  }).annotations({
+  }).annotate({
     description: 'A relationship between two people.',
   }),
 ) {}

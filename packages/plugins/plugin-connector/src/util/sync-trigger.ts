@@ -52,7 +52,7 @@ export const setSyncTriggerEnabled = (
 export const syncTriggerMonitorLayer = (
   spaceId: Key.SpaceId,
 ): Layer.Layer<Trigger.TriggerMonitorService, Error, Capability.Service> =>
-  Layer.unwrapEffect(
+  Layer.unwrap(
     Capability.get(Capabilities.ServiceResolver).pipe(
       Effect.map((resolver) =>
         ServiceResolver.provide({ space: spaceId }, Trigger.TriggerMonitorService).pipe(

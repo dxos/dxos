@@ -3,8 +3,8 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';

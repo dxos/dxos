@@ -4,9 +4,9 @@
 
 import { next as A } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
-import * as SqlClient from '@effect/sql/SqlClient';
-import * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlError from 'effect/unstable/sql/SqlError';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
@@ -147,7 +147,12 @@ describe('automatic reclamation', () => {
     // strands chunks if the two are not committed together.
     const { storage } = host.automergeHost;
     const removeRangeEffect = storage.removeRangeEffect.bind(storage);
-    storage.removeRangeEffect = () => Effect.fail(new SqlError.SqlError({ message: 'storage failure mid-wipe' }));
+    storage.removeRangeEffect = () =>
+      Effect.fail(
+        new SqlError.SqlError({
+          reason: new SqlError.UnknownError({ cause: undefined, message: 'storage failure mid-wipe' }),
+        }),
+      );
     try {
       await expect(host.automergeHost.removeDocument(target)).rejects.toThrow();
     } finally {

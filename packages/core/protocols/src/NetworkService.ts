@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
 import { publicKey } from './service-schemas.ts';
@@ -15,7 +15,7 @@ import { publicKey } from './service-schemas.ts';
 // RPC message schemas.
 //
 
-export const ConnectionState = Schema.Enums({
+export const ConnectionState = Schema.Enum({
   OFFLINE: 0,
   ONLINE: 1,
 });
@@ -86,4 +86,4 @@ export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpc
 /**
  * Effect service tag for the `NetworkService` RPC handlers.
  */
-export class Tag extends Context.Tag('@dxos/protocols/rpc/NetworkService')<Tag, Handlers>() {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/NetworkService') {}

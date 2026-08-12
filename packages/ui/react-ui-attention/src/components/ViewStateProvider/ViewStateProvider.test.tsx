@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { act, renderHook } from '@testing-library/react';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { type PropsWithChildren } from 'react';
 import { describe, test } from 'vitest';
 
@@ -39,7 +40,7 @@ describe('useSelection / useSelectionActions', () => {
 });
 
 const wrapper =
-  (manager: ViewState.Manager, registry: Registry.Registry) =>
+  (manager: ViewState.Manager, registry: Registry.AtomRegistry) =>
   ({ children }: PropsWithChildren) => (
     <RegistryContext.Provider value={registry}>
       <ViewStateProvider manager={manager}>{children}</ViewStateProvider>

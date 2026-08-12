@@ -3,7 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 import * as ThreadCapabilities from './ThreadCapabilities';
 
@@ -34,21 +35,25 @@ export const assertUniqueKinds = (providers: readonly ThreadCapabilities.Channel
  */
 export const buildChannelFormSchema = (
   providers: readonly ThreadCapabilities.ChannelBackendProvider[],
-): Schema.Schema.AnyNoContext => {
+): Schema.Codec<any, any> => {
   assertUniqueKinds(providers);
   const needsSelector = providers.length > 1 || providers.some((provider) => fieldCount(provider.createFields) > 0);
   if (!needsSelector) {
     return Schema.Struct({ name: Schema.optional(Schema.String) });
   }
 
+  // `SchemaAST.assignFields`, not `mapFields`: a provider's `createFields` is a `Codec`, which
+  // carries no field literals for a struct operation.
   const branches = providers.map((provider) =>
-    Schema.extend(Schema.Struct({ kind: Schema.Literal(provider.kind) }), provider.createFields),
+    Schema.make<Schema.Codec<any, any>>(
+      SchemaAST.assignFields(Schema.Struct({ kind: Schema.Literal(provider.kind) }).ast, provider.createFields.ast),
+    ),
   );
-  const backend = branches.length === 1 ? branches[0] : Schema.Union(...branches);
+  const backend = branches.length === 1 ? branches[0] : Schema.Union(branches);
   return Schema.Struct({
     name: Schema.optional(Schema.String),
     backend,
   });
 };
 
-const fieldCount = (schema: Schema.Schema.AnyNoContext): number => SchemaAST.getPropertySignatures(schema.ast).length;
+const fieldCount = (schema: Schema.Codec<any, any>): number => SchemaAST.getPropertySignatures(schema.ast).length;

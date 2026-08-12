@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Array from 'effect/Array';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context, ContextDisposedError } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
@@ -132,16 +132,19 @@ export class SyncClient {
     const timeoutMs = self.#rpcTimeoutMs;
     return Effect.ensuring(
       Deferred.await(deferred).pipe(
-        Effect.timeoutFail({
+        Effect.timeoutOrElse({
           duration: timeoutMs,
-          onTimeout: () =>
-            new SyncRpcTimeoutError({
-              requestId,
-              spaceId: meta.spaceId,
-              feedNamespace: meta.feedNamespace,
-              rpcTag: meta.rpcTag,
-              timeoutMs,
-            }),
+          // v4's `orElse` returns an Effect, where v3's `onTimeout` returned the error value.
+          orElse: () =>
+            Effect.fail(
+              new SyncRpcTimeoutError({
+                requestId,
+                spaceId: meta.spaceId,
+                feedNamespace: meta.feedNamespace,
+                rpcTag: meta.rpcTag,
+                timeoutMs,
+              }),
+            ),
         }),
         Effect.tapError((cause) =>
           Effect.sync(() => {
@@ -202,7 +205,7 @@ export class SyncClient {
         limit: opts.limit,
       });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
-        Effect.tapErrorCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+        Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
       );
       const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
         spaceId: opts.spaceId,
@@ -285,7 +288,7 @@ export class SyncClient {
         limit: opts.limit,
       };
       yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
-        Effect.tapErrorCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+        Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
       );
       const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
         spaceId: opts.spaceId,
@@ -345,7 +348,7 @@ export class SyncClient {
         blockCount: unpositioned.blocks.length,
       });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
-        Effect.tapErrorCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+        Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
       );
       const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
         spaceId: opts.spaceId,

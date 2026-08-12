@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { Patch } from './Patch';
 
@@ -33,6 +34,6 @@ export const Track = Schema.Struct({
   muted: Schema.optional(Schema.Boolean),
   /** Sound patches mapping pitch ranges to synth / drum / sample generators. */
   patches: Schema.optional(Schema.mutable(Schema.Array(Patch))),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Track extends Schema.Schema.Type<typeof Track> {}

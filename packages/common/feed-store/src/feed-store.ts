@@ -23,10 +23,9 @@ export interface FeedStoreOptions<T extends {}> {
 /**
  * Effect service tag for {@link FeedStore}.
  */
-export class FeedStoreService extends EffectContext.Tag('@dxos/feed-store/FeedStore')<
-  FeedStoreService,
-  FeedStore<any>
->() {}
+export class FeedStoreService extends EffectContext.Service<FeedStoreService, FeedStore<any>>()(
+  '@dxos/feed-store/FeedStore',
+) {}
 
 /**
  * Persistent hypercore store.

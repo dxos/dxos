@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Options from '@effect/cli/Options';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { BaseError } from '@dxos/errors';
 
@@ -17,7 +17,7 @@ export class McpSessionError extends BaseError.extend('McpSessionError', 'MCP se
  * Server to act on. Optional: with a single stored session the commands pick it up automatically,
  * which keeps the common case to `dx mcp tools` / `dx mcp call <tool>`.
  */
-export const serverUrlOption = Options.text('url').pipe(
+export const serverUrlOption = Options.string('url').pipe(
   Options.withDescription('MCP server URL. Defaults to the most recently connected server.'),
   Options.optional,
 );
@@ -89,7 +89,7 @@ const lastSession = (profile: string): Effect.Effect<McpSession | undefined, Mcp
 
 /** Persisted sessions are decoded rather than trusted: the file is user-editable state. */
 export const decodeSession = (raw: string, label: string): Effect.Effect<McpSession, McpSessionError, never> =>
-  Schema.decodeUnknown(Schema.parseJson(McpSessionSchema))(raw).pipe(
+  Schema.decodeUnknownEffect(Schema.fromJsonString(McpSessionSchema))(raw).pipe(
     Effect.mapError(
       (error) =>
         new McpSessionError({

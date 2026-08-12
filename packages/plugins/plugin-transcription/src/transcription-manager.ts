@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { synchronized } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
@@ -36,7 +37,7 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
 export type TranscriptionManagerOptions = {
   edgeClient: EdgeHttpClient;
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
 
   /**
    * Enrich the message before it is written to the transcription feed.
@@ -52,7 +53,7 @@ export type TranscriptionManagerOptions = {
 export class TranscriptionManagerImpl extends Resource implements TranscriptionCapabilities.TranscriptionManager {
   private readonly _edgeClient: EdgeHttpClient;
   private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;

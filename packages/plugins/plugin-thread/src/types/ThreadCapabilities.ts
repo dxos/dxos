@@ -29,7 +29,7 @@ export interface ChannelBackendProvider {
    * and the channel `name`, which the panel adds). Empty struct when the backend
    * needs no extra input (e.g. the local feed).
    */
-  createFields: Schema.Schema.AnyNoContext;
+  createFields: Schema.Codec<any, any>;
   /** Builds the provider's config object from the collected create-form inputs. */
   makeConfig: (options: Record<string, unknown>) => Obj.Any;
   /**

@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as AiError from '@effect/ai/AiError';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Option from 'effect/Option';
+import * as AiError from 'effect/unstable/ai/AiError';
 import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -24,13 +23,13 @@ import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor';
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 
 describe('Chat processor', () => {
-  it.scoped(
+  it.effect(
     'basic',
     Effect.fn(
       function* ({ expect }) {
         const feed = Feed.make();
         yield* Database.add(feed);
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         const managedRuntime = ManagedRuntime.make(Layer.empty) as unknown as Capabilities.ProcessManagerRuntime;
         const processor = new AiChatProcessor(session, managedRuntime, feed, Layer.empty as any);
@@ -48,8 +47,8 @@ describe('parseError', () => {
 
   // The agent runs in a separate process; on failure the cause is rendered to a string via
   // `Cause.pretty` (which drops nested causes) before it reaches parseError. EDGE rejects an
-  // over-quota request with 429, which `@effect/ai` surfaces as an HttpResponseError whose message
-  // embeds the status — this is the exact string the chat receives.
+  // over-quota request with 429, whose message embeds the status — this is the exact string the
+  // chat receives.
   test('detects an EDGE 429 in the pretty-printed process failure (string)', ({ expect }) => {
     const err =
       'HttpResponseError: StatusCode: An HTTP response error occurred. (429 POST http://edge.internal/v1/messages)\nResponse Body: {"error":{"message":"You have exceeded your usage quota."}}';
@@ -59,20 +58,17 @@ describe('parseError', () => {
     expect(result).toBeInstanceOf(AiUsageQuotaError);
   });
 
-  test('detects a typed 429 HttpResponseError by status (direct path)', ({ expect }) => {
-    const err = new AiError.HttpResponseError({
+  test('detects a typed quota rejection by reason (direct path)', ({ expect }) => {
+    const err = new AiError.AiError({
       module: 'AnthropicClient',
       method: 'streamText',
-      reason: 'StatusCode',
-      request: {
-        method: 'POST',
-        url: 'http://edge.internal/v1/messages',
-        urlParams: [],
-        hash: Option.none(),
-        headers: {},
-      },
-      response: { status: 429, headers: {} },
-      body: JSON.stringify({ error: { message: 'You have exceeded your usage quota.' } }),
+      reason: new AiError.QuotaExhaustedError({
+        http: {
+          request: { method: 'POST', url: 'http://edge.internal/v1/messages', urlParams: [], headers: {} },
+          response: { status: 429, headers: {} },
+          body: JSON.stringify({ error: { message: 'You have exceeded your usage quota.' } }),
+        },
+      }),
     });
     expect(parseError(err).message).toBe(QUOTA_MESSAGE);
   });
@@ -95,10 +91,10 @@ describe('parseError', () => {
   });
 
   test('passes through a non-quota AiError description', ({ expect }) => {
-    const err = new AiError.UnknownError({
+    const err = new AiError.AiError({
       module: 'ChatCompletionsClient',
       method: 'streamText',
-      description: 'Connection refused',
+      reason: new AiError.UnknownError({ description: 'Connection refused' }),
     });
     expect(parseError(err).message).toBe('Connection refused');
   });

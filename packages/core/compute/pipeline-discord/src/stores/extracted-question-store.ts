@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -67,12 +67,11 @@ const toQuestion = (row: Row): ExtractedQuestion => ({
   ...(row.asked_at !== null ? { askedAt: row.asked_at } : {}),
 });
 
-export class ExtractedQuestionStore extends Context.Tag('@dxos/pipeline-discord/ExtractedQuestionStore')<
-  ExtractedQuestionStore,
-  ExtractedQuestionStoreApi
->() {
+export class ExtractedQuestionStore extends Context.Service<ExtractedQuestionStore, ExtractedQuestionStoreApi>()(
+  '@dxos/pipeline-discord/ExtractedQuestionStore',
+) {
   static layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-    Layer.scoped(
+    Layer.effect(
       ExtractedQuestionStore,
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;

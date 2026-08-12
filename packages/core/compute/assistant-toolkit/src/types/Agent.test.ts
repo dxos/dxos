@@ -33,7 +33,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('Agent (0.2.0)', () => {
-  it.scoped(
+  it.effect(
     'makeInitialized creates the identity/preset shape',
     Effect.fnUntraced(
       function* ({ expect }) {

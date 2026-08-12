@@ -284,10 +284,20 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
 
     this._wakeReady();
 
+    // The host echoes a client's own mutation back over its subscription as a separate change; it
+    // merges cleanly and moves the heads but alters nothing, so emitting for it would report a
+    // change that did not happen — a listener waiting for the *next* remote edit would be woken by
+    // its own. Patches, not heads, are the test: a merge can advance the heads without touching any
+    // value.
+    const patches = A.diff(this._doc, headsBefore, A.getHeads(this._doc));
+    if (patches.length === 0) {
+      return;
+    }
+
     this.emit('change', {
       handle: this,
       doc: this._doc,
-      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+      patches,
       patchInfo: { before, after: this._doc, source: 'change' },
     });
   }

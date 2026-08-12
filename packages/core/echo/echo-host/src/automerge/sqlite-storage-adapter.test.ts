@@ -19,7 +19,7 @@ const makeTestLayer = () => {
   const baseLayer = SqliteClient.layer({ filename: ':memory:' });
   const txLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
   const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
-  return { runtime: rt.runtimeEffect, dispose: () => rt.dispose() };
+  return { runtime: rt.contextEffect, dispose: () => rt.dispose() };
 };
 
 describe('encodeKey / decodeKey', () => {

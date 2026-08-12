@@ -110,7 +110,7 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
       return { url: URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type })), type, revoke: true };
     }).pipe(
       Effect.provide(Database.layer(db)),
-      Effect.catchAll(() => Effect.succeed(undefined)),
+      Effect.catch(() => Effect.succeed(undefined)),
     );
     void EffectEx.runPromise(program).then((next) => {
       if (cancelled) {

@@ -3,9 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
+import { SchemaAST } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
@@ -22,6 +22,7 @@ import {
   SchemaKindId,
   StaticTypeSchemaSlot,
 } from '../common/types';
+import { type AnyProperties } from '../common/types/base';
 import { type EntityMeta } from '../common/types/meta';
 import { JsonSchemaType } from '../JsonSchema/json-schema-type';
 
@@ -57,7 +58,7 @@ export type EchoTypeOptions = {
  */
 // TODO(burdon): Rename EchoEntitySchema.
 export interface EchoTypeSchema<
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   ExtraFields = {},
   K extends EntityKind = EntityKind,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
@@ -82,7 +83,7 @@ export interface EchoTypeSchema<
   readonly id: EntityId;
 
   /** Source Effect Schema (kept on a hidden slot for `Type.getSchema`). */
-  readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 
   // NOTE: `typename` / `version` are intentionally NOT fields. They live in
   // `EntityMeta` (`key` / `version`); read via `Type.getTypename(self)` /
@@ -113,7 +114,7 @@ export interface EchoTypeSchema<
   } & (K extends EntityKind.Type
       ? {
           readonly [SchemaKindId]: EntityKind.Type;
-          readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+          readonly [StaticTypeSchemaSlot]: Schema.Codec<any, any>;
         }
       : {});
 }
@@ -174,7 +175,7 @@ export const TypeMetaSchemaDXN = DXN.make('org.dxos.type.schema', '0.1.0');
  */
 // TODO(wittjosiah): Reconcile with `TypeSchema` (`Type/type-schema.ts`).
 //   Both describe the same `org.dxos.type.schema` shape.
-const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
+const persistentEntitySchema: Schema.Codec<AnyProperties, any> = (() => {
   const typename = DXN.getName(TypeMetaSchemaDXN);
   const version = DXN.getVersion(TypeMetaSchemaDXN)!;
   const struct = Schema.Struct({
@@ -182,11 +183,11 @@ const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
     jsonSchema: JsonSchemaType.pipe(Schema.optional),
     id: EntityId,
   });
-  const ast = SchemaAST.annotations(struct.ast, {
+  const ast = SchemaAST.annotate(struct.ast, {
     [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
-    [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
+    ...makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
   });
-  return Schema.make(ast);
+  return Schema.make<Schema.Codec<AnyProperties, any>>(ast);
 })();
 
 /**
@@ -205,7 +206,7 @@ const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
  * `jsonSchema` is mutated (see `typed-handler.ts`).
  */
 export const makeEchoTypeSchema = <
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   K extends EntityKind = EntityKind,
   // TODO(wittjosiah): Can this be inferred from the schema?
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
@@ -219,11 +220,17 @@ export const makeEchoTypeSchema = <
   explicitId?: EntityId,
 ): EchoTypeSchema<Self, {}, K, Fields> => {
   // Source Effect Schema describing the user's type — cached for `Type.getSchema`.
-  const sourceSchema = Schema.make<
-    EchoTypeSchemaProps<Schema.Schema.Type<Self>>,
-    EchoTypeSchemaProps<Schema.Schema.Encoded<Self>>,
-    Schema.Schema.Context<Self>
-  >(ast);
+  // v4's `Schema.make` takes the whole schema type as one parameter, and a schema exposes its
+  // channels as properties rather than through `Schema.Schema.*` helpers.
+  const sourceSchema =
+    Schema.make<
+      Schema.Codec<
+        EchoTypeSchemaProps<Self['Type']>,
+        EchoTypeSchemaProps<Self['Encoded']>,
+        Self['DecodingServices'],
+        Self['EncodingServices']
+      >
+    >(ast);
 
   // `typename` / `version` route through `EntityMeta` (`key` / `version`) — the
   // canonical registry-provenance pair — not data fields. `keys` is empty for

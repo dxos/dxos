@@ -14,8 +14,12 @@ import type { Database, Obj } from '@dxos/echo';
  * the agent/plan model, e.g. plugin-assistant), the conversational agent delegates outstanding work
  * to sub-agents and folds their results back into the conversation. Consumed by the AgentService
  * LayerSpec; absent by default (a plain conversational agent).
+ *
+ * A registry rather than a singleton: the AgentService reads it with `getAll` and takes the first,
+ * and a harness that needs the strategy in place before the app's own module activates has to be
+ * able to contribute one without the two colliding.
  */
-export const AgentDelegationStrategy = Capability.makeSingleton<DelegationStrategy>()(
+export const AgentDelegationStrategy = Capability.make<DelegationStrategy>()(
   'org.dxos.plugin.routine.capability.agentDelegationStrategy',
 );
 

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
@@ -144,7 +144,7 @@ export const generateReply = (options: {
       Effect.provide(AiService.model(GENERATE_MODEL).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
-      Effect.catchAll((cause) => Effect.fail(new GenerateReplyError({ cause }))),
+      Effect.catch((cause) => Effect.fail(new GenerateReplyError({ cause }))),
     );
 
     return { subject: replySubject(message.properties?.subject), body };

@@ -26,7 +26,7 @@ describe('resolveSettingsSpace', () => {
 
       // The app forks the resolver the moment the first space lands, mid-genesis; forking before
       // genesis reproduces that window (default space published, settings space still pending).
-      const resolver = yield* Effect.fork(resolveSettingsSpace(client));
+      const resolver = yield* Effect.forkChild(resolveSettingsSpace(client));
       const { settingsSpace, defaultSpace } = yield* AppSpace.setupIdentitySpaces(client);
       const resolved = yield* Fiber.join(resolver);
 

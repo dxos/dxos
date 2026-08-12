@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';

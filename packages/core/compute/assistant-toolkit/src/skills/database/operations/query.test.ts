@@ -123,6 +123,6 @@ describe('Query', () => {
 
 // The operation's output is `Schema.Unknown`; decode rather than cast.
 const rows = (results: readonly unknown[]) =>
-  Schema.decodeUnknown(
+  Schema.decodeUnknownEffect(
     Schema.Array(Schema.Struct({ typename: Schema.optional(Schema.String), label: Schema.optional(Schema.String) })),
   )(results);

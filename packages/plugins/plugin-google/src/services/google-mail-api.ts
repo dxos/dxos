@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
-import type * as HttpClientError from '@effect/platform/HttpClientError';
 import type * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as ParseResult from 'effect/ParseResult';
+import type * as Schema from 'effect/Schema';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
+import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
 
 import * as Credential from '@dxos/compute/Credential';
 
@@ -31,9 +31,9 @@ type Requirements = HttpClient.HttpClient | GoogleCredentials | Credential.Crede
 export type GoogleMailApiError =
   | GoogleApiError
   | HttpClientError.HttpClientError
-  | Cause.TimeoutException
+  | Cause.TimeoutError
   | GoogleMail.GoogleError
-  | ParseResult.ParseError;
+  | Schema.SchemaError;
 
 /**
  * Swappable Gmail API surface. `Live` delegates to the real {@link GoogleMail} request functions;
@@ -113,10 +113,9 @@ const parseDateWindow = (query: string): { after?: number; before?: number } => 
   };
 };
 
-export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi')<
-  GoogleMailApi,
-  GoogleMailApiService
->() {
+export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiService>()(
+  '@dxos/plugin-inbox/GoogleMailApi',
+) {
   /**
    * Live layer backed by the real Gmail HTTP client. Captures the auth/HTTP context once and provides
    * it to each request, so the resulting service methods carry no requirements. Requires an

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useState } from 'react';
 
 import { Type } from '@dxos/echo';
@@ -14,7 +14,7 @@ import { type Table } from '../types';
 export const useProjectionModel = <S extends Type.AnyEntity>(
   schema: S | undefined,
   table: Table.Table | undefined,
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ) => {
   const [projection, setProjection] = useState<ProjectionModel | undefined>();
 

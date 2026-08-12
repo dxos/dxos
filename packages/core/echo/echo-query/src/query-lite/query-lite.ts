@@ -561,13 +561,13 @@ class QueryClass implements Query$.Any {
     return { [ProjectionTypeId]: QueryClass.projectionVariance, query: this.ast, property };
   }
 
-  static type<S extends Schema.Schema.All>(
+  static type<S extends Schema.Top>(
     schema: S,
     predicates?: Filter$.Props<Schema.Schema.Type<S>>,
   ): Query$.Query<Schema.Schema.Type<S>>;
   static type(type: Type$.Type, predicates?: Filter$.Props<Obj$.Unknown>): Query$.Query<Obj$.Unknown>;
   static type(schema: string, predicates?: Filter$.Props<unknown>): Query$.Query<any>;
-  static type(schema: Schema.Schema.All | Type$.Type | string, predicates?: Filter$.Props<unknown>): Query$.Any {
+  static type(schema: Schema.Top | Type$.Type | string, predicates?: Filter$.Props<unknown>): Query$.Any {
     if (typeof schema !== 'string') {
       throw new TypeError('expected typename as the first paramter');
     }

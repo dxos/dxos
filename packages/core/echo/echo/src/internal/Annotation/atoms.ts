@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
-import * as Data from 'effect/Data';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 
@@ -43,7 +42,7 @@ const annotationFamily = Atom.family((target: Entity.Unknown) =>
 
 /**
  * Atom family for a single key of a record-valued annotation on an entity instance.
- * Keyed by a value-equal `Data.tuple([target, annotation, key])` so nested families are avoided.
+ * Keyed by a structurally-equal tuple key `[target, annotation, key])` so nested families are avoided.
  */
 const annotationPropertyFamily = Atom.family(
   ([target, annotation, key]: readonly [
@@ -102,7 +101,7 @@ export const makeProperty = <V>(
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
   // The flattened family key is a single concrete tuple type, so the generic `V` is erased at the
   // family boundary and recovered here; no typed alternative exists for a per-call-generic family.
-  return annotationPropertyFamily(
-    Data.tuple(target, annotation as Annotation.Annotation<Record<string, any>>, key),
-  ) as Atom.Atom<V | undefined>;
+  return annotationPropertyFamily([target, annotation as Annotation.Annotation<Record<string, any>>, key]) as Atom.Atom<
+    V | undefined
+  >;
 };

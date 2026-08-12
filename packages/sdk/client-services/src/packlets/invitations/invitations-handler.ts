@@ -77,10 +77,9 @@ export type InvitationConnectionProps = {
 /**
  * Effect service tag for {@link InvitationsHandler}.
  */
-export class InvitationsHandlerService extends EffectContext.Tag('@dxos/client-services/InvitationsHandler')<
-  InvitationsHandlerService,
-  InvitationsHandler
->() {}
+export class InvitationsHandlerService extends EffectContext.Service<InvitationsHandlerService, InvitationsHandler>()(
+  '@dxos/client-services/InvitationsHandler',
+) {}
 
 export class InvitationsHandler {
   /**

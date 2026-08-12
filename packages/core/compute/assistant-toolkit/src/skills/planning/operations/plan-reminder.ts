@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
@@ -44,7 +44,7 @@ export default PlanReminder.pipe(
         }
 
         const history = yield* Harness.history;
-        const prompt = Prompt.merge(
+        const prompt = Prompt.concat(
           yield* AiPreprocessor.preprocessPrompt(history, { system: checklistCompletionCheckSystem }),
           checklistCompletionCheckPrompt(text.content),
         );

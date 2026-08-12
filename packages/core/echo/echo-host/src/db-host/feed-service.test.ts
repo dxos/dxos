@@ -3,10 +3,10 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import type * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
@@ -54,7 +54,7 @@ describe('LocalFeedServiceImpl', () => {
 
   it.effect('should delete items', () =>
     Effect.gen(function* () {
-      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       const service = new LocalFeedServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
@@ -87,7 +87,7 @@ describe('LocalFeedServiceImpl', () => {
 
   it.effect('should support pagination', () =>
     Effect.gen(function* () {
-      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();
       const service = new LocalFeedServiceImpl(runtime, feedStore);
@@ -129,7 +129,7 @@ describe('LocalFeedServiceImpl', () => {
 
   it.effect('should pass tombstone blocks through paginated reads', () =>
     Effect.gen(function* () {
-      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();
       const service = new LocalFeedServiceImpl(runtime, feedStore);

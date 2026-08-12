@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { Format } from '@dxos/echo';
@@ -15,8 +16,8 @@ import { TestLayout } from '../../../../../testing';
 import { Form } from '../../../Form';
 
 const schema = Schema.Struct({
-  location: Format.GeoPoint.annotations({ title: 'Location' }),
-}).pipe(Schema.mutable);
+  location: Format.GeoPoint.annotate({ title: 'Location' }),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 type Values = Schema.Schema.Type<typeof schema>;
 

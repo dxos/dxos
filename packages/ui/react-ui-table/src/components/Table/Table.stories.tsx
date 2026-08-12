@@ -31,12 +31,12 @@ import { Table as TableComponent } from './Table';
 
 const Example = Schema.Struct({
   // TODO(wittjosiah): Should be title. Currently name to work with default label.
-  name: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-  urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
+  name: Schema.optional(Schema.String).annotate({ title: 'Title' }),
+  urgent: Schema.optional(Schema.Boolean).annotate({ title: 'Urgent' }),
   status: Schema.optional(
-    Schema.Literal('todo', 'in-progress', 'done')
+    Schema.Literals(['todo', 'in-progress', 'done'])
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.SingleSelect))
-      .annotations({
+      .annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -49,8 +49,8 @@ const Example = Schema.Struct({
         },
       }),
   ),
-  description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  parent: Schema.optional(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))).annotations({
+  description: Schema.optional(Schema.String).annotate({ title: 'Description' }),
+  parent: Schema.optional(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))).annotate({
     title: 'Parent',
   }),
 }).pipe(

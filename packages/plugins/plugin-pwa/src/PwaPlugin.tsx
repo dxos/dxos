@@ -38,7 +38,7 @@ type PrecacheProgress = {
 };
 
 const isPrecacheProgress = (data: unknown): data is PrecacheProgress =>
-  Predicate.isRecord(data) && data.type === PRECACHE_PROGRESS;
+  Predicate.isObject(data) && data.type === PRECACHE_PROGRESS;
 
 const RegisterPwa = Capability.inlineModule(
   'RegisterPwa',
@@ -86,9 +86,9 @@ const RegisterPwa = Capability.inlineModule(
     // end polling for the rest of the session.
     const checkForUpdate = Effect.tryPromise(async () => {
       await registration?.update();
-    }).pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('service worker update check failed', { error }))));
+    }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('service worker update check failed', { error }))));
 
-    const fiber = yield* checkForUpdate.pipe(Effect.repeat(Schedule.fixed(UPDATE_CHECK_INTERVAL)), Effect.forkDaemon);
+    const fiber = yield* checkForUpdate.pipe(Effect.repeat(Schedule.fixed(UPDATE_CHECK_INTERVAL)), Effect.forkDetach);
 
     yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
     return [];

@@ -92,7 +92,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('AgentProcess delegation lifecycle (scripted)', () => {
-  it.scoped(
+  it.effect(
     'delegates work to a sub-agent and folds the result back on completion',
     Effect.fnUntraced(
       function* (_) {

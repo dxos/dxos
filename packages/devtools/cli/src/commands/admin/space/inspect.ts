@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type InspectSpaceResponse, type LegacyInspectSpaceResponse } from '@dxos/protocols';
@@ -21,12 +21,12 @@ const printSection = function* (title: string, lines: string[]) {
 
 export const inspect = Command.make(
   'inspect',
-  { spaceId: Args.text({ name: 'spaceId' }) },
+  { spaceId: Args.string('spaceId') },
   Effect.fn(function* ({ spaceId }) {
     const result = yield* adminRequest<InspectSpaceResponse | LegacyInspectSpaceResponse>(
       'GET',
       `/admin/spaces/${spaceId}`,
-    ).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))));
+    ).pipe(Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));

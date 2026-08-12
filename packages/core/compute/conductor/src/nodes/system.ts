@@ -11,10 +11,10 @@ export const NODE_OUTPUT = 'dxn:node:output';
 
 export const inputNode = defineComputeNode({
   input: VoidInput,
-  output: Schema.Record({ key: Schema.String, value: Schema.Any }),
+  output: Schema.Record(Schema.String, Schema.Any),
 });
 
 export const outputNode = defineComputeNode({
-  input: Schema.Record({ key: Schema.String, value: Schema.Any }),
+  input: Schema.Record(Schema.String, Schema.Any),
   output: VoidOutput,
 });

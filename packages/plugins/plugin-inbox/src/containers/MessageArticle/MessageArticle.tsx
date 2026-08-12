@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
@@ -94,6 +94,18 @@ export const MessageArticle = ({
 
   // Contact extraction targets the conversation's space; any message resolves the same db.
   const db = Obj.getDatabase(messages[0]);
+
+  // Derived summaries live in the mailbox's annotation feed (immutable Messages naming their subject
+  // via `parentMessage`), merged in here rather than stored on the messages, which are immutable.
+  const annotationsFeed = useResolveRef(mailbox?.annotations);
+  const annotationsUri = annotationsFeed ? Obj.getURI(annotationsFeed, { prefer: 'absolute' }) : undefined;
+  const annotations = useQuery(
+    mailboxDb,
+    annotationsUri
+      ? Query.select(Filter.type(MessageType.Message)).from([Scope.feed(annotationsUri)])
+      : Query.select(Filter.nothing()),
+  ) as MessageType.Message[];
+  const summaries = useMemo(() => Mailbox.summaryIndex(annotations), [annotations]);
 
   // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
   // bottom (the connector delivers everything in chronological order).
@@ -209,6 +221,7 @@ export const MessageArticle = ({
     <ConversationStack.Root
       attendableId={toolbarAttendableId}
       items={orderedMessages}
+      summaries={summaries}
       mailbox={mailbox}
       companion={!!companionTo}
       options={optionsAtom}

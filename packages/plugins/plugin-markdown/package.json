@@ -195,10 +195,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/versioning": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/ai": "catalog:",
-    "@effect/experimental": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "react-dropzone": "catalog:"
   },
@@ -212,8 +209,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -225,8 +221,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

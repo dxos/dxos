@@ -33,7 +33,7 @@ export type ConnectionViewProps = {
   /** External-sync cursors authenticated by this connection. */
   bindings: ReadonlyArray<Cursor.ExternalCursor>;
   /** Schema describing per-binding `.options`; absent for connectors without per-binding options. */
-  optionsSchema?: Schema.Schema<any, any>;
+  optionsSchema?: Schema.Codec<any, any>;
   /** True when the connector exposes a `sync` operation (drives Sync-now visibility). */
   canSync: boolean;
   /** True when the connector exposes `getSyncTargets` (drives Change-targets visibility). */
@@ -203,7 +203,7 @@ const BindingRow = ({
   onRemove,
 }: {
   binding: Cursor.ExternalCursor;
-  optionsSchema?: Schema.Schema<any, any>;
+  optionsSchema?: Schema.Codec<any, any>;
   onRemove: (binding: Cursor.ExternalCursor) => void;
 }) => {
   const { t } = useTranslation(meta.profile.key);

@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import { afterAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -698,14 +698,14 @@ const createInvitationsApi = async (
   invitationsApiScopes.push(scope);
   const rpc = await EffectEx.runPromise(
     makeInProcessClientServicesRpc(() => ({ InvitationsService: new InvitationsServiceImpl(manager) })).pipe(
-      Scope.extend(scope),
+      Scope.provide(scope),
     ),
   );
-  const service = makeServicesFromRpc(rpc, Runtime.defaultRuntime).InvitationsService!;
+  const service = makeServicesFromRpc(rpc, EffectContext.empty()).InvitationsService!;
   return { manager, service, metadata };
 };
 
-const invitationsApiScopes: Scope.CloseableScope[] = [];
+const invitationsApiScopes: Scope.Closeable[] = [];
 
 afterAll(async () => {
   await Promise.all(invitationsApiScopes.map((scope) => EffectEx.runPromise(Scope.close(scope, Exit.void))));

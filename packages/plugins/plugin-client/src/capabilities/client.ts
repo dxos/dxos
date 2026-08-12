@@ -55,7 +55,7 @@ export default Capability.makeModule(
         subscription?.unsubscribe();
         yield* Effect.tryPromise(() => client.destroy()).pipe(
           // A finalizer must not fail, and a teardown error must not mask the reason for teardown.
-          Effect.catchAll((error) => Effect.sync(() => log.warn('client destroy failed', { error: String(error) }))),
+          Effect.catch((error) => Effect.sync(() => log.warn('client destroy failed', { error: String(error) }))),
         );
       }),
     );
@@ -128,7 +128,7 @@ export default Capability.makeModule(
           // Shutting the manager down mid-activation interrupts this fiber, which is the subscription
           // ending rather than a failure — and rethrowing it from this floating promise surfaces as an
           // unhandled rejection. Real failures still propagate.
-          if (Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause)) {
+          if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
             EffectEx.throwCause(exit.cause);
           }
         }
@@ -136,7 +136,7 @@ export default Capability.makeModule(
     }).pipe(
       // A failed client init is fatal to the session: every dependent surface stays suspended.
       // The fork is outside the render tree, so the app has to be told — React never sees it.
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.gen(function* () {
           log.error('client initialization failed', { error: String(error) });
           if (onClientInitializationError) {

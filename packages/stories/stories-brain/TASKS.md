@@ -1,5 +1,9 @@
 # stories-brain research tasks
 
+_Resume: PR #12546 open, all story/summary commits pushed and all 8 review comments addressed +
+resolved. Next action: watch Check to green, then land. Uncommitted: none. Last: review fixes
+(`bc19f424a1`) — canonical tier order, `withMailboxLock`, no casts or non-null assertions._
+
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
 
@@ -56,8 +60,10 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
 
 ## Mailbox pipeline suite (2026-08-12, autonomous session)
 
-Six pipelines over the FeedPipeline workbench, all committed on PR #12538's branch. Test index:
-`packages/stories/stories-inbox/AUDIT.md`.
+Six pipelines over the FeedPipeline workbench plus a summarization tier and the orchestrator that
+cascades them, shipped on **PR #12546** (branch `claude/mailbox-research-1e4396`, opened
+after #12538 landed). Test index: `packages/stories/stories-inbox/AUDIT.md`; product plan:
+`packages/plugins/plugin-inbox/PLAN.md` § "Mailbox pipelines → product".
 
 ### Tasks
 
@@ -86,9 +92,50 @@ CreateTrackingProject}`** — the routine→operation→artifact pattern: mailbo
       domain defines the tracked group; feed-triggered runnable routine + backfill). The
       kirkconsult admin example verified in unit tests and live (project + task + investor contact
       created in-browser via the Projects button).
+- [x] **`InboxOperation.SummarizeMailbox`** — per-message summaries for mail from known contacts
+      (the correspondent gate), hard-capped per run (≤50) and idempotent by parent id rather than by
+      cursor, so a reset never re-bills a summary already in the feed. A failed generation skips its
+      message instead of failing the run.
+- [x] **Summary storage = a second feed** (user's design, adopted) — `Mailbox.annotations` holds
+      immutable `Message`s whose `parentMessage` names the subject and whose text block carries
+      `disposition: 'summary'` + `mimeType: 'text/markdown'`; `Mailbox.mergeAnnotations` merges the
+      two feeds on read (newest annotation wins) and `summaryIndex` gives a flat lookup. Feed
+      messages are immutable, so re-derivation appends and supersedes. Tests: `Mailbox.test.ts` →
+      "Mailbox annotations" (22 green).
+- [x] **`InboxOperation.EnrichMailbox`** — the orchestrator: spawns the tiers in cascade order
+      (`deterministic → classify → summarize`, `analyze` opt-in) via `Operation.Service`, reporting
+      per-stage progress. Failure handling had to use `Effect.exit` + `Cause.isInterruptedOnly`:
+      AI layers `Layer.orDie`, so a model failure arrives as a **defect** and `Effect.either` let it
+      escape the cascade. Cancellation stops the remaining stages; an error marks them `skipped`.
+- [x] **Tier taxonomy + product plan** — `MailboxTier` (`deterministic | classify | summarize |
+analyze`) with a mailbox-global default and per-project overrides (user chose option 3), plus
+      PLAN.md's three product deliverables (toolbar trigger, summaries in the message article,
+      create-project-from-message) and the layering recommendation (node unit tests = logic,
+      storybook = runtime wiring, product = the user contract).
+- [x] **Story workbench** — `MailboxArticle.stories.tsx` is now a three-panel harness (article /
+      message JSON / content blocks) with the article cell attended and selection read through
+      `useSelection`; `TestGrid` moved to `@dxos/react-ui/testing`; `seedSummaries` seeds mock
+      summaries for 50% of messages so the annotation merge is exercised without an LLM. The blocks
+      panel merges the message's own blocks with its annotations' — a view reading only
+      `message.blocks` never shows a summary.
 
 ### Follow-ups
 
+- [x] **CodeRabbit review on #12546 (8 comments)** — all fixed, replied per thread, resolved
+      (`bc19f424a1`). The two that were more than mechanical: `tiers` is now documented and enforced
+      as a SET flattened through `InboxOperation.MAILBOX_TIER_ORDER` (honoring a caller's order would
+      let classification run before the contact gate it consumes — test:
+      `runs the tiers in cascade order however the caller lists them`), and `withMailboxLock`
+      (`operations/mailbox-lock.ts`) serializes `SummarizeMailbox` per mailbox URI so overlapping
+      runs cannot double-summarize or double-provision the annotation feed.
+- [ ] **Operation-layer single-flight (still open)** — the lock above is in-process and deliberately
+      NOT taken by `EnrichMailbox`, which spawns `SummarizeMailbox` and would deadlock on its own
+      child. A re-entrant or durable lease at the operation layer would close both this and the
+      `ProcessMailbox` gap above.
+- [ ] **Create-project-from-message UI** — the operation side is done; the message-context form is
+      not built (PLAN.md deliverable 3).
+- [ ] **Summary provenance in the article** — the annotation records its `model` and `created`;
+      the UI shows neither.
 - [ ] **Story invoker wedge (env)** — in the dev storybook, an operation's FIRST invocation after a
       server restart often hangs (lazy-handler vite load?) and `invokePromise` results render `{}`
       even when the operation completes (ECHO side-effects land). Unit tests unaffected. Needs an

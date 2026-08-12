@@ -57,7 +57,7 @@ export const DeleteConnection = Operation.make({
     connection: Ref.Ref(Connection.Connection),
   }),
   output: Schema.Struct({
-    suspended: Schema.Number.annotations({ description: 'Bindings left dormant by the deletion.' }),
+    suspended: Schema.Number.annotate({ description: 'Bindings left dormant by the deletion.' }),
   }),
 });
 
@@ -72,10 +72,10 @@ export const CreateConnection = Operation.make({
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
-    accessToken: Ref.Ref(AccessToken.AccessToken).annotations({
+    accessToken: Ref.Ref(AccessToken.AccessToken).annotate({
       description: 'The access token this Connection uses to authenticate to its service.',
     }),
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'Optional user-friendly label.',
     }).pipe(Schema.optional),
   }),

@@ -24,7 +24,7 @@ export interface Monitor {
   subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message>;
 }
 
-export class Service extends Context.Tag('@dxos/compute-runtime/RemoteTraceMonitor')<Service, Monitor>() {}
+export class Service extends Context.Service<Service, Monitor>()('@dxos/compute-runtime/RemoteTraceMonitor') {}
 
 /**
  * Empty remote trace source for local-only deployments (no swarm subscription).

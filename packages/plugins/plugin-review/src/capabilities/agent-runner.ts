@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -58,22 +58,22 @@ const baseInstructions = trim`
 const EditAnchoredRangeTool = Tool.make('editAnchoredRange', {
   description:
     'Replace the text of the anchored selection in the markdown document. Call this for in-place edits when a <selection> is provided.',
-  parameters: {
-    replacement: Schema.String.annotations({
+  parameters: Schema.Struct({
+    replacement: Schema.String.annotate({
       description: 'The new text for the anchored range. Only this span will be replaced.',
     }),
-  },
+  }),
   success: Schema.String,
 });
 
 const UpdateDocumentTool = Tool.make('updateDocument', {
   description:
     'Replace the entire markdown content of the document. Call this for in-place edits when there is no anchored selection.',
-  parameters: {
-    content: Schema.String.annotations({
+  parameters: Schema.Struct({
+    content: Schema.String.annotate({
       description: 'The full new markdown content of the document.',
     }),
-  },
+  }),
   success: Schema.String,
 });
 

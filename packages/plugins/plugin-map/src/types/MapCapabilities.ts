@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type GeoMarker, type LatLngLiteral } from '@dxos/react-ui-geo';
@@ -18,13 +19,11 @@ const LatLngLiteralSchema = Schema.Struct({
   lng: Schema.Number,
 });
 
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    type: Schema.Literal('globe', 'map'),
-    center: Schema.optional(LatLngLiteralSchema),
-    zoom: Schema.optional(Schema.Number),
-  }),
-);
+export const StateSchema = Schema.Struct({
+  type: Schema.Literals(['globe', 'map']),
+  center: Schema.optional(LatLngLiteralSchema),
+  zoom: Schema.optional(Schema.Number),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type State = {
   type: MapControlType;
@@ -75,4 +74,4 @@ export type MarkerProvider = {
 export const MarkerProvider = Capability.make<MarkerProvider>()(`${meta.profile.key}.capability.markerProvider`);
 
 // TODO(wittjosiah): Factor out?
-export const LocationAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Location');
+export const LocationAnnotationId = '@dxos/plugin-map/annotation/Location';

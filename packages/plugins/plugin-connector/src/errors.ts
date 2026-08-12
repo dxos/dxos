@@ -119,14 +119,14 @@ export class ConnectionAuthExpiredError extends BaseError.extend('ConnectionAuth
  * `@effect/platform`'s `ResponseError`.
  */
 export const isUnauthorizedError = (error: unknown): boolean => {
-  if (!Predicate.isRecord(error)) {
+  if (!Predicate.isObject(error)) {
     return false;
   }
   if (error.code === 401 || error.status === 401) {
     return true;
   }
-  if (Predicate.isRecord(error.context) && (error.context.code === 401 || error.context.status === 401)) {
+  if (Predicate.isObject(error.context) && (error.context.code === 401 || error.context.status === 401)) {
     return true;
   }
-  return error._tag === 'ResponseError' && Predicate.isRecord(error.response) && error.response.status === 401;
+  return error._tag === 'ResponseError' && Predicate.isObject(error.response) && error.response.status === 401;
 };

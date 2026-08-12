@@ -69,7 +69,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('makeDelegationStrategy', () => {
-  it.scoped(
+  it.effect(
     'replies immediately, delegates to a sub-agent, and folds the result back',
     Effect.fnUntraced(
       function* ({ expect }) {

@@ -51,9 +51,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "@effect/platform-browser": "catalog:",
-    "@effect/rpc": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

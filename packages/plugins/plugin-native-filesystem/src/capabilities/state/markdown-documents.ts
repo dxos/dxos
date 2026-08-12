@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -104,7 +105,7 @@ export type MarkdownDocuments = {
  *     workspace's files (called on close or before refresh).
  */
 export const createMarkdownDocuments = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>,
   getSpaceForWorkspace: (workspaceId: string) => Option.Option<Space>,
   client: Client,
@@ -432,7 +433,7 @@ export const createMarkdownDocuments = (
         }
         yield* Effect.promise(() => space.value.waitUntilReady());
         yield* restoreWorkspaceDocuments(workspace).pipe(
-          Effect.catchAll((error) =>
+          Effect.catch((error) =>
             Effect.sync(() => {
               log.error('restoreWorkspaceDocuments failed', { workspaceId: workspace.id, error });
             }),

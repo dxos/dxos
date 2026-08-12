@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import { render, screen } from '@solidjs/testing-library';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { describe, expect, test } from 'vitest';
 
 import { PluginManagerContext } from '@dxos/app-framework';

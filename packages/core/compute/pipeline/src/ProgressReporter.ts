@@ -33,9 +33,9 @@ export const logSink: ProgressSink = (snapshot) =>
  */
 export const layer = (options: {
   readonly sink: ProgressSink;
-  readonly throttle?: Duration.DurationInput;
+  readonly throttle?: Duration.Input;
 }): Layer.Layer<never, never, Progress.Progress> =>
-  Layer.scopedDiscard(
+  Layer.effectDiscard(
     Effect.gen(function* () {
       const progress = yield* Progress.Progress;
       const throttle = options.throttle ?? '2 seconds';

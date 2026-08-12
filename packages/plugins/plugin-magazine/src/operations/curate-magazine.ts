@@ -94,7 +94,7 @@ const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
         { spaceId: Obj.getDatabase(feed)?.spaceId },
       ).pipe(
         Effect.as(true),
-        Effect.catchAll((error) => Effect.sync(() => (log.catch(error, { feedUrl: feed.url }), false))),
+        Effect.catch((error) => Effect.sync(() => (log.catch(error, { feedUrl: feed.url }), false))),
       ),
     { concurrency: SYNC_CONCURRENCY },
   ).pipe(Effect.map((results) => results.filter(Boolean).length));
@@ -127,9 +127,9 @@ const selectPostIds = (
     };
 
     return yield* Operation.invoke(RunInstructions, { instructions: magazine.instructions, input }, { spaceId }).pipe(
-      Effect.flatMap(Schema.decodeUnknown(Magazine.CurationOutput)),
+      Effect.flatMap(Schema.decodeUnknownEffect(Magazine.CurationOutput)),
       Effect.map((output) => output.posts),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.sync(() => {
           log.warn('curation selection failed', { error });
           return [] as readonly (typeof Magazine.CurationOutput.Type.posts)[number][];

@@ -36,10 +36,9 @@ export interface BlobStoreApi {
 /**
  * Effect service tag for {@link BlobStoreApi}.
  */
-export class BlobStoreApiService extends EffectContext.Tag('@dxos/teleport-extension-object-sync/BlobStoreApi')<
-  BlobStoreApiService,
-  BlobStoreApi
->() {}
+export class BlobStoreApiService extends EffectContext.Service<BlobStoreApiService, BlobStoreApi>()(
+  '@dxos/teleport-extension-object-sync/BlobStoreApi',
+) {}
 
 const BlobMetaCodec = schema.getCodecForType('dxos.echo.blob.BlobMeta');
 

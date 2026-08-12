@@ -83,32 +83,20 @@ catalog:
   '@dxos/log': ^0.10.0
   '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
-  '@effect-atom/atom': ^0.5.3
-  '@effect-atom/atom-react': ^0.5.0
+  '@effect/atom-react': 4.0.0-rc.108
   '@effect-rx/rx-react': ^0.42.4
-  '@effect/ai': 0.36.0
-  '@effect/ai-anthropic': 0.26.0
-  '@effect/ai-openai': 0.40.1
-  '@effect/cli': 0.75.2
-  '@effect/cluster': 0.59.0
-  '@effect/experimental': 0.60.0
+  '@effect/ai-anthropic': 4.0.0-rc.108
+  '@effect/ai-openai': 4.0.0-rc.108
   '@effect/language-service': ^0.86.4
-  '@effect/opentelemetry': ^0.63.0
-  '@effect/platform': 0.96.2
-  '@effect/platform-browser': 0.76.0
-  '@effect/platform-bun': 0.90.0
-  '@effect/platform-node': 0.107.0
-  '@effect/printer': 0.49.0
-  '@effect/printer-ansi': 0.49.0
-  '@effect/rpc': 0.75.1
-  '@effect/sql': 0.51.1
-  '@effect/sql-sqlite-bun': 0.52.0
-  '@effect/sql-sqlite-node': 0.52.0
-  '@effect/sql-sqlite-wasm': 0.52.0
-  '@effect/typeclass': 0.40.0
-  '@effect/vitest': 0.29.0
+  '@effect/opentelemetry': 4.0.0-rc.108
+  '@effect/platform-browser': 4.0.0-rc.108
+  '@effect/platform-bun': 4.0.0-rc.108
+  '@effect/platform-node': 4.0.0-rc.108
+  '@effect/sql-sqlite-bun': 4.0.0-rc.108
+  '@effect/sql-sqlite-node': 4.0.0-rc.108
+  '@effect/sql-sqlite-wasm': 4.0.0-rc.108
+  '@effect/vitest': 4.0.0-rc.108
   '@effect/wa-sqlite': ^0.1.2
-  '@effect/workflow': ^0.18.2
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
   '@excalidraw/excalidraw': ^0.18.0
@@ -415,12 +403,12 @@ catalog:
   defuddle: ^0.18.1
   del: ^5.1.0
   depcheck: ^1.4.7
-  dfx: ^0.127.0
+  dfx: ^1.0.15
   diff: ^8.0.3
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
   dompurify: ^3.3.1
-  effect: 3.21.4
+  effect: 4.0.0-rc.108
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
@@ -482,7 +470,7 @@ catalog:
   ink-table: ^3.1.0
   ink-text-input: ^6.0.0
   interface-blockstore: ^5.2.10
-  ioredis: ^5.3.2
+  ioredis: ^5.9.0
   iso-did: ^1.6.0
   isomorphic-fetch: ^3.0.0
   isomorphic-ws: ^5.0.0
@@ -699,6 +687,7 @@ catalog:
   vitest: 4.1.10
   wait-on: ^8.0.3
   wavefile: ^11.0.0
+  web-ext: ^10.5.0
   web-tree-sitter: ^0.25.10
   webdriverio: ^8.32.4
   webext-bridge: ^6.0.1
@@ -807,7 +796,6 @@ overrides:
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.40': patches/@automerge__automerge-repo@2.6.0-subduction.40.patch
   '@automerge/automerge-subduction@0.16.0': patches/@automerge__automerge-subduction@0.16.0.patch
-  '@effect-atom/atom@0.5.3': patches/@effect-atom__atom@0.5.3.patch
   '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
@@ -817,11 +805,7 @@ patchedDependencies:
 peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
-    '@effect-atom/atom>@effect/experimental': 0.60.0
-    '@effect-atom/atom>@effect/platform': 0.96.2
-    '@effect-atom/atom>@effect/rpc': 0.75.1
     '@effect/vitest>vitest': '>=3.2.0'
-    dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
     partyserver>@cloudflare/workers-types: '>=5.0.0'
     vite-plugin-pwa>vite: '>=7.0.0'

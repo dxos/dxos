@@ -46,9 +46,9 @@ export const CreateSpaceDialog = () => {
         });
         yield* invoke(LayoutOperation.UpdateDialog, { state: false });
       }).pipe(
-        // `catchAllCause`, not `catchAll`: a defect (any rejected promise the create chain wraps with
-        // `Effect.promise`) is invisible to `catchAll`, leaving the dialog open with no error shown.
-        Effect.catchAllCause((cause) =>
+        // `catchCause`, not `catch`: a defect (any rejected promise the create chain wraps with
+        // `Effect.promise`) is invisible to `catch`, leaving the dialog open with no error shown.
+        Effect.catchCause((cause) =>
           Effect.sync(() => {
             log.catch(Cause.squash(cause));
             setError(t('create-space-dialog.error.message'));

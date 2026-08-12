@@ -48,7 +48,7 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * - `data`: Data feed (default).
      * - `trace`: Trace feed.
      */
-    namespace: Schema.optional(Schema.Literal('data', 'trace')),
+    namespace: Schema.optional(Schema.Literals(['data', 'trace'])),
 
     /**
      * Earliest item a pending rewind discards — set when a soft fork is decided but not yet expressed,
@@ -160,12 +160,12 @@ export interface SyncState {
  * Used to provide a specific feed to operations that operate on it without threading
  * the feed as an explicit parameter through every call site.
  */
-export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeedService')<
+export class ContextFeedService extends Context.Service<
   ContextFeedService,
   {
     readonly feed: Feed;
   }
->() {
+>()('@dxos/echo/Feed/ContextFeedService') {
   static layer = (feed: Feed) => Layer.succeed(ContextFeedService, { feed });
 }
 

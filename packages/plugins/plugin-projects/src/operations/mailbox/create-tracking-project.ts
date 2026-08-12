@@ -6,9 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, type DXN, Obj, Ref } from '@dxos/echo';
 import { extractDomain, isFreeMailDomain, normalizeEmail, organizationNameFromDomain } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
@@ -24,6 +26,41 @@ const INSTRUCTIONS = (label: string, senders: readonly string[]) => trim`
 `;
 
 /**
+ * The pipelines a tracking project can bind, each mapping to a mailbox-global operation plus the
+ * inputs that scope it to this project. Adding a pipeline here is what makes it offerable in the
+ * product without teaching the operation anything about projects.
+ */
+const PIPELINES: Record<
+  ProjectOperation.TrackingPipeline,
+  (context: { mailbox: Mailbox.Mailbox; senders: readonly string[] }) => {
+    runnable: DXN.DXN;
+    input: Record<string, unknown>;
+    suffix: string;
+    routineLabel: string;
+  }
+> = {
+  tasks: ({ mailbox, senders }) => ({
+    runnable: ProjectOperation.UpdateProjectTasks.meta.key,
+    input: { mailbox: Ref.make(mailbox), senders },
+    suffix: 'Requests',
+    routineLabel: 'Track',
+  }),
+  summaries: ({ mailbox, senders }) => ({
+    runnable: ProjectOperation.UpdateInvestorLog.meta.key,
+    input: { mailbox: Ref.make(mailbox), domains: senders },
+    suffix: 'Conversations',
+    routineLabel: 'Summarize',
+  }),
+  contacts: ({ mailbox }) => ({
+    runnable: InboxOperation.ExtractCorrespondents.meta.key,
+    // Correspondence is derived against the mailbox owner, not the tracked senders.
+    input: { mailbox: Ref.make(mailbox), me: Mailbox.identityAddresses(mailbox) },
+    suffix: 'Contacts',
+    routineLabel: 'Extract contacts for',
+  }),
+};
+
+/**
  * Creates a tracking project from one message — the "project from a sender" flow: the sender's
  * corporate domain defines the tracked group (them and their colleagues; a free-mail sender is
  * tracked by exact address), the project scaffold owns instructions + task set, a feed-triggered
@@ -32,38 +69,43 @@ const INSTRUCTIONS = (label: string, senders: readonly string[]) => trim`
  */
 const handler = ProjectOperation.CreateTrackingProject.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ mailbox: mailboxRef, message }) {
+    Effect.fnUntraced(function* ({ mailbox: mailboxRef, message, scope, pipeline = 'tasks', name }) {
       const mailbox = yield* Database.load(mailboxRef);
       const feed = yield* Database.load(mailbox.feed);
       const { db } = yield* Database.Service;
 
       const email = normalizeEmail(message.sender?.email);
       if (!email) {
-        return yield* Effect.dieMessage('Message has no sender email.');
+        return yield* Effect.die(new Error('Message has no sender email.'));
       }
+      // The domain the project follows, or undefined to track the individual. A free-mail domain
+      // identifies no organization, so it can never widen the scope to a "team" — it degrades to the
+      // sender rather than following every gmail.com address.
       const domain = extractDomain(email);
-      // Corporate domain → track the whole team; free-mail → track the individual only.
-      const corporate = !!domain && !isFreeMailDomain(domain);
-      const senders = corporate ? [domain] : [email];
-      const label = corporate ? organizationNameFromDomain(domain) : (message.sender?.name ?? email);
+      const group =
+        (scope ?? 'domain') === 'domain' && domain !== undefined && !isFreeMailDomain(domain) ? domain : undefined;
+      const senders = group ? [group] : [email];
+      const label = group ? organizationNameFromDomain(group) : (message.sender?.name ?? email);
 
+      const { runnable, input, suffix, routineLabel } = PIPELINES[pipeline]({ mailbox, senders });
       const project = db.add(
         scaffoldProject({
-          name: `${label} — Requests`,
+          name: name ?? `${label} — ${suffix}`,
           text: INSTRUCTIONS(label, senders),
           objects: [Ref.make(mailbox)],
         }),
       );
 
-      // The tracking routine: fires per new feed message, runs the deterministic task pipeline.
-      // Disabled until the user enables it (same convention as the template-scaffolded routines).
+      // The routine: fires per new feed message and runs the chosen pipeline as a runnable — no
+      // model sits between the trigger and the operation. Disabled until the user enables it (the
+      // convention every template-scaffolded routine follows).
       const routine = makeRoutine({
-        name: `Track ${label}`,
-        spec: { kind: 'runnable', runnable: Ref.fromURI(ProjectOperation.UpdateProjectTasks.meta.key) },
+        name: `${routineLabel} ${label}`,
+        spec: { kind: 'runnable', runnable: Ref.fromURI(runnable) },
         trigger: Trigger.make({
           enabled: false,
           spec: Trigger.specFeed(feed),
-          input: { project: Ref.make(project), mailbox: Ref.make(mailbox), senders },
+          input: { project: Ref.make(project), ...input },
           concurrency: 1,
         }),
       });
@@ -72,12 +114,13 @@ const handler = ProjectOperation.CreateTrackingProject.pipe(
         project.routines = [...project.routines, Ref.make(routine)];
       });
 
-      // Initial backfill: the feed's existing history becomes the starting task set.
-      const backfill = yield* syncProjectTasks(project, mailbox, senders);
+      // Initial backfill, for the pipeline that has one: the feed's existing history becomes the
+      // starting task set, so the project is useful before its first trigger fires.
+      const backfill = pipeline === 'tasks' ? yield* syncProjectTasks(project, mailbox, senders) : { created: 0 };
       yield* Effect.promise(() => db.flush());
 
-      log.info('tracking-project: created', { project: project.name, senders, tasks: backfill.created });
-      return { projectId: project.id, senders, tasks: backfill.created };
+      log.info('tracking-project: created', { project: project.name, senders, pipeline, tasks: backfill.created });
+      return { projectId: project.id, senders, pipeline, tasks: backfill.created };
     }),
   ),
   Operation.opaqueHandler,

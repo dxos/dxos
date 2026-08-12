@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { Note } from './Note';
 
@@ -19,6 +20,6 @@ export const Sequence = Schema.Struct({
   /** Length in beats. */
   length: Schema.Number,
   notes: Schema.mutable(Schema.Array(Note)),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Sequence extends Schema.Schema.Type<typeof Sequence> {}

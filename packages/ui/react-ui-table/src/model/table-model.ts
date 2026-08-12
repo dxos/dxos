@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
@@ -37,7 +38,7 @@ import { type FieldSortType, tableSortAspect } from './table-view-state';
  */
 export type TableChangeCallback<T extends TableRow> = {
   /** Callback to wrap table object mutations. */
-  table: (mutate: (mutableTable: Table.Table) => void) => void;
+  table: (mutate: (mutableTable: Mutable<Table.Table>) => void) => void;
   /** Callback to wrap row mutations. */
   row: (row: T, mutate: (mutableRow: T) => void) => void;
 };
@@ -107,7 +108,7 @@ const defaultFeatures: TableFeatures = {
 export type InsertRowResult = 'draft' | 'final';
 
 export type TableModelProps<T extends TableRow = TableRow> = {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   object: Table.Table;
   projection: ProjectionModel;
   db?: Database.Database;
@@ -136,7 +137,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 };
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
   private readonly _object: Table.Table;
   private readonly _projection: ProjectionModel;
   private readonly _db?: Database.Database;

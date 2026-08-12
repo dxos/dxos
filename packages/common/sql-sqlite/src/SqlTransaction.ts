@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 export interface Service {
   withTransaction: <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E | SqlError.SqlError, R>;
@@ -28,7 +28,7 @@ export interface Service {
  * }));
  * ```
  */
-export class SqlTransaction extends Context.Tag('@dxos/sql-sqlite/SqlTransaction')<SqlTransaction, Service>() {}
+export class SqlTransaction extends Context.Service<SqlTransaction, Service>()('@dxos/sql-sqlite/SqlTransaction') {}
 
 /**
  * Default `SqlTransaction` layer backed by `SqlClient.withTransaction`.
@@ -37,7 +37,7 @@ export const layer: Layer.Layer<SqlTransaction, never, SqlClient.SqlClient> = La
   SqlTransaction,
   Effect.map(
     SqlClient.SqlClient,
-    (sql: SqlClient.SqlClient): Context.Tag.Service<SqlTransaction> => ({
+    (sql: SqlClient.SqlClient): Service => ({
       withTransaction: (self) => sql.withTransaction(self),
     }),
   ),

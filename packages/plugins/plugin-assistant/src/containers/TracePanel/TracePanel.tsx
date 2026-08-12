@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Data from 'effect/Data';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -194,6 +193,11 @@ const useExecutionGraph = (
   return useAtomValue(atom);
 };
 
+/** Identity for the graph: only a process appearing, disappearing or changing state redraws it. */
+const sameProcesses = (left: readonly Process.Info[], right: readonly Process.Info[]): boolean =>
+  left.length === right.length &&
+  left.every((process, index) => process.pid === right[index].pid && process.state === right[index].state);
+
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
@@ -205,13 +209,13 @@ const getExecutionGraph = (
     processesAtom,
     Atom.debounce(Duration.millis(500)),
     Atom.map((processes) =>
-      // `Data.array` does structural comparison on the array elements.
-      Data.array(
-        processes
-          .filter((process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
-          .map(Data.struct),
+      processes.filter(
+        (process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING,
       ),
     ),
+    // The monitor rebuilds the process list on every poll, so without a structural comparison the
+    // graph would be rebuilt on each tick even when nothing moved.
+    Atom.withEquality(sameProcesses),
   );
 
   return Atom.make((get) =>

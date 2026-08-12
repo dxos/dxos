@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
@@ -13,9 +14,8 @@ import { TextComponent } from './Text';
 // Kept out of `Text.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
 
-export const TextShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const TextShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('text'),
   }),
 );

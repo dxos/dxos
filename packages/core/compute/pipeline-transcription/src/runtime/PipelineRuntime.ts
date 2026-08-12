@@ -79,10 +79,9 @@ type Enriched = { readonly write: StageWrite; readonly window: Slice };
  * receiving `ctx: StageContext` as an explicit parameter; only this module's internal wiring into
  * `@dxos/pipeline` goes through Effect's Context/Layer mechanism.
  */
-class StageContextService extends Context.Tag('@dxos/pipeline-transcription/StageContextService')<
-  StageContextService,
-  StageContext
->() {}
+class StageContextService extends Context.Service<StageContextService, StageContext>()(
+  '@dxos/pipeline-transcription/StageContextService',
+) {}
 
 const triggerMatches = (stage: Stage<any, any>, kind: TranscriptEvent['kind']): boolean =>
   (stage.trigger === 'per-block' && kind === 'block') ||
@@ -105,12 +104,14 @@ const windowTrigger = (
   const blocks = config?.window?.blocks ?? stage.window?.blocks;
   return (input) =>
     input.pipe(
-      Stream.mapAccum([] as Slice, (window, event) => {
-        const next = event.kind === 'block' ? [...window, event.block].slice(-MAX_WINDOW) : window;
-        const slice = triggerMatches(stage, event.kind) ? (blocks ? next.slice(-blocks) : next) : undefined;
-        return [next, slice];
-      }),
-      Stream.filter((slice): slice is Slice => slice !== undefined),
+      Stream.mapAccum(
+        () => [] as Slice,
+        (window, event) => {
+          const next = event.kind === 'block' ? [...window, event.block].slice(-MAX_WINDOW) : window;
+          const slice = triggerMatches(stage, event.kind) ? (blocks ? next.slice(-blocks) : next) : undefined;
+          return [next, slice === undefined ? [] : [slice]] as const;
+        },
+      ),
     );
 };
 
@@ -140,7 +141,7 @@ const runStage = (
         onTelemetry?.({ stageId: stage.id, model, trigger, durationMs, outcome: 'committed' });
         return { write, window: slice };
       }).pipe(
-        Effect.catchAllCause((cause) =>
+        Effect.catchCause((cause) =>
           Effect.sync(() => {
             log.catch(Cause.squash(cause));
             onTelemetry?.({ stageId: stage.id, model, trigger, durationMs: 0, outcome: 'error' });
@@ -171,8 +172,8 @@ const run = (options: RunOptions): Effect.Effect<void> =>
       // Isolate commit failures per write: a failed commit must not fail its branch (which, under the
       // unbounded `Effect.forEach`, would interrupt the sibling branches). Log and drop instead.
       const sink: Pipeline.Sink<Enriched> = ({ write, window }) =>
-        commit(write, window).pipe(Effect.catchAllCause((cause) => Effect.sync(() => log.catch(Cause.squash(cause)))));
-      const branches = yield* source.pipe(Stream.broadcast(enabled.length, BROADCAST_BUFFER));
+        commit(write, window).pipe(Effect.catchCause((cause) => Effect.sync(() => log.catch(Cause.squash(cause)))));
+      const branches = yield* source.pipe(Stream.broadcastN({ n: enabled.length, capacity: BROADCAST_BUFFER }));
 
       yield* Effect.forEach(
         branches,
