@@ -20,10 +20,55 @@ runs:
       shell: bash
 
     # TODO(wittjosiah): Install moon in docker image?
+    # Tolerated rather than trusted: this step installs proto and moon over two unretried hops — it
+    # curls an install script, and the script curls a GitHub release with a bare `curl --fail
+    # --location` (proto.sh:111). One 503 from either fails the step and took the whole job with it
+    # until the fallback below existed.
     - uses: moonrepo/setup-toolchain@v0
+      id: toolchain
+      continue-on-error: true
       with:
         moon-version: ${{ steps.pins.outputs.moon }}
         proto-version: ${{ steps.pins.outputs.proto }}
+
+    # Only the restored toolchain cache is lost when the step above fails — `moon setup` reinstalls
+    # what it held, so a retried install here is enough to save the job.
+    - name: Reinstall proto and moon
+      if: steps.toolchain.outcome == 'failure'
+      env:
+        PINNED_MOON: ${{ steps.pins.outputs.moon }}
+        PINNED_PROTO: ${{ steps.pins.outputs.proto }}
+      run: |
+        proto_home="${PROTO_HOME:-$HOME/.proto}"
+        scripts=https://raw.githubusercontent.com/moonrepo/moon/refs/heads/master/website/static/install
+        mkdir -p "$proto_home/temp" "$proto_home/bin"
+        # moon.sh defaults to ~/.moon/bin; the action puts it beside proto and so does this.
+        export MOON_INSTALL_DIR="$proto_home/bin"
+        install_tool() {
+          tool=$1
+          version=$2
+          shift 2
+          script="$proto_home/temp/$tool-retry.sh"
+          for attempt in 1 2 3; do
+            if curl -fsSL --retry 3 --retry-all-errors -o "$script" "$scripts/$tool.sh" &&
+              bash "$script" "$version" "$@"; then
+              return 0
+            fi
+            if [ "$attempt" != 3 ]; then
+              echo "::warning::Installing $tool $version failed (attempt $attempt of 3), retrying."
+              sleep $((attempt * 5))
+            fi
+          done
+          echo "::error::Could not install $tool $version."
+          return 1
+        }
+        # proto.sh finishes by running `proto setup`, which prompts for a shell profile to edit unless it
+        # is told not to — the action gets away without these only because proto reads CI from the env.
+        install_tool proto "$PINNED_PROTO" --yes --no-modify-profile
+        install_tool moon "$PINNED_MOON"
+        # The action adds these before it installs anything, but not if it failed even earlier.
+        printf '%s\n' "$proto_home/bin" "$proto_home/shims" >> "$GITHUB_PATH"
+      shell: bash
 
     # moon's SetupProto action — which every `moon setup` and `moon run` schedules — probes for
     # `$PROTO_HOME/tools/proto/<version>/proto` and downloads proto from GitHub when it is absent.
