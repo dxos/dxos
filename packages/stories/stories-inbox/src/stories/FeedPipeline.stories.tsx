@@ -19,11 +19,12 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ProgressMeter, useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, createKvsStore } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as Assistant from '@dxos/plugin-assistant/Assistant';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -558,6 +559,23 @@ const StoryProcessPlugin = Plugin.define(
       Effect.succeed([Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet)]),
     ),
   ),
+  // The assistant Settings capability the TracePanel (Trace/SwarmTrace cells) requires — contributed
+  // directly rather than by installing AssistantPlugin, whose AiService LayerSpec would displace the
+  // per-variant story AiService (the canned trip payloads broke with AiModelNotAvailableError).
+  Plugin.addModule(
+    Capability.inlineModule('AssistantSettings', { provides: [AssistantCapabilities.Settings] }, () =>
+      Effect.succeed([
+        Capability.contribute(
+          AssistantCapabilities.Settings,
+          createKvsStore({
+            key: 'org.dxos.plugin.inbox.story.assistant',
+            schema: Assistant.Settings,
+            defaultValue: () => ({}),
+          }),
+        ),
+      ]),
+    ),
+  ),
   Plugin.make,
 );
 
@@ -637,8 +655,6 @@ const meta = {
         }),
         StorybookPlugin({}),
         SpacePlugin({}),
-        // TracePanel (StoryRole.Trace / SwarmTrace cells) needs the assistant Settings capability.
-        AssistantPlugin(),
         InboxPlugin(),
         BrainPlugin(),
         ConnectorPlugin(),

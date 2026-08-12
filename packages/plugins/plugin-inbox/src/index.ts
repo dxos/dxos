@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Remove export! Pass range via operation.
-
 export * as Calendar from './types/Calendar';
 export * as DraftEvent from './types/DraftEvent';
 export * as ExtractedFrom from './types/ExtractedFrom';
