@@ -346,19 +346,19 @@ const meta = {
                 return;
               }
 
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
+                const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
                 switch (args.seed) {
                   case 'fixture':
-                    return seedFromFixture(defaultSpace);
+                    return seedFromFixture(space, mailbox);
                   case 'crm':
-                    return seedFromObjects(defaultSpace);
+                    return seedFromObjects(space, mailbox);
                   case 'demo':
-                    return seedFromMessages(defaultSpace);
-                  case 'live': {
-                    defaultSpace.db.add(Mailbox.make());
-                    await defaultSpace.db.flush({ indexes: true });
-                  }
+                    return seedFromMessages(space, mailbox);
+                  case 'live':
+                    // Empty mailbox: the connector flow populates it.
+                    return space.db.flush({ indexes: true });
                 }
               });
             }),

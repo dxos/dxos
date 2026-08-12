@@ -110,9 +110,11 @@ export const seedDemoMessages = (feed: Feed.Feed): Effect.Effect<void, never, Da
  * demo messages when no corpus has been pulled (CI, fresh checkout). The dev server SPA-fallbacks
  * unknown paths with HTML, so gate on the content type rather than the status alone.
  */
-export const seedFromFixture = async (space: Space, fixture = 'mailbox'): Promise<Mailbox.Mailbox> => {
-  const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
-  await space.db.flush();
+export const seedFromFixture = async (
+  space: Space,
+  mailbox: Mailbox.Mailbox,
+  fixture = 'mailbox',
+): Promise<Mailbox.Mailbox> => {
   const response = await fetch(`/fixtures/${fixture}.json`).catch(() => undefined);
   if (response?.ok && response.headers.get('content-type')?.includes('application/json')) {
     const archived: unknown[] = await response.json();
@@ -126,9 +128,7 @@ export const seedFromFixture = async (space: Space, fixture = 'mailbox'): Promis
 };
 
 /** Adds a Mailbox with the shared demo messages on its feed (no Organizations). */
-export const seedFromMessages = async (space: Space): Promise<Mailbox.Mailbox> => {
-  const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
-  await space.db.flush();
+export const seedFromMessages = async (space: Space, mailbox: Mailbox.Mailbox): Promise<Mailbox.Mailbox> => {
   const feed = await mailbox.feed.load();
   await EffectEx.runPromise(seedDemoMessages(feed).pipe(Effect.provide(Database.layer(space.db))));
   await space.db.flush({ indexes: true });
@@ -136,9 +136,7 @@ export const seedFromMessages = async (space: Space): Promise<Mailbox.Mailbox> =
 };
 
 /** Adds a Mailbox with the shared demo messages on its feed, plus the extraction-gate Organizations. */
-export const seedFromObjects = async (space: Space): Promise<Mailbox.Mailbox> => {
-  const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
-  await space.db.flush();
+export const seedFromObjects = async (space: Space, mailbox: Mailbox.Mailbox): Promise<Mailbox.Mailbox> => {
   const feed = await mailbox.feed.load();
   await EffectEx.runPromise(seedDemoMessages(feed).pipe(Effect.provide(Database.layer(space.db))));
   ORGANIZATIONS.forEach((organization) => space.db.add(Obj.make(Organization.Organization, organization)));

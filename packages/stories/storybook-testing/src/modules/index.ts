@@ -9,6 +9,7 @@ import { ConfigModule } from './ConfigModule';
 import { DatabaseModule } from './DatabaseModule';
 import { ExecutionGraphModule } from './ExecutionGraphModule';
 import { InvocationsModule } from './InvocationsModule';
+import { JsonModule } from './JsonModule';
 import { LoggingModule } from './LoggingModule';
 import { RoutineModule } from './RoutineModule';
 
@@ -16,6 +17,7 @@ export * from './ConfigModule';
 export * from './DatabaseModule';
 export * from './ExecutionGraphModule';
 export * from './InvocationsModule';
+export * from './JsonModule';
 export * from './LoggingModule';
 export * from './RoutineModule';
 
@@ -29,6 +31,7 @@ export const ModuleRole = {
   Database: Role.make<Record<string, unknown>>('org.dxos.storybook.role.database'),
   ExecutionGraph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.executionGraph'),
   Invocations: Role.make<Record<string, unknown>>('org.dxos.storybook.role.invocations'),
+  Json: Role.make<Record<string, unknown>>('org.dxos.storybook.role.json'),
   Logging: Role.make<Record<string, unknown>>('org.dxos.storybook.role.logging'),
   Routine: Role.make<Record<string, unknown>>('org.dxos.storybook.role.routine'),
 };
@@ -58,6 +61,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.invocations',
     filter: Surface.makeFilter(ModuleRole.Invocations),
     component: InvocationsModule,
+  }),
+  Surface.create({
+    id: 'role.json',
+    filter: Surface.makeFilter(ModuleRole.Json),
+    component: JsonModule,
   }),
   Surface.create({
     id: 'role.logging',

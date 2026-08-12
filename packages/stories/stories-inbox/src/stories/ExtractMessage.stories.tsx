@@ -40,11 +40,11 @@ import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import * as Trip from '@dxos/plugin-trip/Trip';
-import { type Space, useQuery } from '@dxos/react-client/echo';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message as MessageType, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -220,16 +220,7 @@ const ExtractMessageModule = () => {
   }
 
   return (
-    <div className='h-full overflow-auto grid grid-cols-2 gap-2'>
-      <MessageArticle
-        testId='message-article'
-        role='article'
-        subject={message}
-        attendableId='story'
-        mailbox={mailbox}
-      />
-      <JsonHighlighter data={{ message }} />
-    </div>
+    <MessageArticle testId='message-article' role='article' subject={message} attendableId='story' mailbox={mailbox} />
   );
 };
 
@@ -248,13 +239,20 @@ const StoryExtractMessagePlugin = Plugin.define(
             filter: Surface.makeFilter(ExtractMessageRole),
             component: ExtractMessageModule,
           }),
+          ...moduleSurfaces,
         ]),
       ]),
   }),
   Plugin.make,
 );
 
-const DefaultStory = () => <ModuleContainer layout={[[ExtractMessageRole]]} />;
+const DefaultStory = () => {
+  // The JSON cell inspects the live message: query it here (inside the plugin-manager decorator) and
+  // bind it into the layout via the surface cell's `data`.
+  const [space] = useSpaces();
+  const [message] = useQuery(space?.db, Filter.type(MessageType.Message));
+  return <ModuleContainer layout={[[ExtractMessageRole], [{ type: ModuleRole.Json, data: { subject: message } }]]} />;
+};
 
 const meta = {
   title: 'stories/stories-inbox/ExtractMessage',
