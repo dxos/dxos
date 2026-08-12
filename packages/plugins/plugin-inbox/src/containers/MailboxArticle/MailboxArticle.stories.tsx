@@ -38,8 +38,12 @@ import { InboxPlugin } from '../../InboxPlugin';
 import * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as Mailbox from '../../types/Mailbox';
 import { MailboxArticle } from './MailboxArticle';
+import { TestGrid } from './TestGrid';
 
-// No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
+// No-op handler for the one layout operation the article invokes that belongs to DeckPlugin, which
+// this story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin
+// (already in `corePlugins`), and a no-op here would swallow the selection the article publishes —
+// leaving `useSelection` empty and every selection-driven surface dead.
 const MockDeckOperations = Capability.inlineModule(
   'operation-handler',
   { provides: [Capabilities.OperationHandler] },
@@ -47,10 +51,7 @@ const MockDeckOperations = Capability.inlineModule(
     Effect.succeed([
       Capability.contribute(
         Capabilities.OperationHandler,
-        OperationHandlerSet.make(
-          Operation.withHandler(LayoutOperation.Select, () => Effect.void),
-          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-        ),
+        OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
       ),
     ]),
 );
@@ -145,19 +146,23 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-2'>
-      <MailboxArticle role='article' subject={mailbox} attendableId={ATTENDABLE_ID} />
-      <Panel.Root role='article'>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Toolbar.Text>{selected ? 'Selected message' : 'No selection'}</Toolbar.Text>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content data-testid='message-json' classNames='dx-container overflow-auto p-2 text-sm'>
-          {selected && <JsonHighlighter data={messageJson(selected, summaries.get(selected.id))} />}
-        </Panel.Content>
-      </Panel.Root>
-    </div>
+    <TestGrid.Stack>
+      <TestGrid.Panel>
+        <MailboxArticle role='article' subject={mailbox} attendableId={ATTENDABLE_ID} />
+      </TestGrid.Panel>
+      <TestGrid.Panel>
+        <Panel.Root role='article'>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              <Toolbar.Text>{selected ? 'Selected message' : 'No selection'}</Toolbar.Text>
+            </Toolbar.Root>
+          </Panel.Toolbar>
+          <Panel.Content data-testid='message-json' classNames='dx-container overflow-auto p-2 text-sm'>
+            {selected && <JsonHighlighter data={messageJson(selected, summaries.get(selected.id))} />}
+          </Panel.Content>
+        </Panel.Root>
+      </TestGrid.Panel>
+    </TestGrid.Stack>
   );
 };
 

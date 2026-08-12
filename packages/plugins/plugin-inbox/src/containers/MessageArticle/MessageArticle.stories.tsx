@@ -17,7 +17,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
@@ -96,19 +96,23 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-2'>
-      <MessageArticle role='article' subject={subject} mailbox={mailbox} attendableId={ATTENDABLE_ID} />
-      <Panel.Root role='article'>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Toolbar.Text>Selected message</Toolbar.Text>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content data-testid='message-json' classNames='dx-container overflow-auto p-2 text-sm'>
-          <JsonHighlighter data={messageJson(selected, summaries.get(selected.id))} />
-        </Panel.Content>
-      </Panel.Root>
-    </div>
+    <TestGrid.Stack>
+      <TestGrid.Panel>
+        <MessageArticle role='article' subject={subject} mailbox={mailbox} attendableId={ATTENDABLE_ID} />
+      </TestGrid.Panel>
+      <TestGrid.Panel>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              <Toolbar.Text>Selected message</Toolbar.Text>
+            </Toolbar.Root>
+          </Panel.Toolbar>
+          <Panel.Content data-testid='message-json' classNames='dx-container overflow-auto p-2 text-sm'>
+            <JsonHighlighter data={messageJson(selected, summaries.get(selected.id))} />
+          </Panel.Content>
+        </Panel.Root>
+      </TestGrid.Panel>
+    </TestGrid.Stack>
   );
 };
 
