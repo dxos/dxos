@@ -11,12 +11,15 @@ import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
+import { Role } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -33,11 +36,12 @@ import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import * as Trip from '@dxos/plugin-trip/Trip';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { ModuleContainer } from '@dxos/storybook-testing';
 import { Message, Person } from '@dxos/types';
 
 import { TRIP_LEGS, TRIP_MESSAGES } from '../testing';
@@ -110,13 +114,16 @@ const seedFeed = async (space: Space) => {
   await space.db.flush({ indexes: true });
 };
 
+/** Role token for the story-local module, referenced by the `ModuleContainer` layout. */
+const ExtractListRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.extractMessageList');
+
 /**
- * Harness: lists the Mailbox feed's messages, runs `ExtractMessage` over each via the
+ * Story-local module: lists the Mailbox feed's messages, runs `ExtractMessage` over each via the
  * OperationInvoker (the same path the toolbar uses), and reports live counts of Trips / Segments /
  * relations so the play function can assert the outcome from the DOM.
  */
-const DefaultStory = () => {
-  const [space] = useSpaces();
+const ExtractListModule = () => {
+  const space = useActiveSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = mailbox?.feed?.target;
   const messages = useQuery(
@@ -186,6 +193,29 @@ const DefaultStory = () => {
   );
 };
 
+/** Registers the story-local module surface for the `ModuleContainer` layout. */
+const StoryExtractListPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('story.inbox.extractMessageListModule'), name: 'Extract Message List Story Module' }),
+).pipe(
+  Plugin.addModule({
+    id: 'extract-message-list-module',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(Capabilities.ReactSurface, [
+          Surface.create({
+            id: 'inbox.extractMessageList',
+            filter: Surface.makeFilter(ExtractListRole),
+            component: ExtractListModule,
+          }),
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const DefaultStory = () => <ModuleContainer layout={[[ExtractListRole]]} />;
+
 const meta = {
   title: 'stories/stories-inbox/ExtractMessageList',
   render: DefaultStory,
@@ -220,6 +250,7 @@ const meta = {
         MarkdownPlugin(),
         TripPlugin(),
         MockAiServicePlugin(),
+        StoryExtractListPlugin(),
       ],
     }),
   ],

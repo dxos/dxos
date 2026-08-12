@@ -6,12 +6,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
+import { Role } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Database, Feed, Tag } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
@@ -21,6 +27,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useClient } from '@dxos/react-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
+import { ModuleContainer } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 const HOST_STORY_TYPES = [
@@ -59,7 +66,10 @@ const HOST_STORY_CLIENT_SERVICES = persistentClientServices(
   }),
 );
 
-const HostStory = () => {
+/** Role token for the story-local module, referenced by the `ModuleContainer` layout. */
+const HostRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.mailboxHost');
+
+const HostModule = () => {
   const client = useClient();
   const [invitation, setInvitation] = useState<{ code: string; secret?: string; state: string }>();
   const [recoveryCode, setRecoveryCode] = useState<string>();
@@ -192,9 +202,28 @@ const HostStory = () => {
   );
 };
 
+/** Registers the story-local module surface for the `ModuleContainer` layout. */
+const StoryHostPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('story.inbox.mailboxHostModule'), name: 'Mailbox Host Story Module' }),
+).pipe(
+  Plugin.addModule({
+    id: 'mailbox-host-module',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(Capabilities.ReactSurface, [
+          Surface.create({ id: 'inbox.mailboxHost', filter: Surface.makeFilter(HostRole), component: HostModule }),
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const DefaultStory = () => <ModuleContainer layout={[[HostRole]]} />;
+
 const meta = {
   title: 'stories/stories-inbox/MailboxHost',
-  render: HostStory,
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
@@ -231,6 +260,7 @@ const meta = {
         SpacePlugin({}),
         InboxPlugin(),
         StorybookPlugin({}),
+        StoryHostPlugin(),
       ],
     })),
   ],
@@ -239,7 +269,7 @@ const meta = {
     controls: { disable: true },
     translations: [...inboxTranslations],
   },
-} satisfies Meta<typeof HostStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
