@@ -243,6 +243,21 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
 
     return [
       //
+      // The cascade — spawns the tiers below in order (deterministic gate → cheap LLM labels).
+      //
+      {
+        // Ollama drives the story's LLM tiers, so `strict: false` skips the structured-output pass
+        // local models never honor.
+        id: 'enrich',
+        label: 'InboxOperation.EnrichMailbox',
+        run: () =>
+          invoker.invokePromise(
+            InboxOperation.EnrichMailbox,
+            { mailbox: Ref.make(mailbox), me: USER_EMAILS, model: OLLAMA_MODEL, strict: false },
+            { spaceId: space.id },
+          ),
+      },
+      //
       // InboxOperation
       //
       {
@@ -318,6 +333,18 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           invoker.invokePromise(
             InboxOperation.ClassifyMailbox,
             { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL, strict: false },
+            { spaceId: space.id },
+          ),
+      },
+      {
+        // Per-message summaries over contact mail, appended to the mailbox's annotation feed and
+        // merged back into the message article on read.
+        id: 'summarize',
+        label: 'InboxOperation.SummarizeMailbox',
+        run: () =>
+          invoker.invokePromise(
+            InboxOperation.SummarizeMailbox,
+            { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL },
             { spaceId: space.id },
           ),
       },

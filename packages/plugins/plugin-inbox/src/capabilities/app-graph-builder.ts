@@ -422,7 +422,37 @@ export default Capability.makeModule(
               onNone: () => false,
               onSome: (registry) => get(registry.monitorAtom(progressKey))?.status === 'running',
             });
+            const enrichKey = InboxOperation.createEnrichProgressKey(mailbox);
+            const isEnriching = Option.match(progressRegistry, {
+              onNone: () => false,
+              onSome: (registry) => get(registry.monitorAtom(enrichKey))?.status === 'running',
+            });
             return [
+              {
+                // The pipeline cascade the user runs by hand after a first sync: deterministic
+                // extraction, then cheap LLM labelling. Each spawned tier keeps its own cursor, so
+                // a repeat run catches up rather than redoing the mailbox.
+                id: 'enrich',
+                data: () =>
+                  isEnriching
+                    ? Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(enrichKey))
+                    : // Scheduled (not invoked): the cascade is a long run the meter/stop can cancel
+                      // between tiers.
+                      Operation.schedule(
+                        InboxOperation.EnrichMailbox,
+                        { mailbox: Ref.make(mailbox), me: Mailbox.identityAddresses(mailbox) },
+                        { spaceId: db.spaceId },
+                      ),
+                properties: {
+                  label: isEnriching
+                    ? ['stop-enrich-mailbox.label', { ns: meta.profile.key }]
+                    : ['enrich-mailbox.label', { ns: meta.profile.key }],
+                  icon: isEnriching ? 'ph--stop--regular' : 'ph--stack-simple--regular',
+                  disposition: ['toolbar', 'list-item'],
+                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  testId: 'inbox.mailbox.enrich',
+                },
+              },
               {
                 id: 'process',
                 data: () =>

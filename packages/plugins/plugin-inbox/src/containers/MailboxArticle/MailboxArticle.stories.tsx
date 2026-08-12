@@ -6,7 +6,7 @@ import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -17,8 +17,8 @@ import { useCapability } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -26,17 +26,22 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { initializeMailbox } from '#testing';
+import { initializeMailbox, seedSummaries } from '#testing';
 
 import { InboxPlugin } from '../../InboxPlugin';
 import * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as Mailbox from '../../types/Mailbox';
 import { MailboxArticle } from './MailboxArticle';
 
-// No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
+// No-op handler for the one layout operation the article invokes that belongs to DeckPlugin, which
+// this story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin
+// (already in `corePlugins`), and a no-op here would swallow the selection the article publishes —
+// leaving `useSelection` empty and every selection-driven surface dead.
 const MockDeckOperations = Capability.inlineModule(
   'operation-handler',
   { provides: [Capabilities.OperationHandler] },
@@ -44,10 +49,7 @@ const MockDeckOperations = Capability.inlineModule(
     Effect.succeed([
       Capability.contribute(
         Capabilities.OperationHandler,
-        OperationHandlerSet.make(
-          Operation.withHandler(LayoutOperation.Select, () => Effect.void),
-          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-        ),
+        OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
       ),
     ]),
 );
@@ -68,6 +70,20 @@ const SEARCH_TERM = 'invoice';
  * mailbox's search results.
  */
 const HTML_ONLY_TERM = 'htmlonlyterm';
+
+const ATTENDABLE_ID = 'story';
+
+/**
+ * Every content block that belongs to a message — its own, plus the blocks of the annotations
+ * derived from it. Summaries are `Text` blocks with `disposition: 'summary'` living on a second
+ * feed, so a view that reads only `message.blocks` never shows them.
+ */
+const blocksJson = (message: Message.Message, annotations: readonly Message.Message[]) => [
+  ...message.blocks.map((block) => ({ ...block })),
+  ...annotations
+    .filter((annotation) => annotation.parentMessage === message.id)
+    .flatMap((annotation) => annotation.blocks.map((block) => ({ ...block, model: annotation.properties?.model }))),
+];
 
 type StoryArgs = {
   /** Number of messages to seed. */
@@ -95,18 +111,71 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
     }
   }, [conversations, setSettings]);
 
+  // Clicking a row dispatches `LayoutOperation.Select` against the article's `attendableId`, so
+  // reading the same id here follows the list's selection without the story owning any state.
+  const selectedId = useSelection(ATTENDABLE_ID, 'single');
+  // Marks the article's cell as the attended surface, so its selection and keyboard navigation are live.
+  const attentionAttributes = useAttentionAttributes(ATTENDABLE_ID);
+  const feed = useResolveRef(mailbox?.feed);
+  const messages = useQuery(
+    space?.db,
+    feed
+      ? Query.select(Filter.type(Message.Message)).from([Scope.feed(Obj.getURI(feed, { prefer: 'absolute' }))])
+      : Query.select(Filter.nothing()),
+  );
+  const selected = messages.find((message) => message.id === selectedId);
+
+  // Summaries are immutable annotations on a second feed, keyed by `parentMessage` — shown here
+  // because they are not on the message and would otherwise be invisible in this story.
+  const annotationsFeed = useResolveRef(mailbox?.annotations);
+  const annotations = useQuery(
+    space?.db,
+    annotationsFeed
+      ? Query.select(Filter.type(Message.Message)).from([
+          Scope.feed(Obj.getURI(annotationsFeed, { prefer: 'absolute' })),
+        ])
+      : Query.select(Filter.nothing()),
+  );
+  const summary = useMemo(
+    () => (selected ? Mailbox.summaryIndex(annotations).get(selected.id) : undefined),
+    [annotations, selected],
+  );
+
   if (!space?.db || !mailbox) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
   }
 
-  return <MailboxArticle role='article' subject={mailbox} attendableId='story' />;
+  return (
+    <TestGrid.Root>
+      <TestGrid.Stack>
+        <TestGrid.Panel {...attentionAttributes}>
+          <MailboxArticle role='article' subject={mailbox} attendableId={ATTENDABLE_ID} />
+        </TestGrid.Panel>
+        {selected && (
+          <TestGrid.Stack orientation='vertical'>
+            <TestGrid.Panel className='overflow-auto'>
+              {summary && (
+                <div className='p-2 text-sm text-description' data-testid='message-summary'>
+                  {summary}
+                </div>
+              )}
+              <JsonHighlighter data={selected} />
+            </TestGrid.Panel>
+            <TestGrid.Panel className='overflow-auto p-2 text-sm'>
+              <JsonHighlighter data={blocksJson(selected, annotations)} />
+            </TestGrid.Panel>
+          </TestGrid.Stack>
+        )}
+      </TestGrid.Stack>
+    </TestGrid.Root>
+  );
 };
 
 const meta = {
   title: 'plugins/plugin-inbox/containers/MailboxArticle',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false, bound = false } }) => ({
       plugins: [
         ...corePlugins(),
@@ -163,9 +232,13 @@ const meta = {
                   yield* Feed.append(feed, [...messages, htmlOnlyMessage]).pipe(
                     Effect.provide(Database.layer(defaultSpace.db)),
                   );
+                  // Half the messages carry a derived summary, so the annotation merge is exercised
+                  // against a realistic mix rather than an all-or-nothing one.
+                  yield* Effect.promise(() => seedSummaries(defaultSpace.db, mailbox));
                 }
               } else {
                 const mailbox = yield* Effect.promise(() => initializeMailbox(defaultSpace.db, count, threads));
+                yield* Effect.promise(() => seedSummaries(defaultSpace.db, mailbox));
                 if (bound) {
                   const accessToken = defaultSpace.db.add(
                     AccessToken.make({ source: 'imap.example.com', account: 'user@example.com', token: 'story-token' }),
@@ -198,19 +271,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Both variants force the setting explicitly: the settings store persists across runs, so an
-// omitted value would inherit whatever a prior session wrote rather than the product default.
 export const Default: Story = {
   args: {
-    count: 500,
+    count: 50,
   },
 };
 
-// TODO(wittjosiah): Remove? Conversation grouping is on by default now, so `Default` already covers
-// it — this exists only to exercise the flat/ungrouped fallback (`conversations: false`).
 export const Flat: Story = {
   args: {
-    count: 500,
+    count: 50,
     conversations: false,
   },
 };
