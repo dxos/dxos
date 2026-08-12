@@ -1,9 +1,10 @@
 # stories-brain research tasks
 
-_Resume: PR #12546 MERGED 2026-08-12 (squash `12b6618058`) — the enrichment cascade, the story/summary
-commits and all 8 review fixes are all on `main`. Next action: create-project-from-message UI
-(PLAN.md deliverable 3 — the operation exists, the message-context form does not), then summary
-provenance (`model`/`created`) in the article. Uncommitted: none._
+_Resume: PR #12546 MERGED 2026-08-12 (squash `12b6618058`); since then, on this branch: the
+conversation summary is its own tile at the foot of the ConversationStack (`5a50523dca`) and carries
+its provenance (`54ddecd421`). Next action: whole-conversation summarization — thread-scoped input to
+`SummarizeMailbox`, then `dx-anchor` DXN links to referenced entities, then task extraction rendered
+as a markdown task list. Uncommitted: none._
 
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
@@ -140,11 +141,24 @@ analyze`) with a mailbox-global default and per-project overrides (user chose op
       gutter; the duplicate inside each expanded message is gone. `Mailbox.conversationSummary` picks
       the newest summarized message in the thread (a seam for a future thread-level annotation).
       `MessageArticle.stories` now seeds summaries and the Spec play test asserts the tile.
-- [ ] **Whole-conversation summarization + eval** — summaries are derived per message today; they
-      should consider the entire thread, with a test framework/eval scoring the result. (Issue 1 of
-      the two raised 2026-08-12; the tile above was issue 2.)
-- [ ] **Summary provenance in the article** — the annotation records its `model` and `created`;
-      the summary tile shows neither.
+- [ ] **Whole-conversation summarization** (IN PROGRESS 2026-08-12) — three parts, in this order:
+  - Thread-scoped input: summarize the whole conversation (every message in the `threadId`), not each
+    message in isolation. The annotation still names a parent, so the read model keeps working.
+  - `dx-anchor` links (ECHO DXNs) to entities the summary references — Person, Organization, etc.
+  - Task extraction, rendered as a markdown task list with those links at the foot of the summary.
+- [ ] **Regenerate a summary with extra instructions** — the user re-runs summarization for a
+      conversation while adding guidance ("focus on the contract terms", "who owes what?"), either
+      from the MessageArticle UI or the companion chat. Re-derivation already appends and supersedes,
+      so the storage model needs nothing; the missing pieces are the instruction input surface and an
+      operation input for it.
+- [ ] **Summarization eval** — score thread summaries (coverage/faithfulness/task-extraction
+      precision) so a prompt change is measurable; reuses `judge.ts` per the model-ladder work below.
+- [x] **Summary provenance in the article** — the summary tile's header carries `model · age`
+      (`summary-provenance.label`), the full model id as its `title`, and the age is the ANNOTATION's
+      `created`, not the message's, so a summary that predates the newest replies reads as stale.
+      `Mailbox.conversationSummary` now takes the annotations rather than a `summaryIndex` map, since
+      the map discards provenance; `modelLabel` shortens `com.anthropic.model.claude-haiku-4-5.default`
+      for display.
 - [ ] **Story invoker wedge (env)** — in the dev storybook, an operation's FIRST invocation after a
       server restart often hangs (lazy-handler vite load?) and `invokePromise` results render `{}`
       even when the operation completes (ECHO side-effects land). Unit tests unaffected. Needs an

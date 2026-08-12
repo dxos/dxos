@@ -155,25 +155,37 @@ describe('Mailbox annotations', () => {
     expect(entry.annotations.map(Mailbox.getSummaryText)).toEqual(['Better summary.', 'Draft summary.']);
   });
 
-  test('the conversation summary is the newest summarized message in the thread', async ({ expect }) => {
-    // `id`/`created` is all the selection reads, so the fixture is plain objects — no db needed.
-    const messages = [
-      { id: 'a', created: '2026-07-01T00:00:00.000Z' },
-      { id: 'b', created: '2026-07-03T00:00:00.000Z' },
-      { id: 'c', created: '2026-07-02T00:00:00.000Z' },
-    ];
+  test('the conversation summary is the newest annotation in the thread, with its provenance', async ({ expect }) => {
+    // Real messages, since `parentMessage` is a ULID; only their ids matter to the selection.
+    const { messages } = await createMailbox(3);
+    const [first, , third] = messages;
 
-    // Newest by `created`, NOT last in the given order — the article reorders drafts inline, so
-    // position in the list is not chronology.
-    const summaries = new Map([
-      ['a', 'Oldest.'],
-      ['c', 'Middle.'],
-    ]);
-    expect(Mailbox.conversationSummary(messages, summaries)).toEqual({ summary: 'Middle.', messageId: 'c' });
+    // Newest by the ANNOTATION's date, not the message's: a re-derivation supersedes, and the age
+    // shown in the article is the age of the summary.
+    const older = Mailbox.makeSummary({
+      message: third,
+      text: 'Older.',
+      model: 'haiku',
+      created: '2026-07-01T00:00:00.000Z',
+    });
+    const newer = Mailbox.makeSummary({ message: first, text: 'Newer.', created: '2026-07-02T00:00:00.000Z' });
+    expect(Mailbox.conversationSummary(messages, [older, newer])).toEqual({
+      summary: 'Newer.',
+      messageId: first.id,
+      created: '2026-07-02T00:00:00.000Z',
+    });
 
-    // The newest message being unsummarized must not blank the conversation.
-    expect(Mailbox.conversationSummary(messages, new Map([['a', 'Oldest.']]))?.summary).toBe('Oldest.');
-    expect(Mailbox.conversationSummary(messages, new Map())).toBeUndefined();
+    // Provenance rides along when the annotation recorded a model.
+    expect(Mailbox.conversationSummary(messages, [older])).toEqual({
+      summary: 'Older.',
+      messageId: third.id,
+      model: 'haiku',
+      created: '2026-07-01T00:00:00.000Z',
+    });
+
+    // An annotation naming a message OUTSIDE this thread is not this conversation's summary.
+    expect(Mailbox.conversationSummary([first], [older])).toBeUndefined();
+    expect(Mailbox.conversationSummary(messages, [])).toBeUndefined();
   });
 
   test('annotations never leak into the message feed', async ({ expect }) => {

@@ -35,7 +35,7 @@ import { meta } from '#meta';
 import type * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as Mailbox from '../../types/Mailbox';
 import * as SystemTags from '../../types/SystemTags';
-import { createDraftMessage, getMessageProps } from '../../util';
+import { createDraftMessage, formatAge, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
@@ -375,11 +375,23 @@ type ConversationSummaryTileProps = {
 };
 
 /**
+ * Display form of a model id: `com.anthropic.model.claude-haiku-4-5.default` reads as
+ * `claude-haiku-4-5`. The full id is the reproducible one, so it stays as the title attribute.
+ */
+const modelLabel = (model: string): string => model.replace(/^.*\.model\./, '').replace(/\.default$/, '');
+
+/**
  * The conversation's derived summary, as the last tile under the messages. Rendered as markdown: the
  * summarization pipeline writes `text/markdown` blocks.
+ *
+ * The header carries the summary's provenance (model + when it was derived), which is what tells a
+ * reader whether it predates the newest replies — a summary is advisory, so it must be datable.
  */
 const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // Recomputed per render rather than ticked: the tile re-renders whenever the annotation feed does,
+  // and an age this coarse does not warrant a timer.
+  const age = formatAge(new Date(summary.created), new Date());
   return (
     <div
       role='complementary'
@@ -398,7 +410,12 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
         </div>
       </div>
       <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
-        <h2 className='text-sm font-medium text-description'>{t('conversation-summary.title')}</h2>
+        <div className='flex items-baseline gap-2 text-sm text-description'>
+          <h2 className='font-medium'>{t('conversation-summary.title')}</h2>
+          <span className='text-subdued truncate' title={summary.model} data-testid='conversation.summary.provenance'>
+            {summary.model ? t('summary-provenance.label', { model: modelLabel(summary.model), age }) : age}
+          </span>
+        </div>
         <MarkdownViewer content={summary.summary} />
       </div>
     </div>

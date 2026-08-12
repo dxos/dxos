@@ -424,33 +424,55 @@ export const summaryIndex = (annotations: Iterable<MessageLike>): Map<string, st
   return index;
 };
 
-/** A conversation's summary, with the message it was derived from so the UI can attribute it. */
+/** A conversation's summary and its provenance, so the UI can attribute and date it. */
 export type ConversationSummary = {
   readonly summary: string;
+  /** Message the summary was derived from. */
   readonly messageId: string;
+  /** Model that produced it, when the annotation recorded one. */
+  readonly model?: string;
+  /** When it was derived — NOT the message's date, so a stale summary reads as stale. */
+  readonly created: string;
 };
 
 /**
  * The summary shown for a whole conversation. Summarization runs per message today, so this is the
- * newest summarized message in the thread; keeping the selection here means a future thread-level
- * annotation can replace it without touching the article.
+ * newest annotation naming any message in the thread; keeping the selection here means a future
+ * thread-level annotation can replace it without touching the article.
+ *
+ * Takes the annotations rather than a {@link summaryIndex} map because provenance (`model`, `created`)
+ * lives on the annotation Message, which the map discards.
  */
 export const conversationSummary = (
-  messages: Iterable<Pick<Message.Message, 'id' | 'created'>>,
-  summaries: ReadonlyMap<string, string>,
+  messages: Iterable<Pick<Message.Message, 'id'>>,
+  annotations: Iterable<MessageLike>,
 ): ConversationSummary | undefined => {
-  let newest: { summary: string; messageId: string; created: number } | undefined;
+  const ids = new Set<string>();
   for (const message of messages) {
-    const summary = summaries.get(message.id);
-    if (summary === undefined) {
+    ids.add(message.id);
+  }
+
+  // The summary text and parent id are captured in the loop, where they are known to be present —
+  // narrowing them again afterwards would need non-null assertions.
+  let newest: ConversationSummary | undefined;
+  for (const annotation of annotations) {
+    const parent = annotation.parentMessage;
+    const summary = getSummaryText(annotation);
+    if (!parent || !ids.has(parent) || summary === undefined) {
       continue;
     }
-    const created = Date.parse(message.created);
-    if (!newest || created > newest.created) {
-      newest = { summary, messageId: message.id, created };
+    if (newest && Date.parse(annotation.created) <= Date.parse(newest.created)) {
+      continue;
     }
+    const model = annotation.properties?.model;
+    newest = {
+      summary,
+      messageId: parent,
+      ...(typeof model === 'string' ? { model } : {}),
+      created: annotation.created,
+    };
   }
-  return newest && { summary: newest.summary, messageId: newest.messageId };
+  return newest;
 };
 
 /** A feed message paired with the annotations derived from it. */

@@ -106,7 +106,10 @@ export const MessageArticle = ({
       : Query.select(Filter.nothing()),
   ) as MessageType.Message[];
   const summaries = useMemo(() => Mailbox.summaryIndex(annotations), [annotations]);
-  const conversationSummary = useMemo(() => Mailbox.conversationSummary(messages, summaries), [messages, summaries]);
+  const conversationSummary = useMemo(
+    () => Mailbox.conversationSummary(messages, annotations),
+    [messages, annotations],
+  );
 
   // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
   // bottom (the connector delivers everything in chronological order).
