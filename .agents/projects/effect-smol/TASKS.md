@@ -423,26 +423,39 @@ Order matters — EDGE ships before Composer.
 
 ## Blocked on credentials
 
-- [ ] **Record the missing `agent-runtime` redelivery fixture.** The `AgentService.test.ts` case
-      `recovers queued tool results after reload` fails on a fixture miss that surfaces as a 15s
-      timeout: the agent process fails, then the test waits for a completion that never comes. On a
-      reload, `agent-process.ts` (~L268) redelivers a queued tool result as a synthetic `<result pid=N>`
-      **text** block rather than a tool-result part — main's design (`76dd26df`), not a v4 change —
-      and no fixture in the store records that shape (`grep -rl 'result pid=' .store/conversations`
-      returns nothing). So the path only passes when the result lands before the shutdown and no
-      redelivery happens at all. Needs a real provider call:
-      `DX_ANTHROPIC_API_KEY=… DX_UPDATE_MODEL_FIXTURES=1 moon run agent-runtime:test -- src/agent-service/AgentService.test.ts`.
-      **Regenerate the whole file, never with `-t`** — the suite calls
-      `EntityId.dangerouslyDisableRandomness()` at module scope, so the ID sequence depends on how
-      many tests ran before; a single-test regeneration writes fixtures with IDs that do not match
-      the full-file run and corrupts the rest of the suite (see the `regenerate-model-fixture`
-      skill). `model-fixture` is a deliberately non-required workflow, so this does not block merge.
-- [ ] **Re-port the fixtures the codemod deliberately skipped.** `tools/codemods/migrate-model-fixtures.mjs`
-      applies the `usage` transform store-wide (a v3-shaped record cannot decode at all) but scopes
-      the tool-schema and error-text transforms to `ai` and `agent-runtime` — the only suites whose
-      model-fixture tests execute. The other five suites (`assistant-toolkit` ×2, `agent-runtime`
-      functions/xml-response, …) skip, so rewriting them would be unverifiable invention; they need
-      regenerating when re-enabled.
+`model-fixture` is a deliberately non-required workflow (see the header of
+`.github/workflows/model-fixture.yml`), so none of this blocks merge — but it is green on main and
+red here, so it is migration drift, not pre-existing rot.
+
+- [ ] **Regenerate the `assistant-toolkit` and `agent-runtime` fixtures against a live provider.**
+      A recorded conversation is keyed on its parameters plus prompt, and v4 changed _what the
+      request contains_, so every request in those suites misses. Two independent shifts:
+  - Tool `inputSchema` emission (optional properties become nullable `anyOf`, an empty `required`
+    is dropped, `Schema.Number` gains the non-finite string branch). **Already ported** — run the
+    replay with `DX_DUMP_FIXTURE_TOOLS=<dir>` and feed the dump to
+    `tools/codemods/migrate-model-fixture-tools.mjs`, which replaces a stored schema only where it
+    matches one observed being replaced. 295 schemas across 55 fixtures.
+  - The JSON Schema of registered ECHO types, which the agent's prompt embeds verbatim (the
+    `Type.Type` meta-schema now serializes with `$defs` and nullable unions, and
+    `Schema.Record(…, Any)` no longer emits `additionalProperties`). This is prompt content, not
+    parameters: rewriting it to match would keep a response the model produced for a _different_
+    prompt, so the tests would assert nothing. That needs a real re-record, not a codemod.
+    Regenerate with
+    `DX_ANTHROPIC_API_KEY=… DX_UPDATE_MODEL_FIXTURES=1 moon run <project>:test -- <file>`.
+    **Regenerate the whole file, never with `-t`** — the suites call
+    `EntityId.dangerouslyDisableRandomness()` at module scope, so the ID sequence depends on how
+    many tests ran before; a single-test regeneration writes fixtures with IDs that do not match
+    the full-file run and corrupts the rest of the suite (see the `regenerate-model-fixture`
+    skill).
+- [ ] **Record the missing `agent-runtime` redelivery fixture.** `AgentService.test.ts`'s
+      `recovers queued tool results after reload` surfaces as a 15s timeout rather than a miss: the
+      miss kills the agent process, then the test waits for a completion that never comes. The
+      tool-schema port fixed its _first_ turn (the `research` call now replays); the second misses
+      because on reload `agent-process.ts` (~L268) redelivers a queued tool result as a synthetic
+      `<result pid=N>` **text** block rather than a tool-result part — main's design (`76dd26df`),
+      not a v4 change — and no fixture records that shape
+      (`grep -rl 'result pid=' .store/conversations` returns nothing). So the path only ever passed
+      when the result landed before the shutdown and no redelivery happened at all.
 
 ## Review follow-ups deferred (from the comprehensive branch review)
 
