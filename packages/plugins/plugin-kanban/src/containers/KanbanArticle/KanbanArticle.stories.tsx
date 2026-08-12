@@ -65,7 +65,7 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [...types, View.View, Kanban.Kanban],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -75,7 +75,7 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
             yield* Effect.promise(() => onSpaceCreated?.(space) ?? Promise.resolve());
           }),
       }),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
       SpacePlugin({}),
       StorybookPlugin.make({}),
       KanbanPlugin(),

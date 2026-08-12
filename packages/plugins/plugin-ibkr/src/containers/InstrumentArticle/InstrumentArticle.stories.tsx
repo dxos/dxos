@@ -41,7 +41,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Ibkr.Instrument],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

@@ -82,7 +82,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [TestDoc, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

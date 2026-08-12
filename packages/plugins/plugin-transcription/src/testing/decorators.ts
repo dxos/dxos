@@ -56,7 +56,7 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
     plugins: [
       ...corePlugins(),
       StorybookPlugin.make({}),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [TestItem, Person.Person, Organization.Organization],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -67,7 +67,7 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
             yield* Effect.promise(() => seedTestData(defaultSpace));
           }),
       }),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
       TranscriptionPlugin(),
     ],
     // setupEvents (not fireEvents) so capabilities activate during app setup, before the always-mounted

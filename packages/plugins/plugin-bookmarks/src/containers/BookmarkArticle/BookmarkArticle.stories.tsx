@@ -46,7 +46,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Bookmark.Bookmark, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

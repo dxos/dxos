@@ -155,7 +155,7 @@ const meta = {
     withPluginManager<StoryArgs>(() => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Transcript.Transcript, Meeting.Meeting, Text.Text],
           // CallManager requires the edge service config to construct (it throws otherwise).
           config: new Config({
@@ -193,8 +193,8 @@ const meta = {
         CallsPlugin.make(),
         TranscriptionPlugin.make(),
         MeetingPlugin(),
-        MarkdownPlugin(),
-        PreviewPlugin(),
+        MarkdownPlugin.make(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

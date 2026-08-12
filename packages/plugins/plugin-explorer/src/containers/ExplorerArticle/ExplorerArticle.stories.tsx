@@ -50,7 +50,7 @@ const meta: Meta<StoryArgs> = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Graph.Graph,
             HasRelationship.HasRelationship,
@@ -105,7 +105,7 @@ const meta: Meta<StoryArgs> = {
               return graph;
             }),
         }),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

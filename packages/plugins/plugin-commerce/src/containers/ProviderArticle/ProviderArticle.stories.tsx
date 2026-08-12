@@ -52,7 +52,7 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Provider.Provider],
           onClientInitialized: seedSpace,
         }),

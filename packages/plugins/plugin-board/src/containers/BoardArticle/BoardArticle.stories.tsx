@@ -78,7 +78,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Organization.Organization, Person.Person, Board.Board],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -106,7 +106,7 @@ const meta = {
         }),
 
         StorybookPlugin.make({}),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

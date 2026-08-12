@@ -318,7 +318,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -331,7 +331,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         StoryGraphPlugin(),
         TranscriptionPlugin(),
       ],

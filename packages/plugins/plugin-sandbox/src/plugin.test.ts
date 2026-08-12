@@ -29,7 +29,7 @@ describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => 
   test('creates a sandbox and runs a shell command via operations', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [
-        ClientPlugin({
+        ClientPlugin.make({
           config: configPreset({ sandbox: 'local' }),
         }),
         SandboxPlugin(),

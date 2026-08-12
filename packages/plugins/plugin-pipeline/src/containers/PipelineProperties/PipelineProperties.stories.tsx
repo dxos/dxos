@@ -129,7 +129,7 @@ const meta = {
             }).pipe(Effect.provide(Database.layer(defaultSpace.db)));
           }),
         }),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

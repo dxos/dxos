@@ -26,7 +26,7 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
   return withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [Collection.Collection],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -34,7 +34,7 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
           }),
       }),
 
-      SearchPlugin(),
+      SearchPlugin.make(),
       SpacePlugin({}),
 
       // TODO(burdon): This should be factored ouf from SimpleLayoutPlugin.

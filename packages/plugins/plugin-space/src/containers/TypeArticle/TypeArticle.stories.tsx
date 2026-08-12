@@ -179,8 +179,8 @@ const meta = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [CardType, Collection.Collection, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

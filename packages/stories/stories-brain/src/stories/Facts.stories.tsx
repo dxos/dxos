@@ -100,7 +100,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               if (!client.halo.identity.get()) {

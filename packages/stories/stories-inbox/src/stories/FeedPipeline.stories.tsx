@@ -636,7 +636,7 @@ const meta = {
       setupEvents: [ActivationEvents.Startup],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             AccessToken.AccessToken,
             Booking.Booking,
@@ -687,8 +687,8 @@ const meta = {
         BrainPlugin.make(),
         ConnectorPlugin.make(),
         CrmPlugin.make(),
-        MarkdownPlugin(),
-        PreviewPlugin(),
+        MarkdownPlugin.make(),
+        PreviewPlugin.make(),
         ProgressPlugin.make(),
         TripPlugin(),
         // Both provide the `AiService` LayerSpec, so exactly one is registered per variant: the trip

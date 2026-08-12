@@ -41,7 +41,7 @@ const meta = {
       // capabilities, which activate on SetupSettings — fire it so the driver does not throw.
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Transcript.Transcript, Feed.Feed, Message.Message, TestItem],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

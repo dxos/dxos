@@ -45,7 +45,7 @@ const meta: Meta<typeof NotebookArticle> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
           config: new Config({
             runtime: {
@@ -64,8 +64,8 @@ const meta: Meta<typeof NotebookArticle> = {
         }),
         AssistantPlugin(),
         RoutinePlugin(),
-        ExplorerPlugin(),
-        MarkdownPlugin(),
+        ExplorerPlugin.make(),
+        MarkdownPlugin.make(),
       ],
     }),
   ],

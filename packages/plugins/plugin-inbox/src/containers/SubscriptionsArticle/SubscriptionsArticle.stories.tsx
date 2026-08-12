@@ -50,7 +50,7 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin.make({}),
         InboxPlugin(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Mailbox.Mailbox, Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

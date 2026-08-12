@@ -54,7 +54,7 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Graph.Graph,
             View.View,
@@ -89,7 +89,7 @@ const meta: Meta<typeof DefaultStory> = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

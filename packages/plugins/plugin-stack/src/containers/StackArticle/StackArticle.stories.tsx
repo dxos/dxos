@@ -61,7 +61,7 @@ const meta: Meta<typeof StackArticle> = {
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Collection.Collection, Markdown.Document, Drawing.Drawing, Drawing.Canvas],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -104,7 +104,7 @@ const meta: Meta<typeof StackArticle> = {
               );
             }),
         }),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         IllustratorPlugin.make(),
         TldrawPlugin.make(),
         SpacePlugin({}),

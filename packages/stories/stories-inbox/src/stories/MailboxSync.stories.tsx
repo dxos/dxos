@@ -62,7 +62,7 @@ const DECORATORS = [
   withPluginManager(() => ({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: TYPES,
         ...CLIENT_SERVICES,
         onClientInitialized: ({ client }) =>
@@ -81,7 +81,7 @@ const DECORATORS = [
       ConnectorPlugin.make(),
       DebugPlugin.make({}),
       AssistantPlugin.make(),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
       ProgressPlugin.make(),
       RoutinePlugin.make(),
       StorySyncPlugin(),

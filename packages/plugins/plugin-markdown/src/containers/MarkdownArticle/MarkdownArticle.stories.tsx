@@ -104,7 +104,7 @@ const meta = {
         MarkdownExtensionsPlugin(),
         IllustratorPlugin.make(),
         TldrawPlugin.make(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Markdown.Document,
             Text.Text,
@@ -169,7 +169,7 @@ const meta = {
         // Contributes the versioning-state atom consumed by useVersioning.
         SpacePlugin({}),
         MarkdownPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

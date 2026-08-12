@@ -142,7 +142,7 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
     setupEvents: [AppActivationEvents.AssistantStart],
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [
           Mailbox.Mailbox,
           Project.Project,

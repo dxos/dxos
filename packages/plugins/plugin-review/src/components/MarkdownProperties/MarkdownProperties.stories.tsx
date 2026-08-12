@@ -72,7 +72,7 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin.make({}),
         MarkdownExtensionsPlugin(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

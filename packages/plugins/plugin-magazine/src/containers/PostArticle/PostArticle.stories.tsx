@@ -96,7 +96,7 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
           onClientInitialized: seedSpace,
         }),

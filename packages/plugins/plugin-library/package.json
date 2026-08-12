@@ -65,17 +65,17 @@
     "./Book": {
       "source": "./src/types/Book.ts",
       "types": "./dist/types/src/types/Book.d.ts",
-      "import": "./dist/lib/Book.mjs"
+      "default": "./dist/lib/neutral/Book.mjs"
     },
     "./LibraryEvents": {
       "source": "./src/types/LibraryEvents.ts",
       "types": "./dist/types/src/types/LibraryEvents.d.ts",
-      "import": "./dist/lib/LibraryEvents.mjs"
+      "default": "./dist/lib/neutral/LibraryEvents.mjs"
     },
     "./LibraryPlugin": {
       "source": "./src/LibraryPlugin.ts",
       "types": "./dist/types/src/LibraryPlugin.d.ts",
-      "import": "./dist/lib/LibraryPlugin.mjs"
+      "default": "./dist/lib/neutral/LibraryPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

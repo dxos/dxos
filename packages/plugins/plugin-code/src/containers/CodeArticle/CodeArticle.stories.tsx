@@ -112,7 +112,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { seed, name } }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

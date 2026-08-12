@@ -76,7 +76,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           config: new Config({
             runtime: {
               services: SERVICES_CONFIG.REMOTE,

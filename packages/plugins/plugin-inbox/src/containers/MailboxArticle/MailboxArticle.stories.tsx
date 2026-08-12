@@ -21,8 +21,7 @@ import { Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SAMPLE_MESSAGES, corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -179,7 +178,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false, bound = false } }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Feed.Feed,
             Mailbox.Mailbox,
@@ -257,7 +256,7 @@ const meta = {
 
         StorybookPlugin.make({}),
         InboxPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
         MockDeckOperationsPlugin(),
       ],
     })),

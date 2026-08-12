@@ -156,7 +156,7 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Text.Text],
           onClientInitialized: seedRegisterMagazine,
         }),

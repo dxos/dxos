@@ -54,7 +54,7 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message],
           config: new Config({
             runtime: {

@@ -49,7 +49,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

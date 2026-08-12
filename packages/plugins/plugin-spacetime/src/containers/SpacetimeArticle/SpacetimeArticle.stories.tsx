@@ -47,7 +47,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Scene.Scene, Model.Object],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

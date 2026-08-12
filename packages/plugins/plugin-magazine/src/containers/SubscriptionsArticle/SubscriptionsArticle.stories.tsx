@@ -45,7 +45,7 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Subscription.Subscription, Subscription.Post],
           onClientInitialized: ({ client }: { client: Client }) =>
             Effect.gen(function* () {

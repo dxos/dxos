@@ -57,7 +57,7 @@ const meta: Meta<typeof EditableMarkdownCardStory> = {
       plugins: [
         ...corePlugins(),
         ProcessManagerPlugin(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

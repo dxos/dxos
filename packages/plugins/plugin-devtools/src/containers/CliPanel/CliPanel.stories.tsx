@@ -30,7 +30,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         // The identity brings a default space, which is what the commands resolve against.
-        ClientPlugin({ onClientInitialized: ({ client }) => Effect.asVoid(initializeIdentity(client)) }),
+        ClientPlugin.make({ onClientInitialized: ({ client }) => Effect.asVoid(initializeIdentity(client)) }),
         StorybookPlugin.make({}),
         // The real plugin, so the story covers it actually contributing its commands.
         SpacePlugin.make({}),

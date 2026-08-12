@@ -90,7 +90,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

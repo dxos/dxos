@@ -59,8 +59,8 @@ const meta = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [Blog.Publication, Blog.Post, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

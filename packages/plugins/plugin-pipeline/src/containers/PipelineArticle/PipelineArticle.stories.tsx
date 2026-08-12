@@ -205,7 +205,7 @@ const meta = {
           }),
         }),
         InboxPlugin.make(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

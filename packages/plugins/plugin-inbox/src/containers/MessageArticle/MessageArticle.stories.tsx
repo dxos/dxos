@@ -117,7 +117,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { length = 8 } }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -130,7 +130,7 @@ const meta = {
         }),
         StorybookPlugin.make({}),
         InboxPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

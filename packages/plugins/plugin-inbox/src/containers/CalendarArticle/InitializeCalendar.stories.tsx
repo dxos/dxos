@@ -45,7 +45,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { withToken = false } }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [AccessToken.AccessToken, Feed.Feed, Calendar.Calendar],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -65,7 +65,7 @@ const meta = {
         }),
         StorybookPlugin.make({}),
         InboxPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

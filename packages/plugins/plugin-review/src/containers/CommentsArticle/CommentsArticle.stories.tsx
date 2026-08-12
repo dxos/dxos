@@ -223,7 +223,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -251,7 +251,7 @@ const meta = {
           agentRunner: StubAgentRunner,
           agentIdentity: { name: STORY_AGENT_NAME },
         } satisfies ReviewPluginOptions),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         StoryGraphPlugin(),
       ],
     })),

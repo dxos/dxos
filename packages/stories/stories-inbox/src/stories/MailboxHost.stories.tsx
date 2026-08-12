@@ -234,7 +234,7 @@ const meta = {
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: HOST_STORY_TYPES,
           ...HOST_STORY_CLIENT_SERVICES,
           onClientInitialized: ({ client }) =>

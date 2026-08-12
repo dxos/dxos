@@ -51,7 +51,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Script.Script, Operation.PersistentOperation, Skill.Skill, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

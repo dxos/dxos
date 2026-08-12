@@ -73,7 +73,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Project.Project,
             Instructions.Instructions,

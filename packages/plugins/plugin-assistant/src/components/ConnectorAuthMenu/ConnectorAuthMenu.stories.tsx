@@ -137,7 +137,7 @@ const meta = {
       capabilities: [Capability.contribute(ConnectorSpec.Connector, testConnectors)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

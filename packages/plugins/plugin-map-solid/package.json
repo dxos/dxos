@@ -50,7 +50,7 @@
     "./MapPlugin": {
       "source": "./src/MapPlugin.ts",
       "types": "./dist/types/src/MapPlugin.d.ts",
-      "import": "./dist/lib/MapPlugin.mjs"
+      "default": "./dist/lib/neutral/MapPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

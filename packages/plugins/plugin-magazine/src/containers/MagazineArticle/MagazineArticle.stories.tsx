@@ -73,7 +73,7 @@ const buildMeta = (options: {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpace(options),
         }),
@@ -194,7 +194,7 @@ export const CurateFlow: Story = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpaceWithQueueItems,
         }),

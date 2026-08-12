@@ -70,22 +70,22 @@
     "./AtprotoCapabilities": {
       "source": "./src/types/AtprotoCapabilities.ts",
       "types": "./dist/types/src/types/AtprotoCapabilities.d.ts",
-      "import": "./dist/lib/AtprotoCapabilities.mjs"
+      "default": "./dist/lib/neutral/AtprotoCapabilities.mjs"
     },
     "./AtprotoEvents": {
       "source": "./src/types/AtprotoEvents.ts",
       "types": "./dist/types/src/types/AtprotoEvents.d.ts",
-      "import": "./dist/lib/AtprotoEvents.mjs"
+      "default": "./dist/lib/neutral/AtprotoEvents.mjs"
     },
     "./AtprotoPlugin": {
       "source": "./src/AtprotoPlugin.ts",
       "types": "./dist/types/src/AtprotoPlugin.d.ts",
-      "import": "./dist/lib/AtprotoPlugin.mjs"
+      "default": "./dist/lib/neutral/AtprotoPlugin.mjs"
     },
     "./AtprotoPublication": {
       "source": "./src/types/AtprotoPublication.ts",
       "types": "./dist/types/src/types/AtprotoPublication.d.ts",
-      "import": "./dist/lib/AtprotoPublication.mjs"
+      "default": "./dist/lib/neutral/AtprotoPublication.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

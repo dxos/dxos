@@ -97,7 +97,7 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Connection.Connection, AccessToken.AccessToken, AtprotoPublication.AtprotoPublication, DemoNote],
           onClientInitialized: seed,
         }),

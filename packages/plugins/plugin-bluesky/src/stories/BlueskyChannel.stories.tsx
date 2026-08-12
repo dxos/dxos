@@ -54,7 +54,7 @@ const meta = {
       capabilities: [Capability.contribute(AppCapabilities.Schema, types)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types,
           config: new Config({
             runtime: {

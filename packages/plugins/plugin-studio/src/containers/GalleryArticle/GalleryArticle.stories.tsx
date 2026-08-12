@@ -51,7 +51,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Collection.Collection, Artifact.Artifact, Variant.Variant, Instructions.Instructions, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -82,7 +82,7 @@ const meta = {
         }),
         StudioPlugin(),
         StorybookPlugin.make({}),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

@@ -283,7 +283,7 @@ const meta = {
         MarkdownExtensionsPlugin(),
         // Ambient-review fixtures only for the AmbientReview story (keeps other stories untouched).
         ...(context.parameters?.ambientReview ? [AmbientReviewPlugin()] : []),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

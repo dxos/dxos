@@ -186,7 +186,7 @@ const baseDecorators = (
   withPluginManager(() => ({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [Trip.Trip, Segment.Segment, Booking.Booking],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -199,7 +199,7 @@ const baseDecorators = (
       TripPlugin(),
       MapPlugin.make(),
       RoutingStoryPlugin(routingService),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
     ],
   })),
 ];

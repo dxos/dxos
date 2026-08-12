@@ -33,7 +33,7 @@ const getDispatcher = (harness: Awaited<ReturnType<typeof createComposerTestApp>
 describe('TriggerRuntimeController', () => {
   test('toggles the per-space TriggerDispatcher as triggersDisabled changes', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({ types: [Feed.Feed] }), RoutinePlugin()],
+      plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()],
     });
 
     // Creating identity also creates the default space and emits SpacesReady,
@@ -77,7 +77,7 @@ describe('TriggerRuntimeController', () => {
 
   test('does not re-issue start when triggersDisabled is reasserted to the same value', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({ types: [Feed.Feed] }), RoutinePlugin()],
+      plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()],
     });
 
     const { defaultSpace } = await EffectEx.runAndForwardErrors(

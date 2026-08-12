@@ -100,7 +100,7 @@ const meta = {
       return {
         plugins: [
           ...corePlugins(),
-          ClientPlugin({
+          ClientPlugin.make({
             types: [Chat.Chat, Feed.Feed, Message.Message],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
@@ -121,7 +121,7 @@ const meta = {
             aiServiceMiddleware:
               messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
           }),
-          PreviewPlugin(),
+          PreviewPlugin.make(),
           StorybookPlugin.make({}),
         ],
         capabilities,

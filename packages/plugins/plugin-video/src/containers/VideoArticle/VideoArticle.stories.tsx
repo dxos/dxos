@@ -57,7 +57,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Video.Video, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -74,7 +74,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         VideoPlugin(),
       ],
     }),

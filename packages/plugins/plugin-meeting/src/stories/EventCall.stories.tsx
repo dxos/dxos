@@ -86,7 +86,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Feed.Feed,
             Calendar.Calendar,
@@ -194,8 +194,8 @@ const meta = {
         CallsPlugin.make(),
         TranscriptionPlugin.make(),
         MeetingPlugin(),
-        MarkdownPlugin(),
-        PreviewPlugin(),
+        MarkdownPlugin.make(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

@@ -53,7 +53,7 @@ const meta = {
       capabilities: [Capability.contribute(BrainCapabilities.FactStoreRegistry, registry)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);

@@ -269,7 +269,7 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Feed.Feed,
             // Tags are created as Tag objects (Mailbox.applyTag → Tag.findOrCreate), so the schema
@@ -300,9 +300,9 @@ const meta = {
         }),
         StorybookPlugin.make({}),
         InboxPlugin(),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         TripPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
         MockDeckOperationsPlugin(),
         ImportantExtractorPlugin(),
         MockAiServicePlugin(),

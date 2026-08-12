@@ -92,7 +92,7 @@ const meta_ = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Artifact.Artifact, Variant.Variant],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -123,7 +123,7 @@ const meta_ = {
         StudioPlugin(),
         MockProviderPlugin(),
         StorybookPlugin.make({}),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

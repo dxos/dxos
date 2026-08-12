@@ -61,7 +61,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Task, Note],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

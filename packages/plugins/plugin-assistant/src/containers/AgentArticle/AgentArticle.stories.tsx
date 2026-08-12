@@ -63,7 +63,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { inputs } }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Agent.Agent,
             Feed.Feed,
@@ -107,7 +107,7 @@ const meta = {
         }),
         RoutinePlugin(),
         AssistantPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
         StorybookPlugin.make({}),
       ],
     })),

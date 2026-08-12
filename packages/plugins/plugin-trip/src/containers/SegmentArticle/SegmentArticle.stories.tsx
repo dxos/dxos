@@ -65,7 +65,7 @@ const meta = {
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Trip.Trip, Segment.Segment, Booking.Booking],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -76,7 +76,7 @@ const meta = {
         }),
         StorybookPlugin.make({}),
         TripPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

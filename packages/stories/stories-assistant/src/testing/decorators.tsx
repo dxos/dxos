@@ -225,7 +225,7 @@ const buildPluginManagerOptions = ({
       }),
 
       // User plugins.
-      PreviewPlugin(),
+      PreviewPlugin.make(),
       RoutinePlugin.make(),
       AssistantPlugin.make(
         scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},

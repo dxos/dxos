@@ -53,7 +53,7 @@ const meta = {
     withTheme(),
     withLayout({ classNames: 'w-document-max-width' }),
     withPluginManager({
-      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin.make({})],
     }),
   ],
   parameters: {

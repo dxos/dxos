@@ -35,7 +35,7 @@ export const withCallManager = () =>
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         config: storyConfig,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {

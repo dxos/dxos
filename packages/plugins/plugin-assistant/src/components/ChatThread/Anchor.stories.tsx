@@ -66,8 +66,8 @@ const meta = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [Organization.Organization],
           onClientInitialized: Effect.fnUntraced(function* ({ client }) {
             const { defaultSpace } = yield* initializeIdentity(client);
