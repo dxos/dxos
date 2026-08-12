@@ -7,7 +7,6 @@ import { Surface } from '@dxos/app-framework/ui';
 
 import { ArchiveModule } from './ArchiveModule';
 import { ConnectorModule } from './ConnectorModule';
-import { ControlsModule } from './ControlsModule';
 import { FactsModule } from './FactsModule';
 import { MailboxModule } from './MailboxModule';
 import { MessageModule } from './MessageModule';
@@ -24,7 +23,6 @@ import { TriggersModule } from './TriggersModule';
  * and each surface resolves the active space via `useActiveSpace()`.
  */
 export const StoryRole = {
-  Controls: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.controls'),
   Mailbox: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.mailbox'),
   Message: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.message'),
   Facts: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.facts'),
@@ -40,11 +38,6 @@ export const StoryRole = {
 
 /** React surfaces for the MailboxSync story columns, one per `StoryRole` token. */
 export const moduleSurfaces: Surface.Definition[] = [
-  Surface.create({
-    id: 'inbox.controls',
-    filter: Surface.makeFilter(StoryRole.Controls),
-    component: ControlsModule,
-  }),
   Surface.create({
     id: 'inbox.mailbox',
     filter: Surface.makeFilter(StoryRole.Mailbox),

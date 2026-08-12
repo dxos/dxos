@@ -18,7 +18,7 @@ import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-frame
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ProgressMeter, useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
-import { Feed, Filter, Query, Ref, Tag } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
@@ -48,7 +48,9 @@ import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import * as Trip from '@dxos/plugin-trip/Trip';
+import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Select, Toolbar } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -110,6 +112,8 @@ const ProcessModule = () => {
 // Split from the space guard above: an early return before hooks changes the hook count between
 // renders (the active space resolves after first mount) and React throws.
 const ProcessModuleContainer = ({ space }: { space: Space }) => {
+  const client = useClient();
+  const identity = useIdentity();
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
   const feed = mailbox?.feed?.target;
   const messages = useQuery(
@@ -170,6 +174,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     }
 
     return [
+      //
+      // InboxOperation
+      //
       {
         // The cursored log-title pipeline (resumes after the cursor; Reset clears it).
         id: 'process',
@@ -181,7 +188,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         // Correspondent pipeline: Person (+ derived Organization) per sender the user has sent or
         // replied to — the outbound signal is derived from the feed, so no allow-list is needed.
         id: 'people',
-        label: 'ExtractCorrespondents',
+        label: 'InboxOperation.ExtractCorrespondents',
         run: () =>
           invoker.invokePromise(
             InboxOperation.ExtractCorrespondents,
@@ -198,18 +205,6 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           invoker.invokePromise(
             InboxOperation.ExtractSubscriptions,
             { mailbox: Ref.make(mailbox) },
-            { spaceId: space.id },
-          ),
-      },
-      {
-        // CRM pipeline: cursored contact extraction + per-contact Profile scaffold (pairs with the
-        // `crm` seed, whose Organizations satisfy the extraction gate).
-        id: 'crm',
-        label: 'CrmOperation.ProcessMailbox',
-        run: () =>
-          invoker.invokePromise(
-            CrmOperation.ProcessMailbox,
-            { mailbox: Ref.make(mailbox), research: true },
             { spaceId: space.id },
           ),
       },
@@ -247,13 +242,6 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         },
       },
       {
-        // Image enrichment: Gravatar avatars + domain logos via the hardened CRM attach path
-        // (needs the CORS proxy / image service).
-        id: 'images',
-        label: 'CrmOperation.EnrichImages',
-        run: () => invoker.invokePromise(CrmOperation.EnrichImages, {}, { spaceId: space.id }),
-      },
-      {
         // Spam/label classification: cursored ≤100-message batches; known-Person senders are
         // short-circuited. Ollama, so `strict: false` skips the structured-output pass.
         id: 'classify',
@@ -267,37 +255,117 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       },
       {
         // Fact analysis against local Ollama; the in-memory FactStore is not ECHO-reactive, so the
-        // fact count refresh is explicit.
+        // count is polled while the run commits per page, then refreshed once at the end.
         id: 'analyze',
         label: 'InboxOperation.AnalyzeMailbox',
         run: async () => {
-          const result = await invoker.invokePromise(
-            InboxOperation.AnalyzeMailbox,
-            {
-              mailbox: Ref.make(mailbox),
-              model: OLLAMA_MODEL,
-              provider: Provider.ollama.id,
-              strict: false,
-              pageSize: 1,
-            },
-            { spaceId: space.id },
-          );
-          const stored = await EffectEx.runPromise(
-            factStores
-              .forSpace(space.id)
-              .query({})
-              .pipe(Effect.orElseSucceed(() => [])),
-          );
-          setFacts(stored.length);
-          return result;
+          const refresh = async () => {
+            const stored = await EffectEx.runPromise(
+              factStores
+                .forSpace(space.id)
+                .query({})
+                .pipe(Effect.orElseSucceed(() => [])),
+            );
+            setFacts(stored.length);
+          };
+          const timer = setInterval(() => void refresh(), 500);
+          try {
+            return await invoker.invokePromise(
+              InboxOperation.AnalyzeMailbox,
+              {
+                mailbox: Ref.make(mailbox),
+                model: OLLAMA_MODEL,
+                provider: Provider.ollama.id,
+                strict: false,
+                pageSize: 1,
+              },
+              { spaceId: space.id },
+            );
+          } finally {
+            clearInterval(timer);
+            await refresh();
+          }
         },
       },
+      //
+      // CrmOperation
+      //
+      {
+        // CRM pipeline: cursored contact extraction + per-contact Profile scaffold (pairs with the
+        // `crm` seed, whose Organizations satisfy the extraction gate).
+        id: 'crm',
+        label: 'CrmOperation.ProcessMailbox',
+        run: () =>
+          invoker.invokePromise(
+            CrmOperation.ProcessMailbox,
+            { mailbox: Ref.make(mailbox), research: true },
+            { spaceId: space.id },
+          ),
+      },
+      {
+        // Image enrichment: Gravatar avatars + domain logos via the hardened CRM attach path
+        // (needs the CORS proxy / image service).
+        id: 'images',
+        label: 'CrmOperation.EnrichImages',
+        run: () => invoker.invokePromise(CrmOperation.EnrichImages, {}, { spaceId: space.id }),
+      },
+      //
+      // Story controls (folded from the ex-ControlsModule; resets are actions like everything else).
+      //
+      {
+        // Clears the shared FactStore (not ECHO-reactive, so the count refresh is explicit).
+        id: 'reset-facts',
+        label: 'Reset fact store',
+        run: async () => {
+          await EffectEx.runPromise(
+            factStores
+              .forSpace(space.id)
+              .clear()
+              .pipe(Effect.orElseSucceed(() => undefined)),
+          );
+          setFacts(0);
+          return { reset: 'facts' };
+        },
+      },
+      {
+        // Removes the analyze pipeline's UNTAGGED feed cursor (a different object from the tagged
+        // process/classify cursors the Reset button clears), so the next analyze re-reads the feed.
+        id: 'reset-analyze-cursor',
+        label: 'Reset analyze cursor',
+        run: async () => {
+          const feedUri = mailbox.feed.uri;
+          const cursors = await space.db.query(Filter.type(Cursor.Cursor)).run();
+          const existing = cursors.find(
+            (cursor) =>
+              cursor.spec.kind === 'feed' &&
+              cursor.spec.source.uri === feedUri &&
+              Obj.getMeta(cursor).keys.length === 0,
+          );
+          if (existing) {
+            space.db.remove(existing);
+          }
+          return { reset: 'analyze-cursor', removed: !!existing };
+        },
+      },
+      {
+        // Full client reset: wipes the profile (OPFS) and reloads the page.
+        id: 'reset-store',
+        label: 'Reset store',
+        run: async () => {
+          await client.reset();
+          window.location.reload();
+          return { reset: 'store' };
+        },
+      },
+      //
+      // ProjectOperation
+      //
       {
         // Projects composition: create the admin tracking project from a tracked sender's message
         // (once; reruns reuse it), then run the travel-log and investor-log artifact pipelines
         // against it — the routine→operation→artifact pattern, driven manually.
         id: 'projects',
-        label: 'Projects',
+        label: 'ProjectOperation.CreateTrackingProject',
         run: async () => {
           const anchor =
             messages.find((message) => TRACKED_SENDER_RE.test(message.sender?.email ?? '')) ??
@@ -336,7 +404,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         },
       },
     ];
-  }, [space, invoker, mailbox, messages, projects, factStores]);
+  }, [space, client, invoker, mailbox, messages, projects, factStores]);
 
   const [actionId, setActionId] = useState('process');
 
@@ -373,7 +441,8 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
               <Select.Content>
                 <Select.Viewport>
                   {actions.map((action) => (
-                    <Select.Option key={action.id} value={action.id}>
+                    // Testid selection (`action-<id>`): the play tests must survive label edits.
+                    <Select.Option key={action.id} value={action.id} data-testid={`action-${action.id}`}>
                       {action.label}
                     </Select.Option>
                   ))}
@@ -386,6 +455,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       <Panel.Content data-testid='counts' classNames='dx-container overflow-auto p-2 text-sm'>
         <JsonHighlighter
           data={{
+            identity: identity?.identityKey.truncate(),
             runs,
             mailbox: mailbox ? 1 : 0,
             messages: messages.length,
@@ -458,15 +528,7 @@ const StoryProcessPlugin = Plugin.define(
 
 const DefaultStory = () => (
   <ModuleContainer
-    layout={[
-      [ProcessRole, StoryRole.Mailbox],
-      [
-        // TODO(burdon): What is this for?
-        StoryRole.Controls,
-        StoryRole.Facts,
-      ],
-      [ModuleRole.Logging, ModuleRole.Objects],
-    ]}
+    layout={[[ProcessRole, StoryRole.Mailbox], [StoryRole.Facts, ModuleRole.Objects], [ModuleRole.Logging]]}
   />
 );
 
@@ -653,10 +715,13 @@ export const FixtureTest: Story = {
   },
 };
 
-/** Picks a workbench action in the toolbar select (Radix portals the options to `document.body`). */
-const selectAction = async (canvas: ReturnType<typeof within>, label: string) => {
+/**
+ * Picks a workbench action in the toolbar select by ACTION ID (Radix portals the options to
+ * `document.body`, hence `screen`). Testid-based so display-label edits never break the tests.
+ */
+const selectAction = async (canvas: ReturnType<typeof within>, id: string) => {
   await userEvent.click(canvas.getByTestId('action-select'));
-  await userEvent.click(await screen.findByRole('option', { name: label }));
+  await userEvent.click(await screen.findByTestId(`action-${id}`));
 };
 
 /** The CRM demo seed: 3 demo messages plus the extraction-gate Organizations. */
@@ -700,7 +765,7 @@ export const CrmTest: Story = {
 
     // First pass: one Person + one Profile per allow-listed demo sender (the unknown-org Wayne
     // sender is denied by the gate), all provenance recorded, cursor created.
-    await selectAction(canvas, 'CRM');
+    await selectAction(canvas, 'crm');
     await userEvent.click(canvas.getByTestId('execute'));
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(/"contacts":\s*3\b/);
@@ -756,7 +821,7 @@ export const TripTest: Story = {
 
     // First pass: both same-PNR legs collapse into ONE Trip with TWO Segments. Every message ends
     // linked (the travel pair to the Trip, the digest to the contact extracted on dispatch).
-    await selectAction(canvas, 'Auto Extract');
+    await selectAction(canvas, 'dispatch');
     await userEvent.click(canvas.getByTestId('execute'));
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(/"trips":\s*1\b/);
