@@ -135,8 +135,16 @@ analyze`) with a mailbox-global default and per-project overrides (user chose op
       `ProcessMailbox` gap above.
 - [ ] **Create-project-from-message UI** — the operation side is done; the message-context form is
       not built (PLAN.md deliverable 3).
+- [x] **Conversation summary tile** — the summary renders once, as the last tile under the messages
+      (`ConversationStack.SummaryTile`), aligned to the message column template via the shared avatar
+      gutter; the duplicate inside each expanded message is gone. `Mailbox.conversationSummary` picks
+      the newest summarized message in the thread (a seam for a future thread-level annotation).
+      `MessageArticle.stories` now seeds summaries and the Spec play test asserts the tile.
+- [ ] **Whole-conversation summarization + eval** — summaries are derived per message today; they
+      should consider the entire thread, with a test framework/eval scoring the result. (Issue 1 of
+      the two raised 2026-08-12; the tile above was issue 2.)
 - [ ] **Summary provenance in the article** — the annotation records its `model` and `created`;
-      the UI shows neither.
+      the summary tile shows neither.
 - [ ] **Story invoker wedge (env)** — in the dev storybook, an operation's FIRST invocation after a
       server restart often hangs (lazy-handler vite load?) and `invokePromise` results render `{}`
       even when the operation completes (ECHO side-effects land). Unit tests unaffected. Needs an
