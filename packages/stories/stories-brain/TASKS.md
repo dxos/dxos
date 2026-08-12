@@ -1,8 +1,9 @@
 # stories-brain research tasks
 
-_Resume: PR #12546 open, all story/summary commits pushed and all 8 review comments addressed +
-resolved. Next action: watch Check to green, then land. Uncommitted: none. Last: review fixes
-(`bc19f424a1`) — canonical tier order, `withMailboxLock`, no casts or non-null assertions._
+_Resume: PR #12546 MERGED 2026-08-12 (squash `12b6618058`) — the enrichment cascade, the story/summary
+commits and all 8 review fixes are all on `main`. Next action: create-project-from-message UI
+(PLAN.md deliverable 3 — the operation exists, the message-context form does not), then summary
+provenance (`model`/`created`) in the article. Uncommitted: none._
 
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
