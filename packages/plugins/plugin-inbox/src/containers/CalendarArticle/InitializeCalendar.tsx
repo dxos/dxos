@@ -7,10 +7,9 @@ import React from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 
+import { Initialize } from '#components';
 import { meta } from '#meta';
 import { Calendar } from '#types';
-
-import { Initialize } from '../../components';
 
 export type InitializeCalendarProps = {
   calendar: Calendar.Calendar;

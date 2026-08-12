@@ -11,6 +11,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
+import { qualifyId } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -26,7 +31,6 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
@@ -38,12 +42,12 @@ import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
+import { translations } from '#translations';
 import { AgentIdentity, CommentCapabilities } from '#types';
 
 import { ReviewPlugin, type ReviewPluginOptions } from '../../plugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
-import { translations } from '../../translations';
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];

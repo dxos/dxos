@@ -3,5 +3,5 @@
 //
 
 export * as DuffelPlugin from './DuffelPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

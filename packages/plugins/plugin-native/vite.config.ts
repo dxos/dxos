@@ -12,7 +12,6 @@ export default defineConfig({
     capabilities: 'src/capabilities/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     NativeCapabilities: 'src/types/NativeCapabilities.ts',
     NativeEvents: 'src/types/NativeEvents.ts',

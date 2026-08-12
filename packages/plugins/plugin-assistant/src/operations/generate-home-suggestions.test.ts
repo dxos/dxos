@@ -16,9 +16,8 @@ import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
+import { AssistantOperationHandlerSet } from '#operations';
 import { AssistantCapabilities, AssistantOperation } from '#types';
-
-import { AssistantOperationHandlerSet } from './index';
 
 EntityId.dangerouslyDisableRandomness();
 

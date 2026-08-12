@@ -7,9 +7,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from '#types';

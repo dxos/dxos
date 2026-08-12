@@ -17,7 +17,6 @@ export default defineConfig({
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
-    'plugin.workerd': 'src/plugin.workerd.ts',
     'translations': 'src/translations.ts',
     'atoms': 'src/atoms/index.ts',
     'testing': 'src/testing/index.ts',

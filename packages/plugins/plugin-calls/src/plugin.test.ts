@@ -7,9 +7,9 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
+import { meta } from '#meta';
 import { CallsPlugin } from '#plugin';
 
-import { meta } from './meta';
 import { CallsPlugin as CallsPluginNode } from './plugin.node';
 
 describe('CallsPlugin', () => {

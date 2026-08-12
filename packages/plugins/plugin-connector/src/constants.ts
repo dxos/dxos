@@ -6,7 +6,7 @@ import { DXN } from '@dxos/keys';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { ATPROTO_OAUTH_SCOPES } from '@dxos/protocols';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 /** Surface id for the sync-targets dialog. */
 export const SYNC_TARGETS_DIALOG = DXN.make(`${meta.profile.key}.syncTargetsDialog`);

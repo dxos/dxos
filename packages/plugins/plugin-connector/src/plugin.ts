@@ -17,10 +17,10 @@ import {
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import { translations } from './translations';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

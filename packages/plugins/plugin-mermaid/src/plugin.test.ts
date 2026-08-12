@@ -8,9 +8,8 @@ import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
+import { meta } from '#meta';
 import { MermaidPlugin } from '#plugin';
-
-import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

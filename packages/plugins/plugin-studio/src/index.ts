@@ -3,6 +3,6 @@
 //
 
 export * as StudioPlugin from './StudioPlugin';
-export * from './meta';
-export * from './operations';
-export * from './types';
+export * from '#meta';
+export * from '#operations';
+export * from '#types';

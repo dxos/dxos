@@ -6,9 +6,8 @@ import { describe, test } from 'vitest';
 
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
+import { meta } from '#meta';
 import { IrohBeaconPlugin } from '#plugin';
-
-import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

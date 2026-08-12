@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Graph } from '@dxos/plugin-graph';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';

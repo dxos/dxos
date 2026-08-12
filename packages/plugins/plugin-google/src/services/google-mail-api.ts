@@ -12,7 +12,8 @@ import type * as ParseResult from 'effect/ParseResult';
 
 import * as Credential from '@dxos/compute/Credential';
 
-import { GoogleMail } from '../apis';
+import { GoogleMail } from '#apis';
+
 import { GoogleApiError } from '../errors';
 import { GoogleCredentials } from './google-credentials';
 

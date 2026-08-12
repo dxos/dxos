@@ -14,7 +14,6 @@ export default defineConfig({
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     model: 'src/model/index.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     Excalidraw: 'src/types/Excalidraw.ts',
     ExcalidrawCapabilities: 'src/types/ExcalidrawCapabilities.ts',

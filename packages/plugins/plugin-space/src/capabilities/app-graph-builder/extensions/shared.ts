@@ -5,11 +5,11 @@
 import { type Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 
+import type * as Node from '@dxos/app-graph/Node';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';

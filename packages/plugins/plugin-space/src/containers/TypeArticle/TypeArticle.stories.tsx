@@ -28,10 +28,10 @@ import { CardAnnotation } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 import { ComplexMap } from '@dxos/util';
 
+import { SpaceOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
 import { SpaceCapabilities } from '#types';
 
-import { SpaceOperationHandlerSet } from '../../operations';
 import { MergePreview } from '../MergePreview/MergePreview';
 import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack';
 import { TypeArticle } from './TypeArticle';

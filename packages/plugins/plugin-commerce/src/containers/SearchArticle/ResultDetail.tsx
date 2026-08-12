@@ -7,9 +7,8 @@ import React, { Fragment } from 'react';
 import { useObject } from '@dxos/echo-react';
 import { Carousel, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
+import { meta } from '#meta';
 import { Result } from '#types';
-
-import { meta } from '../../meta';
 
 export type ResultDetailProps = {
   result?: Result.Result;

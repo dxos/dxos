@@ -3,7 +3,7 @@
 //
 
 export * as RoutinePlugin from './RoutinePlugin';
-export * from './meta';
+export * from '#meta';
 export * from './paths';
-export * from './types';
+export * from '#types';
 export * from './util';

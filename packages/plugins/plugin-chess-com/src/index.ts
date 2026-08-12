@@ -3,5 +3,5 @@
 //
 
 export * as ChessComPlugin from './ChessComPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

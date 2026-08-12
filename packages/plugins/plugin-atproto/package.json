@@ -67,10 +67,25 @@
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
     },
+    "./AtprotoCapabilities": {
+      "source": "./src/types/AtprotoCapabilities.ts",
+      "types": "./dist/types/src/types/AtprotoCapabilities.d.ts",
+      "import": "./dist/lib/AtprotoCapabilities.mjs"
+    },
+    "./AtprotoEvents": {
+      "source": "./src/types/AtprotoEvents.ts",
+      "types": "./dist/types/src/types/AtprotoEvents.d.ts",
+      "import": "./dist/lib/AtprotoEvents.mjs"
+    },
     "./AtprotoPlugin": {
       "source": "./src/AtprotoPlugin.ts",
       "types": "./dist/types/src/AtprotoPlugin.d.ts",
       "import": "./dist/lib/AtprotoPlugin.mjs"
+    },
+    "./AtprotoPublication": {
+      "source": "./src/types/AtprotoPublication.ts",
+      "types": "./dist/types/src/types/AtprotoPublication.d.ts",
+      "import": "./dist/lib/AtprotoPublication.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -82,6 +97,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",

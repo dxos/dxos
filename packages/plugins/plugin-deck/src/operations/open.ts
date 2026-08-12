@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -15,7 +16,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Graph } from '@dxos/plugin-graph';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { DeckCapabilities } from '#types';

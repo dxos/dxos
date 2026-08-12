@@ -5,7 +5,8 @@
 import { Atom, Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect } from 'react';
 
-import { Graph, Node } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import { random } from '@dxos/random';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';

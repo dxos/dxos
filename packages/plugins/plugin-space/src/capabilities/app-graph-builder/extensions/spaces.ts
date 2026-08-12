@@ -5,6 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -15,7 +20,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Expando } from '@dxos/schema';
 import { Position } from '@dxos/util';

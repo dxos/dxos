@@ -3,5 +3,5 @@
 //
 
 export * as AttentionPlugin from './AttentionPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

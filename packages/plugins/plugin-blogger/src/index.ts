@@ -3,5 +3,5 @@
 //
 
 export * as BloggerPlugin from './BloggerPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

@@ -4,4 +4,4 @@
 
 export * as OsrmPlugin from './OsrmPlugin';
 export * from './events';
-export * from './meta';
+export * from '#meta';

@@ -3,6 +3,6 @@
 //
 
 export * as SheetPlugin from './SheetPlugin';
-export * from './meta';
+export * from '#meta';
 export * from './operations';
-export * from './types';
+export * from '#types';

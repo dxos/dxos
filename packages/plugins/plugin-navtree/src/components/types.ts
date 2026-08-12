@@ -4,7 +4,7 @@
 
 import type { FC } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import type { Density } from '@dxos/react-ui';
 import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
 

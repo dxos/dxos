@@ -21,7 +21,6 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
-    'plugin.workerd': 'src/plugin.workerd.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'AssistantEvents': 'src/types/AssistantEvents.ts',

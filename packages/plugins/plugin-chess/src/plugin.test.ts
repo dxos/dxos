@@ -10,10 +10,9 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
+import { meta } from '#meta';
 import { ChessPlugin } from '#plugin';
 import { ChessOperation } from '#types';
-
-import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

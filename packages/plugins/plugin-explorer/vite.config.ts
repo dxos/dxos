@@ -14,7 +14,6 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
     ExplorerAction: 'src/types/ExplorerAction.ts',

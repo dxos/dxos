@@ -14,9 +14,10 @@ import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 import * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 
-import { GoogleMail } from '../../../apis';
+import { GoogleMail } from '#apis';
+import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '#services';
+
 import { GoogleApiError } from '../../../errors';
-import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '../../../services';
 import { type AttachmentMetadata } from '../mapper';
 
 /** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */

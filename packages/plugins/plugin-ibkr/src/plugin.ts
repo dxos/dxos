@@ -13,12 +13,12 @@ import {
   ReactSurface,
   SkillDefinition,
 } from '#capabilities';
+import { translations } from '#translations';
 import { Ibkr } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 import { meta } from './meta';
-import { translations } from './translations';
 
 export const IbkrPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

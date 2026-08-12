@@ -28,9 +28,8 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Transcript } from '@dxos/types';
 
+import { MeetingPlugin } from '#plugin';
 import { Meeting } from '#types';
-
-import { MeetingPlugin } from '../plugin';
 
 type StoryArgs = {};
 

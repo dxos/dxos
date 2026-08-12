@@ -6,8 +6,10 @@ import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
 import { type BuilderExtensions } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { log } from '@dxos/log';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { random } from '@dxos/random';
 
 export const storybookGraphBuilders = (): BuilderExtensions => {

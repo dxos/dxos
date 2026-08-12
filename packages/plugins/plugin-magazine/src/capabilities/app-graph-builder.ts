@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -15,7 +16,6 @@ import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { GraphBuilder } from '@dxos/plugin-graph';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Selection } from '@dxos/react-ui-attention';
 

@@ -3,6 +3,6 @@
 //
 
 export * as GamePlugin from './GamePlugin';
-export * from './meta';
-export * from './types';
-export * from './util';
+export * from '#meta';
+export * from '#types';
+export * from '#util';

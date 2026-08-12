@@ -15,9 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
+import { MarkdownOperationHandlerSet } from '#operations';
 import { Markdown, MarkdownOperation } from '#types';
-
-import { MarkdownOperationHandlerSet } from './index';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',

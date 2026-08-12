@@ -15,7 +15,6 @@ export default defineConfig({
     diagnostics: 'src/diagnostics/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     DoctorCapabilities: 'src/types/DoctorCapabilities.ts',
     DoctorEvents: 'src/types/DoctorEvents.ts',

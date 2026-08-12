@@ -5,10 +5,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, Node } from '@dxos/plugin-graph';
 import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
 import { useBreakpoints, useCompanions, useDeckState } from '#hooks';

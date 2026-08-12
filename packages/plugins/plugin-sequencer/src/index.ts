@@ -3,5 +3,5 @@
 //
 
 export * as SequencerPlugin from './SequencerPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

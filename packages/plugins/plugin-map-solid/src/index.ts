@@ -4,4 +4,4 @@
 
 export * as MapPlugin from './MapPlugin';
 export * from './events';
-export * from './meta';
+export * from '#meta';

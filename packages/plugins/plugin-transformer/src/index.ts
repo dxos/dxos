@@ -3,4 +3,4 @@
 //
 
 export * as TransformerPlugin from './TransformerPlugin';
-export * from './meta';
+export * from '#meta';

@@ -3,5 +3,5 @@
 //
 
 export * as SlackPlugin from './SlackPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

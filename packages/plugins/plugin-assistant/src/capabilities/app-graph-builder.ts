@@ -7,6 +7,9 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -23,7 +26,6 @@ import { Sequence } from '@dxos/conductor';
 import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';

@@ -13,10 +13,10 @@ import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Organization, Person } from '@dxos/types';
 
+import { CrmOperationHandlerSet } from '#operations';
 import { CrmOperation } from '#types';
 
 import { gravatarUrl, organizationImageCandidates, personImageCandidates } from './image-candidates';
-import { CrmOperationHandlerSet } from './index';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: CrmOperationHandlerSet,

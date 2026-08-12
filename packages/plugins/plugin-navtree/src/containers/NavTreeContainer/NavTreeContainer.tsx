@@ -8,9 +8,10 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { Graph, Node } from '@dxos/plugin-graph';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';

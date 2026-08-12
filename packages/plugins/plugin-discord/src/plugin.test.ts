@@ -8,9 +8,8 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
+import { meta } from '#meta';
 import { DiscordPlugin } from '#plugin';
-
-import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

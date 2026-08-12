@@ -7,11 +7,11 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { ChannelBackend, Connector, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
+import { BlueskyChannel } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import { translations } from './translations';
-import { BlueskyChannel } from './types';
 
 export const BlueskyPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

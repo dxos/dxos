@@ -25,10 +25,10 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
+import { meta } from '#meta';
 import { AssistantPlugin } from '#plugin';
 import { AssistantEvents } from '#types';
 
-import { meta } from './meta';
 import { AssistantSkill } from './skills/assistant';
 
 EntityId.dangerouslyDisableRandomness();

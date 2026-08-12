@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';

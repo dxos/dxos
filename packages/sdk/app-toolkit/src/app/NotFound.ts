@@ -7,7 +7,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Graph, Node } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import { Filter, Key, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';

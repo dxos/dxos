@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 

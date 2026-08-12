@@ -3,4 +3,4 @@
 //
 
 export * as ProgressPlugin from './ProgressPlugin';
-export { meta } from './meta';
+export { meta } from '#meta';

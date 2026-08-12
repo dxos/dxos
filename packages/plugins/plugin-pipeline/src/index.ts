@@ -3,4 +3,4 @@
 //
 
 export * as PipelinePlugin from './PipelinePlugin';
-export * from './meta';
+export * from '#meta';

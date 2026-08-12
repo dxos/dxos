@@ -3,5 +3,5 @@
 //
 
 export * as SpotlightPlugin from './SpotlightPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

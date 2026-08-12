@@ -3,4 +3,4 @@
 //
 
 export * as PwaPlugin from './PwaPlugin';
-export * from './meta';
+export * from '#meta';

@@ -3,5 +3,5 @@
 //
 
 export * as PresenterPlugin from './PresenterPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

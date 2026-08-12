@@ -14,7 +14,6 @@ export default defineConfig({
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     NativeFilesystemCapabilities: 'src/types/NativeFilesystemCapabilities.ts',
     NativeFilesystemEvents: 'src/types/NativeFilesystemEvents.ts',

@@ -13,10 +13,10 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import * as Game from '@dxos/plugin-game/Game';
 
+import { ChessOperationHandlerSet } from '#operations';
 import { Chess, ChessOperation, ChessPositionIndex, PlayerReview } from '#types';
 
 import * as positionIndexInternal from '../internal/position-index';
-import { ChessOperationHandlerSet } from './index';
 
 EntityId.dangerouslyDisableRandomness();
 

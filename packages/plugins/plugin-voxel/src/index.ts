@@ -3,6 +3,6 @@
 //
 
 export * as VoxelPlugin from './VoxelPlugin';
-export * from './meta';
-export * from './skills';
-export * from './types';
+export * from '#meta';
+export * from '#skills';
+export * from '#types';

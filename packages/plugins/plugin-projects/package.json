@@ -1,7 +1,7 @@
 {
   "name": "@dxos/plugin-projects",
   "version": "0.11.1",
-  "description": "Projects \u2014 interactive, long-running processes with instructions, routines, and artifacts",
+  "description": "Projects — interactive, long-running processes with instructions, routines, and artifacts",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -131,6 +131,7 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",

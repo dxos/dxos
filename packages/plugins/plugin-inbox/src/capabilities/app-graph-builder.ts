@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -16,7 +18,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
 import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';

@@ -17,4 +17,6 @@ tasks:
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/LibraryPlugin.ts'
       - '--entryPoint=src/translations.ts'
+      - '--entryPoint=src/types/Book.ts'
+      - '--entryPoint=src/types/LibraryEvents.ts'
       - '--platform=neutral'

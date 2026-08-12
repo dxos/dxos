@@ -10,6 +10,8 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -21,7 +23,6 @@ import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from 
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, isNonNullable } from '@dxos/util';

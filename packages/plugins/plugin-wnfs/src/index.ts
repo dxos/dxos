@@ -4,6 +4,6 @@
 
 export * as WnfsPlugin from './WnfsPlugin';
 export * from './annotations';
-export * from './helpers';
-export * from './meta';
-export * from './types';
+export * from '#helpers';
+export * from '#meta';
+export * from '#types';

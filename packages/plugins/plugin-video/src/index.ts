@@ -3,5 +3,5 @@
 //
 
 export * as VideoPlugin from './VideoPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

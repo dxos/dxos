@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const RegistrySettingsSchema = Schema.mutable(
   Schema.Struct({

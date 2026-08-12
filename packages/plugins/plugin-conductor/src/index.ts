@@ -3,5 +3,5 @@
 //
 
 export * as ConductorPlugin from './ConductorPlugin';
-export * from './meta';
+export * from '#meta';
 export * from './types';

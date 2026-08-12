@@ -10,9 +10,10 @@ import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 
-import { Jmap, JmapMail } from '../../../apis';
+import { Jmap, JmapMail } from '#apis';
+import { JmapCredentials } from '#services';
+
 import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors';
-import { JmapCredentials } from '../../../services';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 

@@ -62,6 +62,16 @@
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
     },
+    "./Book": {
+      "source": "./src/types/Book.ts",
+      "types": "./dist/types/src/types/Book.d.ts",
+      "import": "./dist/lib/Book.mjs"
+    },
+    "./LibraryEvents": {
+      "source": "./src/types/LibraryEvents.ts",
+      "types": "./dist/types/src/types/LibraryEvents.d.ts",
+      "import": "./dist/lib/LibraryEvents.mjs"
+    },
     "./LibraryPlugin": {
       "source": "./src/LibraryPlugin.ts",
       "types": "./dist/types/src/LibraryPlugin.d.ts",
@@ -77,6 +87,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",

@@ -14,7 +14,6 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     Dream: 'src/types/Dream.ts',
     Sequence: 'src/types/Sequence.ts',

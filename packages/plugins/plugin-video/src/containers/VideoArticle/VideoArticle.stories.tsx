@@ -17,10 +17,10 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { VideoPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Video } from '#types';
 
-import { VideoPlugin } from '../../plugin';
 import { VideoArticle } from './VideoArticle';
 
 const DefaultStory = () => {

@@ -81,6 +81,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../app-graph"
     }
   ]
 }

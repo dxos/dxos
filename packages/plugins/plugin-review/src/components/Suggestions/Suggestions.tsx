@@ -7,7 +7,8 @@ import React from 'react';
 import { type GroupPolicy } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { type SuggestionGroup, buildSuggestionSources, suggestionHue } from '../../hooks';
+import { type SuggestionGroup, buildSuggestionSources, suggestionHue } from '#hooks';
+
 import { SuggestionAuthors } from './SuggestionAuthors';
 import { SuggestionSources } from './SuggestionSources';
 import { SuggestionThread } from './SuggestionThread';

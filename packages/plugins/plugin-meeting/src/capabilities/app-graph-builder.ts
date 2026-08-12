@@ -7,6 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -16,7 +18,6 @@ import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
-import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';

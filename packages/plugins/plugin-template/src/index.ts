@@ -3,5 +3,5 @@
 //
 
 export * as TemplatePlugin from './TemplatePlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

@@ -6,6 +6,6 @@
 //   Either refactor callers to not need them or factor them out to a shared package.
 
 export * as SearchPlugin from './SearchPlugin';
-export * from './hooks';
-export * from './meta';
-export * from './types';
+export * from '#hooks';
+export * from '#meta';
+export * from '#types';

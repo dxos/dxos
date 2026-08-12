@@ -15,11 +15,11 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
 
+import { MagazineOperationHandlerSet } from '#operations';
+import { MagazineSkill } from '#skills';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { MagazineSkill } from '../skills';
 import { applyKeep, resolveSelected } from './curate-magazine';
-import { MagazineOperationHandlerSet } from './index';
 
 /**
  * Whether the model picks the right articles is a judgement question, graded out-of-band; scripting

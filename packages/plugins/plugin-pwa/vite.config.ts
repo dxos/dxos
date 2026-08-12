@@ -10,7 +10,6 @@ export default defineConfig({
     PwaPlugin: 'src/PwaPlugin.ts',
     plugin: 'src/plugin.tsx',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
   },
   jsx: 'react',

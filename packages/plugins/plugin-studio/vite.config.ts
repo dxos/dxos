@@ -14,7 +14,6 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.tsx',
     surfaces: 'src/surfaces.ts',
     translations: 'src/translations.ts',
     Artifact: 'src/types/Artifact.ts',

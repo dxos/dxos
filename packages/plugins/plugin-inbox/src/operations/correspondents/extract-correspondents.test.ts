@@ -14,9 +14,9 @@ import { Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
+import { InboxOperationHandlerSet } from '#operations';
 import { InboxOperation, Mailbox } from '#types';
 
-import { InboxOperationHandlerSet } from '../index';
 import { deriveCorrespondents, parseAddressList } from './correspondence';
 
 const TestLayer = AssistantTestLayer({

@@ -8,7 +8,7 @@ import { type Atom } from '@effect-atom/atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 /**
  * Diagnostic shape mirroring `compiler.Diagnostic`. Re-declared here (rather

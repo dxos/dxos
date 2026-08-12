@@ -3,5 +3,5 @@
 //
 
 export * as SpacetimePlugin from './SpacetimePlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

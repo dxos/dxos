@@ -4,9 +4,8 @@
 
 // @import-as-namespace
 
+import { meta as pluginMeta } from '#meta';
 import { StorybookPlugin } from '#plugin';
-
-import { meta as pluginMeta } from './meta';
 
 /** Plugin metadata, available without loading the plugin body. */
 export const meta = pluginMeta;

@@ -28,11 +28,11 @@ import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@d
 import { hexToHue } from '@dxos/util';
 
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
+import { type SuggestionGroup, useStatus } from '#hooks';
 import { meta } from '#meta';
 import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state';
-import { type SuggestionGroup, useStatus } from '../../hooks';
 import { currentObjectId, getMessageMetadata } from '../../util';
 
 /**

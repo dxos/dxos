@@ -9,10 +9,10 @@ import React, { useEffect, useMemo } from 'react';
 import { Proxy } from '@dxos/crx-protocol';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { meta as pluginMeta } from '#meta';
+import { translations } from '#translations';
 import { Settings } from '#types';
 
-import { meta as pluginMeta } from '../../meta';
-import { translations } from '../../translations';
 import { CrxSettings } from './CrxSettings';
 
 /**

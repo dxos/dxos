@@ -12,10 +12,10 @@ import { Identity } from '@dxos/halo';
 import { HaloServicesLayer } from '@dxos/plugin-client';
 
 import { meta } from '#meta';
+import { type BeaconState } from '#types';
 
 import { BeaconService } from '../beacon-service';
 import { BroadcastChannelTransport } from '../transport/broadcast-channel-transport';
-import { type BeaconState } from '../types';
 
 export namespace BeaconCapabilities {
   export const State = Capability.makeSingleton<Atom.Atom<BeaconState>>()(`${meta.profile.key}.capability.state`);

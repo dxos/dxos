@@ -16,7 +16,6 @@ export default defineConfig({
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     HelpCapabilities: 'src/types/HelpCapabilities.ts',
     HelpOperation: 'src/types/HelpOperation.ts',

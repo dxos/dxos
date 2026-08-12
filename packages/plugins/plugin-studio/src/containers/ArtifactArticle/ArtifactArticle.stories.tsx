@@ -19,10 +19,10 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 
+import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
 
-import { StudioPlugin } from '../../plugin';
 import { ArtifactArticle } from './ArtifactArticle';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */

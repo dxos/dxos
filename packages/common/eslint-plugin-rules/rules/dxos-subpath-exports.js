@@ -68,10 +68,18 @@ const stripComments = (code) => {
 };
 
 /**
- * Resolves a relative specifier to a file on disk, including the directory-with-index form so a
- * nested barrel resolves the same way the bundler resolves it.
+ * Resolves a specifier to a file on disk, including the directory-with-index form so a nested
+ * barrel resolves the same way the bundler resolves it. A `#` self-reference is resolved through
+ * the declaring package's `imports` map — barrels reach their own modules that way, so treating it
+ * as unresolvable would both hide the namespaces behind it and read as a foreign package.
  */
-const resolveModule = (source, fromFile) => {
+const resolveModule = (source, fromFile, pkg) => {
+  if (source.startsWith('#')) {
+    const entry = pkg?.json?.imports?.[source];
+    const inner = typeof entry === 'string' ? entry : entry?.source;
+    const spec = typeof inner === 'string' ? inner : (inner?.default ?? inner?.node);
+    return typeof spec === 'string' ? path.resolve(pkg.dir, spec) : null;
+  }
   if (!source.startsWith('.')) {
     return null;
   }
@@ -108,7 +116,7 @@ const isNamespaceModule = (file, cache) => {
  * records the first-hop specifier it arrived through, which is the only node in the linted file
  * that can carry a report for a namespace declared in another file.
  */
-const analyzeBarrel = (entryFile, readFile) => {
+const analyzeBarrel = (entryFile, readFile, pkg) => {
   const ambiguous = new Map();
   const externalStars = [];
   const pluginStars = [];
@@ -132,7 +140,7 @@ const analyzeBarrel = (entryFile, readFile) => {
       own.set(name, {
         name,
         source,
-        target: resolveModule(source, file),
+        target: resolveModule(source, file, pkg),
         typeOnly: Boolean(typeKeyword),
         declaredIn: file,
         rootStar,
@@ -147,9 +155,9 @@ const analyzeBarrel = (entryFile, readFile) => {
       if (PLUGIN_ENTRYPOINTS.has(source)) {
         pluginStars.push({ source, declaredIn: file, rootStar: nextRootStar });
       }
-      const resolved = resolveModule(source, file);
+      const resolved = resolveModule(source, file, pkg);
       if (!resolved) {
-        if (!source.startsWith('.')) {
+        if (!source.startsWith('.') && !source.startsWith('#')) {
           externalStars.push({ source, declaredIn: file, rootStar: nextRootStar });
         }
         continue;
@@ -301,7 +309,11 @@ export default {
           return;
         }
 
-        const { namespaces, ambiguous, externalStars, pluginStars } = analyzeBarrel(path.resolve(filename), readFile);
+        const { namespaces, ambiguous, externalStars, pluginStars } = analyzeBarrel(
+          path.resolve(filename),
+          readFile,
+          pkg,
+        );
 
         // Index the linted file's own statements so a finding can point at a real node. A
         // namespace declared in a nested barrel attaches to the `export *` that reaches it.

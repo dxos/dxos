@@ -6,6 +6,7 @@ import fs from 'node:fs';
 
 import comment from './rules/comment.js';
 import consistentUpdateParam from './rules/consistent-update-param.js';
+import dxosPackageImports from './rules/dxos-package-imports.js';
 import dxosSubpathExports from './rules/dxos-subpath-exports.js';
 import dxosSubpathImports from './rules/dxos-subpath-imports.js';
 import effectSubpathImports from './rules/effect-subpath-imports.js';
@@ -27,6 +28,7 @@ const plugin = {
   rules: {
     comment,
     'consistent-update-param': consistentUpdateParam,
+    'dxos-package-imports': dxosPackageImports,
     'dxos-subpath-exports': dxosSubpathExports,
     'dxos-subpath-imports': dxosSubpathImports,
     'effect-subpath-imports': effectSubpathImports,

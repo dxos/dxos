@@ -10,7 +10,6 @@ export default defineConfig({
     CommercePlugin: 'src/CommercePlugin.ts',
     plugin: 'src/plugin.tsx',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     CommerceEvents: 'src/types/CommerceEvents.ts',
     Provider: 'src/types/Provider.ts',
     Result: 'src/types/Result.ts',

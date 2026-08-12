@@ -6,7 +6,7 @@ import { type EditorView } from '@codemirror/view';
 import { Atom } from '@effect-atom/atom';
 import React, { memo, useMemo } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';

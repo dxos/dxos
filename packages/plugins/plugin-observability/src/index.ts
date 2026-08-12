@@ -3,5 +3,5 @@
 //
 
 export * as ObservabilityPlugin from './ObservabilityPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

@@ -7,9 +7,8 @@ import { describe, test } from 'vitest';
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 
+import { meta } from '#meta';
 import { MapPlugin } from '#plugin';
-
-import { meta } from './meta';
 
 describe('MapPlugin', () => {
   test('plugin initializes without error', async ({ expect }) => {

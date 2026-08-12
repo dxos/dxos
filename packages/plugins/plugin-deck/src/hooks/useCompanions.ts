@@ -5,8 +5,8 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect, useState } from 'react';
 
+import type * as Node from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { type Node } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { DeckSchema } from '#types';

@@ -4,5 +4,5 @@
 
 export * as SettingsPlugin from './SettingsPlugin';
 export * from './actions';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

@@ -7,7 +7,8 @@ import React, { type MouseEvent, useCallback } from 'react';
 import { useObject } from '@dxos/echo-react';
 import { Card, SystemIconButton, composable, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { type Result } from '../../types/Result';
 
 export type ResultCardProps = {

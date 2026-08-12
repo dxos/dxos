@@ -17,9 +17,9 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { ReactRoot, ReactSurface, State } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { type SimpleLayoutPluginOptions } from '#plugin';
 import { translations } from '#translations';
 
-import { type SimpleLayoutPluginOptions } from '../../plugin';
 import { SimpleLayout } from './SimpleLayout';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {

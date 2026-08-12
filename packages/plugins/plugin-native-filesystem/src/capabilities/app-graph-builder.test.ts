@@ -7,8 +7,10 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 import { NativeFilesystemCapabilities } from '#types';

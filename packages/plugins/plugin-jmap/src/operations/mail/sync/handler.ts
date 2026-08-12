@@ -14,7 +14,8 @@ import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { runMailSync } from '@dxos/plugin-inbox/sync';
 
-import { JmapCredentials, JmapMailApi } from '../../../services';
+import { JmapCredentials, JmapMailApi } from '#services';
+
 import { jmapMailSyncProvider } from './sync-provider';
 
 const handler = InboxOperation.JmapSync.pipe(

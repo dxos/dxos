@@ -9,11 +9,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Obj } from '@dxos/echo';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
-import { MapCapabilities } from '#types';
-
 // Import the lazy wrapper (ComponentType<any>) so JSX assignment is not blocked by the
 // compound GeoControlProps & MapArticleProps intersection that TS cannot unify directly.
-import { MapArticle } from '../index';
+import { MapArticle } from '#containers';
+import { MapCapabilities } from '#types';
+
 import { buildTileUrl } from './build-tile-url';
 
 // MapTiler raster style used when an API key for `maptiler.com` is configured.

@@ -3,5 +3,5 @@
 //
 
 export * as RegistryPlugin from './RegistryPlugin';
-export * from './meta';
+export * from '#meta';
 export * from './storage';

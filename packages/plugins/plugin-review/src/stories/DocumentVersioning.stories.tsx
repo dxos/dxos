@@ -46,6 +46,8 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
+import { translations } from '#translations';
+
 import { ReviewPlugin } from '../plugin';
 import {
   type ReviewScenario,
@@ -62,7 +64,6 @@ import {
   tableSuggestScenario,
 } from '../testing';
 import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
-import { translations } from '../translations';
 
 const concat = (...lines: string[]) => lines.join('\n');
 

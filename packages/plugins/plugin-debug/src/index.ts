@@ -3,5 +3,5 @@
 //
 
 export * as DebugPlugin from './DebugPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

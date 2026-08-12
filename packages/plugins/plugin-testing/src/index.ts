@@ -10,5 +10,5 @@
 export * as StorybookPlugin from './StorybookPlugin';
 export * from './core';
 export * from './corpus';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

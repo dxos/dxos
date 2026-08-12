@@ -3,6 +3,6 @@
 //
 
 export * as NavTreePlugin from './NavTreePlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';
 export * from './util';

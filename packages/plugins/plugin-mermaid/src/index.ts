@@ -3,4 +3,4 @@
 //
 
 export * as MermaidPlugin from './MermaidPlugin';
-export * from './meta';
+export * from '#meta';

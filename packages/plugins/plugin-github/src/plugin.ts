@@ -7,10 +7,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { Connector, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import { translations } from './translations';
 
 export const GitHubPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

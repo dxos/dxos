@@ -4,5 +4,5 @@
 
 export * as BlueskyPlugin from './BlueskyPlugin';
 export * from './events';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

@@ -150,6 +150,7 @@
     "@codemirror/lang-javascript": "catalog:",
     "@codemirror/lang-markdown": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",

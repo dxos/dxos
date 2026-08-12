@@ -3,5 +3,5 @@
 //
 
 export * as StackPlugin from './StackPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

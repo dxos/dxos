@@ -3,5 +3,5 @@
 //
 
 export * as DeckPlugin from './DeckPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

@@ -10,7 +10,7 @@ import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const LOAD_PLUGIN_DIALOG = DXN.make(`${meta.profile.key}.loadPluginDialog`);
 

@@ -4,4 +4,4 @@
 
 export * as HeyGenPlugin from './HeyGenPlugin';
 export * from './events';
-export * from './meta';
+export * from '#meta';

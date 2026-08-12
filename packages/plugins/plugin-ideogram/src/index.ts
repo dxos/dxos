@@ -4,4 +4,4 @@
 
 export * as IdeogramPlugin from './IdeogramPlugin';
 export * from './events';
-export * from './meta';
+export * from '#meta';

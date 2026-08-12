@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Position } from '@dxos/util';
 

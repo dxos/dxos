@@ -8,9 +8,8 @@ import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 
+import { meta } from '#meta';
 import { AttentionPlugin } from '#plugin';
-
-import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

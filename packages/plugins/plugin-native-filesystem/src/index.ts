@@ -3,5 +3,5 @@
 //
 
 export * as NativeFilesystemPlugin from './NativeFilesystemPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

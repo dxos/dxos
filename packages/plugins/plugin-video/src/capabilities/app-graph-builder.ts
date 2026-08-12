@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
-import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 // Import only the (lightweight) Video type directly — NOT via the `#types` barrel. The barrel also

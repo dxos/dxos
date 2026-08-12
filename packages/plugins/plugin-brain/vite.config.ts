@@ -13,7 +13,6 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     skills: 'src/skills/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     containers: 'src/containers/index.ts',
     BrainCapabilities: 'src/types/BrainCapabilities.ts',

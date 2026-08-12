@@ -6,12 +6,12 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useContext, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
 import { type Database, Filter, type Obj, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { CONNECTOR_AUTH_GROUP_ID, connectorAuthActions } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { Graph } from '@dxos/plugin-graph';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Menu, useGraphMenuActions } from '@dxos/react-ui-menu';

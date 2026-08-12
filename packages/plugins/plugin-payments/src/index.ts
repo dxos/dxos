@@ -3,5 +3,5 @@
 //
 
 export * as PaymentsPlugin from './PaymentsPlugin';
-export * from './types';
-export { meta } from './meta';
+export * from '#types';
+export { meta } from '#meta';

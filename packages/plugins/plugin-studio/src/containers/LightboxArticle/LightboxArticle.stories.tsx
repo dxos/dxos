@@ -18,10 +18,10 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Artifact, Lightbox, Variant } from '#types';
 
-import { StudioPlugin } from '../../plugin';
 import { LightboxArticle } from './LightboxArticle';
 
 const DefaultStory = () => {

@@ -18,4 +18,7 @@ tasks:
       - '--entryPoint=src/AtprotoPlugin.ts'
       - '--entryPoint=src/testing.ts'
       - '--entryPoint=src/translations.ts'
+      - '--entryPoint=src/types/AtprotoCapabilities.ts'
+      - '--entryPoint=src/types/AtprotoEvents.ts'
+      - '--entryPoint=src/types/AtprotoPublication.ts'
       - '--platform=neutral'

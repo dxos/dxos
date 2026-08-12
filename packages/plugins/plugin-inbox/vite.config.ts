@@ -20,7 +20,6 @@ export default defineConfig({
     'hooks': 'src/hooks/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
-    'plugin.workerd': 'src/plugin.workerd.ts',
     'testing': 'src/testing/index.ts',
     'testing/sync-fixture': 'src/testing/sync-fixture.ts',
     'translations': 'src/translations.ts',

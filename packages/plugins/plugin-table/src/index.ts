@@ -3,7 +3,7 @@
 //
 
 export * as TablePlugin from './TablePlugin';
-export * from './meta';
-export * from './operations';
-export * from './skills';
-export * from './types';
+export * from '#meta';
+export * from '#operations';
+export * from '#skills';
+export * from '#types';

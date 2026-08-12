@@ -3,4 +3,4 @@
 //
 
 export * as IrohBeaconPlugin from './IrohBeaconPlugin';
-export * from './meta';
+export * from '#meta';

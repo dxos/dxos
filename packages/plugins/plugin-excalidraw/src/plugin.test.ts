@@ -9,9 +9,8 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
+import { meta } from '#meta';
 import { ExcalidrawPlugin } from '#plugin';
-
-import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

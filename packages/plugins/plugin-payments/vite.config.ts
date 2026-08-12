@@ -12,7 +12,6 @@ export default defineConfig({
     capabilities: 'src/capabilities/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     services: 'src/services/index.ts',
     translations: 'src/translations.ts',
     PaymentsCapabilities: 'src/types/PaymentsCapabilities.ts',

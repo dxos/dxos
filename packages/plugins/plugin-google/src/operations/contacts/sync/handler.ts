@@ -19,9 +19,10 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { Person } from '@dxos/types';
 
-import { GoogleContacts } from '../../../apis';
+import { GoogleContacts } from '#apis';
+import { GoogleCredentials } from '#services';
+
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { GoogleCredentials } from '../../../services';
 import { mapGooglePerson } from '../mapper';
 
 const COMMIT_PAGE_SIZE = 10;

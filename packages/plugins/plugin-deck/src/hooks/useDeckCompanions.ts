@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeType from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Node, type Node as NodeType } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { type Label } from '@dxos/ui-types/translations';
 import { Position } from '@dxos/util';

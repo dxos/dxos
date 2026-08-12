@@ -4,4 +4,4 @@
 
 export * as PreviewPlugin from './PreviewPlugin';
 export * from './events';
-export * from './meta';
+export * from '#meta';

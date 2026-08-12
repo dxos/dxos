@@ -6,9 +6,9 @@ import { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
+import type * as Node from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { type Node } from '@dxos/plugin-graph';
 import { Path, type TreeModel } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 

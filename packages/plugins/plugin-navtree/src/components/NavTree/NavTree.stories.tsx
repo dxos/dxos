@@ -25,10 +25,9 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
+import { NavTreePlugin } from '#plugin';
 import { storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
-
-import { NavTreePlugin } from '../../plugin';
 
 random.seed(1234);
 

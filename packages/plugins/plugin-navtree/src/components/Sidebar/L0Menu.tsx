@@ -24,7 +24,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {

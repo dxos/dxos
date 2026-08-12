@@ -10,8 +10,8 @@ import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { EffectEx } from '@dxos/effect';
 
-import { RegistrySettings } from '../../components';
-import { type RegistrySettings as RegistrySettingsType } from '../../types';
+import { RegistrySettings } from '#components';
+import { type RegistrySettings as RegistrySettingsType } from '#types';
 
 export type RegistrySettingsContainerProps = {
   subject: AppCapabilities.Settings;

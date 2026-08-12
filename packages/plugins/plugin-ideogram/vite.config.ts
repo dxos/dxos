@@ -11,7 +11,6 @@ export default defineConfig({
     plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     services: 'src/services/index.ts',
   },
   test: { node: true },

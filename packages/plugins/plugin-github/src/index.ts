@@ -3,5 +3,5 @@
 //
 
 export * as GitHubPlugin from './GitHubPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

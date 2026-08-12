@@ -14,7 +14,6 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     Blog: 'src/types/Blog.ts',
     BloggerCapabilities: 'src/types/BloggerCapabilities.ts',

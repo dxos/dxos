@@ -8,7 +8,8 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Graph, type Node } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import type * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';

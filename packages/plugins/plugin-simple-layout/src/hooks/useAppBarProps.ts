@@ -7,9 +7,10 @@ import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, Node } from '@dxos/plugin-graph';
 import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';

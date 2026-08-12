@@ -6,7 +6,7 @@
 
 import { ThemePlugin } from '#plugin';
 
-export { meta } from './meta';
+export { meta } from '#meta';
 
 /** Constructs the plugin; the body is loaded eagerly. */
 export const make = ThemePlugin;

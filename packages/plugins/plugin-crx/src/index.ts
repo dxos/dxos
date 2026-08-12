@@ -3,5 +3,5 @@
 //
 
 export * as CrxPlugin from './CrxPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

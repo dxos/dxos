@@ -13,7 +13,6 @@ export default defineConfig({
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     ConductorEvents: 'src/types/ConductorEvents.ts',
   },

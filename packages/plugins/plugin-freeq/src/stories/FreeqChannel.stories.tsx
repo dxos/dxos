@@ -22,9 +22,10 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
+import { FreeqPlugin } from '#plugin';
+import { translations } from '#translations';
+
 import { FREEQ_BACKEND_KIND } from '../constants';
-import { FreeqPlugin } from '../plugin';
-import { translations } from '../translations';
 import { FreeqChannel, makeFreeqChannel } from '../types';
 
 /** Live freeq server + channel the demo connects to (guest read; no handle). */

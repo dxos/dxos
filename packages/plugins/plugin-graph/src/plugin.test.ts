@@ -7,9 +7,8 @@ import { describe, test } from 'vitest';
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 
+import { meta } from '#meta';
 import { GraphPlugin } from '#plugin';
-
-import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

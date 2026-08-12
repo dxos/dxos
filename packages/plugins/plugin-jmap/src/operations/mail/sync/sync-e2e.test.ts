@@ -10,8 +10,9 @@ import * as Predicate from 'effect/Predicate';
 
 import * as InboxResolver from '@dxos/extractor-lib';
 
-import { Jmap, JmapMail } from '../../../apis';
-import { JmapCredentials } from '../../../services';
+import { Jmap, JmapMail } from '#apis';
+import { JmapCredentials } from '#services';
+
 import { mapEmail } from '../mapper';
 
 /**

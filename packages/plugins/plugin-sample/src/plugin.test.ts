@@ -9,10 +9,9 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
+import { meta } from '#meta';
 import { SamplePlugin } from '#plugin';
 import { SampleItem, SampleOperation } from '#types';
-
-import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

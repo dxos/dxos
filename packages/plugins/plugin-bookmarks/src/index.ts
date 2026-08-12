@@ -3,5 +3,5 @@
 //
 
 export * as BookmarksPlugin from './BookmarksPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

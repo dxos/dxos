@@ -6,7 +6,7 @@ export * as ConnectorPlugin from './ConnectorPlugin';
 export { ATPROTO_OAUTH_SCOPES } from './constants';
 export { CONNECTOR_AUTH_GROUP_ID, type ConnectorAuthActionsOptions, connectorAuthActions } from './util';
 export { ConnectionTestError } from './errors';
-export * from './meta';
+export * from '#meta';
 export {
   autoBindSingleConnection,
   bindConnectionToTarget,
@@ -21,4 +21,4 @@ export {
   syncBinding,
   syncTarget,
 } from './util';
-export * from './types';
+export * from '#types';

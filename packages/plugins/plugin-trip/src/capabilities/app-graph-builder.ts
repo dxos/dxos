@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { GraphBuilder } from '@dxos/plugin-graph';
 import { getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { Selection, ViewState } from '@dxos/react-ui-attention';

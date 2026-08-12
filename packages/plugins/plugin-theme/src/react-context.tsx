@@ -11,9 +11,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
+import { meta } from '#meta';
 import { Settings, ThemeCapabilities } from '#types';
-
-import { meta } from './meta';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'resourceExtensions'>> & {
   appName?: string;

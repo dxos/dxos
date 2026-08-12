@@ -3,5 +3,5 @@
 //
 
 export * as ZenPlugin from './ZenPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

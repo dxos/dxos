@@ -12,7 +12,6 @@ export default defineConfig({
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     Template: 'src/types/Template.ts',
     types: 'src/types/index.ts',

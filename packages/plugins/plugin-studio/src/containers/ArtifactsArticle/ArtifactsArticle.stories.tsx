@@ -17,10 +17,10 @@ import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Artifact, Variant } from '#types';
 
-import { StudioPlugin } from '../../plugin';
 import { ArtifactsArticle } from './ArtifactsArticle';
 
 const DefaultStory = () => {

@@ -5,10 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ConnectionState } from '@dxos/client/mesh';
 import * as Operation from '@dxos/compute/Operation';
-import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';

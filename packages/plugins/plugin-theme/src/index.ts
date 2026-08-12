@@ -3,5 +3,5 @@
 //
 
 export * as ThemePlugin from './ThemePlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

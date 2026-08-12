@@ -4,7 +4,7 @@
 
 export * as ClientPlugin from './ClientPlugin';
 export * from './progress';
-export * from './types';
-export { ClientOperation } from './operations';
+export * from '#types';
+export { ClientOperation } from '#operations';
 export { HaloServicesLayer } from './halo-services-layer';
-export { meta } from './meta';
+export { meta } from '#meta';

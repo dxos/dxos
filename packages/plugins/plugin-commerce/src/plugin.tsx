@@ -6,12 +6,12 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { TagIndex } from '@dxos/schema';
 
+import { meta } from '#meta';
 import { Provider, Result, Search } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SkillDefinition } from './capabilities';
-import { meta } from './meta';
 import { translations } from './translations';
 
 export const CommercePlugin = Plugin.define(meta).pipe(

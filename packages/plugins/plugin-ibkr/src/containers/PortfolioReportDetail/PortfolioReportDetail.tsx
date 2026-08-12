@@ -10,9 +10,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
+import { ReportSections } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
 
-import { ReportSections } from '../../components';
 import { meta } from '../../meta';
 import { parseCash, parseClosedLots, parseOpenLots, parsePositions, parseTrades } from '../../services';
 

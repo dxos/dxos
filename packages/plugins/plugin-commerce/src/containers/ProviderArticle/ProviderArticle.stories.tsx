@@ -17,9 +17,9 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { CommercePlugin } from '#plugin';
 import { Provider } from '#types';
 
-import { CommercePlugin } from '../../plugin';
 import { makeSampleProvider } from '../../testing';
 import { translations } from '../../translations';
 import { ProviderArticle } from './ProviderArticle';

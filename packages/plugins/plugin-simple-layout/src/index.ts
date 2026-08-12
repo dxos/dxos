@@ -3,5 +3,5 @@
 //
 
 export * as SimpleLayoutPlugin from './SimpleLayoutPlugin';
-export * from './meta';
-export * from './types';
+export * from '#meta';
+export * from '#types';

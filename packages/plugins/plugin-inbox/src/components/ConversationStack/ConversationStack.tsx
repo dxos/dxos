@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import { type Graph } from '@dxos/app-graph';
+import type * as Graph from '@dxos/app-graph/Graph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';

@@ -11,9 +11,9 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
 
+import { NavTreePlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { NavTreePlugin } from '../../plugin';
 import { CommandsDialogContent } from './CommandsDialogContent';
 
 const DefaultStory = () => (

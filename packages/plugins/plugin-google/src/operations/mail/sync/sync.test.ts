@@ -26,9 +26,10 @@ import { ambientSyncServices, seedMailboxBinding, seedSenderOrganizations } from
 import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
+import { type GmailDataset, GoogleMailApi } from '#services';
+
 import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
 import { GoogleApiError } from '../../../errors';
-import { type GmailDataset, GoogleMailApi } from '../../../services';
 import { generateGmailDataset } from '../../../testing/gmail-fixtures';
 import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture';
 import { GMAIL_TAG_SOURCE } from '../tags';
