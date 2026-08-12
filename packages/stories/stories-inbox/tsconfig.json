@@ -130,6 +130,9 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-debug"
+    },
+    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {

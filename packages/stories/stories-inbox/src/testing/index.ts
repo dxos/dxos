@@ -5,6 +5,7 @@
 export * from './archive';
 export * from './messages';
 export * from './plugins';
+export * from './seed';
 export * from './trip';
 
 // NOTE: `./modules` (the `StoryModulesPlugin` surface registration) is intentionally NOT re-exported

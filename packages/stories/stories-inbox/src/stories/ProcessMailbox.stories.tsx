@@ -38,9 +38,18 @@ import { seedDemoMessages } from '../testing';
  * earns a Person only when its domain matches a known Organization.
  */
 const DEMO_ORGANIZATIONS = [
-  { name: 'Sequoia Capital', website: 'https://sequoia.com' },
-  { name: 'Globex Corporation', website: 'https://globex.com' },
-  { name: 'Initech', website: 'https://initech.com' },
+  {
+    name: 'Sequoia Capital',
+    website: 'https://sequoia.com',
+  },
+  {
+    name: 'Globex Corporation',
+    website: 'https://globex.com',
+  },
+  {
+    name: 'Initech',
+    website: 'https://initech.com',
+  },
 ];
 
 /** Adds a Mailbox with the shared demo messages on its feed, plus the gate Organizations. */

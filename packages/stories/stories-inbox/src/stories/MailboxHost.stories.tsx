@@ -197,7 +197,7 @@ const meta = {
   render: HostStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column' }),
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),

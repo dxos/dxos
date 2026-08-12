@@ -63,12 +63,14 @@ const Story = () => {
     if (!mailbox || !space) {
       return;
     }
+
     const message = Obj.make(Message.Message, {
       created: '2026-01-01T10:00:00.000Z',
       sender: { email: 'alice@example.com' },
       blocks: [{ _tag: 'text', text: 'Kickoff details.' }],
       properties: { subject: 'Project kickoff', messageId: '<kickoff>' },
     });
+
     void invokePromise(
       InboxOperation.CreateProjectFromMessage,
       { mailbox: Ref.make(mailbox), message },

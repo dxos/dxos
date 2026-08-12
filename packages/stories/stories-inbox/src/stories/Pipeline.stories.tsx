@@ -55,6 +55,8 @@ const SYNC_STORY_TYPES = [
  * Seeds the feed with demo messages for the `SeededFacts` variant. `seedDemoMessages` is idempotent
  * (dedups by subject), so a reload against persistent storage never re-appends; the ref just avoids
  * redundant runs within a session. Renders nothing.
+ *
+ * @deprecated Seed from fixture instead.
  */
 const SeedRunner = () => {
   const [space] = useSpaces();

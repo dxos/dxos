@@ -58,6 +58,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-trip": "workspace:*",
+    "@dxos/react-ui-debug": "workspace:*",
     "@dxos/storybook-testing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",

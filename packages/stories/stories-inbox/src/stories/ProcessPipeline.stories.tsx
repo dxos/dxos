@@ -4,18 +4,22 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Provider } from '@dxos/ai';
+import { Role } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { ProgressMeter, useProgressMonitors } from '@dxos/app-toolkit/ui';
-import { Database, Feed, Filter, Query, Ref } from '@dxos/echo';
+import { ProgressMeter, useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
+import { Feed, Filter, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
@@ -23,56 +27,52 @@ import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import { ContactMessageExtractor } from '@dxos/plugin-inbox/operations';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
+import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
+import { Message, Organization, Person } from '@dxos/types';
 
-import { StoryAiPlugin, importMessages, seedDemoMessages } from '../testing';
+import { StoryAiPlugin, loadMailboxFixture } from '../testing';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
 
-/**
- * Adds a Mailbox seeded from the pulled `@dxos/fixtures` mailbox corpus (served by the storybook
- * dev server at `/fixtures/<name>.json` — see `.storybook/main.mts`), falling back to the shared
- * demo messages when no corpus has been pulled (CI, fresh checkout). The dev server SPA-fallbacks
- * unknown paths with HTML, so gate on the content type rather than the status alone.
- */
-const seed = async (space: Space) => {
-  const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
-  await space.db.flush();
-  const response = await fetch('/fixtures/mailbox.json').catch(() => undefined);
-  if (response?.ok && response.headers.get('content-type')?.includes('application/json')) {
-    const archived: unknown[] = await response.json();
-    await importMessages(mailbox, archived, space.db);
-  } else {
-    const feed = await mailbox.feed.load();
-    await EffectEx.runPromise(seedDemoMessages(feed).pipe(Effect.provide(Database.layer(space.db))));
-  }
-  await space.db.flush({ indexes: true });
-};
+/** Role token for the story-local process module, referenced by the `ModuleContainer` layout. */
+const ProcessRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.process');
 
 /**
- * Harness: seeds the shared demo mailbox fixture and drives the cursored `ProcessMailbox`
- * pipeline + `ResetProcessCursor` via the OperationInvoker (the same operations the mailbox
- * toolbar's Process/Reset actions run), reporting live counts so the play function can assert
- * cursor semantics from the DOM.
+ * Story-local module: drives the cursored `ProcessMailbox` pipeline, `ResetProcessCursor`, and the
+ * `AnalyzeMailbox` fact variant via the OperationInvoker (the same operations the mailbox toolbar
+ * runs), reporting live counts so the play function can assert cursor semantics from the DOM.
+ * Resolves the active space like every module surface (`ModuleContainer` sets the workspace).
  */
-const DefaultStory = () => {
-  const [space] = useSpaces();
-  const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
+const ProcessModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+
+  return <ProcessModuleContainer space={space} />;
+};
+
+const ProcessModuleContainer = ({ space }: { space: Space }) => {
+  const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
   const feed = mailbox?.feed?.target;
   const messages = useQuery(
-    space?.db,
+    space.db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
-  const cursors = useQuery(space?.db, Filter.type(Cursor.Cursor));
+  const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
+  const contacts = useQuery(space.db, Filter.type(Person.Person));
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);
   const [factStores] = useCapabilities(BrainCapabilities.FactStoreRegistry);
   const [runs, setRuns] = useState(0);
@@ -84,22 +84,24 @@ const DefaultStory = () => {
   const monitors = useProgressMonitors();
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
-  // The in-memory FactStore is not ECHO-reactive, so refreshes are explicit (after each run).
-  const refreshFacts = async () => {
-    if (!space || !factStores) {
+  const handleReset = useCallback(async () => {
+    if (!invoker || !mailbox) {
       return;
     }
-    const stored = await EffectEx.runPromise(
-      factStores
-        .forSpace(space.id)
-        .query({})
-        .pipe(Effect.orElseSucceed(() => [])),
-    );
-    setFacts(stored.length);
-  };
 
-  const handleRun = async () => {
-    if (!space?.db || !invoker || !mailbox) {
+    const result = await invoker
+      .invokePromise(InboxOperation.ResetProcessCursor, { mailbox: Ref.make(mailbox) }, { spaceId: space.id })
+      .catch((err) => {
+        log.warn('reset process cursor failed', { err });
+        return { error: String(err) };
+      });
+    setLast(result);
+    setRuns(0);
+    setFacts(0);
+  }, [space, invoker, mailbox]);
+
+  const handleProcess = useCallback(async () => {
+    if (!invoker || !mailbox) {
       return;
     }
 
@@ -113,27 +115,32 @@ const DefaultStory = () => {
       });
     setLast(result);
     setRuns((count) => count + 1);
-  };
+  }, [space, invoker, mailbox]);
 
-  const handleReset = async () => {
-    if (!space?.db || !invoker || !mailbox) {
+  // Contact-extraction pipeline: runs the deterministic contact extractor over every feed message
+  // (a Person per sender, linked to a known Organization by domain); results land in the space and
+  // are visible in the Database module.
+  const handleExtract = useCallback(async () => {
+    if (!invoker || !mailbox) {
       return;
     }
 
     const result = await invoker
-      .invokePromise(InboxOperation.ResetProcessCursor, { mailbox: Ref.make(mailbox) }, { spaceId: space.id })
+      .invokePromise(
+        InboxOperation.ExtractMailbox,
+        { mailbox: Ref.make(mailbox), extractorId: ContactMessageExtractor.id },
+        { spaceId: space.id },
+      )
       .catch((err) => {
-        log.warn('reset process cursor failed', { err });
+        log.warn('extract contacts failed', { err });
         return { error: String(err) };
       });
     setLast(result);
     setRuns((count) => count + 1);
-  };
+  }, [space, invoker, mailbox]);
 
-  // Fact-pipeline variant: `AnalyzeMailbox` over the same feed (own `#analyze` cursor + monitor),
-  // extracting against a local Ollama model — start it with `OLLAMA_ORIGINS="*" ollama serve`.
-  const handleAnalyze = async () => {
-    if (!space?.db || !invoker || !mailbox) {
+  const handleAnalyze = useCallback(async () => {
+    if (!invoker || !mailbox) {
       return;
     }
 
@@ -149,18 +156,29 @@ const DefaultStory = () => {
       });
     setLast(result);
     setRuns((count) => count + 1);
-    await refreshFacts();
-  };
+
+    // The in-memory FactStore is not ECHO-reactive, so refreshes are explicit (after each run).
+    const stored = await EffectEx.runPromise(
+      factStores
+        .forSpace(space.id)
+        .query({})
+        .pipe(Effect.orElseSucceed(() => [])),
+    );
+    setFacts(stored.length);
+  }, [space, invoker, mailbox, factStores]);
 
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Button data-testid='process' disabled={!invoker || !mailbox} onClick={() => void handleRun()}>
-            Run
-          </Toolbar.Button>
           <Toolbar.Button data-testid='reset' disabled={!invoker || !mailbox} onClick={() => void handleReset()}>
             Reset
+          </Toolbar.Button>
+          <Toolbar.Button data-testid='process' disabled={!invoker || !mailbox} onClick={() => void handleProcess()}>
+            Process
+          </Toolbar.Button>
+          <Toolbar.Button data-testid='extract' disabled={!invoker || !mailbox} onClick={() => void handleExtract()}>
+            Extract
           </Toolbar.Button>
           <Toolbar.Button data-testid='analyze' disabled={!invoker || !mailbox} onClick={() => void handleAnalyze()}>
             Analyze
@@ -175,6 +193,7 @@ const DefaultStory = () => {
             messages: messages.length,
             cursors: cursors.length,
             cursorMax: Cursor.parseKey(cursors[0]?.max),
+            contacts: contacts.length,
             facts,
             last,
           }}
@@ -196,6 +215,33 @@ const DefaultStory = () => {
   );
 };
 
+/**
+ * Registers the story-local process module surface plus the shared diagnostic module surfaces
+ * (Logging etc. — see `@dxos/storybook-testing/modules`), so the `ModuleContainer` layout can
+ * reference both by role token.
+ */
+const StoryProcessPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.inbox.story.processPipeline'),
+    name: 'Process Pipeline Story Modules',
+  }),
+).pipe(
+  Plugin.addModule({
+    id: 'process-pipeline-modules',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(Capabilities.ReactSurface, [
+          Surface.create({ id: 'inbox.process', filter: Surface.makeFilter(ProcessRole), component: ProcessModule }),
+          ...moduleSurfaces,
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const DefaultStory = () => <ModuleContainer layout={[[ProcessRole], [ModuleRole.Database, ModuleRole.Logging]]} />;
+
 const meta = {
   title: 'stories/stories-inbox/ProcessPipeline',
   render: DefaultStory,
@@ -207,11 +253,19 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Feed.Feed, Mailbox.Mailbox, TagIndex.TagIndex, Message.Message, Cursor.Cursor],
+          types: [
+            Cursor.Cursor,
+            Feed.Feed,
+            Mailbox.Mailbox,
+            Message.Message,
+            Organization.Organization,
+            Person.Person,
+            TagIndex.TagIndex,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => seed(defaultSpace));
+              yield* Effect.promise(() => loadMailboxFixture(defaultSpace));
             }),
         }),
         StorybookPlugin({}),
@@ -219,10 +273,11 @@ const meta = {
         BrainPlugin(),
         ProgressPlugin(),
         StoryAiPlugin(),
+        StoryProcessPlugin(),
       ],
     }),
   ],
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', translations: debugTranslations },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -235,7 +290,8 @@ export const Default: Story = {};
  * The cursored log-title pipeline over a seeded mailbox — the `@dxos/fixtures` corpus when pulled,
  * the demo messages otherwise, so the assertions are count-agnostic: the first run processes every
  * seeded message and creates the tagged feed cursor; a rerun processes nothing (strictly-greater
- * skip); reset clears the cursor (reusing the object) so the next run re-processes the whole feed.
+ * skip); reset clears the cursor (reusing the object, zeroing the run counter) so the next run
+ * re-processes the whole feed.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -290,13 +346,14 @@ export const Test: Story = {
     const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
     void expect(afterSecond).toMatch(/"processed":\s*0\b/);
 
-    // Reset clears the cursor (object reused), so the next run re-processes the whole feed.
+    // Reset clears the cursor (object reused) and zeroes the run counter, so the next run
+    // re-processes the whole feed.
     await userEvent.click(canvas.getByTestId('reset'));
-    const afterReset = await waitFor((text) => /"runs":\s*3\b/.test(text));
-    void expect(afterReset).toMatch(/"reset":\s*true\b/);
+    const afterReset = await waitFor((text) => /"reset":\s*true\b/.test(text));
+    void expect(afterReset).toMatch(/"runs":\s*0\b/);
     void expect(afterReset).toMatch(/"cursorMax":\s*0\b/);
     await userEvent.click(canvas.getByTestId('process'));
-    const afterRerun = await waitFor((text) => /"runs":\s*4\b/.test(text));
+    const afterRerun = await waitFor((text) => /"runs":\s*1\b/.test(text) && /"processed":/.test(text));
     void expect(afterRerun).toMatch(new RegExp(`"processed":\\s*${messageCount}\\b`));
     void expect(afterRerun).toMatch(/"cursors":\s*1\b/);
   },

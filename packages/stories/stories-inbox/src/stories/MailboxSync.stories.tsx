@@ -98,7 +98,6 @@ const DefaultStory = () => (
       [StoryRole.Connector, StoryRole.Triggers],
       [StoryRole.Trace, StoryRole.SwarmTrace],
     ]}
-    compact
   />
 );
 
