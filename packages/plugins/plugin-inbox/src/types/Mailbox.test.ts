@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Feed, Filter, Tag } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { TagIndex } from '@dxos/schema';
@@ -55,6 +56,117 @@ describe('Mailbox tags', () => {
     // Removing unsets the association.
     Mailbox.removeTag(mailbox, tagUri, message);
     expect(Mailbox.getTagsForMessage(mailbox, message)).toEqual([]);
+  });
+});
+
+describe('identity addresses', () => {
+  test('recognizes a mailbox named after the account it syncs, and nothing else', ({ expect }) => {
+    expect(Mailbox.identityAddresses({ name: 'rich@example.com' })).toEqual(['rich@example.com']);
+    // Normalized, so the comparison against message senders is case-insensitive.
+    expect(Mailbox.identityAddresses({ name: '  Rich@Example.COM ' })).toEqual(['rich@example.com']);
+    // A display name is NOT an identity: deriving against it would invert every sent/received call.
+    expect(Mailbox.identityAddresses({ name: 'Inbox' })).toEqual([]);
+    expect(Mailbox.identityAddresses({})).toEqual([]);
+  });
+});
+
+describe('Mailbox annotations', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const createMailbox = async (messageCount: number) => {
+    const { db } = await builder.createDatabase({
+      types: [Feed.Feed, Tag.Tag, Mailbox.Mailbox, Message.Message, TagIndex.TagIndex],
+    });
+    const mailbox = db.add(Mailbox.make());
+    await db.flush();
+    const feed = mailbox.feed!.target!;
+
+    const { messages } = new Builder().createMessages(messageCount).build();
+    await EffectEx.runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(db))));
+
+    // The annotation feed is provisioned on first use (like the tag index), not at mailbox creation.
+    const annotations = db.add(Feed.make());
+    Obj.setParent(annotations, mailbox);
+    Obj.update(mailbox, (mailbox) => {
+      mailbox.annotations = Ref.make(annotations);
+    });
+    await db.flush();
+    return { db, mailbox, feed, annotations, messages };
+  };
+
+  const read = (db: EchoDatabase, feed: Feed.Feed) =>
+    EffectEx.runAndForwardErrors(
+      Feed.query(feed, Filter.type(Message.Message)).run.pipe(Effect.provide(Database.layer(db))),
+    );
+
+  test('merges a summary feed into the message feed by parentMessage', async ({ expect }) => {
+    const { db, mailbox, feed, annotations, messages } = await createMailbox(3);
+    const [first, , third] = messages;
+
+    // Summaries for a SUBSET of the messages: the merge must not drop the unsummarized ones.
+    await EffectEx.runAndForwardErrors(
+      Feed.append(annotations, [
+        Mailbox.makeSummary({ message: first, text: 'First summarized.', model: 'haiku' }),
+        Mailbox.makeSummary({ message: third, text: 'Third summarized.' }),
+      ]).pipe(Effect.provide(Database.layer(db))),
+    );
+
+    const feedMessages = await read(db, feed);
+    const merged = [...Mailbox.mergeAnnotations(feedMessages, await read(db, mailbox.annotations!.target!))];
+
+    // Every message survives, in the order given — annotations never add, remove or reorder.
+    expect(merged.map((entry) => entry.message.id)).toEqual(feedMessages.map((message) => message.id));
+
+    const entryFor = (message: Message.Message) => merged.find((entry) => entry.message.id === message.id);
+    expect(entryFor(first)?.summary).toBe('First summarized.');
+    expect(entryFor(third)?.summary).toBe('Third summarized.');
+    // The unsummarized message is still present, simply without a summary.
+    const [unsummarized] = merged.filter((entry) => entry.summary === undefined);
+    expect(unsummarized.annotations).toEqual([]);
+    expect(merged.filter((entry) => entry.summary !== undefined)).toHaveLength(2);
+    // The annotation is a full Message, so its provenance rides along.
+    expect(entryFor(first)?.annotations[0].properties?.model).toBe('haiku');
+  });
+
+  test('a re-derived summary supersedes the earlier one, which stays in the feed', async ({ expect }) => {
+    const { db, mailbox, feed, annotations, messages } = await createMailbox(1);
+    const [message] = messages;
+
+    await EffectEx.runAndForwardErrors(
+      Feed.append(annotations, [
+        Mailbox.makeSummary({ message, text: 'Draft summary.', created: '2026-07-01T00:00:00.000Z' }),
+        Mailbox.makeSummary({ message, text: 'Better summary.', created: '2026-07-02T00:00:00.000Z' }),
+      ]).pipe(Effect.provide(Database.layer(db))),
+    );
+
+    const [entry] = [...Mailbox.mergeAnnotations(await read(db, feed), await read(db, mailbox.annotations!.target!))];
+
+    // Newest wins for display; the append-only history is intact behind it.
+    expect(entry.summary).toBe('Better summary.');
+    expect(entry.annotations).toHaveLength(2);
+    expect(entry.annotations.map(Mailbox.getSummaryText)).toEqual(['Better summary.', 'Draft summary.']);
+  });
+
+  test('annotations never leak into the message feed', async ({ expect }) => {
+    const { db, mailbox, feed, annotations, messages } = await createMailbox(2);
+
+    await EffectEx.runAndForwardErrors(
+      Feed.append(annotations, [Mailbox.makeSummary({ message: messages[0], text: 'Summarized.' })]).pipe(
+        Effect.provide(Database.layer(db)),
+      ),
+    );
+
+    // The reason for a second feed rather than one mixed feed: no reader has to filter.
+    expect(await read(db, feed)).toHaveLength(2);
+    expect(await read(db, mailbox.annotations!.target!)).toHaveLength(1);
   });
 });
 
@@ -178,6 +290,38 @@ describe('subscriptions', () => {
     });
     expect(Mailbox.parseUnsubscribe('<mailto:unsub@x.io>')).toEqual({ mailto: 'mailto:unsub@x.io' });
     expect(Mailbox.parseUnsubscribe('not a header')).toEqual({});
+  });
+
+  test('parseUnsubscribe accepts a bare URL (body-extracted affordance)', ({ expect }) => {
+    expect(Mailbox.parseUnsubscribe('https://x.io/unsubscribe?t=1')).toEqual({ http: 'https://x.io/unsubscribe?t=1' });
+    expect(Mailbox.parseUnsubscribe('mailto:unsub@x.io')).toEqual({ mailto: 'mailto:unsub@x.io' });
+  });
+
+  test('extractBodyUnsubscribe finds unsubscribe-shaped links in text blocks', ({ expect }) => {
+    const withBody = (text: string) =>
+      Message.make({
+        created: '2026-01-01T00:00:00.000Z',
+        sender: { email: 'news@a.io' },
+        blocks: [{ _tag: 'text', text }],
+        properties: { subject: 's' },
+      });
+    expect(Mailbox.extractBodyUnsubscribe(withBody('Bye. https://a.io/unsubscribe?u=1 Thanks'))).toBe(
+      'https://a.io/unsubscribe?u=1',
+    );
+    expect(Mailbox.extractBodyUnsubscribe(withBody('Manage: https://a.io/email-preferences/x'))).toBe(
+      'https://a.io/email-preferences/x',
+    );
+    expect(Mailbox.extractBodyUnsubscribe(withBody('no links here'))).toBeUndefined();
+  });
+
+  test('getUnsubscribeAffordance prefers the header over a body link', ({ expect }) => {
+    const message = Message.make({
+      created: '2026-01-01T00:00:00.000Z',
+      sender: { email: 'news@a.io' },
+      blocks: [{ _tag: 'text', text: 'https://a.io/unsubscribe?body=1' }],
+      properties: { subject: 's', listUnsubscribe: '<https://a.io/u?header=1>' },
+    });
+    expect(Mailbox.getUnsubscribeAffordance(message)).toBe('<https://a.io/u?header=1>');
   });
 
   test('parseUnsubscribe accepts a bare URL (body-extracted affordance)', ({ expect }) => {

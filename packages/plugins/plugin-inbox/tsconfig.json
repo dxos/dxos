@@ -161,6 +161,9 @@
       "path": "../../ui/react-ui-search"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
