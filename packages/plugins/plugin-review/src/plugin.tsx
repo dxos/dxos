@@ -8,7 +8,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
-import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import {
   AgentIdentityModule,
@@ -48,7 +47,7 @@ export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(UndoMappings),
-  Plugin.addModule(AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(HistorySurface),
   Plugin.addModule(AppCapability.translations([...translations, ...threadTranslations])),

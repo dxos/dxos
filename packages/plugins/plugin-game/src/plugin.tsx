@@ -8,14 +8,13 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Game } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const GamePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
-  Plugin.addModule(AppCapability.schema([Game.Game])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(

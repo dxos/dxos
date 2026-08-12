@@ -8,7 +8,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { GameVariant, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Chess, ChessPositionIndex, PlayerReview } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -25,7 +24,7 @@ export const ChessPlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addModule(AppCapability.schema([Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );

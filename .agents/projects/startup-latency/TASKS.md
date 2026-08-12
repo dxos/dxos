@@ -1126,7 +1126,15 @@ documented as being for exactly this kind of registration contribution. So schem
 idle-activated — the conversion is purely about the MODULE GRAPH, not timing. The array literal
 is built when `XPlugin.tsx` is evaluated no matter when the module activates.
 
-- [ ] Convert the 101 `AppCapability.schema([...])` call sites to the loader form, measure
-      `check-boot-budget` before/after. The schema arrays sit in `XPlugin.tsx` (behind the lazy
-      `#plugin` import) so the boot win may be zero — measure, do not assume, per the two
-      negative `sideEffects` results above.
+- [x] DONE, and MEASURED NEGATIVE: converting the call sites to the loader form moved
+      `check-boot-budget` by -354 bytes (4,730,304 -> 4,729,950, 21 chunks either side) on a
+      genuinely re-run bundle. The reason is the one anticipated here: the arrays sit in
+      `XPlugin.tsx`, already behind the lazy `#plugin` dynamic import, so they were never in the
+      boot graph and deferring them defers nothing. Keep the change for consistency with
+      `commands` and because it drops `#types` from ~50 plugin bodies, but do NOT record it as a
+      startup lever. Untested: whether it moves `check-startup-budget` or lazy-chunk size.
+
+      Shape, for reference: 99 call sites across 52 packages became 62 modules. 44 packages share
+      one `schema.ts` across their platform variants (the arrays were previously restated per
+      variant); 8 needed `schema.node.ts` / `schema.workerd.ts` because their variants really do
+      register different sets — plugin-inbox registers 9 in the browser and 4 headless.

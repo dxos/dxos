@@ -8,13 +8,12 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Stack } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const StackPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.schema([Stack.Stack])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(

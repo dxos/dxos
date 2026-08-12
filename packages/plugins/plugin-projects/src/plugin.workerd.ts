@@ -5,9 +5,6 @@
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Instructions from '@dxos/compute/Instructions';
-import * as Project from '@dxos/compute/Project';
-import * as Routine from '@dxos/compute/Routine';
 
 import { meta } from '#meta';
 import { ProjectCapabilities } from '#types';
@@ -24,7 +21,7 @@ const Templates = Capability.lazyModule(
 
 export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema([Project.Project, Instructions.Instructions, Routine.Routine])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema.workerd'))),
   Plugin.addModule(Templates),
   Plugin.make,
 );

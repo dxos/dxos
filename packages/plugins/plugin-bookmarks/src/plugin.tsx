@@ -4,19 +4,17 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Text } from '@dxos/schema';
 
 import { CommentConfig, OperationHandler, PageActionProvider, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Bookmark } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BookmarksPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CommentConfig),
-  Plugin.addModule(AppCapability.schema([Bookmark.Bookmark, Text.Text])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PageActionProvider),
   Plugin.addModule(ReactSurface),

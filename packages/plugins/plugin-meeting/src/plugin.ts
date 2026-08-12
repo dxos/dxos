@@ -4,7 +4,6 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { AnchoredTo } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -16,7 +15,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Meeting } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -24,7 +22,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema([Meeting.Meeting, AnchoredTo.AnchoredTo])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(MeetingSettings),

@@ -8,7 +8,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { CreateObject, OperationHandler, ReactSurface, SkillDefinition, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Kanban } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -18,7 +17,7 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(UndoMappings),
-  Plugin.addModule(AppCapability.schema([Kanban.Kanban])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(

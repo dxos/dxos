@@ -4,8 +4,6 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { ComputeGraph } from '@dxos/conductor';
-import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -16,7 +14,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ConductorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
-  Plugin.addModule(AppCapability.schema([CanvasBoard.CanvasBoard, ComputeGraph])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(

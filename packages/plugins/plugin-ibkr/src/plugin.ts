@@ -14,7 +14,6 @@ import {
   SkillDefinition,
 } from '#capabilities';
 import { translations } from '#translations';
-import { Ibkr } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -22,7 +21,7 @@ import { meta } from './meta';
 
 export const IbkrPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(AppCapability.schema([Ibkr.Portfolio, Ibkr.Report, Ibkr.Instrument, Ibkr.Lot])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(CreateObject),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),

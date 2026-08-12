@@ -8,7 +8,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ChannelBackend, Connector, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { BlueskyChannel } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -16,7 +15,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const BlueskyPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(AppCapability.schema([BlueskyChannel])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(Connector),
   // Read-only ATProto channel backend (contributes ThreadCapabilities.ChannelBackend).
   Plugin.addModule(ChannelBackend),

@@ -8,7 +8,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Drawing } from '#types';
 
 /**
  * Headless variant of IllustratorPlugin (no React surfaces / CreateObject panel).
@@ -18,7 +17,7 @@ import { Drawing } from '#types';
  */
 export const IllustratorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema([Drawing.Drawing, Drawing.Canvas])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,

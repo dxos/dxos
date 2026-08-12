@@ -4,24 +4,10 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Tag } from '@dxos/echo';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { DataTypes } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import {
-  AnchoredTo,
-  Employer,
-  Event,
-  HasConnection,
-  HasRelationship,
-  HasSubject,
-  Organization,
-  Person,
-  Pipeline,
-  Task,
-  TaskSet,
-} from '@dxos/types';
+import { HasConnection, Person } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -54,23 +40,7 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).p
   Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactRoot),
-  Plugin.addModule(
-    AppCapability.schema([
-      ...DataTypes,
-      AnchoredTo.AnchoredTo,
-      Employer.Employer,
-      Event.Event,
-      HasConnection.HasConnection,
-      HasRelationship.HasRelationship,
-      HasSubject.HasSubject,
-      Organization.Organization,
-      Person.Person,
-      Pipeline.Pipeline,
-      Tag.Tag,
-      Task.Task,
-      TaskSet.TaskSet,
-    ]),
-  ),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(SpaceSettings),
   Plugin.addModule(
     AppCapability.translations([...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations]),

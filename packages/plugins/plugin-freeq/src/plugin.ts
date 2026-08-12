@@ -11,11 +11,10 @@ import { translations } from '#translations';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import { FreeqChannel } from './types';
 
 export const FreeqPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(AppCapability.schema([FreeqChannel])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   // Single module contributes both the connection manager and the channel backend
   // (see channel-backend.ts) — same-wave modules cannot `waitFor` each other's contributions.
   Plugin.addModule(ChannelBackend),

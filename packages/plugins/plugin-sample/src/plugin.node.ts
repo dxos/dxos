@@ -12,11 +12,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { SampleItem } from '#types';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
-  Plugin.addModule(AppCapability.schema([SampleItem.SampleItem])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(OperationHandler),
   Plugin.make,
 );

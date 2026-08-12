@@ -4,10 +4,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Project from '@dxos/compute/Project';
-import { AccessToken, Cursor } from '@dxos/link';
-import { TagIndex } from '@dxos/schema';
-import { Event, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -24,7 +21,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Calendar, ExtractedFrom, Mailbox } from '#types';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
@@ -32,19 +28,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(
-    AppCapability.schema([
-      Event.Event,
-      Mailbox.Mailbox,
-      Calendar.Calendar,
-      Message.Message,
-      ExtractedFrom.ExtractedFrom,
-      TagIndex.TagIndex,
-      Project.Project,
-      AccessToken.AccessToken,
-      Cursor.Cursor,
-    ]),
-  ),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(IdentitySpecs),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

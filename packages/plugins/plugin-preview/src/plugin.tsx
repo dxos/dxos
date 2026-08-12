@@ -4,14 +4,13 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Organization, Person } from '@dxos/types';
 
 import { PreviewPopover, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.schema([Person.Person, Organization.Organization])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(PreviewPopover),

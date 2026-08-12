@@ -15,7 +15,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ProfileOf } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -25,7 +24,7 @@ export const CrmPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(AppCapability.schema([ProfileOf.ProfileOf])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(AutomationTemplates),
   // Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu.
   Plugin.addModule(MailboxAction),

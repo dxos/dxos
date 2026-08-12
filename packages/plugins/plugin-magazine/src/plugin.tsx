@@ -4,8 +4,6 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Instructions from '@dxos/compute/Instructions';
-import { StateMap, TagIndex } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
@@ -17,7 +15,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Magazine, Subscription } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -34,17 +31,7 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addModule(
-    AppCapability.schema([
-      Subscription.Subscription,
-      Subscription.Post,
-      Subscription.PostContent,
-      Magazine.Magazine,
-      Instructions.Instructions,
-      StateMap.StateMap,
-      TagIndex.TagIndex,
-    ]),
-  ),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

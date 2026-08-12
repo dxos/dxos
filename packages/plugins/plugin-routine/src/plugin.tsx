@@ -4,11 +4,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Instructions from '@dxos/compute/Instructions';
-import * as Operation from '@dxos/compute/Operation';
-import * as Routine from '@dxos/compute/Routine';
 import * as Trace from '@dxos/compute/Trace';
-import * as Trigger from '@dxos/compute/Trigger';
 
 import {
   AppGraphBuilder,
@@ -41,15 +37,7 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addModule(
-    AppCapability.schema([
-      Routine.Routine,
-      Operation.PersistentOperation,
-      Instructions.Instructions,
-      Trigger.Trigger,
-      Trace.Message,
-    ]),
-  ),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   // Dependency-mode: the specs resolve services (client, database, ...) lazily at

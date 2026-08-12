@@ -4,8 +4,6 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Blob } from '@dxos/echo';
-import { File } from '@dxos/types';
 
 import {
   CreateObject,
@@ -28,7 +26,7 @@ export const FilePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema([File.File, Blob.Blob])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(Settings),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

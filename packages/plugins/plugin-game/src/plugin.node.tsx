@@ -7,7 +7,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Game } from '#types';
 
 /**
  * Headless variant of GamePlugin (no React surfaces / CreateObject panel).
@@ -16,7 +15,7 @@ import { Game } from '#types';
  * downstream bundlers don't resolve cleanly under nested pnpm symlinks.
  */
 export const GamePlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.schema([Game.Game])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );

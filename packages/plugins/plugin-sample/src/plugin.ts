@@ -15,7 +15,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { SampleItem } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -34,7 +33,7 @@ export const SamplePlugin = Plugin.define(meta).pipe(
 
   // Registers ECHO schemas so the framework knows about this type.
   // Required for queries, serialization, and type resolution.
-  Plugin.addModule(AppCapability.schema([SampleItem.SampleItem])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
 
   // Registers the settings module.
   Plugin.addModule(SampleSettings),

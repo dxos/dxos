@@ -4,20 +4,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Tag } from '@dxos/echo';
-import { DataTypes } from '@dxos/schema';
-import {
-  AnchoredTo,
-  Employer,
-  Event,
-  HasConnection,
-  HasRelationship,
-  HasSubject,
-  Organization,
-  Person,
-  Pipeline,
-  Task,
-} from '@dxos/types';
+import { HasConnection, Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -27,22 +14,7 @@ const OperationHandler = AppCapability.operationHandler(() => import('./capabili
 
 export const SpacePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(
-    AppCapability.schema([
-      ...DataTypes,
-      AnchoredTo.AnchoredTo,
-      Employer.Employer,
-      Event.Event,
-      HasConnection.HasConnection,
-      HasRelationship.HasRelationship,
-      HasSubject.HasSubject,
-      Organization.Organization,
-      Person.Person,
-      Pipeline.Pipeline,
-      Tag.Tag,
-      Task.Task,
-    ]),
-  ),
+  Plugin.addModule(AppCapability.schema(() => import('./schema.workerd'))),
   Plugin.make,
 );
 

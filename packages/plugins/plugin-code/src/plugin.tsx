@@ -16,7 +16,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { CodeProject, SourceFile, Spec } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -26,7 +25,7 @@ export const CodePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema([Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(SettingsCapability),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

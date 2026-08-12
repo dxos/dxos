@@ -15,7 +15,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Drawing } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -25,7 +24,7 @@ export const IllustratorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CommentConfig),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema([Drawing.Drawing, Drawing.Canvas])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

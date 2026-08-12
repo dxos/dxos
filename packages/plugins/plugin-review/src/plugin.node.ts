@@ -4,7 +4,6 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -23,7 +22,7 @@ export const ReviewPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(UndoMappings),
-  Plugin.addModule(AppCapability.schema([AnchoredTo.AnchoredTo, Message.Message, Thread.Thread])),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
   Plugin.make,
 );
 
