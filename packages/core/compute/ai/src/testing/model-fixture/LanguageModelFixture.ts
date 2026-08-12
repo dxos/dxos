@@ -845,6 +845,22 @@ const throwErrorWithClosestMatch = (store: FixtureStore, conversation: FixtureCo
     if (!DISABLE_CLOSEST_MATCH_SEARCH) {
       const closestMatch = yield* store.getClosestMatch(conversation);
       if (Option.isSome(closestMatch)) {
+        const dumpDir = process.env.DX_DUMP_FIXTURE_TOOLS;
+        if (dumpDir) {
+          // A toolkit whose JSON Schema emission changed (an Effect upgrade) misses on every fixture
+          // at once. Dumping both tool lists lets `migrate-model-fixture-tools.mjs` rewrite the store
+          // from what the runtime actually emits rather than from a transcribed guess.
+          yield* Effect.promise(async () => {
+            const { mkdir, writeFile } = await import('node:fs/promises');
+            const { createHash } = await import('node:crypto');
+            const payload = JSON.stringify({
+              stored: closestMatch.value.parameters.tools,
+              prompted: conversation.parameters.tools,
+            });
+            await mkdir(dumpDir, { recursive: true });
+            await writeFile(`${dumpDir}/${createHash('sha256').update(payload).digest('hex')}.json`, payload);
+          });
+        }
         const patch = createPatch(
           'conversation',
           store.formatConversation(closestMatch.value),
