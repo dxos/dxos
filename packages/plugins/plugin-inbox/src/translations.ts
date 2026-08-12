@@ -170,6 +170,7 @@ export const translations = [
         'send-email-success.title': 'Message sent',
         'send-email-error.title': 'Failed to send email',
         'draft-message.title': 'Draft',
+        'conversation-summary.title': 'Summary',
         'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 

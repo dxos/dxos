@@ -155,6 +155,27 @@ describe('Mailbox annotations', () => {
     expect(entry.annotations.map(Mailbox.getSummaryText)).toEqual(['Better summary.', 'Draft summary.']);
   });
 
+  test('the conversation summary is the newest summarized message in the thread', async ({ expect }) => {
+    // `id`/`created` is all the selection reads, so the fixture is plain objects — no db needed.
+    const messages = [
+      { id: 'a', created: '2026-07-01T00:00:00.000Z' },
+      { id: 'b', created: '2026-07-03T00:00:00.000Z' },
+      { id: 'c', created: '2026-07-02T00:00:00.000Z' },
+    ];
+
+    // Newest by `created`, NOT last in the given order — the article reorders drafts inline, so
+    // position in the list is not chronology.
+    const summaries = new Map([
+      ['a', 'Oldest.'],
+      ['c', 'Middle.'],
+    ]);
+    expect(Mailbox.conversationSummary(messages, summaries)).toEqual({ summary: 'Middle.', messageId: 'c' });
+
+    // The newest message being unsummarized must not blank the conversation.
+    expect(Mailbox.conversationSummary(messages, new Map([['a', 'Oldest.']]))?.summary).toBe('Oldest.');
+    expect(Mailbox.conversationSummary(messages, new Map())).toBeUndefined();
+  });
+
   test('annotations never leak into the message feed', async ({ expect }) => {
     const { db, mailbox, feed, annotations, messages } = await createMailbox(2);
 

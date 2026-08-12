@@ -19,7 +19,7 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { initializeMailbox } from '#testing';
+import { initializeMailbox, seedSummaries } from '#testing';
 
 import { InboxPlugin } from '../../InboxPlugin';
 import * as Mailbox from '../../types/Mailbox';
@@ -112,7 +112,7 @@ const meta = {
   title: 'plugins/plugin-inbox/containers/MessageArticle',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { length = 8 } }) => ({
       plugins: [
         ...corePlugins(),
@@ -123,7 +123,10 @@ const meta = {
               const { defaultSpace } = yield* initializeIdentity(client);
               // Thread pool of size 1 assigns every seeded message the same threadId — a single
               // conversation of exactly `length` messages, oldest to newest.
-              yield* Effect.promise(() => initializeMailbox(defaultSpace.db, length, 1));
+              const mailbox = yield* Effect.promise(() => initializeMailbox(defaultSpace.db, length, 1));
+              // Half the conversation carries a derived summary, so the summary tile renders from a
+              // realistic mix (the tile shows the newest summarized message, not every one).
+              yield* Effect.promise(() => seedSummaries(defaultSpace.db, mailbox));
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -162,6 +165,11 @@ export const Spec: Story = {
     const replyButtons = await canvas.findAllByRole('button', { name: 'Reply All' }, { timeout: 12_000 });
     await expect(replyButtons).toHaveLength(1);
     await waitFor(() => expect(canvas.getAllByTestId('message.expand')).toHaveLength(2), { timeout: 5_000 });
+
+    // The conversation's summary is its own tile at the bottom of the stack (not repeated inside the
+    // expanded message), sourced from the newest summarized message in the thread.
+    const summaryTile = await canvas.findByTestId('conversation.summary', undefined, { timeout: 5_000 });
+    await expect(summaryTile).toHaveTextContent(/waiting on a reply/);
 
     // Reply All on the newest message appends a draft composer inline at the bottom — no navigation.
     await userEvent.click(replyButtons[0]);

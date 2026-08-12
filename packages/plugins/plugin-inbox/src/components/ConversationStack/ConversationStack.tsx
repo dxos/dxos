@@ -12,7 +12,15 @@ import { type Graph } from '@dxos/app-graph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
-import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Card,
+  Icon,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
 import { Html, emailDialect } from '@dxos/react-ui-components';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -112,6 +120,8 @@ type ConversationStackContextValue = {
   getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
   /** Derived summaries keyed by message id (container-resolved from the mailbox's annotation feed). */
   summaries?: ReadonlyMap<string, string>;
+  /** Summary of the conversation as a whole, rendered as the last tile in the stack. */
+  conversationSummary?: Mailbox.ConversationSummary;
   onExpandedChange?: (id: string, expanded: boolean) => void;
   /** Folds every message (thread toolbar only). */
   onCollapseAll?: () => void;
@@ -143,6 +153,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'sendOperations'
     | 'getExtractActions'
     | 'summaries'
+    | 'conversationSummary'
     | 'onExpandedChange'
     | 'onCollapseAll'
     | 'onExpandAll'
@@ -171,6 +182,7 @@ const ConversationStackRoot = ({
   sendOperations,
   getExtractActions,
   summaries,
+  conversationSummary,
   onExpandedChange,
   onCollapseAll,
   onExpandAll,
@@ -196,6 +208,7 @@ const ConversationStackRoot = ({
     graph={graph}
     getExtractActions={getExtractActions}
     summaries={summaries}
+    conversationSummary={conversationSummary}
     runtime={runtime}
     sendOperations={sendOperations}
   >
@@ -221,7 +234,7 @@ export type ConversationStackContentProps = ThemedClassName<{ testId?: string }>
  */
 const ConversationStackContent = composable<HTMLDivElement, ConversationStackContentProps>(
   ({ testId, ...props }, forwardedRef) => {
-    const { items } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
+    const { items, conversationSummary } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
     const viewportRef = useRef<HTMLDivElement>(null);
 
     const tileItems = useMemo<ConversationTileData[]>(
@@ -296,6 +309,9 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
               getId={getId}
               draggable={false}
             />
+            {/* Outside the stack: the summary describes the conversation, not a message, so it must not
+                be reorderable/selectable as a tile — but it shares the tile chrome and the document width. */}
+            {conversationSummary && <ConversationSummaryTile summary={conversationSummary} />}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
@@ -308,6 +324,17 @@ ConversationStackContent.displayName = CONVERSATION_STACK_CONTENT_NAME;
 //
 // Message Tile
 //
+
+/** Column template established by the tile; message parts subgrid into it. */
+const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
+
+/**
+ * Avatar footprint, which sets the width of column 1 — non-avatar tiles reserve the same gutter so
+ * their content aligns with the senders and bodies. `DxAvatar` renders `size * 4` px, matching `w-9`;
+ * `is-9` is not a real Tailwind utility (see the Slider regression guard).
+ */
+const MESSAGE_AVATAR_SIZE = 9;
+const MESSAGE_AVATAR_GUTTER = 'w-9';
 
 const MESSAGE_TILE_NAME = 'ConversationStack.MessageTile';
 
@@ -338,6 +365,49 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
 ConversationMessageTile.displayName = MESSAGE_TILE_NAME;
 
 //
+// Summary tile
+//
+
+const CONVERSATION_SUMMARY_TILE_NAME = 'ConversationStack.SummaryTile';
+
+type ConversationSummaryTileProps = {
+  summary: Mailbox.ConversationSummary;
+};
+
+/**
+ * The conversation's derived summary, as the last tile under the messages. Rendered as markdown: the
+ * summarization pipeline writes `text/markdown` blocks.
+ */
+const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  return (
+    <div
+      role='complementary'
+      aria-label={t('conversation-summary.title')}
+      // Same column template and gutter width as a message tile, so the heading and text line up with
+      // the senders and bodies above rather than starting at the tile edge.
+      className={mx(
+        'dx-document dx-attention-surface border border-subdued-separator rounded overflow-hidden mbs-2',
+        MESSAGE_TILE_COLUMNS,
+      )}
+      data-testid='conversation.summary'
+    >
+      <div className='p-2'>
+        <div className={mx('flex items-center justify-center', MESSAGE_AVATAR_GUTTER)}>
+          <Icon icon='ph--text-align-left--regular' size={5} classNames='text-subdued' />
+        </div>
+      </div>
+      <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
+        <h2 className='text-sm font-medium text-description'>{t('conversation-summary.title')}</h2>
+        <MarkdownViewer content={summary.summary} />
+      </div>
+    </div>
+  );
+};
+
+ConversationSummaryTile.displayName = CONVERSATION_SUMMARY_TILE_NAME;
+
+//
 // Message (read tile)
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
@@ -347,9 +417,6 @@ ConversationMessageTile.displayName = MESSAGE_TILE_NAME;
 //
 
 const MESSAGE_TILE_COLUMNS_NAME = 'ConversationStack.MessageTile.Columns';
-
-/** Column template established by the tile; message parts subgrid into it. */
-const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
 
 type MessageTileProps = {
   id: string;
@@ -407,7 +474,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
       <div className='col-span-full grid grid-cols-subgrid items-start'>
         {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
         <div className='p-2'>
-          <Avatar actor={target.sender} name={sender} size={9} />
+          <Avatar actor={target.sender} name={sender} size={MESSAGE_AVATAR_SIZE} />
         </div>
 
         <div className='col-start-2 flex flex-col py-1'>
@@ -463,12 +530,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
         <div className='col-span-full grid grid-cols-subgrid items-start'>
           {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
           <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
-          <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pe-3'>
-            {summary && (
-              <div className='rounded bg-subdued-surface p-2 text-sm text-description' data-testid='message.summary'>
-                {summary}
-              </div>
-            )}
+          <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pb-1'>
+            {/* The summary is not repeated here: an expanded message shows its body, and the
+                conversation's summary is the last tile in the stack. */}
             <MessageBody message={message} mailbox={mailbox} options={options} />
           </div>
         </div>

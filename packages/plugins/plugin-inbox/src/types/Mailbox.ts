@@ -424,6 +424,35 @@ export const summaryIndex = (annotations: Iterable<MessageLike>): Map<string, st
   return index;
 };
 
+/** A conversation's summary, with the message it was derived from so the UI can attribute it. */
+export type ConversationSummary = {
+  readonly summary: string;
+  readonly messageId: string;
+};
+
+/**
+ * The summary shown for a whole conversation. Summarization runs per message today, so this is the
+ * newest summarized message in the thread; keeping the selection here means a future thread-level
+ * annotation can replace it without touching the article.
+ */
+export const conversationSummary = (
+  messages: Iterable<Pick<Message.Message, 'id' | 'created'>>,
+  summaries: ReadonlyMap<string, string>,
+): ConversationSummary | undefined => {
+  let newest: { summary: string; messageId: string; created: number } | undefined;
+  for (const message of messages) {
+    const summary = summaries.get(message.id);
+    if (summary === undefined) {
+      continue;
+    }
+    const created = Date.parse(message.created);
+    if (!newest || created > newest.created) {
+      newest = { summary, messageId: message.id, created };
+    }
+  }
+  return newest && { summary: newest.summary, messageId: newest.messageId };
+};
+
 /** A feed message paired with the annotations derived from it. */
 export type AnnotatedMessage = {
   readonly message: Message.Message;
