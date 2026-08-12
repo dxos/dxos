@@ -141,29 +141,34 @@ summary appends and supersedes rather than overwriting. See `Mailbox.test.ts` �
 
 The user syncs a mailbox, then runs enrichment manually (automation comes later, via a routine).
 
-- [ ] `app-graph-builder.ts`: an **Enrich** action on the Mailbox alongside the existing
+- [x] `app-graph-builder.ts`: an **Enrich** action on the Mailbox alongside the existing
       Process/Stop toggle — `Operation.schedule(EnrichMailbox)` so the run is a cancellable process,
       Stop wired to `ProgressRegistry.cancel(createEnrichProgressKey(mailbox))`.
-- [ ] `MailboxArticle` statusbar: surface `#enrich` alongside `#sync` / `#process`.
-- [ ] Routine template `org.dxos.routine.enrichMailbox` (disabled timer trigger, runnable =
+- [x] `MailboxArticle` statusbar: surface `#enrich` alongside `#sync` / `#process`.
+- [x] Routine template `org.dxos.routine.enrichMailbox` (disabled timer trigger, runnable =
       `EnrichMailbox`), mirroring `org.dxos.routine.processMailbox`, so the same cascade can later
       run unattended.
 - [ ] Live verification against a synced mailbox: meter appears, Stop mid-cascade leaves committed
       cursors intact, re-run resumes.
 
-**Open question — the `me` input.** `ExtractCorrespondents` needs the user's own addresses to derive
-outbound correspondence. Candidate sources, in preference order: the mailbox's `Connection`
-`accessToken.account` (the Gmail/JMAP account, already stored), then HALO identity profile emails.
-Until resolved the cascade reports that stage as `skipped` rather than silently producing nothing.
+**Resolved — the `me` input.** `Mailbox.identityAddresses` reads the mailbox name, which the
+connectors seed from the connection's `accessToken.account`, so a synced mailbox names its own
+account. Anything else yields none and the cascade reports the correspondent stage as `skipped`
+rather than deriving against a wrong identity (which would invert every sent/received judgement).
+Still worth adding: HALO profile emails as a second source for mailboxes named by hand.
 
 ## Deliverable 2 — show summaries in the message article
 
-- [ ] `SummarizeMailbox` operation (tier 2): per-thread summary over **contact mail only** (gated on
+- [x] `SummarizeMailbox` operation (tier 2): per-thread summary over **contact mail only** (gated on
       a Person existing for the sender), writing `makeSummary` annotations to the annotations feed.
       Budgeted per run like `ClassifyMailbox`; cursored on its own tag.
-- [ ] `useAnnotations(mailbox)` hook: queries the annotations feed and memoizes `mergeAnnotations`.
-- [ ] `MessageArticle` / `ConversationStack`: render the newest summary above the body when present,
-      with provenance (model, date) and no layout shift when absent.
+- [x] Container-resolved summary index (`Mailbox.summaryIndex`) queried from the annotation feed in
+      `MessageArticle` and threaded through `ConversationStack` context (components hold no capability
+      hooks, so the container resolves it).
+- [x] `ConversationStack` renders the newest summary: in place of the provider snippet when
+      collapsed, and as a distinct block above the body when expanded.
+- [ ] Show provenance (model, date) on the expanded summary block — currently the annotation carries
+      it (`properties.model`) but the UI does not surface it.
 - [ ] Empty/stale states: no summary is the common case — the affordance must not imply failure.
 
 ## Deliverable 3 — create a project from a message, with a chosen pipeline

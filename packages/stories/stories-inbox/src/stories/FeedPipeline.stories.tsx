@@ -337,6 +337,18 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           ),
       },
       {
+        // Per-message summaries over contact mail, appended to the mailbox's annotation feed and
+        // merged back into the message article on read.
+        id: 'summarize',
+        label: 'InboxOperation.SummarizeMailbox',
+        run: () =>
+          invoker.invokePromise(
+            InboxOperation.SummarizeMailbox,
+            { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL },
+            { spaceId: space.id },
+          ),
+      },
+      {
         // Fact analysis against local Ollama; the in-memory FactStore is not ECHO-reactive, so the
         // count is polled while the run commits per page, then refreshed once at the end.
         id: 'analyze',

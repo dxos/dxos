@@ -99,6 +99,13 @@ const handler = InboxOperation.EnrichMailbox.pipe(
           }),
         });
       }
+      if (tiers.includes('summarize')) {
+        stages.push({
+          tier: 'summarize',
+          operation: InboxOperation.SummarizeMailbox.meta.key.toString(),
+          run: Operation.invoke(InboxOperation.SummarizeMailbox, { mailbox: Ref.make(mailbox), model }),
+        });
+      }
       if (tiers.includes('analyze')) {
         stages.push({
           tier: 'analyze',

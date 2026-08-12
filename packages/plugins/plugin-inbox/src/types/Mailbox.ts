@@ -366,6 +366,23 @@ export const makeSummary = ({
     properties: model ? { model } : undefined,
   });
 
+/**
+ * The mailbox's annotation feed, provisioned on first use — annotations are rare relative to
+ * mailboxes, so the feed is not created until something derives one (the {@link Mailbox.tags} pattern).
+ */
+export const findOrCreateAnnotations = (mailbox: Mailbox, db: Pick<Database.Database, 'add'>): Feed.Feed => {
+  const existing = mailbox.annotations?.target;
+  if (existing) {
+    return existing;
+  }
+  const feed = db.add(Feed.make());
+  Obj.setParent(feed, mailbox);
+  Obj.update(mailbox, (mailbox) => {
+    mailbox.annotations = Ref.make(feed);
+  });
+  return feed;
+};
+
 /** The summary text carried by an annotation message, if it is one. */
 export const getSummaryText = (annotation: MessageLike): string | undefined => {
   // A loop, not `find`: the discriminant only narrows the block union inside the `if`.
@@ -375,6 +392,31 @@ export const getSummaryText = (annotation: MessageLike): string | undefined => {
     }
   }
   return undefined;
+};
+
+/**
+ * Newest summary per source message, keyed by message id — the read model for UI that renders
+ * summaries beside messages it already has (the article), where the full {@link mergeAnnotations}
+ * pairing would mean re-walking the message feed.
+ */
+export const summaryIndex = (annotations: Iterable<MessageLike>): Map<string, string> => {
+  const newest = new Map<string, MessageLike>();
+  for (const annotation of annotations) {
+    const parent = annotation.parentMessage;
+    if (!parent || getSummaryText(annotation) === undefined) {
+      continue;
+    }
+    const current = newest.get(parent);
+    if (!current || Date.parse(annotation.created) > Date.parse(current.created)) {
+      newest.set(parent, annotation);
+    }
+  }
+
+  const index = new Map<string, string>();
+  for (const [parent, annotation] of newest) {
+    index.set(parent, getSummaryText(annotation)!);
+  }
+  return index;
 };
 
 /** A feed message paired with the annotations derived from it. */
