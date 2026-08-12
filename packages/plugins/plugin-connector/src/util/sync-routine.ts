@@ -2,20 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 import { type Connection } from '@dxos/link';
 import { makeRoutine } from '@dxos/plugin-routine';
 
-import * as ConnectorOperation from '../types/ConnectorOperation';
+import type * as ConnectorSpec from '../types/ConnectorSpec';
 
 /**
  * Build the sync Routine for `connection` as a fully-wired, unpersisted draft graph: one Routine per
  * account, wrapping a trigger built from the connector's declared `sync.trigger` spec and bound to
- * {@link ConnectorOperation.SyncConnection} — which fans out over every binding of the connection, so
- * targets added or removed later are covered without touching the routine. The `priority` input is an
- * event template: a manual sync from one target's button carries its binding on the fire event
- * (pressed-first ordering), while scheduled fires resolve it to nothing.
+ * the connector's own account-level sync operation — which fans out over every binding of the
+ * connection (see `syncConnectionBindings`), so targets added or removed later are covered without
+ * touching the routine. The `priority` input is an event template: a manual sync from one target's
+ * button carries its binding on the fire event (pressed-first ordering), while scheduled fires
+ * resolve it to nothing.
  *
  * Consumed by the connector's routine template, where the draft is shown editable in the
  * create-routine form and persisted on Save — sync routines are never persisted silently.
@@ -23,11 +25,13 @@ import * as ConnectorOperation from '../types/ConnectorOperation';
 export const scaffoldConnectionSyncRoutine = ({
   name,
   connection,
+  operation,
   spec,
   remote,
 }: {
   name?: string;
   connection: Connection.Connection;
+  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
   spec: Trigger.Spec;
   remote?: boolean;
 }) => {
@@ -43,9 +47,9 @@ export const scaffoldConnectionSyncRoutine = ({
   return makeRoutine({
     // Label the routine after the account so multiple connections stay distinguishable.
     name: name ?? syncRoutineName(connection),
-    // SyncConnection is statically defined and already in the registry, so the routine refers to it
-    // by key rather than persisting a copy of it into the space.
-    spec: { kind: 'runnable', runnable: Ref.fromURI(ConnectorOperation.SyncConnection.meta.key) },
+    // A connector's sync is statically defined and already in the registry, so the routine refers to
+    // it by key rather than persisting a copy of it into the space.
+    spec: { kind: 'runnable', runnable: Ref.fromURI(operation.meta.key) },
     trigger,
   });
 };

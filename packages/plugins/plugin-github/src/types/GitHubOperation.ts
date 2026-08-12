@@ -9,10 +9,9 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import {
-  // Unused by name, but the emitted declarations reference it — dropping the import breaks
-  // declaration emit (TS2742).
-  // eslint-disable-next-line unused-imports/no-unused-imports
   Connection,
+  // Referenced only from JSDoc {@link}s, which the rule cannot see.
+  // eslint-disable-next-line unused-imports/no-unused-imports
   Cursor,
 } from '@dxos/link';
 // Unused by name, but the emitted declarations reference it — dropping the import breaks
@@ -75,22 +74,28 @@ export const SyncOptions = Schema.Struct({
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
 /**
- * Reconcile GitHub data for one {@link Cursor} (one repo).
+ * Reconcile GitHub data for every repo bound to a connection (one {@link Cursor} per repo).
  *
- * Pull-then-push for the bound repo: auto-upsert its owning org + members,
+ * Pull-then-push per bound repo: auto-upsert its owning org + members,
  * three-way merge the repo as a Project and its issues/PRs as Tasks (respecting
  * `maxDaysBack` if set), then push diverged Project/Task fields back to GitHub.
- * Sync state (`lastTick`/`lastError`/`spec.snapshots`) is written onto the binding.
+ * Sync state (`lastTick`/`lastError`/`spec.snapshots`) is written onto each binding.
  */
 export const SyncGitHubRepositories = Operation.make({
   meta: {
     key: makeKey('syncGithubRepositories'),
     name: 'Sync GitHub Repositories',
-    description: 'Reconcile one bound GitHub repo plus its owning org, members, issues, PRs, and comments.',
+    description: 'Reconcile every bound GitHub repo plus its owning org, members, issues, PRs, and comments.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection whose credentials sync every bound repository.',
+    }),
+    priority: Schema.String.pipe(
+      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.optional,
+    ),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({

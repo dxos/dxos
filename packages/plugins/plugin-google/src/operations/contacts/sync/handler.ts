@@ -16,6 +16,7 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
+import { syncConnectionBindings } from '@dxos/plugin-connector';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { Person } from '@dxos/types';
 
@@ -126,67 +127,71 @@ const upsertPerson =
       return false;
     });
 
+/** Syncs one bound contact group: stream connections → filter to group members → map → upsert. */
+const syncContactGroup = (binding: Cursor.ExternalCursor) =>
+  Effect.gen(function* () {
+    const db = Obj.getDatabase(binding);
+    const groupResourceName = binding.spec.externalId;
+    if (!db || !groupResourceName) {
+      return { upserted: 0 };
+    }
+    log('syncing google contact group', { groupResourceName });
+
+    // The group membership is the set of resource names to keep; the source streams all
+    // connections (paginated) and we filter to the group.
+    const memberNames = new Set(yield* fetchGroupMembers(groupResourceName));
+    const cursorKey = Cursor.parseKey(binding.max);
+
+    // Pipeline: stream connections → filter to group members → map → upsert into the space. It's a
+    // DB target (no feed); the upsert sink is idempotent via the foreign key and advances the
+    // cursor (high-water contact `updateTime`) + run status in the same place as the write.
+    //
+    // NB: no dedup-by-cursor here — a contact added to the group without being modified has an
+    // `updateTime` older than the cursor, so deduping would silently drop it. We re-upsert every
+    // member each run (idempotent).
+    // TODO(wittjosiah): Skip unchanged contacts (dedup by updateTime) once we also detect group
+    //   membership changes, so newly-added-but-unmodified contacts still sync.
+    // One query per identity type up front, then every lookup is O(1) and sees this run's writes.
+    const index = yield* buildIdentityIndex(db, InboxResolver.identitySpecs);
+    const stats: Cursor.Stats = { newMessages: 0 };
+    yield* connectionsSource().pipe(
+      Stage.filter('group-member', (person: GoogleContacts.Person) => memberNames.has(person.resourceName)),
+      mapPersonStage,
+      Stream.grouped(COMMIT_PAGE_SIZE),
+      Pipeline.run({ sink: Cursor.upsertCommit(upsertPerson(index)) }),
+      Effect.provide(
+        Cursor.layer({ cursor: binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, maxKey: cursorKey, stats }),
+      ),
+    );
+
+    log('contact group sync complete', {
+      groupResourceName,
+      members: memberNames.size,
+      upserted: stats.newMessages,
+    });
+    return { upserted: stats.newMessages };
+  });
+
 const handler = InboxOperation.GoogleContactsSync.pipe(
-  Operation.withHandler(({ binding: bindingRef }) =>
-    Effect.gen(function* () {
-      const bindingObj = bindingRef.target;
-      const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
-      if (!bindingObj || !db || !Cursor.isExternal(bindingObj)) {
-        return { upserted: 0 };
-      }
-
-      const accessTokenRef = bindingObj.spec.source;
-
-      return yield* Effect.gen(function* () {
-        const binding = yield* Database.load(bindingRef);
-        if (!Cursor.isExternal(binding)) {
-          return { upserted: 0 };
-        }
-        const groupResourceName = binding.spec.externalId;
-        if (!groupResourceName) {
-          return { upserted: 0 };
-        }
-        log('syncing google contact group', { groupResourceName });
-
-        // The group membership is the set of resource names to keep; the source streams all
-        // connections (paginated) and we filter to the group.
-        const memberNames = new Set(yield* fetchGroupMembers(groupResourceName));
-        const cursorKey = Cursor.parseKey(binding.max);
-
-        // Pipeline: stream connections → filter to group members → map → upsert into the space. It's a
-        // DB target (no feed); the upsert sink is idempotent via the foreign key and advances the
-        // cursor (high-water contact `updateTime`) + run status in the same place as the write.
-        //
-        // NB: no dedup-by-cursor here — a contact added to the group without being modified has an
-        // `updateTime` older than the cursor, so deduping would silently drop it. We re-upsert every
-        // member each run (idempotent).
-        // TODO(wittjosiah): Skip unchanged contacts (dedup by updateTime) once we also detect group
-        //   membership changes, so newly-added-but-unmodified contacts still sync.
-        // One query per identity type up front, then every lookup is O(1) and sees this run's writes.
-        const index = yield* buildIdentityIndex(db, InboxResolver.identitySpecs);
-        const stats: Cursor.Stats = { newMessages: 0 };
-        yield* connectionsSource().pipe(
-          Stage.filter('group-member', (person: GoogleContacts.Person) => memberNames.has(person.resourceName)),
-          mapPersonStage,
-          Stream.grouped(COMMIT_PAGE_SIZE),
-          Pipeline.run({ sink: Cursor.upsertCommit(upsertPerson(index)) }),
+  Operation.withHandler(({ connection, priority }) =>
+    syncConnectionBindings({
+      connection,
+      priority,
+      sync: (binding) =>
+        syncContactGroup(binding).pipe(
           Effect.provide(
-            Cursor.layer({ cursor: binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, maxKey: cursorKey, stats }),
+            Layer.mergeAll(
+              FetchHttpClient.layer,
+              InboxResolver.Live,
+              GoogleCredentials.fromAccessToken(binding.spec.source),
+            ),
           ),
-        );
-
-        log('contact group sync complete', {
-          groupResourceName,
-          members: memberNames.size,
-          upserted: stats.newMessages,
-        });
-        return { upserted: stats.newMessages };
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromAccessToken(accessTokenRef)),
         ),
-      );
-    }),
+    }).pipe(
+      Effect.map(({ outputs }) => ({
+        upserted: outputs.reduce((total, output) => total + (output?.upserted ?? 0), 0),
+      })),
+    ),
   ),
   Operation.opaqueHandler,
 );

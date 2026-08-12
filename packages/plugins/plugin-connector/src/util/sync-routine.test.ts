@@ -3,11 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -15,12 +17,18 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import * as ConnectorOperation from '../types/ConnectorOperation';
 import { scaffoldConnectionSyncRoutine } from './sync-routine';
 import { findSyncTriggerForConnection } from './sync-trigger';
 
 /** Stands in for a connector's declared `sync.trigger`. */
 const SYNC_SPEC = Trigger.specTimer('*/10 * * * *');
+
+// Stand-in for a connector's account-level `sync.operation`.
+const TestSync = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.syncRoutine.sync'), name: 'Test Sync' },
+  input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
+  output: Schema.Any,
+});
 
 const types = [Routine.Routine, Trigger.Trigger, AccessToken.AccessToken, Connection.Connection];
 
@@ -40,12 +48,14 @@ const makeConnection = (db: Database.Database): Connection.Connection => {
 };
 
 describe('scaffoldConnectionSyncRoutine', () => {
-  test('scaffolds an account routine wrapping SyncConnection with a priority event template', async ({ expect }) => {
+  test('scaffolds an account routine wrapping the connector sync op with a priority event template', async ({
+    expect,
+  }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
-    const draft = scaffoldConnectionSyncRoutine({ connection, spec: SYNC_SPEC });
+    const draft = scaffoldConnectionSyncRoutine({ connection, operation: TestSync, spec: SYNC_SPEC });
 
     // Unpersisted draft: nothing lands in the database until the create-routine form saves it.
     expect(await db.query(Filter.type(Routine.Routine)).run()).toHaveLength(0);
@@ -60,8 +70,8 @@ describe('scaffoldConnectionSyncRoutine', () => {
     expect(trigger?.input?.connection?.uri).toBe(Ref.make(connection).uri);
     expect(trigger?.input?.priority).toBe('{{event.data.priority}}');
 
-    // The runnable is the statically-registered SyncConnection fan-out, referenced by key.
-    expect(draft.spec?.kind === 'runnable' && draft.spec.runnable.uri).toBe(ConnectorOperation.SyncConnection.meta.key);
+    // The runnable is the connector's own statically-registered sync operation, referenced by key.
+    expect(draft.spec?.kind === 'runnable' && draft.spec.runnable.uri).toBe(TestSync.meta.key);
 
     // Labeled after the account so multiple connections stay distinguishable.
     expect(draft.name).toBe('Sync — me@example.com');
@@ -72,7 +82,7 @@ describe('scaffoldConnectionSyncRoutine', () => {
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
-    const draft = scaffoldConnectionSyncRoutine({ connection, spec: SYNC_SPEC, remote: true });
+    const draft = scaffoldConnectionSyncRoutine({ connection, operation: TestSync, spec: SYNC_SPEC, remote: true });
 
     // The monitor routes a `remote` trigger to EDGE, so the schedule keeps running with the app closed.
     expect(draft.triggers[0]?.target?.remote).toBe(true);
@@ -83,7 +93,7 @@ describe('scaffoldConnectionSyncRoutine', () => {
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
-    const draft = scaffoldConnectionSyncRoutine({ connection, spec: SYNC_SPEC });
+    const draft = scaffoldConnectionSyncRoutine({ connection, operation: TestSync, spec: SYNC_SPEC });
     const persisted = db.add(draft);
     await db.flush({ indexes: true });
 

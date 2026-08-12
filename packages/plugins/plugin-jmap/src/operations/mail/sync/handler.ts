@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
-import { Cursor } from '@dxos/link';
-import { log } from '@dxos/log';
+import { syncConnectionBindings } from '@dxos/plugin-connector';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { runMailSync } from '@dxos/plugin-inbox/sync';
 
@@ -18,33 +17,29 @@ import { JmapCredentials, JmapMailApi } from '../../../services';
 import { jmapMailSyncProvider } from './sync-provider';
 
 const handler = InboxOperation.JmapSync.pipe(
-  Operation.withHandler(({ binding: bindingRef }) =>
-    Effect.gen(function* () {
-      const bindingObj = bindingRef.target;
-      const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
-      if (!bindingObj || !db || !Cursor.isExternal(bindingObj)) {
-        log.warn('jmap sync skipped: missing binding target or database', {
-          hasBinding: Boolean(bindingObj),
-          hasDatabase: Boolean(db),
-        });
-        return { newMessages: 0 };
-      }
-
-      const accessTokenRef = bindingObj.spec.source;
-      // Layer stack, top-down: the provider needs JmapMailApi + Resolver; JmapMailApi.Live needs the
-      // HTTP client + credentials. Chained `Layer.provide` reads as that dependency stack.
-      return yield* runMailSync({ binding: bindingRef }).pipe(
-        Effect.provide(
-          jmapMailSyncProvider().pipe(
-            Layer.provide(InboxResolver.Live),
-            Layer.provide(JmapMailApi.Live),
-            Layer.provide(FetchHttpClient.layer),
-            Layer.provide(JmapCredentials.fromAccessToken(accessTokenRef)),
+  Operation.withHandler(({ connection, priority }) =>
+    syncConnectionBindings({
+      connection,
+      priority,
+      sync: (binding) =>
+        // Layer stack, top-down: the provider needs JmapMailApi + Resolver; JmapMailApi.Live needs the
+        // HTTP client + credentials. Chained `Layer.provide` reads as that dependency stack.
+        runMailSync({ binding: Ref.make(binding) }).pipe(
+          Effect.provide(
+            jmapMailSyncProvider().pipe(
+              Layer.provide(InboxResolver.Live),
+              Layer.provide(JmapMailApi.Live),
+              Layer.provide(FetchHttpClient.layer),
+              Layer.provide(JmapCredentials.fromAccessToken(binding.spec.source)),
+            ),
           ),
+          Effect.withSpan('jmap-sync'),
         ),
-        Effect.withSpan('jmap-sync'),
-      );
-    }),
+    }).pipe(
+      Effect.map(({ outputs }) => ({
+        newMessages: outputs.reduce((total, output) => total + (output?.newMessages ?? 0), 0),
+      })),
+    ),
   ),
   Operation.opaqueHandler,
 );

@@ -227,9 +227,9 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     expect(kanbansAfterBind).toHaveLength(1);
     expect(binding.spec.snapshots).toBeUndefined();
 
-    // 3. Sync: reconciles the bound board's cards.
+    // 3. Sync: fans out over the connection's bindings and reconciles each bound board's cards.
     const result = await syncTrelloBoardHandler
-      .handler({ binding: Ref.make(binding) })
+      .handler({ connection: Ref.make(connection) })
       .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
     expect(result.pulled.added).toBe(1);
 
@@ -263,6 +263,17 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     const { db, connection } = await setup();
     const layer = Database.layer(db);
 
+    // Bind each board through its own connection so the failing board's fan-out
+    // cannot interrupt the healthy board's sync mid-run.
+    const tokenB = db.add(
+      Obj.make(AccessToken.AccessToken, {
+        source: TRELLO_SOURCE,
+        token: 'apikey:usertoken-b',
+        account: 'me-b@example.com',
+      }),
+    );
+    const connectionB = db.add(Connection.make({ connectorId: 'trello', accessToken: Ref.make(tokenB) }));
+
     const discovered = await getTrelloBoardsHandler
       .handler({ connection: Ref.make(connection) })
       .pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
@@ -271,21 +282,21 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     const bindingA = await bindTarget(db, connection, { id: 'board-a', name: 'Board A' }).pipe(
       EffectEx.runAndForwardErrors,
     );
-    const bindingB = await bindTarget(db, connection, { id: 'board-b', name: 'Board B' }).pipe(
+    const bindingB = await bindTarget(db, connectionB, { id: 'board-b', name: 'Board B' }).pipe(
       EffectEx.runAndForwardErrors,
     );
     expect(discovered.targets).toHaveLength(2);
 
     // Board A syncs cleanly.
     await syncTrelloBoardHandler
-      .handler({ binding: Ref.make(bindingA) })
+      .handler({ connection: Ref.make(connection) })
       .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
     expect(bindingA.lastError).toBeUndefined();
     expect(bindingA.lastTick).toBeDefined();
 
     // Board B fails — the sync handler fails and stamps the error on the binding.
     await syncTrelloBoardHandler
-      .handler({ binding: Ref.make(bindingB) })
+      .handler({ connection: Ref.make(connectionB) })
       .pipe(stubOperationService, Effect.provide(layer), Effect.either, EffectEx.runAndForwardErrors);
     expect(bindingB.lastError).toContain('boom');
     expect(bindingB.lastTick).toBeUndefined();

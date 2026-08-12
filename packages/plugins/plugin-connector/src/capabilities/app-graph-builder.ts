@@ -21,9 +21,8 @@ import { meta } from '#meta';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
 import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
-import * as ConnectorOperation from '../types/ConnectorOperation';
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { connectorAuthActions, isCursorForConnection, isCursorForTarget } from '../util';
+import { connectorAuthActions, isCursorForConnection, isCursorForTarget, syncConnectionOrOfferRoutine } from '../util';
 
 /**
  * Resolve the external-sync cursors authenticated by a connection's access token. Used by the
@@ -74,18 +73,20 @@ export default Capability.makeModule(
           Effect.gen(function* () {
             const connectors = get(connectorAtom).flat();
             const connector = connectors.find((entry) => entry.id === connection.connectorId);
-            const spaceId = Obj.getDatabase(connection)?.spaceId;
             const actions = [];
             if (connector?.sync) {
               actions.push(
                 Node.makeAction({
                   id: `${meta.profile.key}.sync-connection.${connection.id}`,
-                  data: () =>
-                    Operation.invoke(
-                      ConnectorOperation.SyncConnection,
-                      { connection: Ref.make(connection) },
-                      { spaceId },
-                    ),
+                  // Runs through the account routine's trigger (dispatcher-driven continuation);
+                  // a missing routine opens the seeded create-routine form instead.
+                  data: () => {
+                    const db = Obj.getDatabase(connection);
+                    if (!db) {
+                      return Effect.void;
+                    }
+                    return syncConnectionOrOfferRoutine({ connection, connector, db });
+                  },
                   properties: {
                     label: ['sync-connection.label', { ns: meta.profile.key }],
                     icon: 'ph--arrows-clockwise--regular',

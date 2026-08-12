@@ -67,7 +67,7 @@ describe('reconcileCursors', () => {
   // cursor reconciliation.
   const SyncExampleTarget = Operation.make({
     meta: { key: DXN.make('org.dxos.test.reconcileCursors.sync') },
-    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
 

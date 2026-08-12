@@ -9,10 +9,9 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import {
-  // Unused by name, but the emitted declarations reference it — dropping the import breaks
-  // declaration emit (TS2742).
-  // eslint-disable-next-line unused-imports/no-unused-imports
   Connection,
+  // Referenced only from JSDoc {@link}s, which the rule cannot see.
+  // eslint-disable-next-line unused-imports/no-unused-imports
   Cursor,
 } from '@dxos/link';
 // Unused by name, but the emitted declarations reference it — dropping the import breaks
@@ -64,22 +63,28 @@ export const MaterializeTrelloTarget = Operation.make({
 });
 
 /**
- * Bidirectional reconcile of a single Trello board bound by an external-sync
- * {@link Cursor.Cursor}.
+ * Bidirectional reconcile of every Trello board bound to a connection (one
+ * external-sync {@link Cursor.Cursor} per board).
  *
  * Does **not** discover boards. Pulls cards from Trello into local Expando cards
  * (keyed by foreign id), pushes locally-created and locally-edited cards back to
- * Trello, and updates the binding's `lastTick`/`lastError`.
+ * Trello, and updates each binding's `lastTick`/`lastError`.
  */
 export const SyncTrelloBoard = Operation.make({
   meta: {
     key: makeKey('syncTrelloBoard'),
     name: 'Sync Trello Board',
-    description: 'Reconcile cards for the Trello board bound by a sync cursor.',
+    description: 'Reconcile cards for every Trello board bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection whose credentials sync every bound board.',
+    }),
+    priority: Schema.String.pipe(
+      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.optional,
+    ),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({

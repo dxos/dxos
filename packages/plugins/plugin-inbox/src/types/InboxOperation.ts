@@ -12,7 +12,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Connection, Cursor } from '@dxos/link';
+import { Connection } from '@dxos/link';
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
@@ -133,9 +133,13 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
-      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection whose credentials sync every bound Mailbox.',
     }),
+    priority: Schema.String.pipe(
+      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.optional,
+    ),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({
@@ -174,9 +178,13 @@ export const JmapSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
-      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection whose credentials sync every bound Mailbox.',
     }),
+    priority: Schema.String.pipe(
+      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.optional,
+    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,
@@ -223,9 +231,13 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
-      description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection whose credentials sync every bound Calendar.',
     }),
+    priority: Schema.String.pipe(
+      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.optional,
+    ),
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
     syncForwardDays: Schema.optional(Schema.Number),
@@ -310,9 +322,13 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
-      description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection whose credentials sync every bound contact group.',
     }),
+    priority: Schema.String.pipe(
+      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.optional,
+    ),
     pageSize: Schema.optional(Schema.Number),
   }),
   output: Schema.Struct({

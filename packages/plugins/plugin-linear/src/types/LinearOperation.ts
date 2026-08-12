@@ -67,9 +67,10 @@ export const SyncOptions = Schema.Struct({
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
 /**
- * Reconcile Linear data for one team target bound by an external-sync {@link Cursor.Cursor}.
+ * Reconcile Linear data for every team bound to a connection (one external-sync
+ * {@link Cursor.Cursor} per team).
  *
- * The binding's `spec.source` is the {@link Connection}'s access token that authenticates the sync;
+ * Each binding's `spec.source` is the {@link Connection}'s access token that authenticates the sync;
  * its `spec.target` is the team's local root Project; its `spec.externalId` is the Linear
  * team UUID. Bidirectional (pull-then-push): upsert the team's projects as
  * Project objects, upsert issues as Tasks (respecting `maxDaysBack` if set),
@@ -81,11 +82,17 @@ export const SyncLinearTeams = Operation.make({
   meta: {
     key: makeKey('syncLinearTeams'),
     name: 'Sync Linear Teams',
-    description: 'Reconcile one Linear team binding — projects and issues.',
+    description: 'Reconcile every bound Linear team — projects and issues.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection whose credentials sync every bound team.',
+    }),
+    priority: Schema.String.pipe(
+      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.optional,
+    ),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({

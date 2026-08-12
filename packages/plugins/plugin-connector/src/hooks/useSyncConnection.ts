@@ -8,18 +8,14 @@ import { useCallback, useState } from 'react';
 import * as Capability from '@dxos/app-framework/Capability';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as Operation from '@dxos/compute/Operation';
-import * as Routine from '@dxos/compute/Routine';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { SpaceOperation } from '@dxos/plugin-space';
 
 import { useConnector } from '#hooks';
 
-import { SyncRoutineMissingError } from '../errors';
-import { SyncTemplateId } from '../templates/sync';
-import { runConnectionSync } from '../util';
+import { syncConnectionOrOfferRoutine } from '../util';
 
 export type UseSyncConnectionResult = {
   /** True when the connection's connector exposes a `sync` operation. Drives sync button visibility. */
@@ -36,8 +32,8 @@ export type UseSyncConnectionResult = {
 
 /**
  * Trigger a sync for every external-sync cursor authenticated by a {@link Connection}.
- * Delegates to {@link runConnectionSync} so the graph-builder action, the target's sync button, and
- * this hook share one code path (and one recreation offer).
+ * Delegates to {@link syncConnectionOrOfferRoutine} so the graph-builder actions, the target's sync
+ * button, and this hook share one code path (and one recreation offer).
  */
 export const useSyncConnection = (connection: Connection.Connection | undefined): UseSyncConnectionResult => {
   const invoker = useOperationInvoker();
@@ -52,21 +48,7 @@ export const useSyncConnection = (connection: Connection.Connection | undefined)
     }
     setSyncing(true);
     try {
-      await runConnectionSync({ connection, connector, spaceId: db.spaceId }).pipe(
-        Effect.catchIf(
-          (error): error is SyncRoutineMissingError => error instanceof SyncRoutineMissingError,
-          // The account's routine is missing (deleted, or declined at creation): reopen the seeded
-          // create-routine form; saving re-runs the sync the user just pressed.
-          () =>
-            invoker.invoke(SpaceOperation.OpenCreateObject, {
-              target: db,
-              typename: Type.getTypename(Routine.Routine),
-              initialFormValues: { templateId: SyncTemplateId, subject: connection },
-              navigable: false,
-              onCreateObject: () => void sync(),
-            }),
-        ),
-        Effect.provide(Database.layer(db)),
+      await syncConnectionOrOfferRoutine({ connection, connector, db }).pipe(
         Effect.provideService(Operation.Service, invoker),
         Effect.provideService(Capability.Service, manager.capabilities),
         EffectEx.runPromise,

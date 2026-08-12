@@ -25,9 +25,9 @@ export const SyncTemplateId = 'org.dxos.routine.connectorSync';
 
 /**
  * "Sync" automation template: the account-level recurring sync routine for a Connection, built from
- * the connector-declared trigger spec and bound to the SyncConnection fan-out — one routine covers
- * every target of the account. Contributed so the routine is created through the create-routine
- * form — the user sees and can edit the schedule — instead of being persisted silently.
+ * the connector-declared trigger spec and bound to the connector's own sync operation (whose handler
+ * fans out over every binding of the account). Contributed so the routine is created through the
+ * create-routine form — the user sees and can edit the schedule — instead of being persisted silently.
  *
  * The subject may be the Connection itself (the connection flow, the multi-target picker) or a bound
  * target such as a Mailbox (a target's sync affordance); a target resolves to its binding's
@@ -61,7 +61,13 @@ export const makeSyncTemplate = (capabilities: CapabilityManager.CapabilityManag
         return yield* Effect.fail(new Error('Connector declares no sync schedule.'));
       }
 
-      return scaffoldConnectionSyncRoutine({ name, connection, spec: sync.trigger, remote: sync.remote });
+      return scaffoldConnectionSyncRoutine({
+        name,
+        connection,
+        operation: sync.operation,
+        spec: sync.trigger,
+        remote: sync.remote,
+      });
     }),
 });
 

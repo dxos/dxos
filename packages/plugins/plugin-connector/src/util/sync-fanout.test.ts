@@ -26,11 +26,10 @@ import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
 import { autoSyncConnection } from '../capabilities/connector-coordinator/auto-sync';
-import * as ConnectorOperation from '../types/ConnectorOperation';
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import SyncConnectionHandler from './sync-connection';
+import { syncConnectionBindings } from './sync-fanout';
 
-describe('SyncConnection', () => {
+describe('syncConnectionBindings', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -41,7 +40,7 @@ describe('SyncConnection', () => {
     await builder.close();
   });
 
-  /** Bindings the connector's own sync operation was invoked for, in invocation order. */
+  /** Bindings synced, in invocation order. */
   const synced: string[] = [];
 
   /** Trigger ids force-run through the monitor. */
@@ -50,21 +49,27 @@ describe('SyncConnection', () => {
   /** Binding uris whose sync should request `Operation.runAgain()` (a capped run with work left). */
   const runAgainFor = new Set<string>();
 
-  // Stand-in for a connector's `sync.operation` (e.g. `InboxOperation.GoogleMailSync`): same
-  // `{ binding }` input every real connector's sync declares.
+  // Stand-in for a connector's account-level `sync.operation`: its handler wraps the shared
+  // fan-out over a per-binding sync, the shape every migrated connector follows.
   const TestSync = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.syncConnection.sync'), name: 'Test Sync' },
-    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    meta: { key: DXN.make('org.dxos.test.syncFanout.sync'), name: 'Test Sync' },
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
 
   const syncHandler = TestSync.pipe(
-    Operation.withHandler(({ binding }) =>
-      Effect.gen(function* () {
-        synced.push(binding.uri);
-        if (runAgainFor.has(binding.uri)) {
-          yield* Operation.runAgain();
-        }
+    Operation.withHandler(({ connection, priority }) =>
+      syncConnectionBindings({
+        connection,
+        priority,
+        sync: (binding) =>
+          Effect.gen(function* () {
+            const uri = Ref.make(binding).uri;
+            synced.push(uri);
+            if (runAgainFor.has(uri)) {
+              yield* Operation.runAgain();
+            }
+          }),
       }),
     ),
   );
@@ -75,13 +80,13 @@ describe('SyncConnection', () => {
     invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
   };
 
-  test('invokes each binding’s sync operation directly', async ({ expect }) => {
+  test('fans out to each binding', async ({ expect }) => {
     const { db, connection, cursor } = await setup();
-    // A trigger in the space changes nothing: the handler is the routine's runnable, so it never
-    // routes through triggers (that would recurse) — it always fans out to the per-binding syncs.
+    // A trigger in the space changes nothing: the operation is the routine's runnable, so its
+    // handler never routes through triggers (that would recurse) — it always syncs the bindings.
     await addConnectionSyncTrigger(db, connection);
 
-    const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
+    const result = await invokeSync(connection);
 
     expect(result.synced).toBe(1);
     expect(synced).toEqual([Ref.make(cursor).uri]);
@@ -92,7 +97,7 @@ describe('SyncConnection', () => {
     const { db, connection, cursor, token } = await setup();
     const second = await addCursor(db, token);
 
-    await invokeSync(makeInvoker({ scheduled: true }), connection, second.id);
+    await invokeSync(connection, second.id);
 
     // Pressed-first ordering: the priority cursor grabs a fan-out slot immediately.
     expect(synced[0]).toBe(Ref.make(second).uri);
@@ -107,25 +112,11 @@ describe('SyncConnection', () => {
 
     // Continuation is re-raised at the operation level so a dispatcher-driven run resumes; a direct
     // invocation like this one surfaces it as a defect.
-    await expect(invokeSync(makeInvoker({ scheduled: true }), connection)).rejects.toThrow();
+    await expect(invokeSync(connection)).rejects.toThrow();
 
     // The capped binding never starves its siblings: both were attempted before the re-raise.
     expect(synced).toContain(Ref.make(cursor).uri);
     expect(synced).toContain(Ref.make(second).uri);
-  });
-
-  test('does nothing when no connector is registered for the connection', async ({ expect }) => {
-    const { connection } = await setup();
-    // An unregistered connector id resolves to no entry, so there is no sync to run.
-    Obj.update(connection, (connection) => {
-      connection.connectorId = 'unregistered';
-    });
-
-    const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
-
-    expect(result.synced).toBe(0);
-    expect(synced).toEqual([]);
-    expect(fired).toEqual([]);
   });
 
   test('auto-syncs a new connection when its connector opts in', async ({ expect }) => {
@@ -133,13 +124,7 @@ describe('SyncConnection', () => {
     const connector = makeConnector({ scheduled: false, auto: true });
 
     await EffectEx.runPromise(
-      autoSyncConnection(
-        makeInvoker({ scheduled: false }),
-        makeCapabilities({ scheduled: false }),
-        db,
-        connector,
-        connection,
-      ),
+      autoSyncConnection(makeInvoker(), makeCapabilities({ scheduled: false }), db, connector, connection),
     );
 
     // Forked so connection setup returns without waiting, so the sync lands after this call.
@@ -152,13 +137,7 @@ describe('SyncConnection', () => {
     const connector = makeConnector({ scheduled: true, auto: true });
 
     await EffectEx.runPromise(
-      autoSyncConnection(
-        makeInvoker({ scheduled: true }),
-        makeCapabilities({ scheduled: true }),
-        db,
-        connector,
-        connection,
-      ),
+      autoSyncConnection(makeInvoker(), makeCapabilities({ scheduled: true }), db, connector, connection),
     );
 
     // The trigger dispatcher runs the sync (durable execution), so the operation is not invoked here.
@@ -171,13 +150,7 @@ describe('SyncConnection', () => {
     const connector = makeConnector({ scheduled: true, auto: true });
 
     await EffectEx.runPromise(
-      autoSyncConnection(
-        makeInvoker({ scheduled: true }),
-        makeCapabilities({ scheduled: true }),
-        db,
-        connector,
-        connection,
-      ),
+      autoSyncConnection(makeInvoker(), makeCapabilities({ scheduled: true }), db, connector, connection),
     );
 
     // The user declined the routine: no silent recreation, no sync.
@@ -191,13 +164,7 @@ describe('SyncConnection', () => {
     const connector = makeConnector({ scheduled: false });
 
     await EffectEx.runPromise(
-      autoSyncConnection(
-        makeInvoker({ scheduled: false }),
-        makeCapabilities({ scheduled: false }),
-        db,
-        connector,
-        connection,
-      ),
+      autoSyncConnection(makeInvoker(), makeCapabilities({ scheduled: false }), db, connector, connection),
     );
 
     expect(synced).toEqual([]);
@@ -225,8 +192,8 @@ describe('SyncConnection', () => {
   });
 
   /**
-   * Capabilities the handler and `runConnectionSync` read: the connector registry, plus a
-   * `ServiceResolver` that resolves the space's trigger monitor.
+   * Capabilities `runConnectionSync` reads: the connector registry, plus a `ServiceResolver` that
+   * resolves the space's trigger monitor.
    */
   const makeCapabilities = ({ scheduled }: { scheduled: boolean }) => {
     const manager = CapabilityManager.make({ registry: Registry.make() });
@@ -243,10 +210,10 @@ describe('SyncConnection', () => {
     return manager;
   };
 
-  const makeInvoker = (options: { scheduled: boolean }) =>
+  const makeInvoker = () =>
     OperationInvoker.make(
-      () => Effect.succeed([SyncConnectionHandler, syncHandler]),
-      ManagedRuntime.make(Layer.succeed(Capability.Service, makeCapabilities({ scheduled: options.scheduled }))),
+      () => Effect.succeed([syncHandler]),
+      ManagedRuntime.make(Layer.succeed(Capability.Service, makeCapabilities({ scheduled: false }))),
     );
 
   const setup = async () => {
@@ -295,8 +262,9 @@ describe('SyncConnection', () => {
     return trigger;
   };
 
-  const invokeSync = (invoker: ReturnType<typeof makeInvoker>, connection: Connection.Connection, priority?: string) =>
-    EffectEx.runPromise(
-      invoker.invoke(ConnectorOperation.SyncConnection, { connection: Ref.make(connection), priority }),
-    );
+  const invokeSync = (
+    connection: Connection.Connection,
+    priority?: string,
+  ): Promise<{ synced: number; outputs: unknown[] }> =>
+    EffectEx.runPromise(makeInvoker().invoke(TestSync, { connection: Ref.make(connection), priority }));
 });

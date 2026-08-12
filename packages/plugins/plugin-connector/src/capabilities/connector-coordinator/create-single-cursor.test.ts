@@ -64,7 +64,7 @@ describe('createSingleCursor', () => {
   // target materialization and binding.
   const SyncExampleTarget = Operation.make({
     meta: { key: DXN.make('org.dxos.test.createSingleCursor.sync') },
-    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
 

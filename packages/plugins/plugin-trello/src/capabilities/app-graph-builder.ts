@@ -9,8 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
+import { Connection, Cursor } from '@dxos/link';
+import { isCursorForConnection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 
@@ -56,6 +56,13 @@ export default Capability.makeModule(
           if (!binding) {
             return Effect.succeed([]);
           }
+          // The sync operation is account-level: it takes the binding's connection and fans out
+          // over every bound board, with this board's cursor as the priority binding.
+          const connections = get(db.query(Filter.type(Connection.Connection)).atom);
+          const connection = connections.find((candidate) => isCursorForConnection(binding, candidate));
+          if (!connection) {
+            return Effect.succeed([]);
+          }
           return Effect.succeed([
             {
               id: 'trelloSyncThisBoard',
@@ -63,7 +70,8 @@ export default Capability.makeModule(
                 Operation.invoke(
                   TrelloOperation.SyncTrelloBoard,
                   {
-                    binding: Ref.make(binding),
+                    connection: Ref.make(connection),
+                    priority: binding.id,
                   },
                   { spaceId: db.spaceId },
                 ),

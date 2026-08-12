@@ -7,13 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import {
-  // Unused by name, but the emitted declarations reference it — dropping the import breaks
-  // declaration emit (TS2742).
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  Connection,
-  Cursor,
-} from '@dxos/link';
+import { Connection } from '@dxos/link';
 // Unused by name, but the emitted declarations reference it — dropping the import breaks
 // declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -63,26 +57,33 @@ export const MaterializeBlueskyTarget = Operation.make({
 });
 
 /**
- * Pull-only sync of a single Bluesky feed bound by a {@link Cursor.Cursor}.
- * Fetches posts via XRPC (public for the user's own feed; via Edge atproto
- * proxy for `getActorLikes` / `getBookmarks` / `getFeed`) and appends new
- * Posts to the backing `Subscription.Feed` queue (the cursor's target).
- * Updates the cursor's `value` / `lastTick` / `lastError`.
+ * Pull-only sync of every Bluesky target bound to a connection. Fans out over
+ * the connection's sync cursors, fetching posts via XRPC (public for the
+ * user's own feed; via Edge atproto proxy for `getActorLikes` /
+ * `getBookmarks` / `getFeed`) and appending new Posts to each backing
+ * `Subscription.Feed` queue (the cursor's target). Updates each cursor's
+ * `value` / `lastTick` / `lastError`.
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
     key: makeKey('syncBlueskyTargets'),
     name: 'Sync Bluesky',
-    description: 'Pull posts for the Bluesky feed bound by a sync cursor.',
+    description: 'Pull posts for every Bluesky target bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
+    connection: Ref.Ref(Connection.Connection).annotations({
+      description: 'Connection whose credentials sync every bound Bluesky target.',
+    }),
+    priority: Schema.String.pipe(
+      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.optional,
+    ),
   }),
   output: Schema.Struct({
-    /** Total posts appended for this binding's target. */
+    /** Total posts appended across the connection's targets. */
     appended: Schema.Number,
   }),
 }).pipe(Operation.visible);

@@ -5,18 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Operation from '@dxos/compute/Operation';
-import * as Routine from '@dxos/compute/Routine';
-import { Database, Filter, Obj, Type } from '@dxos/echo';
+import type * as Operation from '@dxos/compute/Operation';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { Connection } from '@dxos/link';
-import { log } from '@dxos/log';
-import { SpaceOperation } from '@dxos/plugin-space';
 
-import { ConnectionSyncError, SyncRoutineMissingError } from '../errors';
-import { SyncTemplateId } from '../templates/sync';
+import { ConnectionSyncError } from '../errors';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 import { findBindingForTarget } from './find-binding';
-import { runConnectionSync } from './run-sync';
+import { syncConnectionOrOfferRoutine } from './run-sync';
 import { findSyncTriggerForBinding, fireSyncTrigger, syncTriggerMonitorLayer } from './sync-trigger';
 
 /**
@@ -25,10 +21,9 @@ import { findSyncTriggerForBinding, fireSyncTrigger, syncTriggerMonitorLayer } f
  * while its siblings queue behind it. A legacy per-binding sync routine (pre-account-routine spaces)
  * is force-run directly instead. No-op for an object that is not bound to a connection.
  *
- * When the account's sync routine is missing (deleted, or declined at creation), this is the sync
- * button's recreation path: the seeded create-routine form opens instead, and saving it re-runs the
- * sync the user just pressed — through the freshly persisted trigger, so the dispatcher drives
- * continuation. Cancelling runs nothing.
+ * When the account's sync routine is missing (deleted, or declined at creation), the seeded
+ * create-routine form opens instead and saving re-runs the sync — see
+ * {@link syncConnectionOrOfferRoutine}.
  */
 export const syncTarget = (
   target: Obj.Unknown,
@@ -60,12 +55,7 @@ export const syncTarget = (
         return;
       }
 
-      yield* runConnectionSync({ connection, connector, spaceId: db.spaceId, priority: cursor.id }).pipe(
-        Effect.catchIf(
-          (error): error is SyncRoutineMissingError => error instanceof SyncRoutineMissingError,
-          () => offerSyncRoutine(target, db),
-        ),
-      );
+      yield* syncConnectionOrOfferRoutine({ connection, connector, db, priority: cursor.id, subject: target });
     }).pipe(
       Effect.provide(Database.layer(db)),
       // Resolving the binding and its connector can fail the same way the sync itself can, so the
@@ -75,33 +65,3 @@ export const syncTarget = (
       ),
     );
   });
-
-/**
- * Reopen the seeded create-routine form for the account's missing sync routine; saving re-runs
- * {@link syncTarget}, which now finds the trigger and fires it with this target as priority.
- */
-const offerSyncRoutine = (
-  target: Obj.Unknown,
-  db: Database.Database,
-): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
-  Effect.gen(function* () {
-    const invoker = yield* Operation.Service;
-    const capabilities = yield* Capability.Service;
-    yield* invoker.invoke(SpaceOperation.OpenCreateObject, {
-      target: db,
-      typename: Type.getTypename(Routine.Routine),
-      initialFormValues: { templateId: SyncTemplateId, subject: target },
-      navigable: false,
-      onCreateObject: () => {
-        // The dialog's save callback is a plain function; re-enter the Effect world with the
-        // services captured above.
-        Effect.runFork(
-          syncTarget(target).pipe(
-            Effect.provideService(Operation.Service, invoker),
-            Effect.provideService(Capability.Service, capabilities),
-            Effect.catchAll((error) => Effect.sync(() => log.warn('sync after routine created failed', { error }))),
-          ),
-        );
-      },
-    });
-  }).pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('offer sync routine failed', { error }))));

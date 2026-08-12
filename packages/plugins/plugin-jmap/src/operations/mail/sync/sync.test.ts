@@ -126,7 +126,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     const start = subDays(new Date(), 12);
     const dataset = generateJmapDataset({ count: 40, seed: 11, start, end });
 
-    const { db, mailbox, binding } = await seed();
+    const { db, mailbox, connection, binding } = await seed();
 
     // Contact extraction is an allow-list, and these fixtures generate random senders — see
     // `seedSenderOrganizations`.
@@ -134,7 +134,7 @@ describe('runJmapSync against a mock JMAP API', () => {
 
     const { result, feedMessages } = await EffectEx.runPromise(
       Effect.gen(function* () {
-        const result = yield* runJmapSync({ binding: Ref.make(binding) });
+        const result = yield* runJmapSync({ connection: Ref.make(connection) });
         const feedMessages = yield* Effect.promise(() => queryFeedMessages(db, mailbox));
         return { result, feedMessages };
       }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
@@ -176,7 +176,7 @@ describe('runJmapSync against a mock JMAP API', () => {
 
     // Re-running is a no-op: dedup + cursor prevent duplicate work.
     const rerun = await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding) }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
+      runJmapSync({ connection: Ref.make(connection) }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
     );
     expect(rerun.newMessages).toBe(0);
     const afterRerun = await queryFeedMessages(db, mailbox);
@@ -188,11 +188,11 @@ describe('runJmapSync against a mock JMAP API', () => {
     // Pinned clock so the re-run's forward window lands on the same high-water boundary as the first sync.
     const now = new Date('2026-07-16T12:00:00.000Z');
     const dataset = generateJmapDataset({ count: 12, seed: 55, start: subDays(now, 6), end: subDays(now, 1) });
-    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    const { db, mailbox, connection } = await seed({ options: { syncBackDays: 14 } });
 
     // Initial full sync.
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
     );
     expect((await syncedIdsOf(db, mailbox)).length).toBe(dataset.emails.length);
 
@@ -201,7 +201,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     // `emailGet` — nothing downloads.
     const { layer, fetched } = countingJmapApi(dataset);
     const rerun = await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(
         Effect.provide(Layer.mergeAll(layer, ambientSyncServices(db))),
       ),
     );
@@ -214,7 +214,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     const start = subDays(new Date(), 12);
     const dataset = generateJmapDataset({ count: 20, seed: 17, start, end });
 
-    const { db, mailbox, binding } = await seed();
+    const { db, mailbox, connection } = await seed();
 
     const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
     const traceLayer = Trace.testTraceService().pipe(
@@ -232,7 +232,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     );
 
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding) }).pipe(
+      runJmapSync({ connection: Ref.make(connection) }).pipe(
         Effect.provide(jmapSyncTestServices(db, dataset, { traceLayer })),
       ),
     );
@@ -279,11 +279,11 @@ describe('runJmapSync against a mock JMAP API', () => {
       emails: datasets.flatMap((dataset) => dataset.emails),
     });
 
-    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
 
     // 1) Initial: no cursor → backward from today down to the 14-day horizon. Only `mid` is in range.
     const r1 = await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding) }).pipe(Effect.provide(jmapSyncTestServices(db, mid))),
+      runJmapSync({ connection: Ref.make(connection) }).pipe(Effect.provide(jmapSyncTestServices(db, mid))),
     );
     expect(r1.newMessages).toBe(mid.emails.length);
     expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(mid)); // max set to the newest synced.
@@ -292,7 +292,9 @@ describe('runJmapSync against a mock JMAP API', () => {
 
     // 2) Incremental: forward from `max`. A newer band has arrived; only it syncs, `min` unchanged.
     const r2 = await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding) }).pipe(Effect.provide(jmapSyncTestServices(db, union(mid, recent)))),
+      runJmapSync({ connection: Ref.make(connection) }).pipe(
+        Effect.provide(jmapSyncTestServices(db, union(mid, recent))),
+      ),
     );
     expect(r2.newMessages).toBe(recent.emails.length);
     expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(recent));
@@ -307,7 +309,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     });
     const highBeforeWiden = binding.max;
     const r3 = await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding) }).pipe(
+      runJmapSync({ connection: Ref.make(connection) }).pipe(
         Effect.provide(jmapSyncTestServices(db, union(mid, recent, older))),
       ),
     );
@@ -324,12 +326,12 @@ describe('runJmapSync against a mock JMAP API', () => {
   test('an interrupted initial sync commits durably and a following run resumes both halves', async ({ expect }) => {
     const now = new Date();
     const dataset = generateJmapDataset({ count: 20, seed: 23, start: subDays(now, 10), end: subDays(now, 2) });
-    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
 
     // Fault after the first commit page (COMMIT_PAGE_SIZE = 10) — simulates a crash partway through
     // the initial backward (newest-first) walk.
     const exit = await EffectEx.runPromise(
-      Effect.exit(runJmapSync({ binding: Ref.make(binding) })).pipe(
+      Effect.exit(runJmapSync({ connection: Ref.make(connection) })).pipe(
         Effect.provide(ambientSyncServices(db)),
         Effect.provide(withFaultAfterEmails(10, dataset)),
       ),
@@ -350,7 +352,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     // Recovery: a healthy run resumes the backward half from `min`, nothing new forward — everything
     // lands exactly once.
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding) }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
+      runJmapSync({ connection: Ref.make(connection) }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
     );
     const finalIds = await syncedIdsOf(db, mailbox);
     expect(new Set(finalIds).size).toBe(finalIds.length);
@@ -361,11 +363,11 @@ describe('runJmapSync against a mock JMAP API', () => {
   test('a capped run requests Operation.runAgain(), and repeated runs sync the whole mailbox', async ({ expect }) => {
     const now = new Date();
     const dataset = generateJmapDataset({ count: 30, seed: 29, start: subDays(now, 5), end: subDays(now, 1) });
-    const { db, mailbox, binding } = await seed();
+    const { db, mailbox, connection } = await seed();
 
     const runOnce = () =>
       EffectEx.runPromise(
-        Effect.exit(runJmapSync({ binding: Ref.make(binding), maxMessages: 10 })).pipe(
+        Effect.exit(runJmapSync({ connection: Ref.make(connection), maxMessages: 10 })).pipe(
           Effect.provide(jmapSyncTestServices(db, dataset)),
         ),
       );
@@ -399,13 +401,13 @@ describe('runJmapSync against a mock JMAP API', () => {
     async ({ expect }) => {
       const now = new Date();
       const dataset = generateJmapDataset({ count: 30, seed: 31, start: subDays(now, 5), end: subDays(now, 1) });
-      const { db, mailbox, binding } = await seed();
+      const { db, mailbox, connection } = await seed();
 
       // `dedupSeedTail` (5) < messages backfilled after the newest, so a newest-only seed would evict the
       // newest from the dedup set and the forward `after: max` re-fetch would re-commit it (prod: >500).
       const runOnce = () =>
         EffectEx.runPromise(
-          Effect.exit(runJmapSync({ binding: Ref.make(binding), maxMessages: 10, dedupSeedTail: 5 })).pipe(
+          Effect.exit(runJmapSync({ connection: Ref.make(connection), maxMessages: 10, dedupSeedTail: 5 })).pipe(
             Effect.provide(jmapSyncTestServices(db, dataset)),
           ),
         );
@@ -436,7 +438,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     // No cursor → backward (initial sync): newest-first.
     const backward = await seed();
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(backward.binding) }).pipe(
+      runJmapSync({ connection: Ref.make(backward.connection) }).pipe(
         Effect.provide(jmapSyncTestServices(backward.db, dataset)),
       ),
     );
@@ -449,7 +451,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     const forwardCursor = String(minKey(dataset) - 1);
     const forward = await seed({ max: forwardCursor, min: forwardCursor, options: { syncBackDays: 1 } });
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(forward.binding) }).pipe(
+      runJmapSync({ connection: Ref.make(forward.connection) }).pipe(
         Effect.provide(jmapSyncTestServices(forward.db, dataset)),
       ),
     );
@@ -468,9 +470,9 @@ describe('runJmapSync against a mock JMAP API', () => {
       blobs: { 'blob-1': bytes },
     };
 
-    const { db, mailbox, binding } = await seed();
+    const { db, mailbox, connection } = await seed();
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding) }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
+      runJmapSync({ connection: Ref.make(connection) }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
     );
 
     const feedMessages = await queryFeedMessages(db, mailbox);
@@ -505,10 +507,10 @@ describe('runJmapSync against a mock JMAP API', () => {
     const end = subDays(new Date(), 3);
     const start = subDays(new Date(), 12);
     const dataset = { ...generateJmapDataset({ count: 6, seed: 81, start, end }), state: 'state-0' };
-    const { db, mailbox, binding } = await seed();
+    const { db, mailbox, connection, binding } = await seed();
 
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding) }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
+      runJmapSync({ connection: Ref.make(connection) }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
     );
 
     // The state token is captured and the (window) backfill still ran normally.
@@ -519,11 +521,11 @@ describe('runJmapSync against a mock JMAP API', () => {
   test('an incremental run syncs only the delta created messages and advances the token', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateJmapDataset({ count: 5, seed: 82, start: subDays(now, 6), end: subDays(now, 2) });
-    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
 
     // First tick: window backfill + capture 'state-0'.
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(
         Effect.provide(jmapSyncTestServices(db, { ...base, state: 'state-0' })),
       ),
     );
@@ -540,7 +542,7 @@ describe('runJmapSync against a mock JMAP API', () => {
       changeLog: [{ sinceState: 'state-0', newState: 'state-1', created: [arrival.id] }],
     };
     const r2 = await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(jmapSyncTestServices(db, run2))),
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(Effect.provide(jmapSyncTestServices(db, run2))),
     );
 
     // Only the delta's created message synced; the token advanced to the new state.
@@ -554,7 +556,7 @@ describe('runJmapSync against a mock JMAP API', () => {
   test('a stale state token clears it, falls back to the window scan, and recaptures', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateJmapDataset({ count: 5, seed: 84, start: subDays(now, 6), end: subDays(now, 2) });
-    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
 
     // A prior run left a token the server can no longer resolve (evicted past its retention window).
     Obj.update(binding, (binding) => {
@@ -566,7 +568,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     // No change-log chain from 'evicted' → the mock fails with `cannotCalculateChanges`.
     const dataset = { ...base, state: 'state-current', changeLog: [] };
     const result = await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
     );
 
     // Fell back to the full window scan and recaptured the fresh token.
@@ -578,11 +580,11 @@ describe('runJmapSync against a mock JMAP API', () => {
   test('a crash mid-incremental leaves the token unadvanced and recovers with no duplicate', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateJmapDataset({ count: 5, seed: 85, start: subDays(now, 6), end: subDays(now, 2) });
-    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
 
     // First tick: backfill + capture 'state-0'.
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(
         Effect.provide(jmapSyncTestServices(db, { ...base, state: 'state-0' })),
       ),
     );
@@ -603,7 +605,7 @@ describe('runJmapSync against a mock JMAP API', () => {
       changeLog: [{ sinceState: 'state-0', newState: 'state-1', created: arrivals.map((email) => email.id) }],
     };
     const exit = await EffectEx.runPromise(
-      Effect.exit(runJmapSync({ binding: Ref.make(binding), now })).pipe(
+      Effect.exit(runJmapSync({ connection: Ref.make(connection), now })).pipe(
         Effect.provide(ambientSyncServices(db)),
         Effect.provide(withFaultAfterEmails(10, run2Dataset)),
       ),
@@ -614,7 +616,9 @@ describe('runJmapSync against a mock JMAP API', () => {
 
     // Recovery: the next run re-fetches the whole delta, dedups the committed prefix, finishes clean.
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(jmapSyncTestServices(db, run2Dataset))),
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(
+        Effect.provide(jmapSyncTestServices(db, run2Dataset)),
+      ),
     );
     expect(tokenOf(binding)).toBe('state-1');
     const ids = await syncedIdsOf(db, mailbox);
@@ -627,9 +631,9 @@ describe('runJmapSync against a mock JMAP API', () => {
   }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateJmapDataset({ count: 3, seed: 90, start: subDays(now, 6), end: subDays(now, 2) });
-    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(
         Effect.provide(jmapSyncTestServices(db, { ...base, state: 'state-0' })),
       ),
     );
@@ -647,7 +651,7 @@ describe('runJmapSync against a mock JMAP API', () => {
       changeLog: [{ sinceState: 'state-0', newState: 'state-1', updated: [targetId] }],
     };
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(jmapSyncTestServices(db, run2))),
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(Effect.provide(jmapSyncTestServices(db, run2))),
     );
 
     // No new feed message and the token advanced.
@@ -675,9 +679,9 @@ describe('runJmapSync against a mock JMAP API', () => {
   test('an incremental $flagged keyword add stars an existing message (canonical starred tag)', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateJmapDataset({ count: 3, seed: 93, start: subDays(now, 6), end: subDays(now, 2) });
-    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    const { db, mailbox, connection } = await seed({ options: { syncBackDays: 14 } });
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(
         Effect.provide(jmapSyncTestServices(db, { ...base, state: 'state-0' })),
       ),
     );
@@ -694,7 +698,7 @@ describe('runJmapSync against a mock JMAP API', () => {
       changeLog: [{ sinceState: 'state-0', newState: 'state-1', updated: [targetId] }],
     };
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(jmapSyncTestServices(db, run2))),
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(Effect.provide(jmapSyncTestServices(db, run2))),
     );
 
     // The message gained the canonical starred tag — the same one the local star toggle resolves.
@@ -713,9 +717,9 @@ describe('runJmapSync against a mock JMAP API', () => {
   test('a created delta larger than the per-run budget syncs across bounded runs (maxChanges)', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateJmapDataset({ count: 3, seed: 94, start: subDays(now, 6), end: subDays(now, 2) });
-    const { db, mailbox, binding } = await seed({ options: { syncBackDays: 14 } });
+    const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
     await EffectEx.runPromise(
-      runJmapSync({ binding: Ref.make(binding), now }).pipe(
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(
         Effect.provide(jmapSyncTestServices(db, { ...base, state: 'state-0' })),
       ),
     );
@@ -744,7 +748,7 @@ describe('runJmapSync against a mock JMAP API', () => {
     let exit: Exit.Exit<unknown, unknown>;
     do {
       exit = await EffectEx.runPromise(
-        Effect.exit(runJmapSync({ binding: Ref.make(binding), maxMessages: 3, now })).pipe(
+        Effect.exit(runJmapSync({ connection: Ref.make(connection), maxMessages: 3, now })).pipe(
           Effect.provide(jmapSyncTestServices(db, dataset)),
         ),
       );

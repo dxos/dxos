@@ -4,7 +4,7 @@
 
 export { ATPROTO_OAUTH_SCOPES } from './constants';
 export { CONNECTOR_AUTH_GROUP_ID, type ConnectorAuthActionsOptions, connectorAuthActions } from './util';
-export { ConnectionTestError, SyncRoutineMissingError } from './errors';
+export { ConnectionAuthExpiredError, ConnectionTestError, SyncRoutineMissingError } from './errors';
 export { SyncTemplateId, makeSyncTemplate } from './templates';
 export * from './meta';
 export {
@@ -19,6 +19,8 @@ export {
   isCursorForTarget,
   runConnectionSync,
   scaffoldConnectionSyncRoutine,
+  syncConnectionBindings,
+  syncConnectionOrOfferRoutine,
   syncTarget,
 } from './util';
 export * as ConnectorEvents from './types/ConnectorEvents';

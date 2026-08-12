@@ -44,7 +44,7 @@ describe('syncTarget', () => {
 
   const TestSync = Operation.make({
     meta: { key: DXN.make('org.dxos.test.syncTarget.sync'), name: 'Test Sync' },
-    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
 
