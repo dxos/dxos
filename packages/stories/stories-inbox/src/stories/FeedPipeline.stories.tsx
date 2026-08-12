@@ -88,6 +88,8 @@ const ProcessModule = () => {
   return <ProcessModuleContainer space={space} />;
 };
 
+// Split from the space guard above: an early return before hooks changes the hook count between
+// renders (the active space resolves after first mount) and React throws.
 const ProcessModuleContainer = ({ space }: { space: Space }) => {
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
   const feed = mailbox?.feed?.target;
@@ -334,9 +336,12 @@ const DefaultStory = () => (
   <ModuleContainer
     layout={[
       [ProcessRole, StoryRole.Mailbox],
-      [StoryRole.Message],
-      [StoryRole.Controls, StoryRole.Facts],
-      [ModuleRole.Database, ModuleRole.Logging],
+      [
+        StoryRole.Facts,
+        // TODO(burdon): What is this for?
+        StoryRole.Controls,
+      ],
+      [ModuleRole.Objects, ModuleRole.Logging],
     ]}
   />
 );
@@ -434,16 +439,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    seed: 'fixture',
-  },
-};
-
 /** Plain demo messages, no Organizations — the ex-MailboxPipeline seeded variant. */
 export const Demo: Story = {
   args: {
     seed: 'demo',
+  },
+};
+
+export const Fixture: Story = {
+  args: {
+    seed: 'fixture',
   },
 };
 
@@ -454,7 +459,7 @@ export const Demo: Story = {
  * skip); reset clears the cursor (reusing the object, zeroing the run counter) so the next run
  * re-processes the whole feed.
  */
-export const Test: Story = {
+export const FixtureTest: Story = {
   args: {
     seed: 'fixture',
   },
