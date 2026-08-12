@@ -296,7 +296,10 @@ export class ManagerState {
   recordFailure(id: string, phase: PluginFailurePhase, error: Error): void {
     const reason: PluginFailureReason = isTimeoutCause(error) ? 'timeout' : 'error';
     const failure: PluginFailure = { id, phase, reason, error, timestamp: Date.now() };
-    log.warn('plugin failed to activate', { id, phase, reason, error: error.message });
+    // `LazyPluginError`'s own message says only that resolution failed; the import's rejection is
+    // the cause, and without it a load failure is undiagnosable from the console alone.
+    const cause = error.cause instanceof Error ? error.cause.message : undefined;
+    log.warn('plugin failed to activate', { id, phase, reason, error: error.message, cause });
     this.#update(this.failed, (current) => [...current.filter((entry) => entry.id !== id), failure]);
   }
 
