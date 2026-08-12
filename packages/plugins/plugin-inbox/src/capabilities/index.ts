@@ -8,6 +8,8 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
@@ -32,6 +34,11 @@ export const SummarizeExtractor = Capability.inlineModule(
   'summarize-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
   () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
+);
+export const AutomationTemplates = Capability.lazyModule(
+  'AutomationTemplates',
+  { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+  () => import('./automation-templates'),
 );
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],

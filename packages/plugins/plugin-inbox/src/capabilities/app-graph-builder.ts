@@ -13,7 +13,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
 import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -397,6 +397,69 @@ export default Capability.makeModule(
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
                   // The toolbar emits `data-testid` only for actions that set one; browser-e2e waits on it.
                   testId: 'inbox.mailbox.sync',
+                },
+              },
+            ];
+          });
+        },
+      }),
+
+      GraphBuilder.createExtension({
+        id: 'processMailbox',
+        // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        actions: (mailbox, get) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          return Effect.gen(function* () {
+            // Same monitor MailboxArticle's statusbar meter reads, so the button's stop state agrees
+            // with a run kicked off from either surface (or a routine).
+            const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+            const progressKey = InboxOperation.createProcessProgressKey(mailbox);
+            const isRunning = Option.match(progressRegistry, {
+              onNone: () => false,
+              onSome: (registry) => get(registry.monitorAtom(progressKey))?.status === 'running',
+            });
+            return [
+              {
+                id: 'process',
+                data: () =>
+                  isRunning
+                    ? // Cancel routes through the progress trace sink, terminating the emitting process.
+                      Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(progressKey))
+                    : // Scheduled (not invoked) so the run is a real process the meter/stop can cancel.
+                      Operation.schedule(
+                        InboxOperation.ProcessMailbox,
+                        { mailbox: Ref.make(mailbox) },
+                        { spaceId: db.spaceId },
+                      ),
+                properties: {
+                  label: isRunning
+                    ? ['stop-process-mailbox.label', { ns: meta.profile.key }]
+                    : ['process-mailbox.label', { ns: meta.profile.key }],
+                  icon: isRunning ? 'ph--stop--regular' : 'ph--play--regular',
+                  disposition: ['toolbar', 'list-item'],
+                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  testId: 'inbox.mailbox.process',
+                },
+              },
+              {
+                id: 'resetProcessCursor',
+                data: () =>
+                  Operation.invoke(
+                    InboxOperation.ResetProcessCursor,
+                    { mailbox: Ref.make(mailbox) },
+                    { spaceId: db.spaceId },
+                  ).pipe(Effect.asVoid),
+                properties: {
+                  label: ['reset-process-cursor.label', { ns: meta.profile.key }],
+                  icon: 'ph--arrow-counter-clockwise--regular',
+                  // Context menu only; disabled mid-run so a reset never races the advancing cursor.
+                  disposition: ['list-item'],
+                  disabled: isRunning,
+                  testId: 'inbox.mailbox.processReset',
                 },
               },
             ];

@@ -68,6 +68,10 @@ export const translations = [
         'sync-mailbox.label': 'Sync',
         'empty-mailbox.message': 'Mailbox empty',
 
+        'process-mailbox.label': 'Process',
+        'stop-process-mailbox.label': 'Stop',
+        'reset-process-cursor.label': 'Reset process cursor',
+
         'sync-calendar.label': 'Sync calendar',
         'empty-calendar.message': 'Calendar empty',
 

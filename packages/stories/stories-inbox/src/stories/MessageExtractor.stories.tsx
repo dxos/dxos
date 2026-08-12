@@ -8,12 +8,15 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
+import { Role } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -38,9 +41,10 @@ import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import * as Trip from '@dxos/plugin-trip/Trip';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message as MessageType, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -203,8 +207,11 @@ const seedMessage = (space: Space) => {
   return message;
 };
 
-const DefaultStory = () => {
-  const [space] = useSpaces();
+/** Role token for the story-local module, referenced by the `ModuleContainer` layout. */
+const ExtractMessageRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.extractMessage');
+
+const ExtractMessageModule = () => {
+  const space = useActiveSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const [message] = useQuery(space?.db, Filter.type(MessageType.Message));
 
@@ -213,21 +220,42 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='h-full overflow-auto grid grid-cols-2 gap-2'>
-      <MessageArticle
-        testId='message-article'
-        role='article'
-        subject={message}
-        attendableId='story'
-        mailbox={mailbox}
-      />
-      <JsonHighlighter data={{ message }} />
-    </div>
+    <MessageArticle testId='message-article' role='article' subject={message} attendableId='story' mailbox={mailbox} />
   );
 };
 
+/** Registers the story-local module surface for the `ModuleContainer` layout. */
+const StoryExtractMessagePlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('story.inbox.extractMessageModule'), name: 'Extract Message Story Module' }),
+).pipe(
+  Plugin.addModule({
+    id: 'extract-message-module',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(Capabilities.ReactSurface, [
+          Surface.create({
+            id: 'inbox.extractMessage',
+            filter: Surface.makeFilter(ExtractMessageRole),
+            component: ExtractMessageModule,
+          }),
+          ...moduleSurfaces,
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const DefaultStory = () => {
+  // The JSON cell inspects the live message: query it here (inside the plugin-manager decorator) and
+  // bind it into the layout via the surface cell's `data`.
+  const [space] = useSpaces();
+  const [message] = useQuery(space?.db, Filter.type(MessageType.Message));
+  return <ModuleContainer layout={[[ExtractMessageRole], [{ type: ModuleRole.Json, data: { subject: message } }]]} />;
+};
+
 const meta = {
-  title: 'stories/stories-inbox/ExtractMessage',
+  title: 'stories/stories-inbox/MessageExtractor',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -277,6 +305,7 @@ const meta = {
         MockDeckOperationsPlugin(),
         ImportantExtractorPlugin(),
         MockAiServicePlugin(),
+        StoryExtractMessagePlugin(),
       ],
     }),
   ],
