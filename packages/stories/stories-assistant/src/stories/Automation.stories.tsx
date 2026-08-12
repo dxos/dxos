@@ -56,14 +56,14 @@ export const WithTriggers: Story = {
 export const WithChessTrigger: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ Chess }, { ChessPlugin }, { Game }, { GamePlugin }] = await Promise.all([
+      const [{ Chess }, ChessPlugin, { Game }, { GamePlugin }] = await Promise.all([
         import('@dxos/plugin-chess'),
-        import('@dxos/plugin-chess/plugin'),
+        import('@dxos/plugin-chess/ChessPlugin'),
         import('@dxos/plugin-game'),
         import('@dxos/plugin-game/plugin'),
       ]);
       return {
-        plugins: [GamePlugin(), ChessPlugin()],
+        plugins: [GamePlugin(), ChessPlugin.make()],
         types: [Game.Game, Chess.State],
       };
     },

@@ -44,14 +44,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ChessPlugin.workerd.ts",
-        "node": "./src/ChessPlugin.node.ts",
-        "default": "./src/ChessPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/ChessPlugin.d.ts",
-      "workerd": "./dist/lib/ChessPlugin.workerd.mjs",
-      "node": "./dist/lib/ChessPlugin.node.mjs",
-      "default": "./dist/lib/ChessPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -81,11 +81,6 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "import": "./dist/lib/operations.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
@@ -101,6 +96,7 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Chess": {
       "source": "./src/types/Chess.ts",
       "types": "./dist/types/src/types/Chess.d.ts",
@@ -116,6 +112,11 @@
       "types": "./dist/types/src/types/ChessOperation.d.ts",
       "import": "./dist/lib/ChessOperation.mjs"
     },
+    "./ChessPlugin": {
+      "source": "./src/ChessPlugin.ts",
+      "types": "./dist/types/src/ChessPlugin.d.ts",
+      "import": "./dist/lib/ChessPlugin.mjs"
+    },
     "./ChessPositionIndex": {
       "source": "./src/types/ChessPositionIndex.ts",
       "types": "./dist/types/src/types/ChessPositionIndex.d.ts",
@@ -125,8 +126,7 @@
       "source": "./src/types/PlayerReview.ts",
       "types": "./dist/types/src/types/PlayerReview.d.ts",
       "import": "./dist/lib/PlayerReview.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

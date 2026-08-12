@@ -12,7 +12,7 @@ import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessComPlugin } from '@dxos/plugin-chess-com/plugin';
-import { ChessPlugin } from '@dxos/plugin-chess/plugin';
+import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
@@ -164,7 +164,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     BookmarksPlugin(),
     BrainPlugin(),
     CallsPlugin(),
-    ChessPlugin(),
+    ChessPlugin.make(),
     ChessComPlugin(),
     ReviewPlugin(),
     ConductorPlugin(),
