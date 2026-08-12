@@ -423,17 +423,15 @@ Order matters — EDGE ships before Composer.
 
 ## Blocked on credentials
 
-- [ ] **Record the missing `agent-runtime` redelivery fixture.** `AgentService.test.ts > recovers
-    queued tool results after reload` fails on a fixture miss that surfaces as a 15s timeout: the
-      agent process fails, and the test then waits for a completion that never comes. After a reload
-      `agent-process.ts` (~L268) redelivers a queued tool result as a synthetic `<result pid=N>`
+- [ ] **Record the missing `agent-runtime` redelivery fixture.** The `AgentService.test.ts` case
+      `recovers queued tool results after reload` fails on a fixture miss that surfaces as a 15s
+      timeout: the agent process fails, then the test waits for a completion that never comes. On a
+      reload, `agent-process.ts` (~L268) redelivers a queued tool result as a synthetic `<result pid=N>`
       **text** block rather than a tool-result part — main's design (`76dd26df`), not a v4 change —
       and no fixture in the store records that shape (`grep -rl 'result pid=' .store/conversations`
       returns nothing). So the path only passes when the result lands before the shutdown and no
       redelivery happens at all. Needs a real provider call:
-      `     DX_ANTHROPIC_API_KEY=… DX_UPDATE_MODEL_FIXTURES=1 \
-      moon run agent-runtime:test -- src/agent-service/AgentService.test.ts
-    `
+      `DX_ANTHROPIC_API_KEY=… DX_UPDATE_MODEL_FIXTURES=1 moon run agent-runtime:test -- src/agent-service/AgentService.test.ts`.
       **Regenerate the whole file, never with `-t`** — the suite calls
       `EntityId.dangerouslyDisableRandomness()` at module scope, so the ID sequence depends on how
       many tests ran before; a single-test regeneration writes fixtures with IDs that do not match
