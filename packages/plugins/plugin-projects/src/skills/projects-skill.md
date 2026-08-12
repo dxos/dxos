@@ -97,6 +97,9 @@ onward — never pass a bare id where a ref is expected.
   4. Push durable _why_ (decisions, findings) into the design document, not the outline — the
      outline is scratch, the document is the record.
   5. Confirm the checkpoint in one short block (done / in-progress / next).
+- **`/project end`** — close out a work-stream: run the hydrate checkpoint first, then
+  `projectUpdate { project, status: 'ended' }`. Ended projects stay queryable; nothing is
+  deleted.
 - **`/project resume`** — reload at the start of a session:
   1. `projectGet` the target project (ask which if more than one `active` project matches and
      none was named).

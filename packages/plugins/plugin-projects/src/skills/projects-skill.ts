@@ -23,7 +23,8 @@ const make = () =>
     key: SKILL_KEY,
     name: 'Projects',
     description:
-      'Manage work-stream projects, tasks and design docs stored in the space (successor to repo-file task tracking).',
+      'Track multi-step work as projects, tasks and design docs in the space. Use when work spans 3+ steps or ' +
+      'phases, will outlive one session, or the user asks for a plan, progress, or a /project verb.',
     agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make({ content: instructions })),
