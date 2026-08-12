@@ -175,7 +175,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   // Auto-dispatch pipeline: `ExtractMessage` per feed message with no extractor named — the
   // dispatcher selects by match confidence (the composer toolbar path). Pairs with the `trip` seed,
   // where the two same-PNR legs must collapse into one Trip.
-  const handleDispatch = useCallback(async () => {
+  const handleAutoExtract = useCallback(async () => {
     if (!invoker || !mailbox) {
       return;
     }
@@ -258,7 +258,11 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Button data-testid='crm' disabled={!invoker || !mailbox} onClick={() => void handleCrm()}>
             CRM
           </Toolbar.Button>
-          <Toolbar.Button data-testid='dispatch' disabled={!invoker || !mailbox} onClick={() => void handleDispatch()}>
+          <Toolbar.Button
+            data-testid='dispatch'
+            disabled={!invoker || !mailbox}
+            onClick={() => void handleAutoExtract()}
+          >
             Dispatch
           </Toolbar.Button>
           <Toolbar.Button data-testid='analyze' disabled={!invoker || !mailbox} onClick={() => void handleAnalyze()}>
