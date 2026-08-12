@@ -267,7 +267,11 @@ describe('mailbox project pipelines', () => {
       const project = projects.find((candidate) => candidate.id === result.projectId);
       expect(project?.name).toBe('Nicole — Threads');
       const routine = yield* Effect.promise(() => project!.routines[0].load());
-      expect(String((routine.spec as { runnable?: { uri?: string } }).runnable?.uri)).toContain('updateInvestorLog');
+      // Compared against the operation's own key, so renaming the operation moves this assertion
+      // with it rather than leaving a stale string behind.
+      expect(String((routine.spec as { runnable?: { uri?: string } }).runnable?.uri)).toContain(
+        ProjectOperation.UpdateInvestorLog.meta.key.toString(),
+      );
     }).pipe(Effect.provide(testLayer())),
   );
 });
