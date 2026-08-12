@@ -1,23 +1,23 @@
-# Project
+# Projects
 
 ## Overview
 
-A **project** is a work-stream — one coherent effort, usually one branch/worktree —
-tracked as objects in a DXOS ECHO space: a project object, an owned task set, an
-ad hoc outline (scratch checklist), and design documents filed as artifacts. This
-replaces the old file-based system (`.agents/projects/registry.yml`,
-per-project `TASKS.md`/`DESIGN.md`, git commits as the durability mechanism).
-**The space is the only store.** Do not create or edit any local file to record
-project state — no registry file, no TASKS.md, no DESIGN.md. Everything durable
-goes through the MCP tools below.
+A **project** is a work-stream — one coherent effort with its own goals, task ledger, and design
+record — stored as objects in a DXOS ECHO space: a project object, an owned task set, an outline
+(the scratch checklist), and design documents filed as artifacts. The space is the durable,
+shared source of truth: state survives context resets and new sessions, is visible live in
+Composer, and is shared with other agents and humans working the same stream.
 
-It is distinct from in-session `TodoWrite`: `TodoWrite` is ephemeral scratch for
-the current turn; the space is the persistent source of truth, visible across
-sessions, repos, and to other agents/humans live in Composer. Use judgment about
-when a project/task warrants tracking — err toward creating it.
+**The space is the only store.** Durable project state never goes into local files, scratch
+notes, or commit messages — everything that should outlive this session goes through the tools
+below.
 
-**Never spawn a background task chip for a follow-up on work you're doing** —
-that follow-up is a task (`taskCreate`) in the current project, not spun-off work.
+Project tracking is distinct from any in-session todo list you keep: session todos are ephemeral
+scratch for the current turn; the project is the persistent record. Use judgment about when work
+warrants a project — err toward creating one.
+
+A follow-up discovered while working a project is a task on that project (`taskCreate`) — do not
+spin it off into a separate untracked thread.
 
 ## Space binding — read this before any other call
 
@@ -28,106 +28,104 @@ The repo pins the space its projects live in in a committed config file,
 spaceId: <id>
 ```
 
-1. Read the file. If it is missing, or `spaceId` is null/empty, **stop and say
-   so** — do not guess a space, do not fall back to "no spaceId" (omitting
-   `spaceId` targets whatever space the session defaults to, which is not the
-   same thing and must not be used as a silent substitute).
-2. Call `whoami {}` and confirm the pinned `spaceId` appears in the session's
-   spaces. If it does not, **stop and say so** — the agent's session isn't
-   scoped to this repo's project space.
+1. Read the file. If it is missing, or `spaceId` is null/empty, **stop and say so** — do not
+   guess a space, and do not fall back to the session's default space (omitting `spaceId`
+   targets whatever the session defaults to, which is not the same thing and must not be used
+   as a silent substitute).
+2. Call `whoami {}` and confirm the pinned `spaceId` appears in the session's spaces. If it does
+   not, **stop and say so** — this session isn't scoped to the repo's project space.
 3. Only then proceed, passing that `spaceId` on every call below.
 
-This is a hard gate, not a suggestion: no partial writes, no fallback space, no
-"I'll just use the default space for now." A project system split across spaces
-is worse than an agent that refuses and asks the user to fix the binding.
+This is a hard gate, not a suggestion: no partial writes, no fallback space. A project system
+split across spaces is worse than an agent that refuses and asks the user to fix the binding.
 
 ## Ref envelopes
 
 Every object reference passed into a tool is a DXN envelope, not a bare string:
-`{"/": "<id>"}`. `projectGet`, `taskCreate`'s `taskSet`, `taskUpdate`'s `task`,
-etc. all take this shape. Values returned from `projectCreate`/`projectList`
-already come back with `id` fields you wrap yourself when passing them onward —
-don't pass a bare id where a ref is expected.
+`{"/": "<id>"}`. `projectGet`'s `project`, `taskCreate`'s `taskSet`, `taskUpdate`'s `task`, etc.
+all take this shape. Tools return objects with `id` fields; wrap them yourself when passing them
+onward — never pass a bare id where a ref is expected.
 
-## Object model (what replaces what)
+## The shape of a project
 
-| Old (file-based)                    | New (space-based)                                                                   |
-| ------------------------------------ | ------------------------------------------------------------------------------------ |
-| `registry.yml` entry                 | a project object (`projectCreate`/`projectList`/`projectGet`)                        |
-| registry `status`                    | the project `status` field: `active`\|`paused`\|`blocked`\|`ended` (`projectUpdate`)  |
-| registry `summary`                   | the project `description`                                                            |
-| `TASKS.md` phase (`## Phase N`)      | a parent task (`taskCreate` with no `parent`)                                        |
-| `TASKS.md` individual task           | a sub-task (`taskCreate` with `parent: {"/": "<phase-task-id>"}`)                     |
-| checkbox state (`- [ ]` / `- [x]`)   | task `status`: `todo`\|`in-progress`\|`done`\|`failed`\|`cancelled`                    |
-| `DESIGN.md`                          | a document object (`createObject` typename `org.dxos.type.document`, plus its `org.dxos.type.text` content) filed as a project artifact |
-| resume pointer (italic line)         | a line starting `Resume:` in the project's outline (`outlineUpdate`)                 |
-| ad hoc scratch notes                 | the project outline generally — the free-text checklist surface (`outlineGet`/`outlineUpdate`) |
-
-For design docs: create the text object, then the document object whose
-`content` references it, via `createObject`. Record the document's id as a line
-in the project outline (e.g. `Design: {"/": "<doc-id>"}`) so resume can find it
-even before it shows up in `projectGet`'s artifacts list.
+- **Project object** — `name`; `status` (`active`|`paused`|`blocked`|`ended`); `description`
+  (the one-line summary); `goals` (what done means, each `open`|`met`|`dropped`).
+- **Task set** — the ledger. Phases are parent tasks (`taskCreate` with no `parent`); individual
+  work items are sub-tasks (`taskCreate` with `parent: {"/": "<phase-task-id>"}`). Task `status`
+  is `todo`|`in-progress`|`done`|`failed`|`cancelled`.
+- **Outline** — the free-text scratch surface (`outlineGet`/`outlineUpdate`). Keep a line
+  starting `Resume:` holding the single next action, and a `Design: {"/": "<doc-id>"}` line
+  pointing at the design document.
+- **Design document** — the durable *why*: decisions, findings, spec. Create the text object,
+  then a document whose `content` references it (`createObject` typenames `org.dxos.type.text`
+  and `org.dxos.type.document`).
 
 ## When to use
 
 - Work spans **3+ distinct steps**, multiple files, or phases.
-- The task will likely outlive one session (you'll resume it later).
+- The work will likely outlive one session (you'll resume it later).
 - The user asks for a plan, roadmap, or to track progress.
-- The user uses **`/project track <text>`** — always record it as a task, never
-  a task chip.
+- The user uses **`/project track <text>`** — always record it as a task.
 - You are resuming work — call `projectGet` + `taskList` first to reload state.
 
 **When NOT to use:**
 
 - Throwaway one-offs (a single edit, a quick answer) — just do them.
-- Cross-project chores with no single home — keep those in `TodoWrite`.
-- Duplicating `TodoWrite` — pick one; don't mirror the same list in both.
+- Chores with no single home — keep those in session scratch.
+- Duplicating a session todo list — pick one; don't mirror the same list in both.
 
 ## Verbs
 
-- **`/project` (bare)** — `projectList` (spaceId from the binding). Summarize:
-  name, status, open/total task counts. If more than one project is `active`,
-  list them numbered and ask which, rather than guessing.
+- **`/project` (bare)** — `projectList` (spaceId from the binding). Summarize: name, status,
+  open/total task counts. If more than one project is `active`, list them numbered and ask
+  which, rather than guessing.
 - **`/project new <name>`** — `projectCreate { name, spaceId }`, then
-  `projectUpdate { project, status: 'active', description: <one-line summary> }`.
-  Report the new project id.
-- **`/project tasks`** — `taskList { project: {"/": id}, includeSubtasks: true, spaceId }`
-  for the resumed/active project; render phases (parent tasks) with their
-  sub-tasks and statuses.
-- **`/project track <text>`** — `taskCreate` on the active project's task set
-  (`taskSet` ref from `projectGet`). If the text names a phase, create it under
-  that phase's parent task; otherwise create it as a top-level task (or ask
-  which phase if ambiguous — never guess silently for a multi-phase project).
-- **`/project hydrate`** — checkpoint before stopping or opening a PR:
-  1. Reconcile task statuses: `taskUpdate`/`taskComplete` every task whose real
-     state has moved; leave a short `description` note on anything left
-     `in-progress` (what's blocked, what's next).
-  2. Refresh the resume pointer: `outlineUpdate` the `Resume:` line to the
-     single next action.
-  3. Update `projectUpdate.goals` if goals were met/dropped/added.
-  4. Push durable *why* (decisions, findings) into the design document, not the
-     outline — the outline is the scratch surface, the document is the record.
+  `projectUpdate { project, status: 'active', description: <one-line summary> }`. Report the new
+  project id.
+- **`/project tasks`** — `taskList { project: {"/": id}, includeSubtasks: true, spaceId }` for
+  the active project; render phases (parent tasks) with their sub-tasks and statuses.
+- **`/project track <text>`** — `taskCreate` on the active project's task set (`taskSet` ref
+  from `projectGet`). If the text names a phase, create it under that phase's parent task;
+  otherwise ask which phase if the project has several — never guess silently.
+- **`/project hydrate`** — checkpoint before stopping or handing off:
+  1. Reconcile task statuses: `taskUpdate`/`taskComplete` every task whose real state has
+     moved; leave a short `description` note on anything left `in-progress` (what's blocked,
+     what's next).
+  2. Refresh the resume pointer: `outlineUpdate` the `Resume:` line to the single next action.
+  3. Update `projectUpdate.goals` if goals were met/dropped/added, and `status` if the
+     work-stream's state changed.
+  4. Push durable *why* (decisions, findings) into the design document, not the outline — the
+     outline is scratch, the document is the record.
   5. Confirm the checkpoint in one short block (done / in-progress / next).
 - **`/project resume`** — reload at the start of a session:
-  1. `projectGet` the target project (ask which if more than one `active`
-     project matches and none was named).
-  2. `taskList { project, includeSubtasks: true }` — read the outline's
-     `Resume:` line.
-  3. Report a concise state: done / in-progress / **next action**. Continue with
-     the next action, or wait for direction if the user gave any.
+  1. `projectGet` the target project (ask which if more than one `active` project matches and
+     none was named).
+  2. `taskList { project, includeSubtasks: true }`; read the outline's `Resume:` line.
+  3. Report a concise state: done / in-progress / **next action**. Continue with the next
+     action, or wait for direction if the user gave any.
+
+## Workflow discipline
+
+1. **At task start** — `projectGet` + `taskList` to reload state; create the project if none
+   exists for this stream.
+2. **As you work** — update task status in the **same turn** the work completes. Never leave
+   statuses stale, and never batch-update everything at the end.
+3. **When parking a task** — leave a one-line note in its `description` (what's blocked, what's
+   next) so it's resumable.
+4. **Before claiming done** — reconcile the ledger against reality: every `done` task is
+   actually complete, and no completed work is still `todo`.
 
 ## Common mistakes
 
-| Mistake                                                        | Fix                                                                                       |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Calling a tool without checking `space.yml` / `whoami` first      | Read the binding and confirm it's in the session's spaces before any project/task call.    |
-| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute an unpinned space.                            |
-| Passing a bare id where a ref envelope is expected                | Wrap every object reference as `{"/": "<id>"}`.                                            |
-| Patching `description` when only the status changed              | `status` is its own field on `projectUpdate`; leave the summary alone.                      |
-| Flat task list with no phase grouping                            | Create one parent task per phase; individual tasks are sub-tasks with `parent` set.         |
-| Leaving task status stale after work lands                       | `taskUpdate`/`taskComplete` in the same turn the work completes, not batched at the end.    |
-| Spawning a task chip for an in-scope follow-up                   | `taskCreate` it on the current project; chips are only for genuinely separate spin-off work. |
-| Losing the resume pointer                                        | `outlineUpdate` the `Resume:` line every `/project hydrate`, not just at the very end.       |
-| Writing design decisions to the outline instead of the document  | Outline = scratch/checklist; the document object is the durable design record.              |
-| Duplicating `TodoWrite` and the task set                         | Task set = durable/cross-session; `TodoWrite` = in-session scratch. Don't mirror both.       |
-| Creating a new project when one for this work already exists     | `projectList` first; resume/extend the existing one instead of forking state.                |
+| Mistake                                                            | Fix                                                                                          |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.      |
+| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute an unpinned space.                             |
+| Passing a bare id where a ref envelope is expected                 | Wrap every object reference as `{"/": "<id>"}`.                                              |
+| Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.   |
+| Flat task list with no phase grouping                              | Create one parent task per phase; individual tasks are sub-tasks with `parent` set.          |
+| Leaving task status stale after work lands                         | `taskUpdate`/`taskComplete` in the same turn the work completes, not batched at the end.     |
+| Losing the resume pointer                                          | `outlineUpdate` the `Resume:` line at every checkpoint, not just at the very end.            |
+| Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.               |
+| Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.        |
+| Creating a new project when one for this work already exists       | `projectList` first; resume/extend the existing one instead of forking state.                |
