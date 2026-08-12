@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { TerraObject } from '#types';
-
 import { type TerraConfigValues, type Vec3, add, scale, sub } from '../engine';
+import * as TerraObject from '../types/TerraObject';
 import { tangentFrame } from './geo';
 import { type MotionContext, type ObjectState, evaluate } from './motion';
 

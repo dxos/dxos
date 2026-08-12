@@ -1135,6 +1135,26 @@ is built when `XPlugin.tsx` is evaluated no matter when the module activates.
       startup lever. Untested: whether it moves `check-startup-budget` or lazy-chunk size.
 
       Shape, for reference: 99 call sites across 52 packages became 62 modules. 44 packages share
-      one `schema.ts` across their platform variants (the arrays were previously restated per
-      variant); 8 needed `schema.node.ts` / `schema.workerd.ts` because their variants really do
-      register different sets — plugin-inbox registers 9 in the browser and 4 headless.
+              one `schema.ts` across their platform variants (the arrays were previously restated per
+              variant); 8 needed `schema.node.ts` / `schema.workerd.ts` because their variants really do
+              register different sets — plugin-inbox registers 9 in the browser and 4 headless.
+
+### Follow-up 2026-08-12 (a `#types` barrel import inside a plugin can close an eval cycle)
+
+Routing an intra-plugin sibling import through the package's own barrel (`../types/Drawing` ->
+`#types`) is NOT always a rename. The barrel pulls in every sibling module, and if one of them
+imports back into the importing directory the cycle closes: `types/index` -> `types/XOperation`
+-> `#model` -> `model/builder` -> `#types`. The namespace binding is then still in TDZ when the
+first module evaluates, and it fails at RUNTIME as `Cannot read properties of undefined` on a
+schema field, with nothing wrong at the type level. Cost 7 new cycles across illustrator, terra
+and voxel before CI caught it; fixed by restoring the direct sibling import in those 7 files.
+
+Rule of thumb: prefer `#types` for cross-directory reads, but keep the DIRECT module import when
+the target directory's barrel can reach back into yours. In voxel the barrel form also silently
+promoted `import type * as Voxel` to a value import, which is what made an erased edge real.
+
+- [ ] `scripts/check-cycles.mjs` covers only `packages/{common,core}` and uses madge, which does
+      not resolve the `imports` map — so BOTH the plugins tree and every `#` edge are invisible to
+      CI. Extend it to `packages/plugins` with `#` self-reference resolution. Baseline before
+      turning it on: 15 pre-existing cycles in plugins (barrel <-> component/hook cycles), so it
+      needs an allowlist or those fixed first.
