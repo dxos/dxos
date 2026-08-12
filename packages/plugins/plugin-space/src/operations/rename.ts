@@ -6,7 +6,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
 import { RENAME_POPOVER } from '../constants';
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Rename> = SpaceOperation.Rename.pipe(
   Operation.withHandler(

@@ -17,7 +17,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { Attention } from '@dxos/react-ui-attention';

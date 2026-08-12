@@ -56,9 +56,8 @@ describe('dxos-subpath-exports', () => {
             "export * as helpers from './meta';",
           ].join('\n'),
         },
-        // A narrow named re-export stays: a star over the directory barrel would export more than
-        // it names, and in some packages something else entirely.
-        { filename: nested, code: "export * from './types';\nexport { value } from './types/Undeclared';" },
+        // A named re-export from a module beside the barrel is fine; only reaching down is not.
+        { filename: nested, code: "export * from './types';\nexport { value } from './alt';" },
         // A package with no per-namespace subpaths has not migrated; its barrel is still its API.
         { filename: fixture('subpath-unmigrated'), code: "export * as Whatever from './types/Whatever';" },
         // A subpath onto a module that does not declare itself a namespace is a standalone
@@ -179,6 +178,13 @@ describe('dxos-subpath-exports', () => {
             { messageId: 'nestedPathExport' },
             { messageId: 'nestedPathExport' },
           ],
+        },
+        {
+          // Cherry-picking names out of a module a directory down is the same smell: that module
+          // wanted to be a namespace.
+          code: "export * from './types';\nexport { value } from './types/Undeclared';",
+          filename: nested,
+          errors: [{ messageId: 'nestedPathExport' }],
         },
       ],
     });

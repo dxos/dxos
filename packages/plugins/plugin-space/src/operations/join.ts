@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { JOIN_DIALOG } from '../constants';
 import type { JoinDialogProps } from '../containers/JoinDialog';
 import { NoIdentityError } from '../errors';
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperation.Join.pipe(
   Operation.withHandler(

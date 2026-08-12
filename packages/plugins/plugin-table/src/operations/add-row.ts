@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 import * as TableOperation from '../types/TableOperation';

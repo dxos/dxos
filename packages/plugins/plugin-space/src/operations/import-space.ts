@@ -6,7 +6,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.ImportSpace> = SpaceOperation.ImportSpace.pipe(
   Operation.withHandler(

@@ -18,7 +18,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { meta } from '#meta';
 
-import { SpaceOperation } from '../../operations';
+import * as SpaceOperation from '../../types/SpaceOperation';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;

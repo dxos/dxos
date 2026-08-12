@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 

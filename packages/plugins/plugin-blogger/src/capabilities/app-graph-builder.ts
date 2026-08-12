@@ -14,7 +14,7 @@ import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';

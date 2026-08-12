@@ -28,6 +28,8 @@ export default defineConfig({
     'SpaceSurface': 'src/types/SpaceSurface.ts',
     'SpaceCapability': 'src/types/SpaceCapability.ts',
     'types/Settings': 'src/types/Settings.ts',
+    'CollectionOperation': 'src/types/CollectionOperation.ts',
+    'SpaceOperation': 'src/types/SpaceOperation.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

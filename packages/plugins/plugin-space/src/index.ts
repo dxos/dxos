@@ -5,5 +5,4 @@
 export * from './errors';
 export * from './meta';
 export * from './util';
-export { CollectionOperation, SpaceOperation } from './operations/definitions';
 export * from './types';

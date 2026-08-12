@@ -75,41 +75,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/types/Settings.mjs"
-    },
-    "./SpaceCapabilities": {
-      "source": "./src/types/SpaceCapabilities.ts",
-      "types": "./dist/types/src/types/SpaceCapabilities.d.ts",
-      "import": "./dist/lib/SpaceCapabilities.mjs"
-    },
-    "./SpaceCapability": {
-      "source": "./src/types/SpaceCapability.ts",
-      "types": "./dist/types/src/types/SpaceCapability.d.ts",
-      "import": "./dist/lib/SpaceCapability.mjs"
-    },
-    "./SpaceEvents": {
-      "source": "./src/types/SpaceEvents.ts",
-      "types": "./dist/types/src/types/SpaceEvents.d.ts",
-      "import": "./dist/lib/SpaceEvents.mjs"
-    },
-    "./SpaceForm": {
-      "source": "./src/types/SpaceForm.ts",
-      "types": "./dist/types/src/types/SpaceForm.d.ts",
-      "import": "./dist/lib/SpaceForm.mjs"
-    },
-    "./SpaceSchema": {
-      "source": "./src/types/SpaceSchema.ts",
-      "types": "./dist/types/src/types/SpaceSchema.d.ts",
-      "import": "./dist/lib/SpaceSchema.mjs"
-    },
-    "./SpaceSurface": {
-      "source": "./src/types/SpaceSurface.ts",
-      "types": "./dist/types/src/types/SpaceSurface.d.ts",
-      "import": "./dist/lib/SpaceSurface.mjs"
-    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./components": {
       "source": "./src/components/index.ts",
@@ -141,6 +106,51 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./CollectionOperation": {
+      "source": "./src/types/CollectionOperation.ts",
+      "types": "./dist/types/src/types/CollectionOperation.d.ts",
+      "import": "./dist/lib/CollectionOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/types/Settings.mjs"
+    },
+    "./SpaceCapabilities": {
+      "source": "./src/types/SpaceCapabilities.ts",
+      "types": "./dist/types/src/types/SpaceCapabilities.d.ts",
+      "import": "./dist/lib/SpaceCapabilities.mjs"
+    },
+    "./SpaceCapability": {
+      "source": "./src/types/SpaceCapability.ts",
+      "types": "./dist/types/src/types/SpaceCapability.d.ts",
+      "import": "./dist/lib/SpaceCapability.mjs"
+    },
+    "./SpaceEvents": {
+      "source": "./src/types/SpaceEvents.ts",
+      "types": "./dist/types/src/types/SpaceEvents.d.ts",
+      "import": "./dist/lib/SpaceEvents.mjs"
+    },
+    "./SpaceForm": {
+      "source": "./src/types/SpaceForm.ts",
+      "types": "./dist/types/src/types/SpaceForm.d.ts",
+      "import": "./dist/lib/SpaceForm.mjs"
+    },
+    "./SpaceOperation": {
+      "source": "./src/types/SpaceOperation.ts",
+      "types": "./dist/types/src/types/SpaceOperation.d.ts",
+      "import": "./dist/lib/SpaceOperation.mjs"
+    },
+    "./SpaceSchema": {
+      "source": "./src/types/SpaceSchema.ts",
+      "types": "./dist/types/src/types/SpaceSchema.d.ts",
+      "import": "./dist/lib/SpaceSchema.mjs"
+    },
+    "./SpaceSurface": {
+      "source": "./src/types/SpaceSurface.ts",
+      "types": "./dist/types/src/types/SpaceSurface.d.ts",
+      "import": "./dist/lib/SpaceSurface.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

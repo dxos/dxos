@@ -8,3 +8,4 @@ export * as ClientAction from './ClientAction';
 export * as ClientCapabilities from './ClientCapabilities';
 export * as ClientEvents from './ClientEvents';
 export * as ClientOptions from './ClientOptions';
+export * as PasskeyError from './PasskeyError';

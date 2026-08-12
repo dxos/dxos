@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { buildContactFromActor } from '@dxos/extractor-lib';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import * as InboxOperation from '../../types/InboxOperation';
 

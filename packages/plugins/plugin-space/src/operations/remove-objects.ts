@@ -13,7 +13,7 @@ import { Annotation, Collection, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = SpaceOperation.RemoveObjects.pipe(
   Operation.withHandler(

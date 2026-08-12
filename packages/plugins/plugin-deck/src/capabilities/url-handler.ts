@@ -24,15 +24,10 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Attention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
+import * as CompanionViewState from '../types/CompanionViewState';
 import * as DeckCapabilities from '../types/DeckCapabilities';
 import * as DeckSchema from '../types/DeckSchema';
-import {
-  COMPANION_VIEW_STATE_CONTEXT,
-  companionAspect,
-  getRenderedPlanks,
-  resolveCompanionAnchor,
-  serializeDeckToUrl,
-} from '../util';
+import { getRenderedPlanks, resolveCompanionAnchor, serializeDeckToUrl } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /**
@@ -406,7 +401,7 @@ export default Capability.makeModule(
         const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
         // Only the attended plank's companion is on screen, so only it belongs in the URL.
         const plankId = anchorId && deck.companionPlanks.includes(anchorId) ? anchorId : undefined;
-        const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
+        const selection = viewState.get(CompanionViewState.aspect, CompanionViewState.CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;
           const represented = PathResolution.representNode(builder, companionNodeId);
@@ -444,7 +439,7 @@ export default Capability.makeModule(
       userNavigated = true;
       syncUrl();
     });
-    const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
+    const unsubscribeCompanionVariant = viewState.subscribe(CompanionViewState.aspect, CompanionViewState.CONTEXT, () =>
       syncUrl(),
     );
     // Only the unconditional BASELINE write is deferred: it serializes the current deck whether or

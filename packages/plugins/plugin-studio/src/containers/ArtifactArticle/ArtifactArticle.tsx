@@ -13,7 +13,7 @@ import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Button, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';

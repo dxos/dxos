@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import * as ChessComAccount from '../types/ChessComAccount';
 import * as ChessComOperation from '../types/ChessComOperation';

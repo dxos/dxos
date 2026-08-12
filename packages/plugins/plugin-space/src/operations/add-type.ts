@@ -10,7 +10,7 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
 import * as SpaceEvents from '../types/SpaceEvents';
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOperation.AddType.pipe(
   Operation.withHandler(

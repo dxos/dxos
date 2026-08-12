@@ -13,7 +13,7 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Graph } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';

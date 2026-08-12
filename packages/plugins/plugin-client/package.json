@@ -75,6 +75,21 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
     "./Account": {
       "source": "./src/types/Account.ts",
       "types": "./dist/types/src/types/Account.d.ts",
@@ -105,20 +120,10 @@
       "types": "./dist/types/src/types/ClientOptions.d.ts",
       "import": "./dist/lib/ClientOptions.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./PasskeyError": {
+      "source": "./src/types/PasskeyError.ts",
+      "types": "./dist/types/src/types/PasskeyError.d.ts",
+      "import": "./dist/lib/PasskeyError.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

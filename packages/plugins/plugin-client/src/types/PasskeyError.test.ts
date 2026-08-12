@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { PasskeyDismissedError, classifyPasskeyFailure, toPasskeyAssertionError } from './errors';
+import * as PasskeyError from './PasskeyError';
 
 describe('passkey errors', () => {
   // The native (Tauri) bridge rejects with a plain string rather than a DOMException, and
@@ -12,7 +12,7 @@ describe('passkey errors', () => {
   test.each(['ASAuthorizationError: the operation was canceled', 'Prompt cancelled by user'])(
     'a native dismissal is recognised without a DOMException (%s)',
     (rejection) => {
-      expect(PasskeyDismissedError.is(toPasskeyAssertionError(rejection))).to.be.true;
+      expect(PasskeyError.Dismissed.is(PasskeyError.fromAssertion(rejection))).to.be.true;
     },
   );
 
@@ -21,7 +21,7 @@ describe('passkey errors', () => {
   test.each([new Error('Recovery key not registered.'), 'plain string', undefined, null])(
     'an unrecognised failure is still reported (%s)',
     (error) => {
-      expect(classifyPasskeyFailure(error)).to.eq('failed');
+      expect(PasskeyError.classify(error)).to.eq('failed');
     },
   );
 });

@@ -14,7 +14,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj, Type } from '@dxos/echo';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Channel } from '@dxos/types';
 import { Position } from '@dxos/util';
 

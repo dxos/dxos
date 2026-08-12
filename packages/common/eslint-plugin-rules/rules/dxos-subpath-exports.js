@@ -406,13 +406,15 @@ export default {
           }
         }
 
-        // A namespace declared here but living a directory down keeps the root barrel growing a
-        // line per module. Declaring it in that directory's own barrel and star-exporting the
-        // directory says the same thing in one line, and the walk above resolves either form
-        // identically. Narrow named re-exports are left alone: a star over the directory barrel
-        // would export more than they name, and sometimes something else entirely.
+        // Anything the barrel reaches a directory down keeps it growing a line per module.
+        // Declaring it in that directory's own barrel and star-exporting the directory says the
+        // same thing in one line, and the walk above resolves either form identically. A group of
+        // names cherry-picked out of a module is the same smell: the module wanted to be a
+        // namespace, so give it one rather than a star that would export more than was named.
         for (const statement of node.body) {
-          if (statement.type !== 'ExportAllDeclaration' || !statement.exported) {
+          const isNamespace = statement.type === 'ExportAllDeclaration' && statement.exported;
+          const isNamed = statement.type === 'ExportNamedDeclaration' && statement.source;
+          if (!isNamespace && !isNamed) {
             continue;
           }
           const source = String(statement.source.value);
@@ -427,7 +429,12 @@ export default {
           context.report({
             node: statement,
             messageId: 'nestedPathExport',
-            data: { name: statement.exported.name, source, dir, barrel: `src/${dir}/index.ts` },
+            data: {
+              name: isNamespace ? statement.exported.name : segments.at(-1),
+              source,
+              dir,
+              barrel: `src/${dir}/index.ts`,
+            },
           });
         }
 

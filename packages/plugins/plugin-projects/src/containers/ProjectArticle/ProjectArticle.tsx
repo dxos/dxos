@@ -13,7 +13,7 @@ import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';

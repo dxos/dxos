@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage } from '@dxos/types';
 
 import { getFeedObjectPath, getMailboxPath } from '../paths';

@@ -25,9 +25,9 @@ import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
 
 import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
+import * as SpaceOperation from '../../../types/SpaceOperation';
 import { resolveCollectionObjectPath } from '../../../util';
 import {
   COLLECTIONS_SECTION_TYPE,

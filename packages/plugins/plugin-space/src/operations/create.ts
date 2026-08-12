@@ -20,7 +20,7 @@ import { iconValues } from '@dxos/ui-types';
 import { SpaceNotReadyError } from '../errors';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
 import * as SpaceEvents from '../types/SpaceEvents';
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 import { SpaceOperationConfig } from './helpers';
 
 /** Bounds how long space creation waits for the new space's properties object to become available. */

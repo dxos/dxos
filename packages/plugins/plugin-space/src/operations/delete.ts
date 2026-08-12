@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { DefaultSpaceDeletionError } from '../errors';
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Delete> = SpaceOperation.Delete.pipe(
   Operation.withHandler(

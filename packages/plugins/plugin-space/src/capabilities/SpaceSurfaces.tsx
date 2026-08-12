@@ -33,10 +33,10 @@ import {
   TypeArticle,
   ViewEditor,
 } from '#containers';
-import { SpaceOperation } from '#operations';
 
 import * as Settings from '../types/Settings';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceOperation from '../types/SpaceOperation';
 import { tryGetViewForObject } from './try-get-view';
 
 export type SpaceHomeSectionProps = {

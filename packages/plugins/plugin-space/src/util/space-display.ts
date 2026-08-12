@@ -10,9 +10,9 @@ import { Obj, Type } from '@dxos/echo';
 import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
 
 import type * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceOperation from '../types/SpaceOperation';
 
 //
 // Constants

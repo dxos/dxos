@@ -11,7 +11,7 @@ import { Obj, Ref, Relation } from '@dxos/echo';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { shouldTriggerAgent } from '../should-trigger-agent';

@@ -17,7 +17,7 @@ import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
 import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 

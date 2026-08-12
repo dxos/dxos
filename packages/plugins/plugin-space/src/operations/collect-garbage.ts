@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.CollectGarbage> = SpaceOperation.CollectGarbage.pipe(
   Operation.withHandler(

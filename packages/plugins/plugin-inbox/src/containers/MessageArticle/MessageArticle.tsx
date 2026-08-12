@@ -12,7 +12,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useManager } from '@dxos/react-ui-attention';
 import { DraftMessage, Message as MessageType } from '@dxos/types';

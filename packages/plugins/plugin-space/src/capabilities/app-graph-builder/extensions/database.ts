@@ -27,10 +27,10 @@ import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
 
 import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
 import * as SpaceEvents from '../../../types/SpaceEvents';
+import * as SpaceOperation from '../../../types/SpaceOperation';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,

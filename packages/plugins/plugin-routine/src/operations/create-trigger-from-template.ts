@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { getRoutinesSettingsPath } from '../paths';
 import * as RoutineOperation from '../types/RoutineOperation';

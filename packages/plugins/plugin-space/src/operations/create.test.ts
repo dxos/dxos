@@ -16,7 +16,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SpacePlugin } from '#plugin';
 
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 
 describe('SpaceOperation.Create', () => {
   // `updateSpace` commits the preference on the host, so what can fail afterwards is only the local

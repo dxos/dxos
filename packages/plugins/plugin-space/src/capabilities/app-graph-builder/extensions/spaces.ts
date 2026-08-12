@@ -21,9 +21,9 @@ import { Expando } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
 
 import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
+import * as SpaceOperation from '../../../types/SpaceOperation';
 import * as SpaceSchema from '../../../types/SpaceSchema';
 import { getSpaceDisplayName } from '../../../util';
 import {

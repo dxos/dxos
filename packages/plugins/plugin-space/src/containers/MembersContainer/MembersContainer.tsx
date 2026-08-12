@@ -30,7 +30,8 @@ import {
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
+
+import * as SpaceOperation from '../../types/SpaceOperation';
 
 // TODO(wittjosiah): Copied from Shell.
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';

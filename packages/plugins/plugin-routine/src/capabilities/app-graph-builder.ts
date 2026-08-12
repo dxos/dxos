@@ -14,7 +14,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Position } from '@dxos/util';
 

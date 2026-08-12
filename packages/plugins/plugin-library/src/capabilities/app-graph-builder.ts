@@ -14,7 +14,7 @@ import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, type NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { meta } from '#meta';
 

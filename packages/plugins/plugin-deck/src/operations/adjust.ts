@@ -17,10 +17,11 @@ import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { incrementPlank } from '../layout';
+import * as CompanionViewState from '../types/CompanionViewState';
 import * as DeckCapabilities from '../types/DeckCapabilities';
 import * as DeckOperation from '../types/DeckOperation';
 import * as DeckSchema from '../types/DeckSchema';
-import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, computeActiveUpdates } from '../util';
+import { computeActiveUpdates } from '../util';
 import { addCompanionPlank, updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
@@ -80,14 +81,14 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
 
           if (companions.length > 0) {
             const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-            const selected = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
+            const selected = viewState.get(CompanionViewState.aspect, CompanionViewState.CONTEXT);
             const preferred = selected.variant
               ? companions.find((companion) => Attention.getLinkedVariant(companion.id) === selected.variant)
               : undefined;
             const companion = preferred ?? companions[0];
             if (!preferred) {
               // Merge (don't replace) so seeding the variant preserves the persisted split points.
-              viewState.update(companionAspect, COMPANION_VIEW_STATE_CONTEXT, (prev) => ({
+              viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({
                 ...prev,
                 variant: Attention.getLinkedVariant(companion.id),
               }));

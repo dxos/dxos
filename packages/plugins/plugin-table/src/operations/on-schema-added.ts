@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import * as TableOperation from '../types/TableOperation';
 

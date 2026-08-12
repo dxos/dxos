@@ -12,7 +12,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Position } from '@dxos/util';
 
 import { meta } from '../meta';

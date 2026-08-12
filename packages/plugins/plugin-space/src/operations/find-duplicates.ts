@@ -6,7 +6,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Query } from '@dxos/echo';
 import { findDuplicates } from '@dxos/extractor';
 
-import { SpaceOperation } from './definitions';
+import * as SpaceOperation from '../types/SpaceOperation';
 import { resolveIdentitySpec } from './helpers';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.FindDuplicates> = SpaceOperation.FindDuplicates.pipe(

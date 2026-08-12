@@ -11,8 +11,8 @@ import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
-import { SpaceOperation } from '../../operations';
 import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import * as SpaceOperation from '../../types/SpaceOperation';
 import { type UseDuplicatesResult, buildMergePreview } from './useDuplicates';
 
 export type UseDuplicatesGroupOptions = {

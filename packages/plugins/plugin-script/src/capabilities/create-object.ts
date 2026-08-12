@@ -8,8 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import * as Notebook from '../types/Notebook';
 import * as ScriptOperation from '../types/ScriptOperation';
