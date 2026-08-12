@@ -14,7 +14,6 @@
   "sideEffects": true,
   "exports": {},
   "dependencies": {
-    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -45,6 +44,7 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
+    "@dxos/ai": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/extractor": "workspace:*",
     "@dxos/fixtures": "workspace:*",

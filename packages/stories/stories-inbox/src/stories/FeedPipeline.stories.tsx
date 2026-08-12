@@ -158,11 +158,36 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
 
     return [
       {
+        // Full client reset: wipes the profile (OPFS) and reloads the page.
+        id: 'reset-store',
+        label: 'Client',
+        run: async () => {
+          await client.reset();
+          window.location.reload();
+          return { reset: 'store' };
+        },
+      },
+      {
+        // Clears the shared FactStore (not ECHO-reactive, so the count is zeroed explicitly).
+        id: 'reset-facts',
+        label: 'Facts',
+        run: async () => {
+          await EffectEx.runPromise(
+            factStores
+              .forSpace(space.id)
+              .clear()
+              .pipe(Effect.orElseSucceed(() => undefined)),
+          );
+          setFacts(0);
+          return { reset: 'facts' };
+        },
+      },
+      {
         // Every pipeline cursor at once: the tagged process/classify cursors (reset operation) and
         // the analyze pipeline's UNTAGGED feed cursor (a plain object removal — it predates the
         // tagged-consumer convention), so the next run of any cursored pipeline re-reads the feed.
         id: 'reset',
-        label: 'Reset cursors',
+        label: 'Cursors',
         run: async () => {
           const process = await invoker.invokePromise(
             InboxOperation.ResetProcessCursor,
@@ -186,31 +211,6 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             space.db.remove(analyze);
           }
           return { process, classify, analyzeCursor: !!analyze };
-        },
-      },
-      {
-        // Clears the shared FactStore (not ECHO-reactive, so the count is zeroed explicitly).
-        id: 'reset-facts',
-        label: 'Reset facts',
-        run: async () => {
-          await EffectEx.runPromise(
-            factStores
-              .forSpace(space.id)
-              .clear()
-              .pipe(Effect.orElseSucceed(() => undefined)),
-          );
-          setFacts(0);
-          return { reset: 'facts' };
-        },
-      },
-      {
-        // Full client reset: wipes the profile (OPFS) and reloads the page.
-        id: 'reset-store',
-        label: 'Reset store',
-        run: async () => {
-          await client.reset();
-          window.location.reload();
-          return { reset: 'store' };
         },
       },
     ];
@@ -445,23 +445,18 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Toolbar>
         <Toolbar.Root>
-          {resets.map((reset) => (
-            <Toolbar.Button
-              key={reset.id}
-              data-testid={reset.id}
-              disabled={!invoker || !mailbox}
-              onClick={() => void handleReset(reset)}
-            >
-              {reset.label}
-            </Toolbar.Button>
-          ))}
-          <Toolbar.Button data-testid='execute' disabled={!invoker || !mailbox} onClick={() => void handleExecute()}>
-            Execute
-          </Toolbar.Button>
+          <Toolbar.IconButton
+            icon='ph--play--regular'
+            iconOnly
+            label='Execute'
+            data-testid='execute'
+            disabled={!invoker || !mailbox}
+            onClick={() => void handleExecute()}
+          />
           <Select.Root value={actionId} onValueChange={setActionId}>
-            <Select.TriggerButton data-testid='action-select' placeholder='Action' />
+            <Select.TriggerButton classNames='truncate' data-testid='action-select' placeholder='Action' />
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>
@@ -477,8 +472,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           </Select.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content data-testid='counts' classNames='dx-container overflow-auto p-2 text-sm'>
+      <Panel.Content data-testid='counts' classNames='dx-container grid grid-cols-2'>
         <JsonHighlighter
+          classNames='text-xs'
           data={{
             identity: identity?.identityKey.truncate(),
             runs,
@@ -489,33 +485,46 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             linked,
             facts,
             last,
-            objects: {
-              organizations: organizations.length,
-              contacts: contacts.length,
-              images: contacts.filter((contact) => !!contact.image).length,
-              subscriptions: mailbox?.subscriptions?.length ?? 0,
-              profiles: profiles.length,
-              trips: trips.length,
-              segments: segments.length,
-              relations: relations.length,
-              projects: projects.length,
-              tasks: tasks.length,
-            },
+          }}
+        />
+        <JsonHighlighter
+          classNames='text-xs'
+          data={{
+            organizations: organizations.length,
+            contacts: contacts.length,
+            images: contacts.filter((contact) => !!contact.image).length,
+            subscriptions: mailbox?.subscriptions?.length ?? 0,
+            profiles: profiles.length,
+            trips: trips.length,
+            segments: segments.length,
+            relations: relations.length,
+            projects: projects.length,
+            tasks: tasks.length,
           }}
         />
       </Panel.Content>
-      {monitors.length > 0 && (
-        <Panel.Statusbar classNames='flex flex-col'>
-          {monitors.map((monitor) => (
-            <ProgressMeter
-              key={monitor.name}
-              state={monitor}
-              classNames='border-t border-separator'
-              onCancel={progressRegistry ? () => progressRegistry.cancel(monitor.name) : undefined}
+      <Panel.Statusbar classNames='flex flex-col'>
+        {monitors.map((monitor) => (
+          <ProgressMeter
+            key={monitor.name}
+            state={monitor}
+            classNames='border-t border-separator'
+            onCancel={progressRegistry ? () => progressRegistry.cancel(monitor.name) : undefined}
+          />
+        ))}
+        <Toolbar.Root>
+          {resets.map((reset) => (
+            <Toolbar.IconButton
+              key={reset.id}
+              icon='ph--trash--regular'
+              label={reset.label}
+              data-testid={reset.id}
+              disabled={!invoker || !mailbox}
+              onClick={() => void handleReset(reset)}
             />
           ))}
-        </Panel.Statusbar>
-      )}
+        </Toolbar.Root>
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };
@@ -553,7 +562,7 @@ const StoryProcessPlugin = Plugin.define(
 
 const DefaultStory = () => (
   <ModuleContainer
-    layout={[[ProcessRole, StoryRole.Mailbox], [StoryRole.Facts, ModuleRole.Objects], [ModuleRole.Logging]]}
+    layout={[[ProcessRole, StoryRole.Mailbox], [ModuleRole.Objects, StoryRole.Facts], [ModuleRole.Logging]]}
   />
 );
 

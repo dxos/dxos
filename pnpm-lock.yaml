@@ -19282,9 +19282,6 @@ importers:
 
   packages/stories/stories-inbox:
     dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -19370,6 +19367,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
