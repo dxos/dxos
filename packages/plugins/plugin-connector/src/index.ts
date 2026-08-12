@@ -3,7 +3,12 @@
 //
 
 export { ATPROTO_OAUTH_SCOPES } from './constants';
-export { CONNECTOR_AUTH_GROUP_ID, type ConnectorAuthActionsOptions, connectorAuthActions } from './util';
+export {
+  CONNECTOR_AUTH_GROUP_ID,
+  type ConnectorAuthActionsOptions,
+  connectorAuthActions,
+  connectorAuthUnavailableActions,
+} from './util';
 export { ConnectionTestError, TargetAccountMismatchError } from './errors';
 export * from './meta';
 export {

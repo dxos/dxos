@@ -16,6 +16,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
 import { findLiveBinding, syncTarget } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { DraftMessage, Event, Message } from '@dxos/types';
@@ -48,6 +49,11 @@ const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Hoisted so the sync actions below take a reactive dependency on the provider list: a connector
+    // module activates lazily, and reading the capability manager synchronously inside a graph
+    // extension registers no dependency, so a Sync disabled on a fresh load would stay disabled.
+    const connectorAtom = yield* Capability.atom(ConnectorSpec.Connector);
+
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'mailboxesSection',
@@ -368,6 +374,12 @@ export default Capability.makeModule(
           if (!binding) {
             return Effect.succeed([]);
           }
+          // A bound mailbox whose provider plugin is not registered cannot sync — `syncTarget` resolves
+          // no connector and returns — so the button stays as the toolbar's affordance but disabled,
+          // rather than looking functional and doing nothing.
+          const hasConnector = get(connectorAtom)
+            .flat()
+            .some((entry) => entry.id === binding.connection.connectorId);
           return Effect.gen(function* () {
             // Progress registry is optional (absent when plugin-progress isn't loaded); the same
             // monitor `MailboxArticle`'s statusbar meter reads, so the action's spinner/disabled
@@ -385,7 +397,7 @@ export default Capability.makeModule(
                   label: ['sync-mailbox.label', { ns: meta.profile.key }],
                   icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
                   spin: isSyncing,
-                  disabled: isSyncing,
+                  disabled: isSyncing || !hasConnector,
                   // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
@@ -480,6 +492,10 @@ export default Capability.makeModule(
           if (!binding) {
             return Effect.succeed([]);
           }
+          // Disabled rather than dropped when the provider plugin is absent — see `syncMailbox`.
+          const hasConnector = get(connectorAtom)
+            .flat()
+            .some((entry) => entry.id === binding.connection.connectorId);
           return Effect.succeed([
             {
               id: 'sync',
@@ -487,6 +503,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['sync-calendar.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
+                disabled: !hasConnector,
                 // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
                 // No progress monitor yet for calendar sync, so (unlike mailbox) there's no spinner.
                 disposition: ['toolbar', 'list-item'],

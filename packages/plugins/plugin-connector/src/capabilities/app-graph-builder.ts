@@ -25,6 +25,7 @@ import * as ConnectorSpec from '../types/ConnectorSpec';
 import {
   checkTargetAccount,
   connectorAuthActions,
+  connectorAuthUnavailableActions,
   findLiveBinding,
   isCursorForTarget,
   isTokenForConnection,
@@ -192,7 +193,10 @@ export default Capability.makeModule(
                 ? annotation.connectorIds(object, capabilities)
                 : annotation.connectorIds;
             if (connectorIds.length === 0) {
-              return [];
+              // A bindable type with no registered provider still shows where connecting would happen;
+              // a resolver-based type (studio artifacts) legitimately has none for this object, so it
+              // keeps contributing nothing.
+              return annotation.bindTarget ? connectorAuthUnavailableActions() : [];
             }
             const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
             const accessTokens = get(db.query(Filter.type(AccessToken.AccessToken)).atom);
@@ -210,7 +214,7 @@ export default Capability.makeModule(
               // Connected: the owning plugin's own sync/generate action covers this state.
               return [];
             }
-            return connectorAuthActions({
+            const groups = connectorAuthActions({
               connectorIds,
               db,
               spaceId: db.spaceId,
@@ -222,6 +226,9 @@ export default Capability.makeModule(
                 ? allConnections.filter((connection) => !contradictsTargetAccount(connection, accessTokens, object))
                 : allConnections,
             });
+            // An unconnected bindable object always keeps a Connect control, disabled when the
+            // registered providers have no auth flow and no connection is left to reuse.
+            return groups.length > 0 || !annotation.bindTarget ? groups : connectorAuthUnavailableActions();
           }),
       }),
 

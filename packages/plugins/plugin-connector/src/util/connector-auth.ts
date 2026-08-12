@@ -132,6 +132,25 @@ export const connectorAuthActions = ({
 /** Id of the dropdown group {@link connectorAuthActions} produces; the menu reads its children. */
 export const CONNECTOR_AUTH_GROUP_ID = 'connectorAuth';
 
+/**
+ * The Connect group as a disabled trigger with nothing inside it, for a bindable object that has
+ * nothing to offer — no provider plugin registered for its type, or every existing connection belongs
+ * to another account. Dropping the control instead reads as "this kind of object cannot be connected",
+ * which is wrong; a disabled Connect says the capability exists and is currently unavailable. Pairs
+ * with {@link connectorAuthActions}, which returns `[]` in exactly that case.
+ */
+export const connectorAuthUnavailableActions = (): Node.NodeArg<typeof Node.actionGroupSymbol>[] => [
+  AppNode.makeToolbarActionGroup({
+    id: CONNECTOR_AUTH_GROUP_ID,
+    label: ['connect.label', { ns: meta.profile.key }],
+    icon: CONNECT_ICON,
+    iconOnly: false,
+    disabled: true,
+    testId: 'connectorPlugin.connect',
+    actions: [],
+  }),
+];
+
 /** Label for a connection's connector, falling back to the connection id when unregistered. */
 const connectorLabel = (
   allConnectors: readonly ConnectorSpec.ConnectorEntry[],

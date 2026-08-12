@@ -17,7 +17,7 @@ import { Node } from '@dxos/plugin-graph';
 import { OAuthProvider } from '@dxos/protocols';
 
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { connectorAuthActions } from './connector-auth';
+import { CONNECTOR_AUTH_GROUP_ID, connectorAuthActions, connectorAuthUnavailableActions } from './connector-auth';
 
 // A connector is "offered" (gets a Connect entry) when it has an auth flow; oauth is the simplest.
 const authFlow: Partial<ConnectorSpec.ConnectorEntry> = { oauth: { provider: OAuthProvider.GOOGLE, scopes: [] } };
@@ -80,6 +80,17 @@ describe('connectorAuthActions', () => {
       allConnections: [],
     });
     expect(actions).toEqual([]);
+  });
+
+  test('the unavailable form is a disabled, empty Connect group', async ({ expect }) => {
+    // What a bindable object's toolbar falls back to, so Connect is always present as an affordance
+    // even where the case above has nothing to offer.
+    const [group] = connectorAuthUnavailableActions();
+
+    expect(group.type).toBe(Node.ActionGroupType);
+    expect(group.id).toBe(CONNECTOR_AUTH_GROUP_ID);
+    expect(group.properties?.disabled).toBe(true);
+    expect(group.actions).toEqual([]);
   });
 
   test('always produces a single dropdown group', async ({ expect }) => {
