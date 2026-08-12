@@ -24,7 +24,7 @@ export const Goal = Schema.Struct({
 export type Goal = Schema.Schema.Type<typeof Goal>;
 
 /** Work-stream lifecycle state; complements per-goal {@link Goal} status. */
-export const ProjectStatus = Schema.Literal('active', 'paused', 'blocked', 'ended');
+export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
 export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
 
 /**
