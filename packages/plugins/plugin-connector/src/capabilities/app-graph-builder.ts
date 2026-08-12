@@ -11,10 +11,9 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { meta } from '#meta';
@@ -23,23 +22,7 @@ import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
 import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
 import * as ConnectorOperation from '../types/ConnectorOperation';
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { connectorAuthActions, findLiveBinding, isCursorForConnection, isCursorForTarget } from '../util';
-
-/**
- * Resolve the external-sync cursors authenticated by a connection's access token. Used by the
- * per-connection `delete` action to enumerate the cursors to remove alongside the connection.
- */
-const queryConnectionBindings = (connection: Connection.Connection): Effect.Effect<Cursor.Cursor[]> => {
-  const db = Obj.getDatabase(connection);
-  if (!db) {
-    return Effect.succeed([]);
-  }
-  return Database.query(Filter.type(Cursor.Cursor)).run.pipe(
-    Effect.provide(Database.layer(db)),
-    Effect.map((cursors) => cursors.filter((cursor) => isCursorForConnection(cursor, connection))),
-    Effect.orElseSucceed(() => []),
-  );
-};
+import { connectorAuthActions, findLiveBinding, isCursorForTarget } from '../util';
 
 /**
  * Reactive matcher: matches an ECHO object that has an external-sync {@link Cursor} targeting it and
@@ -97,15 +80,7 @@ export default Capability.makeModule(
             actions.push(
               Node.makeAction({
                 id: `${meta.profile.key}.delete-connection.${connection.id}`,
-                // Remove the connection along with its cursors (deleting the connection does not
-                // cascade to cursors that merely reference its access token).
-                data: () =>
-                  Effect.gen(function* () {
-                    const cursors = yield* queryConnectionBindings(connection);
-                    yield* Operation.invoke(SpaceOperation.RemoveObjects, {
-                      objects: [connection, ...cursors],
-                    });
-                  }),
+                data: () => Operation.invoke(ConnectorOperation.DeleteConnection, { connection: Ref.make(connection) }),
                 properties: {
                   label: ['delete-connection.label', { ns: meta.profile.key }],
                   icon: 'ph--trash--regular',

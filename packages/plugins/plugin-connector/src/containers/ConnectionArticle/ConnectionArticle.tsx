@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection, Cursor } from '@dxos/link';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -14,6 +14,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
 
+import * as ConnectorOperation from '../../types/ConnectorOperation';
 import { isCursorForConnection } from '../../util';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;
@@ -43,11 +44,10 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   const { available: canReauthenticate, reauthenticating, reauthenticate } = useReauthenticate(subject);
 
   const handleDelete = useCallback(() => {
-    // Cursors reference the connection's access token rather than the connection, so removing the
-    // connection alone strands them: their targets then read as bound (no Connect action) yet cannot
-    // sync. Same set the nav-tree delete action removes.
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject, ...bindings] });
-  }, [invokePromise, subject, bindings]);
+    // Deleting a connection suspends its bindings rather than removing them; the operation is the single
+    // path both this button and the nav-tree action take.
+    void invokePromise(ConnectorOperation.DeleteConnection, { connection: Ref.make(subject) });
+  }, [invokePromise, subject]);
 
   const handleRemoveBinding = useCallback(
     (binding: Cursor.ExternalCursor) => {

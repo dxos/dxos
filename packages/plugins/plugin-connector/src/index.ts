@@ -8,6 +8,7 @@ export { ConnectionTestError } from './errors';
 export * from './meta';
 export {
   type LiveBinding,
+  adoptOrphanedBinding,
   autoBindSingleConnection,
   bindConnectionToTarget,
   connectorIdsForTarget,
@@ -16,11 +17,15 @@ export {
   findBindingForTarget,
   findLiveBinding,
   findLiveBindingForTarget,
+  findOrphanedBindings,
+  findOrphanedBindingsForTarget,
   findSyncTriggerForBinding,
   fireSyncTrigger,
   isCursorForConnection,
   isCursorForTarget,
-  removeOrphanedBindings,
+  removeBinding,
+  setSyncTriggerEnabled,
+  suspendConnectionBindings,
   syncBinding,
   syncTarget,
 } from './util';

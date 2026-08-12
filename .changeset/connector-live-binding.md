@@ -1,5 +1,6 @@
 ---
+'@dxos/link': patch
 '@dxos/plugin-connector': patch
 ---
 
-Restore the Connect action on a mailbox or calendar whose connection was deleted: a binding left without its connection no longer counts as connected, deleting a connection from its settings panel removes its bindings, and re-binding a target clears the orphan its old connection left behind.
+Restore the Connect action on a mailbox or calendar whose connection was deleted, and keep its sync progress: deleting a connection now leaves its bindings dormant (cursors kept, schedules suspended) instead of stranding them, re-connecting the same account resumes a dormant binding where it left off, and re-connecting a different account starts fresh.

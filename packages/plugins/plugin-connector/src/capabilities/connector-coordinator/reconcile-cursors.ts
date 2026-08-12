@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 
 import * as ConnectorSpec from '../../types/ConnectorSpec';
-import { ensureSyncTrigger, isCursorForConnection, removeOrphanedBindings } from '../../util';
+import { adoptOrphanedBinding, ensureSyncTrigger, isCursorForConnection } from '../../util';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
@@ -49,6 +49,7 @@ export const reconcileCursors = ({
   existingTarget,
 }: ReconcileCursorsInput) =>
   Effect.gen(function* () {
+    const account = (yield* Database.load(connection.accessToken)).account;
     const existingCursors = (yield* Database.query(Filter.type(Cursor.Cursor)).run).filter(
       (cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, connection),
     );
@@ -81,9 +82,21 @@ export const reconcileCursors = ({
       let target: Obj.Unknown;
       if (sel === firstNew && existingTarget) {
         target = yield* Database.load(existingTarget);
-        yield* removeOrphanedBindings(target);
         if (sel.name) {
           Obj.update(target, (target) => Obj.setLabel(target, sel.name!));
+        }
+        // Only a pre-existing target can carry a dormant binding; resuming it keeps the synced range.
+        const adopted = yield* adoptOrphanedBinding({
+          target,
+          source: connection.accessToken,
+          account,
+          externalId: sel.externalId,
+          connector,
+        });
+        if (adopted) {
+          // `adoptOrphanedBinding` restores the schedule; nothing else to wire.
+          added++;
+          continue;
         }
       } else if (connector.sync?.materializeTarget) {
         const { target: materialized } = yield* invoker.invoke(
@@ -106,6 +119,7 @@ export const reconcileCursors = ({
       const cursor = yield* Database.add(
         Cursor.makeExternal({
           source: connection.accessToken,
+          account,
           target: Ref.make(target),
           externalId: sel.externalId,
           ...(sel.name ? { label: sel.name } : {}),

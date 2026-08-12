@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trigger from '@dxos/compute/Trigger';
 import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, Filter, type Key, Query } from '@dxos/echo';
+import { Database, Filter, type Key, Obj, Query } from '@dxos/echo';
 import { type Cursor } from '@dxos/link';
 
 /**
@@ -21,6 +21,26 @@ export const findSyncTriggerForBinding = (cursor: Cursor.ExternalCursor) =>
   Effect.gen(function* () {
     const triggers = yield* Database.query(Query.select(Filter.id(cursor.id)).referencedBy(Trigger.Trigger)).run;
     return triggers.find((trigger) => !!trigger.spec);
+  });
+
+/**
+ * Enables or disables the sync trigger of `cursor`'s Routine, reporting whether one was found. A
+ * binding whose connection is deleted keeps its cursor (its progress outlives the credential) but must
+ * stop firing, or every scheduled run reports a missing-credential failure until the target is re-bound.
+ */
+export const setSyncTriggerEnabled = (
+  cursor: Cursor.ExternalCursor,
+  enabled: boolean,
+): Effect.Effect<boolean, never, Database.Service> =>
+  Effect.gen(function* () {
+    const trigger = yield* findSyncTriggerForBinding(cursor);
+    if (!trigger) {
+      return false;
+    }
+    Obj.update(trigger, (trigger) => {
+      trigger.enabled = enabled;
+    });
+    return true;
   });
 
 /**

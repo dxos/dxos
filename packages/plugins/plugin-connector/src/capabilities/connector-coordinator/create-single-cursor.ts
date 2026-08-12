@@ -11,7 +11,7 @@ import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import * as ConnectorSpec from '../../types/ConnectorSpec';
-import { ensureSyncTrigger, removeOrphanedBindings } from '../../util';
+import { adoptOrphanedBinding, ensureSyncTrigger } from '../../util';
 
 /**
  * Create exactly one binding for a single-target connector (no `getSyncTargets`):
@@ -26,13 +26,12 @@ export const createSingleCursor = (
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
+    const account = (yield* Database.load(connection.accessToken)).account;
     let target: Obj.Unknown | undefined;
     if (existingTarget) {
       target = yield* Database.load(existingTarget);
-      const accessToken = yield* Database.load(connection.accessToken);
-      const name = accessToken.account;
-      if (name) {
-        Obj.update(target, (target) => Obj.setLabel(target, name));
+      if (account) {
+        Obj.update(target, (target) => Obj.setLabel(target, account));
       }
     } else if (connector.sync?.materializeTarget) {
       const { target: materialized } = yield* invoker.invoke(
@@ -46,15 +45,23 @@ export const createSingleCursor = (
       log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
       return;
     }
-    yield* removeOrphanedBindings(target);
-    const cursor = yield* Database.add(
-      Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
-    );
+    // A target the user is re-connecting may hold the dormant binding of an earlier connection; resuming
+    // it keeps the synced range so the sync picks up where it left off.
+    const adopted = yield* adoptOrphanedBinding({
+      target,
+      source: connection.accessToken,
+      account,
+      connector,
+    });
+    const cursor =
+      adopted ??
+      (yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, account, target: Ref.make(target) })));
     invariant(Cursor.isExternal(cursor));
     log.info('bound single-target connector', {
       connectorId: connection.connectorId,
       target: target.id,
       bound: existingTarget ? 'existing' : 'materialized',
+      resumed: adopted !== undefined,
     });
     // Sets up recurring background sync for the binding, if the connector declares a trigger spec.
     // Its own failure is not special-cased — a defect here is caught by this function's own outer

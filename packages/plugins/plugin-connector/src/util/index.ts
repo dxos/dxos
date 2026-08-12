@@ -3,6 +3,7 @@
 //
 
 export * from './auto-bind';
+export * from './binding-lifecycle';
 export * from './connector-auth';
 export * from './cursor-predicates';
 export * from './find-binding';

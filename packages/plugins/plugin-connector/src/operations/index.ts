@@ -9,5 +9,6 @@ import * as ConnectorOperation from '../types/ConnectorOperation';
 
 export const ConnectorOperationHandlerSet = OperationHandlerSet.lazy([
   ConnectorOperation.CreateConnection.pipe(Operation.lazyHandler(() => import('./create-connection'))),
+  ConnectorOperation.DeleteConnection.pipe(Operation.lazyHandler(() => import('./delete-connection'))),
   ConnectorOperation.SyncConnection.pipe(Operation.lazyHandler(() => import('./sync-connection'))),
 ]);

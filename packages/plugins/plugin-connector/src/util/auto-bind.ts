@@ -11,7 +11,7 @@ import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { removeOrphanedBindings } from './find-binding';
+import { adoptOrphanedBinding } from './binding-lifecycle';
 import { ensureSyncTrigger } from './sync-routine';
 import { connectorIdsForTarget } from './target-connectors';
 
@@ -37,8 +37,17 @@ export const bindConnectionToTarget = ({
     if (name) {
       Obj.update(object, (object) => Obj.setLabel(object, name));
     }
-    yield* removeOrphanedBindings(object);
-    const cursor = yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target }));
+    // Resumes the account's dormant binding when the target has one, rather than syncing from scratch.
+    const adopted = yield* adoptOrphanedBinding({
+      target: object,
+      source: connection.accessToken,
+      account: name,
+      connector,
+    });
+    if (adopted) {
+      return adopted;
+    }
+    const cursor = yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, account: name, target }));
     invariant(Cursor.isExternal(cursor));
     if (connector) {
       yield* ensureSyncTrigger({ connector, cursor });

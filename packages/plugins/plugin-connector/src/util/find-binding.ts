@@ -67,23 +67,29 @@ export const findBindingForTarget = (
   findLiveBindingForTarget(target).pipe(Effect.map((binding) => binding?.cursor));
 
 /**
- * Remove external cursors targeting `target` whose {@link Connection} is gone, returning how many
- * were removed. Run before creating a new binding for an object: a re-bind would otherwise leave the
- * orphan in place, and since a target's sync Routine is matched by target rather than by cursor, the
- * recurring sync would keep firing against the dead binding instead of the new one.
+ * External cursors targeting `target` that no {@link Connection} backs — dormant bindings, holding the
+ * progress of a sync whose credential was deleted. They are kept rather than discarded (see
+ * `adoptOrphanedBinding`): the synced range and merge snapshots they carry are what let a re-bind of the
+ * same account resume instead of re-walking the whole horizon.
  */
-export const removeOrphanedBindings = (target: Obj.Unknown): Effect.Effect<number, never, Database.Service> =>
+export const findOrphanedBindings = (
+  cursors: readonly Cursor.Cursor[],
+  connections: readonly Connection.Connection[],
+  target: Obj.Unknown,
+): Cursor.ExternalCursor[] =>
+  cursors.filter(
+    (cursor): cursor is Cursor.ExternalCursor =>
+      Cursor.isExternal(cursor) &&
+      isCursorForTarget(cursor, target) &&
+      !connections.some((connection) => isCursorForConnection(cursor, connection)),
+  );
+
+/** {@link findOrphanedBindings} over the target's whole space. */
+export const findOrphanedBindingsForTarget = (
+  target: Obj.Unknown,
+): Effect.Effect<Cursor.ExternalCursor[], never, Database.Service> =>
   Effect.gen(function* () {
     const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
     const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
-    const orphaned = cursors.filter(
-      (cursor) =>
-        Cursor.isExternal(cursor) &&
-        isCursorForTarget(cursor, target) &&
-        !connections.some((connection) => isCursorForConnection(cursor, connection)),
-    );
-    for (const cursor of orphaned) {
-      yield* Database.remove(cursor);
-    }
-    return orphaned.length;
+    return findOrphanedBindings(cursors, connections, target);
   });
