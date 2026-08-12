@@ -3,12 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import type * as Routine from '@dxos/compute/Routine';
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -34,13 +35,24 @@ type Draft = {
  * the chosen template's scaffolded in-memory draft (the same edit surface as the article and companion).
  * Save submits `{ templateId, draft }`; plugin-routine's CreateObjectEntry.createObject persists the draft
  * (a single `Database.add` cascades the owned trigger/instructions). Cancel returns to the picker.
+ *
+ * A caller can seed the panel via `initialFormValues`: `templateId` skips the picker and scaffolds that
+ * template immediately, and `subject` is passed to the scaffold (e.g. the connector flow seeds its sync
+ * template with the just-bound target so the user sees — and can edit — the routine being created).
  */
-export const CreateRoutinePanel = ({ target, onCreateObject, templates: templatesProp }: CreateRoutinePanelProps) => {
+export const CreateRoutinePanel = ({
+  target,
+  initialFormValues,
+  onCreateObject,
+  templates: templatesProp,
+}: CreateRoutinePanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const capabilityTemplates = useCapabilities(RoutineCapabilities.Template);
   const templates = templatesProp ?? capabilityTemplates;
   const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
   const [draft, setDraft] = useState<Draft | undefined>();
+  const seededTemplateId: string | undefined = initialFormValues?.templateId;
+  const subject: Obj.Unknown | undefined = initialFormValues?.subject;
 
   // The global create dialog has no subject, so subject-required templates (e.g. CRM, which needs a
   // Mailbox) are excluded; they are offered from the relevant object's Automation companion instead.
@@ -60,15 +72,30 @@ export const CreateRoutinePanel = ({ target, onCreateObject, templates: template
         return;
       }
 
-      // The scaffold returns a fully-wired in-memory routine draft graph (its owned trigger/instructions
-      // bound and parented); nothing is persisted until Save.
-      const scaffolded = await EffectEx.runPromise(
-        template.scaffold({}).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
-      );
-      setDraft({ templateId, routine: scaffolded });
+      try {
+        // The scaffold returns a fully-wired in-memory routine draft graph (its owned trigger/instructions
+        // bound and parented); nothing is persisted until Save.
+        const scaffolded = await EffectEx.runPromise(
+          template.scaffold({ subject }).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+        );
+        setDraft({ templateId, routine: scaffolded });
+      } catch (error) {
+        // A scaffold that requires context the subject lacks (e.g. a sync binding) fails typed; keep the
+        // picker up rather than crashing the dialog.
+        log.catch(error);
+      }
     },
-    [templates, db],
+    [templates, db, subject],
   );
+
+  // Seeded flow: skip the picker and scaffold the named template immediately (once per mount).
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededTemplateId && !seededRef.current) {
+      seededRef.current = true;
+      void handleSelect(seededTemplateId);
+    }
+  }, [seededTemplateId, handleSelect]);
 
   const handleSave = useCallback(() => {
     if (draft) {

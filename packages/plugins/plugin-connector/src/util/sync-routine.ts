@@ -9,6 +9,7 @@ import * as FiberId from 'effect/FiberId';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
 
@@ -62,6 +63,44 @@ export const createSyncRoutine = ({
     );
   });
 
+/**
+ * Build the sync Routine for `cursor` as a fully-wired, unpersisted draft graph: a Routine wrapping a
+ * trigger built from the connector's declared `sync.trigger` spec, bound to the connector's sync
+ * operation with `binding` = the cursor. Shared by the silent creation path ({@link createSyncRoutine})
+ * and the connector's routine template, where the draft is shown editable in the create-routine form
+ * and persisted on Save.
+ */
+export const scaffoldSyncRoutine = ({
+  name,
+  cursor,
+  operation,
+  spec,
+  remote,
+}: {
+  name?: string;
+  cursor: Cursor.ExternalCursor;
+  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
+  spec: Trigger.Spec;
+  remote?: boolean;
+}) => {
+  // `remote` is left unset for a local connector rather than written as `false`, so the trigger
+  // editor shows the schema default instead of a stored choice the connector never made.
+  const trigger = Trigger.make({
+    enabled: true,
+    ...(remote ? { remote: true } : {}),
+    spec,
+    input: { binding: Ref.make(cursor) },
+  });
+
+  return makeRoutine({
+    name: name ?? 'Sync',
+    // A connector's sync is statically defined and already in the registry, so the routine refers to
+    // it by key rather than persisting a copy of it into the space.
+    spec: { kind: 'runnable', runnable: Ref.fromURI(operation.meta.key) },
+    trigger,
+  });
+};
+
 const createRoutine = ({
   target,
   cursor,
@@ -84,24 +123,10 @@ const createRoutine = ({
       }
     }
 
-    // `remote` is left unset for a local connector rather than written as `false`, so the trigger
-    // editor shows the schema default instead of a stored choice the connector never made.
-    const trigger = Trigger.make({
-      enabled: true,
-      ...(remote ? { remote: true } : {}),
-      spec,
-      input: { binding: Ref.make(cursor) },
-    });
-
-    const routine = makeRoutine({
-      name: 'Sync',
-      // A connector's sync is statically defined and already in the registry, so the routine refers to
-      // it by key rather than persisting a copy of it into the space.
-      spec: { kind: 'runnable', runnable: Ref.fromURI(operation.meta.key) },
-      trigger,
-    });
-
+    const routine = scaffoldSyncRoutine({ cursor, operation, spec, remote });
     yield* Database.add(routine);
+    const trigger = routine.triggers[0]?.target;
+    invariant(Obj.instanceOf(Trigger.Trigger, trigger));
     return trigger;
   });
 

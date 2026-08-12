@@ -83,6 +83,9 @@ export type RoutineFormProps = {
  *
  * The uncontrolled form is keyed by the routine/trigger identities and their spec kinds, so a kind switch
  * (or an external mutation of it) remounts and re-reads the seed values from the graph.
+ * TODO(wittjosiah): Replace the kind-switch remount with a reactive `values` source (useObject snapshot
+ *  projection) so external mutations flow in without remounting; requires a way to drop stale overrides
+ *  for a cleared/changed union subtree.
  *
  * Created with `composable()` so it carries the COMPOSABLE marker and can be the child of
  * `Panel.Content asChild` (forwards ref and merges layout props onto the scroll viewport).

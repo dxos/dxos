@@ -9,14 +9,30 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
+import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 
 import * as ConnectorSpec from '../../types/ConnectorSpec';
-import { ensureSyncTrigger } from '../../util';
+
+/** Outcome of binding a single-target connector. */
+export type SingleCursorResult = {
+  cursor: Cursor.ExternalCursor;
+  target: Obj.Unknown;
+  /**
+   * The connector declares a recurring sync trigger and the target has no sync routine yet — the
+   * caller offers one through the create-routine form (nothing is persisted here; see
+   * `openCreateSyncRoutineDialog`).
+   */
+  needsSyncRoutine: boolean;
+};
 
 /**
  * Create exactly one binding for a single-target connector (no `getSyncTargets`):
  * bind a supplied `existingTarget` or materialize a fresh local root. Replaces
  * the old `onTokenCreated`-creates-the-target path (e.g. Gmail's Mailbox).
+ *
+ * The recurring sync routine is NOT created here — the caller surfaces it through the seeded
+ * create-routine form so the user sees (and can edit) what is being created, instead of it being
+ * persisted silently in the background.
  */
 export const createSingleCursor = (
   invoker: Operation.OperationService,
@@ -24,7 +40,7 @@ export const createSingleCursor = (
   connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
-): Effect.Effect<void, never> =>
+): Effect.Effect<SingleCursorResult | undefined, never> =>
   Effect.gen(function* () {
     let target: Obj.Unknown | undefined;
     if (existingTarget) {
@@ -44,7 +60,7 @@ export const createSingleCursor = (
     }
     if (!target) {
       log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
-      return;
+      return undefined;
     }
     const cursor = yield* Database.add(
       Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
@@ -55,15 +71,31 @@ export const createSingleCursor = (
       target: target.id,
       bound: existingTarget ? 'existing' : 'materialized',
     });
-    // Sets up recurring background sync for the binding, if the connector declares a trigger spec.
-    // Its own failure is not special-cased — a defect here is caught by this function's own outer
-    // `catchAllDefect` below, same as any other step in this flow.
-    yield* ensureSyncTrigger({ connector, cursor });
+    const needsSyncRoutine = !!connector.sync?.trigger && !(yield* hasSyncRoutine(target, connector.sync.trigger.kind));
     // Flush the index so a caller that queries cursors right after (e.g. the mailbox/calendar
-    // article this navigates to) observes the new binding immediately, matching `reconcileCursors`.
+    // article this navigates to, or the sync template's scaffold) observes the new binding
+    // immediately, matching `reconcileCursors`.
     yield* Database.flush({ indexes: true });
+    return { cursor, target, needsSyncRoutine };
   }).pipe(
     Effect.provide(Database.layer(db)),
-    Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
-    Effect.catchAllDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
+    Effect.catchAll((error) =>
+      Effect.sync(() => {
+        log.warn('create single binding failed', { error });
+        return undefined;
+      }),
+    ),
+    Effect.catchAllDefect((defect) =>
+      Effect.sync(() => {
+        log.warn('create single binding defect', { defect });
+        return undefined;
+      }),
+    ),
   );
+
+/** Whether `target` already has a connected routine triggered by the same spec kind (mirrors the silent-creation dedup). */
+const hasSyncRoutine = (target: Obj.Unknown, kind: string): Effect.Effect<boolean, never, Database.Service> =>
+  Effect.gen(function* () {
+    const connected = yield* Database.query(connectedRoutinesQuery(target)).run;
+    return connected.some((routine) => routine.triggers.some((ref) => ref.target?.spec?.kind === kind));
+  }).pipe(Effect.orDie);

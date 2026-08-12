@@ -13,18 +13,21 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Credential from '@dxos/compute/Credential';
 import type * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { Database, EID, type Key, Obj, Ref } from '@dxos/echo';
+import { Database, EID, type Key, Obj, Ref, Type } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { SpaceOperation } from '@dxos/plugin-space';
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
 import { meta } from '../../meta';
+import { SyncTemplateId } from '../../templates';
 import * as ConnectorCoordination from '../../types/ConnectorCoordination';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { autoSyncConnection } from './auto-sync';
@@ -163,6 +166,32 @@ const navigateToNewConnection = (
     })
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
 
+/**
+ * Offer the recurring sync routine through the seeded create-routine form instead of persisting it
+ * silently: the dialog opens directly on the routine form over the sync template's draft, and the
+ * first sync runs only once the user saves — it must go through the persisted trigger, since the
+ * dispatcher is what drives `Operation.runAgain()` continuation for a capped first sync. Cancelling
+ * creates no routine and runs no initial sync (the target's own Sync affordance remains).
+ */
+const openCreateSyncRoutineDialog = (
+  invoker: Operation.OperationService,
+  db: Database.Database,
+  connector: ConnectorSpec.ConnectorEntry,
+  connection: Connection.Connection,
+  target: Obj.Unknown,
+): Effect.Effect<void, never> =>
+  invoker
+    .invoke(SpaceOperation.OpenCreateObject, {
+      target: db,
+      typename: Type.getTypename(Routine.Routine),
+      initialFormValues: { templateId: SyncTemplateId, subject: target },
+      navigable: false,
+      onCreateObject: () => {
+        Effect.runFork(autoSyncConnection(invoker, db, connector, connection));
+      },
+    })
+    .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('open create sync routine dialog failed', { error }))));
+
 const openSyncTargetsDialogAfterConnectionCreated = (
   invoker: Operation.OperationService,
   getTargets: NonNullable<NonNullable<ConnectorSpec.ConnectorEntry['sync']>['getTargets']>,
@@ -221,12 +250,17 @@ const finalizePendingEntry = (
       );
     } else {
       // Single-target (e.g. Gmail): materialize/bind one target immediately.
-      yield* createSingleCursor(invoker, db, connector, persistedConnection, existingTarget);
+      const bound = yield* createSingleCursor(invoker, db, connector, persistedConnection, existingTarget);
       if (!existingTarget) {
         yield* navigateToNewConnection(invoker, db, persistedConnection.id);
       }
-      // Ordered after navigation so the user lands on the target while the first sync fills it in.
-      yield* autoSyncConnection(invoker, db, connector, persistedConnection);
+      if (bound?.needsSyncRoutine) {
+        // Ordered after navigation so the dialog opens over the surface the user lands on.
+        yield* openCreateSyncRoutineDialog(invoker, db, connector, persistedConnection, bound.target);
+      } else {
+        // Ordered after navigation so the user lands on the target while the first sync fills it in.
+        yield* autoSyncConnection(invoker, db, connector, persistedConnection);
+      }
     }
   });
 
