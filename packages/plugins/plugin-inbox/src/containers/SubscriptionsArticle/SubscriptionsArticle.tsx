@@ -164,7 +164,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
-          <Toolbar.Root classNames='dx-document'>
+          <Toolbar.Root classNames='dx-document px-3'>
             <Input.Root>
               <Input.Checkbox
                 checked={allSelected ? true : someSelected ? 'indeterminate' : false}
