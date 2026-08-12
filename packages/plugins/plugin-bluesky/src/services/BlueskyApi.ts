@@ -13,7 +13,6 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as SchemaError from 'effect/SchemaError';
 import * as HttpBody from 'effect/unstable/http/HttpBody';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
@@ -170,7 +169,7 @@ export const toSubscriptionPostInput = (item: FeedViewPost) => {
 
 type RequestEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | HttpBody.HttpBodyError | SchemaError.SchemaError | Cause.TimeoutError,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient
 >;
 
@@ -185,9 +184,9 @@ type RequestEffect<T> = Effect.Effect<
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | SchemaError.SchemaError | Cause.TimeoutError,
+  error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | Schema.SchemaError | Cause.TimeoutError,
 ): boolean => {
-  if (error instanceof SchemaError.SchemaError) {
+  if (error instanceof Schema.SchemaError) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {
@@ -209,7 +208,7 @@ const shouldRetry = (
 /**
  * Common pipeline for outbound requests:
  *  - execute via the injected HttpClient
- *  - decode JSON body with Effect Schema (invalid shapes fail as {@link SchemaError.SchemaError})
+ *  - decode JSON body with Effect Schema (invalid shapes fail as {@link Schema.SchemaError})
  *  - 15s timeout
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
  *  - scope the response so its body stream is released even on failure
@@ -395,7 +394,7 @@ const packageCredentials = (accessToken: AccessToken.AccessToken, db: Database.D
 
 type AuthedEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | HttpBody.HttpBodyError | SchemaError.SchemaError | Cause.TimeoutError,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | Credentials
 >;
 

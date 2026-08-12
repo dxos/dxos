@@ -10,7 +10,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as SchemaError from 'effect/SchemaError';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -149,7 +148,7 @@ export class SlackCredentials extends Context.Service<SlackCredentials, SlackCre
 
 type SlackEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | SlackApiError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | SlackApiError,
   HttpClient.HttpClient | SlackCredentials
 >;
 
@@ -169,7 +168,7 @@ type SlackEffect<T> = Effect.Effect<
  *  - SlackApiError: no — body-level "ok: false" is an application error, not transient.
  */
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | SlackApiError,
+  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | SlackApiError,
 ): boolean => {
   // Matched positively on the HTTP error: v4's tagged-error classes do not narrow a union from the
   // negative side. The specific failure hangs off `reason` -- a transport-level failure is always

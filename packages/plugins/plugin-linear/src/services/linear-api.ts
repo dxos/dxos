@@ -10,7 +10,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as SchemaError from 'effect/SchemaError';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -140,12 +139,12 @@ export class LinearCredentials extends Context.Service<LinearCredentials, Linear
 
 type LinearEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | LinearGraphQLError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | LinearGraphQLError,
   HttpClient.HttpClient | LinearCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | LinearGraphQLError,
+  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | LinearGraphQLError,
 ): boolean => {
   // Matched positively on the HTTP error: v4's tagged-error classes do not narrow a union from the
   // negative side. The specific failure hangs off `reason` -- a transport-level failure is always

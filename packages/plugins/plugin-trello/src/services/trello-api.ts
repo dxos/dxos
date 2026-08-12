@@ -10,7 +10,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as SchemaError from 'effect/SchemaError';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -177,7 +176,7 @@ const authParams = (
 
 type TrelloEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | TrelloCredentials
 >;
 
@@ -190,10 +189,8 @@ type TrelloEffect<T> = Effect.Effect<
  *  - TimeoutException (the request didn't complete in the allotted window): yes.
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (
-  error: HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError,
-): boolean => {
-  if (error instanceof SchemaError.SchemaError) {
+const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError): boolean => {
+  if (error instanceof Schema.SchemaError) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {
@@ -215,7 +212,7 @@ const shouldRetry = (
  *    api.trello.com — Trello answers the GET fine but doesn't handle the
  *    preflight OPTIONS, so the browser blocks the response. Same workaround
  *    we use for Google's userinfo endpoint).
- *  - parse JSON body with Effect Schema (invalid shapes fail as {@link SchemaError.SchemaError})
+ *  - parse JSON body with Effect Schema (invalid shapes fail as {@link Schema.SchemaError})
  *  - 15s timeout
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
  *    (transport errors, 429, 5xx) — never on 4xx auth/validation errors.

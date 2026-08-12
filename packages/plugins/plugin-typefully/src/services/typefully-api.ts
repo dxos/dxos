@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as SchemaError from 'effect/SchemaError';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
@@ -122,14 +121,14 @@ const toDraftBody = (input: Publisher.PublisherDraftInput): Record<string, unkno
 
 type TypefullyEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
   HttpClient.HttpClient | TypefullyCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
+  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
 ): boolean => {
-  if (error instanceof SchemaError.SchemaError || error instanceof Publisher.PublisherError) {
+  if (error instanceof Schema.SchemaError || error instanceof Publisher.PublisherError) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {

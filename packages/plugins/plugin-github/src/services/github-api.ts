@@ -10,7 +10,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as SchemaError from 'effect/SchemaError';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
@@ -159,7 +158,7 @@ export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHub
 
 type GitHubEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | GitHubCredentials
 >;
 
@@ -172,10 +171,8 @@ type GitHubEffect<T> = Effect.Effect<
  *  - TimeoutException: yes.
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (
-  error: HttpClientError.HttpClientError | SchemaError.SchemaError | Cause.TimeoutError,
-): boolean => {
-  if (error instanceof SchemaError.SchemaError) {
+const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError): boolean => {
+  if (error instanceof Schema.SchemaError) {
     return false;
   }
   if (Cause.isTimeoutError(error)) {
