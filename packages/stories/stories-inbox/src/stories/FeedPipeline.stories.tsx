@@ -17,6 +17,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ProgressMeter, useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
+import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Query, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -39,6 +40,8 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/plugin';
+import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import * as Booking from '@dxos/plugin-trip/Booking';
@@ -53,7 +56,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex, Text } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
 import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
-import { Message, Organization, Person } from '@dxos/types';
+import { Message, Organization, Person, Task } from '@dxos/types';
 
 import { StoryRole } from '../modules';
 import {
@@ -72,6 +75,12 @@ const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
 
 /** The fixture corpus owner's addresses — the `me` input for `ExtractCorrespondents`. */
 const USER_EMAILS = ['rich.burdon@gmail.com', 'rich@braneframe.com'];
+
+/** Admin-tracking anchor senders (fixture team domain first, then the demo seed's). */
+const TRACKED_SENDER_RE = /@(kirkconsult\.com|sequoia\.com)$/i;
+
+/** Investor domains for the Investor Conversations pipeline (fixture VCs + the demo seed's). */
+const INVESTOR_DOMAINS = ['backed.vc', 'blueyard.com', 'dispersion.xyz', 'sequoia.com'];
 
 /** Role token for the story-local process module, referenced by the `ModuleContainer` layout. */
 const ProcessRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.process');
@@ -102,6 +111,8 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   );
   const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
   const contacts = useQuery(space.db, Filter.type(Person.Person));
+  const projects = useQuery(space.db, Filter.type(Project.Project));
+  const projectTasks = useQuery(space.db, Filter.type(Task.Task));
   const profiles = useQuery(space.db, Filter.type(ProfileOf.ProfileOf));
   const trips = useQuery(space.db, Filter.type(Trip.Trip));
   const segments = useQuery(space.db, Filter.type(Segment.Segment));
@@ -257,6 +268,57 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     setRuns((count) => count + 1);
   }, [space, invoker, mailbox]);
 
+  // Projects pipelines: create the admin tracking project from a tracked sender's message (once),
+  // then run the travel-log and investor-log artifact pipelines against it — the routine→operation→
+  // artifact pattern, driven manually from the workbench.
+  const handleProjects = useCallback(async () => {
+    if (!invoker || !mailbox) {
+      return;
+    }
+
+    const anchor =
+      messages.find((message) => TRACKED_SENDER_RE.test(message.sender?.email ?? '')) ??
+      messages.find((message) => !!message.sender?.email);
+    if (!anchor) {
+      return;
+    }
+
+    try {
+      // Tracking project (admin example): created once, reruns reuse it.
+      let project = projects.find((candidate) => candidate.name?.endsWith('— Requests'));
+      let created;
+      if (!project) {
+        created = await invoker.invokePromise(
+          ProjectOperation.CreateTrackingProject,
+          { mailbox: Ref.make(mailbox), message: anchor },
+          { spaceId: space.id },
+        );
+        const fresh = await space.db.query(Filter.type(Project.Project)).run();
+        project = fresh.find((candidate) => candidate.name?.endsWith('— Requests'));
+      }
+      if (!project) {
+        setLast({ error: 'tracking project not found after creation', created });
+        return;
+      }
+
+      const travel = await invoker.invokePromise(
+        ProjectOperation.UpdateTravelLog,
+        { project: Ref.make(project), mailbox: Ref.make(mailbox) },
+        { spaceId: space.id },
+      );
+      const investors = await invoker.invokePromise(
+        ProjectOperation.UpdateInvestorLog,
+        { project: Ref.make(project), mailbox: Ref.make(mailbox), domains: INVESTOR_DOMAINS },
+        { spaceId: space.id },
+      );
+      setLast({ created, travel, investors });
+    } catch (err) {
+      log.warn('projects pipelines failed', { err });
+      setLast({ error: String(err) });
+    }
+    setRuns((count) => count + 1);
+  }, [space, invoker, mailbox, messages, projects]);
+
   // Image enrichment: avatars (Gravatar) for Persons and logos (domain services) for Organizations
   // missing an image, via the hardened CRM attach path. Needs the CORS proxy / image service.
   const handleImages = useCallback(async () => {
@@ -351,6 +413,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           >
             Auto Extract
           </Toolbar.Button>
+          <Toolbar.Button data-testid='projects' disabled={!invoker || !mailbox} onClick={() => void handleProjects()}>
+            Projects
+          </Toolbar.Button>
           <Toolbar.Button data-testid='images' disabled={!invoker || !mailbox} onClick={() => void handleImages()}>
             Images
           </Toolbar.Button>
@@ -379,6 +444,8 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             relations: relations.length,
             linked,
             facts,
+            projects: projects.length,
+            tasks: projectTasks.length,
             last,
           }}
         />
@@ -421,6 +488,12 @@ const StoryProcessPlugin = Plugin.define(
         ]),
       ]),
   }),
+  // The mailbox→project pipelines (Projects button) without activating the full ProjectsPlugin.
+  Plugin.addModule(
+    Capability.inlineModule('ProjectOperationHandlers', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet)]),
+    ),
+  ),
   Plugin.make,
 );
 

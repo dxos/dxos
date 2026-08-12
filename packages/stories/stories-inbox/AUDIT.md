@@ -44,6 +44,12 @@ Run storybook play tests: `moon run stories-inbox:test` (or open the story on th
 | `src/operations/process-mailbox.test.ts` | cursored CRM contact + profile pipeline                                                                                      |
 | `src/operations/research.test.ts`        | person/organization research                                                                                                 |
 
+## Unit tests — plugin-projects (`packages/plugins/plugin-projects`)
+
+| File                                              | Covers                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/operations/mailbox/mailbox-projects.test.ts` | mailbox→project pipelines: UpdateProjectTasks (idempotent request tracking, user edits preserved), UpdateTravelLog (regenerated bookings document), UpdateInvestorLog (contact graph + per-thread sections), CreateTrackingProject (scaffold + runnable feed routine + backfill) |
+
 ## Fixture harness (`src/test/`, this package)
 
 | File                                | Covers                                                                                                                                                                                                                                                                                                |

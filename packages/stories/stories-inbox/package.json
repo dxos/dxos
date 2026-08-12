@@ -56,6 +56,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-trip": "workspace:*",
