@@ -77,6 +77,14 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     // with an unsubscribe affordance (header or body link). Replaced wholesale each run — persisted
     // derived state for the UI, never a source of truth.
     subscriptions: Schema.Array(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
+    // Append-only feed of derived annotations about the messages in `feed` — summaries today (see
+    // {@link makeSummary}), each a Message whose `parentMessage` names its subject. A second feed
+    // rather than a record on this object: annotations are immutable and unbounded, so they belong
+    // in an append-only structure instead of growing the mailbox document, and re-deriving one
+    // (better model, changed prompt) appends a new version rather than destroying the old. The
+    // primary feed stays pure — no reader has to filter annotations out of the message list.
+    // Provisioned lazily on first annotation, like `tags`.
+    annotations: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
     // TODO(wittjosiah): Factor out to relation?
     filters: Schema.Array(
       Schema.Struct({
@@ -310,6 +318,153 @@ export const isReplyable = (message: MessageLike, options: { senderClass?: 'pers
   // A classified type (from the LLM stage) wins over the heuristic; otherwise fall back to it.
   return options.senderClass ? options.senderClass === 'person' : !isOrgSender(message);
 };
+
+// A bare address, used to recognize a mailbox named after the account it syncs.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Best-effort addresses for the mailbox owner — the `me` input correspondence derivation needs to
+ * tell outbound from inbound. The connectors seed `mailbox.name` from the connection's
+ * `accessToken.account`, so a synced mailbox usually names its own account. Anything else yields
+ * none: callers report the dependent stage as skipped rather than deriving against a wrong identity,
+ * which would silently invert every sent/received judgement.
+ */
+export const identityAddresses = (mailbox: Pick<Mailbox, 'name'>): string[] => {
+  const name = mailbox.name?.trim().toLowerCase();
+  return name && EMAIL_RE.test(name) ? [name] : [];
+};
+
+//
+// Annotations (the `annotations` feed).
+//
+
+/**
+ * Builds a summary of `message` as an immutable annotation Message: `parentMessage` names its
+ * subject and the text block carries `disposition: 'summary'`. Append to the mailbox's
+ * {@link Mailbox.annotations} feed; re-deriving appends a newer one rather than mutating this.
+ */
+export const makeSummary = ({
+  message,
+  text,
+  model,
+  created = new Date().toISOString(),
+}: {
+  message: Pick<MessageLike, 'id'>;
+  text: string;
+  /** Model that produced the summary, recorded so a re-derivation is attributable. */
+  model?: string;
+  created?: string;
+}): Message.Message =>
+  Message.make({
+    parentMessage: message.id,
+    created,
+    sender: {},
+    // Markdown, not plain: generated summaries may carry inline emphasis or links, and the text-block
+    // renderers select the markdown view over the plaintext one.
+    blocks: [{ _tag: 'text', text, disposition: 'summary', mimeType: 'text/markdown' }],
+    properties: model ? { model } : undefined,
+  });
+
+/**
+ * The mailbox's annotation feed, provisioned on first use — annotations are rare relative to
+ * mailboxes, so the feed is not created until something derives one (the {@link Mailbox.tags} pattern).
+ */
+export const findOrCreateAnnotations = (mailbox: Mailbox, db: Pick<Database.Database, 'add'>): Feed.Feed => {
+  const existing = mailbox.annotations?.target;
+  if (existing) {
+    return existing;
+  }
+  const feed = db.add(Feed.make());
+  Obj.setParent(feed, mailbox);
+  Obj.update(mailbox, (mailbox) => {
+    mailbox.annotations = Ref.make(feed);
+  });
+  return feed;
+};
+
+/** The summary text carried by an annotation message, if it is one. */
+export const getSummaryText = (annotation: MessageLike): string | undefined => {
+  // A loop, not `find`: the discriminant only narrows the block union inside the `if`.
+  for (const block of annotation.blocks ?? []) {
+    if (block._tag === 'text' && block.disposition === 'summary') {
+      return block.text;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Newest summary per source message, keyed by message id — the read model for UI that renders
+ * summaries beside messages it already has (the article), where the full {@link mergeAnnotations}
+ * pairing would mean re-walking the message feed.
+ */
+export const summaryIndex = (annotations: Iterable<MessageLike>): Map<string, string> => {
+  const newest = new Map<string, MessageLike>();
+  for (const annotation of annotations) {
+    const parent = annotation.parentMessage;
+    if (!parent || getSummaryText(annotation) === undefined) {
+      continue;
+    }
+    const current = newest.get(parent);
+    if (!current || Date.parse(annotation.created) > Date.parse(current.created)) {
+      newest.set(parent, annotation);
+    }
+  }
+
+  const index = new Map<string, string>();
+  for (const [parent, annotation] of newest) {
+    const summary = getSummaryText(annotation);
+    if (summary !== undefined) {
+      index.set(parent, summary);
+    }
+  }
+  return index;
+};
+
+/** A feed message paired with the annotations derived from it. */
+export type AnnotatedMessage = {
+  readonly message: Message.Message;
+  /** Newest summary for this message, when one has been derived. */
+  readonly summary?: string;
+  /** Every annotation naming this message, newest first. */
+  readonly annotations: readonly MessageLike[];
+};
+
+/**
+ * Merges the mailbox's message feed with its annotation feed, yielding each message with whatever
+ * has been derived about it. Iterates the message feed in its own order — annotations never add,
+ * remove or reorder messages — and indexes the annotations once, so the merge stays linear.
+ *
+ * Annotations are grouped by `parentMessage` and ordered newest-first, so a re-derived summary
+ * supersedes the earlier one while both remain in the feed.
+ */
+export function* mergeAnnotations(
+  messages: Iterable<Message.Message>,
+  annotations: Iterable<MessageLike>,
+): Generator<AnnotatedMessage> {
+  const byParent = new Map<string, MessageLike[]>();
+  for (const annotation of annotations) {
+    const parent = annotation.parentMessage;
+    if (!parent) {
+      continue;
+    }
+    const list = byParent.get(parent);
+    if (list) {
+      list.push(annotation);
+    } else {
+      byParent.set(parent, [annotation]);
+    }
+  }
+  for (const list of byParent.values()) {
+    list.sort((left, right) => Date.parse(right.created) - Date.parse(left.created));
+  }
+
+  for (const message of messages) {
+    const derived = byParent.get(message.id) ?? [];
+    const summary = derived.map(getSummaryText).find((text) => text !== undefined);
+    yield { message, summary, annotations: derived };
+  }
+}
 
 /** The `List-Unsubscribe` target on a message (the machine-actionable unsubscribe affordance), if any. */
 export const getUnsubscribeTarget = (message: MessageLike): string | undefined => {

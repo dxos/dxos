@@ -26,6 +26,7 @@ export const Disposition = Schema.Literals([
   'synthetic', // synthetic message created by the system
   'cot', // chain-of-thought content in an assistant message
   'version-pin', // marker on a json block that pins an object version
+  'summary', // derived summary of the message named by `parentMessage`.
 ]);
 export type Disposition = Schema.Schema.Type<typeof Disposition>;
 
@@ -35,13 +36,13 @@ export type Disposition = Schema.Schema.Type<typeof Disposition>;
 export const Text = Schema.TaggedStruct('text', {
   mimeType: Schema.optional(Schema.String),
   text: Schema.String,
-
   disposition: Schema.optional(Disposition),
 
   ...Base.fields,
 });
 
 export type Text = Schema.Schema.Type<typeof Text>;
+
 /**
  * Represents part of the reasoning carried out by the model to generate a response.
  */
@@ -65,6 +66,7 @@ export const Reasoning = Schema.TaggedStruct('reasoning', {
 });
 
 export type Reasoning = Schema.Schema.Type<typeof Reasoning>;
+
 /**
  * Represents a tool call made by the model.
  */
@@ -114,6 +116,7 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
 });
 
 export type ToolCall = Schema.Schema.Type<typeof ToolCall>;
+
 export const ToolResult = Schema.TaggedStruct('toolResult', {
   /**
    * Id of the tool call that this result is for.
