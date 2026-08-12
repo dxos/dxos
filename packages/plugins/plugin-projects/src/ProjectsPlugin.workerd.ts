@@ -17,6 +17,7 @@ import * as ProjectCapabilities from './types/ProjectCapabilities';
 // only, so the React surface never reaches a bundle that cannot load it. The capability modules are
 // imported directly rather than through `#capabilities`, whose barrel pulls the surface in.
 const OperationHandler = AppCapability.operationHandler(() => import('./capabilities/operation-handler'));
+const SkillDefinition = AppCapability.skillDefinition(() => import('./capabilities/skill-definition'));
 const Templates = Capability.lazyModule(
   'Templates',
   { provides: [ProjectCapabilities.Template] },
@@ -25,6 +26,7 @@ const Templates = Capability.lazyModule(
 
 export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.schema([Project.Project, Instructions.Instructions, Routine.Routine])),
   Plugin.addModule(Templates),
   Plugin.make,

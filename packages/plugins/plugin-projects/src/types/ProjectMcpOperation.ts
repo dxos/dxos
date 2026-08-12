@@ -60,7 +60,8 @@ export const GetProject = Operation.make({
   meta: {
     key: makeKey('projectGet'),
     name: 'Get Project',
-    description: 'Read a project in full: goals, task-set summary (open/total per set), outline, and artifacts.',
+    description:
+      'Read a project in full: status, goals, task-set summary (open/total per set), outline, and artifacts.',
     icon: 'ph--info--regular',
   },
   services: [Database.Service],

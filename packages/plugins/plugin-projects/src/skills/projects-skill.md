@@ -52,7 +52,12 @@ onward — never pass a bare id where a ref is expected.
   (the one-line summary); `goals` (what done means, each `open`|`met`|`dropped`).
 - **Task set** — the ledger. Phases are parent tasks (`taskCreate` with no `parent`); individual
   work items are sub-tasks (`taskCreate` with `parent: {"/": "<phase-task-id>"}`). Task `status`
-  is `todo`|`in-progress`|`done`|`failed`|`cancelled`.
+  is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Projects made by `projectCreate` always
+  own a task set; if `projectGet` shows none (a project created some other way), bootstrap one
+  before recording tasks: `createObject { typename: 'org.dxos.type.taskSet', properties: { name:
+'Tasks' }, spaceId }`, then attach it with `updateObject { id: <project-id>, properties: {
+taskSet: {"/": "<task-set-id>"} } }`. If the bootstrap fails, say so — do **not** claim a task
+  was recorded.
 - **Outline** — the free-text scratch surface (`outlineGet`/`outlineUpdate`). Keep a line
   starting `Resume:` holding the single next action, and a `Design: {"/": "<doc-id>"}` line
   pointing at the design document.
@@ -85,8 +90,9 @@ onward — never pass a bare id where a ref is expected.
 - **`/project tasks`** — `taskList { project: {"/": id}, includeSubtasks: true, spaceId }` for
   the active project; render phases (parent tasks) with their sub-tasks and statuses.
 - **`/project track <text>`** — `taskCreate` on the active project's task set (`taskSet` ref
-  from `projectGet`). If the text names a phase, create it under that phase's parent task;
-  otherwise ask which phase if the project has several — never guess silently.
+  from `projectGet`; bootstrap one first if missing — see "The shape of a project"). If the text
+  names a phase, create it under that phase's parent task; otherwise ask which phase if the
+  project has several — never guess silently.
 - **`/project hydrate`** — checkpoint before stopping or handing off:
   1. Reconcile task statuses: `taskUpdate`/`taskComplete` every task whose real state has
      moved; leave a short `description` note on anything left `in-progress` (what's blocked,
@@ -101,16 +107,18 @@ onward — never pass a bare id where a ref is expected.
   `projectUpdate { project, status: 'ended' }`. Ended projects stay queryable; nothing is
   deleted.
 - **`/project resume`** — reload at the start of a session:
-  1. `projectGet` the target project (ask which if more than one `active` project matches and
-     none was named).
-  2. `taskList { project, includeSubtasks: true }`; read the outline's `Resume:` line.
+  1. `projectList { spaceId }` to discover projects. If one was named, match it; otherwise pick
+     the single `active` project, or ask which when several are `active` — never guess.
+  2. `projectGet { project: {"/": "<id>"}, spaceId }`, then
+     `taskList { project: {"/": "<id>"}, includeSubtasks: true, spaceId }`; read the outline's
+     `Resume:` line.
   3. Report a concise state: done / in-progress / **next action**. Continue with the next
      action, or wait for direction if the user gave any.
 
 ## Workflow discipline
 
-1. **At task start** — `projectGet` + `taskList` to reload state; create the project if none
-   exists for this stream.
+1. **At task start** — `projectList { spaceId }`, then `projectGet` + `taskList` (project ref
+   and `spaceId` on both) to reload state; create the project if none exists for this stream.
 2. **As you work** — update task status in the **same turn** the work completes. Never leave
    statuses stale, and never batch-update everything at the end.
 3. **When parking a task** — leave a one-line note in its `description` (what's blocked, what's
