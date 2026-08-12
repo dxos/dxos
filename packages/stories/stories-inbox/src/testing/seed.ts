@@ -13,6 +13,25 @@ import { ContentBlock, Message, Organization } from '@dxos/types';
 import { importMessages } from './archive';
 
 /**
+ * Organizations for the demo senders' domains: the contact-extraction gate is an allow-list, so a
+ * sender earns a Person only when its domain matches a known Organization.
+ */
+const ORGANIZATIONS = [
+  {
+    name: 'Sequoia Capital',
+    website: 'https://sequoia.com',
+  },
+  {
+    name: 'Globex Corporation',
+    website: 'https://globex.com',
+  },
+  {
+    name: 'Initech',
+    website: 'https://initech.com',
+  },
+];
+
+/**
  * Fresh demo messages for stories that need content without a live connection (fact extraction,
  * CRM pipelines). A factory (not a const) so each call yields new object instances rather than
  * re-appending already-persisted ones.
@@ -101,32 +120,13 @@ export const loadMailboxFixture = async (space: Space, fixture = 'mailbox'): Pro
   return mailbox;
 };
 
-/**
- * Organizations for the demo senders' domains: the contact-extraction gate is an allow-list, so a
- * sender earns a Person only when its domain matches a known Organization.
- */
-const DEMO_ORGANIZATIONS = [
-  {
-    name: 'Sequoia Capital',
-    website: 'https://sequoia.com',
-  },
-  {
-    name: 'Globex Corporation',
-    website: 'https://globex.com',
-  },
-  {
-    name: 'Initech',
-    website: 'https://initech.com',
-  },
-];
-
 /** Adds a Mailbox with the shared demo messages on its feed, plus the extraction-gate Organizations. */
 export const seedCrmMailbox = async (space: Space): Promise<Mailbox.Mailbox> => {
   const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
   await space.db.flush();
   const feed = await mailbox.feed.load();
   await EffectEx.runPromise(seedDemoMessages(feed).pipe(Effect.provide(Database.layer(space.db))));
-  DEMO_ORGANIZATIONS.forEach((organization) => space.db.add(Obj.make(Organization.Organization, organization)));
+  ORGANIZATIONS.forEach((organization) => space.db.add(Obj.make(Organization.Organization, organization)));
   await space.db.flush({ indexes: true });
   return mailbox;
 };

@@ -46,7 +46,9 @@ import { ModuleContainer } from '@dxos/storybook-testing';
 import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person } from '@dxos/types';
 
+import { StoryRole } from '../modules';
 import { StoryAiPlugin, type StorySeed, seedStoryMailbox } from '../testing';
+import { StoryModulesPlugin } from '../testing/modules';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
@@ -273,7 +275,14 @@ const StoryProcessPlugin = Plugin.define(
   Plugin.make,
 );
 
-const DefaultStory = () => <ModuleContainer layout={[[ProcessRole], [ModuleRole.Database, ModuleRole.Logging]]} />;
+const DefaultStory = () => (
+  <ModuleContainer
+    layout={[
+      [ProcessRole, StoryRole.Mailbox],
+      [ModuleRole.Database, ModuleRole.Logging],
+    ]}
+  />
+);
 
 type StoryArgs = { seed: StorySeed };
 
@@ -314,6 +323,7 @@ const meta = {
         MarkdownPlugin(),
         ProgressPlugin(),
         StoryAiPlugin(),
+        StoryModulesPlugin(),
         StoryProcessPlugin(),
       ],
     })),

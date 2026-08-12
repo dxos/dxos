@@ -86,7 +86,7 @@ const DefaultStory = ({ seed = false }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'stories/stories-inbox/Pipeline',
+  title: 'stories/stories-inbox/MailboxPipeline',
   render: DefaultStory,
   decorators: [
     withSurfaceDebug(false),
