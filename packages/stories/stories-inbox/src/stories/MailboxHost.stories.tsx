@@ -25,10 +25,11 @@ import { translations as inboxTranslations } from '@dxos/plugin-inbox/translatio
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useClient } from '@dxos/react-client';
+import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
-import { ModuleRole } from '@dxos/storybook-testing/modules';
+import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person } from '@dxos/types';
 
 const HOST_STORY_TYPES = [
@@ -214,6 +215,7 @@ const StoryHostPlugin = Plugin.define(
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
           Surface.create({ id: 'inbox.mailboxHost', filter: Surface.makeFilter(HostRole), component: HostModule }),
+          ...moduleSurfaces,
         ]),
       ]),
   }),
@@ -268,7 +270,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...inboxTranslations],
+    translations: [...inboxTranslations, ...debugTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

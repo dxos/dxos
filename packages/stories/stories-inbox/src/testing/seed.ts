@@ -11,6 +11,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message, Organization } from '@dxos/types';
 
 import { importMessages } from './archive';
+import { TRIP_MESSAGES } from './trip';
 
 /**
  * Organizations for the demo senders' domains: the contact-extraction gate is an allow-list, so a
@@ -140,6 +141,29 @@ export const seedFromObjects = async (space: Space, mailbox: Mailbox.Mailbox): P
   const feed = await mailbox.feed.load();
   await EffectEx.runPromise(seedDemoMessages(feed).pipe(Effect.provide(Database.layer(space.db))));
   ORGANIZATIONS.forEach((organization) => space.db.add(Obj.make(Organization.Organization, organization)));
+  await space.db.flush({ indexes: true });
+  return mailbox;
+};
+
+/**
+ * Adds the trip fixture to the mailbox feed: two legs of one booking (same PNR) plus an unrelated
+ * digest, for the auto-dispatch extraction pipeline (both legs must collapse into ONE Trip).
+ */
+export const seedFromTrips = async (space: Space, mailbox: Mailbox.Mailbox): Promise<Mailbox.Mailbox> => {
+  await space.db.flush();
+  const feed = await mailbox.feed.load();
+  await space.db.appendToFeed(
+    feed,
+    TRIP_MESSAGES.map((message, index) =>
+      Obj.make(Message.Message, {
+        threadId: `trip-thread-${index}`,
+        created: new Date('2026-05-25T00:00:00.000Z').toISOString(),
+        sender: { email: message.from },
+        properties: { subject: message.subject },
+        blocks: [{ _tag: 'text', text: message.body }],
+      }),
+    ),
+  );
   await space.db.flush({ indexes: true });
   return mailbox;
 };

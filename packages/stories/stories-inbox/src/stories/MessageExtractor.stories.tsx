@@ -255,7 +255,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'stories/stories-inbox/ExtractMessage',
+  title: 'stories/stories-inbox/MessageExtractor',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),

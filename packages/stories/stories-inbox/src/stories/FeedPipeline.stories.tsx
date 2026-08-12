@@ -17,7 +17,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ProgressMeter, useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
-import { configPreset } from '@dxos/config';
 import { Feed, Filter, Query, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -31,6 +30,7 @@ import { translations as connectorTranslations } from '@dxos/plugin-connector/tr
 import * as CrmOperation from '@dxos/plugin-crm/CrmOperation';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
+import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { ContactMessageExtractor } from '@dxos/plugin-inbox/operations';
@@ -41,7 +41,10 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Config } from '@dxos/react-client';
+import * as Booking from '@dxos/plugin-trip/Booking';
+import * as Segment from '@dxos/plugin-trip/Segment';
+import { TripPlugin } from '@dxos/plugin-trip/testing';
+import * as Trip from '@dxos/plugin-trip/Trip';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
@@ -53,7 +56,15 @@ import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules';
-import { StoryAiPlugin, StorySyncPlugin, seedFromFixture, seedFromMessages, seedFromObjects } from '../testing';
+import {
+  StoryAiPlugin,
+  StorySyncPlugin,
+  StoryTripAiPlugin,
+  seedFromFixture,
+  seedFromMessages,
+  seedFromObjects,
+  seedFromTrips,
+} from '../testing';
 import { StoryModulesPlugin } from '../testing/modules';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
@@ -87,6 +98,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
   const contacts = useQuery(space.db, Filter.type(Person.Person));
   const profiles = useQuery(space.db, Filter.type(ProfileOf.ProfileOf));
+  const trips = useQuery(space.db, Filter.type(Trip.Trip));
+  const segments = useQuery(space.db, Filter.type(Segment.Segment));
+  const relations = useQuery(space.db, Filter.type(ExtractedFrom.ExtractedFrom));
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);
   const [factStores] = useCapabilities(BrainCapabilities.FactStoreRegistry);
   const [runs, setRuns] = useState(0);
@@ -158,6 +172,31 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     setRuns((count) => count + 1);
   }, [space, invoker, mailbox]);
 
+  // Auto-dispatch pipeline: `ExtractMessage` per feed message with no extractor named — the
+  // dispatcher selects by match confidence (the composer toolbar path). Pairs with the `trip` seed,
+  // where the two same-PNR legs must collapse into one Trip.
+  const handleDispatch = useCallback(async () => {
+    if (!invoker || !mailbox) {
+      return;
+    }
+
+    let dispatched = 0;
+    let failed = 0;
+    for (const message of messages) {
+      await invoker
+        .invokePromise(InboxOperation.ExtractMessage, { source: message }, { spaceId: space.id })
+        .then(() => {
+          dispatched += 1;
+        })
+        .catch((err) => {
+          failed += 1;
+          log.warn('dispatch extract failed', { err, messageId: message.id });
+        });
+    }
+    setLast(failed > 0 ? { dispatched, failed } : { dispatched });
+    setRuns((count) => count + 1);
+  }, [space, invoker, mailbox, messages]);
+
   // CRM pipeline: cursored contact extraction + per-contact Profile scaffold (deterministic; the
   // extraction gate needs the seeded Organizations, so it pairs with the `crm` seed).
   const handleCrm = useCallback(async () => {
@@ -219,6 +258,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Button data-testid='crm' disabled={!invoker || !mailbox} onClick={() => void handleCrm()}>
             CRM
           </Toolbar.Button>
+          <Toolbar.Button data-testid='dispatch' disabled={!invoker || !mailbox} onClick={() => void handleDispatch()}>
+            Dispatch
+          </Toolbar.Button>
           <Toolbar.Button data-testid='analyze' disabled={!invoker || !mailbox} onClick={() => void handleAnalyze()}>
             Analyze
           </Toolbar.Button>
@@ -234,6 +276,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             cursorMax: Cursor.parseKey(cursors[0]?.max),
             contacts: contacts.length,
             profiles: profiles.length,
+            trips: trips.length,
+            segments: segments.length,
+            relations: relations.length,
             linked,
             facts,
             last,
@@ -297,7 +342,7 @@ const DefaultStory = () => (
  * connector OAuth round trip (which reloads the page) can resume — the ex-MailboxPipeline flow. The
  * other kinds seed a fresh in-memory profile.
  */
-type StoryArgs = { seed: 'fixture' | 'crm' | 'demo' | 'live' };
+type StoryArgs = { seed: 'fixture' | 'crm' | 'demo' | 'trip' };
 
 const meta = {
   title: 'stories/stories-inbox/FeedPipeline',
@@ -314,8 +359,10 @@ const meta = {
         ClientPlugin({
           types: [
             AccessToken.AccessToken,
+            Booking.Booking,
             Connection.Connection,
             Cursor.Cursor,
+            ExtractedFrom.ExtractedFrom,
             Feed.Feed,
             Mailbox.Mailbox,
             Markdown.Document,
@@ -323,22 +370,12 @@ const meta = {
             Organization.Organization,
             Person.Person,
             ProfileOf.ProfileOf,
+            Segment.Segment,
             Tag.Tag,
+            Trip.Trip,
             TagIndex.TagIndex,
             Text.Text,
           ],
-          ...(args.seed === 'live'
-            ? {
-                config: new Config(
-                  { runtime: { client: { storage: { persistent: true } } } },
-                  configPreset({ edge: 'dev' }).values,
-                ),
-                // OPFS-backed storage so identity/spaces survive a page reload; without a worker the
-                // client silently falls back to in-memory storage regardless of `storage.persistent`.
-                createOpfsWorker: () =>
-                  new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-              }
-            : {}),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               // A persisted (`live`) profile already has its identity + mailbox.
@@ -349,6 +386,8 @@ const meta = {
               const { defaultSpace: space } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
                 const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
+                await space.db.flush();
+
                 switch (args.seed) {
                   case 'fixture':
                     return seedFromFixture(space, mailbox);
@@ -356,9 +395,8 @@ const meta = {
                     return seedFromObjects(space, mailbox);
                   case 'demo':
                     return seedFromMessages(space, mailbox);
-                  case 'live':
-                    // Empty mailbox: the connector flow populates it.
-                    return space.db.flush({ indexes: true });
+                  case 'trip':
+                    return seedFromTrips(space, mailbox);
                 }
               });
             }),
@@ -372,7 +410,10 @@ const meta = {
         MarkdownPlugin(),
         PreviewPlugin(),
         ProgressPlugin(),
-        StoryAiPlugin(),
+        TripPlugin(),
+        // Both provide the `AiService` LayerSpec, so exactly one is registered per variant: the trip
+        // seed needs the canned flight payloads; every other variant targets local Ollama.
+        args.seed === 'trip' ? StoryTripAiPlugin() : StoryAiPlugin(),
         StoryModulesPlugin(),
         StoryProcessPlugin(),
         StorySyncPlugin(),
@@ -399,13 +440,6 @@ export const Default: Story = {
 export const Demo: Story = {
   args: {
     seed: 'demo',
-  },
-};
-
-/** Persistent EDGE-dev profile with an empty mailbox: connect a real account via the mailbox UI. */
-export const Live: Story = {
-  args: {
-    seed: 'live',
   },
 };
 
@@ -537,5 +571,60 @@ export const CrmTest: Story = {
     const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
     void expect(afterSecond).toMatch(/"profiles":\s*3\b/);
     void expect(afterSecond).toMatch(/"contacts":\s*0\b/);
+  },
+};
+
+/** The trip fixture: two same-PNR flight legs plus an unrelated digest, for the Dispatch pipeline. */
+export const Trips: Story = {
+  args: {
+    seed: 'trip',
+  },
+};
+
+/**
+ * Reproduces the real composer path: messages live in a Mailbox feed (immutable Queue items) and
+ * are extracted via the `ExtractMessage` operation. Asserts the two same-PNR legs collapse into a
+ * single Trip with two Segments (not two Trips).
+ */
+export const TripTest: Story = {
+  args: {
+    seed: 'trip',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const waitFor = async (
+      predicate: (text: string) => boolean,
+      { timeout = 30_000, interval = 100 }: { timeout?: number; interval?: number } = {},
+    ): Promise<string> => {
+      const deadline = Date.now() + timeout;
+      let text = canvas.queryByTestId('counts')?.textContent ?? '';
+      while (Date.now() < deadline) {
+        if (predicate(text)) {
+          return text;
+        }
+        await new Promise((resolve) => setTimeout(resolve, interval));
+        text = canvas.queryByTestId('counts')?.textContent ?? '';
+      }
+      return text;
+    };
+
+    // The trip fixture lands as one batch of three messages.
+    await waitFor((text) => /"messages":\s*3\b/.test(text));
+
+    // First pass: both same-PNR legs collapse into ONE Trip with TWO Segments. Every message ends
+    // linked (the travel pair to the Trip, the digest to the contact extracted on dispatch).
+    await userEvent.click(canvas.getByTestId('dispatch'));
+    const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
+    void expect(afterFirst).toMatch(/"trips":\s*1\b/);
+    void expect(afterFirst).toMatch(/"segments":\s*2\b/);
+    void expect(afterFirst).toMatch(/"linked":\s*3\b/);
+
+    // Second pass over the same messages must be idempotent — still ONE Trip, TWO Segments
+    // (segments updated in place, not duplicated). This is the "extract twice" case.
+    await userEvent.click(canvas.getByTestId('dispatch'));
+    const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
+    void expect(afterSecond).toMatch(/"trips":\s*1\b/);
+    void expect(afterSecond).toMatch(/"segments":\s*2\b/);
   },
 };
