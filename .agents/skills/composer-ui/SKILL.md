@@ -3,9 +3,10 @@ name: composer-ui
 description: Use when building or styling plugin UI with Composer's design system — the
   `@dxos/react-ui*` packages. Covers theme tokens, primitives (Panel/Card/List/Input/Button/Icon),
   the standard container layout (Panel + ScrollArea), lists/pickers/stacks, schema-driven forms,
-  toolbar/menu wiring, reactivity (useObject), attention/density, translations, and storybook setup.
-  The UI adjunct to the composer-plugins skill; consult it whenever you write a container/component,
-  reach for a Tailwind color class, build a toolbar, render a form or list, or add a story.
+  toolbar/menu wiring, reactivity (useObject), attention/density, translations, storybook setup, and
+  before/after screenshots. The UI adjunct to the composer-plugins skill; consult it whenever you write
+  a container/component, reach for a Tailwind color class, build a toolbar, render a form or list, add a
+  story, or open a PR that changes what the app renders.
 ---
 
 # Composer UI
@@ -454,6 +455,59 @@ never the repo root. If a story renders empty with "Invalid hook call" / "Cannot
 504 "Outdated Optimize Dep", that's Vite dep-optimizer churn (dual React), not your code — kill storybook,
 `rm -rf node_modules/.cache/storybook`, restart. Clean up the port and cache when done.
 
+## Before/after screenshots
+
+**A PR that changes rendered output ships before/after screenshots in its description.** A prop diff is
+not reviewable as UI — nothing in `centered padding thin` tells a reviewer whether the active-tab
+indicator now sits under the avatar. The pair is also the cheapest check on your own fix: measure the
+element in both states and the numbers either move the way you predicted or they don't.
+
+**Capture both states from one build.** Screenshot the fix, then restore the old value _in the live
+page_ — set the property back on the element, toggle the class — and screenshot again. Rebuilding `main`
+for the "before" swaps fonts, data, and window size along with it; reverting in the page leaves exactly
+one variable.
+
+**Measure, don't just look.** `getBoundingClientRect()` on the element and its neighbours plus the
+`getComputedStyle` property you changed, in both states, printed in the PR beside the images.
+`indicator 8.0..14.0, overlap=2px` is what makes the screenshot legible — and what catches a fix that
+moved the wrong box.
+
+Drive the surface from a story ("Verifying a story in a worktree" above), the local app, or the PR's own
+`pr-<n>-composer-main.dxos.workers.dev` preview once CI has deployed it:
+
+```ts
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 });
+const clip = { x: 0, y: 0, width: 100, height: 260 };
+const measure = () =>
+  page.evaluate(() => {
+    const el = document.querySelector('[data-testid="…"]');
+    return { box: el.getBoundingClientRect(), pad: getComputedStyle(el).paddingInline };
+  });
+
+console.log('after ', await measure());
+await page.screenshot({ path: 'after.png', clip });
+// Re-apply the pre-fix value on the running page.
+await page.evaluate(() => {
+  document.querySelector('[data-testid="…"]').style.paddingInline = 'var(--scroll-strip)';
+});
+console.log('before', await measure());
+await page.screenshot({ path: 'before.png', clip });
+```
+
+`deviceScaleFactor: 2` and a tight `clip` are load-bearing — a full-page 1x shot of a 6px indicator shows
+nothing. In the cloud sandbox add the chromium proxy args from [[cloud-sandbox]]; the default launch
+cannot reach the preview host.
+
+**Hosting.** Nothing uploads to GitHub's CDN over the API, so commit the PNGs to the branch, take
+`https://raw.githubusercontent.com/dxos/dxos/<full-sha>/<path>` from that commit, then delete them in the
+next commit — the URL is pinned to the SHA, so the images keep rendering while the PR's final diff carries
+no binaries. Confirm with `curl -o /dev/null -w '%{http_code}'` once the deleting commit lands.
+
+What holds the blob after the delete is `refs/pull/<n>/head`, which GitHub retains, so it also survives the
+branch being deleted at merge. The URL is exactly that durable and no more: keep it to PR descriptions,
+and use a committed path under `assets/` for anything that must outlive the PR (a README, docs). Never
+link `.../<branch>/<path>` — that 404s the moment the file goes.
+
 ## Checklist
 
 - Layout from `Panel.*` + `ScrollArea.*`; no wrapper `<div>`s for styling; `asChild` when the child is composable.
@@ -465,4 +519,5 @@ never the repo root. If a story renders empty with "Invalid hook call" / "Cannot
 - ECHO object passed into a component → wrap with `useObject` at the container boundary.
 - Icons as `ph--<icon>--<weight>`.
 - Every major component/container has a basic `.stories.tsx` with `withTheme()` (parens) + `parameters: { translations }`; add a `play` function for complex data behaviour.
+- Rendered output changed → before/after screenshots in the PR description, both from one build, with the measurements beside them.
 - Authoring a new `Foo.Root`/`Foo.Content` primitive → [[composite-components]]; plugin wiring/surfaces → [[composer-plugins]].

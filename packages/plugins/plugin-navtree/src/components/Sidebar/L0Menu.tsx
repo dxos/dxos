@@ -355,7 +355,7 @@ export const L0Menu = ({
       </Menu.Root>
 
       {/* Space list. */}
-      <ScrollArea.Root centered padding thin orientation='vertical'>
+      <ScrollArea.Root centered thin orientation='vertical'>
         <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
           {topLevelItems.map((item) => (
             <L0Item
