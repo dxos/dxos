@@ -26,7 +26,7 @@ const Stack = ({
 };
 
 const Panel = ({ children }: PropsWithChildren) => {
-  return <div className='dx-container border border-separator rounded-md p-2'>{children}</div>;
+  return <div className='dx-container border border-separator rounded-md'>{children}</div>;
 };
 
 export const TestGrid = {

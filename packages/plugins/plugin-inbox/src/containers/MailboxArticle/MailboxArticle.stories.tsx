@@ -29,7 +29,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
@@ -38,7 +38,6 @@ import { InboxPlugin } from '../../InboxPlugin';
 import * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as Mailbox from '../../types/Mailbox';
 import { MailboxArticle } from './MailboxArticle';
-import { TestGrid } from './TestGrid';
 
 // No-op handler for the one layout operation the article invokes that belongs to DeckPlugin, which
 // this story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin
@@ -262,19 +261,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Both variants force the setting explicitly: the settings store persists across runs, so an
-// omitted value would inherit whatever a prior session wrote rather than the product default.
 export const Default: Story = {
   args: {
-    count: 500,
+    count: 50,
   },
 };
 
-// TODO(wittjosiah): Remove? Conversation grouping is on by default now, so `Default` already covers
-// it — this exists only to exercise the flat/ungrouped fallback (`conversations: false`).
 export const Flat: Story = {
   args: {
-    count: 500,
+    count: 50,
     conversations: false,
   },
 };
