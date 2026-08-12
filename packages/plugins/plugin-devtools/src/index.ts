@@ -3,5 +3,4 @@
 //
 
 export * from './meta';
-export * as Devtools from './types/Devtools';
-export * as DevtoolsEvents from './types/DevtoolsEvents';
+export * from './types';

@@ -3,5 +3,4 @@
 //
 
 export * from './meta';
-export * as Stack from './types/Stack';
-export * as StackEvents from './types/StackEvents';
+export * from './types';

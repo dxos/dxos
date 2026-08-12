@@ -251,6 +251,8 @@ export default {
         'Barrel re-exports all of "{{source}}". Only package-internal modules may be star-exported; a foreign API cannot be given a subpath of its own.',
       pluginInstanceExported:
         'Barrel re-exports the plugin entrypoint "{{source}}". The root entry carries types and operations only; consumers load the plugin from the "./plugin" subpath.',
+      nestedPathExport:
+        'Namespace "{{name}}" reaches into "{{source}}". Declare it in "{{barrel}}" and re-export that directory from here with `export * from \'./{{dir}}\';`.',
     },
   },
   create: (context) => {
@@ -402,6 +404,31 @@ export default {
               },
             });
           }
+        }
+
+        // A namespace declared here but living a directory down keeps the root barrel growing a
+        // line per module. Declaring it in that directory's own barrel and star-exporting the
+        // directory says the same thing in one line, and the walk above resolves either form
+        // identically. Narrow named re-exports are left alone: a star over the directory barrel
+        // would export more than they name, and sometimes something else entirely.
+        for (const statement of node.body) {
+          if (statement.type !== 'ExportAllDeclaration' || !statement.exported) {
+            continue;
+          }
+          const source = String(statement.source.value);
+          if (!source.startsWith('.')) {
+            continue;
+          }
+          const segments = source.replace(/^\.\//, '').split('/');
+          if (segments.length < 2) {
+            continue;
+          }
+          const dir = segments[0];
+          context.report({
+            node: statement,
+            messageId: 'nestedPathExport',
+            data: { name: statement.exported.name, source, dir, barrel: `src/${dir}/index.ts` },
+          });
         }
 
         for (const [name, entries] of ambiguous) {

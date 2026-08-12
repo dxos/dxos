@@ -3,5 +3,4 @@
 //
 
 export * from './meta';
-export * as Board from './types/Board';
-export * as BoardEvents from './types/BoardEvents';
+export * from './types';

@@ -3,4 +3,4 @@
 //
 
 export * from './meta';
-export * as SimpleLayoutCapabilities from './types/SimpleLayoutCapabilities';
+export * from './types';

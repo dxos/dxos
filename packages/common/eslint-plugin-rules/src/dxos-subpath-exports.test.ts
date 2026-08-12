@@ -12,7 +12,10 @@ import rule from '../rules/dxos-subpath-exports.js';
 // from the fixture, which is what lets a test exercise re-export chains.
 const fixture = (pkg: string) => new URL(`./__fixtures__/${pkg}/src/index.ts`, import.meta.url).pathname;
 
+// `subpath-plugin` keeps its namespaces beside the barrel so a root re-export is single-segment;
+// `subpath-nested` satisfies the same exports map a directory down.
 const filename = fixture('subpath-plugin');
+const nested = fixture('subpath-nested');
 
 const ruleTester = new RuleTester({
   languageOptions: {
@@ -31,23 +34,31 @@ describe('dxos-subpath-exports', () => {
           filename,
           code: [
             "export * from './meta';",
-            "export * as Alpha from './types/Alpha';",
-            "export * as Beta from './types/Beta';",
-            "export * as Gamma from './types/Gamma';",
+            "export * as Alpha from './Alpha';",
+            "export * as Beta from './Beta';",
+            "export * as Gamma from './Gamma';",
           ].join('\n'),
         },
         // The same namespaces reached through a nested barrel: nesting is structure, not contract.
-        { filename, code: "export * from './meta';\nexport * from './types';" },
+        { filename: nested, code: "export * from './types';" },
         // A namespace declared at the root shadows the one the nested barrel provides.
         {
           filename,
-          code: "export * from './types';\nexport * as Alpha from './types/Alpha';",
+          code: "export * as Alpha from './Alpha';\nexport * from './meta';\nexport * as Beta from './Beta';\nexport * as Gamma from './Gamma';",
         },
         // Lowercase names are module entrypoints, not namespaces, so they carry no subpath.
         {
           filename,
-          code: "export * from './types';\nexport * as helpers from './meta';",
+          code: [
+            "export * as Alpha from './Alpha';",
+            "export * as Beta from './Beta';",
+            "export * as Gamma from './Gamma';",
+            "export * as helpers from './meta';",
+          ].join('\n'),
         },
+        // A narrow named re-export stays: a star over the directory barrel would export more than
+        // it names, and in some packages something else entirely.
+        { filename: nested, code: "export * from './types';\nexport { value } from './types/Undeclared';" },
         // A package with no per-namespace subpaths has not migrated; its barrel is still its API.
         { filename: fixture('subpath-unmigrated'), code: "export * as Whatever from './types/Whatever';" },
         // A subpath onto a module that does not declare itself a namespace is a standalone
@@ -55,40 +66,32 @@ describe('dxos-subpath-exports', () => {
         { filename: fixture('subpath-alias'), code: "export const value = 'standalone';" },
         // Files that are not the package's root barrel are none of this rule's business.
         {
-          filename: new URL('./__fixtures__/subpath-plugin/src/types/index.ts', import.meta.url).pathname,
+          filename: new URL('./__fixtures__/subpath-nested/src/types/index.ts', import.meta.url).pathname,
           code: "export * as Alpha from './Alpha';",
         },
       ],
       invalid: [
         {
           // A declared subpath missing from the barrel, inserted among its sorted siblings.
-          code: [
-            "export * from './meta';",
-            "export * as Alpha from './types/Alpha';",
-            "export * as Beta from './types/Beta';",
-          ].join('\n'),
+          code: "export * from './meta';\nexport * as Alpha from './Alpha';\nexport * as Beta from './Beta';",
           filename,
           output: [
             "export * from './meta';",
-            "export * as Alpha from './types/Alpha';",
-            "export * as Beta from './types/Beta';",
-            "export * as Gamma from './types/Gamma';",
+            "export * as Alpha from './Alpha';",
+            "export * as Beta from './Beta';",
+            "export * as Gamma from './Gamma';",
           ].join('\n'),
           errors: [{ messageId: 'missingNamespaceExport' }],
         },
         {
           // Sorted insertion also runs backwards, ahead of the first later sibling.
-          code: [
-            "export * from './meta';",
-            "export * as Beta from './types/Beta';",
-            "export * as Gamma from './types/Gamma';",
-          ].join('\n'),
+          code: "export * from './meta';\nexport * as Beta from './Beta';\nexport * as Gamma from './Gamma';",
           filename,
           output: [
             "export * from './meta';",
-            "export * as Alpha from './types/Alpha';",
-            "export * as Beta from './types/Beta';",
-            "export * as Gamma from './types/Gamma';",
+            "export * as Alpha from './Alpha';",
+            "export * as Beta from './Beta';",
+            "export * as Gamma from './Gamma';",
           ].join('\n'),
           errors: [{ messageId: 'missingNamespaceExport' }],
         },
@@ -97,7 +100,7 @@ describe('dxos-subpath-exports', () => {
           // insertions share an anchor, so a pass applies one and the rest follow on re-runs.
           code: "export * from './meta';",
           filename,
-          output: "export * from './meta';\nexport * as Alpha from './types/Alpha';",
+          output: "export * from './meta';\nexport * as Alpha from './Alpha';",
           errors: [
             { messageId: 'missingNamespaceExport' },
             { messageId: 'missingNamespaceExport' },
@@ -106,54 +109,76 @@ describe('dxos-subpath-exports', () => {
         },
         {
           // Right name, wrong module — a consumer rewritten to `/Beta` would get another module.
-          code: [
-            "export * as Alpha from './types/Alpha';",
-            "export * as Beta from './types/Gamma';",
-            "export * as Gamma from './types/Gamma';",
-          ].join('\n'),
+          code: "export * as Alpha from './Alpha';\nexport * as Beta from './Gamma';\nexport * as Gamma from './Gamma';",
           filename,
           errors: [{ messageId: 'namespaceTargetMismatch' }],
         },
         {
           // A type-only re-export does not satisfy a value entrypoint.
-          code: [
-            "export type * as Alpha from './types/Alpha';",
-            "export * as Beta from './types/Beta';",
-            "export * as Gamma from './types/Gamma';",
-          ].join('\n'),
+          code: "export type * as Alpha from './Alpha';\nexport * as Beta from './Beta';\nexport * as Gamma from './Gamma';",
           filename,
           errors: [{ messageId: 'typeOnlyNamespaceExport' }],
         },
         {
           // Exported from the barrel but unreachable by subpath, so importing it costs the package.
-          code: "export * from './types';\nexport * as Undeclared from './types/Undeclared';",
+          code: [
+            "export * as Alpha from './Alpha';",
+            "export * as Beta from './Beta';",
+            "export * as Gamma from './Gamma';",
+            "export * as Undeclared from './Undeclared';",
+          ].join('\n'),
           filename,
           errors: [{ messageId: 'undeclaredNamespace' }],
         },
         {
+          // A namespace reached only through a nested barrel is still held to the contract, and
+          // reports on the `export *` that reaches it, since no node here names it.
+          code: "export * from './types';\nexport * from './nested';",
+          filename: nested,
+          errors: [{ messageId: 'undeclaredNamespace' }],
+        },
+        {
           // Two paths to one name resolve to distinct bindings, so ES drops it from the barrel.
-          // The report lands on the `export *` that reaches it, since no node here names it.
           code: "export * from './types';\nexport * from './alt';",
-          filename,
+          filename: nested,
           errors: [{ messageId: 'ambiguousNamespace' }],
         },
         {
           // Only package-internal modules may be star-exported.
-          code: "export * from './types';\nexport * from '@dxos/echo';",
+          code: [
+            "export * as Alpha from './Alpha';",
+            "export * as Beta from './Beta';",
+            "export * as Gamma from './Gamma';",
+            "export * from '@dxos/echo';",
+          ].join('\n'),
           filename,
           errors: [{ messageId: 'externalStarExport' }],
         },
         {
           // The root entry carries types and operations; the plugin lives on its own subpath.
-          code: "export * from './types';\nexport * from './plugin';",
+          code: [
+            "export * as Alpha from './Alpha';",
+            "export * as Beta from './Beta';",
+            "export * as Gamma from './Gamma';",
+            "export * from './plugin';",
+          ].join('\n'),
           filename,
           errors: [{ messageId: 'pluginInstanceExported' }],
         },
         {
-          // A namespace reached only through a nested barrel is still held to the contract.
-          code: "export * from './types';\nexport * from './nested';",
-          filename,
-          errors: [{ messageId: 'undeclaredNamespace' }],
+          // Reaching a directory down grows the root barrel a line per module; the directory's
+          // own barrel says the same thing in one line.
+          code: [
+            "export * as Alpha from './types/Alpha';",
+            "export * as Beta from './types/Beta';",
+            "export * as Gamma from './types/Gamma';",
+          ].join('\n'),
+          filename: nested,
+          errors: [
+            { messageId: 'nestedPathExport' },
+            { messageId: 'nestedPathExport' },
+            { messageId: 'nestedPathExport' },
+          ],
         },
       ],
     });

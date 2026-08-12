@@ -12,4 +12,4 @@ export * from './meta';
 // dynamic `import()` — see `./core.ts` for the underlying chunk-init issue
 // — and there is no production code-splitting benefit to recover here.
 export * from './StorybookPlugin';
-export * as StorybookCapabilities from './types/StorybookCapabilities';
+export * from './types';

@@ -3,6 +3,6 @@
 //
 
 export * from './meta';
-export * as Alpha from './types/Alpha';
-export * as Beta from './types/Beta';
-export * as Gamma from './types/Gamma';
+export * as Alpha from './Alpha';
+export * as Beta from './Beta';
+export * as Gamma from './Gamma';

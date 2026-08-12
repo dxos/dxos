@@ -3,5 +3,4 @@
 //
 
 export * from './meta';
-export * as Dream from './types/Dream';
-export * as Sequence from './types/Sequence';
+export * from './types';

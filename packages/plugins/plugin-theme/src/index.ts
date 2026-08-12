@@ -3,5 +3,4 @@
 //
 
 export * from './meta';
-export * as Settings from './types/Settings';
-export * as ThemeCapabilities from './types/ThemeCapabilities';
+export * from './types';

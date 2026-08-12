@@ -3,4 +3,4 @@
 //
 
 export * from './meta';
-export * as SpotlightCapabilities from './types/SpotlightCapabilities';
+export * from './types';
