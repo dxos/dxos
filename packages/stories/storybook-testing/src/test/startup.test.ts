@@ -6,7 +6,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import { afterAll, beforeAll, describe, onTestFinished, test } from 'vitest';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -138,9 +137,10 @@ describe('ClientPlugin startup', () => {
     const eventStarts: Record<string, number> = {};
     const startupDone = new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('Startup timed out after 30s')), 30_000);
+      // v4's `subscribe` yields a `Subscription` read through `PubSub.take`, not a `Queue`.
       PubSub.subscribe(manager.activation).pipe(
-        Effect.flatMap((queue) =>
-          Queue.take(queue).pipe(
+        Effect.flatMap((subscription) =>
+          PubSub.take(subscription).pipe(
             Effect.tap(({ event, state, error: activationError }) =>
               Effect.sync(() => {
                 if (state === 'activating') {

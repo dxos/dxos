@@ -64,7 +64,7 @@ export default Capability.makeModule(
           .get()
           .map((handler) =>
             handler(url).pipe(
-              Effect.catchAllCause((cause) =>
+              Effect.catchCause((cause) =>
                 Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
               ),
             ),
@@ -145,7 +145,7 @@ export default Capability.makeModule(
           }),
         );
       }).pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.sync(() => log.warn('[UrlHandler] Failed to initialize deep link listener', { error })),
         ),
       );

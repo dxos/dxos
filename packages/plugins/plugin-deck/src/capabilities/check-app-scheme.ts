@@ -129,7 +129,7 @@ export default Capability.makeModule(
           .get()
           .map((handler) =>
             handler(url).pipe(
-              Effect.catchAllCause((cause) =>
+              Effect.catchCause((cause) =>
                 Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
               ),
             ),

@@ -15,7 +15,7 @@ import * as Instructions from './Instructions';
 import * as Trigger from './Trigger';
 
 const Kinds = ['runnable', 'instructions'] as const;
-export const Kind = Schema.Literal(...Kinds);
+export const Kind = Schema.Literals(Kinds);
 export type Kind = (typeof Kinds)[number];
 
 const RunnableSpec = Schema.Struct({
@@ -28,7 +28,7 @@ const InstructionsSpec = Schema.Struct({
   instructions: Ref.Ref(Instructions.Instructions),
 });
 
-const RoutineSpec = Schema.Union(RunnableSpec, InstructionsSpec);
+const RoutineSpec = Schema.Union([RunnableSpec, InstructionsSpec]);
 
 /**
  * User-facing routine: a thin aggregate of an action (`runnable`) and the triggers that fire it.

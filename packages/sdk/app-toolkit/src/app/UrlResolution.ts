@@ -39,7 +39,7 @@ export const resolveInternalLink = (
     }
 
     const resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs: [plankPair] });
-    return Option.fromNullable(resolved[0]?.nodeId);
+    return Option.fromNullishOr(resolved[0]?.nodeId);
   });
 
 /**

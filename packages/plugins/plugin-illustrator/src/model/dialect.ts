@@ -19,7 +19,7 @@ import * as Scene from './scene';
 export type Dialect<Input = any> = {
   id: string;
   description: string;
-  input: Schema.Schema<Input, any>;
+  input: Schema.Codec<Input, any>;
   compile: (input: Input) => Effect.Effect<readonly Scene.Command[]>;
 };
 

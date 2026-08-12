@@ -13,7 +13,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { HEYGEN_CONNECTOR_ID, HEYGEN_SOURCE } from '../constants';
 
 const HeyGenTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'API key',
     description: 'The HeyGen API key from https://app.heygen.com/settings (API).',
   }),

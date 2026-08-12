@@ -143,7 +143,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       // capabilities), minus the delegation skill itself — otherwise a sub-agent could
       // recursively delegate. Resolved from the conversation's AiContext bindings.
       const inheritedSkills = yield* Effect.gen(function* () {
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
         return binder.getSkills().filter((skill) => Obj.getMeta(skill).key !== DelegationSkill.key);
       }).pipe(Effect.scoped);

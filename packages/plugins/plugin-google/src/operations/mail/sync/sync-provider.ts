@@ -66,7 +66,7 @@ export const googleMailSyncProvider = (options: {
         prepare: ({ mailbox, binding, token, maxMessages }) =>
           Effect.gen(function* () {
             const labelMap = yield* syncLabels(mailbox, userId).pipe(
-              Effect.catchAll((error) => {
+              Effect.catch((error) => {
                 log.catch(error);
                 return Effect.succeed(new Map<string, string>());
               }),

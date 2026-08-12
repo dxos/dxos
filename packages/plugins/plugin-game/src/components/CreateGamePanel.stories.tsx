@@ -21,12 +21,12 @@ import { CreateGamePanel } from './CreateGamePanel';
 // the picker reads (label, icon, inputSchema). createVariant is a no-op since we
 // don't actually submit through a database here.
 const Card = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 }).pipe(Type.makeObject(DXN.make('org.dxos.story.cards', '0.1.0')));
 
 const Dice = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  faces: Schema.optional(Schema.Number.annotations({ title: 'Number of faces' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  faces: Schema.optional(Schema.Number.annotate({ title: 'Number of faces' })),
 }).pipe(Type.makeObject(DXN.make('org.dxos.story.dice', '0.1.0')));
 
 const dummyVariants: GameCapabilities.GameVariant[] = [

@@ -10,22 +10,22 @@ import { meta } from '../meta';
 
 const EdgarConceptSourceSchema = Schema.Struct({
   concepts: Schema.Array(Schema.String),
-  units: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
+  units: Schema.optionalKey(Schema.Array(Schema.String)),
 });
 
 /** Maps a snapshot field to one or more SEC us-gaap XBRL concepts, or a ratio of concept groups. */
-export const EdgarFieldSourceSchema = Schema.Union(
+export const EdgarFieldSourceSchema = Schema.Union([
   Schema.Struct({
     type: Schema.Literal('concept'),
     concepts: Schema.Array(Schema.String),
-    units: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
+    units: Schema.optionalKey(Schema.Array(Schema.String)),
   }),
   Schema.Struct({
     type: Schema.Literal('ratio'),
     numerator: EdgarConceptSourceSchema,
     denominator: EdgarConceptSourceSchema,
   }),
-);
+]);
 export type EdgarFieldSource = Schema.Schema.Type<typeof EdgarFieldSourceSchema>;
 
 /** Place on schema fields to drive SEC EDGAR company-facts extraction. */

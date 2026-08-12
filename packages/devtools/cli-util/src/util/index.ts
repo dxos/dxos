@@ -4,6 +4,8 @@
 
 export * from '#platform';
 
+export * as Ansi from './Ansi';
+export * as Doc from './Doc';
 export * as FormBuilder from './form-builder';
 export * from './format';
 export * from './options';

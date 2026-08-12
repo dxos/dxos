@@ -34,11 +34,11 @@ export const autoSyncConnection = (
   return invoker
     .invoke(ConnectorOperation.SyncConnection, { connection: Ref.make(connection) }, { spaceId: db.spaceId })
     .pipe(
-      Effect.catchAll((error) => Effect.sync(() => log.warn('auto sync failed', { connectorId: connector.id, error }))),
-      Effect.catchAllDefect((defect) =>
+      Effect.catch((error) => Effect.sync(() => log.warn('auto sync failed', { connectorId: connector.id, error }))),
+      Effect.catchDefect((defect) =>
         Effect.sync(() => log.warn('auto sync defect', { connectorId: connector.id, defect })),
       ),
-      Effect.forkDaemon,
+      Effect.forkDetach,
       Effect.asVoid,
     );
 };

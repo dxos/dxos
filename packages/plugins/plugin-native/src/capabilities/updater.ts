@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { type } from '@tauri-apps/plugin-os';
 import { relaunch } from '@tauri-apps/plugin-process';
 import * as Updater from '@tauri-apps/plugin-updater';
@@ -11,6 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -179,10 +179,11 @@ export default Capability.makeModule(
       return false;
     });
 
-    const schedule = Schedule.fixed(Duration.hours(1)).pipe(
-      Schedule.whileInput((keepChecking: boolean) => keepChecking),
+    // v4 moved the output predicate off the schedule and onto `repeat`.
+    const fiber = yield* backgroundAction.pipe(
+      Effect.repeat({ schedule: Schedule.fixed(Duration.hours(1)), while: (keepChecking) => keepChecking }),
+      Effect.forkDetach,
     );
-    const fiber = yield* backgroundAction.pipe(Effect.repeat(schedule), Effect.forkDaemon);
     log.info('updater module initialized, update check scheduled');
 
     // Fiber.interrupt is async and would throw AsyncFiberException if wrapped in Effect.runSync,

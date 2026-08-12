@@ -16,16 +16,16 @@ import { CUSTOM_PROVIDER_ID } from '../constants';
 
 /** Default form for manually entered access tokens (custom connector). */
 const CustomTokenForm = Schema.Struct({
-  source: Format.Hostname.annotations({
+  source: Format.Hostname.annotate({
     title: 'Source',
     description: 'The domain name of the service that issued the token.',
     examples: ['example.com'],
   }),
-  account: Schema.String.annotations({
+  account: Schema.String.annotate({
     title: 'Account',
     description: 'Optional account label associated with the token.',
   }).pipe(Schema.optional),
-  token: Schema.String.annotations({
+  token: Schema.String.annotate({
     title: 'Token',
     description: 'The access token value.',
   }),

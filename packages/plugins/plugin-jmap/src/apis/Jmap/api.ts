@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { withAuthorization } from '@dxos/compute-runtime';
 
@@ -17,7 +17,7 @@ import { MethodError, Response, Session } from './types';
 
 /** Shared per-attempt timeout/retry policy for JMAP HTTP requests (session, batched API, blob download). */
 export const REQUEST_TIMEOUT = '10 seconds';
-export const REQUEST_RETRY = Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)));
+export const REQUEST_RETRY = Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }));
 
 // Retry transient failures (network, 5xx, timeout) but not 4xx — a bad host/token or malformed
 // request will fail identically on retry, so retrying only adds latency.
@@ -47,7 +47,9 @@ export const getSession: Effect.Effect<Session, JmapApiError, HttpClient.HttpCli
   function* () {
     const { host, token } = yield* JmapCredentials;
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
-    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const httpClientWithTracerDisabled = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
 
     return yield* HttpClientRequest.get(`https://${host}/.well-known/jmap`).pipe(
       HttpClientRequest.setHeader('accept', 'application/json'),
@@ -75,11 +77,13 @@ export const jmapRequest = (
   Effect.gen(function* () {
     const { token } = yield* JmapCredentials;
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
-    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const httpClientWithTracerDisabled = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
 
     const executed = HttpClientRequest.post(apiUrl).pipe(
       HttpClientRequest.setHeader('accept', 'application/json'),
-      HttpClientRequest.bodyUnsafeJson(body),
+      HttpClientRequest.bodyJsonUnsafe(body),
       httpClientWithTracerDisabled.execute,
       Effect.flatMap(decodeJsonOrFail(Response)),
       Effect.timeout(REQUEST_TIMEOUT),
@@ -97,7 +101,7 @@ export const jmapRequest = (
 export const getMethodResponse = <A, I, R>(
   response: Response,
   callId: string,
-  schema: Schema.Schema<A, I, R>,
+  schema: Schema.Codec<A, I, R>,
 ): Effect.Effect<A, JmapApiError, R> => {
   const entry = response.methodResponses.find((methodResponse) => methodResponse[2] === callId);
   if (!entry) {
@@ -106,7 +110,7 @@ export const getMethodResponse = <A, I, R>(
 
   const [name, args] = entry;
   if (name === 'error') {
-    return Schema.decodeUnknown(MethodError)(args).pipe(
+    return Schema.decodeUnknownEffect(MethodError)(args).pipe(
       Effect.matchEffect({
         onFailure: () => Effect.fail(new JmapApiError(undefined, `JMAP method error (${callId}).`)),
         onSuccess: (error) => Effect.fail(new JmapApiError(undefined, error.description ?? error.type, error.type)),
@@ -114,12 +118,12 @@ export const getMethodResponse = <A, I, R>(
     );
   }
 
-  return Schema.decodeUnknown(schema)(args).pipe(Effect.mapError(asJmapApiError));
+  return Schema.decodeUnknownEffect(schema)(args).pipe(Effect.mapError(asJmapApiError));
 };
 
 /** Decodes a 2xx JSON body against `schema`; a >=400 status fails with the (truncated) body text. */
 const decodeJsonOrFail =
-  <A, I, R>(schema: Schema.Schema<A, I, R>) =>
+  <A, I, R>(schema: Schema.Codec<A, I, R>) =>
   (response: HttpClientResponse.HttpClientResponse): Effect.Effect<A, JmapApiError, R> =>
     Effect.gen(function* () {
       if (response.status >= 400) {

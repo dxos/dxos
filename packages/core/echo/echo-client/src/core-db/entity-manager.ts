@@ -4,9 +4,9 @@
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
 import * as Stream from 'effect/Stream';
 
 import {
@@ -82,7 +82,7 @@ export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
   queryService: QueryService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
   spaceKey: PublicKey;
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
@@ -101,7 +101,7 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _hypergraph: HypergraphImpl;
   private _dataService: DataService.Client;
   private _queryService: QueryService.Client;
-  private readonly _runtime: Runtime.Runtime<never>;
+  private readonly _runtime: EffectContext.Context<never>;
   readonly _repoProxy: RepoProxy;
 
   // ── Object storage ──────────────────────────────────────────────────────
@@ -667,7 +667,7 @@ export class EntityManager implements IDatabaseBinding {
       await this._repoProxy.flush();
       await runServiceCall(
         this._runtime,
-        this._dataService.DataService.flush({
+        this._dataService['DataService.flush']({
           documentIds: this._getAllDocHandles()
             .map((handle) => handle.documentId)
             .filter((id): id is DocumentId => id != null),
@@ -677,7 +677,7 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     if (indexes) {
-      await runServiceCall(this._runtime, this._dataService.DataService.updateIndexes());
+      await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']());
     }
 
     if (updates) {
@@ -694,7 +694,7 @@ export class EntityManager implements IDatabaseBinding {
 
     const headsStates = await runServiceCall(
       this._runtime,
-      this._dataService.DataService.getDocumentHeads({
+      this._dataService['DataService.getDocumentHeads']({
         documentIds: Object.values(doc.links ?? {}).map((link) =>
           interpretAsDocumentId(link.toString() as AutomergeUrl),
         ),
@@ -715,7 +715,7 @@ export class EntityManager implements IDatabaseBinding {
   async waitUntilHeadsReplicated(heads: SpaceDocumentHeads): Promise<void> {
     await runServiceCall(
       this._runtime,
-      this._dataService.DataService.waitUntilHeadsReplicated({
+      this._dataService['DataService.waitUntilHeadsReplicated']({
         heads: {
           entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
         },
@@ -762,7 +762,7 @@ export class EntityManager implements IDatabaseBinding {
 
     await runServiceCall(
       this._runtime,
-      this._dataService.DataService.reIndexHeads({
+      this._dataService['DataService.reIndexHeads']({
         documentIds: [
           root.documentId,
           ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
@@ -773,11 +773,11 @@ export class EntityManager implements IDatabaseBinding {
 
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
-    await runServiceCall(this._runtime, this._dataService.DataService.updateIndexes());
+    await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']());
   }
 
   async stats(): Promise<Database.DatabaseStats> {
-    return runServiceCall(this._runtime, this._dataService.DataService.stats({ spaceId: this.spaceId }), {
+    return runServiceCall(this._runtime, this._dataService['DataService.stats']({ spaceId: this.spaceId }), {
       timeout: RPC_TIMEOUT,
     });
   }
@@ -785,7 +785,7 @@ export class EntityManager implements IDatabaseBinding {
   async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
     return runServiceCall(
       this._runtime,
-      this._dataService.DataService.runGarbageCollection({
+      this._dataService['DataService.runGarbageCollection']({
         spaceId: this.spaceId,
         index: options?.index,
         feeds: options?.feeds,
@@ -797,7 +797,7 @@ export class EntityManager implements IDatabaseBinding {
   async getSyncState(): Promise<SpaceSyncState> {
     const value = await runServiceCall(
       this._runtime,
-      this._dataService.DataService.subscribeSpaceSyncState({ spaceId: this.spaceId }).pipe(
+      this._dataService['DataService.subscribeSpaceSyncState']({ spaceId: this.spaceId }).pipe(
         Stream.runHead,
         Effect.map(Option.getOrElse(() => raise(new Error('Failed to get sync state')))),
       ),
@@ -812,7 +812,7 @@ export class EntityManager implements IDatabaseBinding {
     const setupStream = () => {
       cleanup = subscribeStream(
         this._runtime,
-        this._dataService.DataService.subscribeSpaceSyncState({ spaceId: this.spaceId }),
+        this._dataService['DataService.subscribeSpaceSyncState']({ spaceId: this.spaceId }),
         {
           onData: (data) => {
             void runInContextAsync(ctx, () => callback(data));

@@ -55,7 +55,7 @@ describe('SyncClient', () => {
     );
 
     expect(Exit.isFailure(exit)).toBe(true);
-    const error = Exit.isFailure(exit) ? Cause.failureOption(exit.cause) : Option.none();
+    const error = Exit.isFailure(exit) ? Cause.findErrorOption(exit.cause) : Option.none();
     expect(Option.isSome(error) && error.value instanceof SyncRpcTimeoutError).toBe(true);
 
     await runtime.dispose();

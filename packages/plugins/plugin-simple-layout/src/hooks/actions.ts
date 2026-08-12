@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Node from '@dxos/app-graph/Node';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';

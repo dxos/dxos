@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
@@ -43,7 +43,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
         Effect.provide(BlueskyApi.Credentials.fromConnection(connectionRef, client)),
         Effect.provide(FetchHttpClient.layer),
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.sync(() => {
             log.warn('failed to load Bluesky saved feeds', { error });
             return [] as ReadonlyArray<BlueskyApi.SavedFeed>;

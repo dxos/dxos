@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
-import type * as HttpClientError from '@effect/platform/HttpClientError';
-import type * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
+import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import type * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { log } from '@dxos/log';
 import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
@@ -23,7 +23,7 @@ export type RetryOptions = {
 };
 
 // Layer pattern.
-export class HttpConfig extends Context.Tag('HttpConfig')<HttpConfig, RetryOptions>() {
+export class HttpConfig extends Context.Service<HttpConfig, RetryOptions>()('HttpConfig') {
   static default = Layer.succeed(HttpConfig, {
     timeout: Duration.millis(1_000),
     retryTimes: 3,
@@ -63,9 +63,12 @@ export const withRetryConfig = (
 
 export const withLogging = <A extends HttpClientResponse.HttpClientResponse, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(
-    Effect.tap((res) => {
-      log.info('response', { status: res.status });
-    }),
+    // v4's `tap` requires an Effect; a bare side effect has to be lifted.
+    Effect.tap((res) =>
+      Effect.sync(() => {
+        log.info('response', { status: res.status });
+      }),
+    ),
   );
 
 /**

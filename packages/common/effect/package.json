@@ -33,14 +33,12 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect/opentelemetry": "catalog:",
     "@opentelemetry/api": "catalog:",
     "jsonpath-plus": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "@effect/platform": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@opentelemetry/api-logs": "catalog:",
     "@opentelemetry/resources": "catalog:",
@@ -51,7 +49,6 @@
     "effect": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform": "catalog:",
     "@effect/platform-browser": "catalog:",
     "effect": "catalog:"
   },

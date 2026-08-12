@@ -7,6 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
+import { EffectEx } from '@dxos/effect';
 import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
@@ -32,7 +33,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   ) {}
 
   ['NetworkService.queryStatus'](): EffectStream.Stream<NetworkStatus, Error> {
-    return EffectStream.async<NetworkStatus, Error>((emit) => {
+    return EffectEx.streamFromEmitter<NetworkStatus, Error>((emit) => {
       const ctx = Context.default();
       const update = () => {
         void emit.single({
@@ -89,7 +90,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   ['NetworkService.subscribeSwarmState'](
     request: SubscribeSwarmStateRequest,
   ): EffectStream.Stream<SwarmResponse, Error> {
-    return EffectStream.async<SwarmResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<SwarmResponse, Error>((emit) => {
       const ctx = Context.default();
       this.signalManager.swarmState?.on(ctx, (state) => {
         if (request.topic.equals(state.swarmKey)) {
@@ -112,7 +113,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
 
   ['NetworkService.subscribeMessages'](request: SubscribeMessagesRequest): EffectStream.Stream<Message, Error> {
     const { peer, tags = [] } = request;
-    return EffectStream.async<Message, Error>((emit) => {
+    return EffectEx.streamFromEmitter<Message, Error>((emit) => {
       const ctx = Context.default();
 
       // This stream crosses the client-services RPC (protobufjs codec, e.g. dedicated worker → main

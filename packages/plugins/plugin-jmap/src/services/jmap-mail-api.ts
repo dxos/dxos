@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { Jmap, JmapMail } from '#apis';
 
@@ -172,7 +172,7 @@ const sortEmails = (
   );
 };
 
-export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<JmapMailApi, JmapMailApiService>() {
+export class JmapMailApi extends Context.Service<JmapMailApi, JmapMailApiService>()('@dxos/plugin-inbox/JmapMailApi') {
   /**
    * Live layer backed by the real JMAP HTTP client. Captures the auth/HTTP context once and provides
    * it to each request, so the resulting service methods carry no requirements. Requires an
@@ -226,7 +226,7 @@ export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<J
           }),
         emailGet: (_target, ids) =>
           Effect.sync(() => ({
-            list: ids.map((id) => byId.get(id)).filter(Predicate.isNotNullable),
+            list: ids.map((id) => byId.get(id)).filter(Predicate.isNotNullish),
             state: dataset.state,
           })),
         // Chains the change-log steps from `sinceState`, honoring `maxChanges`: it stops before a step

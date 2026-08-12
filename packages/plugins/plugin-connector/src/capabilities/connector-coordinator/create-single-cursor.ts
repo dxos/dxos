@@ -65,6 +65,6 @@ export const createSingleCursor = (
     yield* Database.flush({ indexes: true });
   }).pipe(
     Effect.provide(Database.layer(db)),
-    Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
-    Effect.catchAllDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
+    Effect.catch((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
+    Effect.catchDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
   );

@@ -2,14 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
@@ -33,15 +32,15 @@ import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../process/curso
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 /** Categories the model may assign — the canonical mail-category system tags. */
-const Category = Schema.Literal('personal', 'social', 'promotions', 'updates', 'forums');
+const Category = Schema.Literals(['personal', 'social', 'promotions', 'updates', 'forums']);
 
 const ClassificationResult = Schema.Struct({
-  index: Schema.Number.annotations({ description: 'The message number from the input list.' }),
-  spam: Schema.Boolean.annotations({
+  index: Schema.Number.annotate({ description: 'The message number from the input list.' }),
+  spam: Schema.Boolean.annotate({
     description: 'True only for unsolicited, deceptive, or phishing mail — not routine subscribed bulk mail.',
   }),
   // Nullable: models consistently emit `category: null` for spam entries.
-  category: Schema.NullOr(Category).pipe(Schema.optional).annotations({
+  category: Schema.NullOr(Category).pipe(Schema.optional).annotate({
     description: 'Best-fit category for the message; may be null when spam.',
   }),
 });
@@ -115,7 +114,7 @@ const generateClassification = (prompt: string, useStrict: boolean) =>
     if (useStrict) {
       const strict = yield* LanguageModel.generateObject({ schema: ClassificationPayload, prompt }).pipe(
         Effect.map((response) => Option.some(response.value)),
-        Effect.catchAll(() => Effect.succeed(Option.none<ClassificationPayload>())),
+        Effect.catch(() => Effect.succeed(Option.none<ClassificationPayload>())),
       );
       if (Option.isSome(strict)) {
         return strict.value;
@@ -296,9 +295,10 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
 
       const pipeline = Stream.fromIterable(batch).pipe(
         Stream.grouped(page),
-        Stage.map('classify', (messagesPage: Chunk.Chunk<Message.Message>) =>
+        // v4's `Stream.grouped` emits a non-empty array, not a `Chunk`.
+        Stage.map('classify', (messagesPage: readonly Message.Message[]) =>
           Effect.gen(function* () {
-            const list = Chunk.toReadonlyArray(messagesPage);
+            const list = messagesPage;
             yield* classifyPage(list);
             return list;
           }),
@@ -327,7 +327,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
       yield* pipeline.pipe(
         Effect.onError((cause) =>
           Effect.sync(() => {
-            if (!Cause.isInterruptedOnly(cause)) {
+            if (!Cause.hasInterruptsOnly(cause)) {
               Cursor.recordError(cursor, Cause.pretty(cause).slice(0, 500));
               reportStatus({ message: PROGRESS_STATUS_FAILED });
             }

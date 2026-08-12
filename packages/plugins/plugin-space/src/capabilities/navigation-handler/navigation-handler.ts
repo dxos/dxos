@@ -62,7 +62,7 @@ export default Capability.makeModule(
         removeQueryParam(invitationProp);
         yield* Operation.invoke(SpaceOperation.Join, { invitationCode });
       }).pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.gen(function* () {
             log.warn('navigation handler failed', { error });
             yield* Operation.invoke(LayoutOperation.AddToast, {
@@ -70,9 +70,7 @@ export default Capability.makeModule(
               title: ['navigation-failed-toast.title', { ns: meta.profile.key }],
               description: ['navigation-failed-toast.description', { ns: meta.profile.key }],
               icon: 'ph--warning--regular',
-            }).pipe(
-              Effect.catchAll((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))),
-            );
+            }).pipe(Effect.catch((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))));
           }),
         ),
         Effect.provideService(Capability.Service, capabilities),

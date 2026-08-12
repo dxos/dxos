@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, copyToClipboard, openBrowser, print } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
@@ -47,7 +47,7 @@ export const handler = Effect.fn(function* ({
           const authCode = invitation.authCode!;
 
           // Copy auth code to clipboard
-          yield* copyToClipboard(authCode).pipe(Effect.catchAll(() => Effect.void));
+          yield* copyToClipboard(authCode).pipe(Effect.catch(() => Effect.void));
 
           const url = new URL(host);
           url.searchParams.set('deviceInvitationCode', invitationCode);
@@ -61,7 +61,7 @@ export const handler = Effect.fn(function* ({
 
           if (open) {
             yield* openBrowser(url.toString()).pipe(
-              Effect.catchAll(() => Console.error(`Failed to open browser: ${url.toString()}`)),
+              Effect.catch(() => Console.error(`Failed to open browser: ${url.toString()}`)),
             );
           }
         }),
@@ -98,8 +98,8 @@ export const share = Command.make(
       Options.withDescription('Lifetime of the invitation in seconds.'),
       Options.withDefault(12 * 60 * 60), // 12 hours - HALO invitations are typically shorter-lived
     ),
-    open: Options.boolean('open', { ifPresent: true }).pipe(Options.withDescription('Open browser with invitation.')),
-    host: Options.text('host').pipe(
+    open: Options.boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
+    host: Options.string('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),
     ),

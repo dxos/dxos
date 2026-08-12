@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
+import * as Path from 'effect/Path';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, FormBuilder, formatBytes, print, withTimeout } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -55,10 +55,10 @@ export const handler = Effect.fn(function* ({ file, tags }: ImportArgs) {
 export const importSpace = Command.make(
   'import',
   {
-    file: Args.file({ name: 'file' }).pipe(Args.withDescription('Archive to import, in either binary or json format.')),
-    tags: Options.text('tag').pipe(
+    file: Args.file('file').pipe(Args.withDescription('Archive to import, in either binary or json format.')),
+    tags: Options.string('tag').pipe(
       Options.withDescription('Immutable tag to set on the new space. Repeat to set several.'),
-      Options.repeated,
+      Options.atLeast(0),
     ),
   },
   (args) => handler(args).pipe(withTimeout),

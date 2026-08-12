@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom';
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
@@ -26,20 +26,20 @@ import { isTruthy } from '@dxos/util';
 import { type AiChatServices, skillRegistry } from '../../util';
 
 export type ChatProcessorOptions = {
-  runtime: Runtime.Runtime<AiChatServices>;
+  runtime: Context.Context<AiChatServices>;
   toolkit: OpaqueToolkit.OpaqueToolkit;
   functions: OperationHandlerSet.OperationHandlerSet;
   metadata?: AiService.ServiceMetadata;
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
 };
 
 // TODO(burdon): Factor out common guts from AiChatProcessor.
 export class ChatProcessor {
-  private readonly _runtime: Runtime.Runtime<AiChatServices>;
+  private readonly _runtime: Context.Context<AiChatServices>;
   private readonly _toolkit: OpaqueToolkit.OpaqueToolkit;
   private readonly _functions: OperationHandlerSet.OperationHandlerSet;
   private readonly _metadata?: AiService.ServiceMetadata;
-  private readonly _registry?: Registry.Registry;
+  private readonly _registry?: Registry.AtomRegistry;
 
   constructor(options: ChatProcessorOptions) {
     this._runtime = options.runtime;
@@ -73,11 +73,11 @@ export class ChatProcessor {
         ),
       ),
       Effect.asVoid,
-      Runtime.runFork(this.runtime),
+      Effect.runForkWith(this.runtime),
     );
 
     const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
-    if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
+    if (!Exit.isSuccess(response) && !Cause.hasInterruptsOnly(response.cause)) {
       const cause = Cause.pretty(response.cause);
       log.error('request failed', { cause });
       throw new Error(cause);
@@ -116,7 +116,7 @@ export class ChatProcessor {
     space.db.add(chat);
 
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+      Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const session = new AiSession.Session({ feed, runtime, registry: this._registry });
     await session.open();

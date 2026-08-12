@@ -120,7 +120,6 @@
     "@dxos/edge-compute": "workspace:*",
     "@dxos/random": "workspace:*",
     "@effect/opentelemetry": "catalog:",
-    "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/resources": "catalog:",
@@ -131,7 +130,6 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

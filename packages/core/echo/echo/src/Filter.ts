@@ -7,10 +7,10 @@
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
@@ -122,7 +122,7 @@ export const type: {
     schema: S,
     props?: Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
-  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
+  <S extends Schema.Union<readonly Schema.Codec<any, any>[]>>(
     union: S,
     props?: Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
@@ -131,7 +131,7 @@ export const type: {
   // (e.g. Query.type / Query.sourceOf / Query.targetOf impls). Listed last so the
   // typed overloads above still win for monomorphic inputs.
   (input: Type$.AnyEntity | URI.URI, props?: Props<unknown>): Filter<unknown>;
-} = (input: Type$.AnyEntity | Schema.Schema.AnyNoContext | URI.URI, props?: Props<unknown>): any => {
+} = (input: Type$.AnyEntity | Schema.Codec<any, any> | URI.URI, props?: Props<unknown>): any => {
   if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
     const typenames = input.ast.types.map((t) => internal.getTypeURIFromSpecifier(Schema.make(t)));
     return new FilterClass({
@@ -458,7 +458,7 @@ const propsFilterToAst = (predicates: Props<any>): Pick<QueryAST.FilterObject, '
       'invalid id filter',
     );
     idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
-    Schema.Array(EntityId).pipe(Schema.validateSync)(idFilter);
+    Schema.decodeSync(Schema.toType(Schema.Array(EntityId)))(idFilter);
   }
 
   return {

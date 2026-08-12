@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
+import * as Path from 'effect/Path';
 import * as Schema from 'effect/Schema';
 import * as Yaml from 'yaml';
 
@@ -27,11 +27,11 @@ export const loadEnabledPlugins = Effect.fn(function* ({ profile }: { profile: s
 
   const content = yield* fs
     .readFileString(pluginsPath)
-    .pipe(Effect.catchTag('SystemError', () => Effect.succeed('[]')));
+    .pipe(Effect.catchTag('PlatformError', () => Effect.succeed('[]')));
 
   const raw = Yaml.parse(content);
-  const parsed = yield* Schema.decodeUnknown(PluginsSchema)(raw ?? []).pipe(
-    Effect.catchAll(() => Effect.succeed([] as string[])),
+  const parsed = yield* Schema.decodeUnknownEffect(PluginsSchema)(raw ?? []).pipe(
+    Effect.catch(() => Effect.succeed([] as string[])),
   );
 
   return parsed;

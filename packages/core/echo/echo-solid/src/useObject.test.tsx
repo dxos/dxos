@@ -15,7 +15,7 @@ import { RegistryProvider } from '@dxos/effect-atom-solid';
 
 import { type ObjectUpdateCallback, useObject } from './useObject';
 
-const createWrapper = (registry: Registry.Registry) => {
+const createWrapper = (registry: Registry.AtomRegistry) => {
   return (props: { children: JSX.Element }) => (
     <RegistryProvider registry={registry}>{props.children}</RegistryProvider>
   );

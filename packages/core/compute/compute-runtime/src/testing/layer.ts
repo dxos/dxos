@@ -44,7 +44,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
   never,
   never
 > =>
-  Layer.scopedContext(
+  Layer.effectContext(
     Effect.gen(function* () {
       types ??= [];
       types.push(...DEFAULT_TYPES);

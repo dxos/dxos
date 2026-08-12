@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useMemo } from 'react';
 
 import { getQueryTarget } from '@dxos/app-toolkit/query';
@@ -14,7 +15,7 @@ import { Pipeline } from '@dxos/types';
 
 export const usePipelineBoardModel = (
   pipeline: Pipeline.Pipeline | undefined,
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ): BoardModel<Pipeline.Column, Obj.Unknown> =>
   useMemo<BoardModel<Pipeline.Column, Obj.Unknown>>(() => {
     if (pipeline == null) {

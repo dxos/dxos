@@ -62,7 +62,7 @@ export const useAsyncFieldEffect = <A>(
             onSuccess: (data) => setState({ loading: false, error: undefined, data }),
             onFailure: (cause) => {
               // A superseding run interrupts this one; ignore the resulting interruption.
-              if (!Cause.isInterruptedOnly(cause)) {
+              if (!Cause.hasInterruptsOnly(cause)) {
                 setState((prev) => ({ loading: false, error: Cause.squash(cause), data: prev.data }));
               }
             },

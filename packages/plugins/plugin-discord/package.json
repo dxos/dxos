@@ -122,7 +122,6 @@
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "dfx": "catalog:",
     "effect": "catalog:"
   },

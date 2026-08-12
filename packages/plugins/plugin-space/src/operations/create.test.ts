@@ -34,7 +34,7 @@ describe('SpaceOperation.Create', () => {
 
     const outcome = await harness.runPromise(
       Operation.invoke(SpaceOperation.Create, { name: 'Test', edgeReplication: true }).pipe(
-        Effect.catchAllCause((cause) => Effect.succeed(Cause.squash(cause))),
+        Effect.catchCause((cause) => Effect.succeed(Cause.squash(cause))),
       ),
     );
 

@@ -66,7 +66,7 @@ const resolveDefaultSpace = Effect.fnUntraced(function* (client: Client, setting
  * changed, so the replay is skipped.
  */
 const awaitChange = (client: Client, settingsSpace: Space): Effect.Effect<void> =>
-  Effect.async<void>((resume) => {
+  Effect.callback<void>((resume) => {
     let replayed = false;
     const spacesSub = client.spaces.subscribe(() => {
       if (replayed) {
@@ -101,7 +101,7 @@ export default Capability.makeModule(
     //
 
     // Interrupted in cleanup so it cannot touch the db after client.destroy() closes the repo.
-    let initFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
+    let initFiber: Fiber.Fiber<void, unknown> | undefined;
 
     const initSettingsSpace = Effect.gen(function* () {
       const settingsSpace = yield* resolveSettingsSpace(client);
@@ -357,7 +357,7 @@ export default Capability.makeModule(
           });
         }),
       ),
-      Effect.catchAll((err) => Effect.sync(() => log.catch(err))),
+      Effect.catch((err) => Effect.sync(() => log.catch(err))),
     );
     registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
 

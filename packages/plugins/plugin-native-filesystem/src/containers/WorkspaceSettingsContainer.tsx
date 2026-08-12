@@ -24,8 +24,8 @@ import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '#types'
 import { writeComposerConfig } from '../util';
 
 const WorkspaceSettingsSchema = Schema.Struct({
-  icon: Schema.optional(Schema.String).annotations({ title: 'Icon' }),
-  hue: Schema.optional(Schema.String).annotations({ title: 'Color' }),
+  icon: Schema.optional(Schema.String).annotate({ title: 'Icon' }),
+  hue: Schema.optional(Schema.String).annotate({ title: 'Color' }),
 });
 
 /** Renders nothing until a filesystem workspace is active; the workspace comes from context. */

@@ -7,17 +7,15 @@
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
 import { type Database, Entity, Filter, Format, Obj, Query, Ref, type Registry, Scope, Type, View } from '@dxos/echo';
-import { LabelAnnotation, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { TypeEnum } from '@dxos/echo/Format';
 import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
 import { type Mutable } from '@dxos/echo/Obj';
-import { EffectEx, SchemaEx } from '@dxos/effect';
+import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 
 import { ProjectionModel, createEchoChangeCallback } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
@@ -151,23 +149,25 @@ export const makeWithReferences = async ({
     projection.showFieldProjection(name);
 
     await Effect.gen(function* () {
-      const referenceDXN = yield* Function.pipe(
-        SchemaEx.findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
-        Option.fromNullable,
-        Option.map((ref) => DXN.make(ref.typename, ref.version)),
-      );
+      // v4's `Effect.gen` no longer yields an `Option` directly; absence becomes a
+      // `NoSuchElementError` failure, which the recovery below already handles.
+      // The target is read through `Ref.getReferenceTarget` rather than the typed annotation: this
+      // schema was rebuilt from JSON, which carries the reference only as encoded `$ref` keys.
+      const referenceDXN = yield* Effect.fromNullishOr(Ref.getReferenceTarget(property.type));
 
       const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDXN, registry));
 
-      const referencePath = yield* Function.pipe(
-        Option.fromNullable(referenceSchema),
-        Option.map((schema) => Type.getSchema(schema)),
-        Option.flatMap((schema) => LabelAnnotation.get(schema)),
-        Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
+      const referencePath = yield* Effect.fromOption(
+        Function.pipe(
+          Option.fromNullishOr(referenceSchema),
+          Option.map((schema) => Type.getSchema(schema)),
+          Option.flatMap((schema) => LabelAnnotation.get(schema)),
+          Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
+        ),
       );
 
       if (referenceSchema && referencePath) {
-        const fieldId = yield* Option.fromNullable(view.projection.fields?.find((f) => f.path === property.name)?.id);
+        const fieldId = yield* Effect.fromNullishOr(view.projection.fields?.find((f) => f.path === property.name)?.id);
         const title =
           SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.type) ?? String.capitalize(name);
         projection.setFieldProjection({
@@ -187,8 +187,8 @@ export const makeWithReferences = async ({
       }
     }).pipe(
       Effect.catchIf(
-        (error) => error._tag === 'NoSuchElementException',
-        () => Effect.succeed('Recovering from NoSuchElementException'),
+        (error) => error._tag === 'NoSuchElementError',
+        () => Effect.succeed('Recovering from NoSuchElementError'),
       ),
       EffectEx.runAndForwardErrors,
     );

@@ -47,8 +47,8 @@ export const FeedbackPanel = () => {
   useAsyncEffect(
     async (controller) => {
       const available = await observability.isAvailable('feedback').pipe(
-        Effect.catchAll(() => Effect.succeed(false)),
-        Effect.catchAllDefect(() => Effect.succeed(false)),
+        Effect.catch(() => Effect.succeed(false)),
+        Effect.catchDefect(() => Effect.succeed(false)),
         EffectEx.runAndForwardErrors,
       );
       if (!controller.signal.aborted) {

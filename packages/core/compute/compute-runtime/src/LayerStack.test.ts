@@ -20,10 +20,10 @@ import * as LayerStack from './LayerStack';
 // Test service tags.
 //
 
-class ServiceA extends Context.Tag('test/ServiceA')<ServiceA, { readonly value: string }>() {}
-class ServiceB extends Context.Tag('test/ServiceB')<ServiceB, { readonly value: string }>() {}
-class ServiceC extends Context.Tag('test/ServiceC')<ServiceC, { readonly value: string }>() {}
-class ServiceD extends Context.Tag('test/ServiceD')<ServiceD, { readonly value: string }>() {}
+class ServiceA extends Context.Service<ServiceA, { readonly value: string }>()('test/ServiceA') {}
+class ServiceB extends Context.Service<ServiceB, { readonly value: string }>()('test/ServiceB') {}
+class ServiceC extends Context.Service<ServiceC, { readonly value: string }>()('test/ServiceC') {}
+class ServiceD extends Context.Service<ServiceD, { readonly value: string }>()('test/ServiceD') {}
 
 /**
  * Helpers.

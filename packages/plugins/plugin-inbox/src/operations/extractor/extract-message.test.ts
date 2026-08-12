@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
@@ -96,10 +96,10 @@ describe('ExtractMessage operation handler', () => {
     const capabilityService = makeCapabilityService([noMatchExtractor]);
 
     const result = await runExtractMessage({ source: message }, { db, capabilityService })
-      .pipe(Effect.either)
+      .pipe(Effect.result)
       .pipe(Effect.runPromise);
 
-    expect(result._tag).toBe('Left');
+    expect(result._tag).toBe('Failure');
   });
 
   test('selects highest-confidence extractor', async ({ expect }) => {

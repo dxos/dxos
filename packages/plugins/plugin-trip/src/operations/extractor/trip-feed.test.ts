@@ -129,7 +129,7 @@ describe('trip extraction over a message feed', () => {
     await db.appendToFeed(feed, messages);
 
     // Iterate the feed, invoking the extract dispatcher per message. Non-matching messages fail
-    // with NoMatchingExtractorError, which we tolerate via Effect.either.
+    // with NoMatchingExtractorError, which we tolerate via Effect.result.
     for (let index = 0; index < messages.length; index++) {
       const message = messages[index];
       const payload = payloads[index];
@@ -143,7 +143,7 @@ describe('trip extraction over a message feed', () => {
             ),
           ),
         )
-        .pipe(Effect.either)
+        .pipe(Effect.result)
         .pipe(EffectEx.runAndForwardErrors);
       await db.flush();
     }

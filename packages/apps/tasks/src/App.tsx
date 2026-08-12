@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
-import * as Registry from '@effect-atom/atom/Registry';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useEffect, useMemo } from 'react';
 import {
   Navigate,
@@ -122,7 +122,7 @@ const createServices = (config?: Config) =>
 
 export const App = () => {
   // Create a registry instance for atom reactivity
-  const registry = useMemo(() => Registry.make(), []);
+  const registry = useMemo(() => AtomRegistry.make(), []);
 
   return (
     <ClientProvider

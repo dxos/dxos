@@ -4,17 +4,17 @@
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
-import * as Rpc from '@effect/rpc/Rpc';
-import * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
-import * as RpcServer from '@effect/rpc/RpcServer';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
@@ -102,7 +102,7 @@ const setupRpc = async (
 
   const scope = Effect.runSync(Scope.make());
   onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  return EffectEx.runPromise(makeClientServicesRpc(proxyPort).pipe(Scope.extend(scope)));
+  return EffectEx.runPromise(makeClientServicesRpc(proxyPort).pipe(Scope.provide(scope)));
 };
 
 const setup = async (
@@ -110,7 +110,7 @@ const setup = async (
   options?: { onRequest?: () => Promise<void> },
 ) => {
   const rpc = await setupRpc(services, options);
-  return makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+  return makeServicesFromRpc(rpc, Context.empty());
 };
 
 //
@@ -257,10 +257,10 @@ describe('client services effect-rpc', () => {
       }),
     }));
 
-    const config = await EffectEx.runPromise(rpc.SystemService.getConfig(undefined));
+    const config = await EffectEx.runPromise(rpc['SystemService.getConfig'](undefined));
     expect(config.runtime?.client?.remoteSource).toEqual('https://example.com');
 
-    const statuses = await EffectEx.runPromise(rpc.SystemService.queryStatus({}).pipe(Stream.runCollect));
+    const statuses = await EffectEx.runPromise(rpc['SystemService.queryStatus']({}).pipe(Stream.runCollect));
     expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
   });
 });
@@ -279,7 +279,7 @@ describe('effect-rpc tests', () => {
       yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer), Effect.forkScoped);
 
       const clientLayer = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => port1)),
+        Layer.provide(BrowserWorker.layer(() => port1)),
       );
 
       yield* Effect.gen(function* () {
@@ -319,7 +319,7 @@ describe('effect-rpc tests', () => {
       yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer2), Effect.forkScoped);
 
       const clientLayer1 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => channel1.port1)),
+        Layer.provide(BrowserWorker.layer(() => channel1.port1)),
       );
 
       yield* Effect.gen(function* () {
@@ -329,7 +329,7 @@ describe('effect-rpc tests', () => {
       }).pipe(Effect.provide(clientLayer1));
 
       const clientLayer2 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => channel2.port1)),
+        Layer.provide(BrowserWorker.layer(() => channel2.port1)),
       );
 
       yield* Effect.gen(function* () {

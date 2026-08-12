@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { type AiToolNotFoundError, OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import type * as Skill from '@dxos/compute/Skill';
@@ -33,7 +33,7 @@ export const createToolkit = ({
 > =>
   Effect.gen(function* () {
     const skillToolkit = yield* ToolResolverService.resolveToolkit(skills.flatMap(({ tools }) => tools));
-    const skillToolHandler = yield* skillToolkit.toContext(ToolExecutionService.handlersFor(skillToolkit));
+    const skillToolHandler = yield* skillToolkit.toHandlers(ToolExecutionService.handlersFor(skillToolkit));
     const opaqueToolkit = OpaqueToolkit.merge(...opaqueToolkits);
 
     const toolkitDefs = [toolkitProp?.toolkit, skillToolkit, opaqueToolkit.toolkit].filter(isTruthy);

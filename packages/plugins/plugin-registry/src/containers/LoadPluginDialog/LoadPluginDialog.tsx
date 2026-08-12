@@ -36,7 +36,7 @@ export const LoadPluginDialog = () => {
       yield* manager.enable(plugin.meta.profile.key);
       closeRef.current?.click();
     }).pipe(
-      Effect.catchAll((err) =>
+      Effect.catch((err) =>
         Effect.sync(() => {
           setError(String(err));
         }),

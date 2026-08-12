@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 import { getCodec } from './codecs';
 import { type Codec, type Converted, type Derived, type Mapping, type Plan, type ResolvedEntry } from './types';
@@ -15,7 +13,7 @@ import { type Codec, type Converted, type Derived, type Mapping, type Plan, type
 /** `id` is identity, never lensed, so it never participates in a mapping. */
 const RESERVED = new Set(['id']);
 
-const properties = (entity: Type.AnyObj | Schema.Schema.Any): SchemaEx.SchemaProperty[] => {
+const properties = (entity: Type.AnyObj | Schema.Top): SchemaEx.SchemaProperty[] => {
   const schema = Type.isType(entity) ? Type.getSchema(entity) : entity;
   return SchemaEx.getProperties(schema.ast).filter((property) => !RESERVED.has(String(property.name)));
 };
@@ -67,8 +65,8 @@ export const compatible = (source: SchemaEx.SchemaProperty, target: SchemaEx.Sch
 
   // Structs match only when they declare the same property names; nothing here recurses, so a
   // same-shaped struct with differently-typed leaves is a known false positive of the PoC.
-  if (SchemaAST.isTypeLiteral(source.type) && SchemaAST.isTypeLiteral(target.type)) {
-    const names = (ast: SchemaAST.TypeLiteral) =>
+  if (SchemaAST.isObjects(source.type) && SchemaAST.isObjects(target.type)) {
+    const names = (ast: SchemaAST.Objects) =>
       ast.propertySignatures
         .map((property) => String(property.name))
         .sort()
@@ -78,9 +76,9 @@ export const compatible = (source: SchemaEx.SchemaProperty, target: SchemaEx.Sch
 
   // Declarations (Ref, and the branded formats) carry their identity in the AST identifier.
   if (SchemaAST.isDeclaration(source.type)) {
-    // `getIdentifierAnnotation` returns an Option, and comparing the Options' string forms makes two
-    // MISSING identifiers compare equal — which would map unrelated declarations to each other.
-    const identifier = (ast: SchemaAST.AST) => Option.getOrUndefined(SchemaAST.getIdentifierAnnotation(ast));
+    // Two absent identifiers must not compare equal, or unrelated declarations would map to each
+    // other; the explicit `undefined` check below is what prevents that.
+    const identifier = (ast: SchemaAST.AST) => SchemaAST.getIdentifierAnnotation(ast);
     const sourceIdentifier = identifier(source.type);
     return sourceIdentifier !== undefined && sourceIdentifier === identifier(target.type);
   }
@@ -167,7 +165,7 @@ type MappingEntryLike = string | Converted | Derived | { kind: 'readOnly'; prope
  * else overlay. A name match with an incompatible type resolves to neither — it is reported as
  * suspicious and left unmapped, because overlaying it would duplicate a fact the source already holds.
  */
-export const plan = (source: Type.AnyObj, target: Type.AnyObj | Schema.Schema.Any, mapping: Mapping): Plan => {
+export const plan = (source: Type.AnyObj, target: Type.AnyObj | Schema.Top, mapping: Mapping): Plan => {
   const sourceProperties = new Map(properties(source).map((property) => [property.name as string, property]));
   const targetProperties = properties(target);
 

@@ -34,7 +34,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       // Dynamic import to avoid circular dependency with the barrel that also exports SkillManagerHandlers.
       const { SkillManagerSkill } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
 
-      const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+      const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
       const binder = new AiContext.Binder({ feed, runtime, registry });
 
       // Bind default skills via registry refs — no DB clone needed since the ECHO ref

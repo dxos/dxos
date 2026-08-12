@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // to the NavigationTargetLoader capability (contributed by plugin-client) so this layout plugin
       // has no direct client dependency; loading the object also materializes its graph node.
       const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader).pipe(
-        Effect.catchAll(() => Effect.succeed([])),
+        Effect.catch(() => Effect.succeed([])),
       );
       const checkExistence: NotFound.ExistenceChecker | undefined =
         loaders.length > 0

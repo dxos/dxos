@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { type FC } from 'react';
 
 import { type ShapeDef, getAnchorPoints } from '@dxos/react-ui-canvas-editor';
@@ -17,9 +18,8 @@ import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from
 
 type GateType = 'and' | 'or' | 'not';
 
-const GateShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+const GateShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.String,
   }),
 );

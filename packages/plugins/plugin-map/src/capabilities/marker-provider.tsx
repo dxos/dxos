@@ -56,7 +56,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
 
           return { id: row.id, location: { lat, lng } };
         })
-        .filter(Predicate.isNotNullable),
+        .filter(Predicate.isNotNullish),
     [objects, view?.projection.pivotFieldId, view?.projection.fields],
   );
 

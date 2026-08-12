@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -20,14 +20,14 @@ class McpConnectError extends BaseError.extend('McpConnectError', 'MCP connect f
 export const connect = Command.make(
   'connect',
   {
-    url: Args.text({ name: 'url' }).pipe(
+    url: Args.string('url').pipe(
       Args.withDescription('MCP server URL (e.g. https://mcp-space-service.dxos.workers.dev).'),
     ),
-    spaceId: Options.text('space-id').pipe(
+    spaceId: Options.string('space-id').pipe(
       Options.withDescription('Space(s) to bring into the session context; repeatable. Defaults to the first space.'),
-      Options.repeated,
+      Options.atLeast(0),
     ),
-    haloSpaceId: Options.text('halo-space-id').pipe(
+    haloSpaceId: Options.string('halo-space-id').pipe(
       Options.withDescription('HALO space id. Only needed when the identity has no registered agent.'),
       Options.optional,
     ),

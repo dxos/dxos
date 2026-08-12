@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useState } from 'react';
 
 import { JsonSchema, Type } from '@dxos/echo';
@@ -24,7 +24,7 @@ import { Kanban } from '#types';
 export const useProjectionModel = <S extends Type.AnyEntity>(
   schema: S | undefined,
   kanban: Kanban.Kanban | undefined,
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ) => {
   const [projection, setProjection] = useState<ProjectionModel | undefined>();
 

@@ -43,8 +43,7 @@
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",

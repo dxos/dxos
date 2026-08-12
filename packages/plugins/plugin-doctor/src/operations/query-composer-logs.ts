@@ -59,7 +59,7 @@ export default DoctorOperation.QueryComposerLogs.pipe(
           }),
         catch: (err) => err,
       }).pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           Effect.sync(() => {
             log.warn('plugin-doctor: log-reader threw', { err });
             return { total: 0, opened: false } as const;

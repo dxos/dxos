@@ -46,7 +46,7 @@ describe('mapMessage', () => {
 
       // When no contact is resolved, the contact key should be absent from the serialized sender.
       // Having an explicit `contact: undefined` causes protobuf (google.protobuf.Struct)
-      // to encode it as `null`, which then fails Schema.decodeUnknown on queue load.
+      // to encode it as `null`, which then fails Schema.decodeUnknownEffect on queue load.
       expect('contact' in json.sender).toBe(false);
     }, Effect.provide(InboxResolver.Mock())),
   );
@@ -68,9 +68,9 @@ describe('mapMessage', () => {
       const { '@type': _, '@meta': __, ...rawData } = json;
 
       // This reproduces the ParseError that QueueImpl hits during refresh:
-      //   Schema.decodeUnknown rejects null for optional Ref<Person> (expects undefined).
-      const decoded = Schema.decodeUnknownEither(Type.getSchema(Message.Message))(rawData);
-      expect(decoded._tag).toBe('Left');
+      //   Schema.decodeUnknownEffect rejects null for optional Ref<Person> (expects undefined).
+      const decoded = Schema.decodeUnknownResult(Type.getSchema(Message.Message))(rawData);
+      expect(decoded._tag).toBe('Failure');
     }, Effect.provide(InboxResolver.Mock())),
   );
 
@@ -385,8 +385,8 @@ describe('GoogleMail.Message schema', () => {
         body: { size: 11, data: Buffer.from('Hello World').toString('base64') },
       },
     };
-    const decoded = Schema.decodeUnknownEither(GoogleMail.Message)(raw);
-    expect(decoded._tag).toBe('Right');
-    expect(decoded._tag === 'Right' && decoded.right.labelIds).toBeUndefined();
+    const decoded = Schema.decodeUnknownResult(GoogleMail.Message)(raw);
+    expect(decoded._tag).toBe('Success');
+    expect(decoded._tag === 'Success' && decoded.success.labelIds).toBeUndefined();
   });
 });

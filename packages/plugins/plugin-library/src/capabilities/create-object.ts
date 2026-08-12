@@ -27,7 +27,7 @@ type CreateBookValues = {
 const CreateBook = Schema.Struct({
   // Combobox over the BookHive catalog. Typing queries titles; the selected option's value is the hive id.
   hiveId: Schema.optional(
-    Schema.String.annotations({ title: 'Book' }).pipe(
+    Schema.String.annotate({ title: 'Book' }).pipe(
       OptionsLookupAnnotation.set(
         optionsLookup<CreateBookValues>()(
           ['hiveId'],
@@ -48,7 +48,7 @@ const CreateBook = Schema.Struct({
   ),
   // Prefilled from the selected catalog book; remains user-editable (and required to create).
   title: Schema.optional(
-    Schema.String.annotations({ title: 'Title' }).pipe(
+    Schema.String.annotate({ title: 'Title' }).pipe(
       AutofillAnnotation.set(
         autofill<CreateBookValues>()(['hiveId'], ({ hiveId }) =>
           hiveId
@@ -60,7 +60,7 @@ const CreateBook = Schema.Struct({
       ),
     ),
   ),
-  status: Schema.optional(Book.Status.annotations({ title: 'Status' })),
+  status: Schema.optional(Book.Status.annotate({ title: 'Status' })),
 });
 
 export default Capability.makeModule(

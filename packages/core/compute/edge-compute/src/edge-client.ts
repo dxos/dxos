@@ -107,9 +107,9 @@ export const getDeployedFunctions = async (
     return Function$.pipe(
       functions,
       Array.filter((_) => Obj.getMeta(_).key !== undefined),
-      Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => _.updated ?? ''))),
+      Array.sort(Order.flip(Order.mapInput(Order.String, (_: Operation.PersistentOperation) => _.updated ?? ''))),
       Array.dedupeWith((self, that) => Obj.getMeta(self).key === Obj.getMeta(that).key),
-      Array.sort(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => Obj.getMeta(_).key ?? '')),
+      Array.sort(Order.mapInput(Order.String, (_: Operation.PersistentOperation) => Obj.getMeta(_).key ?? '')),
     );
   } else {
     return functions;

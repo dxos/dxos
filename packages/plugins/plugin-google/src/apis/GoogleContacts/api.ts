@@ -38,7 +38,7 @@ export const listContactGroups = Effect.fn(function* (pageToken?: string) {
     ...(pageToken ? { pageToken } : {}),
   }).toString();
   const response = yield* makeGoogleApiRequest(url);
-  return yield* Schema.decodeUnknown(ListContactGroupsResponse)(response);
+  return yield* Schema.decodeUnknownEffect(ListContactGroupsResponse)(response);
 });
 
 /**
@@ -48,7 +48,7 @@ export const listContactGroups = Effect.fn(function* (pageToken?: string) {
 export const getContactGroup = Effect.fn(function* (resourceName: string, maxMembers = 1000) {
   const url = createUrl([API_URL, resourceName], { maxMembers }).toString();
   const response = yield* makeGoogleApiRequest(url);
-  return yield* Schema.decodeUnknown(ContactGroupResponse)(response);
+  return yield* Schema.decodeUnknownEffect(ContactGroupResponse)(response);
 });
 
 /**
@@ -62,7 +62,7 @@ export const batchGetPeople = Effect.fn(function* (resourceNames: readonly strin
   }
   url.searchParams.set('personFields', PERSON_FIELDS);
   const response = yield* makeGoogleApiRequest(url.toString());
-  return yield* Schema.decodeUnknown(BatchGetPeopleResponse)(response);
+  return yield* Schema.decodeUnknownEffect(BatchGetPeopleResponse)(response);
 });
 
 /**
@@ -82,5 +82,5 @@ export const listConnections = Effect.fn(function* (opts: {
     ...(opts.pageToken ? { pageToken: opts.pageToken } : {}),
   }).toString();
   const response = yield* makeGoogleApiRequest(url);
-  return yield* Schema.decodeUnknown(ListConnectionsResponse)(response);
+  return yield* Schema.decodeUnknownEffect(ListConnectionsResponse)(response);
 });

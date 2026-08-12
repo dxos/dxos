@@ -4,7 +4,7 @@
 
 // Surface components that cannot be expressed as a `props` mapper, because they call hooks or compose.
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 

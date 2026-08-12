@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
 import type * as Graph from '@dxos/app-graph/Graph';
@@ -85,7 +85,7 @@ export const buildGraphMenu = (
  */
 export const graphActions = (
   graph: Graph.ReadableGraph | undefined,
-  get: Atom.Context,
+  get: Atom.AtomContext,
   nodeId: string | undefined,
   options?: GraphMenuOptions,
 ): ActionGraphProps =>

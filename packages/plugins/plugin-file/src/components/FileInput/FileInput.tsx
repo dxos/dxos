@@ -14,7 +14,7 @@ import { meta } from '#meta';
 import { FileCapabilities } from '#types';
 
 export type FileInputProps = {
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Codec<any, any>;
   onChange: (file: File) => void;
 };
 

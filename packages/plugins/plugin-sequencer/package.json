@@ -155,7 +155,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react-resize-detector": "catalog:",
     "tone": "catalog:"

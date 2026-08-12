@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Semaphore from 'effect/Semaphore';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
@@ -23,7 +23,7 @@ const PersistedChildEvent = Schema.Struct({
   data: Schema.optional(Schema.Unknown),
 });
 
-export const PersistedEvent = Schema.Union(
+export const PersistedEvent = Schema.Union([
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('spawn') }),
   // `value` is the input encoded via the process definition's input schema.
   Schema.Struct({
@@ -33,7 +33,7 @@ export const PersistedEvent = Schema.Union(
   }),
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('alarm') }),
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('childEvent'), event: PersistedChildEvent }),
-);
+]);
 export type PersistedEvent = Schema.Schema.Type<typeof PersistedEvent>;
 
 // Event payload as accepted by ProcessStore.appendEvent (seq assigned internally).
@@ -57,7 +57,7 @@ export const PersistedProcess = Schema.Struct({
     conversation: Schema.optional(Schema.String),
   }),
   parentId: Schema.NullOr(Process.ID),
-  state: Schema.Enums(Process.State),
+  state: Schema.Enum(Process.State),
   alarmDueAt: Schema.NullOr(Schema.Number),
   events: Schema.Array(PersistedEvent),
 });
@@ -66,8 +66,8 @@ export type PersistedProcess = Schema.Schema.Type<typeof PersistedProcess>;
 const INDEX_KEY = 'processes';
 const recordKey = (id: Process.ID) => `process/${id}/__record`;
 
-const IndexSchema = Schema.parseJson(Schema.Array(Process.ID));
-const RecordSchema = Schema.parseJson(PersistedProcess);
+const IndexSchema = Schema.fromJsonString(Schema.Array(Process.ID));
+const RecordSchema = Schema.fromJsonString(PersistedProcess);
 
 /**
  * Durable persistence for the process registry over a KeyValueStore.
@@ -77,16 +77,16 @@ const RecordSchema = Schema.parseJson(PersistedProcess);
 export class ProcessStore {
   readonly #kv: KeyValueStore.KeyValueStore;
   readonly #seq = new Map<Process.ID, number>();
-  readonly #locks = new Map<Process.ID, Effect.Semaphore>();
+  readonly #locks = new Map<Process.ID, Semaphore.Semaphore>();
 
   constructor(kv: KeyValueStore.KeyValueStore) {
     this.#kv = kv;
   }
 
-  #lock(id: Process.ID): Effect.Semaphore {
+  #lock(id: Process.ID): Semaphore.Semaphore {
     let lock = this.#locks.get(id);
     if (!lock) {
-      lock = Effect.runSync(Effect.makeSemaphore(1));
+      lock = Effect.runSync(Semaphore.make(1));
       this.#locks.set(id, lock);
     }
     return lock;
@@ -94,34 +94,34 @@ export class ProcessStore {
 
   /** Returns the IDs of all persisted processes. */
   listProcessIds(): Effect.Effect<readonly Process.ID[]> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const raw = yield* this.#kv.get(INDEX_KEY).pipe(Effect.orDie);
-      if (Option.isNone(raw)) {
+      if (raw === undefined) {
         return [];
       }
-      return yield* Schema.decode(IndexSchema)(raw.value).pipe(Effect.orDie);
+      return yield* Schema.decodeEffect(IndexSchema)(raw).pipe(Effect.orDie);
     });
   }
 
   /** Returns the persisted record for the given process ID, or `undefined` if not found. */
   getProcess(id: Process.ID): Effect.Effect<PersistedProcess | undefined> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const raw = yield* this.#kv.get(recordKey(id)).pipe(Effect.orDie);
-      if (Option.isNone(raw)) {
+      if (raw === undefined) {
         return undefined;
       }
-      const decoded = yield* Schema.decode(RecordSchema)(raw.value).pipe(Effect.either);
-      if (decoded._tag === 'Left') {
+      const decoded = yield* Schema.decodeEffect(RecordSchema)(raw).pipe(Effect.result);
+      if (decoded._tag === 'Failure') {
         yield* this.#purgeProcess(id);
         return undefined;
       }
-      return decoded.right;
+      return decoded.success;
     });
   }
 
   /** Returns all persisted process records. */
   listProcesses(): Effect.Effect<readonly PersistedProcess[]> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const ids = yield* this.listProcessIds();
       const records = yield* Effect.forEach(ids, (id) => this.getProcess(id));
       return records.filter((record): record is PersistedProcess => record !== undefined);
@@ -131,12 +131,12 @@ export class ProcessStore {
   /** Persists a process record, adding it to the index if it is not already present. */
   putProcess(record: PersistedProcess): Effect.Effect<void> {
     return this.#lock(record.id).withPermits(1)(
-      Effect.gen(this, function* () {
-        const encoded = yield* Schema.encode(RecordSchema)(record).pipe(Effect.orDie);
+      Effect.gen({ self: this }, function* () {
+        const encoded = yield* Schema.encodeEffect(RecordSchema)(record).pipe(Effect.orDie);
         yield* this.#kv.set(recordKey(record.id), encoded).pipe(Effect.orDie);
         const ids = yield* this.listProcessIds();
         if (!ids.includes(record.id)) {
-          const nextIndex = yield* Schema.encode(IndexSchema)([...ids, record.id]).pipe(Effect.orDie);
+          const nextIndex = yield* Schema.encodeEffect(IndexSchema)([...ids, record.id]).pipe(Effect.orDie);
           yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
         }
         this.#seq.set(
@@ -153,10 +153,10 @@ export class ProcessStore {
   }
 
   #purgeProcess(id: Process.ID): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this.#kv.remove(recordKey(id)).pipe(Effect.orDie);
       const ids = yield* this.listProcessIds();
-      const nextIndex = yield* Schema.encode(IndexSchema)(ids.filter((value) => value !== id)).pipe(Effect.orDie);
+      const nextIndex = yield* Schema.encodeEffect(IndexSchema)(ids.filter((value) => value !== id)).pipe(Effect.orDie);
       yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
       this.#seq.delete(id);
       this.#locks.delete(id);
@@ -165,13 +165,13 @@ export class ProcessStore {
 
   #modify(id: Process.ID, fn: (record: PersistedProcess) => PersistedProcess): Effect.Effect<void> {
     return this.#lock(id).withPermits(1)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const record = yield* this.getProcess(id);
         if (!record) {
           return;
         }
         const next = fn(record);
-        const encoded = yield* Schema.encode(RecordSchema)(next).pipe(Effect.orDie);
+        const encoded = yield* Schema.encodeEffect(RecordSchema)(next).pipe(Effect.orDie);
         yield* this.#kv.set(recordKey(id), encoded).pipe(Effect.orDie);
       }),
     );
@@ -189,7 +189,7 @@ export class ProcessStore {
 
   /** Appends an event to the process event journal and returns the assigned sequence number. */
   appendEvent(id: Process.ID, event: PersistedEventInput): Effect.Effect<number> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const seq = (this.#seq.get(id) ?? 0) + 1;
       this.#seq.set(id, seq);
       yield* this.#modify(id, (record) => ({

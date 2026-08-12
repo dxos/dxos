@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as FiberRef from 'effect/FiberRef';
-import * as GlobalValue from 'effect/GlobalValue';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { DXN } from '@dxos/keys';
 
@@ -26,19 +24,18 @@ import type * as Plugin from './plugin';
  * Effect Context.Tag for accessing CapabilityManager via the Effect layer system.
  * This allows capability modules to access the capability manager without having it passed as an argument.
  */
-export class Service extends Context.Tag('@dxos/app-framework/CapabilityManager')<
-  Service,
-  CapabilityManager.CapabilityManager
->() {}
+export class Service extends Context.Service<Service, CapabilityManager.CapabilityManager>()(
+  '@dxos/app-framework/CapabilityManager',
+) {}
 
 /**
  * Module id of the activation currently executing — set by the loader around each module's
  * `activate` so instrumentation inside module bodies (e.g. {@link lazyModule}'s chunk-import
  * timing) can attribute itself to the module without threading the id through every body.
  */
-export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValue.globalValue(
-  Symbol.for('@dxos/app-framework/Capability/CurrentModuleId'),
-  () => FiberRef.unsafeMake<string | undefined>(undefined),
+export const CurrentModuleId: Context.Reference<string | undefined> = Context.Reference<string | undefined>(
+  '@dxos/app-framework/Capability/CurrentModuleId',
+  { defaultValue: () => undefined },
 );
 
 /**
@@ -47,9 +44,9 @@ export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValu
  * it is running inside. Such a wait only ends at the activation timeout, which the failure
  * supervisor reads as a broken plugin and disables.
  */
-export const ActivatingModuleIds: FiberRef.FiberRef<ReadonlySet<string>> = GlobalValue.globalValue(
-  Symbol.for('@dxos/app-framework/Capability/ActivatingModuleIds'),
-  () => FiberRef.unsafeMake<ReadonlySet<string>>(new Set<string>()),
+export const ActivatingModuleIds: Context.Reference<ReadonlySet<string>> = Context.Reference<ReadonlySet<string>>(
+  '@dxos/app-framework/Capability/ActivatingModuleIds',
+  { defaultValue: () => new Set<string>() },
 );
 
 /**
@@ -85,7 +82,7 @@ export const getAll = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T[], nev
  * @returns The first capability implementation, or `Option.none()` if none is contributed.
  */
 export const getOption = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<Option.Option<T>, never, Service> =>
-  Effect.map(getAll(interfaceDef), (all) => Option.fromNullable(all[0]));
+  Effect.map(getAll(interfaceDef), (all) => Option.fromNullishOr(all[0]));
 
 /**
  * Wait for a capability to be available.
@@ -126,7 +123,7 @@ export const atomByModule = <T>(
 /**
  * Constructs a layer that will request its interface implementation from the capability manager.
  */
-export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Tag<I, T>): Layer.Layer<I, never, Service> =>
+export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Key<I, T>): Layer.Layer<I, never, Service> =>
   Layer.effect(tag, get(interfaceDef).pipe(Effect.orDie));
 
 /**
@@ -145,7 +142,7 @@ export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Tag<I,
 export const layerWith = <T, A, E, R>(
   interfaceDef: InterfaceDef<T>,
   build: (value: T) => Layer.Layer<A, E, R>,
-): Layer.Layer<A, E, R | Service> => Layer.unwrapEffect(get(interfaceDef).pipe(Effect.orDie, Effect.map(build)));
+): Layer.Layer<A, E, R | Service> => Layer.unwrap(get(interfaceDef).pipe(Effect.orDie, Effect.map(build)));
 
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
@@ -226,7 +223,7 @@ export interface Contributions<T> {
 // must be assignable from every concrete `Tag<Example, "the.actual.nsid">`; defaulting to `string`
 // would reject all of them since neither is a subtype of the other under invariance.
 export interface Tag<T, S extends string = any>
-  extends Context.Tag<CapabilityIdentifier<S, 'single'>, T>, InterfaceDef<T> {
+  extends Context.Key<CapabilityIdentifier<S, 'single'>, T>, InterfaceDef<T> {
   readonly arity: 'single';
 }
 
@@ -234,7 +231,7 @@ export interface Tag<T, S extends string = any>
  * A multi (registry) capability: `yield* tag` yields the live {@link Contributions} view.
  */
 export interface MultiTag<T, S extends string = any>
-  extends Context.Tag<CapabilityIdentifier<S, 'multi'>, Contributions<T>>, InterfaceDef<T> {
+  extends Context.Key<CapabilityIdentifier<S, 'multi'>, Contributions<T>>, InterfaceDef<T> {
   readonly arity: 'multi';
 }
 
@@ -258,7 +255,7 @@ type NsidParam<S extends string> = [DXN.Name<S>] extends [never]
 // are type-only, so assembling the concrete tag object requires a controlled cast at this boundary
 // (as Effect's own tag constructors do internally). Isolated here so call sites stay cast-free.
 const buildTag = <T, S extends string, A extends Arity>(identifier: S, arity: A) =>
-  Object.assign(Context.GenericTag<CapabilityIdentifier<S, A>, T>(identifier), {
+  Object.assign(Context.Service<CapabilityIdentifier<S, A>, T>(identifier), {
     identifier,
     arity,
   }) as unknown as A extends 'multi' ? MultiTag<T, S> : Tag<T, S>;
@@ -349,7 +346,7 @@ export type ContributionTypeId = typeof ContributionTypeId;
  * Carries one value for a singleton capability, n values for a multi capability.
  */
 // `Id` is a capability identifier (`CapabilityIdentifier<S, A>`) — left unconstrained because
-// `Context.Tag.Identifier<C>` is opaque to the checker for a generic tag `C` and wouldn't satisfy
+// `Context.Service.Identifier<C>` is opaque to the checker for a generic tag `C` and wouldn't satisfy
 // an explicit bound; the default documents the intended shape.
 export interface Contribution<Id = CapabilityIdentifier<string, Arity>> {
   readonly [ContributionTypeId]: Id;
@@ -363,7 +360,7 @@ export type AnyContribution = Contribution;
 
 /**
  * The capability identifier (NSID + arity) of a tag. Extracted from our own {@link Tag}/
- * {@link MultiTag} `S` parameter rather than via Effect's `Context.Tag.Identifier`, which — for a
+ * {@link MultiTag} `S` parameter rather than via Effect's `Context.Service.Identifier`, which — for a
  * generic tag parameter — falls through to its `TagClassShape` branch and yields the raw tag
  * (leaking the service type again). Singleton checked first; a singleton never matches the multi
  * arm and vice versa (the arity brand differs).
@@ -464,7 +461,7 @@ export type EnsureProvides<Ret, Provides extends readonly AnyTag[]> = [ProvidedI
  * The framework services ({@link Service}, Plugin.Service) and the module scope stay ambient.
  */
 export type Requirements<Requires extends readonly AnyTag[]> =
-  | Context.Tag.Identifier<Requires[number]>
+  | Context.Service.Identifier<Requires[number]>
   | Service
   | Plugin.Service
   | Scope.Scope;
@@ -531,7 +528,7 @@ export const lazyModule = <
     Effect.gen(function* () {
       // Chunk import measured separately from the body: on deferral the import moves to the
       // interaction path wholesale, so its cost has its own axis in the startup profile.
-      const moduleId = (yield* FiberRef.get(CurrentModuleId)) ?? name;
+      const moduleId = (yield* CurrentModuleId) ?? name;
       performance.mark(`module-import:${moduleId}:start`);
       const { default: getModule } = yield* Effect.promise(() => loader());
       performance.mark(`module-import:${moduleId}:end`);

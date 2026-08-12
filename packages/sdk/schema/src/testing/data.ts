@@ -16,7 +16,7 @@ export class Example extends Type.makeObject<Example>(DXN.make('com.example.type
   Schema.Struct({
     name: Schema.optional(
       Schema.String.pipe(
-        Schema.annotations({
+        Schema.annotate({
           description: 'Full name.',
         }),
       ),
@@ -29,7 +29,7 @@ export class Example extends Type.makeObject<Example>(DXN.make('com.example.type
     //     zip: Schema.optional(
     //       Schema.String.pipe(
     //         Schema.pattern(/^[0-9]{5}(?:-[0-9]{4})?$/),
-    //         Schema.annotations({
+    //         Schema.annotate({
     //           description: 'ZIP code.',
     //         }),
     //       ),

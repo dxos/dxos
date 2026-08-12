@@ -181,7 +181,7 @@ export const processAttachments = (): Stage.Stage<Change, Change, never, Databas
         const blob: Blob.Blob | undefined = yield* Blob.fromBytes(attachment.bytes, {
           type: attachment.mimeType,
         }).pipe(
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error, { foreignId: mapped.foreignId, name: attachment.name, size: attachment.size });
             return Effect.succeed(undefined);
           }),

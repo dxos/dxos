@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
@@ -593,7 +593,7 @@ describe('Obj', () => {
 
   describe('atomProperty', () => {
     test('fires only when the observed property changes', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [] });
 
       const tasksAtom = Obj.atomProperty(obj, 'tasks');

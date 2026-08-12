@@ -107,6 +107,11 @@ For composing layer stacks (test environments in particular) — single paramete
 `Layer.empty.pipe(...)` stack, ternaries for alternative implementations, `provide` vs
 `provideMerge` — see [layer-composition.md](layer-composition.md).
 
+This repo is on Effect 4. Schema and AST carry gotchas that fail compile-clean and test-silent —
+annotation reads on refined types, `mutableKey` placement, lost brands, the `toJsonSchema` wire
+contract, and the rule that `effect/SchemaAST` is only ever imported through `@dxos/effect`. See
+[v4-schema.md](v4-schema.md), which also carries the v3 → v4 name map for reading older code.
+
 ### Common Patterns
 
 - **Do notation**: Prefer `Effect.gen` over manual `flatMap` chains.

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
@@ -82,7 +82,7 @@ const createTypeNode = ({
 }: {
   type: Type.AnyEntity;
   space: Space;
-  get: Atom.Context;
+  get: Atom.AtomContext;
   registered: ReadonlyMap<string, Type.AnyEntity>;
 }): Node.NodeArg<Type.AnyEntity> | null => {
   const typename = Type.getTypename(type);

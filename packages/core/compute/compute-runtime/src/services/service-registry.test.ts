@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 
 import { ServiceRegistry } from './service-registry';
 
-class MyTag extends Context.Tag('MyTag')<MyTag, { value: string }>() {}
+class MyTag extends Context.Service<MyTag, { value: string }>()('MyTag') {}
 
 const mockRegistry = Layer.succeed(ServiceRegistry, {
   resolve: (tag) => ((tag as any) === MyTag ? Option.some({ value: 'test' } as any) : Option.none()),

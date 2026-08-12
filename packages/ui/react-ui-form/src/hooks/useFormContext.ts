@@ -3,11 +3,10 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import * as SchemaAST from 'effect/SchemaAST';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 import { type FieldContext, type FormFieldStateProps } from '#types';
 

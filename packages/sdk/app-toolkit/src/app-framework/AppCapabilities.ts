@@ -4,11 +4,11 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import * as Schema$ from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
@@ -94,10 +94,9 @@ export const Translator = Capability$.makeSingleton<Translator$>()('org.dxos.app
  * Effect service for the {@link Translator} capability, consumable via `yield* TranslatorService`
  * once {@link translatorLayer} is provided.
  */
-export class TranslatorService extends Context.Tag('@dxos/app-toolkit/TranslatorService')<
-  TranslatorService,
-  Translator$
->() {}
+export class TranslatorService extends Context.Service<TranslatorService, Translator$>()(
+  '@dxos/app-toolkit/TranslatorService',
+) {}
 
 /**
  * Layer that resolves {@link TranslatorService} from the {@link Translator} capability.
@@ -161,7 +160,7 @@ export type Settings = {
   prefix: string;
   // Settings are persisted as plain atoms, so the schema is always context-free
   // (`R = never`); this lets a schema-driven form decode/validate it directly.
-  schema: Schema$.Schema.AnyNoContext;
+  schema: Schema$.Codec<any, any, never, never>;
   atom: Atom.Writable<any>;
 };
 

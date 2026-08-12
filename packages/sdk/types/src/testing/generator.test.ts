@@ -31,7 +31,7 @@ const Knows = Type.makeRelation(DXN.make('org.dxos.relation.knows', '0.1.0'))({
   Schema.Struct({
     id: Obj.ID,
     since: Schema.optional(Schema.Number),
-  }).annotations({ description: 'A person knows another person.' }),
+  }).annotate({ description: 'A person knows another person.' }),
 );
 
 random.seed(1);

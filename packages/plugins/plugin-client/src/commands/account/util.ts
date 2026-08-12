@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Options from '@effect/cli/Options';
 import * as Effect from 'effect/Effect';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import * as Account from '@dxos/app-toolkit/Account';
 import { ClientService } from '@dxos/client';
@@ -33,7 +33,7 @@ export const METHOD_ALIASES = { atproto: ATMOSPHERE_METHOD } as const;
 export const methodOption = <T extends string>(
   methods: readonly T[],
   aliases: Readonly<Record<string, T>>,
-): Options.Options<T> =>
+): Options.Flag<T> =>
   Options.choiceWithValue('method', [
     ...methods.map((method): [string, T] => [method, method]),
     ...Object.entries(aliases),

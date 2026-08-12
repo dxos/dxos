@@ -712,8 +712,24 @@ Remaining navToReady = client init + identity render (out of scope) + ~2.8s boot
 - Result: static boot graph **521 chunks / 4.03MB (−54% bytes, −30% chunks)**; forbidden
   list (hyperformula, emoji, codemirror-language-data, react-aria, hypercore.mjs, bip39,
   wa-sqlite, client-services) all clear. Bytes-to-ready in the harness: 27.1 → 25.2MB.
-  Remaining top owners are boot-legitimate: effect 780KB, react-dom 744KB, protocol codecs
-  123KB, automerge (echo proxy) ~240KB.
+  **CORRECTION (2026-08-11): the 4.03MB total came off a broken build** — the closure was
+  short of what actually ships, so this line's totals and per-owner bytes are not a usable
+  baseline. Superseded by the measurement below; do not compare against 4.03MB.
+- **Boot-closure owners, re-measured 2026-08-11** by attributing each preload chunk's bytes
+  through its sourcemap _mappings_ (not `sources` presence, which names tree-shaken modules
+  that emit nothing). Deployed `composer-main` (effect v3) vs the effect-v4 branch:
+
+  | owner           | main (v3) | v4 branch |       Δ |
+  | --------------- | --------: | --------: | ------: |
+  | effect (family) |   1.21 MB |   0.90 MB | −0.31MB |
+  | react-dom       |   0.94 MB |   0.96 MB | +0.02MB |
+  | automerge       |   0.26 MB |   0.26 MB |       — |
+  | protocol codecs |   0.10 MB |   0.10 MB |       — |
+  | **closure**     |   5.46 MB |   5.17 MB | −0.29MB |
+
+  Every non-effect owner is flat within noise and effect accounts for the whole delta, which
+  is what makes the attribution trustworthy rather than merely plausible.
+
 - Verified: client 13 passed (+1 expected-fail), compute-hyperformula 12, plugin-sheet 7,
   warm-cold e2e green on the fresh bundle ('open & close' test got 2s timeout — first
   connect now pays the lazy RTC-stack load that used to be a static import).

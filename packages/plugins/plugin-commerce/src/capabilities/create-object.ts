@@ -15,13 +15,13 @@ import { Provider, Search } from '#types';
 
 /** Input schema for creating a Search; types the `props` passed to createObject. */
 const CreateSearchSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 });
 
 /** Input schema for creating a Provider; types the `props` passed to createObject. */
 const CreateProviderSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  url: Schema.optional(Schema.String.annotations({ title: 'URL' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  url: Schema.optional(Schema.String.annotate({ title: 'URL' })),
 });
 
 export default Capability.makeModule(

@@ -111,13 +111,11 @@
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
     "effect": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

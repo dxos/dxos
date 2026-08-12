@@ -156,7 +156,6 @@
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

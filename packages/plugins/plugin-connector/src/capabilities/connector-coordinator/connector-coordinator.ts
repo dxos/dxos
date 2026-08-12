@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -114,10 +114,10 @@ const runOnTokenCreated = (
         Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
       ),
     ),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
     ),
-    Effect.catchAllDefect((defect) =>
+    Effect.catchDefect((defect) =>
       Effect.sync(() => log.warn('onTokenCreated defect', { source: input.accessToken.source, defect })),
     ),
   );
@@ -161,7 +161,7 @@ const navigateToNewConnection = (
       subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connectionId)],
       navigation: 'immediate',
     })
-    .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
+    .pipe(Effect.catch((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
 
 const openSyncTargetsDialogAfterConnectionCreated = (
   invoker: Operation.OperationService,
@@ -183,7 +183,7 @@ const openSyncTargetsDialogAfterConnectionCreated = (
       },
     });
   }).pipe(
-    Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
+    Effect.catch((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
 const finalizePendingEntry = (

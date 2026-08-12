@@ -168,8 +168,7 @@
     "@dxos/react-ui-audio": "workspace:*",
     "@dxos/react-ui-gameboard": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "chess.js": "catalog:",
     "effect": "catalog:"
   },

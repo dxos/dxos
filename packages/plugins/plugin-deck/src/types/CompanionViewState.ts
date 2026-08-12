@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { ViewState } from '@dxos/react-ui-attention';
 
@@ -14,7 +15,7 @@ export const CONTEXT = 'deck-companion';
 export const State = Schema.Struct({
   /** Linked variant of the currently selected companion tab. */
   variant: Schema.optional(Schema.String),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type State = Schema.Schema.Type<typeof State>;
 

@@ -6,6 +6,7 @@ import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
+import * as Semaphore from 'effect/Semaphore';
 
 import { log } from '@dxos/log';
 
@@ -19,7 +20,7 @@ import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
 /** Host configuration passed through from `ManagerOptions`. */
 export type PluginCatalogOptions = {
   pluginLoader: (id: string) => Effect.Effect<{ plugin: Plugin.Plugin; dev?: boolean }, Error>;
-  loadTimeout: Duration.DurationInput;
+  loadTimeout: Duration.Input;
   onRemove?: (id: string) => Effect.Effect<void, unknown>;
 };
 
@@ -34,6 +35,8 @@ export type PluginCatalogOptions = {
 export class PluginCatalog {
   /** Coalesces concurrent lazy-plugin resolutions per plugin id. */
   readonly #resolving = new Map<string, Deferred.Deferred<Plugin.Plugin, Plugin.LazyPluginError>>();
+  /** Serializes enable/disable per plugin id — see {@link PluginCatalog.#lifecycle}. */
+  readonly #lifecycles = new Map<string, Semaphore.Semaphore>();
   /** Dev-sourced plugin ids, with the shadowed original (if any) for restoration on remove. */
   readonly #devPlugins = new Map<string, { shadow?: { plugin: Plugin.Plugin; wasEnabled: boolean } }>();
   readonly #state: ManagerState;
@@ -73,6 +76,23 @@ export class PluginCatalog {
         ),
       );
     }
+  }
+
+  /**
+   * The per-plugin enable/disable lock.
+   *
+   * `#disableOne` flips the `enabled` atom before it tears anything down, so without this an
+   * `enable` reacting to that atom re-registers the plugin's modules and the in-flight disable
+   * then de-registers them again — the plugin ends up enabled with no modules. Auto-disable
+   * forks precisely so taking this lock cannot deadlock an activation chain.
+   */
+  #lifecycle(id: string): Semaphore.Semaphore {
+    let semaphore = this.#lifecycles.get(id);
+    if (!semaphore) {
+      semaphore = Semaphore.makeUnsafe(1);
+      this.#lifecycles.set(id, semaphore);
+    }
+    return semaphore;
   }
 
   /** Whether the id is currently dev-sourced. */
@@ -130,7 +150,7 @@ export class PluginCatalog {
    * @param id The id of the plugin.
    */
   add(id: string): Effect.Effect<Plugin.Plugin, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('add plugin', { id });
       const { plugin, dev = false } = yield* this.#options.pluginLoader(id);
       const pluginId = plugin.meta.profile.key;
@@ -168,7 +188,7 @@ export class PluginCatalog {
    */
   enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error, Plugin.Service> {
     const resolveDependencies = opts?.resolveDependencies !== false;
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('enable plugin', { id, resolveDependencies });
 
       if (!resolveDependencies) {
@@ -214,14 +234,14 @@ export class PluginCatalog {
         if (installed.has(next) || this.#state.getPlugin(next)) {
           continue;
         }
-        const installResult = yield* this.add(next).pipe(Effect.either);
-        if (installResult._tag === 'Left') {
+        const installResult = yield* this.add(next).pipe(Effect.result);
+        if (installResult._tag === 'Failure') {
           this.#state.recordFailure(
             id,
             'load',
             new Plugin.PluginDependencyError({
               context: { id, reason: 'install-failed', dependency: next },
-              cause: installResult.left,
+              cause: installResult.failure,
             }),
           );
           return false;
@@ -274,7 +294,7 @@ export class PluginCatalog {
    * state but still needs to perform the module registration and activation.
    */
   #enableOne(id: string): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const stub = this.#state.getPlugin(id);
       if (!stub) {
         return false;
@@ -319,10 +339,10 @@ export class PluginCatalog {
             candidateModules: plugin.modules.filter((module) => this.#scheduler.isEligible(module)),
           })
           .pipe(
-            Effect.either,
+            Effect.result,
             Effect.map((result) => {
-              if (result._tag === 'Left') {
-                this.#state.recordFailure(id, 'activation', result.left);
+              if (result._tag === 'Failure') {
+                this.#state.recordFailure(id, 'activation', result.failure);
               }
             }),
           );
@@ -336,16 +356,16 @@ export class PluginCatalog {
           // plugin's start-gated modules would never activate.
           yield* this.#scheduler
             .activate(ActivationEvent.pluginStart(id))
-            .pipe(Effect.catchAll((error) => Effect.sync(() => this.#state.recordFailure(id, 'activation', error))));
+            .pipe(Effect.catch((error) => Effect.sync(() => this.#state.recordFailure(id, 'activation', error))));
         } else {
           // Tracked so `shutdown()` interrupts an incremental pass still running from the
           // bootstrap enable chain.
-          yield* this.#state.fibers.trackForked(yield* pass.pipe(Effect.forkDaemon));
+          yield* this.#state.fibers.trackForked(yield* pass.pipe(Effect.forkDetach));
         }
       }
 
       return true;
-    });
+    }).pipe(this.#lifecycle(id).withPermits(1));
   }
 
   /**
@@ -363,7 +383,7 @@ export class PluginCatalog {
    * subscriber and a retry can be attempted.
    */
   #resolveLazy(plugin: Plugin.Plugin): Effect.Effect<Plugin.Plugin, Plugin.LazyPluginError> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (!Plugin.isLazy(plugin)) {
         return plugin;
       }
@@ -376,7 +396,7 @@ export class PluginCatalog {
       const deferred = yield* Deferred.make<Plugin.Plugin, Plugin.LazyPluginError>();
       this.#resolving.set(id, deferred);
 
-      return yield* Effect.gen(this, function* () {
+      return yield* Effect.gen({ self: this }, function* () {
         log('resolving lazy plugin', { id });
         yield* PubSub.publish(this.#state.activation, { event: '', state: 'activating', module: `lazy:${id}` });
         // The plugin-definition chunk import is startup work that predates any module
@@ -387,13 +407,15 @@ export class PluginCatalog {
           // sit on a pending dynamic `import()` indefinitely if the plugin's
           // server is unreachable, which stalls every caller awaiting
           // `enable(id)` and (transitively) the manager's initialization.
-          Effect.timeoutFail({
+          Effect.timeoutOrElse({
             duration: this.#options.loadTimeout,
-            onTimeout: () =>
-              new Plugin.LazyPluginError({
-                context: { id, reason: 'load-failed' },
-                cause: new PluginTimeoutError({ context: { id, phase: 'load' as PluginFailurePhase } }),
-              }),
+            orElse: () =>
+              Effect.fail(
+                new Plugin.LazyPluginError({
+                  context: { id, reason: 'load-failed' },
+                  cause: new PluginTimeoutError({ context: { id, phase: 'load' as PluginFailurePhase } }),
+                }),
+              ),
           }),
         );
         performance.mark(`plugin-load:${id}:end`);
@@ -403,14 +425,14 @@ export class PluginCatalog {
         return resolvedPlugin;
       }).pipe(
         Effect.tapError((error) =>
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             yield* PubSub.publish(this.#state.activation, { event: '', state: 'error', module: `lazy:${id}`, error });
             this.#state.recordFailure(id, 'load', error);
             this.scheduleAutoDisable(id);
           }),
         ),
         Effect.tap((value) => Deferred.succeed(deferred, value)),
-        Effect.tapErrorCause((cause) => Deferred.failCause(deferred, cause)),
+        Effect.tapCause((cause) => Deferred.failCause(deferred, cause)),
         Effect.ensuring(Effect.sync(() => this.#resolving.delete(id))),
       );
     });
@@ -422,7 +444,7 @@ export class PluginCatalog {
    * @param opts See {@link PluginManager.remove}.
    */
   remove(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('remove plugin', { id });
       const wasDev = this.#devPlugins.has(id);
       const disabled = yield* this.disable(id, opts);
@@ -464,7 +486,7 @@ export class PluginCatalog {
    * @param opts See {@link PluginManager.disable}.
    */
   disable(id: string, { cascade = true }: { cascade?: boolean } = {}): Effect.Effect<boolean, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('disable plugin', { id, cascade });
       if (this.#state.isCore(id)) {
         return false;
@@ -506,7 +528,7 @@ export class PluginCatalog {
    * `cascade: false`).
    */
   #disableOne(id: string): Effect.Effect<boolean, Error> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (this.#state.isCore(id)) {
         return false;
       }
@@ -523,7 +545,7 @@ export class PluginCatalog {
         });
       }
       return true;
-    });
+    }).pipe(this.#lifecycle(id).withPermits(1));
   }
 
   /** Entries of the cached registry catalog. */

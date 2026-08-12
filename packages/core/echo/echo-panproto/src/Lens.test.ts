@@ -21,8 +21,8 @@ class Task extends Type.makeObject<Task>(DXN.make('org.dxos.test.Task', '0.1.0')
   Schema.Struct({
     title: Schema.String,
     description: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done')),
-    priority: Schema.optional(Schema.Literal('none', 'low', 'medium', 'high', 'urgent')),
+    status: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done'])),
+    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
     /** Minutes. */
     estimate: Schema.optional(Schema.Number),
     author: Schema.optional(Schema.String),
@@ -37,12 +37,12 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.GtdTask',
     description: Schema.optional(Schema.String),
     /** Lossy: `false` cannot say whether the task is `todo` or `in-progress`. */
     done: Schema.optional(Schema.Boolean),
-    stage: Schema.optional(Schema.Literal('todo', 'in-progress', 'done')),
+    stage: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done'])),
     priority: Schema.optional(Schema.Number),
     estimateHours: Schema.optional(Schema.Number),
     createdBy: Schema.optional(Schema.String),
     /** No counterpart on `Task` — overlay-backed. */
-    context: Schema.optional(Schema.Literal('@home', '@work')),
+    context: Schema.optional(Schema.Literals(['@home', '@work'])),
     waitingOn: Schema.optional(Schema.String),
   }),
 ) {}
@@ -102,7 +102,7 @@ describe('Lens mapping resolution', () => {
     class Other extends Type.makeObject<Other>(DXN.make('org.dxos.test.Other', '0.1.0'))(
       Schema.Struct({
         // Same name as `Task.status`, different vocabulary.
-        status: Schema.optional(Schema.Literal('open', 'closed')),
+        status: Schema.optional(Schema.Literals(['open', 'closed'])),
       }),
     ) {}
 

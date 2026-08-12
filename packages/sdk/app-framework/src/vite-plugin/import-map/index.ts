@@ -247,7 +247,7 @@ const expandWildcardExport = (
  * the corresponding output directory. Falls back to just the package name if exports is
  * absent or simple.
  */
-const getPackageEntrypoints = (packageName: string, packageJsonPath: string): string[] => {
+export const getPackageEntrypoints = (packageName: string, packageJsonPath: string): string[] => {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
     exports?: Record<string, unknown> | string | string[];
   };
@@ -264,12 +264,34 @@ const getPackageEntrypoints = (packageName: string, packageJsonPath: string): st
 
   const excluded = importMapExcludedSubpaths[packageName];
   const packageJsonDir = path.dirname(packageJsonPath);
+  // A `null` target means "explicitly not exported" and takes precedence over any wildcard that
+  // would otherwise match it — `@effect/atom-react` maps `./*` to its dist but blocks `./index`,
+  // `./internal/*` and `./*/index`, so expanding the wildcard alone yields specifiers that fail
+  // to resolve and abort the build.
+  const blocked = exportKeys
+    .filter((key) => (exportsField as Record<string, unknown>)[key] === null)
+    .map((key) => key.slice(2));
+  const isBlocked = (subpath: string) =>
+    blocked.some((pattern) => {
+      const starIndex = pattern.indexOf('*');
+      if (starIndex === -1) {
+        return subpath === pattern;
+      }
+      const prefix = pattern.slice(0, starIndex);
+      const suffix = pattern.slice(starIndex + 1);
+      return subpath.length >= prefix.length + suffix.length && subpath.startsWith(prefix) && subpath.endsWith(suffix);
+    });
+
   const modules = exportKeys.flatMap((key) => {
     if (key === '.') {
       return [packageName];
     }
 
     if (!key.startsWith('./') || key === './package.json') {
+      return [];
+    }
+
+    if ((exportsField as Record<string, unknown>)[key] === null) {
       return [];
     }
 
@@ -283,7 +305,12 @@ const getPackageEntrypoints = (packageName: string, packageJsonPath: string): st
 
     if (key.includes('*')) {
       // Expand wildcard patterns like `./proto/*` into concrete specifiers.
-      return expandWildcardExport(packageName, packageJsonDir, key, (exportsField as Record<string, unknown>)[key]);
+      return expandWildcardExport(
+        packageName,
+        packageJsonDir,
+        key,
+        (exportsField as Record<string, unknown>)[key],
+      ).filter((specifier) => !isBlocked(specifier.slice(packageName.length + 1)));
     }
 
     const subpath = key.slice(2);

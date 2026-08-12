@@ -80,7 +80,7 @@ export default Capability.makeModule(
     const getSpaceName = (space: Space): string | undefined =>
       space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
 
-    const runtime = yield* Effect.runtime<Scope.Scope>();
+    const runtime = yield* Effect.context<Scope.Scope>();
     const subscribeSpace = (space: Space): void =>
       void Effect.gen(function* () {
         const fiber = processManagerRuntime.runFork(

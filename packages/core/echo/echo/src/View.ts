@@ -31,7 +31,7 @@ export const FieldSchema = Schema.Struct({
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
 
-export const KeyValueProps = Schema.Record({ key: Schema.String, value: Schema.Any });
+export const KeyValueProps = Schema.Record(Schema.String, Schema.Any);
 
 export const createFieldId = () => PublicKey.random().truncate();
 

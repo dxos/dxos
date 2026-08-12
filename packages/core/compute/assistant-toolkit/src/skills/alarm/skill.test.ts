@@ -4,7 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -37,30 +37,30 @@ describe('Alarm skill', () => {
     it('resolves an absolute "at" timestamp', ({ expect }) => {
       const at = '2026-06-04T18:00:00.000Z';
       const result = resolveWakeAt({ at }, NOW);
-      expect(Either.isRight(result)).toBe(true);
-      expect(Either.getOrThrow(result)).toBe(new Date(at).getTime());
+      expect(Result.isSuccess(result)).toBe(true);
+      expect(Result.getOrThrow(result)).toBe(new Date(at).getTime());
     });
 
     it('resolves a relative "in" duration', ({ expect }) => {
       const result = resolveWakeAt({ in: '5 minutes' }, NOW);
-      expect(Either.isRight(result)).toBe(true);
-      expect(Either.getOrThrow(result)).toBe(NOW + 5 * 60 * 1000);
+      expect(Result.isSuccess(result)).toBe(true);
+      expect(Result.getOrThrow(result)).toBe(NOW + 5 * 60 * 1000);
     });
 
     it('rejects an invalid "at" timestamp', ({ expect }) => {
-      expect(Either.isLeft(resolveWakeAt({ at: 'not-a-date' }, NOW))).toBe(true);
+      expect(Result.isFailure(resolveWakeAt({ at: 'not-a-date' }, NOW))).toBe(true);
     });
 
     it('rejects an invalid "in" duration', ({ expect }) => {
-      expect(Either.isLeft(resolveWakeAt({ in: 'whenever' }, NOW))).toBe(true);
+      expect(Result.isFailure(resolveWakeAt({ in: 'whenever' }, NOW))).toBe(true);
     });
 
     it('rejects specifying both "in" and "at"', ({ expect }) => {
-      expect(Either.isLeft(resolveWakeAt({ in: '5 minutes', at: '2026-06-04T18:00:00.000Z' }, NOW))).toBe(true);
+      expect(Result.isFailure(resolveWakeAt({ in: '5 minutes', at: '2026-06-04T18:00:00.000Z' }, NOW))).toBe(true);
     });
 
     it('rejects specifying neither "in" nor "at"', ({ expect }) => {
-      expect(Either.isLeft(resolveWakeAt({}, NOW))).toBe(true);
+      expect(Result.isFailure(resolveWakeAt({}, NOW))).toBe(true);
     });
   });
 
@@ -68,7 +68,7 @@ describe('Alarm skill', () => {
   // an AgentProcess stamped as the harness host, so invoking the operation against that conversation
   // dispatches over the process RPC loopback to the host's AlarmManager (no LLM turn required).
   describe('set-alarm operation (Tier B)', () => {
-    it.scoped(
+    it.effect(
       'arms a self-wake on the owning host for a relative duration',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -89,7 +89,7 @@ describe('Alarm skill', () => {
       ),
     );
 
-    it.scoped(
+    it.effect(
       'arms a self-wake on the owning host for an absolute time',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -108,7 +108,7 @@ describe('Alarm skill', () => {
       ),
     );
 
-    it.scoped(
+    it.effect(
       'reports invalid input without arming an alarm',
       Effect.fnUntraced(
         function* ({ expect }) {

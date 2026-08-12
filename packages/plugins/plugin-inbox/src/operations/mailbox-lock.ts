@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Semaphore from 'effect/Semaphore';
 
 import { Obj } from '@dxos/echo';
 
@@ -12,7 +13,7 @@ import type * as Mailbox from '../types/Mailbox';
  * One mutex per mailbox URI, created on first use and never evicted — a mailbox is a long-lived
  * object and the entry is a few bytes.
  */
-const locks = new Map<string, Effect.Semaphore>();
+const locks = new Map<string, Semaphore.Semaphore>();
 
 /**
  * Serializes a pipeline body against other runs over the same mailbox.
@@ -33,7 +34,7 @@ export const withMailboxLock = <A, E, R>(
   const key = Obj.getURI(mailbox);
   let lock = locks.get(key);
   if (!lock) {
-    lock = Effect.unsafeMakeSemaphore(1);
+    lock = Semaphore.makeUnsafe(1);
     locks.set(key, lock);
   }
   return lock.withPermits(1)(effect);

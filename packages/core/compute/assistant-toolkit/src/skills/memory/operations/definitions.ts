@@ -20,13 +20,13 @@ export const QueryMemories = Operation.make({
   },
   input: Schema.Struct({
     text: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Full-text search query. Omit to list all memories.',
         examples: ['new york trip date plan', 'favorite color', 'project cyberdyne'],
       }),
     ),
     limit: Schema.optional(
-      Schema.Number.annotations({
+      Schema.Number.annotate({
         description: 'Maximum number of results to return.',
         default: 10,
       }),
@@ -45,10 +45,10 @@ export const SaveMemory = Operation.make({
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
-    title: Schema.String.annotations({
+    title: Schema.String.annotate({
       description: 'Short descriptive title for the memory.',
     }),
-    content: Schema.String.annotations({
+    content: Schema.String.annotate({
       description:
         'The content of the memory. Can be a fact, preference, instruction, or any knowledge worth persisting.',
     }),

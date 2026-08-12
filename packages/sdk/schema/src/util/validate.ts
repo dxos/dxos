@@ -2,19 +2,31 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
-import * as ParseResult from 'effect/ParseResult';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
+import * as SchemaIssue from 'effect/SchemaIssue';
+
+import { SchemaAST } from '@dxos/effect';
 
 export type ValidationError = { path: string; message: string };
 
-export const validateSchema = <T>(schema: Schema.Schema<T>, values: any): ValidationError[] | undefined => {
-  const validator = Schema.decodeUnknownEither(schema, { errors: 'all', onExcessProperty: 'preserve' });
+/**
+ * Effect 4 replaced `ParseResult.ArrayFormatter` with the Standard Schema formatter, which flattens
+ * the issue tree into `{ message, path }` entries — the same shape this already produced.
+ */
+const formatIssue = SchemaIssue.makeFormatterStandardSchemaV1();
+
+export const validateSchema = <T>(schema: Schema.Codec<T, any>, values: any): ValidationError[] | undefined => {
+  // Validate against the TYPE side: callers hold decoded values (a form's `Ref` is a materialized
+  // `Ref`, not its `{ '/': dxn }` encoding), so decoding the codec would report every such field as
+  // malformed at a path — `_tags[0]['/']` — that is not even addressable as a form field.
+  const validator = Schema.decodeUnknownResult(Schema.make<Schema.Codec<T, any>>(SchemaAST.toType(schema.ast)), {
+    errors: 'all',
+    onExcessProperty: 'preserve',
+  });
   const result = validator(values);
-  if (Either.isLeft(result)) {
-    const errors = Effect.runSync(ParseResult.ArrayFormatter.formatError(result.left));
-    return errors.map(({ message, path }) => {
+  if (Result.isFailure(result)) {
+    return formatIssue(result.failure.issue).issues.map(({ message, path }) => {
       // TODO(burdon): Better way to patch messages? (use translations?)
       if (message === 'is missing') {
         message = 'Required field';
@@ -26,10 +38,11 @@ export const validateSchema = <T>(schema: Schema.Schema<T>, values: any): Valida
 
       return {
         message,
-        path: path
+        path: (path ?? [])
           .map((segment) => {
+            // Standard Schema allows either a bare key or a `{ key }` wrapper.
+            const str = String(typeof segment === 'object' ? segment.key : segment);
             // If segment is a number, wrap in brackets, otherwise return as-is.
-            const str = String(segment);
             return /^\d+$/.test(str) ? `[${str}]` : str;
           })
           .join('.'),
