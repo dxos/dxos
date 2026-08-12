@@ -6,7 +6,7 @@ import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -26,8 +26,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
-import { useSelection } from '@dxos/react-ui-attention';
+import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
@@ -74,20 +73,8 @@ const HTML_ONLY_TERM = 'htmlonlyterm';
 
 const ATTENDABLE_ID = 'story';
 
-/** Plain projection of the selected message — the live proxy carries internals that add noise. */
-const messageJson = (message: Message.Message, summary?: string) => ({
-  id: message.id,
-  created: message.created,
-  threadId: message.threadId,
-  sender: message.sender,
-  properties: message.properties,
-  blocks: message.blocks.map((block) =>
-    block._tag === 'text'
-      ? { _tag: block._tag, disposition: block.disposition, length: block.text.length }
-      : { _tag: block._tag },
-  ),
-  summary,
-});
+/** The message's content blocks, spread off the proxies so every field renders. */
+const blocksJson = (message: Message.Message) => message.blocks.map((block) => ({ ...block }));
 
 type StoryArgs = {
   /** Number of messages to seed. */
@@ -118,6 +105,8 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
   // Clicking a row dispatches `LayoutOperation.Select` against the article's `attendableId`, so
   // reading the same id here follows the list's selection without the story owning any state.
   const selectedId = useSelection(ATTENDABLE_ID, 'single');
+  // Marks the article's cell as the attended surface, so its selection and keyboard navigation are live.
+  const attentionAttributes = useAttentionAttributes(ATTENDABLE_ID);
   const feed = useResolveRef(mailbox?.feed);
   const messages = useQuery(
     space?.db,
@@ -127,39 +116,26 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
   );
   const selected = messages.find((message) => message.id === selectedId);
 
-  // Summaries live on the mailbox's annotation feed keyed by `parentMessage`, so the JSON shows
-  // everything known about the message rather than just the message object.
-  const annotationsFeed = useResolveRef(mailbox?.annotations);
-  const annotations = useQuery(
-    space?.db,
-    annotationsFeed
-      ? Query.select(Filter.type(Message.Message)).from([
-          Scope.feed(Obj.getURI(annotationsFeed, { prefer: 'absolute' })),
-        ])
-      : Query.select(Filter.nothing()),
-  );
-  const summaries = useMemo(() => Mailbox.summaryIndex(annotations), [annotations]);
-
   if (!space?.db || !mailbox) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
   }
 
   return (
     <TestGrid.Stack>
-      <TestGrid.Panel>
+      <TestGrid.Panel {...attentionAttributes}>
         <MailboxArticle role='article' subject={mailbox} attendableId={ATTENDABLE_ID} />
       </TestGrid.Panel>
       <TestGrid.Panel>
-        <Panel.Root role='article'>
-          <Panel.Toolbar asChild>
-            <Toolbar.Root>
-              <Toolbar.Text>{selected ? 'Selected message' : 'No selection'}</Toolbar.Text>
-            </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content data-testid='message-json' classNames='dx-container overflow-auto p-2 text-sm'>
-            {selected && <JsonHighlighter data={messageJson(selected, summaries.get(selected.id))} />}
-          </Panel.Content>
-        </Panel.Root>
+        {selected && (
+          <TestGrid.Stack orientation='vertical'>
+            <TestGrid.Panel>
+              <JsonHighlighter data={selected} />
+            </TestGrid.Panel>
+            <TestGrid.Panel className='overflow-auto p-2 text-sm'>
+              <JsonHighlighter data={blocksJson(selected)} />
+            </TestGrid.Panel>
+          </TestGrid.Stack>
+        )}
       </TestGrid.Panel>
     </TestGrid.Stack>
   );

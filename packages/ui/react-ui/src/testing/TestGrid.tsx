@@ -2,20 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Children, type PropsWithChildren } from 'react';
+import React, { Children, type ComponentPropsWithoutRef, type PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-const Stack = ({
-  children,
-  direction = 'horizontal',
-}: PropsWithChildren<{ direction?: 'horizontal' | 'vertical' }>) => {
+type StackProps = PropsWithChildren<{ orientation?: 'horizontal' | 'vertical' }> & ComponentPropsWithoutRef<'div'>;
+
+const Stack = ({ children, orientation = 'horizontal', className, ...props }: StackProps) => {
   const count = Children.count(children);
   return (
     <div
-      className={mx('dx-container grid p-3 gap-3')}
+      {...props}
+      className={mx('dx-container grid p-3 gap-3', className)}
       style={
-        direction === 'horizontal'
+        orientation === 'horizontal'
           ? { gridTemplateColumns: `repeat(${count}, 1fr)` }
           : { gridTemplateRows: `repeat(${count}, 1fr)` }
       }
@@ -25,8 +25,14 @@ const Stack = ({
   );
 };
 
-const Panel = ({ children }: PropsWithChildren) => {
-  return <div className='dx-container border border-separator rounded-md'>{children}</div>;
+// Props are forwarded so a story can mark one cell as the attended surface
+// (`useAttentionAttributes`), which is what drives selection and keyboard navigation inside it.
+const Panel = ({ children, className, ...props }: PropsWithChildren<ComponentPropsWithoutRef<'div'>>) => {
+  return (
+    <div {...props} className={mx('dx-container border border-separator rounded-md', className)}>
+      {children}
+    </div>
+  );
 };
 
 export const TestGrid = {
