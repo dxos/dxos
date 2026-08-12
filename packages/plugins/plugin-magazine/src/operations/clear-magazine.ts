@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.ClearMagazine> = FeedO
       }
       const starredUri = yield* Effect.promise(() => Subscription.findSystemTagUri(db, 'starred'));
 
-      const next = yield* Option.fromNullable(starredUri).pipe(
+      const next = yield* Option.fromNullishOr(starredUri).pipe(
         Option.match({
           onNone: () => Effect.succeed<Ref.Ref<Subscription.Post>[]>([]),
           onSome: (uri) =>

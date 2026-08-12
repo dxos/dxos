@@ -12,7 +12,7 @@ import { File } from '@dxos/types';
 
 import * as Sandbox from '../../types/Sandbox';
 
-const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotations({
+const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotate({
   description: 'The sandbox object ID.',
 });
 
@@ -25,15 +25,15 @@ export const CreateSandbox = Operation.make({
     icon: 'ph--terminal--regular',
   },
   input: Schema.Struct({
-    name: Schema.optional(Schema.String).annotations({
+    name: Schema.optional(Schema.String).annotate({
       description: 'Display name for the sandbox.',
     }),
-    baseImage: Schema.optional(Schema.String).annotations({
+    baseImage: Schema.optional(Schema.String).annotate({
       description: 'Base container image to use. Defaults to the service default.',
     }),
   }),
   output: Schema.Struct({
-    sandboxId: Schema.String.annotations({
+    sandboxId: Schema.String.annotate({
       description: 'The ECHO object ID of the created sandbox (also used as the sandbox service ID).',
     }),
   }),
@@ -49,17 +49,17 @@ export const Exec = Operation.make({
   },
   input: Schema.Struct({
     sandbox: SandboxRef,
-    command: Schema.String.annotations({
+    command: Schema.String.annotate({
       description: 'Shell command to run.',
     }),
-    cwd: Schema.optional(Schema.String).annotations({
+    cwd: Schema.optional(Schema.String).annotate({
       description: 'Working directory for the command (absolute path).',
     }),
-    env: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })).annotations({
+    env: Schema.optional(Schema.Record(Schema.String, Schema.String)).annotate({
       description:
         'Additional environment variables. Merged with env vars from the sandbox credentials field; these override on conflict.',
     }),
-    timeout: Schema.optional(Schema.Number).annotations({
+    timeout: Schema.optional(Schema.Number).annotate({
       description: 'Timeout in milliseconds.',
     }),
   }),
@@ -81,15 +81,15 @@ export const UploadFile = Operation.make({
   },
   input: Schema.Struct({
     sandbox: SandboxRef,
-    file: Ref.Ref(File.File).annotations({
+    file: Ref.Ref(File.File).annotate({
       description: 'The ECHO File object to upload.',
     }),
-    path: Schema.String.annotations({
+    path: Schema.String.annotate({
       description: 'Absolute path in the sandbox where the file should be written.',
     }),
   }),
   output: Schema.Struct({
-    path: Schema.String.annotations({
+    path: Schema.String.annotate({
       description: 'The path where the file was written in the sandbox.',
     }),
   }),
@@ -105,15 +105,15 @@ export const DownloadFile = Operation.make({
   },
   input: Schema.Struct({
     sandbox: SandboxRef,
-    path: Schema.String.annotations({
+    path: Schema.String.annotate({
       description: 'Absolute path of the file in the sandbox.',
     }),
-    dest: Schema.optional(Ref.Ref(File.File)).annotations({
+    dest: Schema.optional(Ref.Ref(File.File)).annotate({
       description: 'Existing ECHO File object to overwrite. If omitted, a new File object is created.',
     }),
   }),
   output: Schema.Struct({
-    objectId: Schema.String.annotations({
+    objectId: Schema.String.annotate({
       description: 'The ECHO object ID of the File containing the downloaded content.',
     }),
   }),

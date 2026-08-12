@@ -29,9 +29,9 @@ import { ArtifactArticle } from './ArtifactArticle';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */
 const MockRequestSchema = Schema.Struct({
-  prompt: Schema.optional(Schema.String.annotations({ title: 'Prompt' })),
-  style: Schema.optional(Schema.String.annotations({ title: 'Style' })),
-  aspectRatio: Schema.optional(Schema.String.annotations({ title: 'Aspect ratio' })),
+  prompt: Schema.optional(Schema.String.annotate({ title: 'Prompt' })),
+  style: Schema.optional(Schema.String.annotate({ title: 'Style' })),
+  aspectRatio: Schema.optional(Schema.String.annotate({ title: 'Aspect ratio' })),
 });
 
 /** A keyless mock provider (kind 'image') returning placeholder images. */

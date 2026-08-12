@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -108,7 +108,7 @@ const generateSuggestions = (items: { label: string; typename: string }[]) =>
     }),
   ).pipe(
     Effect.map(({ value }) => [...value.prompts.slice(0, MAX_PROMPTS)]),
-    Effect.catchAll((err) => {
+    Effect.catch((err) => {
       log.warn('generate-home-suggestions: LLM call failed', { err });
       return Effect.succeed<string[]>([]);
     }),

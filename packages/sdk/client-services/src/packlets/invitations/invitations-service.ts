@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import {
   type AcceptInvitationRequest,
   type AuthenticationRequest,
@@ -32,7 +33,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
   }
 
   ['InvitationsService.createInvitation'](request: Invitation): EffectStream.Stream<Invitation, Error> {
-    return EffectStream.async<Invitation, Error>((emit) => {
+    return EffectEx.streamFromEmitter<Invitation, Error>((emit) => {
       const ctx = Context.default();
       void this._invitationsManager
         .createInvitation(ctx, request)
@@ -50,7 +51,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
   }
 
   ['InvitationsService.acceptInvitation'](request: AcceptInvitationRequest): EffectStream.Stream<Invitation, Error> {
-    return EffectStream.async<Invitation, Error>((emit) => {
+    return EffectEx.streamFromEmitter<Invitation, Error>((emit) => {
       const ctx = Context.default();
       const invitation = this._invitationsManager.acceptInvitation(ctx, request);
       invitation.subscribe(
@@ -77,7 +78,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
   }
 
   ['InvitationsService.queryInvitations'](): EffectStream.Stream<QueryInvitationsResponse, Error> {
-    return EffectStream.async<QueryInvitationsResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QueryInvitationsResponse, Error>((emit) => {
       const ctx = Context.default();
 
       // Push added invitations to the stream.

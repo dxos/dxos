@@ -103,7 +103,7 @@ const handler = InboxOperation.ExtractCorrespondents.pipe(
       yield* pipeline.pipe(
         Effect.onError((cause) =>
           Effect.sync(() => {
-            if (!Cause.isInterruptedOnly(cause)) {
+            if (!Cause.hasInterruptsOnly(cause)) {
               reportStatus({ message: PROGRESS_STATUS_FAILED });
             }
           }),

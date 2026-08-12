@@ -233,7 +233,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   const OutputSchema = Schema.Struct({
     completedCriteria: Schema.Struct({
       ...Record.fromIterableWith(options.completionCriteria ?? [], (criterion) => [criterion, Schema.Boolean]),
-    }).annotations({
+    }).annotate({
       description: 'True/false for passed or not passed completion criteria.',
     }),
   });

@@ -34,8 +34,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
-    "@effect/rpc": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

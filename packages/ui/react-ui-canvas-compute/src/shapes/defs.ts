@@ -3,10 +3,11 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as Struct from 'effect/Struct';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { Polygon } from '@dxos/react-ui-canvas-editor';
 import { type MakeOptional } from '@dxos/util';
 
@@ -33,12 +34,11 @@ export const parseAnchorId = (id: string): [PropertyKind | undefined, string] =>
 
 export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'id' | 'size'>, 'type' | 'node'>;
 
-export const ComputeShape = Schema.extend(
-  Polygon,
-  Schema.Struct({
+export const ComputeShape = Polygon.mapFields(
+  Struct.assign({
     // TODO(burdon): Rename computeNode?
-    node: Schema.optional(Obj.ID.annotations({ description: 'Compute node id' })),
-  }).pipe(Schema.mutable),
+    node: Schema.mutableKey(Schema.optional(Obj.ID.annotate({ description: 'Compute node id' }))),
+  }),
 );
 
 export type ComputeShape = Schema.Schema.Type<typeof ComputeShape>;

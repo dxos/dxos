@@ -49,12 +49,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         // on that discards a space that already exists.
         yield* Effect.tryPromise(() =>
           space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED),
-        ).pipe(Effect.catchAll((error) => Effect.sync(() => log.catch(error))));
+        ).pipe(Effect.catch((error) => Effect.sync(() => log.catch(error))));
       }
       yield* Effect.tryPromise({
         try: () => space.waitUntilReady(),
         catch: SpaceNotReadyError.wrap(),
-      }).pipe(Effect.timeoutFail({ duration: SPACE_READY_TIMEOUT, onTimeout: () => new SpaceNotReadyError() }));
+      }).pipe(
+        Effect.timeoutOrElse({ duration: SPACE_READY_TIMEOUT, orElse: () => Effect.fail(new SpaceNotReadyError()) }),
+      );
 
       const collection = Obj.make(Collection.Collection, { objects: [] });
       Obj.update(space.properties, (properties) => {

@@ -5,13 +5,15 @@
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 
 import { fetchRss } from './rss';
 // Real-world RSS feed (CDATA-wrapped summary + content:encoded HTML), loaded via Vite's `?raw` suffix.
 import FEED_XML from './testing/feed.xml?raw';
 
 // `fetchRss` is an Effect (it provides its own HTTP layer); run it to a promise for assertions.
-const runFetchRss = (url: string, options?: { corsProxy?: string }) => EffectEx.runPromise(fetchRss(url, options));
+const runFetchRss = (url: string, options?: { corsProxy?: string }) =>
+  EffectEx.runPromise(TestHelpers.withStubbedFetch(fetchRss(url, options)));
 
 // Sample RSS XML fixture.
 const RSS_XML = `<?xml version="1.0" encoding="UTF-8"?>

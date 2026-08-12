@@ -3,11 +3,11 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 
 import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
+import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
@@ -551,7 +551,7 @@ export const DevtoolsOverview: Role.Role<Record<string, unknown>> = Role.make('o
  */
 export type FormInputData = {
   prop: string;
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Codec<any, any>;
   fieldPropertyAst?: SchemaAST.AST;
   [key: string]: unknown;
 };

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -65,7 +65,7 @@ const attachActiveHandle = (
   Effect.gen(function* () {
     const maxAttempts = 15;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const handle = yield* processManager.attach(pid).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+      const handle = yield* processManager.attach(pid).pipe(Effect.catch(() => Effect.succeed(undefined)));
       if (handle && ACTIVE_PROCESS_STATES.has(handle.status.state)) {
         return handle;
       }
@@ -91,7 +91,7 @@ export const useProcessEphemeralStatus = (
   const monitor = useOptionalCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
   const [status, setStatus] = useState<string | undefined>();
-  const fibersRef = useRef<Fiber.RuntimeFiber<void, unknown>[]>([]);
+  const fibersRef = useRef<Fiber.Fiber<void, unknown>[]>([]);
 
   const subscribePidsKey = useMemo(() => {
     if (!agentPid) {
@@ -161,7 +161,7 @@ export const useProcessEphemeralStatus = (
               handleEphemeralMessage(message);
             }),
           ),
-          Effect.forkDaemon,
+          Effect.forkDetach,
         );
         if (disposed) {
           yield* Fiber.interrupt(fiber);

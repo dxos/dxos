@@ -80,7 +80,7 @@ const collectRevoked = (credentials: readonly Credential[]): ComplexSet<PublicKe
 /**
  * Builds the {@link HaloIdentity.Service} implementation over a client's `halo` proxy.
  */
-export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIdentity.Service> => ({
+export const makeIdentityService = (client: Client): Context.Service.Shape<typeof HaloIdentity.Service> => ({
   identity: streamFromClientObservable(client, () => client.halo.identity).pipe(
     Stream.map((identity) => (identity ? Option.some(toInfo(identity)) : Option.none())),
   ),

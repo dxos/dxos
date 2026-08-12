@@ -7,6 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { type LogLevel, type LogProcessor, type LogEntry as NaturalLogEntry, log } from '@dxos/log';
 import {
@@ -73,7 +74,7 @@ export class LoggingServiceImpl implements LoggingService.Handlers {
       return { key, stats: numericalValues(events, 'duration') };
     };
 
-    return EffectStream.async<QueryMetricsResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QueryMetricsResponse, Error>((emit) => {
       const update = () => {
         const metrics: Metrics = {
           timestamp: new Date(),
@@ -98,7 +99,7 @@ export class LoggingServiceImpl implements LoggingService.Handlers {
   }
 
   ['LoggingService.queryLogs'](request: QueryLogsRequest): EffectStream.Stream<LogEntry, Error> {
-    return EffectStream.async<LogEntry, Error>((emit) => {
+    return EffectEx.streamFromEmitter<LogEntry, Error>((emit) => {
       const ctx = Context.default();
       const handler = (entry: NaturalLogEntry) => {
         // This call was caused by the logging service itself.

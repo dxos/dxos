@@ -5,20 +5,21 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Runtime from 'effect/Runtime';
 import { describe, expect, test } from 'vitest';
 
 import * as DynamicRuntime from './dynamic-runtime';
+import * as EffectEx from './EffectEx';
 import { runAndForwardErrors } from './internal/errors';
 
 // Test service tags
-class Database extends Context.Tag('Database')<Database, { query: (sql: string) => Effect.Effect<string[]> }>() {}
+class Database extends Context.Service<Database, { query: (sql: string) => Effect.Effect<string[]> }>()('Database') {}
 
-class Logger extends Context.Tag('Logger')<Logger, { log: (msg: string) => Effect.Effect<void> }>() {}
+class Logger extends Context.Service<Logger, { log: (msg: string) => Effect.Effect<void> }>()('Logger') {}
 
-class Cache extends Context.Tag('Cache')<Cache, { get: (key: string) => Effect.Effect<string | undefined> }>() {}
+class Cache extends Context.Service<Cache, { get: (key: string) => Effect.Effect<string | undefined> }>()('Cache') {}
 
 describe('DynamicRuntime', () => {
   describe('Success Cases', () => {
@@ -143,27 +144,27 @@ describe('DynamicRuntime', () => {
       });
 
       const fiber = runtime.runFork(program);
-      const exit = await runAndForwardErrors(fiber.await);
+      const [exit] = await runAndForwardErrors(Fiber.awaitAll([fiber]));
       expect(Exit.isSuccess(exit)).toBe(true);
       if (Exit.isSuccess(exit)) {
         expect(exit.value).toEqual(['result: SELECT * FROM users']);
       }
     });
 
-    test('runtimeEffect returns runtime with correct context', async () => {
+    test('contextEffect returns runtime with correct context', async () => {
       const layer = Layer.succeed(Database, {
         query: (sql: string) => Effect.succeed([`result: ${sql}`]),
       });
       const runtime = DynamicRuntime.make(ManagedRuntime.make(layer), [Database]);
 
-      const rt = await runtime.runPromise(runtime.runtimeEffect);
+      const rt = await runtime.runPromise(runtime.contextEffect);
       expect(rt).toBeDefined();
       // Verify we can use the runtime directly
       const program = Effect.gen(function* () {
         const db = yield* Database;
         return yield* db.query('test');
       });
-      const result = await Runtime.runPromise(rt)(program);
+      const result = await EffectEx.runPromise(Effect.provideContext(program, rt));
       expect(result).toEqual(['result: test']);
     });
 
@@ -324,11 +325,11 @@ describe('DynamicRuntime', () => {
       expect(() => runtime.runFork(program)).toThrow(/Missing required tags in runtime: Database/);
     });
 
-    test('runtimeEffect with missing tags throws error', async () => {
+    test('contextEffect with missing tags throws error', async () => {
       const layer = Layer.empty; // No tags provided
       const runtime = DynamicRuntime.make(ManagedRuntime.make(layer), [Database]);
 
-      await expect(runtime.runPromise(runtime.runtimeEffect)).rejects.toThrow(
+      await expect(runtime.runPromise(runtime.contextEffect)).rejects.toThrow(
         /Missing required tags in runtime: Database/,
       );
     });

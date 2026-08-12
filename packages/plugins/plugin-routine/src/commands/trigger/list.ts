@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, printList, spaceIdWithDefault, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -32,7 +32,7 @@ export const list = Command.make(
       const client = yield* ClientService;
       const spaceId = yield* spaceIdWithDefault(spaceIdOption);
       const result = yield* Effect.promise(() => client.edge.http.getCronTriggers(Context.default(), spaceId)).pipe(
-        Effect.catchAll(() => Effect.succeed({ cronIds: [] })),
+        Effect.catch(() => Effect.succeed({ cronIds: [] })),
       );
       return result.cronIds;
     });

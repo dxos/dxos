@@ -53,10 +53,10 @@ export default Capability.makeModule(
     if (tokens) {
       log('oauth redirect: capturing tokens', { accessTokenId: tokens.accessTokenId });
       const coordinator = yield* ConnectorCoordination.ConnectorCoordinator;
-      yield* Effect.forkDaemon(
+      yield* Effect.forkDetach(
         coordinator
           .finalizeRedirectFlow(tokens)
-          .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error })))),
+          .pipe(Effect.catch((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error })))),
       );
     }
     return [];

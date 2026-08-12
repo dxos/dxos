@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
@@ -22,15 +22,15 @@ import { JmapCredentials } from '../services';
  * email, and token are collected directly.
  */
 const JmapCredentialFormSchema = Schema.Struct({
-  host: Schema.String.annotations({
+  host: Schema.String.annotate({
     title: 'Server',
     description: 'JMAP server host. The session is discovered at https://<host>/.well-known/jmap.',
   }),
-  email: Schema.String.annotations({
+  email: Schema.String.annotate({
     title: 'Email',
     description: 'Your email address / username on the JMAP server.',
   }),
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'API token',
     description: 'A JMAP API token, sent as a Bearer credential.',
   }),

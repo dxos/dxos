@@ -23,5 +23,5 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
  */
 export type AtprotoVisibility = 'publish' | 'mirror' | 'private';
 
-export const AtprotoVisibilityAnnotationId = Symbol.for('@dxos/schema/annotation/AtprotoVisibility');
+export const AtprotoVisibilityAnnotationId = '@dxos/schema/annotation/AtprotoVisibility';
 export const AtprotoVisibilityAnnotation = createAnnotationHelper<AtprotoVisibility>(AtprotoVisibilityAnnotationId);

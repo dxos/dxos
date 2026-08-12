@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
 
       // Validate navigation target, redirecting to 404 if not found.
       const client = yield* Capability.get(ClientCapabilities.Client).pipe(
-        Effect.catchAll(() => Effect.succeed(undefined)),
+        Effect.catch(() => Effect.succeed(undefined)),
       );
       // Existence checkers for the resolved EID: local (load + catchTag) first, then remote (edge).
       const checkLocalExistence = client
@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             return Database.load(space.db.makeRef(uri)).pipe(
               Effect.as(true),
               Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
-              Effect.catchAll(() => Effect.succeed(false)),
+              Effect.catch(() => Effect.succeed(false)),
             );
           }
         : undefined;

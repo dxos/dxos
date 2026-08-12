@@ -3,10 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, JsonSchema, Obj } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 import { type ProcedureAst } from '@dxos/vendor-hyperformula';

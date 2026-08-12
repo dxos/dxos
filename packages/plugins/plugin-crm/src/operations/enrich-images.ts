@@ -54,7 +54,7 @@ const handler = CrmOperation.EnrichImages.pipe(
               const attached = yield* attachImageToSubject({ subject, url, imageServiceUrl }).pipe(
                 Effect.map(() => true),
                 // A miss (404 avatar, unknown logo, oversize, wrong type) tries the next candidate.
-                Effect.catchAll((error) => {
+                Effect.catch((error) => {
                   log.info('enrich-images: candidate failed', { url, error: error.message });
                   return Effect.succeed(false);
                 }),

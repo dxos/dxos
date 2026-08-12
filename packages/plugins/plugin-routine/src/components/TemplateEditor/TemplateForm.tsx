@@ -22,7 +22,7 @@ export type TemplateChangeCallback = (mutate: (template: Obj.Mutable<Template.Te
 export type TemplateFormProps = {
   id: string;
   template: Template.Template;
-  schema?: Schema.Schema<any, any, any>;
+  schema?: Schema.Codec<any, any, any>;
   /**
    * Callback to mutate the template. Should wrap mutations in parent's Obj.update.
    * If not provided, the component is read-only.

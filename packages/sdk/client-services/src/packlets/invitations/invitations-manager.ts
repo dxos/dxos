@@ -33,10 +33,9 @@ import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeyp
 /**
  * Effect service tag for {@link InvitationsManager}.
  */
-export class InvitationsManagerService extends EffectContext.Tag('@dxos/client-services/InvitationsManager')<
-  InvitationsManagerService,
-  InvitationsManager
->() {}
+export class InvitationsManagerService extends EffectContext.Service<InvitationsManagerService, InvitationsManager>()(
+  '@dxos/client-services/InvitationsManager',
+) {}
 
 /**
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and

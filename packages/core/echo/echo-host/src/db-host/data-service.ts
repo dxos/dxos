@@ -8,6 +8,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -72,7 +73,7 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   ['DataService.subscribe'](request: SubscribeRequest): EffectStream.Stream<BatchedDocumentUpdates, Error> {
-    return EffectStream.async<BatchedDocumentUpdates, Error>((emit) => {
+    return EffectEx.streamFromEmitter<BatchedDocumentUpdates, Error>((emit) => {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
         sendUpdates: (updates) => void emit.single(updates),
@@ -195,7 +196,7 @@ export class DataServiceImpl implements DataService.Handlers {
   ['DataService.subscribeSpaceSyncState'](
     request: GetSpaceSyncStateRequest,
   ): EffectStream.Stream<SpaceSyncState, Error> {
-    return EffectStream.async<SpaceSyncState, Error>((emit) => {
+    return EffectEx.streamFromEmitter<SpaceSyncState, Error>((emit) => {
       const ctx = Context.default();
       const spaceId = request.spaceId;
       invariant(SpaceId.isValid(spaceId));

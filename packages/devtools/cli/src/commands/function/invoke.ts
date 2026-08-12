@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -21,10 +21,10 @@ import { printInvokeResult } from './util';
 export const invoke = Command.make(
   'invoke',
   {
-    key: Args.text({ name: 'key' }).pipe(Args.withDescription('The key of the function to invoke.')),
-    data: Args.text({ name: 'data' }).pipe(
+    key: Args.string('key').pipe(Args.withDescription('The key of the function to invoke.')),
+    data: Args.string('data').pipe(
       Args.withDescription('The data to pass to the function.'),
-      Args.withSchema(Schema.parseJson(Schema.Unknown)),
+      Args.withSchema(Schema.fromJsonString(Schema.Unknown)),
     ),
     cpuTimeLimit: Options.integer('cpuTimeLimit').pipe(
       Options.withDescription('The CPU time limit in seconds.'),

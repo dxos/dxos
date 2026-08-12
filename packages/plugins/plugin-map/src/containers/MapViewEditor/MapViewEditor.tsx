@@ -15,8 +15,8 @@ import type * as Map from '../../types/Map';
 
 // TODO(wittjosiah): Add center and zoom.
 export const MapSettingsSchema = Schema.Struct({
-  coordinateSource: Schema.optional(Schema.String.annotations({ title: 'Coordinate source type' })),
-  coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
+  coordinateSource: Schema.optional(Schema.String.annotate({ title: 'Coordinate source type' })),
+  coordinateColumn: Schema.optional(Schema.String.annotate({ title: 'Coordinate column' })),
 });
 
 type MapViewEditorProps = { object: Map.Map };

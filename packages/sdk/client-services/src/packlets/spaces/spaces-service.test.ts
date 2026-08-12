@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -62,7 +62,7 @@ describe('SpacesService', () => {
     test('returns empty list if no identity is available', async () => {
       const query = spacesService['SpacesService.querySpaces']();
       const result = new Trigger<Space[] | undefined>();
-      const unsubscribe = subscribeStream(Runtime.defaultRuntime, query, {
+      const unsubscribe = subscribeStream(EffectContext.empty(), query, {
         onData: ({ spaces }) => result.wake(spaces),
       });
       onTestFinished(() => unsubscribe());
@@ -85,7 +85,7 @@ describe('SpacesService', () => {
 
       const query = spacesService['SpacesService.querySpaces']();
       const result = new Trigger<Space[] | undefined>();
-      const unsubscribe = subscribeStream(Runtime.defaultRuntime, query, {
+      const unsubscribe = subscribeStream(EffectContext.empty(), query, {
         onData: ({ spaces }) => result.wake(spaces),
       });
       onTestFinished(() => unsubscribe());
@@ -99,7 +99,7 @@ describe('SpacesService', () => {
       await serviceContext.createIdentity();
       const query = spacesService['SpacesService.querySpaces']();
       const result = new Trigger<Space[] | undefined>();
-      const unsubscribe = subscribeStream(Runtime.defaultRuntime, query, {
+      const unsubscribe = subscribeStream(EffectContext.empty(), query, {
         onData: ({ spaces }) => result.wake(spaces),
       });
       onTestFinished(() => unsubscribe());

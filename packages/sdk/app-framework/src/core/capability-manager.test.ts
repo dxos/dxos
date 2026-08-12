@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import { describe, expect, it, onTestFinished } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
@@ -34,13 +34,13 @@ describe('CapabilityManager', () => {
 
       const result = yield* Capability.get(interfaceDef).pipe(
         Effect.provideService(Capability.Service, capabilityManager),
-        Effect.either,
+        Effect.result,
       );
 
-      expect(result._tag).toEqual('Left');
-      if (result._tag === 'Left') {
-        expect(result.left).toBeInstanceOf(CapabilityNotFoundError);
-        expect(result.left.context.identifier).toEqual(interfaceDef.identifier);
+      expect(result._tag).toEqual('Failure');
+      if (result._tag === 'Failure') {
+        expect(result.failure).toBeInstanceOf(CapabilityNotFoundError);
+        expect(result.failure.context.identifier).toEqual(interfaceDef.identifier);
       }
     }),
   );

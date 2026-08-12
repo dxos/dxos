@@ -10,10 +10,10 @@ import {
   interpretAsDocumentId,
   isValidAutomergeUrl,
 } from '@automerge/automerge-repo';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
@@ -106,7 +106,7 @@ type SpaceDocumentSet = {
 /**
  * Effect service tag for {@link EchoHost}.
  */
-export class EchoHostService extends EffectContext.Tag('@dxos/echo-host/EchoHost')<EchoHostService, EchoHost>() {}
+export class EchoHostService extends EffectContext.Service<EchoHostService, EchoHost>()('@dxos/echo-host/EchoHost') {}
 
 /**
  * Host for the Echo database.

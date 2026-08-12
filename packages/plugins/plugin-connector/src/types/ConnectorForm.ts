@@ -11,7 +11,7 @@ import { ConnectorAnnotationId } from './ConnectorAnnotations';
  * tags `connectorId` so plugin-connector renders a connector dropdown.
  */
 export const CreateConnectionForm = Schema.Struct({
-  connectorId: Schema.String.annotations({
+  connectorId: Schema.String.annotate({
     title: 'Service',
     [ConnectorAnnotationId]: true,
   }),

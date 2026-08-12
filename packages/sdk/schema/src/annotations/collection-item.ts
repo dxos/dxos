@@ -13,5 +13,5 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
  *   instead-of: Leaving the type unannotated, which files new objects under `types/<slug>` in the database section where they are harder to discover and cannot be organized into collections
  *   uses: {@link CollectionItemAnnotation}
  */
-export const CollectionItemAnnotationId = Symbol.for('@dxos/schema/annotation/CollectionItem');
+export const CollectionItemAnnotationId = '@dxos/schema/annotation/CollectionItem';
 export const CollectionItemAnnotation = createAnnotationHelper<boolean>(CollectionItemAnnotationId);

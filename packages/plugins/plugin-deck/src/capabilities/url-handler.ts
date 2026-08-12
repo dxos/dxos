@@ -78,7 +78,7 @@ export default Capability.makeModule(
           .get()
           .map((handler) =>
             handler(url).pipe(
-              Effect.catchAllCause((cause) =>
+              Effect.catchCause((cause) =>
                 Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
               ),
             ),
@@ -116,7 +116,7 @@ export default Capability.makeModule(
      * full deadline for a further contribution that never comes.
      */
     const parseWhenKeysArrive = <A>(parse: () => Option.Option<A>) =>
-      Effect.async<Option.Option<A>>((resume) => {
+      Effect.callback<Option.Option<A>>((resume) => {
         const cancel = registry.subscribe(builder.extensions, () => {
           const parsed = parse();
           if (Option.isSome(parsed)) {
@@ -125,10 +125,9 @@ export default Capability.makeModule(
         });
         return Effect.sync(cancel);
       }).pipe(
-        Effect.timeoutTo({
+        Effect.timeoutOrElse({
           duration: RESOLVE_TIMEOUT,
-          onTimeout: () => Option.none<A>(),
-          onSuccess: (parsed) => parsed,
+          orElse: () => Effect.succeed(Option.none<A>()),
         }),
       );
 
@@ -176,7 +175,7 @@ export default Capability.makeModule(
           // not-found sentinel below.
           onNone: () =>
             manager.activate(ActivationEvents.Idle).pipe(
-              Effect.catchAllCause((cause) =>
+              Effect.catchCause((cause) =>
                 Effect.sync(() =>
                   log.warn('idle activation failed during url restore', { error: Cause.pretty(cause) }),
                 ),
@@ -249,7 +248,7 @@ export default Capability.makeModule(
             // id (the final tail segment), else `EntityId.isValid` rejects the compound form.
             const entityId = pair.id.slice(pair.id.lastIndexOf(builder.urlGrammar.tailSeparator) + 1);
             return Effect.forEach(loaders, (loader) =>
-              loader.load({ spaceId: pair.workspace, entityId }).pipe(Effect.catchAll(() => Effect.succeed(false))),
+              loader.load({ spaceId: pair.workspace, entityId }).pipe(Effect.catch(() => Effect.succeed(false))),
             ).pipe(Effect.tap((results) => Effect.sync(() => (confirmed[index] = results.some(Boolean)))));
           },
           { concurrency: 'unbounded' },
@@ -360,7 +359,7 @@ export default Capability.makeModule(
           }),
         );
       }).pipe(
-        Effect.catchAll((error) => Effect.sync(() => log.warn('failed to initialize deep link listener', { error }))),
+        Effect.catch((error) => Effect.sync(() => log.warn('failed to initialize deep link listener', { error }))),
       );
     }
 

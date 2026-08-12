@@ -12,6 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
+import { SchemaAST } from '@dxos/effect';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Icon, Panel, useTranslation } from '@dxos/react-ui';
@@ -24,9 +25,13 @@ import { meta } from '#meta';
 
 import * as ProjectOperation from '../../types/ProjectOperation';
 
-// Pick the editable header fields from the Project schema rather than redeclaring them.
-const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
-type HeaderValues = Schema.Schema.Type<typeof HeaderValues>;
+// Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
+// `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
+// and the field types are re-attached here.
+type HeaderValues = Pick<Project.Project, 'name' | 'description'>;
+const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
+  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description']),
+);
 
 // The Context section edits only the instructions' standing context objects.
 const CONTEXT_FIELDS: readonly string[] = ['objects'];

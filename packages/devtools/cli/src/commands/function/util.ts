@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Prompt from '@effect/cli/Prompt';
-import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
-import { FormBuilder } from '@dxos/cli-util';
+import { Ansi, Doc, FormBuilder } from '@dxos/cli-util';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
 
@@ -35,7 +34,7 @@ export const getFunctionStatus = (
 /**
  * Pretty prints a function with ANSI colors.
  */
-export const printFunction = (fn: Operation.PersistentOperation, status?: FunctionStatus) => {
+export const printFunction = (fn: Operation.PersistentOperation, status?: FunctionStatus): Doc.Doc<any> => {
   return FormBuilder.make({ title: fn.id }).pipe(
     FormBuilder.set('key', Obj.getMeta(fn).key),
     FormBuilder.set('name', fn.name),
@@ -62,7 +61,7 @@ export const printFunction = (fn: Operation.PersistentOperation, status?: Functi
 /**
  * Pretty prints function invocation result with ANSI colors.
  */
-export const printInvokeResult = (result: unknown) => {
+export const printInvokeResult = (result: unknown): Doc.Doc<any> => {
   if (result === null || result === undefined) {
     return FormBuilder.make({ title: 'Result' }).pipe(FormBuilder.set('value', 'null'), FormBuilder.build);
   }

@@ -10,7 +10,6 @@ import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
@@ -72,11 +71,11 @@ export interface Unknown extends BaseObj {}
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
 //   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
 //   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
-export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  Schema.annotations({
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.StructWithRest(
+  Schema.Struct({ id: Schema.String }),
+  [Schema.Record(Schema.String, Schema.Unknown)],
+).pipe(
+  Schema.annotate({
     [internal.TypeAnnotationId]: {
       kind: Entity.Kind.Object,
       typename: internal.ANY_OBJECT_TYPENAME,
@@ -286,7 +285,7 @@ export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Ef
 export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<Option.Option<T>, never> =>
   getReactive(snapshot).pipe(
     Effect.map(Option.some),
-    Effect.catchAll(() => Effect.succeed(Option.none())),
+    Effect.catch(() => Effect.succeed(Option.none())),
   );
 
 /**
@@ -787,7 +786,7 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
     return left === right;
   }
   if (typeof left !== 'object' || typeof right !== 'object') {
-    return Utils.structuralRegion(() => Equal.equals(left, right));
+    return Equal.equals(left, right);
   }
   if (Ref.isRef(left) && Ref.isRef(right)) {
     return left.uri === right.uri;

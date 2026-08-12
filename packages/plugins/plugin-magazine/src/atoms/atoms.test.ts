@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
-import * as Data from 'effect/Data';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';
@@ -179,7 +178,7 @@ describe('postCurationAtom', () => {
     await db.flush();
 
     const registry = Registry.make();
-    const atom = postCurationAtom(Data.tuple(post, magazine));
+    const atom = postCurationAtom([post, magazine]);
     let fireCount = 0;
     registry.subscribe(atom, () => fireCount++, { immediate: true });
     expect(fireCount).toBe(1);
@@ -210,7 +209,7 @@ describe('postCurationAtom', () => {
     await db.flush();
 
     const registry = Registry.make();
-    const atomA = postCurationAtom(Data.tuple(postA, magazine));
+    const atomA = postCurationAtom([postA, magazine]);
     let fireCount = 0;
     registry.subscribe(atomA, () => fireCount++, { immediate: true });
     expect(fireCount).toBe(1);
@@ -238,7 +237,7 @@ describe('postCurationAtom', () => {
     await db.flush();
 
     const registry = Registry.make();
-    const atom = postCurationAtom(Data.tuple(post, magazine));
+    const atom = postCurationAtom([post, magazine]);
     let fireCount = 0;
     registry.subscribe(atom, () => fireCount++, { immediate: true });
     expect(fireCount).toBe(1);
@@ -282,7 +281,7 @@ describe('postDisplayAtom', () => {
     await db.flush();
 
     const registry = Registry.make();
-    const atom = postDisplayAtom(Data.tuple(post, magazine));
+    const atom = postDisplayAtom([post, magazine]);
     registry.subscribe(atom, () => {}, { immediate: true });
 
     // Before curation: falls back to RSS description.
@@ -312,7 +311,7 @@ describe('postDisplayAtom', () => {
     await db.flush();
 
     const registry = Registry.make();
-    const atom = postDisplayAtom(Data.tuple(post, magazine));
+    const atom = postDisplayAtom([post, magazine]);
     let fireCount = 0;
     registry.subscribe(atom, () => fireCount++, { immediate: true });
     expect(registry.get(atom).read).toBe(false);

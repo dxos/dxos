@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import * as Data from 'effect/Data';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { StateMap } from '@dxos/schema';
 
@@ -18,7 +18,7 @@ const EMPTY_CURATION_SLICE: CurationSlice = { snippet: undefined, imageUrl: unde
 /**
  * This Post's magazine-scoped curation slice (snippet/imageUrl), sliced off the Magazine's
  * `postState`. Fires only when this Post's slice changes — sibling Posts' curation mutations are
- * discarded without propagating. Keyed by a value-equal `Data.tuple([post, magazine])`.
+ * discarded without propagating. Keyed by a structurally-equal tuple key `[post, magazine]`.
  */
 export const postCurationAtom = Atom.family((key: readonly [Subscription.Post, Magazine.Magazine]) =>
   Atom.make<CurationSlice>((get) => {
@@ -34,4 +34,4 @@ export const postCurationAtom = Atom.family((key: readonly [Subscription.Post, M
 
 /** This Post's magazine-scoped curation slice. */
 export const usePostCuration = (post: Subscription.Post, magazine: Magazine.Magazine): CurationSlice =>
-  useAtomValue(postCurationAtom(Data.tuple(post, magazine)));
+  useAtomValue(postCurationAtom([post, magazine]));

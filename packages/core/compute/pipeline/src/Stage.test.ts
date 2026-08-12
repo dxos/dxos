@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
@@ -21,7 +20,7 @@ describe('Stage.map', () => {
   });
 
   test('injects the shared context via the Requirements channel', async ({ expect }) => {
-    class Factor extends Context.Tag('Factor')<Factor, { readonly factor: number }>() {}
+    class Factor extends Context.Service<Factor, { readonly factor: number }>()('Factor') {}
     // `R` (the Factor requirement) infers from the callback; only `In` needs the annotation.
     const stage = Stage.map('scale', (n: number) => Factor.pipe(Effect.map(({ factor }) => n * factor)));
     const out = await collect(
@@ -47,7 +46,7 @@ describe('Stage.window', () => {
   });
 
   test('injects the shared context via the Requirements channel', async ({ expect }) => {
-    class Base extends Context.Tag('Base')<Base, { readonly base: number }>() {}
+    class Base extends Context.Service<Base, { readonly base: number }>()('Base') {}
     const stage = Stage.window('sum', 2, (window: readonly number[]) =>
       Base.pipe(Effect.map(({ base }) => window.reduce((total, item) => total + item, base))),
     );
@@ -63,4 +62,4 @@ describe('Stage.window', () => {
 });
 
 const collect = <Out, E>(stream: Stream.Stream<Out, E>): Promise<readonly Out[]> =>
-  EffectEx.runPromise(stream.pipe(Stream.runCollect, Effect.map(Chunk.toReadonlyArray)));
+  EffectEx.runPromise(stream.pipe(Stream.runCollect));

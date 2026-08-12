@@ -176,7 +176,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
             Effect.map(() => 'ok' as const),
             Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('email-check-unavailable' as const)),
             Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('account-exists' as const)),
-            Effect.catchAll((err) =>
+            Effect.catch((err) =>
               Effect.sync(() => {
                 log.catch(err);
                 // Another signup can register the email between the probe and redemption, so the

@@ -40,7 +40,7 @@ export const resolveMailboxByNameOrRole = (folders: readonly Mailbox[], nameOrRo
   const role = ROLE_ALIASES[lowered] ?? lowered;
   const match =
     folders.find((folder) => folder.role === role) ?? folders.find((folder) => folder.name.toLowerCase() === lowered);
-  return Option.fromNullable(match?.id);
+  return Option.fromNullishOr(match?.id);
 };
 
 //
@@ -101,7 +101,7 @@ const buildFilter = (tokens: readonly Token[], ctx: ParseContext): Option.Option
 
   return Match.value(operands.length).pipe(
     Match.when(0, () => Option.none<Filter>()),
-    Match.when(1, () => Option.fromNullable(operands[0])),
+    Match.when(1, () => Option.fromNullishOr(operands[0])),
     Match.orElse(() => Option.some<Filter>({ operator: 'AND', conditions: operands })),
   );
 };
@@ -142,7 +142,7 @@ const buildOperatorLeaf = (operator: string, value: string, ctx: ParseContext): 
       condLeaf(value, STRING_FIELD_LEAVES[field](value)),
     ),
     Match.whenOr('label', 'in', () => ctx.resolveMailbox(value).pipe(Option.map((id) => ({ inMailbox: id })))),
-    Match.when('is', () => Option.fromNullable(IS_LEAVES[value.toLowerCase()])),
+    Match.when('is', () => Option.fromNullishOr(IS_LEAVES[value.toLowerCase()])),
     Match.when('has', () =>
       value.toLowerCase() === 'attachment' ? Option.some<Filter>({ hasAttachment: true }) : Option.none<Filter>(),
     ),

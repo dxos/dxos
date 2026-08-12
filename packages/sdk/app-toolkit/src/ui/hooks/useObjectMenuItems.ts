@@ -57,7 +57,7 @@ const openObject = (
     yield* invoke(LayoutOperation.Open, { subject: [path], disposition: 'add', ...options });
   }).pipe(
     // A click must never throw, but a swallowed Open failure reads as "nothing happened" — leave a trace.
-    Effect.tapErrorCause((cause) => Effect.sync(() => log.warn('failed to open object', { id: subject.id, cause }))),
+    Effect.tapCause((cause) => Effect.sync(() => log.warn('failed to open object', { id: subject.id, cause }))),
     Effect.ignore,
   );
 

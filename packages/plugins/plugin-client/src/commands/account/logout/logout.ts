@@ -2,13 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
-import * as Error from '@effect/platform/Error';
-import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
@@ -17,7 +16,7 @@ import { ConfigService } from '@dxos/config';
 export const logout = Command.make(
   'logout',
   {
-    force: Options.boolean('force', { ifPresent: true }).pipe(Options.withDescription('Skip confirmation prompt.')),
+    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
   },
   Effect.fnUntraced(function* ({ force }) {
     const fs = yield* FileSystem.FileSystem;
@@ -35,8 +34,10 @@ export const logout = Command.make(
     }
 
     yield* fs.remove(path, { recursive: true }).pipe(
+      // v4 wraps the platform's error kinds in a single `PlatformError`, with the normalized tag on
+      // its `reason` rather than on the error itself.
       Effect.catchIf(
-        (e): e is Error.SystemError => e._tag === 'SystemError' && e.reason === 'NotFound',
+        (error) => error._tag === 'PlatformError' && error.reason._tag === 'NotFound',
         () => Effect.void,
       ),
     );

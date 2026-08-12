@@ -17,7 +17,7 @@ export const functions = [
     version: '0.1.0',
     inputSchema: JsonSchema.toJsonSchema(
       Schema.Struct({
-        level: Schema.Number.annotations({
+        level: Schema.Number.annotate({
           title: 'Level',
         }),
       }),
@@ -30,8 +30,8 @@ export const functions = [
     binding: 'FOREX',
     inputSchema: JsonSchema.toJsonSchema(
       Schema.Struct({
-        from: Schema.String.annotations({ title: 'Currency from' }),
-        to: Schema.String.annotations({ title: 'Currency to' }),
+        from: Schema.String.annotate({ title: 'Currency from' }),
+        to: Schema.String.annotate({ title: 'Currency to' }),
       }),
     ),
   },
@@ -41,7 +41,7 @@ export const functions = [
     version: '0.0.1',
     inputSchema: JsonSchema.toJsonSchema(
       Schema.Struct({
-        contact: Ref.Ref(TestSchema.ContactType).annotations({ title: 'Contact' }),
+        contact: Ref.Ref(TestSchema.ContactType).annotate({ title: 'Contact' }),
       }),
     ),
   },
@@ -58,8 +58,8 @@ export const registryFunctions = [
     version: '0.1.0',
     inputSchema: JsonSchema.toJsonSchema(
       Schema.Struct({
-        text: Schema.String.annotations({ title: 'Text' }),
-        targetLanguage: Schema.String.annotations({ title: 'Target language' }),
+        text: Schema.String.annotate({ title: 'Text' }),
+        targetLanguage: Schema.String.annotate({ title: 'Target language' }),
       }),
     ),
   },
@@ -69,7 +69,7 @@ export const registryFunctions = [
     version: '0.1.0',
     inputSchema: JsonSchema.toJsonSchema(
       Schema.Struct({
-        content: Schema.String.annotations({ title: 'Content' }),
+        content: Schema.String.annotate({ title: 'Content' }),
       }),
     ),
   },

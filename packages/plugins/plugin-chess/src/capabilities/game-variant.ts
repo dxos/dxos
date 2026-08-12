@@ -15,13 +15,13 @@ import * as Chess from '../types/Chess';
 
 const CreateChessInput = Schema.Struct({
   name: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Name',
       description: 'Optional name for the game.',
     }),
   ),
   pgn: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'PGN',
       description: 'Optional Portable Game Notation to start from.',
     }),

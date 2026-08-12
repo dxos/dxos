@@ -30,10 +30,10 @@ import {
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';
@@ -586,10 +586,10 @@ export class AutomergeHost extends Resource {
     // row could never be found again.
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
     await RuntimeProvider.runPromise(this._runtime)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const transaction = yield* SqlTransaction.SqlTransaction;
         yield* transaction.withTransaction(
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             yield* this._headsStore.remove(documentId);
             yield* this._storage.removeRangeEffect([documentId]);
             for (const family of SUBDUCTION_KEY_FAMILIES) {

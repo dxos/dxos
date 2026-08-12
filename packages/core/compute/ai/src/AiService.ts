@@ -4,10 +4,10 @@
 
 // @import-as-namespace
 
-import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { DXN } from '@dxos/keys';
 
@@ -41,7 +41,7 @@ export interface Service {
 /**
  * AI Model Factory.
  */
-export class AiService extends Context.Tag('@dxos/ai/AiService')<AiService, Service>() {}
+export class AiService extends Context.Service<AiService, Service>()('@dxos/ai/AiService') {}
 
 /**
  * Resolves a model layer from a bare NSID name — validated at compile time like {@link DXN.make} and
@@ -59,9 +59,9 @@ export const model: {
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService> =>
   AiService.pipe(
     Effect.map((_) => _.model(DXN.make(model), options)),
-    Layer.unwrapEffect,
+    Layer.unwrap,
   );
 
 export const notAvailable = Layer.succeed(AiService, {
-  model: (model) => Layer.fail(new AiModelNotAvailableError(model)),
+  model: (model) => Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model))),
 });

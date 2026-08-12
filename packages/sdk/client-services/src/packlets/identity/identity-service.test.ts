@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -124,7 +124,7 @@ describe('IdentityService', () => {
     test('returns undefined if no identity is available', async () => {
       const stream = identityService['IdentityService.queryIdentity']();
       const result = new Trigger<Identity | undefined>();
-      const cleanup = subscribeStream(Runtime.defaultRuntime, stream, {
+      const cleanup = subscribeStream(EffectContext.empty(), stream, {
         onData: ({ identity }) => result.wake(identity),
       });
       onTestFinished(cleanup);
@@ -134,7 +134,7 @@ describe('IdentityService', () => {
     test('updates when identity is created', async () => {
       const stream = identityService['IdentityService.queryIdentity']();
       let result = new Trigger<Identity | undefined>();
-      const cleanup = subscribeStream(Runtime.defaultRuntime, stream, {
+      const cleanup = subscribeStream(EffectContext.empty(), stream, {
         onData: ({ identity }) => result.wake(identity),
       });
       onTestFinished(cleanup);

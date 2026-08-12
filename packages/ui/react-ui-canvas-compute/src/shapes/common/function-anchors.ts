@@ -3,9 +3,9 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
+import { SchemaAST } from '@dxos/effect';
 import { type Polygon } from '@dxos/react-ui-canvas-editor';
 import { createAnchors, rowHeight } from '@dxos/react-ui-canvas-editor';
 

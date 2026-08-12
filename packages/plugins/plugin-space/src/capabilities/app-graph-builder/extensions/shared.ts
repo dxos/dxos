@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
@@ -118,7 +118,7 @@ export type ViewIndex = {
  * type URI via getTypeURIFromQuery are included.
  */
 // TODO(wittjosiah): Make reactive to schema registry changes (currently only object/view mutations trigger updates).
-export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.AnyEntity[]): ViewIndex => {
+export const buildViewIndex = (get: Atom.AtomContext, space: Space, schemas: Type.AnyEntity[]): ViewIndex => {
   const viewSchemas = schemas.filter((schema) => ViewAnnotation.has(schema));
 
   const viewsByTypeUri = new Map<string, Obj.Any[]>();

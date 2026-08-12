@@ -32,7 +32,7 @@ export interface Service {
   hydrate: () => Effect.Effect<void>;
 }
 
-export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() {}
+export class AgentService extends Context.Service<AgentService, Service>()('@dxos/functions-runtime/AgentService') {}
 
 /**
  * Handle to an agent session.
@@ -73,15 +73,17 @@ export interface Session {
    * Replays buffered events, then streams new ones until the process ends.
    *
    * When forking a collector from a short-lived parent (e.g. `useEffect` +
-   * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDaemon} so the
+   * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDetach} so the
    * stream survives after the parent scope closes; interrupt it on dispose.
    */
   subscribeEphemeral: () => Stream.Stream<Trace.Message>;
 }
 
-export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
+export const getSession = (...args: Parameters<Context.Service.Shape<typeof AgentService>['getSession']>) =>
+  AgentService.use((service) => service.getSession(...args));
 
-export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => service.hydrate);
+export const hydrate = (...args: Parameters<Context.Service.Shape<typeof AgentService>['hydrate']>) =>
+  AgentService.use((service) => service.hydrate(...args));
 
 export interface GetSessionOptions {
   readonly model?: DXN.DXN;

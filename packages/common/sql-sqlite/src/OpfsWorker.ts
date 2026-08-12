@@ -6,15 +6,15 @@
 
 // Code copied from @effect/sql-sqlite-wasm/OpfsWorker.ts and augmented with logging.
 
-/**
- * @since 1.0.0
- */
-/// <reference lib="webworker" />
-import * as SqlError from '@effect/sql/SqlError';
 import * as WaSqlite from '@effect/wa-sqlite';
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import SQLiteESMFactory from '@effect/wa-sqlite/dist/wa-sqlite.mjs';
 import * as Effect from 'effect/Effect';
+/**
+ * @since 1.0.0
+ */
+/// <reference lib="webworker" />
+import * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { log } from '@dxos/log';
 // @ts-ignore
@@ -79,7 +79,10 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
           });
           return handle;
         },
-        catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
+        catch: (cause) =>
+          new SqlError.SqlError({
+            reason: SqlError.classifySqliteError(cause, { message: 'Failed to open database' }),
+          }),
       }),
       (handle) =>
         Effect.sync(() => {
@@ -90,7 +93,7 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
         }),
     );
 
-    return yield* Effect.async<void>((resume) => {
+    return yield* Effect.callback<void>((resume) => {
       const onMessage = (event: any) => {
         let messageId: number;
         let lastSql: string | undefined;

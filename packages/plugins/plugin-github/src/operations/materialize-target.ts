@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.MaterializeGitHubTar
     Operation.withHandler(
       Effect.fnUntraced(function* ({ connection, remoteTarget }) {
         if (!remoteTarget) {
-          return yield* Effect.dieMessage('GitHub materializeTarget requires a remoteTarget (repo descriptor).');
+          return yield* Effect.die(new Error('GitHub materializeTarget requires a remoteTarget (repo descriptor).'));
         }
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
         //   have it provided by the OperationInvoker — composer's invoker is wired
@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.MaterializeGitHubTar
         //   target and provide `Database.layer(db)` ourselves.
         const db = connection.target ? Obj.getDatabase(connection.target) : undefined;
         if (!db) {
-          return yield* Effect.dieMessage('No database for connection ref.');
+          return yield* Effect.die(new Error('No database for connection ref.'));
         }
 
         return yield* Effect.gen(function* () {

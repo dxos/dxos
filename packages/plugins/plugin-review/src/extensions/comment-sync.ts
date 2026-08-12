@@ -4,7 +4,8 @@
 
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { type Atom, type Registry } from '@effect-atom/atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { getTextInRange } from '@dxos/echo-client';
@@ -35,7 +36,7 @@ const getName = (text: Text.Text | undefined, anchor: string): string | undefine
 };
 
 export type CommentSyncStore = {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   stateAtom: Atom.Writable<ReviewCapabilities.CommentState>;
 };
 

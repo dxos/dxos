@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EffectEx } from '@dxos/effect';
@@ -190,8 +189,8 @@ export const useApp = ({
 
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
-      const listener = yield* Effect.forkDaemon(
-        Queue.take(queue).pipe(
+      const listener = yield* Effect.forkDetach(
+        PubSub.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
               // Event-level Startup activated (no `module` field) fires once,

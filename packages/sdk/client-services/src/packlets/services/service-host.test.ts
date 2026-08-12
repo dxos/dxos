@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import { rmSync } from 'node:fs';
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
@@ -32,8 +32,8 @@ import { createMockCredential, createServiceHost } from '../testing';
 const makeProxyServices = async (host: ReturnType<typeof createServiceHost>): Promise<Partial<ClientServices>> => {
   const scope = Effect.runSync(Scope.make());
   onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  const rpc = await EffectEx.runPromise(makeInProcessClientServicesRpc(() => host.services).pipe(Scope.extend(scope)));
-  return makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+  const rpc = await EffectEx.runPromise(makeInProcessClientServicesRpc(() => host.services).pipe(Scope.provide(scope)));
+  return makeServicesFromRpc(rpc, EffectContext.empty());
 };
 
 describe('ClientServicesHost', () => {

@@ -25,7 +25,7 @@ describe('SchemaList', () => {
       function* (_) {
         const schemas = yield* Operation.invoke(SchemaList, {});
 
-        const rows = yield* Schema.decodeUnknown(
+        const rows = yield* Schema.decodeUnknownEffect(
           Schema.Array(Schema.Struct({ typename: Schema.String, kind: Schema.String })),
         )(schemas);
         const typenames = rows.map((row) => row.typename);

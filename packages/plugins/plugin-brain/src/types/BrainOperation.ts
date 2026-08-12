@@ -46,20 +46,20 @@ export const QueryFacts = Operation.make({
   services: [FactStore],
   input: Schema.Struct({
     subjectEntity: Schema.optional(
-      Schema.String.annotations({ description: 'Entity slug the fact subject must match, e.g. "alice-smith".' }),
+      Schema.String.annotate({ description: 'Entity slug the fact subject must match, e.g. "alice-smith".' }),
     ),
-    predicate: Schema.optional(Schema.String.annotations({ description: 'Exact predicate string, e.g. "works-at".' })),
+    predicate: Schema.optional(Schema.String.annotate({ description: 'Exact predicate string, e.g. "works-at".' })),
     entity: Schema.optional(
-      Schema.String.annotations({ description: 'Entity slug appearing as either subject or object.' }),
+      Schema.String.annotate({ description: 'Entity slug appearing as either subject or object.' }),
     ),
-    source: Schema.optional(Schema.String.annotations({ description: 'Source DXN the facts were extracted from.' })),
+    source: Schema.optional(Schema.String.annotate({ description: 'Source DXN the facts were extracted from.' })),
     minConfidence: Schema.optional(
-      Schema.Number.pipe(Schema.between(0, 1)).annotations({
+      Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))).annotate({
         description: 'Lower bound (0..1) on factuality confidence.',
       }),
     ),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum facts returned (default 50).',
       }),
     ),
@@ -79,11 +79,11 @@ export const SummarizeSubject = Operation.make({
   },
   services: [FactStore, AiService.AiService],
   input: Schema.Struct({
-    subject: Schema.String.annotations({
+    subject: Schema.String.annotate({
       description: 'Entity slug or label to summarize, e.g. "Alice Smith" or "acme-corp".',
     }),
     focus: Schema.optional(
-      Schema.String.annotations({ description: 'Optional angle, e.g. "commitments" or "recent activity".' }),
+      Schema.String.annotate({ description: 'Optional angle, e.g. "commitments" or "recent activity".' }),
     ),
   }),
   output: Schema.Struct({

@@ -30,7 +30,7 @@ export type Credentials = {
  * Unlike Google, there is no database-credential fallback — a JMAP connection always carries host +
  * token in its token record.
  */
-export class JmapCredentials extends Context.Tag('JmapCredentials')<JmapCredentials, Credentials>() {
+export class JmapCredentials extends Context.Service<JmapCredentials, Credentials>()('JmapCredentials') {
   /** Creates a credentials layer from an AccessToken ref. Loads its `source` (host), `account`, `token`. */
   static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
     Layer.effect(

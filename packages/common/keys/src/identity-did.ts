@@ -55,30 +55,37 @@ const isValid = (value: unknown): value is IdentityDid => {
  */
 export type IdentityDid = string & { __IdentityDid: never };
 
-export const IdentityDid: Schema.Schema<IdentityDid, string> & {
+const IdentityDidSchema = Schema.String.pipe(Schema.refine((value): value is IdentityDid => isValid(value)));
+
+// Effect 4 schemas are values rather than extensible classes, so the statics are merged onto the
+// schema instead of declared on a subclass.
+export const IdentityDid: Schema.Codec<IdentityDid, string> & {
   byteLength: number;
   encode: (value: Uint8Array) => IdentityDid;
   decode: (value: IdentityDid) => Uint8Array;
   isValid: (value: unknown) => value is IdentityDid;
   make: (value: string) => IdentityDid;
   random: () => IdentityDid;
-} = class extends Schema.String.pipe(Schema.filter(isValid)) {
-  static byteLength = DECODED_BYTE_LENGTH;
+} = Object.assign(IdentityDidSchema, {
+  byteLength: DECODED_BYTE_LENGTH,
 
-  static encode = (value: Uint8Array): IdentityDid => {
+  encode: (value: Uint8Array): IdentityDid => {
     invariant(value instanceof Uint8Array, 'Invalid type');
     invariant(value.length === IdentityDid.byteLength, 'Invalid length');
     return (DID_PREFIX + MULTIBASE_PREFIX + base32Encode(value, 'RFC4648')) as IdentityDid;
-  };
+  },
 
-  static decode = (value: IdentityDid): Uint8Array => {
+  decode: (value: IdentityDid): Uint8Array => {
     invariant(value.startsWith(DID_PREFIX + MULTIBASE_PREFIX), 'Invalid multibase32 encoding');
     return new Uint8Array(base32Decode(value.slice(DID_PREFIX.length + MULTIBASE_PREFIX.length), 'RFC4648'));
-  };
+  },
 
-  static isValid = isValid;
+  isValid,
 
-  static random = (): IdentityDid => {
-    return IdentityDid.encode(randomBytes(IdentityDid.byteLength));
-  };
-};
+  make: (value: string): IdentityDid => {
+    invariant(isValid(value), 'Invalid IdentityDid');
+    return value;
+  },
+
+  random: (): IdentityDid => IdentityDid.encode(randomBytes(IdentityDid.byteLength)),
+});
