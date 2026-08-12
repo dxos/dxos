@@ -73,7 +73,6 @@ export const translations = [
         'reset-process-cursor.label': 'Reset process cursor',
         'enrich-mailbox.label': 'Enrich',
         'stop-enrich-mailbox.label': 'Stop',
-
         'sync-calendar.label': 'Sync calendar',
         'empty-calendar.message': 'Calendar empty',
 

@@ -324,6 +324,38 @@ describe('subscriptions', () => {
     expect(Mailbox.getUnsubscribeAffordance(message)).toBe('<https://a.io/u?header=1>');
   });
 
+  test('parseUnsubscribe accepts a bare URL (body-extracted affordance)', ({ expect }) => {
+    expect(Mailbox.parseUnsubscribe('https://x.io/unsubscribe?t=1')).toEqual({ http: 'https://x.io/unsubscribe?t=1' });
+    expect(Mailbox.parseUnsubscribe('mailto:unsub@x.io')).toEqual({ mailto: 'mailto:unsub@x.io' });
+  });
+
+  test('extractBodyUnsubscribe finds unsubscribe-shaped links in text blocks', ({ expect }) => {
+    const withBody = (text: string) =>
+      Message.make({
+        created: '2026-01-01T00:00:00.000Z',
+        sender: { email: 'news@a.io' },
+        blocks: [{ _tag: 'text', text }],
+        properties: { subject: 's' },
+      });
+    expect(Mailbox.extractBodyUnsubscribe(withBody('Bye. https://a.io/unsubscribe?u=1 Thanks'))).toBe(
+      'https://a.io/unsubscribe?u=1',
+    );
+    expect(Mailbox.extractBodyUnsubscribe(withBody('Manage: https://a.io/email-preferences/x'))).toBe(
+      'https://a.io/email-preferences/x',
+    );
+    expect(Mailbox.extractBodyUnsubscribe(withBody('no links here'))).toBeUndefined();
+  });
+
+  test('getUnsubscribeAffordance prefers the header over a body link', ({ expect }) => {
+    const message = Message.make({
+      created: '2026-01-01T00:00:00.000Z',
+      sender: { email: 'news@a.io' },
+      blocks: [{ _tag: 'text', text: 'https://a.io/unsubscribe?body=1' }],
+      properties: { subject: 's', listUnsubscribe: '<https://a.io/u?header=1>' },
+    });
+    expect(Mailbox.getUnsubscribeAffordance(message)).toBe('<https://a.io/u?header=1>');
+  });
+
   test('deriveSubscriptions groups senders with an unsubscribe affordance, noisiest first', ({ expect }) => {
     const subs = Mailbox.deriveSubscriptions([
       msg('news@a.io', 'A News', '<https://a.io/u>'),
