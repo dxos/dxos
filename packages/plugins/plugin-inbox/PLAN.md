@@ -176,9 +176,10 @@ Still worth adding: HALO profile emails as a second source for mailboxes named b
 `CreateTrackingProject` already does this for one shape (track a sender's domain → tasks). Generalize
 it into a user-chosen pipeline.
 
-- [ ] Extend the operation with `scope` (`sender` | `domain` | `thread`) and `pipeline`
-      (`tasks` | `summaries` | `contacts` | `travel`), selecting which operation the scaffolded
-      routine binds as its runnable and with which inputs.
+- [x] Extend the operation with `scope` (`sender` | `domain`) and `pipeline`
+      (`tasks` | `summaries` | `contacts`), selecting which operation the scaffolded routine binds
+      as its runnable and with which inputs (`PIPELINES` registry in `create-tracking-project.ts`).
+      A free-mail domain degrades `domain` scope to the individual — it identifies no organization.
 - [ ] Message-context action **Create project…** opening a schema-driven form (name prefilled from
       the sender/subject, scope, pipeline, schedule: manual | on new mail).
 - [ ] Keep artifact ownership as-is: tasks upserted by message-keyed foreign key (user edits survive

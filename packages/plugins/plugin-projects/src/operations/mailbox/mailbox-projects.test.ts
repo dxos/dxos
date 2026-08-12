@@ -18,6 +18,7 @@ import { TagIndex, Text } from '@dxos/schema';
 import { Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { scaffoldProject } from '../../templates';
+import * as ProjectOperation from '../../types/ProjectOperation';
 import createTrackingProject from './create-tracking-project';
 import updateInvestorLog from './update-investor-log';
 import updateProjectTasks from './update-project-tasks';
@@ -214,6 +215,7 @@ describe('mailbox project pipelines', () => {
       const result = yield* createTrackingProject.handler({ mailbox: Ref.make(mailbox), message });
       // The sender's corporate domain defines the tracked group — colleagues included.
       expect(result.senders).toEqual(['kirkconsult.com']);
+      expect(result.pipeline).toBe('tasks');
       expect(result.tasks).toBe(2);
 
       const projects = yield* Database.query(Filter.type(Project.Project)).run;
@@ -236,6 +238,36 @@ describe('mailbox project pipelines', () => {
         senders: result.senders,
       });
       expect(rerun.created).toBe(0);
+    }).pipe(Effect.provide(testLayer())),
+  );
+  it.effect('scope and pipeline choose who is followed and which operation the routine binds', () =>
+    Effect.gen(function* () {
+      const { mailbox } = yield* seed([
+        { email: 'ngudmand@kirkconsult.com', name: 'Nicole Gudmand', subject: 'Monthly Meeting' },
+        { email: 'mahern@kirkconsult.com', name: 'Madeline Ahern', subject: "Approval for Dmytro's payment" },
+      ]);
+      const feed = yield* Database.load(mailbox.feed);
+      const [message] = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+
+      // `sender` scope narrows to the individual, and the summaries pipeline binds a different
+      // runnable — so no task backfill happens.
+      const result = yield* createTrackingProject.handler({
+        mailbox: Ref.make(mailbox),
+        message,
+        scope: 'sender',
+        pipeline: 'summaries',
+        name: 'Nicole — Threads',
+      });
+      expect(result.senders).toEqual(['ngudmand@kirkconsult.com']);
+      expect(result.pipeline).toBe('summaries');
+      expect(result.tasks).toBe(0);
+      expect((yield* Database.query(Filter.type(Task.Task)).run).length).toBe(0);
+
+      const projects = yield* Database.query(Filter.type(Project.Project)).run;
+      const project = projects.find((candidate) => candidate.id === result.projectId);
+      expect(project?.name).toBe('Nicole — Threads');
+      const routine = yield* Effect.promise(() => project!.routines[0].load());
+      expect(String((routine.spec as { runnable?: { uri?: string } }).runnable?.uri)).toContain('updateInvestorLog');
     }).pipe(Effect.provide(testLayer())),
   );
 });
