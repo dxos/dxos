@@ -80,7 +80,7 @@ Six pipelines over the FeedPipeline workbench, all committed on PR #12538's bran
 - [x] **`CrmOperation.EnrichImages`** — avatars (Gravatar SHA-256, `d=404`) + logos (Clearbit,
       favicon fallback) through the hardened `AttachImage` path (refactored to a shared core).
 - [x] **`ProjectOperation.{UpdateProjectTasks, UpdateTravelLog, UpdateInvestorLog,
-    CreateTrackingProject}`** — the routine→operation→artifact pattern: mailbox pipelines that
+  CreateTrackingProject}`** — the routine→operation→artifact pattern: mailbox pipelines that
       contribute to a Project (task set requests, regenerated Travel Bookings / Investor
       Conversations documents, contact extraction), plus project-from-a-message (sender's corporate
       domain defines the tracked group; feed-triggered runnable routine + backfill). The
