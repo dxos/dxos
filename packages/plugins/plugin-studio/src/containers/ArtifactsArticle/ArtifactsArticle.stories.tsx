@@ -11,7 +11,8 @@ import * as Instructions from '@dxos/compute/Instructions';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -19,7 +20,7 @@ import { Text } from '@dxos/schema';
 import { translations } from '#translations';
 import { Artifact, Variant } from '#types';
 
-import { StudioPlugin } from '../../StudioPlugin';
+import { StudioPlugin } from '../../plugin';
 import { ArtifactsArticle } from './ArtifactsArticle';
 
 const DefaultStory = () => {
@@ -65,7 +66,7 @@ const meta = {
             }),
         }),
         StudioPlugin(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         PreviewPlugin(),
       ],
     }),

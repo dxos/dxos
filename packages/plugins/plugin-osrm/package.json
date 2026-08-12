@@ -25,9 +25,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/OsrmPlugin.tsx",
-      "types": "./dist/types/src/OsrmPlugin.d.ts",
-      "default": "./dist/lib/OsrmPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#services": {
       "source": "./src/services/index.ts",
@@ -41,10 +41,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./OsrmPlugin": {
+      "source": "./src/OsrmPlugin.ts",
+      "types": "./dist/types/src/OsrmPlugin.d.ts",
+      "import": "./dist/lib/OsrmPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

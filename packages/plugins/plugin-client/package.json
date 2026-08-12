@@ -49,14 +49,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ClientPlugin.workerd.ts",
-        "node": "./src/ClientPlugin.node.ts",
-        "default": "./src/ClientPlugin.ts"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
       },
-      "types": "./dist/types/src/ClientPlugin.d.ts",
-      "workerd": "./dist/lib/ClientPlugin.workerd.mjs",
-      "node": "./dist/lib/ClientPlugin.node.mjs",
-      "default": "./dist/lib/ClientPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",
@@ -79,11 +79,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -124,6 +119,11 @@
       "source": "./src/types/ClientOptions.ts",
       "types": "./dist/types/src/types/ClientOptions.d.ts",
       "import": "./dist/lib/ClientOptions.mjs"
+    },
+    "./ClientPlugin": {
+      "source": "./src/ClientPlugin.ts",
+      "types": "./dist/types/src/ClientPlugin.d.ts",
+      "import": "./dist/lib/ClientPlugin.mjs"
     },
     "./PasskeyError": {
       "source": "./src/types/PasskeyError.ts",

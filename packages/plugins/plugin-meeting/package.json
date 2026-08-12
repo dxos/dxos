@@ -39,9 +39,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/MeetingPlugin.ts",
-      "types": "./dist/types/src/MeetingPlugin.d.ts",
-      "default": "./dist/lib/MeetingPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -61,16 +61,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Meeting": {
       "source": "./src/types/Meeting.ts",
       "types": "./dist/types/src/types/Meeting.d.ts",
@@ -91,12 +87,16 @@
       "types": "./dist/types/src/types/MeetingOperation.d.ts",
       "import": "./dist/lib/MeetingOperation.mjs"
     },
+    "./MeetingPlugin": {
+      "source": "./src/MeetingPlugin.ts",
+      "types": "./dist/types/src/MeetingPlugin.d.ts",
+      "import": "./dist/lib/MeetingPlugin.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

@@ -41,14 +41,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/TripPlugin.workerd.ts",
-        "node": "./src/TripPlugin.node.ts",
-        "default": "./src/TripPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/TripPlugin.d.ts",
-      "workerd": "./dist/lib/TripPlugin.workerd.mjs",
-      "node": "./dist/lib/TripPlugin.node.mjs",
-      "default": "./dist/lib/TripPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",
@@ -73,16 +73,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
+    "./package.json": "./package.json",
     "./Booking": {
       "source": "./src/types/Booking.ts",
       "types": "./dist/types/src/types/Booking.d.ts",
@@ -138,7 +134,11 @@
       "types": "./dist/types/src/types/TripOperation.d.ts",
       "import": "./dist/lib/TripOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./TripPlugin": {
+      "source": "./src/TripPlugin.ts",
+      "types": "./dist/types/src/TripPlugin.d.ts",
+      "import": "./dist/lib/TripPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

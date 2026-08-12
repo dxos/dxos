@@ -8,8 +8,8 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'AssistantPlugin': 'src/AssistantPlugin.ts',
-    'AssistantPlugin.node': 'src/AssistantPlugin.node.ts',
-    'AssistantPlugin.workerd': 'src/AssistantPlugin.workerd.ts',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities.workerd': 'src/capabilities/workerd.ts',

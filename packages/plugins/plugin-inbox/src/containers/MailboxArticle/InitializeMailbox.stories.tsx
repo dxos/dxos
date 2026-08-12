@@ -13,7 +13,8 @@ import { AccessToken } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
@@ -21,7 +22,7 @@ import { Message, Person } from '@dxos/types';
 import { initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
+import { InboxPlugin } from '../../plugin';
 import { InitializeMailbox } from './InitializeMailbox';
 
 type StoryArgs = {
@@ -64,7 +65,7 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
         PreviewPlugin(),
       ],

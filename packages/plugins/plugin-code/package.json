@@ -40,9 +40,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/CodePlugin.tsx",
-      "types": "./dist/types/src/CodePlugin.d.ts",
-      "default": "./dist/lib/CodePlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -67,16 +67,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./CodeCapabilities": {
       "source": "./src/types/CodeCapabilities.ts",
       "types": "./dist/types/src/types/CodeCapabilities.d.ts",
@@ -91,6 +87,11 @@
       "source": "./src/types/CodeOperation.ts",
       "types": "./dist/types/src/types/CodeOperation.d.ts",
       "import": "./dist/lib/CodeOperation.mjs"
+    },
+    "./CodePlugin": {
+      "source": "./src/CodePlugin.ts",
+      "types": "./dist/types/src/CodePlugin.d.ts",
+      "import": "./dist/lib/CodePlugin.mjs"
     },
     "./CodeProject": {
       "source": "./src/types/CodeProject.ts",
@@ -111,8 +112,7 @@
       "source": "./src/types/Spec.ts",
       "types": "./dist/types/src/types/Spec.d.ts",
       "import": "./dist/lib/Spec.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

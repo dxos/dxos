@@ -30,9 +30,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/CrmPlugin.ts",
-      "types": "./dist/types/src/CrmPlugin.d.ts",
-      "default": "./dist/lib/CrmPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -67,16 +67,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
+    "./package.json": "./package.json",
     "./CrmEvents": {
       "source": "./src/types/CrmEvents.ts",
       "types": "./dist/types/src/types/CrmEvents.d.ts",
@@ -87,12 +83,16 @@
       "types": "./dist/types/src/types/CrmOperation.d.ts",
       "import": "./dist/lib/CrmOperation.mjs"
     },
+    "./CrmPlugin": {
+      "source": "./src/CrmPlugin.ts",
+      "types": "./dist/types/src/CrmPlugin.d.ts",
+      "import": "./dist/lib/CrmPlugin.mjs"
+    },
     "./ProfileOf": {
       "source": "./src/types/ProfileOf.ts",
       "types": "./dist/types/src/types/ProfileOf.d.ts",
       "import": "./dist/lib/ProfileOf.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

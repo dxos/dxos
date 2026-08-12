@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './skills';
+export * as MarkdownPlugin from './MarkdownPlugin';
 export * from './meta';
 export * from './operations';
-export * from './util';
+export * from './skills';
 export * from './types';
+export * from './util';

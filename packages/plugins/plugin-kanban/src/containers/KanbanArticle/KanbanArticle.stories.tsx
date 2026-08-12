@@ -21,7 +21,8 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
@@ -35,7 +36,7 @@ import { useProjectionModel } from '#hooks';
 import { translations } from '#translations';
 import { Kanban } from '#types';
 
-import { KanbanPlugin } from '../../KanbanPlugin';
+import { KanbanPlugin } from '../../plugin';
 
 random.seed(0);
 
@@ -76,7 +77,7 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
       }),
       PreviewPlugin(),
       SpacePlugin({}),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       KanbanPlugin(),
     ],
   });

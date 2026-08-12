@@ -49,14 +49,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ScriptPlugin.workerd.ts",
-        "node": "./src/ScriptPlugin.node.ts",
-        "default": "./src/ScriptPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/ScriptPlugin.d.ts",
-      "workerd": "./dist/lib/ScriptPlugin.workerd.mjs",
-      "node": "./dist/lib/ScriptPlugin.node.mjs",
-      "default": "./dist/lib/ScriptPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -81,6 +81,33 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "import": "./dist/lib/containers.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "import": "./dist/lib/skills.mjs"
+    },
+    "./templates": {
+      "source": "./src/templates/index.ts",
+      "types": "./dist/types/src/templates/index.d.ts",
+      "import": "./dist/lib/templates.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
     "./Notebook": {
       "source": "./src/types/Notebook.ts",
       "types": "./dist/types/src/types/Notebook.d.ts",
@@ -101,42 +128,15 @@
       "types": "./dist/types/src/types/ScriptOperation.d.ts",
       "import": "./dist/lib/ScriptOperation.mjs"
     },
+    "./ScriptPlugin": {
+      "source": "./src/ScriptPlugin.ts",
+      "types": "./dist/types/src/ScriptPlugin.d.ts",
+      "import": "./dist/lib/ScriptPlugin.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
-    },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
-    "./templates": {
-      "source": "./src/templates/index.ts",
-      "types": "./dist/types/src/templates/index.d.ts",
-      "import": "./dist/lib/templates.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

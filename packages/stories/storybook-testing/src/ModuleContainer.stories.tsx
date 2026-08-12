@@ -15,7 +15,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -92,7 +93,7 @@ const meta: Meta<typeof ModuleContainer> = {
               yield* Effect.promise(() => space.waitUntilReady());
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         ExampleSurfacesPlugin(),
       ],
     }),

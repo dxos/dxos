@@ -7,9 +7,10 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    PwaPlugin: 'src/PwaPlugin.tsx',
+    PwaPlugin: 'src/PwaPlugin.ts',
+    plugin: 'src/plugin.tsx',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
+    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
   },
   jsx: 'react',

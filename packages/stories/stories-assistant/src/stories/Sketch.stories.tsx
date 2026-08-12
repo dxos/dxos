@@ -32,9 +32,9 @@ const decorators = createDecorators({
   lazyPlugins: async () => {
     const [{ Drawing }, { IllustratorPlugin }, { Tldraw }, { TldrawPlugin }] = await Promise.all([
       import('@dxos/plugin-illustrator'),
-      import('@dxos/plugin-illustrator/plugin'),
+      import('@dxos/plugin-illustrator/IllustratorPlugin'),
       import('@dxos/plugin-tldraw'),
-      import('@dxos/plugin-tldraw/plugin'),
+      import('@dxos/plugin-tldraw/TldrawPlugin'),
     ]);
     return {
       plugins: [IllustratorPlugin(), TldrawPlugin()],

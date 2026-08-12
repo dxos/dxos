@@ -35,9 +35,9 @@
       "default": "./dist/lib/neutral/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/LibraryPlugin.tsx",
-      "types": "./dist/types/src/LibraryPlugin.d.ts",
-      "default": "./dist/lib/neutral/LibraryPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -57,15 +57,15 @@
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "./LibraryPlugin": {
+      "source": "./src/LibraryPlugin.ts",
+      "types": "./dist/types/src/LibraryPlugin.d.ts",
+      "import": "./dist/lib/LibraryPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

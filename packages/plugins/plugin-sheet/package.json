@@ -48,14 +48,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/SheetPlugin.workerd.ts",
-        "node": "./src/SheetPlugin.node.ts",
-        "default": "./src/SheetPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/SheetPlugin.d.ts",
-      "workerd": "./dist/lib/SheetPlugin.workerd.mjs",
-      "node": "./dist/lib/SheetPlugin.node.mjs",
-      "default": "./dist/lib/SheetPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -82,11 +82,6 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -116,6 +111,11 @@
       "source": "./src/types/SheetOperation.ts",
       "types": "./dist/types/src/types/SheetOperation.d.ts",
       "import": "./dist/lib/SheetOperation.mjs"
+    },
+    "./SheetPlugin": {
+      "source": "./src/SheetPlugin.ts",
+      "types": "./dist/types/src/SheetPlugin.d.ts",
+      "import": "./dist/lib/SheetPlugin.mjs"
     },
     "./SheetRange": {
       "source": "./src/types/SheetRange.ts",

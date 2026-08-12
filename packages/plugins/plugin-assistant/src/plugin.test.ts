@@ -1,0 +1,200 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import { describe, test } from 'vitest';
+
+import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
+import { AiService } from '@dxos/ai';
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import * as AgentService from '@dxos/compute/AgentService';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
+import { Database, Ref, Registry } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
+import { DXN, EntityId } from '@dxos/keys';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+
+import { AssistantPlugin } from '#plugin';
+import { AssistantEvents } from '#types';
+
+import { meta } from './meta';
+import { AssistantSkill } from './skills/assistant';
+
+EntityId.dangerouslyDisableRandomness();
+
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+
+// Memoized-replay cases (frozen A/B); gated off the default `:test` path. The module-activation
+// boot test below carries the real composition signal and always runs.
+
+describe('AssistantPlugin', () => {
+  test('modules activate on the expected events', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin.make({}), AssistantPlugin()],
+    });
+
+    // Dependency-mode roots activate immediately during the startup dependency pass.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([
+        moduleId('AppGraphBuilder'),
+        moduleId('schema'),
+        moduleId('OperationHandler'),
+        moduleId('AiService'),
+        moduleId('AiContext'),
+        moduleId('AgentRuntime'),
+      ]),
+    );
+    // Demand-gated modules park until their events fire (CreateObjectRequested).
+    expect(harness.manager.getActive()).not.toContain(moduleId('CreateObject'));
+    // Skills ride the assistant's start event, which the harness fires post-startup.
+    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
+
+    // Space-affinity LayerSpec — resolution requires a space context.
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const aiService = yield* AiService.AiService;
+        expect(aiService).toBeDefined();
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService))),
+    );
+  });
+
+  test('resolves a language model through the plugin AI service', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [
+        ClientPlugin.make({}),
+        AssistantPlugin({
+          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+            { parts: [ScriptedLanguageModel.text('Paris is the capital of France.')] },
+          ]),
+        }),
+      ],
+    });
+
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const { text } = yield* LanguageModel.generateText({
+          prompt: 'What is the capital of France?',
+        });
+        expect(text.toLocaleLowerCase()).toContain('paris');
+      }).pipe(
+        Effect.provide(
+          AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+            Layer.provideMerge(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService)),
+          ),
+        ),
+      ),
+    );
+  });
+
+  test('runs instructions end to end through the plugin', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [
+        ClientPlugin.make({}),
+        AssistantPlugin({
+          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+            { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { capital: 'paris' } })] },
+            { parts: [ScriptedLanguageModel.text('Done.')] },
+          ]),
+        }),
+        RoutinePlugin.make(),
+      ],
+    });
+
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
+
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const instructions = yield* Database.add(
+          Instructions.make({
+            name: 'capital-test',
+            text: 'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
+          }),
+        );
+        yield* Database.flush();
+
+        const result = yield* Operation.invoke(
+          RunInstructions,
+          {
+            instructions: Ref.make(instructions),
+            input: {
+              country: 'France',
+            },
+            model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
+          },
+          { spaceId: defaultSpace.id },
+        );
+        expect(result).toEqual({ capital: 'paris' });
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
+    );
+  });
+
+  test(
+    'boots the agent service with the standard skills and completes a turn',
+    { timeout: 120_000 },
+    async ({ expect }) => {
+      await using harness = await createComposerTestApp({
+        plugins: [
+          ClientPlugin.make({}),
+          AssistantPlugin({
+            aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+              { parts: [ScriptedLanguageModel.text('Hello back.')] },
+            ]),
+          }),
+          RoutinePlugin.make(),
+        ],
+      });
+
+      const { defaultSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
+        EffectEx.runAndForwardErrors,
+      );
+
+      // Skills ride the assistant's start event; the harness already fired it, but fire
+      // deterministically here to mirror the headless toolkit-materialization path.
+      await EffectEx.runAndForwardErrors(harness.manager.activate(AssistantEvents.Start));
+
+      await harness.runPromise(
+        Effect.gen(function* () {
+          const skills = yield* Effect.forEach(
+            [DatabaseSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
+            (_) => Skill.resolve(_.key),
+          );
+          expect(skills).toHaveLength(4);
+
+          const agent = yield* AgentServiceRuntime.createSession({
+            skills,
+          });
+          yield* agent.submitPrompt('Hello');
+          yield* agent.waitForCompletion();
+        }).pipe(
+          Effect.provide(
+            ServiceResolver.provide(
+              { space: defaultSpace.id },
+              Database.Service,
+              AgentService.AgentService,
+              Registry.Service,
+            ),
+          ),
+        ),
+      );
+    },
+  );
+});

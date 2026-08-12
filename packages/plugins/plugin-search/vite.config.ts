@@ -7,14 +7,15 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    SearchPlugin: 'src/SearchPlugin.tsx',
+    SearchPlugin: 'src/SearchPlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.ts',
+    plugin: 'src/plugin.tsx',
     testing: 'src/testing.ts',
     translations: 'src/translations.ts',
     SearchEvents: 'src/types/SearchEvents.ts',

@@ -3,5 +3,6 @@
 //
 
 export * as TldrawModel from './model';
+export * as TldrawPlugin from './TldrawPlugin';
 export * from './meta';
 export * from './types';

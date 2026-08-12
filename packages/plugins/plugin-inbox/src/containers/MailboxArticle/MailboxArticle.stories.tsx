@@ -24,7 +24,8 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { SAMPLE_MESSAGES, corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
@@ -32,7 +33,7 @@ import { Message, Person } from '@dxos/types';
 import { initializeMailbox } from '#testing';
 import { InboxCapabilities, Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
+import { InboxPlugin } from '../../plugin';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
@@ -181,7 +182,7 @@ const meta = {
             }),
         }),
 
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
         PreviewPlugin(),
         MockDeckOperationsPlugin(),

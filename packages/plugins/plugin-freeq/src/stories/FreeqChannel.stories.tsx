@@ -16,14 +16,14 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { translations as threadTranslations } from '@dxos/plugin-thread/translations';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
 import { FREEQ_BACKEND_KIND } from '../constants';
-import { FreeqPlugin } from '../FreeqPlugin';
+import { FreeqPlugin } from '../plugin';
 import { translations } from '../translations';
 import { FreeqChannel, makeFreeqChannel } from '../types';
 
@@ -71,7 +71,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        ThreadPlugin(),
+        ThreadPlugin.make(),
         FreeqPlugin(),
       ],
     }),

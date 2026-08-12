@@ -44,12 +44,12 @@
     },
     "#plugin": {
       "source": {
-        "node": "./src/FilePlugin.node.ts",
-        "default": "./src/FilePlugin.tsx"
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/FilePlugin.d.ts",
-      "node": "./dist/lib/FilePlugin.node.mjs",
-      "default": "./dist/lib/FilePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -73,6 +73,13 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
     "./FileCapabilities": {
       "source": "./src/types/FileCapabilities.ts",
       "types": "./dist/types/src/types/FileCapabilities.d.ts",
@@ -93,22 +100,15 @@
       "types": "./dist/types/src/types/FileOperation.d.ts",
       "import": "./dist/lib/FileOperation.mjs"
     },
+    "./FilePlugin": {
+      "source": "./src/FilePlugin.ts",
+      "types": "./dist/types/src/FilePlugin.d.ts",
+      "import": "./dist/lib/FilePlugin.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

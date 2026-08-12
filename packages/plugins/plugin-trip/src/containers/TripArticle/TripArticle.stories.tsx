@@ -15,10 +15,11 @@ import { useQuery } from '@dxos/echo-react';
 import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MapRole from '@dxos/plugin-map/MapRole';
-import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -194,9 +195,9 @@ const baseDecorators = (
             yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
           }),
       }),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       TripPlugin(),
-      MapPlugin(),
+      MapPlugin.make(),
       RoutingStoryPlugin(routingService),
       PreviewPlugin(),
     ],

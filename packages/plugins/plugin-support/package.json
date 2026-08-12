@@ -45,9 +45,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/SupportPlugin.tsx",
-      "types": "./dist/types/src/SupportPlugin.d.ts",
-      "default": "./dist/lib/SupportPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -77,16 +77,12 @@
       "types": "./dist/types/src/components/index.d.ts",
       "import": "./dist/lib/components.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./HelpCapabilities": {
       "source": "./src/types/HelpCapabilities.ts",
       "types": "./dist/types/src/types/HelpCapabilities.d.ts",
@@ -117,12 +113,16 @@
       "types": "./dist/types/src/types/SupportOperation.d.ts",
       "import": "./dist/lib/SupportOperation.mjs"
     },
+    "./SupportPlugin": {
+      "source": "./src/SupportPlugin.ts",
+      "types": "./dist/types/src/SupportPlugin.d.ts",
+      "import": "./dist/lib/SupportPlugin.mjs"
+    },
     "./Tour": {
       "source": "./src/types/Tour.ts",
       "types": "./dist/types/src/types/Tour.d.ts",
       "import": "./dist/lib/Tour.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

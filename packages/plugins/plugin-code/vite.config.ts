@@ -7,14 +7,15 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    CodePlugin: 'src/CodePlugin.tsx',
+    CodePlugin: 'src/CodePlugin.ts',
+    plugin: 'src/plugin.tsx',
     skills: 'src/skills/index.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.ts',
+    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     CodeCapabilities: 'src/types/CodeCapabilities.ts',
     CodeEvents: 'src/types/CodeEvents.ts',

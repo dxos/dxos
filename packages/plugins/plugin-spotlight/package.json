@@ -35,9 +35,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/SpotlightPlugin.ts",
-      "types": "./dist/types/src/SpotlightPlugin.d.ts",
-      "default": "./dist/lib/SpotlightPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -57,22 +57,22 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./SpotlightCapabilities": {
       "source": "./src/types/SpotlightCapabilities.ts",
       "types": "./dist/types/src/types/SpotlightCapabilities.d.ts",
       "import": "./dist/lib/SpotlightCapabilities.mjs"
     },
-    "./package.json": "./package.json"
+    "./SpotlightPlugin": {
+      "source": "./src/SpotlightPlugin.ts",
+      "types": "./dist/types/src/SpotlightPlugin.d.ts",
+      "import": "./dist/lib/SpotlightPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

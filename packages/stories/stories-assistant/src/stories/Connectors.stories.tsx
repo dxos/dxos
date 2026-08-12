@@ -43,9 +43,9 @@ export const WithMail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ InboxPlugin }, { MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-thread/plugin'),
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
       return {
         plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
@@ -80,8 +80,8 @@ export const WithGmail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
         plugins: [InboxPlugin(), ConnectorPlugin()],
@@ -122,8 +122,8 @@ export const WithConnectorPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
         plugins: [InboxPlugin(), ConnectorPlugin()],
@@ -154,8 +154,8 @@ export const WithCalendar: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
         plugins: [InboxPlugin(), ConnectorPlugin()],
@@ -204,8 +204,8 @@ export const WithTranscription: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ TranscriptionPlugin }, { PreviewPlugin }] = await Promise.all([
-        import('@dxos/plugin-transcription/plugin'),
-        import('@dxos/plugin-preview/plugin'),
+        import('@dxos/plugin-transcription/TranscriptionPlugin'),
+        import('@dxos/plugin-preview/PreviewPlugin'),
       ]);
       return {
         plugins: [TranscriptionPlugin(), PreviewPlugin()],

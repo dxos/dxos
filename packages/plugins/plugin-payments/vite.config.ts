@@ -7,11 +7,12 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    PaymentsPlugin: 'src/PaymentsPlugin.tsx',
+    PaymentsPlugin: 'src/PaymentsPlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
+    plugin: 'src/plugin.tsx',
     services: 'src/services/index.ts',
     translations: 'src/translations.ts',
     PaymentsCapabilities: 'src/types/PaymentsCapabilities.ts',

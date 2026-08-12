@@ -69,9 +69,9 @@ export const WithResearch: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ MarkdownPlugin }, { TablePlugin }, { ThreadPlugin }] = await Promise.all([
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-table/plugin'),
-        import('@dxos/plugin-thread/plugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-table/TablePlugin'),
+        import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
       return {
         plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
@@ -177,9 +177,9 @@ export const WithProject: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ InboxPlugin }, { MarkdownPlugin }, { PipelinePlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-pipeline/plugin'),
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-pipeline/PipelinePlugin'),
       ]);
       return {
         plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
@@ -359,10 +359,10 @@ export const WithCRM: Story = {
     importSnapshot: loadMockInbox,
     lazyPlugins: async () => {
       const [{ CrmPlugin }, { InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
-        import('@dxos/plugin-crm/plugin'),
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-table/plugin'),
+        import('@dxos/plugin-crm/CrmPlugin'),
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-table/TablePlugin'),
       ]);
       return {
         plugins: [CrmPlugin(), InboxPlugin(), MarkdownPlugin(), TablePlugin()],

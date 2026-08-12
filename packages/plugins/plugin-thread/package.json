@@ -49,14 +49,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ThreadPlugin.workerd.ts",
-        "node": "./src/ThreadPlugin.node.ts",
-        "default": "./src/ThreadPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/ThreadPlugin.d.ts",
-      "workerd": "./dist/lib/ThreadPlugin.workerd.mjs",
-      "node": "./dist/lib/ThreadPlugin.node.mjs",
-      "default": "./dist/lib/ThreadPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -74,6 +74,13 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     },
     "./ChannelBackend": {
       "source": "./src/types/ChannelBackend.ts",
@@ -95,17 +102,10 @@
       "types": "./dist/types/src/types/ThreadOperation.d.ts",
       "import": "./dist/lib/ThreadOperation.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./ThreadPlugin": {
+      "source": "./src/ThreadPlugin.ts",
+      "types": "./dist/types/src/ThreadPlugin.d.ts",
+      "import": "./dist/lib/ThreadPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

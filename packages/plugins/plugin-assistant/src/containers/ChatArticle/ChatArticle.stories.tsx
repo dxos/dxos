@@ -19,7 +19,8 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
@@ -27,7 +28,7 @@ import { Message } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../AssistantPlugin';
+import { AssistantPlugin } from '../../plugin';
 import { ChatArticle } from './ChatArticle';
 
 /**
@@ -121,7 +122,7 @@ const meta = {
               messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
           }),
           PreviewPlugin(),
-          StorybookPlugin({}),
+          StorybookPlugin.make({}),
         ],
         capabilities,
       };

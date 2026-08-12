@@ -49,14 +49,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ConnectorPlugin.workerd.ts",
-        "node": "./src/ConnectorPlugin.node.ts",
-        "default": "./src/ConnectorPlugin.ts"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
       },
-      "types": "./dist/types/src/ConnectorPlugin.d.ts",
-      "workerd": "./dist/lib/ConnectorPlugin.workerd.mjs",
-      "node": "./dist/lib/ConnectorPlugin.node.mjs",
-      "default": "./dist/lib/ConnectorPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -74,6 +74,18 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "import": "./dist/lib/components.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     },
     "./ConnectorAnnotations": {
       "source": "./src/types/ConnectorAnnotations.ts",
@@ -100,27 +112,15 @@
       "types": "./dist/types/src/types/ConnectorOperation.d.ts",
       "import": "./dist/lib/ConnectorOperation.mjs"
     },
+    "./ConnectorPlugin": {
+      "source": "./src/ConnectorPlugin.ts",
+      "types": "./dist/types/src/ConnectorPlugin.d.ts",
+      "import": "./dist/lib/ConnectorPlugin.mjs"
+    },
     "./ConnectorSpec": {
       "source": "./src/types/ConnectorSpec.ts",
       "types": "./dist/types/src/types/ConnectorSpec.d.ts",
       "import": "./dist/lib/ConnectorSpec.mjs"
-    },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

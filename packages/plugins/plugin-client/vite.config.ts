@@ -8,8 +8,8 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'ClientPlugin': 'src/ClientPlugin.ts',
-    'ClientPlugin.node': 'src/ClientPlugin.node.ts',
-    'ClientPlugin.workerd': 'src/ClientPlugin.workerd.ts',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',

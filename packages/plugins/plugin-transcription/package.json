@@ -48,14 +48,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/TranscriptionPlugin.workerd.ts",
-        "node": "./src/TranscriptionPlugin.node.ts",
-        "default": "./src/TranscriptionPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/TranscriptionPlugin.d.ts",
-      "workerd": "./dist/lib/TranscriptionPlugin.workerd.mjs",
-      "node": "./dist/lib/TranscriptionPlugin.node.mjs",
-      "default": "./dist/lib/TranscriptionPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -91,11 +91,6 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "import": "./dist/lib/operations.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
@@ -106,10 +101,16 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./TranscriptOperation": {
+      "source": "./src/types/TranscriptOperation.ts",
+      "types": "./dist/types/src/types/TranscriptOperation.d.ts",
+      "import": "./dist/lib/TranscriptOperation.mjs"
     },
     "./TranscriptionCapabilities": {
       "source": "./src/types/TranscriptionCapabilities.ts",
@@ -121,12 +122,11 @@
       "types": "./dist/types/src/types/TranscriptionEvents.d.ts",
       "import": "./dist/lib/TranscriptionEvents.mjs"
     },
-    "./TranscriptOperation": {
-      "source": "./src/types/TranscriptOperation.ts",
-      "types": "./dist/types/src/types/TranscriptOperation.d.ts",
-      "import": "./dist/lib/TranscriptOperation.mjs"
-    },
-    "./package.json": "./package.json"
+    "./TranscriptionPlugin": {
+      "source": "./src/TranscriptionPlugin.ts",
+      "types": "./dist/types/src/TranscriptionPlugin.d.ts",
+      "import": "./dist/lib/TranscriptionPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

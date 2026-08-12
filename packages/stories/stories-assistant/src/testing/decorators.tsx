@@ -49,21 +49,22 @@ import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { type Client, Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -165,7 +166,7 @@ const buildPluginManagerOptions = ({
     // that surfaces like TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [
           AccessToken.AccessToken,
           Assistant.Chat,
@@ -225,14 +226,14 @@ const buildPluginManagerOptions = ({
 
       // User plugins.
       PreviewPlugin(),
-      RoutinePlugin(),
-      AssistantPlugin(
+      RoutinePlugin.make(),
+      AssistantPlugin.make(
         scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
       ),
-      TranscriptionPlugin(),
+      TranscriptionPlugin.make(),
 
       // Test-specific.
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       StoryPlugin({ onChatCreated, createAgent, layoutAtom, layoutHolder }),
       ...plugins,
     ],

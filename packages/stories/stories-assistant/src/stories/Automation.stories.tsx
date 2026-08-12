@@ -60,7 +60,7 @@ export const WithChessTrigger: Story = {
         import('@dxos/plugin-chess'),
         import('@dxos/plugin-chess/ChessPlugin'),
         import('@dxos/plugin-game'),
-        import('@dxos/plugin-game/plugin'),
+        import('@dxos/plugin-game/GamePlugin'),
       ]);
       return {
         plugins: [GamePlugin(), ChessPlugin.make()],
@@ -120,7 +120,7 @@ export const WithChessTrigger: Story = {
 export const WithPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
         plugins: [MarkdownPlugin()],
       };

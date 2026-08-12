@@ -1110,3 +1110,23 @@ Follow-ups, in dependency order:
 - [ ] Scope the CSS/augmentation packages to the array form rather than `true`.
 - [ ] Flip the remaining 88 to `"sideEffects": false` and measure `check-startup-budget`, not
       `check-boot-budget` — the latter is already known flat.
+
+### Follow-up 2026-08-12 (schema capability is eagerly-arrayed at all 101 call sites)
+
+`AppCapability.schema` already accepts the lazy loader form
+(`() => Promise<{ default: [...] }>`) exactly as `AppCapability.commands` does — the API
+gap is not in app-toolkit, it is that **all 101 call sites pass the eager array**
+(`AppCapability.schema([Chess.State, ...])`), which dereferences every schema at plugin-body
+module scope. Same shape as the operation-handler-set leak fixed in b4904463: the definitions
+are eager even though the consumer is lazy.
+
+No activation question to settle: omitting `activatesOn` already normalizes to
+`ActivationEvents.Idle` (see its docstring in `common/activation-events.ts`), and Idle is
+documented as being for exactly this kind of registration contribution. So schema is already
+idle-activated — the conversion is purely about the MODULE GRAPH, not timing. The array literal
+is built when `XPlugin.tsx` is evaluated no matter when the module activates.
+
+- [ ] Convert the 101 `AppCapability.schema([...])` call sites to the loader form, measure
+      `check-boot-budget` before/after. The schema arrays sit in `XPlugin.tsx` (behind the lazy
+      `#plugin` import) so the boot win may be zero — measure, do not assume, per the two
+      negative `sideEffects` results above.

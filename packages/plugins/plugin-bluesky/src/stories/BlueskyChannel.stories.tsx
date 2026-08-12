@@ -16,15 +16,15 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { translations as threadTranslations } from '@dxos/plugin-thread/translations';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { BlueskyPlugin } from '../BlueskyPlugin';
 import { ATPROTO_BACKEND_KIND } from '../constants';
+import { BlueskyPlugin } from '../plugin';
 import { translations } from '../translations';
 import { BlueskyChannel, makeBlueskyChannel } from '../types';
 
@@ -85,7 +85,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        ThreadPlugin(),
+        ThreadPlugin.make(),
         BlueskyPlugin(),
       ],
     }),

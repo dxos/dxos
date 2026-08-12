@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { GamePlugin } from '@dxos/plugin-game/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { ChessPlugin } from '#plugin';
@@ -20,7 +20,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('ChessPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), GamePlugin(), ChessPlugin()],
+      plugins: [ClientPlugin.make({}), GamePlugin.make(), ChessPlugin()],
     });
 
     // Modules expected to be active after a normal startup (headless/node variant). OperationHandler
@@ -38,7 +38,7 @@ describe('ChessPlugin', () => {
     // non-assistant `SkillDefinition` module (chess, kanban, map, script, table, ...) was only
     // ever asserted absent. A broken body surfaces as a skill the assistant silently never offers.
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), GamePlugin(), ChessPlugin()],
+      plugins: [ClientPlugin.make({}), GamePlugin.make(), ChessPlugin()],
     });
 
     await harness.fire(AppActivationEvents.AssistantStart);
@@ -47,14 +47,14 @@ describe('ChessPlugin', () => {
   });
 
   test('invokes the Print operation via the invoker capability', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [GamePlugin(), ChessPlugin()] });
+    await using harness = await createComposerTestApp({ plugins: [GamePlugin.make(), ChessPlugin()] });
     const result = await harness.invoke(ChessOperation.Print, {});
     // Empty input returns empty ASCII (handler swallows errors for malformed FEN).
     expect(typeof result.ascii).toBe('string');
   });
 
   test('Print renders a PGN to ASCII board', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [GamePlugin(), ChessPlugin()] });
+    await using harness = await createComposerTestApp({ plugins: [GamePlugin.make(), ChessPlugin()] });
     const { ascii } = await harness.invoke(ChessOperation.Print, { pgn: '1. e4 e5' });
     expect(ascii).toContain('a  b  c  d  e  f  g  h');
   });

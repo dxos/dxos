@@ -45,14 +45,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ChessComPlugin.workerd.ts",
-        "node": "./src/ChessComPlugin.node.ts",
-        "default": "./src/ChessComPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/ChessComPlugin.d.ts",
-      "workerd": "./dist/lib/ChessComPlugin.workerd.mjs",
-      "node": "./dist/lib/ChessComPlugin.node.mjs",
-      "default": "./dist/lib/ChessComPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -72,16 +72,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./ChessComAccount": {
       "source": "./src/types/ChessComAccount.ts",
       "types": "./dist/types/src/types/ChessComAccount.d.ts",
@@ -97,7 +93,11 @@
       "types": "./dist/types/src/types/ChessComOperation.d.ts",
       "import": "./dist/lib/ChessComOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./ChessComPlugin": {
+      "source": "./src/ChessComPlugin.ts",
+      "types": "./dist/types/src/ChessComPlugin.d.ts",
+      "import": "./dist/lib/ChessComPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

@@ -7,10 +7,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    HeyGenPlugin: 'src/HeyGenPlugin.tsx',
+    HeyGenPlugin: 'src/HeyGenPlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
+    plugin: 'src/plugin.tsx',
     services: 'src/services/index.ts',
     components: 'src/components/index.ts',
   },

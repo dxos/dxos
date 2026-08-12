@@ -11,10 +11,11 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
@@ -108,10 +109,10 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        BrainPlugin(),
+        BrainPlugin.make(),
         CrawlerStoresPlugin(),
         StoryModulesPlugin(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

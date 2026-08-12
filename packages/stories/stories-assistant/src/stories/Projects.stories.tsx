@@ -50,7 +50,7 @@ const decorators = createDecorators({
         Collection: echo.Collection,
         Text: schema.Text,
       })),
-      import('@dxos/plugin-projects/plugin'),
+      import('@dxos/plugin-projects/ProjectsPlugin'),
     ]);
     return {
       plugins: [ProjectsPlugin()],

@@ -30,9 +30,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/DiscordPlugin.ts",
-      "types": "./dist/types/src/DiscordPlugin.d.ts",
-      "default": "./dist/lib/DiscordPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -51,6 +51,13 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
     "./DiscordEvents": {
       "source": "./src/types/DiscordEvents.ts",
       "types": "./dist/types/src/types/DiscordEvents.d.ts",
@@ -61,22 +68,15 @@
       "types": "./dist/types/src/types/DiscordOperation.d.ts",
       "import": "./dist/lib/DiscordOperation.mjs"
     },
+    "./DiscordPlugin": {
+      "source": "./src/DiscordPlugin.ts",
+      "types": "./dist/types/src/DiscordPlugin.d.ts",
+      "import": "./dist/lib/DiscordPlugin.mjs"
+    },
     "./DiscordTargetOptions": {
       "source": "./src/types/DiscordTargetOptions.ts",
       "types": "./dist/types/src/types/DiscordTargetOptions.d.ts",
       "import": "./dist/lib/DiscordTargetOptions.mjs"
-    },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -40,9 +40,9 @@
       "default": "./dist/lib/model.mjs"
     },
     "#plugin": {
-      "source": "./src/ExcalidrawPlugin.tsx",
-      "types": "./dist/types/src/ExcalidrawPlugin.d.ts",
-      "default": "./dist/lib/ExcalidrawPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -61,16 +61,12 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Excalidraw": {
       "source": "./src/types/Excalidraw.ts",
       "types": "./dist/types/src/types/Excalidraw.d.ts",
@@ -86,12 +82,16 @@
       "types": "./dist/types/src/types/ExcalidrawEvents.d.ts",
       "import": "./dist/lib/ExcalidrawEvents.mjs"
     },
+    "./ExcalidrawPlugin": {
+      "source": "./src/ExcalidrawPlugin.ts",
+      "types": "./dist/types/src/ExcalidrawPlugin.d.ts",
+      "import": "./dist/lib/ExcalidrawPlugin.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

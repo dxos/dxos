@@ -40,14 +40,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/PresenterPlugin.workerd.ts",
-        "node": "./src/PresenterPlugin.node.ts",
-        "default": "./src/PresenterPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/PresenterPlugin.d.ts",
-      "workerd": "./dist/lib/PresenterPlugin.workerd.mjs",
-      "node": "./dist/lib/PresenterPlugin.node.mjs",
-      "default": "./dist/lib/PresenterPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": "./src/testing.ts",
     "#translations": {
@@ -66,6 +66,13 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     },
     "./Presenter": {
       "source": "./src/types/Presenter.ts",
@@ -87,22 +94,15 @@
       "types": "./dist/types/src/types/PresenterOperation.d.ts",
       "import": "./dist/lib/PresenterOperation.mjs"
     },
+    "./PresenterPlugin": {
+      "source": "./src/PresenterPlugin.ts",
+      "types": "./dist/types/src/PresenterPlugin.d.ts",
+      "import": "./dist/lib/PresenterPlugin.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

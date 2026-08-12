@@ -7,14 +7,15 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    NavTreePlugin: 'src/NavTreePlugin.tsx',
+    NavTreePlugin: 'src/NavTreePlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.ts',
+    plugin: 'src/plugin.tsx',
     testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
     NavTreeNode: 'src/types/NavTreeNode.ts',

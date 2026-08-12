@@ -15,10 +15,11 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Form } from '@dxos/react-ui-form';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -68,7 +69,7 @@ const meta = {
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         MarkdownExtensionsPlugin(),
         ClientPlugin({
           types: [Markdown.Document, Text.Text],
@@ -87,7 +88,7 @@ const meta = {
         }),
         // Contributes the versioning-state atom consumed by useVersioning.
         SpacePlugin({}),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     })),
   ],

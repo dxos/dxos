@@ -7,14 +7,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'GamePlugin': 'src/GamePlugin.tsx',
-    'GamePlugin.node': 'src/GamePlugin.node.tsx',
-    'GamePlugin.workerd': 'src/GamePlugin.workerd.tsx',
+    'GamePlugin': 'src/GamePlugin.ts',
+    'plugin': 'src/plugin.tsx',
+    'plugin.node': 'src/plugin.node.tsx',
+    'plugin.workerd': 'src/plugin.workerd.tsx',
     'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',
-    'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'GameUtil': 'src/util/load-game.ts',
     'util': 'src/util/index.ts',

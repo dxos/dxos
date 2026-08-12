@@ -13,14 +13,15 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { CallsPlugin } from '@dxos/plugin-calls/plugin';
+import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -29,7 +30,7 @@ import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
 import { Meeting } from '#types';
 
-import { MeetingPlugin } from '../MeetingPlugin';
+import { MeetingPlugin } from '../plugin';
 
 type StoryArgs = {
   /** Seed a Meeting already linked to the event (toolbar shows "Open meeting"); otherwise "Create meeting". */
@@ -189,10 +190,10 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
-        InboxPlugin(),
-        CallsPlugin(),
-        TranscriptionPlugin(),
+        StorybookPlugin.make({}),
+        InboxPlugin.make(),
+        CallsPlugin.make(),
+        TranscriptionPlugin.make(),
         MeetingPlugin(),
         MarkdownPlugin(),
         PreviewPlugin(),

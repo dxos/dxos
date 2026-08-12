@@ -13,7 +13,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { CallsPlugin } from '@dxos/plugin-calls/plugin';
+import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -26,7 +26,7 @@ import { Channel, Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ThreadPlugin } from '../../ThreadPlugin';
+import { ThreadPlugin } from '../../plugin';
 import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle';
 
 // TODO(wittjosiah): Channel doesn't render full height.
@@ -89,7 +89,7 @@ const meta = {
         }),
         SpacePlugin({}),
         ThreadPlugin(),
-        CallsPlugin(),
+        CallsPlugin.make(),
       ],
     }),
   ],

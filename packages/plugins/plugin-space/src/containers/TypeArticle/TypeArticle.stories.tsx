@@ -20,7 +20,8 @@ import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-li
 import { PublicKey } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CardAnnotation } from '@dxos/schema';
@@ -177,7 +178,7 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         PreviewPlugin(),
         ClientPlugin({
           types: [CardType, Collection.Collection, Person.Person, Organization.Organization],

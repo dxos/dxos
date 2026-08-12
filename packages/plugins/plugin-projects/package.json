@@ -40,12 +40,12 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ProjectsPlugin.workerd.ts",
-        "default": "./src/ProjectsPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/ProjectsPlugin.d.ts",
-      "workerd": "./dist/lib/ProjectsPlugin.workerd.mjs",
-      "default": "./dist/lib/ProjectsPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -65,11 +65,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./templates": {
       "source": "./src/templates/index.ts",
       "types": "./dist/types/src/templates/index.d.ts",
@@ -104,6 +99,11 @@
       "source": "./src/types/ProjectsEvents.ts",
       "types": "./dist/types/src/types/ProjectsEvents.d.ts",
       "import": "./dist/lib/ProjectsEvents.mjs"
+    },
+    "./ProjectsPlugin": {
+      "source": "./src/ProjectsPlugin.ts",
+      "types": "./dist/types/src/ProjectsPlugin.d.ts",
+      "import": "./dist/lib/ProjectsPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -45,14 +45,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/SamplePlugin.workerd.ts",
-        "node": "./src/SamplePlugin.node.ts",
-        "default": "./src/SamplePlugin.ts"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
       },
-      "types": "./dist/types/src/SamplePlugin.d.ts",
-      "workerd": "./dist/lib/SamplePlugin.workerd.mjs",
-      "node": "./dist/lib/SamplePlugin.node.mjs",
-      "default": "./dist/lib/SamplePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -72,16 +72,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./SampleCapabilities": {
       "source": "./src/types/SampleCapabilities.ts",
       "types": "./dist/types/src/types/SampleCapabilities.d.ts",
@@ -102,12 +98,16 @@
       "types": "./dist/types/src/types/SampleOperation.d.ts",
       "import": "./dist/lib/SampleOperation.mjs"
     },
+    "./SamplePlugin": {
+      "source": "./src/SamplePlugin.ts",
+      "types": "./dist/types/src/SamplePlugin.d.ts",
+      "import": "./dist/lib/SamplePlugin.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

@@ -7,9 +7,10 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'ScriptPlugin': 'src/ScriptPlugin.tsx',
-    'ScriptPlugin.node': 'src/ScriptPlugin.node.ts',
-    'ScriptPlugin.workerd': 'src/ScriptPlugin.workerd.ts',
+    'ScriptPlugin': 'src/ScriptPlugin.ts',
+    'plugin': 'src/plugin.tsx',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
@@ -18,7 +19,6 @@ export default defineConfig({
     'hooks': 'src/hooks/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
-    'plugin': 'src/plugin.ts',
     'templates': 'src/templates/index.ts',
     'translations': 'src/translations.ts',
     'Settings': 'src/types/Settings.ts',

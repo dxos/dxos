@@ -11,7 +11,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { EffectEx } from '@dxos/effect';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
@@ -59,7 +60,7 @@ const meta = {
               yield* Effect.promise(() => EffectEx.runPromise(registry.forSpace(defaultSpace.id).putFacts(FACTS)));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

@@ -15,9 +15,10 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { BloggerOperationHandlerSet } from '#operations';
@@ -58,7 +59,7 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         PreviewPlugin(),
         ClientPlugin({
           types: [Blog.Publication, Blog.Post, Markdown.Document],
@@ -67,7 +68,7 @@ const meta = {
               yield* initializeIdentity(client);
             }),
         }),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     }),
   ],

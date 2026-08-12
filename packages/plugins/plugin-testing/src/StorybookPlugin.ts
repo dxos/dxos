@@ -2,21 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Plugin from '@dxos/app-framework/Plugin';
+// @import-as-namespace
 
-import { OperationHandler, ReactContext, State } from '#capabilities';
-import { meta } from '#meta';
-import { StorybookCapabilities } from '#types';
+import { StorybookPlugin } from '#plugin';
 
-export type StorybookPluginOptions = {
-  initialState?: Partial<StorybookCapabilities.LayoutStateProps>;
-};
+import { meta as pluginMeta } from './meta';
 
-export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(ReactContext),
-  Plugin.addModule(State),
-  Plugin.make,
-);
+/** Plugin metadata, available without loading the plugin body. */
+export const meta = pluginMeta;
 
-export default StorybookPlugin;
+/**
+ * Constructs the plugin. Eager by design: storybook runs under vite-dev, where webkit
+ * cannot reliably settle the lazy stub's dynamic import (see `./core.ts`).
+ */
+export const make = StorybookPlugin;
+
+export type { StorybookPluginOptions } from '#plugin';

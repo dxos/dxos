@@ -54,14 +54,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/SpacePlugin.workerd.ts",
-        "node": "./src/SpacePlugin.node.ts",
-        "default": "./src/SpacePlugin.ts"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
       },
-      "types": "./dist/types/src/SpacePlugin.d.ts",
-      "workerd": "./dist/lib/SpacePlugin.workerd.mjs",
-      "node": "./dist/lib/SpacePlugin.node.mjs",
-      "default": "./dist/lib/SpacePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -97,11 +97,6 @@
       "import": "./dist/lib/containers.mjs"
     },
     "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -146,6 +141,11 @@
       "source": "./src/types/SpaceOperation.ts",
       "types": "./dist/types/src/types/SpaceOperation.d.ts",
       "import": "./dist/lib/SpaceOperation.mjs"
+    },
+    "./SpacePlugin": {
+      "source": "./src/SpacePlugin.ts",
+      "types": "./dist/types/src/SpacePlugin.d.ts",
+      "import": "./dist/lib/SpacePlugin.mjs"
     },
     "./SpaceSchema": {
       "source": "./src/types/SpaceSchema.ts",

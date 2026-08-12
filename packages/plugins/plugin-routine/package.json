@@ -49,14 +49,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/RoutinePlugin.workerd.ts",
-        "node": "./src/RoutinePlugin.node.ts",
-        "default": "./src/RoutinePlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/RoutinePlugin.d.ts",
-      "workerd": "./dist/lib/RoutinePlugin.workerd.mjs",
-      "node": "./dist/lib/RoutinePlugin.node.mjs",
-      "default": "./dist/lib/RoutinePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": {
@@ -75,6 +75,28 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "import": "./dist/lib/components.mjs"
+    },
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "import": "./dist/lib/hooks.mjs"
+    },
+    "./package.json": "./package.json",
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     },
     "./Routine": {
       "source": "./src/types/Routine.ts",
@@ -96,32 +118,10 @@
       "types": "./dist/types/src/types/RoutineOperation.d.ts",
       "import": "./dist/lib/RoutineOperation.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
-    },
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./RoutinePlugin": {
+      "source": "./src/RoutinePlugin.ts",
+      "types": "./dist/types/src/RoutinePlugin.d.ts",
+      "import": "./dist/lib/RoutinePlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

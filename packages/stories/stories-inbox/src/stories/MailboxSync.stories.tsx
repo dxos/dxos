@@ -13,20 +13,21 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
-import { DebugPlugin } from '@dxos/plugin-debug/plugin';
+import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
@@ -77,15 +78,15 @@ const DECORATORS = [
       }),
       SpacePlugin({}),
       InboxPlugin(),
-      ConnectorPlugin(),
-      DebugPlugin({}),
-      AssistantPlugin(),
+      ConnectorPlugin.make(),
+      DebugPlugin.make({}),
+      AssistantPlugin.make(),
       PreviewPlugin(),
-      ProgressPlugin(),
-      RoutinePlugin(),
+      ProgressPlugin.make(),
+      RoutinePlugin.make(),
       StorySyncPlugin(),
       StoryModulesPlugin(),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
     ],
   })),
 ];

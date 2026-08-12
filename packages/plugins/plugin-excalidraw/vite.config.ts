@@ -7,13 +7,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    ExcalidrawPlugin: 'src/ExcalidrawPlugin.tsx',
+    ExcalidrawPlugin: 'src/ExcalidrawPlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     model: 'src/model/index.ts',
-    plugin: 'src/plugin.ts',
+    plugin: 'src/plugin.tsx',
     translations: 'src/translations.ts',
     Excalidraw: 'src/types/Excalidraw.ts',
     ExcalidrawCapabilities: 'src/types/ExcalidrawCapabilities.ts',

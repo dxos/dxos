@@ -2,7 +2,7 @@
   "name": "@dxos/plugin-onboarding",
   "version": "0.11.1",
   "private": true,
-  "description": "DXOS Composer onboarding plugin — identity setup, exemplar space, and auth flows.",
+  "description": "DXOS Composer onboarding plugin \u2014 identity setup, exemplar space, and auth flows.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -15,9 +15,9 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/OnboardingPlugin.ts",
-      "types": "./dist/types/src/OnboardingPlugin.d.ts",
-      "default": "./dist/lib/OnboardingPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     }
   },
   "exports": {
@@ -26,15 +26,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./OnboardingPlugin": {
+      "source": "./src/OnboardingPlugin.ts",
+      "types": "./dist/types/src/OnboardingPlugin.d.ts",
+      "import": "./dist/lib/OnboardingPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

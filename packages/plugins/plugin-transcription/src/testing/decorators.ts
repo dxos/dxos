@@ -8,13 +8,14 @@ import * as Effect from 'effect/Effect';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { IndexKind } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
+import { TranscriptionPlugin } from '../plugin';
 import { TestItem } from './testing';
 
 // TODO(mykola): Make API easier to use.
@@ -54,7 +55,7 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       ClientPlugin({
         types: [TestItem, Person.Person, Organization.Organization],
         onClientInitialized: ({ client }) =>

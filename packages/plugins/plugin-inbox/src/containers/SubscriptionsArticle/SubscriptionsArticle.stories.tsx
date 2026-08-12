@@ -11,14 +11,15 @@ import { Database, Feed, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
+import { InboxPlugin } from '../../plugin';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 /** Bulk-mail senders with a `List-Unsubscribe` affordance; counts drive the noisiest-first sort. */
@@ -47,7 +48,7 @@ const meta = {
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
         ClientPlugin({
           types: [Mailbox.Mailbox, Message.Message],

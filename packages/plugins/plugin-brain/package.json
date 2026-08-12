@@ -35,9 +35,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/BrainPlugin.tsx",
-      "types": "./dist/types/src/BrainPlugin.d.ts",
-      "default": "./dist/lib/BrainPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -72,16 +72,12 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "import": "./dist/lib/operations.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./BrainCapabilities": {
       "source": "./src/types/BrainCapabilities.ts",
       "types": "./dist/types/src/types/BrainCapabilities.d.ts",
@@ -97,6 +93,11 @@
       "types": "./dist/types/src/types/BrainOperation.d.ts",
       "import": "./dist/lib/BrainOperation.mjs"
     },
+    "./BrainPlugin": {
+      "source": "./src/BrainPlugin.ts",
+      "types": "./dist/types/src/BrainPlugin.d.ts",
+      "import": "./dist/lib/BrainPlugin.mjs"
+    },
     "./BrainSettings": {
       "source": "./src/types/BrainSettings.ts",
       "types": "./dist/types/src/types/BrainSettings.d.ts",
@@ -106,8 +107,7 @@
       "source": "./src/types/BrainSurface.ts",
       "types": "./dist/types/src/types/BrainSurface.d.ts",
       "import": "./dist/lib/BrainSurface.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

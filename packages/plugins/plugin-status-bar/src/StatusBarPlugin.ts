@@ -1,18 +1,15 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ReactSurface } from '#capabilities';
-import { meta } from '#meta';
-import { translations } from '#translations';
+import { meta as pluginMeta } from './meta';
 
-export const StatusBarPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.make,
-);
+/** Plugin metadata, available without loading the plugin body. */
+export const meta = pluginMeta;
 
-export default StatusBarPlugin;
+/** Constructs the plugin; the body loads on first enable. */
+export const make = Plugin.lazy(meta, () => import('#plugin'));

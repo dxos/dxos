@@ -40,14 +40,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/CallsPlugin.workerd.ts",
-        "node": "./src/CallsPlugin.node.ts",
-        "default": "./src/CallsPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/CallsPlugin.d.ts",
-      "workerd": "./dist/lib/CallsPlugin.workerd.mjs",
-      "node": "./dist/lib/CallsPlugin.node.mjs",
-      "default": "./dist/lib/CallsPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -67,16 +67,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./CallsCapabilities": {
       "source": "./src/types/CallsCapabilities.ts",
       "types": "./dist/types/src/types/CallsCapabilities.d.ts",
@@ -87,7 +83,11 @@
       "types": "./dist/types/src/types/CallsEvents.d.ts",
       "import": "./dist/lib/CallsEvents.mjs"
     },
-    "./package.json": "./package.json"
+    "./CallsPlugin": {
+      "source": "./src/CallsPlugin.ts",
+      "types": "./dist/types/src/CallsPlugin.d.ts",
+      "import": "./dist/lib/CallsPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

@@ -7,9 +7,10 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'ReviewPlugin': 'src/ReviewPlugin.tsx',
-    'ReviewPlugin.node': 'src/ReviewPlugin.node.ts',
-    'ReviewPlugin.workerd': 'src/ReviewPlugin.workerd.ts',
+    'ReviewPlugin': 'src/ReviewPlugin.ts',
+    'plugin': 'src/plugin.tsx',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
@@ -18,7 +19,6 @@ export default defineConfig({
     'hooks': 'src/hooks/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
-    'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'AgentIdentity': 'src/types/AgentIdentity.ts',
     'ReviewCapabilities': 'src/types/ReviewCapabilities.ts',

@@ -8,8 +8,8 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'SpacePlugin': 'src/SpacePlugin.ts',
-    'SpacePlugin.node': 'src/SpacePlugin.node.ts',
-    'SpacePlugin.workerd': 'src/SpacePlugin.workerd.ts',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',

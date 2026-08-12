@@ -44,9 +44,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/DeckPlugin.ts",
-      "types": "./dist/types/src/DeckPlugin.d.ts",
-      "default": "./dist/lib/DeckPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -67,11 +67,6 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -91,6 +86,11 @@
       "source": "./src/types/DeckOperation.ts",
       "types": "./dist/types/src/types/DeckOperation.d.ts",
       "import": "./dist/lib/DeckOperation.mjs"
+    },
+    "./DeckPlugin": {
+      "source": "./src/DeckPlugin.ts",
+      "types": "./dist/types/src/DeckPlugin.d.ts",
+      "import": "./dist/lib/DeckPlugin.mjs"
     },
     "./DeckRole": {
       "source": "./src/types/DeckRole.ts",

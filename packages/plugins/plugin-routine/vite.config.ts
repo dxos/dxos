@@ -7,9 +7,10 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'RoutinePlugin': 'src/RoutinePlugin.tsx',
-    'RoutinePlugin.node': 'src/RoutinePlugin.node.ts',
-    'RoutinePlugin.workerd': 'src/RoutinePlugin.workerd.ts',
+    'RoutinePlugin': 'src/RoutinePlugin.ts',
+    'plugin': 'src/plugin.tsx',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',
@@ -17,7 +18,6 @@ export default defineConfig({
     'hooks': 'src/hooks/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
-    'plugin': 'src/plugin.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'Routine': 'src/types/Routine.ts',

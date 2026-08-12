@@ -9,11 +9,12 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -55,8 +56,8 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [
             Tag.Tag,
             Feed.Feed,
@@ -203,7 +204,7 @@ const meta = {
             }).pipe(Effect.provide(Database.layer(defaultSpace.db)));
           }),
         }),
-        InboxPlugin(),
+        InboxPlugin.make(),
         PreviewPlugin(),
       ],
     }),

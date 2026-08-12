@@ -84,7 +84,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
         plugins: [MarkdownPlugin()],
       };
@@ -108,7 +108,7 @@ export const WithSubAgents: Story = {
       instructions: 'You delegate units of work to sub-agents using the available tools.',
     },
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
         plugins: [MarkdownPlugin()],
       };
@@ -128,7 +128,7 @@ export const WithExecutionGraph: Story = {
   decorators: createDecorators({
     config: config.remote,
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
         plugins: [MarkdownPlugin()],
       };
@@ -143,7 +143,7 @@ export const WithExecutionGraph: Story = {
 export const WithWebSearch: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
         plugins: [MarkdownPlugin()],
       };
@@ -159,7 +159,7 @@ export const WithWebSearch: Story = {
 export const WithPlanning: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
         plugins: [MarkdownPlugin()],
       };
@@ -293,7 +293,7 @@ export const WithSubAgentsTest2: Story = {
       instructions: 'You delegate units of work to sub-agents using the available tools.',
     },
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
         plugins: [MarkdownPlugin()],
       };

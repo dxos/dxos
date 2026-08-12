@@ -31,7 +31,7 @@ export const WithChess: Story = {
         import('@dxos/plugin-chess'),
         import('@dxos/plugin-chess/ChessPlugin'),
         import('@dxos/plugin-game'),
-        import('@dxos/plugin-game/plugin'),
+        import('@dxos/plugin-game/GamePlugin'),
       ]);
       return {
         plugins: [GamePlugin(), ChessPlugin.make()],
@@ -83,8 +83,8 @@ export const WithMap: Story = {
     lazyPlugins: async () => {
       const [{ Map }, { MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: _ }] = await Promise.all([
         import('@dxos/plugin-map'),
-        import('@dxos/plugin-map/plugin'),
-        import('@dxos/plugin-table/plugin'),
+        import('@dxos/plugin-map/MapPlugin'),
+        import('@dxos/plugin-table/TablePlugin'),
         import('@dxos/react-ui-table/types'),
         import('@dxos/plugin-map/testing'),
       ]);
@@ -129,9 +129,9 @@ export const WithTrip: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ MarkdownPlugin }, { Map }, { MapPlugin }] = await Promise.all([
-        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
         import('@dxos/plugin-map'),
-        import('@dxos/plugin-map/plugin'),
+        import('@dxos/plugin-map/MapPlugin'),
       ]);
       return {
         plugins: [MarkdownPlugin(), MapPlugin()],
@@ -190,7 +190,7 @@ export const WithBoard: Story = {
     lazyPlugins: async () => {
       const [{ Board }, { BoardPlugin }] = await Promise.all([
         import('@dxos/plugin-board'),
-        import('@dxos/plugin-board/plugin'),
+        import('@dxos/plugin-board/BoardPlugin'),
       ]);
       return {
         plugins: [BoardPlugin()],

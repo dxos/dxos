@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export { meta } from './meta';
-export { HaloServicesLayer } from './halo-services-layer';
+export * as ClientPlugin from './ClientPlugin';
 export * from './progress';
-export { ClientOperation } from './operations';
 export * from './types';
+export { ClientOperation } from './operations';
+export { HaloServicesLayer } from './halo-services-layer';
+export { meta } from './meta';

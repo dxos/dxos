@@ -44,9 +44,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/NavTreePlugin.tsx",
-      "types": "./dist/types/src/NavTreePlugin.d.ts",
-      "default": "./dist/lib/NavTreePlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",
@@ -70,6 +70,13 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
     "./NavTreeCapabilities": {
       "source": "./src/types/NavTreeCapabilities.ts",
       "types": "./dist/types/src/types/NavTreeCapabilities.d.ts",
@@ -80,17 +87,10 @@
       "types": "./dist/types/src/types/NavTreeNode.d.ts",
       "import": "./dist/lib/NavTreeNode.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./NavTreePlugin": {
+      "source": "./src/NavTreePlugin.ts",
+      "types": "./dist/types/src/NavTreePlugin.d.ts",
+      "import": "./dist/lib/NavTreePlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

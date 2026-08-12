@@ -40,12 +40,12 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/TasksPlugin.workerd.ts",
-        "default": "./src/TasksPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/TasksPlugin.d.ts",
-      "workerd": "./dist/lib/TasksPlugin.workerd.mjs",
-      "default": "./dist/lib/TasksPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -66,11 +66,6 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -100,6 +95,11 @@
       "source": "./src/types/TasksEvents.ts",
       "types": "./dist/types/src/types/TasksEvents.d.ts",
       "import": "./dist/lib/TasksEvents.mjs"
+    },
+    "./TasksPlugin": {
+      "source": "./src/TasksPlugin.ts",
+      "types": "./dist/types/src/TasksPlugin.d.ts",
+      "import": "./dist/lib/TasksPlugin.mjs"
     },
     "./TasksUtil": {
       "source": "./src/types/TasksUtil.ts",

@@ -49,14 +49,15 @@ import {
   makeDatabaseLookup,
 } from '@dxos/pipeline-transcription';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -526,11 +527,11 @@ const meta = {
         }),
         SpacePlugin({}),
         MarkdownPlugin(),
-        TranscriptionPlugin(),
-        BrainPlugin(),
-        ProgressPlugin(),
+        TranscriptionPlugin.make(),
+        BrainPlugin.make(),
+        ProgressPlugin.make(),
         StoryModulesPlugin(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

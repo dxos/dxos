@@ -49,12 +49,12 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/MagazinePlugin.workerd.ts",
-        "default": "./src/MagazinePlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/MagazinePlugin.d.ts",
-      "workerd": "./dist/lib/MagazinePlugin.workerd.mjs",
-      "default": "./dist/lib/MagazinePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -80,16 +80,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./CreateSubscription": {
       "source": "./src/types/CreateSubscription.ts",
       "types": "./dist/types/src/types/CreateSubscription.d.ts",
@@ -110,12 +106,16 @@
       "types": "./dist/types/src/types/MagazineEvents.d.ts",
       "import": "./dist/lib/MagazineEvents.mjs"
     },
+    "./MagazinePlugin": {
+      "source": "./src/MagazinePlugin.ts",
+      "types": "./dist/types/src/MagazinePlugin.d.ts",
+      "import": "./dist/lib/MagazinePlugin.mjs"
+    },
     "./Subscription": {
       "source": "./src/types/Subscription.ts",
       "types": "./dist/types/src/types/Subscription.d.ts",
       "import": "./dist/lib/Subscription.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

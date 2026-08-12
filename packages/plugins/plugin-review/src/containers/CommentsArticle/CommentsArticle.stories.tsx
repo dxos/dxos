@@ -40,7 +40,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { AgentIdentity, CommentCapabilities } from '#types';
 
-import { ReviewPlugin, type ReviewPluginOptions } from '../../ReviewPlugin';
+import { ReviewPlugin, type ReviewPluginOptions } from '../../plugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
 import { translations } from '../../translations';

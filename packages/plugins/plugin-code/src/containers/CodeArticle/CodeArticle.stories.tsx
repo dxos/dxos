@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 import { translations } from '#translations';
 import { CodeProject, SourceFile, Spec } from '#types';
 
-import { CodePlugin } from '../../CodePlugin';
+import { CodePlugin } from '../../plugin';
 import { CodeArticle } from './CodeArticle';
 
 const HELLO_WORLD = {

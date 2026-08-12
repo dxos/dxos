@@ -7,9 +7,10 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'InboxPlugin': 'src/InboxPlugin.tsx',
-    'InboxPlugin.node': 'src/InboxPlugin.node.ts',
-    'InboxPlugin.workerd': 'src/InboxPlugin.workerd.ts',
+    'InboxPlugin': 'src/InboxPlugin.ts',
+    'plugin': 'src/plugin.tsx',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'sync': 'src/sync/index.ts',
     'capabilities': 'src/capabilities/index.ts',
@@ -19,7 +20,6 @@ export default defineConfig({
     'hooks': 'src/hooks/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
-    'plugin': 'src/plugin.ts',
     'plugin.workerd': 'src/plugin.workerd.ts',
     'testing': 'src/testing/index.ts',
     'testing/sync-fixture': 'src/testing/sync-fixture.ts',

@@ -67,8 +67,8 @@ import { isNonNullable, trim } from '@dxos/util';
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
 
+import { TranscriptionPlugin } from '../plugin';
 import { enableQueryIndexes } from '../testing';
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
 
 const SAMPLE_CONTENT = trim`
   # Test
