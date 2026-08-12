@@ -121,9 +121,7 @@ export const syncConnectionOrOfferRoutine = ({
                 syncConnectionOrOfferRoutine({ connection, connector, db, priority, subject }).pipe(
                   Effect.provideService(Operation.Service, invoker),
                   Effect.provideService(Capability.Service, capabilities),
-                  Effect.catch((error) =>
-                    Effect.sync(() => log.warn('sync after routine created failed', { error })),
-                  ),
+                  Effect.catch((error) => Effect.sync(() => log.warn('sync after routine created failed', { error }))),
                 ),
               );
             },
