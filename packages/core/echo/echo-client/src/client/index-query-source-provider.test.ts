@@ -34,7 +34,7 @@ const mockGraph = {} as Hypergraph.Hypergraph;
 /** No-op update signal for tests that don't exercise re-hydration. */
 const noopUpdateEvent = new Event<ObjectUpdate>();
 
-const makeQuery = (spaceId: SpaceId = SpaceId$.random()): QueryAST.Query => ({
+const makeScopedQuery = (scopes: QueryAST.Scope[]): QueryAST.Query => ({
   type: 'from',
   query: {
     type: 'select',
@@ -46,9 +46,12 @@ const makeQuery = (spaceId: SpaceId = SpaceId$.random()): QueryAST.Query => ({
   },
   from: {
     _tag: 'scope',
-    scopes: [Scope.space({ id: spaceId })],
+    scopes,
   },
 });
+
+const makeQuery = (spaceId: SpaceId = SpaceId$.random()): QueryAST.Query =>
+  makeScopedQuery([Scope.space({ id: spaceId })]);
 
 describe('IndexQuerySource', () => {
   test('does not start a REACTIVE remote query until open() is called', async () => {
@@ -126,6 +129,59 @@ describe('IndexQuerySource', () => {
     expect(results).toEqual([]);
     expect(calls).toHaveLength(1);
     expect(calls[0].reactivity).toBe(QueryReactivity.ONE_SHOT);
+  });
+
+  // Regression: a registry-only query forwarded to the remote QueryService fails the whole
+  // query on edge — the query host rejects space-less queries ("Query must specify at least one
+  // spaceId in options") and `GraphQueryContext.run`'s fail-fast merge discards the
+  // `RegistryQuerySource`'s results. Surfaced by `projectCreate` over MCP (`SpaceOperation.
+  // AddObject`'s type lookup is registry-scoped); dxos/edge mcp-operations project, DESIGN §6.
+  test('registry-only queries never reach the remote service', async () => {
+    const calls: QueryRequest[] = [];
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) => {
+        calls.push(request);
+        return Stream.async<QueryResponse>((emit) => {
+          queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
+        });
+      },
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: Runtime.defaultRuntime,
+      objectLoader: {
+        loadObject: async () => undefined,
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+
+    // `open()` subscribes to the shared `noopUpdateEvent` and `update()` opens a reactive
+    // stream; close on teardown so neither outlives the test, including when an assertion throws.
+    onTestFinished(() => source.close());
+
+    const registryOnlyQuery = makeScopedQuery([Scope.registry()]);
+
+    // One-shot: resolves empty locally without a remote round-trip.
+    const results = await source.run(Context.default(), registryOnlyQuery);
+    expect(results).toEqual([]);
+    expect(calls).toHaveLength(0);
+
+    // Reactive: no remote stream is opened either.
+    source.open();
+    source.update(registryOnlyQuery);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(calls).toHaveLength(0);
+
+    // A mixed-scope query (space + registry) still queries the index for the space part.
+    const mixedQuery = makeScopedQuery([Scope.space({ id: SpaceId$.random() }), Scope.registry()]);
+    source.update(mixedQuery);
+    await expect.poll(() => calls).toHaveLength(1);
+    expect(calls[0].reactivity).toBe(QueryReactivity.REACTIVE);
   });
 
   test('re-hydrates reactive results when a previously-unavailable object loads', async () => {
