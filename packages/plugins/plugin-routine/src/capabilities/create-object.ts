@@ -21,8 +21,10 @@ export default Capability.makeModule(
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Routine.Routine),
       customPanel: CreateRoutinePanel,
-      createObject: ({ name, templateId }: { name?: string; templateId: string }, options: CreateOptions) =>
-        Operation.invoke(RoutineOperation.CreateRoutine, { db: options.db, templateId, name }),
+      createObject: (
+        { name, templateId, draft }: { name?: string; templateId: string; draft?: Routine.Routine },
+        options: CreateOptions,
+      ) => Operation.invoke(RoutineOperation.CreateRoutine, { db: options.db, templateId, name, draft }),
     });
   }),
 );

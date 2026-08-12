@@ -56,6 +56,8 @@ export const CreateRoutine = Operation.make({
     templateId: Schema.String,
     name: Schema.optional(Schema.String),
     subject: Schema.optional(Obj.Unknown),
+    /** Pre-scaffolded in-memory routine graph (already edited in a form); persisted instead of scaffolding. */
+    draft: Schema.optional(Obj.Unknown),
   }),
   output: Schema.Struct({
     id: Schema.String,

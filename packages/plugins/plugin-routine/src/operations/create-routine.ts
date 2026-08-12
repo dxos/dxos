@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Database } from '@dxos/echo';
+import * as Routine from '@dxos/compute/Routine';
+import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 
@@ -16,20 +17,24 @@ import * as RoutineOperation from '../types/RoutineOperation';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = RoutineOperation.CreateRoutine.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, templateId, name, subject }) {
-      const templates = yield* Capability.getAll(RoutineCapabilities.Template);
-      const template = templates.find((entry) => entry.id === templateId);
-      invariant(template, `Unknown routine template: ${templateId}`);
+    Effect.fnUntraced(function* ({ db, templateId, name, subject, draft }) {
+      let object = draft;
+      if (!object) {
+        const templates = yield* Capability.getAll(RoutineCapabilities.Template);
+        const template = templates.find((entry) => entry.id === templateId);
+        invariant(template, `Unknown routine template: ${templateId}`);
 
-      // The scaffold returns a fully-wired in-memory routine graph (runnable, owned instructions, and trigger
-      // all parented and bound by `makeRoutine`); AddObject's `Database.add` cascades the whole graph.
-      const draft = yield* template
-        .scaffold({ name, subject })
-        .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
+        // The scaffold returns a fully-wired in-memory routine graph (runnable, owned instructions, and trigger
+        // all parented and bound by `makeRoutine`); AddObject's `Database.add` cascades the whole graph.
+        object = yield* template
+          .scaffold({ name, subject })
+          .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
+      }
+      invariant(Obj.instanceOf(Routine.Routine, object), 'Draft is not a routine');
 
       const targetNodeId = getRoutinesPath(db.spaceId);
       return yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: draft,
+        object,
         target: db,
         targetNodeId,
       });
