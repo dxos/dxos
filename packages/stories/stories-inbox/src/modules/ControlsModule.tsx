@@ -196,7 +196,11 @@ const ControlsModuleContainer = ({ space }: { space: Space }) => {
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col gap-2 p-2 text-sm'>
         <JsonHighlighter
-          data={{ identity: identity?.identityKey.truncate(), processed: processedCount, facts: factsCount }}
+          data={{
+            identity: identity?.identityKey.truncate(),
+            processed: processedCount,
+            facts: factsCount,
+          }}
         />
       </Panel.Content>
     </Panel.Root>

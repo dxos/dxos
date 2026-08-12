@@ -125,6 +125,16 @@ export const seedFromFixture = async (space: Space, fixture = 'mailbox'): Promis
   return mailbox;
 };
 
+/** Adds a Mailbox with the shared demo messages on its feed (no Organizations). */
+export const seedFromMessages = async (space: Space): Promise<Mailbox.Mailbox> => {
+  const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
+  await space.db.flush();
+  const feed = await mailbox.feed.load();
+  await EffectEx.runPromise(seedDemoMessages(feed).pipe(Effect.provide(Database.layer(space.db))));
+  await space.db.flush({ indexes: true });
+  return mailbox;
+};
+
 /** Adds a Mailbox with the shared demo messages on its feed, plus the extraction-gate Organizations. */
 export const seedFromObjects = async (space: Space): Promise<Mailbox.Mailbox> => {
   const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));

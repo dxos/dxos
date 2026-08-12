@@ -17,14 +17,17 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ProgressMeter, useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Query, Ref } from '@dxos/echo';
+import { configPreset } from '@dxos/config';
+import { Feed, Filter, Query, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
+import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import * as CrmOperation from '@dxos/plugin-crm/CrmOperation';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
@@ -34,8 +37,11 @@ import { ContactMessageExtractor } from '@dxos/plugin-inbox/operations';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { Config } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
@@ -47,7 +53,7 @@ import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules';
-import { StoryAiPlugin, seedFromFixture, seedFromObjects } from '../testing';
+import { StoryAiPlugin, StorySyncPlugin, seedFromFixture, seedFromMessages, seedFromObjects } from '../testing';
 import { StoryModulesPlugin } from '../testing/modules';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
@@ -277,11 +283,21 @@ const StoryProcessPlugin = Plugin.define(
 
 const DefaultStory = () => (
   <ModuleContainer
-    layout={[[ProcessRole, StoryRole.Mailbox], [StoryRole.Facts], [ModuleRole.Database, ModuleRole.Logging]]}
+    layout={[
+      [ProcessRole, StoryRole.Mailbox],
+      [StoryRole.Message],
+      [StoryRole.Controls, StoryRole.Facts],
+      [ModuleRole.Database, ModuleRole.Logging],
+    ]}
   />
 );
 
-type StoryArgs = { seed: 'fixture' | 'crm' };
+/**
+ * `live` seeds nothing and switches the client to persistent OPFS storage against EDGE dev, so the
+ * connector OAuth round trip (which reloads the page) can resume — the ex-MailboxPipeline flow. The
+ * other kinds seed a fresh in-memory profile.
+ */
+type StoryArgs = { seed: 'fixture' | 'crm' | 'demo' | 'live' };
 
 const meta = {
   title: 'stories/stories-inbox/FeedPipeline',
@@ -289,13 +305,16 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
-    // Initializer form: the seed variant is a story arg, so one plugin set serves every story.
+    // Initializer form: the seed variant is a story arg, so one plugin set serves every story — and
+    // the client config branches on it too (`live` must survive the OAuth reload).
     withPluginManager<StoryArgs>(({ args }) => ({
       setupEvents: [ActivationEvents.Startup],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
           types: [
+            AccessToken.AccessToken,
+            Connection.Connection,
             Cursor.Cursor,
             Feed.Feed,
             Mailbox.Mailbox,
@@ -304,37 +323,65 @@ const meta = {
             Organization.Organization,
             Person.Person,
             ProfileOf.ProfileOf,
+            Tag.Tag,
             TagIndex.TagIndex,
             Text.Text,
           ],
+          ...(args.seed === 'live'
+            ? {
+                config: new Config(
+                  { runtime: { client: { storage: { persistent: true } } } },
+                  configPreset({ edge: 'dev' }).values,
+                ),
+                // OPFS-backed storage so identity/spaces survive a page reload; without a worker the
+                // client silently falls back to in-memory storage regardless of `storage.persistent`.
+                createOpfsWorker: () =>
+                  new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
+              }
+            : {}),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
+              // A persisted (`live`) profile already has its identity + mailbox.
+              if (client.halo.identity.get()) {
+                return;
+              }
+
               const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => {
+              yield* Effect.promise(async () => {
                 switch (args.seed) {
                   case 'fixture':
                     return seedFromFixture(defaultSpace);
                   case 'crm':
                     return seedFromObjects(defaultSpace);
+                  case 'demo':
+                    return seedFromMessages(defaultSpace);
+                  case 'live': {
+                    defaultSpace.db.add(Mailbox.make());
+                    await defaultSpace.db.flush({ indexes: true });
+                  }
                 }
               });
             }),
         }),
         StorybookPlugin({}),
+        SpacePlugin({}),
         InboxPlugin(),
         BrainPlugin(),
+        ConnectorPlugin(),
         CrmPlugin(),
         MarkdownPlugin(),
+        PreviewPlugin(),
         ProgressPlugin(),
         StoryAiPlugin(),
         StoryModulesPlugin(),
         StoryProcessPlugin(),
+        StorySyncPlugin(),
       ],
     })),
   ],
   parameters: {
     layout: 'fullscreen',
-    translations: debugTranslations,
+    translations: [...debugTranslations, ...connectorTranslations],
   },
 } satisfies Meta<StoryArgs>;
 
@@ -344,7 +391,21 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    sseed: 'fixture',
+    seed: 'fixture',
+  },
+};
+
+/** Plain demo messages, no Organizations — the ex-MailboxPipeline seeded variant. */
+export const Demo: Story = {
+  args: {
+    seed: 'demo',
+  },
+};
+
+/** Persistent EDGE-dev profile with an empty mailbox: connect a real account via the mailbox UI. */
+export const Live: Story = {
+  args: {
+    seed: 'live',
   },
 };
 

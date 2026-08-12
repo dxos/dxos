@@ -28,6 +28,7 @@ import { useClient } from '@dxos/react-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleRole } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person } from '@dxos/types';
 
 const HOST_STORY_TYPES = [
@@ -219,14 +220,14 @@ const StoryHostPlugin = Plugin.define(
   Plugin.make,
 );
 
-const DefaultStory = () => <ModuleContainer layout={[[HostRole]]} />;
+const DefaultStory = () => <ModuleContainer layout={[[HostRole], [ModuleRole.Logging]]} />;
 
 const meta = {
   title: 'stories/stories-inbox/MailboxHost',
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
