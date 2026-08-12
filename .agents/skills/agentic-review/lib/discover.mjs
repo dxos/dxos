@@ -112,16 +112,68 @@ export const matchRuleFiles = (rule, root, { changedSet = null, projectFiles = n
  * Group matched rules for subagents, favoring focus over packing: one group is a
  * single rule over a bounded chunk of its files. Rules are never merged together.
  *
+ * When `maxGroups > 0`, every matched file is still covered — slot budget is
+ * shared across rules (at least one group each) and each rule's files are split
+ * evenly into its slots (chunk size grows as needed). If there are more rules
+ * than `maxGroups`, the budget expands to one group per rule so files are never
+ * dropped. `maxGroups <= 0` means unlimited (use `chunkSize` only).
+ *
  * @returns {Array<{ n: number, rule: object, files: string[] }>}
  */
-export const groupRuleMatches = (ruleMatches, chunkSize) => {
+export const groupRuleMatches = (ruleMatches, chunkSize, maxGroups = 0) => {
+  const active = ruleMatches.filter(({ files }) => files.length > 0);
+  if (active.length === 0) {
+    return [];
+  }
+
+  const slots =
+    maxGroups > 0
+      ? allocateGroupSlots(
+          active.map(({ files }) => files.length),
+          maxGroups,
+        )
+      : active.map(({ files }) => Math.ceil(files.length / chunkSize));
+
   const groups = [];
   let n = 0;
-  for (const { rule, files } of ruleMatches) {
-    for (let start = 0; start < files.length; start += chunkSize) {
+  for (let index = 0; index < active.length; index++) {
+    const { rule, files } = active[index];
+    const slotCount = Math.max(1, slots[index]);
+    const size = Math.ceil(files.length / slotCount);
+    for (let start = 0; start < files.length; start += size) {
       n++;
-      groups.push({ n, rule, files: files.slice(start, start + chunkSize) });
+      groups.push({ n, rule, files: files.slice(start, start + size) });
     }
   }
   return groups;
+};
+
+/**
+ * Split `maxGroups` across rules with file counts `fileCounts`: one slot each,
+ * then give remaining slots to the rule with the highest files/slots ratio so
+ * large rules get finer chunks. Never returns fewer slots than rules.
+ *
+ * @param {number[]} fileCounts
+ * @param {number} maxGroups
+ * @returns {number[]}
+ */
+export const allocateGroupSlots = (fileCounts, maxGroups) => {
+  const count = fileCounts.length;
+  const budget = Math.max(maxGroups, count);
+  const slots = Array.from({ length: count }, () => 1);
+  let remaining = budget - count;
+  while (remaining > 0) {
+    let best = 0;
+    let bestRatio = -1;
+    for (let index = 0; index < count; index++) {
+      const ratio = fileCounts[index] / slots[index];
+      if (ratio > bestRatio) {
+        bestRatio = ratio;
+        best = index;
+      }
+    }
+    slots[best]++;
+    remaining--;
+  }
+  return slots;
 };

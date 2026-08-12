@@ -8,11 +8,14 @@
 // group for subagents, and write the review store.
 //
 // Usage:
-//   node prepare.mjs [--chunk=15] [--base=<ref>] [--main=origin/main] [--slug=<slug>] [--pr-only]
+//   node prepare.mjs [--chunk=15] [--max-groups=20] [--base=<ref>] [--main=origin/main]
+//                    [--slug=<slug>] [--pr-only]
 //
 // Default: no prior finalized review → every rule scans the whole project; a
 // rule never seen in a prior ancestor review also gets a full first pass.
 // `--pr-only` restores diff-only mode (last review or merge-base with main).
+// Groups are capped at `--max-groups` (default 20; 0 = unlimited): all matched
+// files are still covered — chunk sizes grow so the file set fits the budget.
 //
 // Prints the STAGING.md / REVIEW.md paths, the group count, and a per-group line.
 
@@ -44,15 +47,17 @@ import {
 
 const { values } = parseArgs({
   options: {
-    chunk: { type: 'string', default: '15' },
-    base: { type: 'string' },
-    main: { type: 'string', default: 'origin/main' },
-    slug: { type: 'string' },
+    'chunk': { type: 'string', default: '15' },
+    'max-groups': { type: 'string', default: '20' },
+    'base': { type: 'string' },
+    'main': { type: 'string', default: 'origin/main' },
+    'slug': { type: 'string' },
     'pr-only': { type: 'boolean', default: false },
   },
 });
 
 const chunkSize = Math.max(1, Number.parseInt(values.chunk, 10) || 15);
+const maxGroups = Number.parseInt(values['max-groups'], 10);
 const prOnly = values['pr-only'] === true;
 const root = repoRoot();
 const head = headCommit();
@@ -140,7 +145,8 @@ for (const rule of rules) {
   }
   ruleMatches.push({ rule, files, scope: useFull ? 'full' : 'delta' });
 }
-const groups = groupRuleMatches(ruleMatches, chunkSize);
+const groupCap = Number.isFinite(maxGroups) ? maxGroups : 20;
+const groups = groupRuleMatches(ruleMatches, chunkSize, groupCap);
 
 // Carry per-match scope onto each chunk group for STAGING / groups.json.
 const scopeByRuleId = new Map(ruleMatches.map(({ rule, scope }) => [rule.id, scope]));
@@ -157,17 +163,19 @@ const slug = values.slug ? assertSafeSlug(values.slug) : reviewSlug(branch, shor
 const storeDir = join(root, REVIEWS_DIR, slug);
 const groupsDir = join(storeDir, 'groups');
 // A re-run for the same slug replaces prior fragments so stale diagnostics never linger.
-rmSync(groupsDir, { recursive: true, force: true });
+rmSync(storeDir, { recursive: true, force: true });
 mkdirSync(groupsDir, { recursive: true });
 
 const modeLabel = prOnly ? 'pr-only' : 'default';
+const totalFiles = groups.reduce((sum, group) => sum + group.files.length, 0);
 const staging = [
   `# Review staging — ${slug}`,
   '',
   `- base: \`${base}\``,
   `- head: \`${head}\``,
   `- mode: ${modeLabel}`,
-  `- groups: ${groups.length}`,
+  `- groups: ${groups.length}${groupCap > 0 ? ` (max ${groupCap})` : ''}`,
+  `- files: ${totalFiles}`,
   '',
   'Each group below is one rule over a bounded set of files. A subagent',
   'reviews its files against the rule and appends diagnostics to the named fragment.',
@@ -228,12 +236,15 @@ console.log(`STAGING: ${rel(join(storeDir, 'STAGING.md'))}`);
 console.log(`REVIEW:  ${rel(join(storeDir, 'REVIEW.md'))}`);
 console.log(`base:    ${base}`);
 console.log(`mode:    ${modeLabel}`);
-console.log(`groups:  ${groups.length}`);
+console.log(`groups:  ${groups.length}${groupCap > 0 ? ` (max ${groupCap})` : ''}`);
+console.log(`files:   ${totalFiles}`);
 for (const group of groups) {
   console.log(
     `  ${String(group.n).padStart(2, '0')}  ${group.rule.id}  (${group.files.length} file${group.files.length === 1 ? '' : 's'}, ${group.scope})`,
   );
 }
 if (groups.length === 0) {
-  console.log(prOnly ? '  (no rules matched the changed set — nothing to review)' : '  (no rules matched — nothing to review)');
+  console.log(
+    prOnly ? '  (no rules matched the changed set — nothing to review)' : '  (no rules matched — nothing to review)',
+  );
 }

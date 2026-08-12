@@ -1,0 +1,122 @@
+{
+  "10": {
+    "ruleId": "no-compat-shims",
+    "severity": "warn",
+    "title": "No compatibility re-exports when moving code",
+    "scope": "full"
+  },
+  "11": {
+    "ruleId": "no-compat-shims",
+    "severity": "warn",
+    "title": "No compatibility re-exports when moving code",
+    "scope": "full"
+  },
+  "12": {
+    "ruleId": "no-compat-shims",
+    "severity": "warn",
+    "title": "No compatibility re-exports when moving code",
+    "scope": "full"
+  },
+  "13": {
+    "ruleId": "no-compat-shims",
+    "severity": "warn",
+    "title": "No compatibility re-exports when moving code",
+    "scope": "full"
+  },
+  "14": {
+    "ruleId": "no-compat-shims",
+    "severity": "warn",
+    "title": "No compatibility re-exports when moving code",
+    "scope": "full"
+  },
+  "15": {
+    "ruleId": "no-compat-shims",
+    "severity": "warn",
+    "title": "No compatibility re-exports when moving code",
+    "scope": "full"
+  },
+  "16": {
+    "ruleId": "no-compat-shims",
+    "severity": "warn",
+    "title": "No compatibility re-exports when moving code",
+    "scope": "full"
+  },
+  "17": {
+    "ruleId": "private-new-packages",
+    "severity": "error",
+    "title": "New packages must be private",
+    "scope": "full"
+  },
+  "18": {
+    "ruleId": "private-new-packages",
+    "severity": "error",
+    "title": "New packages must be private",
+    "scope": "full"
+  },
+  "19": {
+    "ruleId": "workspace-deps",
+    "severity": "error",
+    "title": "In-repo deps use the workspace protocol",
+    "scope": "full"
+  },
+  "20": {
+    "ruleId": "workspace-deps",
+    "severity": "error",
+    "title": "In-repo deps use the workspace protocol",
+    "scope": "full"
+  },
+  "01": {
+    "ruleId": "harness-script-hygiene",
+    "severity": "warn",
+    "title": "Harness scripts stay dependency-free and honest",
+    "scope": "delta"
+  },
+  "02": {
+    "ruleId": "no-sleep-in-test",
+    "severity": "warn",
+    "title": "No sleep or polling in tests",
+    "scope": "full"
+  },
+  "03": {
+    "ruleId": "no-casts",
+    "severity": "error",
+    "title": "No casts to silence the type-checker",
+    "scope": "full"
+  },
+  "04": {
+    "ruleId": "no-casts",
+    "severity": "error",
+    "title": "No casts to silence the type-checker",
+    "scope": "full"
+  },
+  "05": {
+    "ruleId": "no-casts",
+    "severity": "error",
+    "title": "No casts to silence the type-checker",
+    "scope": "full"
+  },
+  "06": {
+    "ruleId": "no-casts",
+    "severity": "error",
+    "title": "No casts to silence the type-checker",
+    "scope": "full"
+  },
+  "07": {
+    "ruleId": "no-casts",
+    "severity": "error",
+    "title": "No casts to silence the type-checker",
+    "scope": "full"
+  },
+  "08": {
+    "ruleId": "no-casts",
+    "severity": "error",
+    "title": "No casts to silence the type-checker",
+    "scope": "full"
+  },
+  "09": {
+    "ruleId": "no-casts",
+    "severity": "error",
+    "title": "No casts to silence the type-checker",
+    "scope": "full"
+  }
+}

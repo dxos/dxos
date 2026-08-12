@@ -59,10 +59,12 @@ commit), the mode, and the **group count** plus a per-group line
 how many subagents to spawn. If the count is `0`, nothing matched; report clean
 and stop.
 
-Useful flags: `--chunk=<N>` (max files per group, default 15), `--pr-only`
-(diff against last review or merge-base with main), `--base=<ref>` (override the
-diff base for delta rules), `--main=<ref>` (main-like ref for `--pr-only`
-fallback), `--slug=<slug>` (override the store dir name).
+Useful flags: `--chunk=<N>` (max files per group when uncapped, default 15),
+`--max-groups=<N>` (cap total groups, default 20; spreads all matched files
+across the budget by growing chunk sizes; `0` = unlimited), `--pr-only` (diff
+against last review or merge-base with main), `--base=<ref>` (override the diff
+base for delta rules), `--main=<ref>` (main-like ref for `--pr-only` fallback),
+`--slug=<slug>` (override the store dir name).
 
 ### 2. Spawn one Sonnet subagent per group
 
