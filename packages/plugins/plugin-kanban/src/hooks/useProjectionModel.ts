@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
-import type * as Kanban from '../types/Kanban';
+import { Kanban } from '#types';
 
 /**
  * Loads the kanban view and builds a ProjectionModel for field projections and pivot.

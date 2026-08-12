@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 /**
  * Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu (the CRM sibling of

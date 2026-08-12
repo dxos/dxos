@@ -32,10 +32,9 @@ import {
   type MarkdownEditorProviderProps,
 } from '#components';
 import { useLinkQuery } from '#hooks';
+import { Markdown, MarkdownCapabilities } from '#types';
 
 import { mergeConflicts } from '../../extensions';
-import * as Markdown from '../../types/Markdown';
-import * as MarkdownCapabilities from '../../types/MarkdownCapabilities';
 
 /**
  * Built-in binding when no {@link MarkdownCapabilities.EditorBindingHook} is contributed: bind the

@@ -10,8 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 import { Cursor, isRangeVisible, scrollCommentIntoView } from '@dxos/ui-editor/headless';
 
-import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
-import * as MarkdownOperation from '../types/MarkdownOperation';
+import { MarkdownCapabilities, MarkdownOperation } from '#types';
 
 const SCROLL_OPTIONS = { y: 'start', yMargin: 96 } as const;
 

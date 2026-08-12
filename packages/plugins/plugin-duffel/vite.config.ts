@@ -16,6 +16,7 @@ export default defineConfig({
     DuffelCapabilities: 'src/types/DuffelCapabilities.ts',
     DuffelEvents: 'src/types/DuffelEvents.ts',
     Settings: 'src/types/Settings.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

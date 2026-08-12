@@ -11,9 +11,7 @@ import { Ref } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-
-import * as ChessComAccount from '../types/ChessComAccount';
-import * as ChessComOperation from '../types/ChessComOperation';
+import { ChessComAccount, ChessComOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

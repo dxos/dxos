@@ -9,7 +9,7 @@ import { Graph, Node } from '@dxos/plugin-graph';
 import { useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
 import { applyPresentation } from '@dxos/react-ui-menu';
 
-import * as NavTreeNode from '../types/NavTreeNode';
+import { NavTreeNode } from '#types';
 
 /** Dispositions rendered as navtree item (row/header) actions, most-primary first. */
 const LIST_ITEM_DISPOSITIONS = ['list-item-primary', 'list-item'];

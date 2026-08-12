@@ -13,8 +13,8 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
-import * as CrmOperation from '../types/CrmOperation';
-import * as ProfileOf from '../types/ProfileOf';
+import { CrmOperation, ProfileOf } from '#types';
+
 import { CrmOperationHandlerSet } from './index';
 
 const TestLayer = AssistantTestLayer({

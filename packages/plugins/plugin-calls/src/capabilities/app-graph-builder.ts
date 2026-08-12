@@ -11,8 +11,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as CallsCapabilities from '../types/CallsCapabilities';
+import { CallsCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

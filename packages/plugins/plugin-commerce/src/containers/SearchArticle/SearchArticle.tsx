@@ -15,9 +15,9 @@ import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
+import { Result, Search } from '#types';
+
 import { meta } from '../../meta';
-import * as Result from '../../types/Result';
-import * as Search from '../../types/Search';
 import { ResultDetail } from './ResultDetail';
 import { ResultTile } from './ResultTile';
 

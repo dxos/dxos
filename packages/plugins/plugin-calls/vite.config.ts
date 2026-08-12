@@ -19,6 +19,7 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'CallsCapabilities': 'src/types/CallsCapabilities.ts',
     'CallsEvents': 'src/types/CallsEvents.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

@@ -17,8 +17,7 @@ import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { log } from '@dxos/log';
 
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 const MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 const CACHE_TTL_MS = 60 * 60 * 1000;

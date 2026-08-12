@@ -7,8 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 
 import { meta } from '#meta';
-
-import * as KanbanOperation from '../types/KanbanOperation';
+import { KanbanOperation } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

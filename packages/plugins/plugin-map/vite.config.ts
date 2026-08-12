@@ -26,6 +26,7 @@ export default defineConfig({
     'MapCapabilities': 'src/types/MapCapabilities.ts',
     'MapEvents': 'src/types/MapEvents.ts',
     'MapOperation': 'src/types/MapOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

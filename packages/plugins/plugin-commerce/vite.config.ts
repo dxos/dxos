@@ -15,6 +15,7 @@ export default defineConfig({
     Result: 'src/types/Result.ts',
     Search: 'src/types/Search.ts',
     SearchOperation: 'src/types/SearchOperation.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

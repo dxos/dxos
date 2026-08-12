@@ -16,9 +16,7 @@ import { Attention, useSelection } from '@dxos/react-ui-attention';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
-
-import * as FeedOperation from '../../types/FeedOperation';
-import * as Subscription from '../../types/Subscription';
+import { FeedOperation, Subscription } from '#types';
 
 export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 

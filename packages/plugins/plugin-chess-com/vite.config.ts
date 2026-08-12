@@ -21,6 +21,7 @@ export default defineConfig({
     'ChessComAccount': 'src/types/ChessComAccount.ts',
     'ChessComEvents': 'src/types/ChessComEvents.ts',
     'ChessComOperation': 'src/types/ChessComOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

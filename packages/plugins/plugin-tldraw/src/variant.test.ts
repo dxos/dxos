@@ -21,8 +21,7 @@ import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
 import { TldrawBuilder } from '#model';
-
-import * as Tldraw from './types/Tldraw';
+import { Tldraw } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 

@@ -27,11 +27,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { AgentIdentity, CommentCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import * as AgentIdentity from './types/AgentIdentity';
-import * as CommentCapabilities from './types/CommentCapabilities';
 
 /**
  * Test/storybook hosts swap in a stub `AgentRunner`/`AgentIdentity` via these options rather

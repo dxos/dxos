@@ -25,7 +25,8 @@ import {
   getRawPgn,
 } from '@dxos/react-ui-gameboard';
 
-import type * as Chess from '../../types/Chess';
+import { Chess } from '#types';
+
 import { Info, type InfoProps } from './Info';
 import { ExtendedChessModel } from './types';
 

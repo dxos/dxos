@@ -20,6 +20,7 @@ export default defineConfig({
     CrxOperation: 'src/types/CrxOperation.ts',
     PageAction: 'src/types/PageAction.ts',
     Settings: 'src/types/Settings.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

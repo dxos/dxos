@@ -22,9 +22,9 @@ import { Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
 import { translations } from '#translations';
+import { ReviewCapabilities } from '#types';
 
 import { ReviewPlugin } from '../../plugin';
-import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { ObjectHistory } from './ObjectHistory';
 
 /**

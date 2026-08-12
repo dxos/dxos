@@ -13,10 +13,7 @@ import { Obj, View } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-
-import * as Map from '../types/Map';
-import * as MapCapabilities from '../types/MapCapabilities';
-import * as MapOperation from '../types/MapOperation';
+import { Map, MapCapabilities, MapOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

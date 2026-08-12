@@ -15,8 +15,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as SettingsPath from '../types/SettingsPath';
+import { SettingsPath } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

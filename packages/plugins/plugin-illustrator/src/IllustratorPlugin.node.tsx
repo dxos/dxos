@@ -8,8 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-
-import * as Drawing from './types/Drawing';
+import { Drawing } from '#types';
 
 /**
  * Headless variant of IllustratorPlugin (no React surfaces / CreateObject panel).

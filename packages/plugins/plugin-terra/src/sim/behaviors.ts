@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { TerraObject } from '#types';
+
 import { type TerraConfigValues, type Vec3, makeSampler, radiusAt, seaRadius } from '../engine';
-import * as TerraObject from '../types/TerraObject';
 import { routeLength, walkRouteSeries } from './path';
 
 /** Cruise altitude for planes, as a fraction of sea radius above the surface. */

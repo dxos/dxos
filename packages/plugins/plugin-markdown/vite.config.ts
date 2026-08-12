@@ -27,6 +27,7 @@ export default defineConfig({
     'MarkdownEvents': 'src/types/MarkdownEvents.ts',
     'MarkdownOperation': 'src/types/MarkdownOperation.ts',
     'Settings': 'src/types/Settings.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

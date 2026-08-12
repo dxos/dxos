@@ -17,6 +17,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     Dream: 'src/types/Dream.ts',
     Sequence: 'src/types/Sequence.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   assetsAsFiles: true,

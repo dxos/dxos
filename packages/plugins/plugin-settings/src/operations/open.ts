@@ -11,7 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import * as SettingsPath from '../types/SettingsPath';
+import { SettingsPath } from '#types';
 
 const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOperation.Open.pipe(
   Operation.withHandler((input) =>

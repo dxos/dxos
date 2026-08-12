@@ -23,6 +23,7 @@ export default defineConfig({
     'ChannelBackend': 'src/types/ChannelBackend.ts',
     'ThreadEvents': 'src/types/ThreadEvents.ts',
     'ThreadOperation': 'src/types/ThreadOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

@@ -12,7 +12,7 @@ import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import * as CommentOperation from '../types/CommentOperation';
+import { CommentOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = CommentOperation.CreateProposals.pipe(
   Operation.withHandler(

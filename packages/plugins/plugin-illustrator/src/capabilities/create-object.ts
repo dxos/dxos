@@ -12,9 +12,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CreateDrawingPanel } from '#components';
-
-import * as Drawing from '../types/Drawing';
-import * as IllustratorCapabilities from '../types/IllustratorCapabilities';
+import { Drawing, IllustratorCapabilities } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 

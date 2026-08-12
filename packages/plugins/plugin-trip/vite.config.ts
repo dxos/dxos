@@ -30,6 +30,7 @@ export default defineConfig({
     'TripCapabilities': 'src/types/TripCapabilities.ts',
     'TripEvents': 'src/types/TripEvents.ts',
     'TripOperation': 'src/types/TripOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

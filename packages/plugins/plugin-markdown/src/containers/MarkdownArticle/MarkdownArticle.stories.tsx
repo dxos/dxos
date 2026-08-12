@@ -36,10 +36,9 @@ import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
+import { Markdown, MarkdownCapabilities } from '#types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
-import * as Markdown from '../../types/Markdown';
-import * as MarkdownCapabilities from '../../types/MarkdownCapabilities';
 
 random.seed(1);
 

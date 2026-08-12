@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Database, type Ref } from '@dxos/echo';
 
-import * as Drawing from '../types/Drawing';
-import * as IllustratorCapabilities from '../types/IllustratorCapabilities';
+import { Drawing, IllustratorCapabilities } from '#types';
 
 export class UnknownDrawingVariantError extends Error {
   readonly _tag = 'UnknownDrawingVariantError';

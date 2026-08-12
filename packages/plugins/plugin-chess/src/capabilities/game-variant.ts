@@ -10,8 +10,7 @@ import { Type } from '@dxos/echo';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 
 import { ChessArticle, ChessCard } from '#containers';
-
-import * as Chess from '../types/Chess';
+import { Chess } from '#types';
 
 const CreateChessInput = Schema.Struct({
   name: Schema.optional(

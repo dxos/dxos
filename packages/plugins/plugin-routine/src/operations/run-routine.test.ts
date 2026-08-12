@@ -18,7 +18,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import * as RoutineOperation from '../types/RoutineOperation';
+import { RoutineOperation } from '#types';
+
 import { makeRoutine } from '../util';
 import RunRoutineHandler from './run-routine';
 

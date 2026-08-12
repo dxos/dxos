@@ -15,8 +15,9 @@ import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Event } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { TripOperation } from '#types';
+
 import { TRIP_SKILL_KEY } from '../skills';
-import * as TripOperation from '../types/TripOperation';
 import { buildTripFromEvents } from './events-to-segments';
 
 export default TripOperation.CreateTripFromEvents.pipe(

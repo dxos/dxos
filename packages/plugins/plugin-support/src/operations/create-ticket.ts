@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import * as Support from '../types/Support';
-import * as SupportOperation from '../types/SupportOperation';
+import { Support, SupportOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SupportOperation.CreateTicket> = SupportOperation.CreateTicket.pipe(
   Operation.withHandler(

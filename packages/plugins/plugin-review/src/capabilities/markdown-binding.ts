@@ -9,8 +9,9 @@ import { Obj, Type } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
+import { ReviewCapabilities } from '#types';
+
 import { useMarkdownEditorBinding } from '../hooks';
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

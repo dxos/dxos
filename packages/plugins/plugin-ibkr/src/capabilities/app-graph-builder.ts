@@ -14,8 +14,9 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Selection } from '@dxos/react-ui-attention';
 
+import { Ibkr } from '#types';
+
 import { meta } from '../meta';
-import * as Ibkr from '../types/Ibkr';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

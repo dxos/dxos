@@ -19,8 +19,9 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 
+import { Provider } from '#types';
+
 import { meta } from '../../meta';
-import * as Provider from '../../types/Provider';
 
 export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provider>;
 

@@ -13,7 +13,8 @@ import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { EntityId } from '@dxos/keys';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
-import * as Kanban from '../types/Kanban';
+import { Kanban } from '#types';
+
 import { useKanbanBoardModel } from './useKanbanBoardModel';
 
 // TODO(wittjosiah): Consider adding single-select to TestSchema.Task and using that instead.

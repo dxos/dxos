@@ -14,8 +14,7 @@ import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 
 import { meta } from '#meta';
-
-import * as Book from '../../types/Book';
+import { Book } from '#types';
 
 // The user's per-book reading state — the editable subset of the Book schema. The catalog metadata is
 // read-only (sourced from BookHive), so it is presented above but excluded from the form.

@@ -9,7 +9,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
 /**
  * Companion (child) nodes for a plank.

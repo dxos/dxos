@@ -11,8 +11,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Attention } from '@dxos/react-ui-attention';
 
-import * as CompanionViewState from '../types/CompanionViewState';
-import * as DeckCapabilities from '../types/DeckCapabilities';
+import { CompanionViewState, DeckCapabilities } from '#types';
+
 import { resolveCompanionAnchor, resolveCompanionPlank } from '../util';
 import { addCompanionPlank, updateActiveDeck } from './helpers';
 

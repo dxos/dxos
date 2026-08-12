@@ -11,8 +11,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { File } from '@dxos/types';
 
-import * as FileCapabilities from '../types/FileCapabilities';
-import * as FileOperation from '../types/FileOperation';
+import { FileCapabilities, FileOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

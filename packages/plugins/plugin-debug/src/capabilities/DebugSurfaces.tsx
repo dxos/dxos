@@ -25,8 +25,7 @@ import { Panel } from '@dxos/react-ui';
 import { Logger } from '@dxos/react-ui-debug';
 
 import { DebugObjectPanel, DebugSettings, DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
-
-import * as Settings from '../types/Settings';
+import { Settings } from '#types';
 
 /** Returns `onOpen` and `canOpen` for the ObjectsTree "Open" action. */
 const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoker>['invokePromise']) => {

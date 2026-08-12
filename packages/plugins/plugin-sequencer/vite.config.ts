@@ -25,6 +25,7 @@ export default defineConfig({
     'Track': 'src/types/Track.ts',
     'Note': 'src/types/Note.ts',
     'Patch': 'src/types/Patch.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

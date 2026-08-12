@@ -8,7 +8,8 @@ import { Button, Icon } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import type * as Track from '../../types/Track';
+import { Track } from '#types';
+
 import { hueFor, hueToHex } from '../../util/hue';
 
 export type TrackListProps = {

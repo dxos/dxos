@@ -19,6 +19,7 @@ export default defineConfig({
     BloggerCapabilities: 'src/types/BloggerCapabilities.ts',
     BloggerEvents: 'src/types/BloggerEvents.ts',
     Publisher: 'src/types/Publisher.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

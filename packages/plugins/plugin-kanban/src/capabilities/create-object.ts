@@ -11,8 +11,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ViewModel } from '@dxos/schema';
 
-import * as Kanban from '../types/Kanban';
-import * as KanbanSchema from '../types/KanbanSchema';
+import { Kanban, KanbanSchema } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

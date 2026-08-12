@@ -16,8 +16,9 @@ import { Database, Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
+import { AssistantOperation } from '#types';
+
 import { getChatsPath } from '../paths';
-import * as AssistantOperation from '../types/AssistantOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

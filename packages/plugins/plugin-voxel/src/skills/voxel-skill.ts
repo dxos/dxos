@@ -6,7 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as VoxelOperation from '../types/VoxelOperation';
+import { VoxelOperation } from '#types';
 
 const SKILL_KEY = 'org.dxos.skill.voxel';
 

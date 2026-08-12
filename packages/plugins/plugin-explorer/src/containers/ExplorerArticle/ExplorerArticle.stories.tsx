@@ -19,7 +19,8 @@ import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory, createRelationFactory } from '@dxos/schema/testing';
 import { HasConnection, HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
-import * as Graph from '../../types/Graph';
+import { Graph } from '#types';
+
 import { ExplorerArticle, type ExplorerArticleVariant } from './ExplorerArticle';
 
 const generator = random as any as ValueGenerator;

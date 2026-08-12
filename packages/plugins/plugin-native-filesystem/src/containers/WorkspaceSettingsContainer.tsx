@@ -19,9 +19,8 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { useActiveFilesystemWorkspace } from '#hooks';
 import { meta } from '#meta';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '#types';
 
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
-import * as NativeFilesystemOperation from '../types/NativeFilesystemOperation';
 import { writeComposerConfig } from '../util';
 
 const WorkspaceSettingsSchema = Schema.Struct({

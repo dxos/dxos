@@ -15,9 +15,8 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { FilePlugin } from '#plugin';
+import { FileCapabilities, FileOperation } from '#types';
 
-import * as FileCapabilities from '../types/FileCapabilities';
-import * as FileOperation from '../types/FileOperation';
 import { FileTooLargeError, UnsupportedFileTypeError } from './create';
 
 describe('FileOperation.Create', () => {

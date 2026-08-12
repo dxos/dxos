@@ -11,10 +11,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
+import { CodeProject, Spec } from '#types';
 
 import { isPluginSpecSubject } from '../plugin-spec';
-import * as CodeProject from '../types/CodeProject';
-import * as Spec from '../types/Spec';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

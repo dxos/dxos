@@ -22,7 +22,8 @@ import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Expando } from '@dxos/schema';
 
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { syncTarget } from './sync-target';
 
 describe('syncTarget', () => {

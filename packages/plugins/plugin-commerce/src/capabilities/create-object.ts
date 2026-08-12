@@ -11,8 +11,7 @@ import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as Provider from '../types/Provider';
-import * as Search from '../types/Search';
+import { Provider, Search } from '#types';
 
 /** Input schema for creating a Search; types the `props` passed to createObject. */
 const CreateSearchSchema = Schema.Struct({

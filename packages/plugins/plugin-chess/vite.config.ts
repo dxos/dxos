@@ -25,6 +25,7 @@ export default defineConfig({
     'ChessOperation': 'src/types/ChessOperation.ts',
     'ChessPositionIndex': 'src/types/ChessPositionIndex.ts',
     'PlayerReview': 'src/types/PlayerReview.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

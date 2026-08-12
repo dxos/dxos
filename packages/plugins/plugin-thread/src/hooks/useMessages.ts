@@ -7,8 +7,7 @@ import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { type Channel, type Message } from '@dxos/types';
 
-import * as ChannelBackend from '../types/ChannelBackend';
-import * as ThreadCapabilities from '../types/ThreadCapabilities';
+import { ChannelBackend, ThreadCapabilities } from '#types';
 
 const EMPTY: readonly Message.Message[] = [];
 

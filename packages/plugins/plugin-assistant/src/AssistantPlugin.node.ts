@@ -19,8 +19,7 @@ import {
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
-
-import * as AssistantOptions from './types/AssistantOptions';
+import { AssistantOptions } from '#types';
 
 export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOptions | void>(meta)
   .pipe(

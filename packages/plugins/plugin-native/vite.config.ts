@@ -17,6 +17,7 @@ export default defineConfig({
     NativeEvents: 'src/types/NativeEvents.ts',
     Settings: 'src/types/Settings.ts',
     Update: 'src/types/Update.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

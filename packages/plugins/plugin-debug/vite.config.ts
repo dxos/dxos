@@ -21,6 +21,7 @@ export default defineConfig({
     'DebugNodes': 'src/types/DebugNodes.ts',
     'DebugSurface': 'src/types/DebugSurface.ts',
     'Settings': 'src/types/Settings.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

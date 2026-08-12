@@ -34,6 +34,7 @@ export default defineConfig({
     'AssistantOperation': 'src/types/AssistantOperation.ts',
     'AssistantCapabilities': 'src/types/AssistantCapabilities.ts',
     'Ollama': 'src/types/Ollama.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

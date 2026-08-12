@@ -12,8 +12,7 @@ import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-import * as NavTreeNode from '../../types/NavTreeNode';
+import { NavTreeNode } from '#types';
 
 const fallbackIcon = 'ph--circle-dashed--regular';
 

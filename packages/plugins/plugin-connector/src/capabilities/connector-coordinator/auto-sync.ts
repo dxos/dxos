@@ -9,8 +9,7 @@ import { type Database, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import * as ConnectorOperation from '../../types/ConnectorOperation';
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorOperation, ConnectorSpec } from '#types';
 
 /**
  * Run the first sync for a connection whose initial sync targets were just bound, so a new

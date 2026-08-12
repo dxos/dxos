@@ -14,10 +14,9 @@ import { Channel } from '@dxos/types';
 // Lazily loaded (via the #containers barrel) so the react-ui-form dependency
 // graph isn't pulled into this capability module's evaluation.
 import { ChannelCreatePanel } from '#containers';
+import { ChannelBackend, ThreadCapabilities } from '#types';
 
 import { getChannelsPath } from '../paths';
-import * as ChannelBackend from '../types/ChannelBackend';
-import * as ThreadCapabilities from '../types/ThreadCapabilities';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 

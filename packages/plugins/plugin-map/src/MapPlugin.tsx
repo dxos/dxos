@@ -17,10 +17,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { Map } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import * as Map from './types/Map';
 
 export const MapPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

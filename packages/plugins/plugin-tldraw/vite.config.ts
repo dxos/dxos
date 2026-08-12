@@ -21,6 +21,7 @@ export default defineConfig({
     Tldraw: 'src/types/Tldraw.ts',
     TldrawCapabilities: 'src/types/TldrawCapabilities.ts',
     TldrawEvents: 'src/types/TldrawEvents.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

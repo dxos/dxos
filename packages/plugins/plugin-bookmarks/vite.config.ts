@@ -18,6 +18,7 @@ export default defineConfig({
     Bookmark: 'src/types/Bookmark.ts',
     BookmarkOperation: 'src/types/BookmarkOperation.ts',
     BookmarksEvents: 'src/types/BookmarksEvents.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

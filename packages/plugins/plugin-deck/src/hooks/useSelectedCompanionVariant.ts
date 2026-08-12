@@ -4,7 +4,7 @@
 
 import { useViewState } from '@dxos/react-ui-attention';
 
-import * as CompanionViewState from '../types/CompanionViewState';
+import { CompanionViewState } from '#types';
 
 /**
  * Reads the globally-selected companion variant (persisted via view state) so reopening the companion

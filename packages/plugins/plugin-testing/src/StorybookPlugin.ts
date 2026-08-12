@@ -6,8 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import { OperationHandler, ReactContext, State } from '#capabilities';
 import { meta } from '#meta';
-
-import * as StorybookCapabilities from './types/StorybookCapabilities';
+import { StorybookCapabilities } from '#types';
 
 export type StorybookPluginOptions = {
   initialState?: Partial<StorybookCapabilities.LayoutStateProps>;

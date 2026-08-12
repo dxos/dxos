@@ -17,11 +17,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { Support, Tour } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import * as Support from './types/Support';
-import type * as Tour from './types/Tour';
 
 export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
 

@@ -25,10 +25,7 @@ import { Channel, Event } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as Meeting from '../types/Meeting';
-import * as MeetingCapabilities from '../types/MeetingCapabilities';
-import * as MeetingOperation from '../types/MeetingOperation';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 /**
  * Atom families to derive meeting state properties.

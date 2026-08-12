@@ -23,6 +23,7 @@ export default defineConfig({
     'PresenterEvents': 'src/types/PresenterEvents.ts',
     'PresenterOperation': 'src/types/PresenterOperation.ts',
     'Settings': 'src/types/Settings.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

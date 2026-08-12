@@ -15,9 +15,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import * as Meeting from '../../types/Meeting';
-import * as MeetingOperation from '../../types/MeetingOperation';
+import { Meeting, MeetingOperation } from '#types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 

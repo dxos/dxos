@@ -21,8 +21,7 @@ import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
 import { ExcalidrawBuilder } from '#model';
-
-import * as Excalidraw from './types/Excalidraw';
+import { Excalidraw } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 

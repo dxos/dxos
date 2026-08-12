@@ -24,6 +24,7 @@ export default defineConfig({
     StudioEvents: 'src/types/StudioEvents.ts',
     StudioOperation: 'src/types/StudioOperation.ts',
     Variant: 'src/types/Variant.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

@@ -18,7 +18,12 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": "./src/SettingsPlugin.ts",
-    "#translations": "./src/translations.ts"
+    "#translations": "./src/translations.ts",
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
   },
   "exports": {
     ".": {

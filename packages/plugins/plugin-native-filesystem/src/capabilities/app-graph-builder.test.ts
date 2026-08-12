@@ -11,9 +11,9 @@ import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
+import { NativeFilesystemCapabilities } from '#types';
 
 import { MockFilesystemManager } from '../testing/mock-filesystem-manager';
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
 import { createFilesystemEntryExtensions } from './app-graph-builder';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;

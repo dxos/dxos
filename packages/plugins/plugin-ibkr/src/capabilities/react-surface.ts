@@ -16,8 +16,7 @@ import {
   PortfolioProperties,
   PortfolioReportDetail,
 } from '#containers';
-
-import * as Ibkr from '../types/Ibkr';
+import { Ibkr } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

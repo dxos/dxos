@@ -7,8 +7,7 @@ import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
 import { type ResearchSource, defaultResearchSources } from '#sources';
-
-import * as CrmOperation from '../../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 const SKILL_KEY = 'org.dxos.skill.crm';
 

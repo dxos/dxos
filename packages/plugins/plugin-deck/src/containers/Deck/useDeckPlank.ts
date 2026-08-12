@@ -13,9 +13,7 @@ import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
 import { useBreakpoints, useCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
-
-import * as DeckOperation from '../../types/DeckOperation';
-import * as DeckSchema from '../../types/DeckSchema';
+import { DeckOperation, DeckSchema } from '#types';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];

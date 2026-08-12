@@ -24,8 +24,7 @@ import { type Channel } from '@dxos/types';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-import * as CallsCapabilities from '../../types/CallsCapabilities';
+import { CallsCapabilities } from '#types';
 
 export type ToolbarProps = ThemedClassName<{
   channel?: Channel.Channel;

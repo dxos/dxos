@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
+import { NativeFilesystemCapabilities } from '#types';
 
 /** Collect all markdown file ids from a tree of entries. */
 export const collectMarkdownFileIds = (entries: NativeFilesystemCapabilities.FilesystemEntry[]): string[] => {

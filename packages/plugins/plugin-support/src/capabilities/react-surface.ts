@@ -25,9 +25,9 @@ import {
   SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
+import { Support } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants';
-import * as Support from '../types/Support';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

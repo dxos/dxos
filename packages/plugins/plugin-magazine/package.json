@@ -18,11 +18,6 @@
       "types": "./dist/types/src/atoms/index.d.ts",
       "default": "./dist/lib/atoms.mjs"
     },
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
       "source": {
         "workerd": "./src/capabilities/workerd.ts",
@@ -61,11 +56,21 @@
       "workerd": "./dist/lib/MagazinePlugin.workerd.mjs",
       "default": "./dist/lib/MagazinePlugin.mjs"
     },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {

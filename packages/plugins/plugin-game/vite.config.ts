@@ -21,6 +21,7 @@ export default defineConfig({
     'Game': 'src/types/Game.ts',
     'GameCapabilities': 'src/types/GameCapabilities.ts',
     'GameEvents': 'src/types/GameEvents.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

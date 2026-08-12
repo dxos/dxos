@@ -5,7 +5,7 @@
 import { Graph, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
-import * as NavTreeNode from './types/NavTreeNode';
+import { NavTreeNode } from '#types';
 
 export const getParent = (
   graph: Graph.ReadableGraph,

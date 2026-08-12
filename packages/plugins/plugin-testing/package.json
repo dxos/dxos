@@ -37,6 +37,11 @@
       "source": "./src/StorybookPlugin.ts",
       "types": "./dist/types/src/StorybookPlugin.d.ts",
       "default": "./dist/lib/StorybookPlugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {

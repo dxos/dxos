@@ -20,6 +20,7 @@ export default defineConfig({
     MeetingEvents: 'src/types/MeetingEvents.ts',
     MeetingOperation: 'src/types/MeetingOperation.ts',
     Settings: 'src/types/Settings.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

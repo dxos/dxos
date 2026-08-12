@@ -26,6 +26,7 @@ export default defineConfig({
     'CommentCapabilities': 'src/types/CommentCapabilities.ts',
     'CommentOperation': 'src/types/CommentOperation.ts',
     'ReviewEvents': 'src/types/ReviewEvents.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   // The first story in a file pays the whole lazy module-load bill — tens of seconds, against a

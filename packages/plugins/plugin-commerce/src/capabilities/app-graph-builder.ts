@@ -15,10 +15,9 @@ import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Position } from '@dxos/util';
 
+import { Provider, Search, SearchOperation } from '#types';
+
 import { meta } from '../meta';
-import * as Provider from '../types/Provider';
-import * as Search from '../types/Search';
-import * as SearchOperation from '../types/SearchOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

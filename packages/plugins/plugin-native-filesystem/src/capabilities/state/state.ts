@@ -11,7 +11,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
+import { NativeFilesystemCapabilities } from '#types';
+
 import { loadWorkspace, refreshWorkspace } from '../../util';
 import { createDirectoryWatcher } from './directory-watcher';
 import * as FilesystemManager from './FilesystemManager';

@@ -11,7 +11,8 @@
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import * as Drawing from '../types/Drawing';
+import { Drawing } from '#types';
+
 import { type ApplyResult, type ContentHandler, type ContentMap, type ReadResult, applyCommands } from './content';
 import type * as Scene from './scene';
 

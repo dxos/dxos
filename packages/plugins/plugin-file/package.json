@@ -13,11 +13,6 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
       "source": {
         "node": "./src/capabilities/node.ts",
@@ -56,10 +51,20 @@
       "node": "./dist/lib/FilePlugin.node.mjs",
       "default": "./dist/lib/FilePlugin.mjs"
     },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
+    },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {

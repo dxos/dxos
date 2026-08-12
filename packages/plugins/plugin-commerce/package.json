@@ -23,6 +23,11 @@
       "source": "./src/CommercePlugin.tsx",
       "types": "./dist/types/src/CommercePlugin.d.ts",
       "default": "./dist/lib/CommercePlugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {

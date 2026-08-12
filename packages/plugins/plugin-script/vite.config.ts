@@ -27,6 +27,7 @@ export default defineConfig({
     'ScriptCapabilities': 'src/types/ScriptCapabilities.ts',
     'ScriptEvents': 'src/types/ScriptEvents.ts',
     'ScriptOperation': 'src/types/ScriptOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   assetsAsFiles: true,

@@ -25,6 +25,7 @@ export default defineConfig({
     'DrawingOperation': 'src/types/DrawingOperation.ts',
     'IllustratorCapabilities': 'src/types/IllustratorCapabilities.ts',
     'IllustratorEvents': 'src/types/IllustratorEvents.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

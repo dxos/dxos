@@ -31,10 +31,8 @@ import { Position } from '@dxos/util';
 import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
-import * as DeckCapabilities from '../../types/DeckCapabilities';
-import * as DeckSchema from '../../types/DeckSchema';
-import type * as Settings from '../../types/Settings';
 import { DeckLayout } from './DeckLayout';
 
 random.seed(1234);

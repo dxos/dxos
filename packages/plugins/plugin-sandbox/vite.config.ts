@@ -14,6 +14,7 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     Sandbox: 'src/types/Sandbox.ts',
     SandboxEvents: 'src/types/SandboxEvents.ts',
+    types: 'src/types/index.ts',
   },
   test: { node: true },
 });

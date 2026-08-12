@@ -14,9 +14,7 @@ import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import * as ConnectorCoordination from '../../types/ConnectorCoordination';
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 export type CustomTokenDialogProps = {
   db: Database.Database;

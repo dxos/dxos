@@ -5,7 +5,7 @@
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Obj } from '@dxos/echo';
 
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
 
 /**
  * The registered connectors that bind objects of this type, by their `sync.targetTypename`.

@@ -7,8 +7,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-
-import * as SampleItem from './types/SampleItem';
+import { SampleItem } from '#types';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

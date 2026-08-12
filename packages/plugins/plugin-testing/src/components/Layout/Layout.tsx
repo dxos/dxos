@@ -24,8 +24,7 @@ import { Dnd } from '@dxos/react-ui-dnd';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-import * as StorybookCapabilities from '../../types/StorybookCapabilities';
+import { StorybookCapabilities } from '#types';
 
 const debounce_delay = 100;
 

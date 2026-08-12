@@ -12,8 +12,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
-import * as TableEvents from '../types/TableEvents';
-import * as TableOperation from '../types/TableOperation';
+import { TableEvents, TableOperation } from '#types';
 
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {

@@ -12,8 +12,7 @@ import { Obj } from '@dxos/echo';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
+import { ReviewCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

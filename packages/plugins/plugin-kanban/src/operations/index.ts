@@ -3,7 +3,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as KanbanOperation from '../types/KanbanOperation';
+import { KanbanOperation } from '#types';
 
 export const KanbanOperationHandlerSet = OperationHandlerSet.lazy([
   KanbanOperation.DeleteCard.pipe(Operation.lazyHandler(() => import('./delete-card'))),

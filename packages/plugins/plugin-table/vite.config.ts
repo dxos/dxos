@@ -21,6 +21,7 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'TableEvents': 'src/types/TableEvents.ts',
     'TableOperation': 'src/types/TableOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

@@ -14,8 +14,8 @@ import { EntityId } from '@dxos/keys';
 import * as Chess from '@dxos/plugin-chess/Chess';
 import * as Game from '@dxos/plugin-game/Game';
 
-import * as ChessComAccount from '../types/ChessComAccount';
-import * as ChessComOperation from '../types/ChessComOperation';
+import { ChessComAccount, ChessComOperation } from '#types';
+
 import { ChessComOperationHandlerSet } from './index';
 
 EntityId.dangerouslyDisableRandomness();

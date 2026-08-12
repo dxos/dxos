@@ -15,8 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
-import * as Markdown from '../types/Markdown';
-import * as MarkdownOperation from '../types/MarkdownOperation';
+import { Markdown, MarkdownOperation } from '#types';
+
 import { MarkdownOperationHandlerSet } from './index';
 
 const TestLayer = AssistantTestLayer({

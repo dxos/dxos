@@ -23,6 +23,7 @@ export default defineConfig({
     'SampleItem': 'src/types/SampleItem.ts',
     'SampleOperation': 'src/types/SampleOperation.ts',
     'Settings': 'src/types/Settings.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

@@ -8,8 +8,9 @@ import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { ChessComAccount } from '#types';
+
 import { ChessComNotFoundError, ChessComRequestError } from '../errors';
-import * as ChessComAccount from '../types/ChessComAccount';
 
 /** Base URL for the Chess.com Published (JSON) API. */
 const CHESS_COM_API_BASE = 'https://api.chess.com/pub';

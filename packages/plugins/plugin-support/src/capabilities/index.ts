@@ -6,9 +6,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as HelpCapabilities from '../types/HelpCapabilities';
-import * as SupportCapabilities from '../types/SupportCapabilities';
-import type * as Tour from '../types/Tour';
+import { HelpCapabilities, SupportCapabilities, Tour } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [SupportCapabilities.Settings],

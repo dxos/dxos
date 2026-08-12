@@ -25,8 +25,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-
-import * as ClientOptions from './types/ClientOptions';
+import { ClientOptions } from '#types';
 
 export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
   Plugin.addModule(Commands),

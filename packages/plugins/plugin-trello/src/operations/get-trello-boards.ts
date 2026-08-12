@@ -9,8 +9,9 @@ import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
+import { TrelloOperation } from '#types';
+
 import { TrelloApi } from '../services';
-import * as TrelloOperation from '../types/TrelloOperation';
 
 /**
  * Discovery only — list Trello boards reachable from the connection's token

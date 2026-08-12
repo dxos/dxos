@@ -12,10 +12,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
+import { ConnectorOperation, ConnectorSpec } from '#types';
+
 import { connectionDeckSubject } from '../constants';
 import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
-import * as ConnectorOperation from '../types/ConnectorOperation';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { isCursorForConnection, syncBinding } from '../util';
 
 /** How many of a connection's bindings sync at once. */

@@ -17,8 +17,8 @@ import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
 
 import { meta } from '#meta';
+import { Settings } from '#types';
 
-import * as Settings from '../../types/Settings';
 import { DebugPortSettings } from '../DebugPortSettings';
 
 type Toast = {

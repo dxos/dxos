@@ -18,8 +18,9 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Graph } from '@dxos/plugin-graph';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
+import { DeckCapabilities } from '#types';
+
 import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
-import * as DeckCapabilities from '../types/DeckCapabilities';
 import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 

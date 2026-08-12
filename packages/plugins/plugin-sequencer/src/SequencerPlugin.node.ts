@@ -6,8 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
-
-import * as Score from './types/Score';
+import { Score } from '#types';
 
 export const SequencerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.schema([Score.Score])),

@@ -25,9 +25,9 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
+import { ConnectorOperation, ConnectorSpec } from '#types';
+
 import { autoSyncConnection } from '../capabilities/connector-coordinator/auto-sync';
-import * as ConnectorOperation from '../types/ConnectorOperation';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import SyncConnectionHandler from './sync-connection';
 
 describe('SyncConnection', () => {

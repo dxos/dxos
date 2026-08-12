@@ -8,8 +8,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
+import { GitHubOperation } from '#types';
+
 import { GitHubApi } from '../services';
-import * as GitHubOperation from '../types/GitHubOperation';
 
 /**
  * Discovery only — list GitHub repositories reachable from the connection's

@@ -14,7 +14,7 @@ import { scaffoldProject } from '@dxos/plugin-projects/templates';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 /** Skills for the project's chats: CRM tools plus the research/database/document utilities. */
 const PROJECT_SKILL_KEYS = [

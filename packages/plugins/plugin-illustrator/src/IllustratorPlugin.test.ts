@@ -10,8 +10,7 @@ import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { IllustratorPlugin } from '#plugin';
-
-import * as Drawing from './types/Drawing';
+import { Drawing } from '#types';
 
 describe('IllustratorPlugin', () => {
   // Canvas is written to the database by every variant's create flow, so the plugin that owns the

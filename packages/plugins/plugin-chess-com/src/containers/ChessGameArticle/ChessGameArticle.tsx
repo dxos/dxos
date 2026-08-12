@@ -14,9 +14,7 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-
-import * as ChessComAccount from '../../types/ChessComAccount';
-import * as ChessComOperation from '../../types/ChessComOperation';
+import { ChessComAccount, ChessComOperation } from '#types';
 
 export type ChessGameArticleProps = AppSurface.ObjectArticleProps<ChessComAccount.Account>;
 

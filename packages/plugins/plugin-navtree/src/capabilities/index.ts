@@ -12,7 +12,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Graph } from '@dxos/plugin-graph';
 
-import * as NavTreeCapabilities from '../types/NavTreeCapabilities';
+import { NavTreeCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const Expose = Capability.inlineModule(

@@ -16,7 +16,8 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Node } from '@dxos/plugin-graph';
 import { OAuthProvider } from '@dxos/protocols';
 
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { connectorAuthActions } from './connector-auth';
 
 // A connector is "offered" (gets a Connect entry) when it has an auth flow; oauth is the simplest.

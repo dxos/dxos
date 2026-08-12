@@ -28,8 +28,7 @@ import {
   runDiagnostics,
 } from '#diagnostics';
 import { meta } from '#meta';
-
-import * as DoctorCapabilities from '../../types/DoctorCapabilities';
+import { DoctorCapabilities } from '#types';
 
 type RunState =
   | { readonly status: 'idle' }

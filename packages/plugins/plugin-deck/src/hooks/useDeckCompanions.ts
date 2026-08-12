@@ -8,7 +8,7 @@ import { useConnections } from '@dxos/plugin-graph/hooks';
 import { type Label } from '@dxos/ui-types/translations';
 import { Position } from '@dxos/util';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
 export type DeckCompanion = NodeType.Node<
   any,

@@ -18,11 +18,9 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { meta } from '#meta';
+import { ConnectorAnnotations, ConnectorOperation, ConnectorSpec } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
-import * as ConnectorOperation from '../types/ConnectorOperation';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { connectorAuthActions, isCursorForConnection, isCursorForTarget } from '../util';
 
 /**

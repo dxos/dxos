@@ -15,8 +15,7 @@ import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments } from '@dxos/ui-editor';
 
-import * as CommentOperation from '../types/CommentOperation';
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
+import { CommentOperation, ReviewCapabilities } from '#types';
 
 // Resolve the anchor snippet against the document the editor produced the cursor from: the branch
 // content Text in Branch view, else main. Resolving a branch-doc cursor against main throws (the

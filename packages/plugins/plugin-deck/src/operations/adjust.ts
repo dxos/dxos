@@ -16,11 +16,9 @@ import { Graph } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
+import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
+
 import { incrementPlank } from '../layout';
-import * as CompanionViewState from '../types/CompanionViewState';
-import * as DeckCapabilities from '../types/DeckCapabilities';
-import * as DeckOperation from '../types/DeckOperation';
-import * as DeckSchema from '../types/DeckSchema';
 import { computeActiveUpdates } from '../util';
 import { addCompanionPlank, updateActiveDeck } from './helpers';
 

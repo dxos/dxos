@@ -12,9 +12,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CreateGamePanel } from '#components';
-
-import * as Game from '../types/Game';
-import * as GameCapabilities from '../types/GameCapabilities';
+import { Game, GameCapabilities } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 

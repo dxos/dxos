@@ -15,8 +15,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { RoutineForm } from '#components';
 import { meta } from '#meta';
-
-import * as RoutineOperation from '../../types/RoutineOperation';
+import { RoutineOperation } from '#types';
 
 export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>;
 

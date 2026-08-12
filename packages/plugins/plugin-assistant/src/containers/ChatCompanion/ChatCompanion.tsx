@@ -19,8 +19,8 @@ import { useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useContextBinder } from '#hooks';
+import { AssistantOperation } from '#types';
 
-import * as AssistantOperation from '../../types/AssistantOperation';
 import ChatArticle from '../ChatArticle';
 
 export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;

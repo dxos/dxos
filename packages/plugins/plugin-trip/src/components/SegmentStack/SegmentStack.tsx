@@ -7,7 +7,8 @@ import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react
 import { ScrollArea, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 
-import * as Segment from '../../types/Segment';
+import { Segment } from '#types';
+
 import { type SegmentCardActionHandler, SegmentTile } from '../SegmentCard';
 
 export type SegmentStackProps = ThemedClassName<{

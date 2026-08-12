@@ -19,8 +19,8 @@ import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/
 
 import { RoutineForm } from '#components';
 import { meta } from '#meta';
+import { RoutineCapabilities } from '#types';
 
-import * as RoutineCapabilities from '../../types/RoutineCapabilities';
 import { connectedRoutinesQuery } from '../../util';
 
 /** Association state of a row relative to the companion's object. */

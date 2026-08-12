@@ -11,8 +11,8 @@ import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
-import * as PasskeyError from '../types/PasskeyError';
+import { ClientCapabilities, PasskeyError } from '#types';
+
 import { RedeemPasskey } from './definitions';
 
 /** Signed challenge presented to EDGE in exchange for admitting this device. */

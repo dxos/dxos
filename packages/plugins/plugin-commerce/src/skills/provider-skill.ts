@@ -6,8 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as Provider from '../types/Provider';
-import * as SearchOperation from '../types/SearchOperation';
+import { Provider, SearchOperation } from '#types';
 
 const operations = [SearchOperation.AnalyzeProvider, SearchOperation.SetProviderTemplate];
 

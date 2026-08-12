@@ -8,8 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-
-import * as Template from './types/Template';
+import { Template } from '#types';
 
 export const TemplatePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),

@@ -8,9 +8,7 @@ import { StateMap, TagIndex } from '@dxos/schema';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
-
-import * as Magazine from './types/Magazine';
-import * as Subscription from './types/Subscription';
+import { Magazine, Subscription } from '#types';
 
 export const MagazinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),

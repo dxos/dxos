@@ -9,7 +9,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
-import * as DeckCapabilities from '../types/DeckCapabilities';
+import { DeckCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CheckAppScheme = Capability.lazyModule(

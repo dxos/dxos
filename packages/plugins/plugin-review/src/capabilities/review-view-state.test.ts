@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
 
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
+import { ReviewCapabilities } from '#types';
 
 describe('ReviewCapabilities.viewAspect', () => {
   const make = () => {

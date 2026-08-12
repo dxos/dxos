@@ -8,8 +8,7 @@ import { Text } from '@dxos/schema';
 
 import { CreateObject, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
-
-import * as Markdown from './types/Markdown';
+import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),

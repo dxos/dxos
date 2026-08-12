@@ -19,6 +19,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     NavTreeNode: 'src/types/NavTreeNode.ts',
     NavTreeCapabilities: 'src/types/NavTreeCapabilities.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

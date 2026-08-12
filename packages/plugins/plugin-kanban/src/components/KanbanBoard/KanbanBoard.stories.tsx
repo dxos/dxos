@@ -17,8 +17,8 @@ import { Organization } from '@dxos/types';
 import { createEchoChangeCallback as createKanbanChangeCallback } from '#hooks';
 import { KanbanCardTileSimple } from '#testing';
 import { translations } from '#translations';
+import { Kanban } from '#types';
 
-import * as Kanban from '../../types/Kanban';
 import { KanbanBoard } from './KanbanBoard';
 
 random.seed(1);

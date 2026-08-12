@@ -9,8 +9,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
+import { ClientCapabilities } from '#types';
+
 import { RECOVERY_CODE_DIALOG } from '../constants';
-import * as ClientCapabilities from '../types/ClientCapabilities';
 import { CreateRecoveryCode } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateRecoveryCode> = CreateRecoveryCode.pipe(

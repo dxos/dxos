@@ -17,12 +17,9 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { Booking, BookingSearch, Segment, Trip, TripCapabilities } from '#types';
+
 import { TripPlugin } from '../../testing';
-import * as Booking from '../../types/Booking';
-import type * as BookingSearch from '../../types/BookingSearch';
-import * as Segment from '../../types/Segment';
-import * as Trip from '../../types/Trip';
-import * as TripCapabilities from '../../types/TripCapabilities';
 import { BookingSearch as BookingSearchComponent } from './BookingSearch';
 
 const STUB_OFFER: BookingSearch.FlightOffer = {

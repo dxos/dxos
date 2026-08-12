@@ -12,7 +12,8 @@ import { type Node } from '@dxos/plugin-graph';
 import { Path, type TreeModel } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import * as NavTreeNode from '../types/NavTreeNode';
+import { NavTreeNode } from '#types';
+
 import { filterItems } from '../util';
 import { useNavTreeState } from './useNavTreeState';
 

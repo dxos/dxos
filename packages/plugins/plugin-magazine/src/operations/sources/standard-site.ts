@@ -7,7 +7,8 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import * as Subscription from '../../types/Subscription';
+import { Subscription } from '#types';
+
 import { makeSnippet } from '../../util/text';
 import { type FeedFetcher, FeedFetchError, type FetchOptions } from './feed-fetcher';
 import { getJson } from './http';

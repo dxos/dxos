@@ -15,9 +15,7 @@ import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { meta } from '#meta';
-
-import * as PresenterCapabilities from '../types/PresenterCapabilities';
-import * as PresenterOperation from '../types/PresenterOperation';
+import { PresenterCapabilities, PresenterOperation } from '#types';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: Node.Node, get: Atom.Context) =>

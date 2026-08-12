@@ -10,9 +10,9 @@ import { Database, type Key, Obj, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { type Node } from '@dxos/plugin-graph';
 
+import { ConnectorCoordination, ConnectorSpec } from '#types';
+
 import { meta } from '../meta';
-import * as ConnectorCoordination from '../types/ConnectorCoordination';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { bindConnectionToTarget } from './auto-bind';
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */

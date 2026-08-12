@@ -16,6 +16,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     Board: 'src/types/Board.ts',
     BoardEvents: 'src/types/BoardEvents.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

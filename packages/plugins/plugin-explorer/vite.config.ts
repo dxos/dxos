@@ -19,6 +19,7 @@ export default defineConfig({
     ExplorerAction: 'src/types/ExplorerAction.ts',
     ExplorerEvents: 'src/types/ExplorerEvents.ts',
     Graph: 'src/types/Graph.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

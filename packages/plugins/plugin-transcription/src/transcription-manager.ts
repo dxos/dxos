@@ -16,7 +16,7 @@ import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import type * as TranscriptionCapabilities from './types/TranscriptionCapabilities';
+import { TranscriptionCapabilities } from '#types';
 
 /**
  * Length of the chunk in ms.

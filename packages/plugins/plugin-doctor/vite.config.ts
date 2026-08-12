@@ -19,6 +19,7 @@ export default defineConfig({
     DoctorCapabilities: 'src/types/DoctorCapabilities.ts',
     DoctorEvents: 'src/types/DoctorEvents.ts',
     DoctorOperation: 'src/types/DoctorOperation.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

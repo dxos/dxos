@@ -19,6 +19,7 @@ export default defineConfig({
     Voxel: 'src/types/Voxel.ts',
     VoxelEvents: 'src/types/VoxelEvents.ts',
     VoxelOperation: 'src/types/VoxelOperation.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

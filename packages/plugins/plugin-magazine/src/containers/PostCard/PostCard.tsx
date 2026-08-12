@@ -9,7 +9,8 @@ import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 
-import * as Subscription from '../../types/Subscription';
+import { Subscription } from '#types';
+
 import { formatDate, getImageUrl, getSnippet } from '../../util';
 
 export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;

@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 
-import * as NavTreeCapabilities from '../types/NavTreeCapabilities';
+import { NavTreeCapabilities } from '#types';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Expose> = LayoutOperation.Expose.pipe(
   Operation.withHandler(

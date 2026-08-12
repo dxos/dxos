@@ -21,6 +21,7 @@ export default defineConfig({
     'ObservabilityEvents': 'src/types/ObservabilityEvents.ts',
     'ObservabilityOperation': 'src/types/ObservabilityOperation.ts',
     'Settings': 'src/types/Settings.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

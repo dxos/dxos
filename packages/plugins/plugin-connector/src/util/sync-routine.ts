@@ -12,7 +12,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
 
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { findSyncTriggerForBinding } from './sync-trigger';
 
 /**

@@ -19,7 +19,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
+import { SimpleLayoutCapabilities } from '#types';
 
 /** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
 const bareWorkspace = (qualifiedWorkspace: string): string => {

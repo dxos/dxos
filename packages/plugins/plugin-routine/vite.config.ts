@@ -24,6 +24,7 @@ export default defineConfig({
     'RoutineCapabilities': 'src/types/RoutineCapabilities.ts',
     'RoutineEvents': 'src/types/RoutineEvents.ts',
     'RoutineOperation': 'src/types/RoutineOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

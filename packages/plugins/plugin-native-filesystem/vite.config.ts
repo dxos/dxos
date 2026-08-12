@@ -18,6 +18,7 @@ export default defineConfig({
     NativeFilesystemCapabilities: 'src/types/NativeFilesystemCapabilities.ts',
     NativeFilesystemEvents: 'src/types/NativeFilesystemEvents.ts',
     NativeFilesystemOperation: 'src/types/NativeFilesystemOperation.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Feed, Obj } from '@dxos/echo';
 
+import { Ibkr, IbkrOperation } from '#types';
+
 import { IbkrImportError } from '../errors';
 import { parseCash, parsePositions, parseTrades } from '../services';
-import * as Ibkr from '../types/Ibkr';
-import * as IbkrOperation from '../types/IbkrOperation';
 import { getOrCreatePortfolioFeed } from './feed';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.ImportPortfolioReport> =

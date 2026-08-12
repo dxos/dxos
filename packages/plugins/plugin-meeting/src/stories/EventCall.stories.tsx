@@ -27,8 +27,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { TagIndex, Text } from '@dxos/schema';
 import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
+import { Meeting } from '#types';
+
 import { MeetingPlugin } from '../MeetingPlugin';
-import * as Meeting from '../types/Meeting';
 
 type StoryArgs = {
   /** Seed a Meeting already linked to the event (toolbar shows "Open meeting"); otherwise "Create meeting". */

@@ -9,8 +9,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
+import { DiscordOperation } from '#types';
+
 import { makeDiscordLayer } from '../services';
-import * as DiscordOperation from '../types/DiscordOperation';
 
 const GUILD_PAGE_LIMIT = 200;
 

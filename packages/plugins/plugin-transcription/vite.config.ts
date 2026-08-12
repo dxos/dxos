@@ -25,6 +25,7 @@ export default defineConfig({
     'TranscriptionCapabilities': 'src/types/TranscriptionCapabilities.ts',
     'TranscriptionEvents': 'src/types/TranscriptionEvents.ts',
     'TranscriptOperation': 'src/types/TranscriptOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'jsdom' }, storybook: true },

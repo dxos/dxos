@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import * as Video from '../types/Video';
+import { Video } from '#types';
 
 const activate = Effect.fnUntraced(function* () {
   // Unanchored: comments attach to the video as a whole. Anchored (range) comments into the

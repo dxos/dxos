@@ -22,6 +22,7 @@ export default defineConfig({
     DeckOperation: 'src/types/DeckOperation.ts',
     Settings: 'src/types/Settings.ts',
     CompanionViewState: 'src/types/CompanionViewState.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

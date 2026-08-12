@@ -33,15 +33,15 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "default": "./dist/lib/hooks.mjs"
     },
-    "#model": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "default": "./dist/lib/model.mjs"
-    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/meta.mjs"
+    },
+    "#model": {
+      "source": "./src/model/index.ts",
+      "types": "./dist/types/src/model/index.d.ts",
+      "default": "./dist/lib/model.mjs"
     },
     "#plugin": {
       "source": "./src/TldrawPlugin.tsx",
@@ -53,6 +53,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {

@@ -9,9 +9,9 @@ import { useObject } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 
 import { TradingViewChart } from '#components';
+import { Ibkr } from '#types';
 
 import { resolveTradingViewSymbol } from '../../services';
-import type * as Ibkr from '../../types/Ibkr';
 
 export type InstrumentCardProps = AppSurface.ObjectCardProps<Ibkr.Instrument>;
 

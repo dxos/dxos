@@ -15,9 +15,9 @@ import { GraphBuilder } from '@dxos/plugin-graph';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 
 import { meta } from '#meta';
+import { TrelloOperation } from '#types';
 
 import { TRELLO_SOURCE } from '../constants';
-import * as TrelloOperation from '../types/TrelloOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

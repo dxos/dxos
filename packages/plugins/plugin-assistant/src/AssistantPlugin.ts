@@ -27,10 +27,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { AssistantOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import * as AssistantOptions from './types/AssistantOptions';
 
 export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOptions | void>(meta)
   .pipe(

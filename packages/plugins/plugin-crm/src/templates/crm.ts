@@ -11,7 +11,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 /**
  * CRM automation template: the routine-only counterpart of the `crmPipeline` project template. The

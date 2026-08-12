@@ -19,6 +19,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     SearchEvents: 'src/types/SearchEvents.ts',
     SearchOperation: 'src/types/SearchOperation.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' }, storybook: true },

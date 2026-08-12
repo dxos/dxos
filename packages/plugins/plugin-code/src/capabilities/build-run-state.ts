@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import * as CodeCapabilities from '../types/CodeCapabilities';
+import { CodeCapabilities } from '#types';
 
 /**
  * Contributes the transient build/run state atom. Keyed by `CodeProject.id`;

@@ -12,8 +12,9 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
+import { RoutineOperation } from '#types';
+
 import { getRoutinesSettingsPath } from '../paths';
-import * as RoutineOperation from '../types/RoutineOperation';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTemplate> =
   RoutineOperation.CreateTriggerFromTemplate.pipe(

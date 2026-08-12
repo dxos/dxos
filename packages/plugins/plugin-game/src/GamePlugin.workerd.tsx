@@ -6,8 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
-
-import * as Game from './types/Game';
+import { Game } from '#types';
 
 export const GamePlugin = Plugin.define(meta).pipe(Plugin.addModule(AppCapability.schema([Game.Game])), Plugin.make);
 

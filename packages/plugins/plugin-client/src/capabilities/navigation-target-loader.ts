@@ -12,8 +12,7 @@ import { Database, EID } from '@dxos/echo';
 import { EntityId, SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';
-
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { ClientCapabilities } from '#types';
 
 /** Cap on the remote edge existence check so an unreachable edge cannot block navigation. */
 const EDGE_EXISTENCE_TIMEOUT = '3 seconds';

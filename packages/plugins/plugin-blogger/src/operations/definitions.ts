@@ -11,8 +11,7 @@ import { DXN } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 
 import { meta } from '#meta';
-
-import * as Blog from '../types/Blog';
+import { Blog } from '#types';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 

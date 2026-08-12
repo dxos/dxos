@@ -22,9 +22,7 @@ import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from
 import { PostCard } from '#components';
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
-
-import * as Blog from '../../types/Blog';
-import * as BloggerCapabilities from '../../types/BloggerCapabilities';
+import { Blog, BloggerCapabilities } from '#types';
 
 type ViewMode = 'gallery' | 'instructions';
 

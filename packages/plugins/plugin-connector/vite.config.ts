@@ -25,6 +25,7 @@ export default defineConfig({
     'ConnectorForm': 'src/types/ConnectorForm.ts',
     'ConnectorEvents': 'src/types/ConnectorEvents.ts',
     'ConnectorOperation': 'src/types/ConnectorOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

@@ -9,7 +9,8 @@ import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { ClientCapabilities } from '#types';
+
 import { RevokeRecoveryCredential } from './definitions';
 
 /**

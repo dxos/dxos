@@ -18,6 +18,7 @@ export default defineConfig({
     Video: 'src/types/Video.ts',
     VideoEvents: 'src/types/VideoEvents.ts',
     VideoOperation: 'src/types/VideoOperation.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

@@ -11,8 +11,7 @@ import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as Notebook from '../types/Notebook';
-import * as ScriptOperation from '../types/ScriptOperation';
+import { Notebook, ScriptOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

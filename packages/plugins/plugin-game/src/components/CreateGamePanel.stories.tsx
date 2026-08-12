@@ -13,8 +13,8 @@ import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { GameCapabilities } from '#types';
 
-import * as GameCapabilities from '../types/GameCapabilities';
 import { CreateGamePanel } from './CreateGamePanel';
 
 // Two dummy variants for the story — no real ECHO state required, just the shape

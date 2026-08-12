@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> = AssistantOperation.UpdateChatName.pipe(
   Operation.withHandler(

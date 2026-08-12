@@ -5,13 +5,14 @@
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { Ibkr } from '#types';
+
 import {
   EdgarAdditionalFactsAnnotation,
   EdgarAsOfConceptsAnnotation,
   EdgarFieldAnnotation,
   type EdgarFieldSource,
 } from '../annotations';
-import type * as Ibkr from '../types/Ibkr';
 
 type EdgarFact = {
   end: string;

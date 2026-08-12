@@ -15,10 +15,9 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
 
+import { FeedOperation, Magazine, Subscription } from '#types';
+
 import { MagazineSkill } from '../skills';
-import * as FeedOperation from '../types/FeedOperation';
-import * as Magazine from '../types/Magazine';
-import * as Subscription from '../types/Subscription';
 import { applyKeep, resolveSelected } from './curate-magazine';
 import { MagazineOperationHandlerSet } from './index';
 

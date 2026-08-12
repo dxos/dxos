@@ -26,6 +26,7 @@ export default defineConfig({
     'ClientCapabilities': 'src/types/ClientCapabilities.ts',
     'ClientEvents': 'src/types/ClientEvents.ts',
     'PasskeyError': 'src/types/PasskeyError.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

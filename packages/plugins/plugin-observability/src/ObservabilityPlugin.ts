@@ -20,9 +20,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-
-import * as ObservabilityCapabilities from './types/ObservabilityCapabilities';
-import * as ObservabilityOptions from './types/ObservabilityOptions';
+import { ObservabilityCapabilities, ObservabilityOptions } from '#types';
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
   Plugin.addModule(ReactSurface),

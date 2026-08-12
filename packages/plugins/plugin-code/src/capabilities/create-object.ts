@@ -10,8 +10,7 @@ import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as CodeProject from '../types/CodeProject';
-import * as Spec from '../types/Spec';
+import { CodeProject, Spec } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

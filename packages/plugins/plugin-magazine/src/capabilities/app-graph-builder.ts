@@ -20,11 +20,9 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
+import { FeedOperation, Magazine, Subscription } from '#types';
 
 import { getMagazinesPath } from '../paths';
-import * as FeedOperation from '../types/FeedOperation';
-import * as Magazine from '../types/Magazine';
-import * as Subscription from '../types/Subscription';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -10,9 +10,9 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
+import { Ibkr, IbkrOperation } from '#types';
+
 import { meta } from '../../meta';
-import type * as Ibkr from '../../types/Ibkr';
-import * as IbkrOperation from '../../types/IbkrOperation';
 
 export type PortfolioImportActionProps = {
   /** The Portfolio whose space owns the report feed the imported report is appended to. */

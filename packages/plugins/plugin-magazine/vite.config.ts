@@ -26,6 +26,7 @@ export default defineConfig({
     'Magazine': 'src/types/Magazine.ts',
     'MagazineEvents': 'src/types/MagazineEvents.ts',
     'Subscription': 'src/types/Subscription.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' }, storybook: true },

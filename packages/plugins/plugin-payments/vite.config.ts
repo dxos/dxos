@@ -17,6 +17,7 @@ export default defineConfig({
     PaymentsCapabilities: 'src/types/PaymentsCapabilities.ts',
     PaymentsEvents: 'src/types/PaymentsEvents.ts',
     Settings: 'src/types/Settings.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

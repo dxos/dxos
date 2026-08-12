@@ -19,6 +19,7 @@ export default defineConfig({
     Settings: 'src/types/Settings.ts',
     SpacetimeCapabilities: 'src/types/SpacetimeCapabilities.ts',
     SpacetimeEvents: 'src/types/SpacetimeEvents.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   assetsAsFiles: true,

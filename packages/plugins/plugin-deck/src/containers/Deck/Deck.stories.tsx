@@ -40,10 +40,8 @@ import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
+import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
-import * as DeckCapabilities from '../../types/DeckCapabilities';
-import * as DeckSchema from '../../types/DeckSchema';
-import * as Settings from '../../types/Settings';
 import { Deck } from './Deck';
 
 type StoryItem = { id: string; title: string; icon: string };

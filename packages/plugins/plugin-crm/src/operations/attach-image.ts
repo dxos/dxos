@@ -12,7 +12,7 @@ import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 /**
  * Default image service base URL. Overridable per-invocation via the

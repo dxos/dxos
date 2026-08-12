@@ -10,8 +10,9 @@ import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
+import { Blog } from '#types';
+
 import { getPublicationsPath } from '../paths';
-import * as Blog from '../types/Blog';
 
 // `BloggerOperation.AddPublication`/`AddPost` persist via `CollectionModel.add` and return a `Ref`
 // for agent/skill callers; they don't produce the `{ id, subject, object }` shape the generic

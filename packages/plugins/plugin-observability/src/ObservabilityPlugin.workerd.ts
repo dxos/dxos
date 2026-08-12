@@ -11,8 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { meta } from '#meta';
-
-import * as ObservabilityOperation from './types/ObservabilityOperation';
+import { ObservabilityOperation } from '#types';
 
 export const ObservabilityPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(

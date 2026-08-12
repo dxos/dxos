@@ -7,8 +7,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
-
-import * as Markdown from './types/Markdown';
+import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.skillDefinition(() => import('./capabilities/skill-definition'))),

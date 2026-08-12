@@ -7,10 +7,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
-
-import * as Chess from './types/Chess';
-import * as ChessPositionIndex from './types/ChessPositionIndex';
-import * as PlayerReview from './types/PlayerReview';
+import { Chess, ChessPositionIndex, PlayerReview } from '#types';
 
 /**
  * Headless variant of ChessPlugin (no React surfaces / GameVariant).

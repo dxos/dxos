@@ -12,9 +12,7 @@ import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph'
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
-
-import * as Account from '../types/Account';
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { Account, ClientCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

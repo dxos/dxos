@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import * as Tour from '../types/Tour';
+import { Tour } from '#types';
 
 /**
  * Access the welcome-tour controller (running flag + steps + start/stop hooks).

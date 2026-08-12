@@ -11,9 +11,9 @@ import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { ChessPlugin } from '#plugin';
+import { ChessOperation } from '#types';
 
 import { meta } from './meta';
-import * as ChessOperation from './types/ChessOperation';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

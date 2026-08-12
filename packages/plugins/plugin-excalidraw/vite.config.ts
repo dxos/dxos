@@ -19,6 +19,7 @@ export default defineConfig({
     ExcalidrawCapabilities: 'src/types/ExcalidrawCapabilities.ts',
     ExcalidrawEvents: 'src/types/ExcalidrawEvents.ts',
     Settings: 'src/types/Settings.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

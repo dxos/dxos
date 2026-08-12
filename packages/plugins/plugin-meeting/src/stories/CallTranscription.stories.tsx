@@ -27,8 +27,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Transcript } from '@dxos/types';
 
+import { Meeting } from '#types';
+
 import { MeetingPlugin } from '../MeetingPlugin';
-import * as Meeting from '../types/Meeting';
 
 type StoryArgs = {};
 

@@ -17,6 +17,7 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'WnfsCapabilities': 'src/types/WnfsCapabilities.ts',
     'WnfsEvents': 'src/types/WnfsEvents.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

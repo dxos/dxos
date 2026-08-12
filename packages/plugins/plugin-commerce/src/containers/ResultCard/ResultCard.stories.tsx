@@ -16,11 +16,11 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { Provider, Result } from '#types';
+
 import { CommercePlugin } from '../../plugin';
 import { makeSampleProvider, makeSampleResults } from '../../testing';
 import { translations } from '../../translations';
-import * as Provider from '../../types/Provider';
-import * as Result from '../../types/Result';
 import { ResultCard } from './ResultCard';
 
 // `ResultCard` subscribes to its subject via `useObject`, so the story renders a live ECHO object

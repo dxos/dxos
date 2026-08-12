@@ -36,8 +36,8 @@ import { type Graph } from '@dxos/plugin-graph';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
 import { CliPanel, DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
+import { Devtools } from '#types';
 
-import * as Devtools from '../types/Devtools';
 import {
   ActiveSpacePanel,
   EdgeTestingSurface,

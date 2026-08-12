@@ -17,6 +17,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     Profile: 'src/types/Profile.ts',
     Sidekick: 'src/types/Sidekick.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

@@ -27,6 +27,7 @@ export default defineConfig({
     'Kanban': 'src/types/Kanban.ts',
     'KanbanEvents': 'src/types/KanbanEvents.ts',
     'KanbanOperation': 'src/types/KanbanOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, browser: 'chromium', storybook: true },

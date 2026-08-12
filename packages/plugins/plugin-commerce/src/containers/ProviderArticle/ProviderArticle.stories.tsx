@@ -16,10 +16,11 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { Provider } from '#types';
+
 import { CommercePlugin } from '../../plugin';
 import { makeSampleProvider } from '../../testing';
 import { translations } from '../../translations';
-import * as Provider from '../../types/Provider';
 import { ProviderArticle } from './ProviderArticle';
 
 const DefaultStory = () => {

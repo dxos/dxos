@@ -12,8 +12,8 @@ import { Form } from '@dxos/react-ui-form';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Ollama } from '#types';
 
-import type * as Ollama from '../../types/Ollama';
 import { OllamaModelsSection } from './OllamaModels';
 
 // In-memory manager that bypasses the (desktop-only) capability lookup; methods are no-ops so the

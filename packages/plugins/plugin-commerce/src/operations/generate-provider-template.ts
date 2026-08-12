@@ -13,10 +13,10 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
+import { Provider, SearchOperation } from '#types';
+
 import { meta } from '../meta';
 import { ProviderSkill } from '../skills';
-import * as Provider from '../types/Provider';
-import * as SearchOperation from '../types/SearchOperation';
 
 const TOAST_ID = `${meta.profile.key}/regenerate`;
 
