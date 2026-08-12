@@ -318,15 +318,21 @@ const meta = {
       ],
     })),
   ],
-  args: { seed: 'fixture' },
-  parameters: { layout: 'fullscreen', translations: debugTranslations },
+  parameters: {
+    layout: 'fullscreen',
+    translations: debugTranslations,
+  },
 } satisfies Meta<StoryArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    sseed: 'fixture',
+  },
+};
 
 /**
  * The cursored log-title pipeline over a seeded mailbox — the `@dxos/fixtures` corpus when pulled,
@@ -336,6 +342,9 @@ export const Default: Story = {};
  * re-processes the whole feed.
  */
 export const Test: Story = {
+  args: {
+    seed: 'fixture',
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -403,7 +412,9 @@ export const Test: Story = {
 
 /** The CRM demo seed: 3 demo messages plus the extraction-gate Organizations. */
 export const Crm: Story = {
-  args: { seed: 'crm' },
+  args: {
+    seed: 'crm',
+  },
 };
 
 /**
@@ -413,7 +424,9 @@ export const Crm: Story = {
  * catch-up that creates nothing.
  */
 export const CrmTest: Story = {
-  args: { seed: 'crm' },
+  args: {
+    seed: 'crm',
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 

@@ -4,14 +4,81 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space } from '@dxos/react-client/echo';
-import { Organization } from '@dxos/types';
+import { ContentBlock, Message, Organization } from '@dxos/types';
 
 import { importMessages } from './archive';
-import { seedDemoMessages } from './messages';
+
+/**
+ * Fresh demo messages for stories that need content without a live connection (fact extraction,
+ * CRM pipelines). A factory (not a const) so each call yields new object instances rather than
+ * re-appending already-persisted ones.
+ */
+export const makeDemoMessages = (): Message.Message[] => [
+  Message.make({
+    sender: {
+      email: 'jane@sequoia.com',
+      name: 'Jane Partner',
+    },
+    created: '2026-07-01T09:00:00.000Z',
+    blocks: [
+      ContentBlock.Text.make({
+        text: 'Acme Corp raised a $20M Series B led by Sequoia Capital. Jane Doe joins as CFO, reporting to CEO Mark Lee.',
+      }),
+    ],
+    properties: {
+      subject: 'Acme Series B closed',
+    },
+  }),
+  Message.make({
+    sender: {
+      email: 'bob@globex.com',
+      name: 'Bob Smith',
+    },
+    created: '2026-07-02T14:30:00.000Z',
+    blocks: [
+      ContentBlock.Text.make({
+        text: 'Bob Smith from Globex Corporation will present the new logistics platform at the Berlin conference next Tuesday.',
+      }),
+    ],
+    properties: {
+      subject: 'Berlin conference talk',
+    },
+  }),
+  Message.make({
+    sender: {
+      email: 'alice@initech.com',
+      name: 'Alice Johnson',
+    },
+    created: '2026-07-03T11:15:00.000Z',
+    blocks: [
+      ContentBlock.Text.make({
+        text: 'The merger between Initech and Umbrella Industries closes Friday. Alice Johnson is coordinating the legal review with counsel at Wayne & Co.',
+      }),
+    ],
+    properties: {
+      subject: 'Initech / Umbrella merger',
+    },
+  }),
+];
+
+/**
+ * Idempotently seeds the feed with the demo messages: appends only those whose subject is not already
+ * present, so repeated runs — e.g. reopening the story against persistent (OPFS) storage — never
+ * duplicate them.
+ */
+export const seedDemoMessages = (feed: Feed.Feed): Effect.Effect<void, never, Database.Service> =>
+  Effect.gen(function* () {
+    const existing = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    const present = new Set(existing.map((message) => message.properties?.subject));
+    const missing = makeDemoMessages().filter((message) => !present.has(message.properties?.subject));
+    if (missing.length > 0) {
+      yield* Feed.append(feed, missing);
+    }
+  });
 
 /**
  * Adds a Mailbox seeded from the pulled `@dxos/fixtures` mailbox corpus (served by the storybook
@@ -39,9 +106,18 @@ export const loadMailboxFixture = async (space: Space, fixture = 'mailbox'): Pro
  * sender earns a Person only when its domain matches a known Organization.
  */
 const DEMO_ORGANIZATIONS = [
-  { name: 'Sequoia Capital', website: 'https://sequoia.com' },
-  { name: 'Globex Corporation', website: 'https://globex.com' },
-  { name: 'Initech', website: 'https://initech.com' },
+  {
+    name: 'Sequoia Capital',
+    website: 'https://sequoia.com',
+  },
+  {
+    name: 'Globex Corporation',
+    website: 'https://globex.com',
+  },
+  {
+    name: 'Initech',
+    website: 'https://initech.com',
+  },
 ];
 
 /** Adds a Mailbox with the shared demo messages on its feed, plus the extraction-gate Organizations. */
