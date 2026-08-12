@@ -85,8 +85,8 @@ taskSet: {"/": "<task-set-id>"} } }`. If the bootstrap fails, say so — do **no
   open/total task counts. If more than one project is `active`, list them numbered and ask
   which, rather than guessing.
 - **`/project new <name>`** — `projectCreate { name, spaceId }`, then
-  `projectUpdate { project, status: 'active', description: <one-line summary> }`. Report the new
-  project id.
+  `projectUpdate { project: {"/": "<id>"}, status: 'active', description: '<one-line summary>',
+spaceId }`. Report the new project id.
 - **`/project tasks`** — `taskList { project: {"/": id}, includeSubtasks: true, spaceId }` for
   the active project; render phases (parent tasks) with their sub-tasks and statuses.
 - **`/project track <text>`** — `taskCreate` on the active project's task set (`taskSet` ref
@@ -104,8 +104,8 @@ taskSet: {"/": "<task-set-id>"} } }`. If the bootstrap fails, say so — do **no
      outline is scratch, the document is the record.
   5. Confirm the checkpoint in one short block (done / in-progress / next).
 - **`/project end`** — close out a work-stream: run the hydrate checkpoint first, then
-  `projectUpdate { project, status: 'ended' }`. Ended projects stay queryable; nothing is
-  deleted.
+  `projectUpdate { project: {"/": "<id>"}, status: 'ended', spaceId }`. Ended projects stay
+  queryable; nothing is deleted.
 - **`/project resume`** — reload at the start of a session:
   1. `projectList { spaceId }` to discover projects. If one was named, match it; otherwise pick
      the single `active` project, or ask which when several are `active` — never guess.
