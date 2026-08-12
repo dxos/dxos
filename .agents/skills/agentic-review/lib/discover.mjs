@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Rule discovery, glob/grep matching against the changed set, and grouping for
+// Rule discovery, glob/grep matching against the file set, and grouping for
 // subagents.
 
 import { globSync, readFileSync } from 'node:fs';
@@ -13,6 +13,15 @@ import { loadRules, RULE_SUFFIX } from './mdl.mjs';
 
 const toPosix = (path) => path.split(sep).join('/');
 
+/** Split git ls-files stdout into a set of repo-relative posix paths. */
+const pathsFromGitOutput = (out) =>
+  new Set(
+    (out ?? '')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean),
+  );
+
 /**
  * Discover every `rule` block across the repo's `.mdl` files (tracked and
  * untracked-but-not-ignored, so `.gitignore` is honored and freshly added rules
@@ -22,10 +31,19 @@ export const discoverRules = (root) => {
   const glob = `*${RULE_SUFFIX}`;
   const tracked = git(['ls-files', glob], { allowFail: true }) ?? '';
   const untracked = git(['ls-files', '--others', '--exclude-standard', glob], { allowFail: true }) ?? '';
-  const paths = new Set(
-    [...tracked.split(/\r?\n/), ...untracked.split(/\r?\n/)].map((line) => line.trim()).filter(Boolean),
-  );
+  const paths = pathsFromGitOutput(`${tracked}\n${untracked}`);
   return [...paths].sort().flatMap((relPath) => loadRules(resolve(root, relPath)));
+};
+
+/**
+ * Every path git considers part of the working tree: tracked files plus
+ * untracked-but-not-ignored. Used as the universe for full-project rule scans so
+ * globs never pull in `node_modules` or other ignored trees.
+ */
+export const listRepoFiles = () => {
+  const tracked = git(['ls-files'], { allowFail: true });
+  const untracked = git(['ls-files', '--others', '--exclude-standard'], { allowFail: true });
+  return pathsFromGitOutput(`${tracked ?? ''}\n${untracked ?? ''}`);
 };
 
 /** Compile a grep pattern as a RegExp, tolerating a pattern that isn't valid
@@ -42,12 +60,19 @@ const compileGrep = (pattern) => {
 };
 
 /**
- * Resolve a rule's globs against the working tree, keep only changed files, then
- * apply the optional `grep` pre-filter.
+ * Resolve a rule's globs against the working tree, restrict to `projectFiles`
+ * (and optionally `changedSet` for incremental/PR mode), then apply the optional
+ * `grep` pre-filter.
  *
+ * @param {object} [options]
+ * @param {Set<string>|null} [options.changedSet] When set, keep only these paths
+ *   (delta / `--pr-only`). When null/omitted, every project file the globs hit
+ *   is a candidate (full-project scan).
+ * @param {Set<string>|null} [options.projectFiles] Git-visible paths; defaults to
+ *   no extra filter when omitted (callers should pass `listRepoFiles()`).
  * @returns {string[]} Sorted, repo-relative paths this rule should review.
  */
-export const matchRuleFiles = (rule, root, changedSet) => {
+export const matchRuleFiles = (rule, root, { changedSet = null, projectFiles = null } = {}) => {
   const base = rule.scope === 'repo' ? root : rule.dir;
   const matched = new Set();
   for (const pattern of rule.files) {
@@ -56,7 +81,13 @@ export const matchRuleFiles = (rule, root, changedSet) => {
     }
   }
 
-  let files = [...matched].filter((path) => changedSet.has(path));
+  let files = [...matched];
+  if (projectFiles) {
+    files = files.filter((path) => projectFiles.has(path));
+  }
+  if (changedSet) {
+    files = files.filter((path) => changedSet.has(path));
+  }
 
   if (rule.grep) {
     const regex = compileGrep(rule.grep);

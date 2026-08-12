@@ -22,6 +22,7 @@ usable manually before any CI wiring.
 - [x] **Rule discovery** (`lib/discover.mjs`) — `git ls-files '*.mdl'` (tracked + untracked-not-ignored), honoring `.gitignore`; flattens `rule` blocks across files; descriptor `.mdl` (SPEC/PLUGIN) yield none.
 - [x] **Diff-base resolution** (`prepare.mjs`) — scan `.agents/reviews/*/REVIEW.md` for finalized reviews whose `commit` is an ancestor of HEAD; newest wins; fallback to merge-base with first main-like ref, then HEAD.
 - [x] **`prepare.mjs`** — changed files vs base (committed + staged + unstaged + untracked), intersect with rule globs, apply `grep`, group (one rule × ≤ chunkSize files), write STAGING.md + groups.json manifest + blank REVIEW.md + `groups/NN.md` stubs, print paths + group count + per-group line.
+- [x] **Full-project default** — no prior review (and any new rule) scans git-visible files matching the rule; incremental afterward; old diff-only behaviour is `--pr-only`. Persists `rules:` on REVIEW.md.
 - [x] **Diagnostic parser** (`lib/diagnostics.mjs`) — parse `# WARN|ERROR \`file:line[:col]\`` + body; dedupe + sort helpers.
 - [x] **`finalize.mjs`** — merge fragments into REVIEW.md (sorted, deduped), set `isFinalized: true`, print severity counts.
 

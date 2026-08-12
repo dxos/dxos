@@ -1,20 +1,24 @@
 ---
 name: agentic-review
 description: >-
-  Run the rule-driven agentic code review over a branch's diff — discover `rule`
-  blocks in the repo's `.mdl` files, prepare per-rule review groups over the
-  changed files, spawn one focused Sonnet subagent per group, then finalize the
-  merged diagnostics into REVIEW.md. Use when asked to run the agentic review,
-  review a branch/PR against the repo's `.mdl` rules, or check a diff for known
-  anti-patterns. For the built-in bug/quality passes use `/code-review` instead.
+  Run the rule-driven agentic code review — discover `rule` blocks in the repo's
+  `.mdl` files, prepare per-rule review groups (full project by default; diff-only
+  with `--pr-only`), spawn one focused Sonnet subagent per group, then finalize
+  the merged diagnostics into REVIEW.md. Use when asked to run the agentic
+  review, review a branch/PR against the repo's `.mdl` rules, or check a diff for
+  known anti-patterns. For the built-in bug/quality passes use `/code-review`
+  instead.
 ---
 
 # Agentic Review
 
-A harness that checks a diff against **`rule` blocks defined in `.mdl` files** —
+A harness that checks the tree against **`rule` blocks defined in `.mdl` files** —
 semantic rules a linter can't express ("prefer subscribing to events over polling
 in tests"). Each rule is applied by a focused LLM subagent, scoped to one rule
-over a bounded set of the changed files, so the reviewer stays cheap and on-task.
+over a bounded set of files, so the reviewer stays cheap and on-task.
+**Default:** full-project first pass when there is no prior review (and for any
+**new** rule never covered by a prior finalized run); later runs are incremental.
+**`--pr-only`:** diff-only against the last review or merge-base with main.
 **Claude drives the loop**: prepare → spawn subagents → finalize.
 
 The scripts are dependency-free Node ESM and can also be run by hand.
@@ -45,16 +49,20 @@ plus the STAGING.md / groups.json / per-group fragments) so runs stay auditable.
 
 ```sh
 node .agents/skills/agentic-review/scripts/prepare.mjs
+# PR / diff-only (previous default):
+node .agents/skills/agentic-review/scripts/prepare.mjs --pr-only
 ```
 
-It prints the STAGING.md / REVIEW.md paths, the resolved base commit, and the
-**group count** plus a per-group line (`NN  <rule-id>  (<n> files)`). Read the
-group count — it is exactly how many subagents to spawn. If the count is `0`,
-nothing matched the diff; report clean and stop.
+It prints the STAGING.md / REVIEW.md paths, the resolved base (`full` or a
+commit), the mode, and the **group count** plus a per-group line
+(`NN  <rule-id>  (<n> files, full|delta)`). Read the group count — it is exactly
+how many subagents to spawn. If the count is `0`, nothing matched; report clean
+and stop.
 
-Useful flags: `--chunk=<N>` (max files per group, default 15), `--base=<ref>`
-(override the diff base), `--main=<ref>` (main-like ref for the fallback base),
-`--slug=<slug>` (override the store dir name).
+Useful flags: `--chunk=<N>` (max files per group, default 15), `--pr-only`
+(diff against last review or merge-base with main), `--base=<ref>` (override the
+diff base for delta rules), `--main=<ref>` (main-like ref for `--pr-only`
+fallback), `--slug=<slug>` (override the store dir name).
 
 ### 2. Spawn one Sonnet subagent per group
 
@@ -116,13 +124,14 @@ rule no-sleep-in-test: No sleep in tests
 ```
 ````
 
-- **`files`** — one glob or a list; matched against the changed set.
+- **`files`** — one glob or a list; matched against the project (default) or the
+  changed set (`--pr-only` / incremental).
 - **`scope`** — `dir` (default) resolves globs relative to the `.mdl` file's
   directory, so a package rule targets its own tree; `repo` resolves from the
   repo root (used by the shared seed rules).
 - **`grep`** — an optional JS-regex pre-filter tested against file contents; a
-  file is reviewed only if it matches. Omit to review every changed file the
-  globs select. Values are literal (no YAML quoting) — write `grep: @dxos/`, not
+  file is reviewed only if it matches. Omit to review every selected file the
+  globs hit. Values are literal (no YAML quoting) — write `grep: @dxos/`, not
   `grep: "@dxos/"`.
 - **`severity`** — `warn` | `error` (default `warn`), authoritative from the rule
   (deterministic). `finalize.mjs` stamps every diagnostic in a group with the
@@ -135,10 +144,11 @@ definition.
 
 ## Notes
 
-- **Diff base is incremental.** The finalized `REVIEW.md` is committed (only the
-  transient staging/manifest/fragments are git-ignored), so base resolution finds
-  the newest finalized review whose commit is an ancestor of HEAD and reviews only
-  what changed since — falling back to the merge-base with `origin/main` on the
-  first run.
+- **Default is full then incremental.** With no finalized ancestor review, every
+  rule scans git-visible files matching its globs (`base: full`). After that,
+  known rules review only the delta since the newest finalized ancestor; a **new**
+  rule (absent from prior runs' `rules:` / `groups.json`) still gets a one-time
+  full-project pass. Pass `--pr-only` for the old diff-only behaviour (last
+  review or merge-base with `origin/main`).
 - **PR-comment posting** from `finalize.mjs` is a later phase; today finalize
   writes `REVIEW.md` only.

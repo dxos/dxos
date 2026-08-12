@@ -79,11 +79,13 @@ Generated blank at prepare (step 1), finalized at step 3:
 ---
 branch: claude/agentic-code-review-8621ce
 commit: b217ecc635 # HEAD at review time
-base: ea11703a42 # commit this review diffs against (see base resolution)
+base: full # `full` or the commit this review diffs against
+mode: default # default | pr-only
 createdAt: 2026-08-09T…
 isFinalized: false # set true by finalize; unfinalized reviews are ignored
 pr: 12520 # optional, if on a PR
 groups: 4
+rules: [no-casts, no-sleep-in-test] # ids covered; new rules get a full first pass
 ---
 
 <!-- diagnostics merged here at finalize -->
@@ -120,16 +122,18 @@ Column is optional.
 
 1. Discover all `rule` blocks across the repo's `.mdl` files (walk repo, honor
    `.gitignore`; non-rule blocks and descriptor documents are skipped).
-2. **Resolve the diff base.** Scan `.agents/reviews/*/REVIEW.md` for **finalized**
-   reviews whose `commit` is an **ancestor of HEAD** (`git merge-base --is-ancestor`).
-   Pick the one with the **most recent** such commit → that's the base. This makes
-   review **incremental**: only re-review what changed since the last good review.
-   Fallback when none exists: `git merge-base HEAD origin/main` (review the whole
-   branch diff).
-3. Compute changed files: `git diff --name-only <base> HEAD` (+ untracked/working
-   set as configured). Keep only files that still exist.
-4. For each rule, intersect its resolved globs with the changed files, then apply
-   the `grep` pre-filter. Yields a set of `(rule, [files])` pairs.
+2. **Resolve prior reviews.** Scan `.agents/reviews/*/REVIEW.md` for **finalized**
+   reviews whose `commit` is an **ancestor of HEAD**. Collect the newest such
+   commit and the union of rule ids those runs covered (`rules:` frontmatter, or
+   `groups.json` for legacy runs).
+3. **File set (default).** No prior review → every rule scans the whole
+   git-visible project (`base: full`). With a prior review → known rules take the
+   delta since that commit; a **new** rule (never in a prior run) still gets a
+   full-project first pass. **`--pr-only`** opts into the old behaviour: always
+   diff against the newest prior commit, else `git merge-base HEAD origin/main`.
+4. For each rule, resolve globs against git-visible paths (and the changed set
+   when in delta / `--pr-only` mode), then apply the `grep` pre-filter. Yields
+   `(rule, [files], scope)` where `scope` is `full` or `delta`.
 5. **Group** for subagents, preferring **few rules per group** over few files:
    a group is one rule × a bounded chunk of its files (chunk size configurable,
    e.g. ≤ 15 files). Big rules split into multiple groups; tiny rules are **not**
@@ -188,10 +192,11 @@ only.
 
 Two intended modes (both supported; the scripts are trigger-agnostic):
 
-1. **On PRs** — run in CI (or on demand) against the PR branch; finalize posts
-   comments. Incremental base = last finalized review or merge-base with main.
-2. **Nightly on main** — run against main's recent diff; finalize can open an
-   issue / summary instead of PR comments.
+1. **On PRs** — run with `--pr-only` in CI (or on demand); finalize posts
+   comments. Diff base = last finalized review or merge-base with main.
+2. **Nightly / bootstrap on main** — default mode: full project when no prior
+   review (or for new rules), then incremental; finalize can open an issue /
+   summary instead of PR comments.
 
 CI wiring is a later phase; the skill + scripts are usable manually first.
 
@@ -225,9 +230,9 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
   body syntax.
 - Per-group fragment files (`groups/NN.md`), merged at finalize — not concurrent
   appends to one file.
-- Base resolution scans finalized reviews for the newest HEAD-ancestor commit;
-  fallback to merge-base with the first main-like ref (`origin/main`, `main`, …);
-  final fallback to HEAD (working-tree-only review) when no main ref exists.
+- Default file set is **full project**, then incremental; a new rule always gets
+  one full pass. `--pr-only` keeps diff-only (newest HEAD-ancestor review, else
+  merge-base with `origin/main` / `main`, else HEAD).
 - Grouping favors few rules per group over few files (focus over packing).
 - Scripts are dependency-free Node ESM `.mjs` — a hand-rolled frontmatter parser
   is used because a standalone script can't resolve a pnpm-hoisted YAML package.
