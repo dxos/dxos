@@ -10,7 +10,12 @@ import { Connection } from '@dxos/link';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { connectorIdsForTarget, findBindingForTarget, isCursorForConnection, scaffoldSyncRoutine } from '../util';
+// Direct module imports, not the `../util` barrel: `util/sync-target` imports this file (to seed the
+// recreation dialog), so going through the barrel would create a module cycle.
+import { isCursorForConnection } from '../util/cursor-predicates';
+import { findBindingForTarget } from '../util/find-binding';
+import { scaffoldSyncRoutine } from '../util/sync-routine';
+import { connectorIdsForTarget } from '../util/target-connectors';
 
 /**
  * Id of the connector sync template. Declared here so the coordinator can seed the create-routine

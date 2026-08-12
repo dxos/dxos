@@ -4,7 +4,8 @@
 
 export { ATPROTO_OAUTH_SCOPES } from './constants';
 export { CONNECTOR_AUTH_GROUP_ID, type ConnectorAuthActionsOptions, connectorAuthActions } from './util';
-export { ConnectionTestError } from './errors';
+export { ConnectionTestError, SyncRoutineMissingError } from './errors';
+export { SyncTemplateId, makeSyncTemplate } from './templates';
 export * from './meta';
 export {
   autoBindSingleConnection,

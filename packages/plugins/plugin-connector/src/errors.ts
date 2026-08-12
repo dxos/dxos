@@ -20,6 +20,8 @@ const TEST_FAILED_MESSAGE = 'Connection test failed.' as const;
 
 const SYNC_FAILED_MESSAGE = 'Connection sync could not be run.' as const;
 
+const SYNC_ROUTINE_MISSING_MESSAGE = 'No sync routine exists for the binding.' as const;
+
 /**
  * A connector's {@link TestConnection} probe rejected the stored credential or could not reach the
  * service. Its `message` is the user-facing reason shown in the connection UI.
@@ -34,6 +36,18 @@ export class ConnectionTestError extends BaseError.extend('ConnectionTestError',
 export class ConnectionSyncError extends BaseError.extend('ConnectionSyncError', SYNC_FAILED_MESSAGE) {
   constructor(input: { connectorId?: string; cause?: unknown } = {}) {
     super({ context: { connectorId: input.connectorId }, cause: input.cause });
+  }
+}
+
+/**
+ * A trigger-declaring connector's binding has no sync routine (deleted, or declined at creation).
+ * Sync is driven by the routine's trigger, and routines are only created through the create-routine
+ * form — never silently — so the caller must (re)create it first: UI callers offer the seeded form
+ * (see `syncTarget`), headless callers skip the binding.
+ */
+export class SyncRoutineMissingError extends BaseError.extend('SyncRoutineMissingError', SYNC_ROUTINE_MISSING_MESSAGE) {
+  constructor(input: { connectorId?: string } = {}) {
+    super({ context: { connectorId: input.connectorId } });
   }
 }
 

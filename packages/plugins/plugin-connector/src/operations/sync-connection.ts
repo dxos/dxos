@@ -11,9 +11,10 @@ import { RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
+import { log } from '@dxos/log';
 
 import { connectionDeckSubject } from '../constants';
-import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
+import { ConnectionAuthExpiredError, SyncRoutineMissingError, isUnauthorizedError } from '../errors';
 import * as ConnectorOperation from '../types/ConnectorOperation';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 import { isCursorForConnection, syncBinding } from '../util';
@@ -56,6 +57,13 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       yield* Effect.all(
         cursors.map((cursor) =>
           syncBinding({ connector, cursor, spaceId }).pipe(
+            // A binding whose sync routine was deleted (or declined) is skipped: a connection-level
+            // sync is headless, so the recreation offer belongs to the target's own sync affordance
+            // (see `syncTarget`), not here.
+            Effect.catchIf(
+              (error): error is SyncRoutineMissingError => error instanceof SyncRoutineMissingError,
+              () => Effect.sync(() => log.info('skipping binding without a sync routine', { cursor: cursor.id })),
+            ),
             Effect.provide(Database.layer(db)),
             // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
             // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.

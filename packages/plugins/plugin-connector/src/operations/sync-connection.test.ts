@@ -89,14 +89,16 @@ describe('SyncConnection', () => {
     expect(synced).toEqual([]);
   });
 
-  test('creates the sync routine when a scheduled binding has none yet', async ({ expect }) => {
+  test('skips a scheduled binding that has no sync routine', async ({ expect }) => {
     const { connection } = await setup();
 
     const result = await invokeSync(makeInvoker({ scheduled: true }), connection);
 
+    // Routines are only created through the create-routine form (never silently), and the recreation
+    // offer belongs to the target's own sync affordance — a headless connection-level sync skips the
+    // binding rather than resurrecting the routine or failing.
     expect(result.synced).toBe(1);
-    // The routine was created from the declared spec and its trigger force-run.
-    expect(fired).toHaveLength(1);
+    expect(fired).toEqual([]);
     expect(synced).toEqual([]);
   });
 
