@@ -286,8 +286,10 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
  * Backs `Operation.Service` with the EDGE-provided `FunctionsService` so that operation
  * handlers can invoke other deployed operations remotely. The `deployedId` on the operation
  * definition is used as the routing key.
+ *
+ * @internal Exported for testing.
  */
-const makeOperationServiceLayer = (
+export const makeOperationServiceLayer = (
   functionsService: EdgeFunctionEnv.FunctionsService,
 ): Layer.Layer<Operation.Service> => {
   const invokeRemote = async (
@@ -318,7 +320,16 @@ const makeOperationServiceLayer = (
       )) as Operation.OperationService['invoke'],
     schedule: ((op: Operation.Definition.Any, input: unknown, _options?: Operation.InvokeOptions) =>
       Effect.sync(() => {
-        invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot schedule remotely.`);
+        // Dropped rather than asserted: `schedule` is typed `Effect<void, never>`, so failing an
+        // unroutable followup would take its caller down with it — a handler that imported a
+        // definition directly (no `deployedId`, e.g. `observability.sendEvent` scheduled by
+        // `space.addObject`) must not fail the operation that emitted it.
+        if (!op.meta.deployedId) {
+          log.warn('scheduled operation dropped: no deployedId, cannot schedule remotely', {
+            key: String(op.meta.key),
+          });
+          return;
+        }
         // Fire and forget — schedule is intentionally non-awaiting.
         void functionsService.invoke(op.meta.deployedId, input).catch(() => {
           // Swallow errors — schedule is observability-only.
@@ -333,7 +344,13 @@ const makeOperationServiceLayer = (
 
 const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
   invoke: () => Effect.die('Operation.Service is not available: missing functionsService in EDGE context.'),
-  schedule: () => Effect.die('Operation.Service is not available: missing functionsService in EDGE context.'),
+  // Warn rather than die, for the same reason the routable variant drops unroutable followups.
+  schedule: (op: Operation.Definition.Any) =>
+    Effect.sync(() => {
+      log.warn('scheduled operation dropped: missing functionsService in EDGE context', {
+        key: String(op.meta.key),
+      });
+    }),
   invokePromise: async () => ({
     error: new Error('Operation.Service is not available: missing functionsService in EDGE context.'),
   }),
