@@ -108,6 +108,8 @@ type ConversationStackContextValue = {
   sendOperations?: readonly InboxCapabilities.MailSendOperation[];
   /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
   getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
+  /** Derived summaries keyed by message id (container-resolved from the mailbox's annotation feed). */
+  summaries?: ReadonlyMap<string, string>;
   onExpandedChange?: (id: string, expanded: boolean) => void;
   /** Folds every message (thread toolbar only). */
   onCollapseAll?: () => void;
@@ -138,6 +140,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'runtime'
     | 'sendOperations'
     | 'getExtractActions'
+    | 'summaries'
     | 'onExpandedChange'
     | 'onCollapseAll'
     | 'onExpandAll'
@@ -165,6 +168,7 @@ const ConversationStackRoot = ({
   runtime,
   sendOperations,
   getExtractActions,
+  summaries,
   onExpandedChange,
   onCollapseAll,
   onExpandAll,
@@ -189,6 +193,7 @@ const ConversationStackRoot = ({
     companion={companion}
     graph={graph}
     getExtractActions={getExtractActions}
+    summaries={summaries}
     runtime={runtime}
     sendOperations={sendOperations}
   >
@@ -362,6 +367,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     companion,
     graph,
     getExtractActions,
+    summaries,
     onAiReply,
     onDelete,
     onOpen,
@@ -389,6 +395,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
 
   const { from, to, date, snippet, subject } = getMessageProps(target);
   const sender = from ?? target.sender?.email ?? '';
+  // Derived by the summarization pipeline; absent for most messages, which is the normal case —
+  // collapsed tiles fall back to the provider's snippet rather than showing an empty affordance.
+  const summary = summaries?.get(target.id);
 
   // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
   return (
@@ -427,7 +436,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
               {to && <div className='text-sm text-description'>{to}</div>}
             </>
           ) : (
-            <div className='text-sm text-description line-clamp-1'>{snippet}</div>
+            <div className='text-sm text-description line-clamp-1' data-testid={summary && 'message.summary'}>
+              {summary ?? snippet}
+            </div>
           )}
         </div>
 
@@ -451,6 +462,11 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
           {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
           <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
           <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pe-3'>
+            {summary && (
+              <div className='rounded bg-subdued-surface p-2 text-sm text-description' data-testid='message.summary'>
+                {summary}
+              </div>
+            )}
             <MessageBody message={message} mailbox={mailbox} options={options} />
           </div>
         </div>
