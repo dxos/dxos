@@ -35,6 +35,17 @@ export const Filter = Schema.Struct({
 });
 export interface Filter extends Schema.Schema.Type<typeof Filter> {}
 
+/** A bulk-mail subscription: a sender the user receives list mail from, with its unsubscribe target. */
+export const Subscription = Schema.Struct({
+  email: Schema.String,
+  name: Schema.optional(Schema.String),
+  /** The raw unsubscribe affordance: the `List-Unsubscribe` header value, or a link found in a body. */
+  unsubscribe: Schema.String,
+  /** Number of messages from this sender in the mailbox. */
+  count: Schema.Number,
+});
+export interface Subscription extends Schema.Schema.Type<typeof Subscription> {}
+
 export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.mailbox', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
@@ -62,6 +73,10 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
       FormInputAnnotation.set(false),
       Schema.optional,
     ),
+    // Bulk-mail subscriptions extracted from the feed (`ExtractSubscriptions`): one entry per sender
+    // with an unsubscribe affordance (header or body link). Replaced wholesale each run — persisted
+    // derived state for the UI, never a source of truth.
+    subscriptions: Schema.Array(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
     // TODO(wittjosiah): Factor out to relation?
     filters: Schema.Array(
       Schema.Struct({
@@ -303,8 +318,9 @@ export const getUnsubscribeTarget = (message: MessageLike): string | undefined =
 };
 
 /**
- * Parse an RFC 2369 `List-Unsubscribe` header (`<https://…>, <mailto:…>`) into its one-click HTTP and
- * mailto targets. The HTTP form supports RFC 8058 one-click POST; the mailto is the fallback. Pure.
+ * Parse an unsubscribe affordance — an RFC 2369 `List-Unsubscribe` header (`<https://…>, <mailto:…>`)
+ * or a bare URL (a body-extracted link) — into its one-click HTTP and mailto targets. The HTTP form
+ * supports RFC 8058 one-click POST; the mailto is the fallback. Pure.
  */
 export const parseUnsubscribe = (header: string): { http?: string; mailto?: string } => {
   const targets: { http?: string; mailto?: string } = {};
@@ -316,27 +332,54 @@ export const parseUnsubscribe = (header: string): { http?: string; mailto?: stri
       targets.mailto = url;
     }
   }
+  // A body-extracted affordance is a bare URL with no angle brackets.
+  const bare = header.trim();
+  if (!targets.http && !targets.mailto) {
+    if (/^https?:/i.test(bare)) {
+      targets.http = bare;
+    } else if (/^mailto:/i.test(bare)) {
+      targets.mailto = bare;
+    }
+  }
   return targets;
 };
 
-/** A bulk-mail subscription: a sender the user receives list mail from, with its unsubscribe target. */
-export type Subscription = {
-  readonly email: string;
-  readonly name?: string;
-  /** The raw `List-Unsubscribe` header value. */
-  readonly unsubscribe: string;
-  /** Number of messages from this sender in the mailbox. */
-  readonly count: number;
+// Unsubscribe-shaped URLs in message bodies — the affordance bulk senders put in the footer when
+// the transport header is absent (or was stripped by a forward).
+const BODY_UNSUBSCRIBE_RE =
+  /https?:\/\/[^\s()[\]"<>]*(?:unsubscrib|opt[-_]?out|email[-_]?preferences|manage[-_]?preferences)[^\s()[\]"<>]*/i;
+
+/** The first unsubscribe-shaped link in the message's text blocks, if any. Pure. */
+export const extractBodyUnsubscribe = (message: MessageLike): string | undefined => {
+  for (const block of message.blocks ?? []) {
+    if (block._tag !== 'text') {
+      continue;
+    }
+    const match = block.text?.match(BODY_UNSUBSCRIBE_RE);
+    if (match) {
+      return match[0];
+    }
+  }
+  return undefined;
 };
 
+/** The message's unsubscribe affordance from any source: the header, falling back to a body link. */
+export const getUnsubscribeAffordance = (message: MessageLike): string | undefined =>
+  getUnsubscribeTarget(message) ?? extractBodyUnsubscribe(message);
+
 /**
- * Group the mailbox's messages into subscriptions — one per sender carrying a `List-Unsubscribe`
- * affordance — for the Subscriptions view. Sorted by message count (noisiest first). Pure.
+ * Group the mailbox's messages into subscriptions — one per sender carrying an unsubscribe
+ * affordance — for the Subscriptions view. Sorted by message count (noisiest first). Pure. The
+ * default resolver reads only the header; pass {@link getUnsubscribeAffordance} to include body
+ * links (the extraction pipeline does).
  */
-export const deriveSubscriptions = (messages: readonly MessageLike[]): Subscription[] => {
+export const deriveSubscriptions = (
+  messages: readonly MessageLike[],
+  getTarget: (message: MessageLike) => string | undefined = getUnsubscribeTarget,
+): Subscription[] => {
   const byEmail = new Map<string, { email: string; name?: string; unsubscribe: string; count: number }>();
   for (const message of messages) {
-    const target = getUnsubscribeTarget(message);
+    const target = getTarget(message);
     const email = message.sender?.email?.toLowerCase();
     if (!target || !email) {
       continue;

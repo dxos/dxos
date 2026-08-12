@@ -55,6 +55,45 @@ export const AttachImage = Operation.make({
 });
 
 /**
+ * Fetches avatars and logos for every Person / Organization missing an `image`: Gravatar by email
+ * hash for people, the organization's domain logo (Clearbit, favicon fallback) for organizations.
+ * Each candidate goes through the {@link AttachImage} hardening (SSRF guard, size/type caps,
+ * re-hosted on the image service). Idempotent — subjects with an image are never touched.
+ */
+export const EnrichImages = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.plugin-crm.enrichImages'),
+    name: 'Enrich images',
+    icon: 'ph--user-circle--regular',
+    description: trim`
+      Finds every Person and Organization without an image and attaches an avatar (Gravatar) or
+      logo (domain logo service) where one exists.
+    `,
+  },
+  input: Schema.Struct({
+    limit: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Maximum subjects processed this run.',
+      }),
+    ),
+    imageServiceUrl: Schema.optional(
+      Schema.String.annotate({
+        description: 'Override for the image service base URL. Defaults to the value configured for the runtime.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    /** Subjects missing an image that were examined. */
+    scanned: Schema.Number,
+    /** Subjects whose `image` was set this run. */
+    updated: Schema.Number,
+    /** Subjects with no resolvable image (no email/domain, or every candidate failed). */
+    skipped: Schema.Number,
+  }),
+  services: [Database.Service, Trace.TraceService],
+}).pipe(Operation.idempotent);
+
+/**
  * Deterministic profile scaffolding for a Person: creates a markdown Profile document pre-filled
  * from known ECHO data and links it via a `ProfileOf` relation. Re-runs refresh
  * `lastResearchedAt` without regenerating the document body (which is user/agent-owned after

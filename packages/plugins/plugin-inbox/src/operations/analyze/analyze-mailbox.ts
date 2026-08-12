@@ -5,8 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { AiService } from '@dxos/ai';
+import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Ref } from '@dxos/echo';
+import * as Trace from '@dxos/compute/Trace';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
@@ -25,7 +27,15 @@ const findOrCreateFeedCursor = (mailbox: Mailbox.Mailbox) =>
   Effect.gen(function* () {
     const feedRef = mailbox.feed;
     const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
-    const existing = cursors.find((cursor) => cursor.spec.kind === 'feed' && cursor.spec.source.uri === feedRef.uri);
+    const existing = cursors.find(
+      (cursor) =>
+        cursor.spec.kind === 'feed' &&
+        cursor.spec.source.uri === feedRef.uri &&
+        // A foreign-key tag marks another consumer's cursor on this feed (the process pipeline, the
+        // CRM pipeline); adopting one would resume analysis from that consumer's position. Analysis
+        // cursors are the untagged ones.
+        Obj.getMeta(cursor).keys.length === 0,
+    );
     if (existing) {
       return existing;
     }
@@ -53,6 +63,21 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       const cursor = yield* findOrCreateFeedCursor(mailbox);
       const aiService = yield* AiService.AiService;
 
+      // Live progress via trace `status.update` events (`#analyze` key), projected into the runtime
+      // ProgressRegistry — same seam as mail sync and the process pipeline. The pipeline's first
+      // `onProgress` delivers the exact pending count, so the meter is determinate.
+      const traceWriter = yield* Trace.TraceService;
+      const progressKey = InboxOperation.createAnalyzeProgressKey(mailbox);
+      let total: number | undefined;
+      const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
+        total = patch.total ?? total;
+        traceWriter.write(Trace.StatusUpdate, {
+          message: patch.message ?? mailbox.name ?? 'Mailbox',
+          progress: { key: progressKey, current: patch.current ?? 0, total },
+        });
+      };
+      reportStatus({ current: 0 });
+
       // Extract options: the email rules plus optional model/provider/strict overrides so callers can
       // target a local model (e.g. ollama, strict:false) instead of the default edge Claude model.
       const extractOptions: RDF.ExtractOptions = {
@@ -71,7 +96,15 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
           ),
         );
 
-      return yield* runFactPipeline({ feed, cursor, extract, pageSize });
+      const result = yield* runFactPipeline({
+        feed,
+        cursor,
+        extract,
+        pageSize,
+        onProgress: ({ processed, total }) => reportStatus({ current: processed, total }),
+      });
+      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+      return result;
     }),
   ),
   Operation.opaqueHandler,

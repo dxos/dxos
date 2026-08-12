@@ -9,6 +9,7 @@ import { type IdentityIndex } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { type Actor, Organization, Person } from '@dxos/types';
 
+import { extractDomain, isFreeMailDomain, organizationNameFromDomain } from './domain';
 import { normalizeEmail } from './identity';
 import { getIdentityIndex } from './resolver';
 import { type SenderSignals, shouldExtractContact } from './selection';
@@ -82,4 +83,71 @@ export const buildContactFromActor = (
     }
 
     return contact;
+  });
+
+/**
+ * Builds a fresh Organization for the actor's corporate email domain (placeholder name + website
+ * from the domain). Returns `undefined` for a free-mail domain, or when the domain already resolves
+ * to a known Organization — the identity index (Organization by website domain) is what makes
+ * repeated extraction converge instead of duplicating.
+ */
+export const buildOrganizationFromActor = (
+  actor: Actor.Actor,
+  db: Database.Database,
+  { index: provided }: { index?: IdentityIndex } = {},
+): Effect.Effect<Organization.Organization | undefined> =>
+  Effect.gen(function* () {
+    const email = normalizeEmail(actor.email);
+    const domain = email ? extractDomain(email) : undefined;
+    if (!domain || isFreeMailDomain(domain)) {
+      return undefined;
+    }
+
+    const index = provided ?? (yield* getIdentityIndex(db));
+    if (index.lookup(Organization.Organization, { email })) {
+      return undefined;
+    }
+
+    const organization = Obj.make(Organization.Organization, {
+      name: organizationNameFromDomain(domain),
+      website: `https://${domain}`,
+    });
+    // Caller-owned overlay only — same commit discipline as the contact path above.
+    provided?.register(organization);
+    return organization;
+  });
+
+/** A sender's extracted object graph: the Person and, when newly derived, their Organization. */
+export type ContactGraph = {
+  readonly contact?: Person.Person;
+  readonly organization?: Organization.Organization;
+};
+
+/**
+ * Builds the sender's full contact graph: the Person (gate included — see
+ * {@link buildContactFromActor}) plus, when the Person was created and its corporate domain matches
+ * no known Organization, a fresh Organization linked from the contact. The gate is evaluated
+ * BEFORE the Organization exists, so a just-created Organization never widens the allow-list that
+ * admitted its own sender.
+ */
+export const buildContactGraph = (
+  actor: Actor.Actor,
+  db: Database.Database,
+  options: BuildContactOptions = {},
+): Effect.Effect<ContactGraph> =>
+  Effect.gen(function* () {
+    const contact = yield* buildContactFromActor(actor, db, options);
+    if (!contact) {
+      return {};
+    }
+    if (contact.organization) {
+      return { contact };
+    }
+    const organization = yield* buildOrganizationFromActor(actor, db, { index: options.index });
+    if (organization) {
+      Obj.update(contact, (contact) => {
+        contact.organization = Ref.make(organization);
+      });
+    }
+    return { contact, organization };
   });

@@ -16,14 +16,23 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy([
     Operation.lazyHandler(() => import('./analyze/create-project-from-message')),
   ),
   InboxOperation.ClassifyEmail.pipe(Operation.lazyHandler(() => import('./classify-email'))),
+  InboxOperation.ClassifyMailbox.pipe(Operation.lazyHandler(() => import('./classify/classify-mailbox'))),
   InboxOperation.DraftEmailAndOpen.pipe(Operation.lazyHandler(() => import('./draft-email-and-open'))),
   InboxOperation.DraftEmail.pipe(Operation.lazyHandler(() => import('./draft-email'))),
   InboxOperation.ExtractContactFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/contact-extractor'))),
+  InboxOperation.ExtractCorrespondents.pipe(
+    Operation.lazyHandler(() => import('./correspondents/extract-correspondents')),
+  ),
   InboxOperation.ExtractContact.pipe(Operation.lazyHandler(() => import('./extractor/extract-contact'))),
   InboxOperation.ExtractMailbox.pipe(Operation.lazyHandler(() => import('./extractor/extract-mailbox'))),
   InboxOperation.ExtractMessage.pipe(Operation.lazyHandler(() => import('./extractor/extract-message'))),
+  InboxOperation.ExtractSubscriptions.pipe(
+    Operation.lazyHandler(() => import('./subscriptions/extract-subscriptions')),
+  ),
   InboxOperation.ExtractSummaryFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/summarize-extractor'))),
+  InboxOperation.ProcessMailbox.pipe(Operation.lazyHandler(() => import('./process/process-mailbox'))),
   InboxOperation.ReadEmail.pipe(Operation.lazyHandler(() => import('./read-email'))),
   InboxOperation.RenameFilter.pipe(Operation.lazyHandler(() => import('./rename-filter'))),
+  InboxOperation.ResetProcessCursor.pipe(Operation.lazyHandler(() => import('./process/reset-process-cursor'))),
   InboxOperation.UnsubscribeSender.pipe(Operation.lazyHandler(() => import('./unsubscribe-sender'))),
 ]);

@@ -119,6 +119,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -127,11 +128,14 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",

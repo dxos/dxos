@@ -3,6 +3,106 @@
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
 
+## Mailbox pipeline routine (2026-08-10)
+
+Spec: `agents/superpowers/specs/2026-08-10-mailbox-pipeline-routine-design.md`. A manually
+triggerable routine driving a **cursored** pipeline over the Mailbox feed — the cursor machinery
+(incremental + reset) is the thing under test; the pipeline body is a log-title walking skeleton.
+
+### Tasks
+
+- [x] **`InboxOperation.ProcessMailbox`** — cursored log-title pipeline over the feed
+      (`plugin-inbox/src/operations/process/`): tagged feed cursor (`org.dxos.plugin.inbox` /
+      `processMailbox`, DXN-conformant — the CRM precedent's hyphenated tags are not), per-page
+      `Cursor.advance`, strictly-greater skip, sync-style `#process` progress (title as status
+      text), `Cancellation.signal` via `Pipeline.abortWith`.
+- [x] **`InboxOperation.ResetProcessCursor`** — clears max/min/lastTick/lastError; `reset: false`
+      when no cursor exists; cursor object reused (found by tag), never recreated.
+- [x] **Toolbar start/stop + reset** — app-graph `processMailbox` extension: Process/Stop primary
+      toolbar toggle (`Operation.schedule` so the run is a cancellable process; stop =
+      `ProgressRegistry.cancel`), reset as a context-menu action disabled mid-run.
+- [x] **`MailboxArticle` statusbar** — shows whichever of `#sync` / `#process` is active.
+- [x] **Routine template** — plugin-inbox contributes `org.dxos.routine.processMailbox`
+      (Automations companion, Mailbox subjects, disabled hourly timer, runnable = the operation).
+- [x] **Tests** — node unit tests (`process-mailbox.test.ts`: cursor tag + advance, incremental,
+      reset cycle, malformed `created` skip, foreign-cursor isolation) + stories-inbox
+      `ProcessPipeline.stories.tsx` play test (`run N → rerun 0 → reset → run N`, `N` = seeded
+      message count) green.
+- [x] **Storybook driven from the `@dxos/fixtures` mailbox corpus** — `.storybook/main.mts` vite
+      middleware serves `/fixtures/<name>.json` (node-side `fixturePath`, `DX_FIXTURES_DIR`
+      override); the story seeds from it (391 real messages) with a demo fallback so CI stays
+      green; play test made count-agnostic + load-stabilized. Verified live on :9016 and headless
+      with/without the fixture.
+- [x] **Progress monitor in the story** — ProgressPlugin + `useProgressMonitors` meters (with
+      cancel) in the harness statusbar; verified live (meter + cancel → interrupted run, committed
+      facts + cursor survive).
+- [x] **Fact-pipeline variant** — Analyze button runs `AnalyzeMailbox` against local Ollama
+      (`StoryAiPlugin`, strict:false, pageSize 1); `runFactPipeline` gained an `onProgress` seam and
+      `AnalyzeMailbox` now emits `#analyze` progress. Live-verified: meter ticks, facts committed.
+      Found + fixed TWO real bugs en route: (1) `AnalyzeMailbox` adopted other consumers' tagged
+      cursors on the same feed (it resumed from the process pipeline's position) — its finder now
+      matches only untagged cursors; (2) `runFactPipeline` streamed in feed order, so a newest-first
+      feed (archive import) advanced the cursor past everything after one message — messages are now
+      sorted ascending. Regression tests for both.
+- [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
+      meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
+- [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
+      triage work above) once the skeleton is proven live.
+- [ ] **Operation-level single-flight per mailbox** (from PR #12538 review) — nothing serializes a
+      routine-triggered run against a manual one, and a reset issued mid-run (UI-guarded only) could
+      be overwritten by a later page commit. Needs a mailbox-keyed guard at the operation layer (no
+      such primitive exists in the repo today); benign for the log-title body, matters once real
+      stages land. Documented as a v1 limitation in the spec's error-handling section.
+
+## Mailbox pipeline suite (2026-08-12, autonomous session)
+
+Six pipelines over the FeedPipeline workbench, all committed on PR #12538's branch. Test index:
+`packages/stories/stories-inbox/AUDIT.md`.
+
+### Tasks
+
+- [x] **`InboxOperation.ExtractCorrespondents`** — Persons (+ derived Organizations) for anyone the
+      user has sent or replied to; outbound signal recovered from an inbox-only corpus (replies
+      addressed directly to `me`); idempotent via the shared identity index. Live on the fixture:
+      391 scanned → 16 correspondents → 12 Persons, reruns 0.
+- [x] **`InboxOperation.ExtractSubscriptions`** — unsubscribe affordances (header + body links)
+      aggregated per sender onto the new `mailbox.subscriptions` field (wholesale replace). Live:
+      135 matched messages → 45 subscriptions.
+- [x] **`InboxOperation.ClassifyMailbox`** — LLM spam + category labeling (canonical system tags,
+      new `spam` tag), cursored ≤100-message batches, known-Person senders short-circuited (never
+      spam, never billed); strict structured output with lenient JSON-salvage fallback. Model-fixture
+      unit tests (recorded on Haiku) + opt-in live harness (`stories-inbox/src/test/classify-fixture.test.ts`).
+      Full-corpus run 2026-08-12: 391/391 — Updates 219, Promotions 58, Personal 52, Forums 34,
+      Social 15, Spam 13; 23 known-person shortcuts. Spend well under $1.
+- [x] **`buildContactGraph` (extractor-lib)** — contact extraction now derives an Organization from
+      a corporate sender domain (free-mail deny list; gate evaluated before the org exists so it
+      never admits its own sender); Extract/CRM/correspondents paths all converge on it.
+- [x] **`CrmOperation.EnrichImages`** — avatars (Gravatar SHA-256, `d=404`) + logos (Clearbit,
+      favicon fallback) through the hardened `AttachImage` path (refactored to a shared core).
+- [x] **`ProjectOperation.{UpdateProjectTasks, UpdateTravelLog, UpdateInvestorLog,
+CreateTrackingProject}`** — the routine→operation→artifact pattern: mailbox pipelines that
+      contribute to a Project (task set requests, regenerated Travel Bookings / Investor
+      Conversations documents, contact extraction), plus project-from-a-message (sender's corporate
+      domain defines the tracked group; feed-triggered runnable routine + backfill). The
+      kirkconsult admin example verified in unit tests and live (project + task + investor contact
+      created in-browser via the Projects button).
+
+### Follow-ups
+
+- [ ] **Story invoker wedge (env)** — in the dev storybook, an operation's FIRST invocation after a
+      server restart often hangs (lazy-handler vite load?) and `invokePromise` results render `{}`
+      even when the operation completes (ECHO side-effects land). Unit tests unaffected. Needs an
+      OperationInvoker-side look.
+- [ ] **One-shot index queries time out (20s) during indexing backlog** — `getIdentityIndex` /
+      `Feed.query` against a freshly imported 391-message space; settles after ~2 min. Retry or
+      backoff at the query layer would unblock pipelines run right after a big import.
+- [ ] **Investor-log LLM summaries live** — `summarize: true` path is implemented + degrades to the
+      digest; run against the fixture with the real key and eyeball quality.
+- [ ] **Travel/investor project templates** — register `ProjectCapabilities.Template`s wrapping the
+      new operations (scaffold + routine), mirroring `inboxResearch` / `crmProject`.
+- [ ] **Messages without `threadId` never render** in the mailbox conversation view
+      (`buildThreadSemiJoin`) — product edge found while seeding; decide fallback grouping.
+
 ## Overnight model-ladder experiment
 
 **Goal:** per task, find the smallest open-weight model that matches a cheap premier model (haiku) —

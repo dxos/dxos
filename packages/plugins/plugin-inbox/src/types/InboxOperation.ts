@@ -505,7 +505,7 @@ export const AnalyzeMailbox = Operation.make({
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore],
+  services: [AiService.AiService, Database.Service, FactStore, Trace.TraceService],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed messages are analyzed.',
@@ -531,6 +531,155 @@ export const AnalyzeMailbox = Operation.make({
   }),
 });
 
+/**
+ * Progress-registry key for a mailbox's process-pipeline monitor — the mailbox URI plus `#process`,
+ * so it coexists with the `#sync` monitor. `MailboxArticle` and the toolbar action subscribe to it.
+ */
+export const createProcessProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#process';
+
+/** Progress-registry key for a mailbox's fact-analysis monitor ({@link AnalyzeMailbox}). */
+export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#analyze';
+
+/** Progress-registry key for a mailbox's correspondent-extraction monitor ({@link ExtractCorrespondents}). */
+export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
+  Obj.getURI(mailbox).toString() + '#correspondents';
+
+export const ExtractCorrespondents = Operation.make({
+  meta: {
+    key: makeKey('extractCorrespondents'),
+    name: 'Extract Correspondents',
+    description: 'Creates Person objects for everyone the user has sent or replied to, derived from the mailbox feed.',
+    icon: 'ph--users--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed is scanned for correspondence.',
+    }),
+    me: Schema.Array(Schema.String).annotate({
+      description: "The user's own email addresses (outbound sender / inbound recipient identities).",
+    }),
+  }),
+  output: Schema.Struct({
+    /** Feed messages scanned. */
+    scanned: Schema.Number,
+    /** Distinct correspondents derived from the feed. */
+    correspondents: Schema.Number,
+    /** Person objects created (existing contacts are never duplicated). */
+    created: Schema.Number,
+    /** Organization objects created for correspondents' corporate domains (never duplicated). */
+    organizations: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
+
+/** Default page size for {@link ProcessMailbox} cursor commits. */
+export const DEFAULT_PROCESS_MAILBOX_PAGE_SIZE = 10;
+
+export const ProcessMailbox = Operation.make({
+  meta: {
+    key: makeKey('processMailbox'),
+    name: 'Process Mailbox',
+    description:
+      'Runs the cursored processing pipeline over the mailbox feed, resuming after the last processed message.',
+    icon: 'ph--play--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed messages are processed.',
+    }),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Number of messages processed per cursor advance.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    processed: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
+
+export const ResetProcessCursor = Operation.make({
+  meta: {
+    key: makeKey('resetProcessCursor'),
+    name: 'Reset Process Cursor',
+    description: 'Clears a pipeline cursor so the next run re-processes the whole mailbox feed.',
+    icon: 'ph--arrow-counter-clockwise--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose pipeline cursor is reset.',
+    }),
+    cursorId: Schema.optional(
+      Schema.String.annotate({
+        description: "Consumer cursor id to reset (e.g. 'classifyMailbox'); defaults to the process pipeline's.",
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    /** False when no cursor existed yet (nothing to reset). */
+    reset: Schema.Boolean,
+  }),
+}).pipe(Operation.idempotent);
+
+/** Progress-registry key for a mailbox's classification monitor ({@link ClassifyMailbox}). */
+export const createClassifyProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#classify';
+
+/** Hard per-run cap on messages classified — LLM batches must stay bounded. */
+export const MAX_CLASSIFY_MAILBOX_BATCH_LIMIT = 100;
+
+/** Default number of messages classified per run ({@link ClassifyMailbox}). */
+export const DEFAULT_CLASSIFY_MAILBOX_BATCH_LIMIT = 100;
+
+/** Default number of messages classified per LLM call. */
+export const DEFAULT_CLASSIFY_MAILBOX_PAGE_SIZE = 20;
+
+export const ClassifyMailbox = Operation.make({
+  meta: {
+    key: makeKey('classifyMailbox'),
+    name: 'Classify Mailbox',
+    description:
+      'LLM spam detection and category labeling over the mailbox feed; senders with a known Person are never spam.',
+    icon: 'ph--shield-check--regular',
+  },
+  services: [AiService.AiService, Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed messages are classified.',
+    }),
+    batchLimit: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Maximum messages classified this run (hard-capped at 100).',
+      }),
+    ),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Messages per LLM call (and per cursor advance).',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotate({ description: 'Classification model name; defaults to Claude Haiku.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotate({
+        description:
+          'Attempt strict structured output before the lenient JSON-salvage path; set false for providers that never honor it (saves one generation per page).',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    /** Messages classified this run (LLM + known-person shortcut). */
+    processed: Schema.Number,
+    /** Messages tagged spam. */
+    spam: Schema.Number,
+    /** Messages short-circuited by a known-Person sender (tagged personal, never spam). */
+    known: Schema.Number,
+    /** Messages still pending beyond this run's batch limit. */
+    remaining: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
+
 export const CreateProjectFromMessage = Operation.make({
   meta: {
     key: makeKey('createProjectFromMessage'),
@@ -551,6 +700,34 @@ export const CreateProjectFromMessage = Operation.make({
     projectId: Schema.String,
   }),
 });
+
+/** Progress-registry key for a mailbox's subscription-extraction monitor ({@link ExtractSubscriptions}). */
+export const createSubscriptionsProgressKey = (mailbox: Mailbox.Mailbox) =>
+  Obj.getURI(mailbox).toString() + '#subscriptions';
+
+export const ExtractSubscriptions = Operation.make({
+  meta: {
+    key: makeKey('extractSubscriptions'),
+    name: 'Extract Subscriptions',
+    description:
+      'Extracts unsubscribe links (header and body) from the mailbox feed and records the per-sender subscriptions on the mailbox.',
+    icon: 'ph--link--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed is scanned and whose subscriptions record is replaced.',
+    }),
+  }),
+  output: Schema.Struct({
+    /** Feed messages scanned. */
+    scanned: Schema.Number,
+    /** Messages carrying an unsubscribe affordance (header or body). */
+    matched: Schema.Number,
+    /** Distinct subscriptions recorded on the mailbox. */
+    subscriptions: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
 
 export const UnsubscribeSender = Operation.make({
   meta: {

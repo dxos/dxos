@@ -83,9 +83,15 @@ export const runFactPipeline = (options: {
   readonly pageSize: number;
   /** In-flight parallelism for the per-message extraction stage (defaults to 1 = serial). */
   readonly concurrency?: number;
+  /**
+   * Called once at run start (`processed: 0`) and after each committed page — the live-progress seam
+   * (e.g. a UI meter). `total` is the exact pending count: both dedup predicates (cursor prefilter,
+   * indexed-source set) are evaluated up-front over the already-materialized message list.
+   */
+  readonly onProgress?: (progress: { processed: number; facts: number; total: number }) => void;
 }): Effect.Effect<{ processed: number; facts: number }, never, FactStore | Database.Service> =>
   Effect.gen(function* () {
-    const { feed, cursor, extract, pageSize, concurrency = 1 } = options;
+    const { feed, cursor, extract, pageSize, concurrency = 1, onProgress } = options;
     const store = yield* FactStore;
 
     // Sources (== `messageSource`) already indexed — the precise skip; the cursor is only a coarse
@@ -101,13 +107,27 @@ export const runFactPipeline = (options: {
 
     let processed = 0;
     let facts = 0;
-    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    // Ascending key order is load-bearing: the sink advances `cursorKey` per committed page and the
+    // dedup stage reads it live, so on an unordered feed (e.g. an archive imported newest-first) the
+    // first-committed newest message would advance the cursor past every older one. A malformed
+    // `created` (NaN key) is dropped up front — it cannot be ordered against the cursor, and its NaN
+    // would poison the page's `Math.max` cursor advance.
+    const messages = (yield* Feed.query(feed, Filter.type(Message.Message)).run)
+      .filter((message) => Number.isFinite(Date.parse(message.created)))
+      .sort((left, right) => Date.parse(left.created) - Date.parse(right.created));
+    // Exact pending count for a determinate meter: ascending order means the live mid-run cursor
+    // advance can never drop a message this initial predicate kept (equal keys pass `< cursorKey`).
+    const total = messages.filter(
+      (message) => !(Date.parse(message.created) < cursorKey) && !indexedSources.has(messageSource(message)),
+    ).length;
     log.info('analyze: pipeline start', {
       messages: messages.length,
+      total,
       cursorKey,
       indexed: indexedSources.size,
       pageSize,
     });
+    onProgress?.({ processed: 0, facts: 0, total });
     yield* Stream.fromIterable(messages).pipe(
       Stage.map('facts-dedup', (message: Message.Message) =>
         Effect.sync(() =>
@@ -151,6 +171,7 @@ export const runFactPipeline = (options: {
               facts,
               cursorKey,
             });
+            onProgress?.({ processed, facts, total });
           }),
       }),
     );

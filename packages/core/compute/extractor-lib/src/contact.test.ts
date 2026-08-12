@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { overlayIdentityIndex } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
-import { buildContactFromActor } from './contact';
+import { buildContactFromActor, buildContactGraph, buildOrganizationFromActor } from './contact';
 import { identitySpecs } from './identity';
 import { getIdentityIndex } from './resolver';
 
@@ -73,5 +73,71 @@ describe('buildContactFromActor', () => {
 
     const shared = await EffectEx.runPromise(getIdentityIndex(db));
     expect(shared.lookup(Person.Person, { email: 'alice@dxos.org' })).toBeUndefined();
+  });
+});
+
+describe('buildContactGraph', () => {
+  let builder: EchoTestBuilder;
+  let db: EchoDatabase;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person] }));
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const overlay = () =>
+    EffectEx.runPromise(Effect.map(getIdentityIndex(db), (shared) => overlayIdentityIndex(identitySpecs, shared)));
+
+  test('creates the Organization for an unknown corporate domain and links the contact', async ({ expect }) => {
+    const index = await overlay();
+    const graph = await EffectEx.runPromise(
+      buildContactGraph({ name: 'Nicole', email: 'nicole@kirkconsult.com' }, db, { index }),
+    );
+    expect(graph.contact?.fullName).toBe('Nicole');
+    expect(graph.organization?.name).toBe('Kirkconsult');
+    expect(graph.organization?.website).toBe('https://kirkconsult.com');
+    expect(graph.contact?.organization?.target).toBe(graph.organization);
+  });
+
+  test('never mints an Organization for a free-mail domain', async ({ expect }) => {
+    const index = await overlay();
+    const graph = await EffectEx.runPromise(buildContactGraph({ email: 'alice@gmail.com' }, db, { index }));
+    expect(graph.contact).toBeDefined();
+    expect(graph.organization).toBeUndefined();
+  });
+
+  test('links an existing Organization instead of creating a second one', async ({ expect }) => {
+    db.add(Obj.make(Organization.Organization, { name: 'Kirk Consulting', website: 'https://kirkconsult.com' }));
+    await db.flush({ indexes: true });
+
+    const index = await overlay();
+    const graph = await EffectEx.runPromise(buildContactGraph({ email: 'nicole@kirkconsult.com' }, db, { index }));
+    expect(graph.contact?.organization?.target?.name).toBe('Kirk Consulting');
+    expect(graph.organization).toBeUndefined();
+  });
+
+  test('repeat senders at one domain share the run-created Organization', async ({ expect }) => {
+    const index = await overlay();
+    const first = await EffectEx.runPromise(buildContactGraph({ email: 'nicole@kirkconsult.com' }, db, { index }));
+    const second = await EffectEx.runPromise(buildContactGraph({ email: 'maggie@kirkconsult.com' }, db, { index }));
+    expect(first.organization).toBeDefined();
+    expect(second.organization).toBeUndefined();
+    expect(second.contact?.organization?.target).toBe(first.organization);
+  });
+
+  test('the gate is evaluated before the Organization exists (no self-admittance)', async ({ expect }) => {
+    // A non-outbound sender at an unknown org is denied — creating the org first would have
+    // admitted them through the known-Organization allow rule.
+    const index = await overlay();
+    const graph = await EffectEx.runPromise(
+      buildContactGraph({ email: 'stranger@unknowncorp.com' }, db, { index, signals: { outbound: false } }),
+    );
+    expect(graph.contact).toBeUndefined();
+    expect(graph.organization).toBeUndefined();
+    expect(await EffectEx.runPromise(buildOrganizationFromActor({ email: 'x@gmail.com' }, db))).toBeUndefined();
   });
 });

@@ -7,7 +7,7 @@ export * from './useActiveSpace';
 export * from './useHomeVisibility';
 export * from './useLayout';
 export * from './useObjectMenuItems';
-export * from './useProgress';
+export * from './useProgressMonitor';
 export * from './useSchemaFilter';
 export * from './useSettingsSpace';
 export * from './useShowItem';

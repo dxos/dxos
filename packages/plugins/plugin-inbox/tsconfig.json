@@ -50,6 +50,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -183,6 +186,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-settings"

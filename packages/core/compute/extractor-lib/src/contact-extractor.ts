@@ -8,7 +8,7 @@ import { type Obj, Type } from '@dxos/echo';
 import { type ExtractInput, type ExtractResult, type MatchResult, type ObjectExtractor } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import { buildContactFromActor } from './contact';
+import { buildContactGraph } from './contact';
 
 export const TEMPLATE_ID = 'org.dxos.extractor.contact';
 
@@ -19,20 +19,26 @@ export const matchMessage = (source: Obj.Any): MatchResult => {
 };
 
 /**
- * Turns the sender into a Person (+ Organization link by domain) via the shared helper. Deterministic
- * (`R = never`): requires neither `Resolver` nor `AiService`, so it composes into contexts without
- * those layers (e.g. a streaming pipeline stage). Does NOT write to the database.
+ * Turns the sender into a Person plus their Organization — linked when the domain resolves to a
+ * known Organization, freshly created (placeholder name/website from the domain) when it does not
+ * and the domain is corporate. Deterministic (`R = never`): requires neither `Resolver` nor
+ * `AiService`, so it composes into contexts without those layers (e.g. a streaming pipeline
+ * stage). Does NOT write to the database.
  */
 export const extractContact = ({ db, source }: ExtractInput): Effect.Effect<ExtractResult, never> =>
   Effect.gen(function* () {
     // `dispatch` may invoke an explicitly-selected extractor without `match()`, so guard a
-    // sender-less message rather than crashing in `buildContactFromActor`.
+    // sender-less message rather than crashing in `buildContactGraph`.
     const sender = (source as Message.Message).sender;
     if (!sender) {
       return { created: [], updated: [], relations: [] };
     }
-    const contact = yield* buildContactFromActor(sender, db);
-    return { created: contact ? [contact] : [], updated: [], relations: [] };
+    const { contact, organization } = yield* buildContactGraph(sender, db);
+    return {
+      created: [organization, contact].filter((object): object is NonNullable<typeof object> => !!object),
+      updated: [],
+      relations: [],
+    };
   });
 
 /**

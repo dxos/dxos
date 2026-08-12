@@ -11,6 +11,7 @@ import { Event, Message } from '@dxos/types';
 
 import {
   AppGraphBuilder,
+  AutomationTemplates,
   ContactExtractor,
   CreateObject,
   IdentitySpecs,
@@ -51,6 +52,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(InboxSettings),
+  Plugin.addModule(AutomationTemplates),
   Plugin.addModule(ContactExtractor),
   Plugin.addModule(SummarizeExtractor),
   Plugin.make,

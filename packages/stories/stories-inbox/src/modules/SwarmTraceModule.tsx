@@ -36,6 +36,7 @@ export const SwarmTraceModule = () => {
   if (!space) {
     return null;
   }
+
   return <SwarmTraceModuleContainer space={space} />;
 };
 

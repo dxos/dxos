@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useProgress } from '@dxos/app-toolkit/ui';
+import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -254,7 +254,7 @@ type ProgressGeneratorProps = ThemedClassName;
 // Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised.
 const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
   const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
-  const monitor = useProgress(TEST_PROGRESS_NAME);
+  const monitor = useProgressMonitor(TEST_PROGRESS_NAME);
   const running = monitor?.status === 'running';
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
