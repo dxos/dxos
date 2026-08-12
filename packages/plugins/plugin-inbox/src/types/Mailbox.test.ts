@@ -59,6 +59,17 @@ describe('Mailbox tags', () => {
   });
 });
 
+describe('identity addresses', () => {
+  test('recognizes a mailbox named after the account it syncs, and nothing else', ({ expect }) => {
+    expect(Mailbox.identityAddresses({ name: 'rich@example.com' })).toEqual(['rich@example.com']);
+    // Normalized, so the comparison against message senders is case-insensitive.
+    expect(Mailbox.identityAddresses({ name: '  Rich@Example.COM ' })).toEqual(['rich@example.com']);
+    // A display name is NOT an identity: deriving against it would invert every sent/received call.
+    expect(Mailbox.identityAddresses({ name: 'Inbox' })).toEqual([]);
+    expect(Mailbox.identityAddresses({})).toEqual([]);
+  });
+});
+
 describe('Mailbox annotations', () => {
   let builder: EchoTestBuilder;
 

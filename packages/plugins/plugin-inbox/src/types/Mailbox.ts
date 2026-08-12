@@ -322,6 +322,21 @@ export const isReplyable = (message: MessageLike, options: { senderClass?: 'pers
   return options.senderClass ? options.senderClass === 'person' : !isOrgSender(message);
 };
 
+// A bare address, used to recognize a mailbox named after the account it syncs.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Best-effort addresses for the mailbox owner — the `me` input correspondence derivation needs to
+ * tell outbound from inbound. The connectors seed `mailbox.name` from the connection's
+ * `accessToken.account`, so a synced mailbox usually names its own account. Anything else yields
+ * none: callers report the dependent stage as skipped rather than deriving against a wrong identity,
+ * which would silently invert every sent/received judgement.
+ */
+export const identityAddresses = (mailbox: Pick<Mailbox, 'name'>): string[] => {
+  const name = mailbox.name?.trim().toLowerCase();
+  return name && EMAIL_RE.test(name) ? [name] : [];
+};
+
 //
 // Annotations (the `annotations` feed).
 //

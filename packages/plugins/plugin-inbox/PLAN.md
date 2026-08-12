@@ -111,3 +111,145 @@ Recommendations:
 
 - [ ] Review remaining ui-theme fragments.
 - [ ] Review `useSelected` and `AttentionOperation.Select` (currently conflates active and selected).
+
+---
+
+# Mailbox pipelines → product
+
+_Added 2026-08-12. The sections above are the mosaic/focus refactor; this is a separate workstream._
+
+## Where we are
+
+Six pipelines exist as operations, each cursored/idempotent, unit-tested, and driveable from the
+`FeedPipeline` storybook workbench — but **none is reachable by a user**:
+
+| operation                   | cost          | what it does                                                             |
+| --------------------------- | ------------- | ------------------------------------------------------------------------ |
+| `ExtractCorrespondents`     | deterministic | Person (+ Organization) per sender the user has sent or replied to       |
+| `ExtractSubscriptions`      | deterministic | unsubscribe affordances → `mailbox.subscriptions`                        |
+| `ClassifyMailbox`           | cheap LLM     | spam verdict + category tags; known-Person senders never reach the model |
+| `AnalyzeMailbox`            | LLM           | RDF facts per message                                                    |
+| `CrmOperation.EnrichImages` | network       | avatars/logos                                                            |
+| `EnrichMailbox`             | —             | **orchestrator**: spawns the above in cascade order                      |
+
+Storage for derived text is settled: an **annotations feed** on the Mailbox (`Mailbox.annotations`),
+holding immutable `Message`s whose `parentMessage` names the subject and whose text block carries
+`disposition: 'summary'`. `Mailbox.mergeAnnotations` merges the two feeds on read; a re-derived
+summary appends and supersedes rather than overwriting. See `Mailbox.test.ts` → "Mailbox annotations".
+
+## Deliverable 1 — trigger the cascade from the mailbox
+
+The user syncs a mailbox, then runs enrichment manually (automation comes later, via a routine).
+
+- [ ] `app-graph-builder.ts`: an **Enrich** action on the Mailbox alongside the existing
+      Process/Stop toggle — `Operation.schedule(EnrichMailbox)` so the run is a cancellable process,
+      Stop wired to `ProgressRegistry.cancel(createEnrichProgressKey(mailbox))`.
+- [ ] `MailboxArticle` statusbar: surface `#enrich` alongside `#sync` / `#process`.
+- [ ] Routine template `org.dxos.routine.enrichMailbox` (disabled timer trigger, runnable =
+      `EnrichMailbox`), mirroring `org.dxos.routine.processMailbox`, so the same cascade can later
+      run unattended.
+- [ ] Live verification against a synced mailbox: meter appears, Stop mid-cascade leaves committed
+      cursors intact, re-run resumes.
+
+**Open question — the `me` input.** `ExtractCorrespondents` needs the user's own addresses to derive
+outbound correspondence. Candidate sources, in preference order: the mailbox's `Connection`
+`accessToken.account` (the Gmail/JMAP account, already stored), then HALO identity profile emails.
+Until resolved the cascade reports that stage as `skipped` rather than silently producing nothing.
+
+## Deliverable 2 — show summaries in the message article
+
+- [ ] `SummarizeMailbox` operation (tier 2): per-thread summary over **contact mail only** (gated on
+      a Person existing for the sender), writing `makeSummary` annotations to the annotations feed.
+      Budgeted per run like `ClassifyMailbox`; cursored on its own tag.
+- [ ] `useAnnotations(mailbox)` hook: queries the annotations feed and memoizes `mergeAnnotations`.
+- [ ] `MessageArticle` / `ConversationStack`: render the newest summary above the body when present,
+      with provenance (model, date) and no layout shift when absent.
+- [ ] Empty/stale states: no summary is the common case — the affordance must not imply failure.
+
+## Deliverable 3 — create a project from a message, with a chosen pipeline
+
+`CreateTrackingProject` already does this for one shape (track a sender's domain → tasks). Generalize
+it into a user-chosen pipeline.
+
+- [ ] Extend the operation with `scope` (`sender` | `domain` | `thread`) and `pipeline`
+      (`tasks` | `summaries` | `contacts` | `travel`), selecting which operation the scaffolded
+      routine binds as its runnable and with which inputs.
+- [ ] Message-context action **Create project…** opening a schema-driven form (name prefilled from
+      the sender/subject, scope, pipeline, schedule: manual | on new mail).
+- [ ] Keep artifact ownership as-is: tasks upserted by message-keyed foreign key (user edits survive
+      re-runs), documents regenerated wholesale.
+- [ ] The mailbox-global defaults stay available; the project supplies overrides (decision below).
+
+## How we develop pipelines and projects
+
+Three layers, each answering a **different question**. They are not maturity stages: a pipeline can
+pass every unit test and still be broken in the workbench, and can work in the workbench yet be
+unusable as a product feature.
+
+| layer               | question it answers                     | what it catches                                                | cost                     |
+| ------------------- | --------------------------------------- | -------------------------------------------------------------- | ------------------------ |
+| node unit tests     | Is the logic right?                     | idempotency, cursor semantics, gates, ordering, degradation    | seconds; always in CI    |
+| storybook workbench | Does it run in a real runtime?          | service wiring, progress/cancel, ECHO writes, layer collisions | ~1 min; play tests in CI |
+| product feature     | Can a user reach it and use the result? | discoverability, granularity, scheduling, artifact ownership   | manual + e2e             |
+
+Each layer earned its place empirically:
+
+- **Unit** found every logic defect that mattered: `AnalyzeMailbox` adopting another consumer's feed
+  cursor, the fact pipeline's order dependence (newest-first feed advanced the cursor past
+  everything), NaN timestamps poisoning a cursor. All are regression-tested.
+- **Workbench** found everything the unit layer structurally cannot: an `AiService` LayerSpec
+  collision (installing `AssistantPlugin` displaced the story's AI service and broke trip
+  extraction), unregistered surfaces, the invoker's first-invocation wedge, index-query timeouts
+  during an import backlog, and messages without `threadId` never rendering.
+- **Product** is the layer this plan exists to close: the pipelines were complete, green and
+  invisible.
+
+### The loop for a new pipeline
+
+1. **Pure core first.** Put the decisions in pure functions (`deriveCorrespondents`,
+   `mergeAnnotations`, `parseClassification`) and keep the Effect handler thin. The pure core is what
+   a unit test can pin without a database, and what survives refactors of the runtime around it.
+2. **Node test**: idempotency, the gate, and failure degradation. LLM stages record a **model
+   fixture** (committed under `.store/conversations`) so CI replays them offline with no key.
+3. **Workbench action** in `FeedPipeline`, plus a play test whenever the pipeline has cursor
+   semantics (run → re-run is a no-op → reset → re-run).
+4. **Product affordance last** — menu action, article surface, or project routine.
+5. **Update `AUDIT.md`** at each step; it is the index that keeps the test surface legible.
+
+### The fixture ladder — use the cheapest rung that proves the point
+
+| rung           | contents                                                   | used by                 |
+| -------------- | ---------------------------------------------------------- | ----------------------- |
+| demo seed      | 4 in-repo messages                                         | play tests, CI          |
+| canned-AI seed | trip fixture with scripted payloads                        | deterministic LLM paths |
+| model fixtures | recorded real turns, replayed offline                      | LLM unit tests in CI    |
+| real corpus    | 391 messages, git-ignored, PII                             | local development only  |
+| live LLM       | double-gated env (`DX_ANTHROPIC_API_KEY` + an opt-in flag) | costed runs, never CI   |
+
+### Pipelines vs projects — the dividing line
+
+- A **pipeline is a capability**: mailbox-global, parameterized, policy-free. It must never hard-code
+  which senders, domains or artifacts matter.
+- A **project is a policy** over pipelines: which scope, which artifacts, how often. It supplies the
+  parameters by binding an operation as a routine runnable with fixed inputs.
+- **Corollary**: when a pipeline needs a judgment call ("is this an investor?", "is this a request?"),
+  that parameter belongs in the project. Decided: **mailbox-global defaults plus project overrides**.
+- Cost class maps onto CI policy: deterministic tiers run in CI unconditionally, cheap-LLM tiers run
+  from fixtures, expensive tiers never run in CI.
+
+### Model policy
+
+Three cost tiers now want three different models, so per-stage routing should stop being ad hoc:
+`resolveModel(stageId)` (`@dxos/pipeline-email`) already exists — seed it from the model-ladder
+findings and let a run override it. Note the measured inversion: **labeling is where open weights
+fail** (best open model scored 0.70 against haiku's 1.00), while drafts and message summaries are
+where they are competitive. So the cheap-volume tier wants a cheap _hosted_ model, not a local one.
+
+## Known gaps carried into this work
+
+- **Single-flight per mailbox.** Nothing serializes a routine-triggered run against a manual one; the
+  cascade makes this more visible because a later tier consumes an earlier one's output.
+- **Watermark enforcement.** Ordering holds by construction inside `EnrichMailbox`, but nothing stops
+  a directly-invoked `ClassifyMailbox` from running ahead of contact extraction.
+- **Invoker first-invocation wedge** (dev storybook): the first invocation after a server restart can
+  hang, and results occasionally marshal as `{}` even when the operation completes.
