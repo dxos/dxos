@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type CapabilityManager } from '@dxos/app-framework';
-import { Database, Filter } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
@@ -14,7 +14,7 @@ import * as ConnectorSpec from '../types/ConnectorSpec';
 // recreation dialog), so going through the barrel would create a module cycle.
 import { isCursorForConnection } from '../util/cursor-predicates';
 import { findBindingForTarget } from '../util/find-binding';
-import { scaffoldSyncRoutine } from '../util/sync-routine';
+import { scaffoldConnectionSyncRoutine } from '../util/sync-routine';
 import { connectorIdsForTarget } from '../util/target-connectors';
 
 /**
@@ -24,42 +24,57 @@ import { connectorIdsForTarget } from '../util/target-connectors';
 export const SyncTemplateId = 'org.dxos.routine.connectorSync';
 
 /**
- * "Sync" automation template: the recurring sync routine for an externally-bound object (a Mailbox,
- * a Calendar), built from the binding's connector-declared trigger spec and sync operation. Contributed
- * so the routine is created through the create-routine form — the user sees and can edit the schedule —
- * instead of being persisted silently by the connection flow.
+ * "Sync" automation template: the account-level recurring sync routine for a Connection, built from
+ * the connector-declared trigger spec and bound to the SyncConnection fan-out — one routine covers
+ * every target of the account. Contributed so the routine is created through the create-routine
+ * form — the user sees and can edit the schedule — instead of being persisted silently.
  *
- * `appliesTo` can only check that a registered connector binds the subject's type; whether the subject
- * actually has a binding is verified in `scaffold` (a synchronous predicate cannot query for the cursor).
+ * The subject may be the Connection itself (the connection flow, the multi-target picker) or a bound
+ * target such as a Mailbox (a target's sync affordance); a target resolves to its binding's
+ * connection. `appliesTo` can only check the subject's shape; the binding/connector lookups happen
+ * in `scaffold` (a synchronous predicate cannot query).
  */
 export const makeSyncTemplate = (capabilities: CapabilityManager.CapabilityManager): RoutineCapabilities.Template => ({
   id: SyncTemplateId,
   label: 'Sync',
   icon: 'ph--arrows-clockwise--regular',
-  appliesTo: (subject) => subject != null && connectorIdsForTarget(subject, capabilities).length > 0,
+  appliesTo: (subject) =>
+    subject != null &&
+    (Obj.instanceOf(Connection.Connection, subject) || connectorIdsForTarget(subject, capabilities).length > 0),
   scaffold: ({ name, subject }) =>
     Effect.gen(function* () {
       if (!subject) {
         return yield* Effect.fail(new Error('Sync template requires a subject.'));
       }
-      const cursor = yield* findBindingForTarget(subject);
-      if (!cursor) {
-        return yield* Effect.fail(new Error('Subject has no external sync binding.'));
+
+      const connection = yield* resolveConnection(subject);
+      if (!connection) {
+        return yield* Effect.fail(new Error('Subject has no connection to sync.'));
       }
 
-      // The binding's connection carries the connector id; the connector declares the trigger spec
-      // and sync operation the routine binds.
-      const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
-      const connection = connections.find((connection) => isCursorForConnection(cursor, connection));
       const connector = capabilities
         .getAll(ConnectorSpec.Connector)
         .flat()
-        .find((entry) => entry.id === connection?.connectorId);
+        .find((entry) => entry.id === connection.connectorId);
       const sync = connector?.sync;
       if (!sync?.trigger) {
         return yield* Effect.fail(new Error('Connector declares no sync schedule.'));
       }
 
-      return scaffoldSyncRoutine({ name, cursor, operation: sync.operation, spec: sync.trigger, remote: sync.remote });
+      return scaffoldConnectionSyncRoutine({ name, connection, spec: sync.trigger, remote: sync.remote });
     }),
 });
+
+/** The subject's connection: the subject itself, or the connection its binding authenticates with. */
+const resolveConnection = (subject: Obj.Unknown) =>
+  Effect.gen(function* () {
+    if (Obj.instanceOf(Connection.Connection, subject)) {
+      return subject;
+    }
+    const cursor = yield* findBindingForTarget(subject);
+    if (!cursor) {
+      return undefined;
+    }
+    const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
+    return connections.find((connection) => isCursorForConnection(cursor, connection));
+  });

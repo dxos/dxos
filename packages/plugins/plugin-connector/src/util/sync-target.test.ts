@@ -39,6 +39,9 @@ describe('syncTarget', () => {
   /** Trigger ids force-run through the monitor. */
   const fired: string[] = [];
 
+  /** Events the force-runs carried (the pressed-first hint rides on `data.priority`). */
+  const firedEvents: unknown[] = [];
+
   const TestSync = Operation.make({
     meta: { key: DXN.make('org.dxos.test.syncTarget.sync'), name: 'Test Sync' },
     input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
@@ -54,15 +57,29 @@ describe('syncTarget', () => {
   const recordingMonitor: Trigger.Monitor = {
     triggers: Atom.make<readonly Trigger.State[]>([]),
     localDispatcherEnabled: false,
-    invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
+    invokeTrigger: ({ trigger, event }) =>
+      Effect.sync(() => {
+        fired.push(trigger.id);
+        firedEvents.push(event);
+      }),
   };
 
-  test('force-runs the sync trigger of the target’s binding', async ({ expect }) => {
+  test('force-runs a legacy per-binding sync trigger', async ({ expect }) => {
     const { target, trigger } = await setup();
 
     await run(target);
 
-    expect(fired).toEqual([trigger.id]);
+    expect(fired).toEqual([trigger?.id]);
+  });
+
+  test('force-runs the account trigger with the pressed binding as priority', async ({ expect }) => {
+    const { target, cursor, accountTrigger } = await setup({ legacy: false, account: true });
+
+    await run(target);
+
+    expect(fired).toEqual([accountTrigger?.id]);
+    // Pressed-first ordering: the fire event carries the pressed binding for the input template.
+    expect(firedEvents).toEqual([{ data: { priority: cursor.id } }]);
   });
 
   test('does nothing for an object with no binding', async ({ expect }) => {
@@ -86,8 +103,9 @@ describe('syncTarget', () => {
     return manager;
   };
 
-  const setup = async () => {
+  const setup = async ({ legacy = true, account = false }: { legacy?: boolean; account?: boolean } = {}) => {
     fired.length = 0;
+    firedEvents.length = 0;
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([
       Connection.Connection,
@@ -97,15 +115,32 @@ describe('syncTarget', () => {
       Expando.Expando,
     ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok' }));
-    db.add(Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }));
+    const connection = db.add(
+      Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }),
+    );
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
     const cursor = db.add(Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(target) }));
     invariant(Cursor.isExternal(cursor));
-    const trigger = db.add(
-      Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *'), input: { binding: Ref.make(cursor) } }),
-    );
+    const trigger = legacy
+      ? db.add(
+          Trigger.make({
+            enabled: true,
+            spec: Trigger.specTimer('*/10 * * * *'),
+            input: { binding: Ref.make(cursor) },
+          }),
+        )
+      : undefined;
+    const accountTrigger = account
+      ? db.add(
+          Trigger.make({
+            enabled: true,
+            spec: Trigger.specTimer('*/10 * * * *'),
+            input: { connection: Ref.make(connection), priority: '{{event.data.priority}}' },
+          }),
+        )
+      : undefined;
     await db.flush({ indexes: true });
-    return { db, target, trigger };
+    return { db, target, cursor, trigger, accountTrigger };
   };
 
   const run = (target: Obj.Unknown) =>

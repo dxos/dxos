@@ -11,14 +11,14 @@ export {
   autoBindSingleConnection,
   bindConnectionToTarget,
   connectorIdsForTarget,
-  createSyncRoutine,
-  ensureSyncTrigger,
   findBindingForTarget,
   findSyncTriggerForBinding,
+  findSyncTriggerForConnection,
   fireSyncTrigger,
   isCursorForConnection,
   isCursorForTarget,
-  syncBinding,
+  runConnectionSync,
+  scaffoldConnectionSyncRoutine,
   syncTarget,
 } from './util';
 export * as ConnectorEvents from './types/ConnectorEvents';

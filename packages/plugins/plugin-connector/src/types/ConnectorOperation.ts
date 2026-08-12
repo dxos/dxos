@@ -16,12 +16,13 @@ import { meta } from '#meta';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
- * Syncs every external-sync cursor authenticated by a Connection. Centralises the fan-out so the
- * graph-builder action and the React hook share the same code path. A cursor whose sync Routine
- * exists is synced by force-running that Routine's trigger, so the run is driven by the trigger
- * dispatcher exactly as a scheduled fire would be; a cursor with no Routine falls back to invoking
- * {@link ConnectorEntry.sync} directly. `Capability.Service` is declared as a service so the handler
- * can resolve the connector entry and the trigger monitor at invocation time.
+ * Syncs every external-sync cursor authenticated by a Connection: the runnable of the connection's
+ * sync Routine, and the shared fan-out for the graph-builder action and the React hook. Each
+ * binding's sync operation is invoked directly; when any binding requests continuation
+ * (`Operation.runAgain`, a capped run with work left) the whole operation re-raises it after
+ * attempting every binding, so a dispatcher-driven run resumes — the durable per-binding cursors
+ * make the re-run pick up where it left off. `Capability.Service` is declared as a service so the
+ * handler can resolve the connector entry at invocation time.
  */
 export const SyncConnection = Operation.make({
   meta: {
@@ -32,6 +33,12 @@ export const SyncConnection = Operation.make({
   },
   input: Schema.Struct({
     connection: Ref.Ref(Connection.Connection),
+    /**
+     * Id of the cursor to sync first (pressed-first ordering): a manual sync from one target's
+     * button carries its binding here via the trigger-event template, so the pressed target grabs
+     * a fan-out slot immediately while its siblings queue. Scheduled fires leave it unset.
+     */
+    priority: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
     synced: Schema.Number,

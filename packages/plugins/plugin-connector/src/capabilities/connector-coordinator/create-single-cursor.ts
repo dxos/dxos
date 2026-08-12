@@ -9,9 +9,9 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 
 import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { findSyncTriggerForBinding, findSyncTriggerForConnection } from '../../util';
 
 /** Outcome of binding a single-target connector. */
 export type SingleCursorResult = {
@@ -71,7 +71,7 @@ export const createSingleCursor = (
       target: target.id,
       bound: existingTarget ? 'existing' : 'materialized',
     });
-    const needsSyncRoutine = !!connector.sync?.trigger && !(yield* hasSyncRoutine(target, connector.sync.trigger.kind));
+    const needsSyncRoutine = !!connector.sync?.trigger && !(yield* hasSyncRoutine(connection, cursor));
     // Flush the index so a caller that queries cursors right after (e.g. the mailbox/calendar
     // article this navigates to, or the sync template's scaffold) observes the new binding
     // immediately, matching `reconcileCursors`.
@@ -93,9 +93,16 @@ export const createSingleCursor = (
     ),
   );
 
-/** Whether `target` already has a connected routine triggered by the same spec kind (mirrors the silent-creation dedup). */
-const hasSyncRoutine = (target: Obj.Unknown, kind: string): Effect.Effect<boolean, never, Database.Service> =>
+/** Whether a sync routine already covers this binding: the connection's account-level trigger, or a legacy per-binding one. */
+const hasSyncRoutine = (
+  connection: Connection.Connection,
+  cursor: Cursor.ExternalCursor,
+): Effect.Effect<boolean, never, Database.Service> =>
   Effect.gen(function* () {
-    const connected = yield* Database.query(connectedRoutinesQuery(target)).run;
-    return connected.some((routine) => routine.triggers.some((ref) => ref.target?.spec?.kind === kind));
+    const connectionTrigger = yield* findSyncTriggerForConnection(connection);
+    if (connectionTrigger) {
+      return true;
+    }
+    const legacyTrigger = yield* findSyncTriggerForBinding(cursor);
+    return !!legacyTrigger;
   }).pipe(Effect.orDie);

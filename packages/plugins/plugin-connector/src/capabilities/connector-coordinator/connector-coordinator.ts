@@ -6,6 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -30,6 +31,7 @@ import { meta } from '../../meta';
 import { SyncTemplateId } from '../../templates';
 import * as ConnectorCoordination from '../../types/ConnectorCoordination';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { findSyncTriggerForConnection } from '../../util';
 import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
 import {
@@ -175,19 +177,21 @@ const navigateToNewConnection = (
  */
 const openCreateSyncRoutineDialog = (
   invoker: Operation.OperationService,
+  capabilities: CapabilityManager.CapabilityManager,
   db: Database.Database,
   connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
-  target: Obj.Unknown,
+  subject: Obj.Unknown,
 ): Effect.Effect<void, never> =>
   invoker
     .invoke(SpaceOperation.OpenCreateObject, {
       target: db,
       typename: Type.getTypename(Routine.Routine),
-      initialFormValues: { templateId: SyncTemplateId, subject: target },
+      // `subject` may be the connection or a bound target — the template resolves either to the account.
+      initialFormValues: { templateId: SyncTemplateId, subject },
       navigable: false,
       onCreateObject: () => {
-        Effect.runFork(autoSyncConnection(invoker, db, connector, connection));
+        Effect.runFork(autoSyncConnection(invoker, capabilities, db, connector, connection));
       },
     })
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('open create sync routine dialog failed', { error }))));
@@ -217,6 +221,7 @@ const openSyncTargetsDialogAfterConnectionCreated = (
 
 const finalizePendingEntry = (
   invoker: Operation.OperationService,
+  capabilities: CapabilityManager.CapabilityManager,
   serviceResolver: ServiceResolver.ServiceResolver,
   entry: Pending,
 ): Effect.Effect<void, never> =>
@@ -256,10 +261,10 @@ const finalizePendingEntry = (
       }
       if (bound?.needsSyncRoutine) {
         // Ordered after navigation so the dialog opens over the surface the user lands on.
-        yield* openCreateSyncRoutineDialog(invoker, db, connector, persistedConnection, bound.target);
+        yield* openCreateSyncRoutineDialog(invoker, capabilities, db, connector, persistedConnection, bound.target);
       } else {
         // Ordered after navigation so the user lands on the target while the first sync fills it in.
-        yield* autoSyncConnection(invoker, db, connector, persistedConnection);
+        yield* autoSyncConnection(invoker, capabilities, db, connector, persistedConnection);
       }
     }
   });
@@ -353,7 +358,7 @@ export default Capability.makeModule(
         if (entry.mode === 'reauth') {
           return;
         }
-        yield* finalizePendingEntry(invoker, serviceResolver, entry);
+        yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, entry);
       });
 
     const handleMessage = (event: MessageEvent): void => {
@@ -516,7 +521,7 @@ export default Capability.makeModule(
           if (inMemory.mode === 'reauth') {
             return;
           }
-          yield* finalizePendingEntry(invoker, serviceResolver, inMemory);
+          yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, inMemory);
           return;
         }
 
@@ -589,7 +594,7 @@ export default Capability.makeModule(
         }
         const existingTarget = existingTargetUri ? space.db.makeRef<Obj.Any>(existingTargetUri) : undefined;
 
-        yield* finalizePendingEntry(invoker, serviceResolver, {
+        yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, {
           mode: 'create',
           token,
           connection,
@@ -621,7 +626,7 @@ export default Capability.makeModule(
           accessToken: Ref.make(accessToken),
         });
 
-        yield* finalizePendingEntry(invoker, serviceResolver, {
+        yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, {
           mode: 'create',
           token: accessToken,
           connection,
@@ -648,7 +653,7 @@ export default Capability.makeModule(
         const result = yield* connector.credentialForm.onSubmit({ values, connector, db });
 
         if (result.kind === 'complete') {
-          yield* finalizePendingEntry(invoker, serviceResolver, {
+          yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, {
             mode: 'create',
             token: result.accessToken,
             connection: result.connection,
@@ -689,9 +694,17 @@ export default Capability.makeModule(
           existingTarget,
         });
         // Initial setup of a multi-target connector: the connection had no bindings until this
-        // submit, so this is the first-sync moment. A later change of targets is left to the user.
+        // submit, so this is the routine-offer / first-sync moment. A later change of targets is
+        // left to the user — new bindings are covered by the account routine's fan-out.
         if (existing === 0 && added > 0) {
-          yield* autoSyncConnection(invoker, db, connector, connection);
+          const trigger = connector.sync?.trigger ? yield* findSyncTriggerForConnection(connection) : undefined;
+          if (connector.sync?.trigger && !trigger) {
+            // One form for the whole account, regardless of how many targets were picked; saving
+            // runs the first sync.
+            yield* openCreateSyncRoutineDialog(invoker, pluginContext, db, connector, connection, connection);
+          } else {
+            yield* autoSyncConnection(invoker, pluginContext, db, connector, connection);
+          }
         }
         return { added, removed };
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));

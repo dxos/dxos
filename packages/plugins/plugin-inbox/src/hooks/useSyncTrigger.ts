@@ -46,19 +46,33 @@ export const useSyncTrigger = ({
 } => {
   const [pending, setPending] = useState(false);
   const { invokePromise } = useOperationInvoker();
-  // A sync trigger doesn't reference its target directly — its `binding` refs a Cursor whose `spec.target`
-  // is the target — so traverse the reverse-ref chain subject ← Cursor ← Trigger in a single query.
-  const triggers = useQuery(
+  const { connection } = useTargetConnection(subject);
+  const connector = useConnectorEntry(connection, connectors);
+
+  // The account-level sync trigger references the connection as its `input.connection`; a legacy
+  // per-binding trigger references the subject's Cursor as its `input.binding`. Query both reverse-ref
+  // chains and prefer the account-level trigger.
+  const connectionTriggers = useQuery(
+    // Skip until the connection resolves — passing no db yields no results without breaking hook order.
+    connection ? db : undefined,
+    Query.select(Filter.id(connection?.id ?? subject.id))
+      .referencedBy(Trigger.Trigger)
+      .debugLabel('plugin-inbox.useSyncTrigger.connection'),
+  );
+  const legacyTriggers = useQuery(
     db,
     Query.select(Filter.id(subject.id))
       .referencedBy(Cursor.Cursor)
       .referencedBy(Trigger.Trigger)
-      .debugLabel('plugin-inbox.useSyncTrigger'),
+      .debugLabel('plugin-inbox.useSyncTrigger.binding'),
   );
-  const { connection } = useTargetConnection(subject);
-  const connector = useConnectorEntry(connection, connectors);
 
-  const syncTrigger = useMemo(() => triggers.find((trigger) => trigger.spec?.kind === 'timer'), [triggers]);
+  const syncTrigger = useMemo(
+    () =>
+      connectionTriggers.find((trigger) => trigger.spec?.kind === 'timer') ??
+      legacyTriggers.find((trigger) => trigger.spec?.kind === 'timer'),
+    [connectionTriggers, legacyTriggers],
+  );
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');
 

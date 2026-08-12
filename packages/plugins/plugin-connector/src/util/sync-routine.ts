@@ -2,84 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Deferred from 'effect/Deferred';
-import * as Effect from 'effect/Effect';
-import * as FiberId from 'effect/FiberId';
-
-import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
-import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
+import { Obj, Ref } from '@dxos/echo';
+import { type Connection } from '@dxos/link';
+import { makeRoutine } from '@dxos/plugin-routine';
 
-import * as ConnectorSpec from '../types/ConnectorSpec';
-import { findSyncTriggerForBinding } from './sync-trigger';
+import * as ConnectorOperation from '../types/ConnectorOperation';
 
 /**
- * Creates the sync Routine for `cursor`: a Routine wrapping a trigger built from the connector's
- * declared `sync.trigger` spec — running on EDGE when the connector declares `sync.remote`, otherwise
- * locally — wired to the connector's sync operation with `binding` bound to `cursor`. `input` carries
- * only `binding`, matching the sync operation's input schema — the routine is related to `target` by
- * query ({@link connectedRoutinesQuery}, surfaced in the routines companion), which reaches it through
- * `binding` → the cursor → the cursor's `spec.target`, so no target ref is smuggled into the operation
- * input. Returns the existing trigger instead when a sync routine is already connected to `target`.
+ * Build the sync Routine for `connection` as a fully-wired, unpersisted draft graph: one Routine per
+ * account, wrapping a trigger built from the connector's declared `sync.trigger` spec and bound to
+ * {@link ConnectorOperation.SyncConnection} — which fans out over every binding of the connection, so
+ * targets added or removed later are covered without touching the routine. The `priority` input is an
+ * event template: a manual sync from one target's button carries its binding on the fire event
+ * (pressed-first ordering), while scheduled fires resolve it to nothing.
+ *
+ * Consumed by the connector's routine template, where the draft is shown editable in the
+ * create-routine form and persisted on Save — sync routines are never persisted silently.
  */
-/**
- * Creation in flight, keyed by binding. The existence check below is an index query, so it cannot see
- * a Routine added moments earlier — without this, callers racing on one binding each observe none and
- * persist a schedule, syncing it twice a period. Process-local: a second peer racing needs the
- * one-routine-per-binding invariant at the data layer.
- */
-const creating = new Map<string, Deferred.Deferred<Trigger.Trigger>>();
-
-export const createSyncRoutine = ({
-  target,
-  cursor,
-  operation,
-  spec,
-  remote,
-}: {
-  target: Obj.Unknown;
-  cursor: Cursor.ExternalCursor;
-  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
-  spec: Trigger.Spec;
-  remote?: boolean;
-}): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
-  // Claimed synchronously, before the first yield point, so no caller can interleave between the
-  // lookup and the claim.
-  Effect.suspend(() => {
-    const inFlight = creating.get(cursor.id);
-    if (inFlight) {
-      return Deferred.await(inFlight);
-    }
-
-    const deferred = Deferred.unsafeMake<Trigger.Trigger>(FiberId.none);
-    creating.set(cursor.id, deferred);
-    return createRoutine({ target, cursor, operation, spec, remote }).pipe(
-      // Waiters see the same outcome, including a defect, rather than hanging on the deferred.
-      Effect.onExit((exit) => Deferred.done(deferred, exit)),
-      Effect.ensuring(Effect.sync(() => creating.delete(cursor.id))),
-    );
-  });
-
-/**
- * Build the sync Routine for `cursor` as a fully-wired, unpersisted draft graph: a Routine wrapping a
- * trigger built from the connector's declared `sync.trigger` spec, bound to the connector's sync
- * operation with `binding` = the cursor. Shared by the silent creation path ({@link createSyncRoutine})
- * and the connector's routine template, where the draft is shown editable in the create-routine form
- * and persisted on Save.
- */
-export const scaffoldSyncRoutine = ({
+export const scaffoldConnectionSyncRoutine = ({
   name,
-  cursor,
-  operation,
+  connection,
   spec,
   remote,
 }: {
   name?: string;
-  cursor: Cursor.ExternalCursor;
-  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
+  connection: Connection.Connection;
   spec: Trigger.Spec;
   remote?: boolean;
 }) => {
@@ -89,76 +37,20 @@ export const scaffoldSyncRoutine = ({
     enabled: true,
     ...(remote ? { remote: true } : {}),
     spec,
-    input: { binding: Ref.make(cursor) },
+    input: { connection: Ref.make(connection), priority: '{{event.data.priority}}' },
   });
 
   return makeRoutine({
-    name: name ?? 'Sync',
-    // A connector's sync is statically defined and already in the registry, so the routine refers to
-    // it by key rather than persisting a copy of it into the space.
-    spec: { kind: 'runnable', runnable: Ref.fromURI(operation.meta.key) },
+    // Label the routine after the account so multiple connections stay distinguishable.
+    name: name ?? syncRoutineName(connection),
+    // SyncConnection is statically defined and already in the registry, so the routine refers to it
+    // by key rather than persisting a copy of it into the space.
+    spec: { kind: 'runnable', runnable: Ref.fromURI(ConnectorOperation.SyncConnection.meta.key) },
     trigger,
   });
 };
 
-const createRoutine = ({
-  target,
-  cursor,
-  operation,
-  spec,
-  remote,
-}: {
-  target: Obj.Unknown;
-  cursor: Cursor.ExternalCursor;
-  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
-  spec: Trigger.Spec;
-  remote?: boolean;
-}): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
-  Effect.gen(function* () {
-    const connected = yield* Database.query(connectedRoutinesQuery(target)).run;
-    for (const routine of connected) {
-      const existingTrigger = routine.triggers.find((ref) => ref.target?.spec?.kind === spec.kind)?.target;
-      if (existingTrigger) {
-        return existingTrigger;
-      }
-    }
-
-    const routine = scaffoldSyncRoutine({ cursor, operation, spec, remote });
-    yield* Database.add(routine);
-    const trigger = routine.triggers[0]?.target;
-    invariant(Obj.instanceOf(Trigger.Trigger, trigger));
-    return trigger;
-  });
-
-/**
- * The trigger of `cursor`'s sync Routine, creating the Routine when the binding has none yet.
- * `undefined` when the connector declares no `sync.trigger` — such a connector syncs on demand only,
- * so its sync operation is invoked directly instead of through a trigger.
- */
-export const ensureSyncTrigger = ({
-  connector,
-  cursor,
-}: {
-  connector: ConnectorSpec.ConnectorEntry;
-  cursor: Cursor.ExternalCursor;
-}): Effect.Effect<Trigger.Trigger | undefined, never, Database.Service> =>
-  Effect.gen(function* () {
-    const sync = connector.sync;
-    if (!sync?.trigger) {
-      return undefined;
-    }
-    const existing = yield* findSyncTriggerForBinding(cursor);
-    if (existing) {
-      return existing;
-    }
-    // A binding whose target ref no longer resolves is broken beyond what routine setup can fix, and
-    // a scheduled connector has no direct-sync path to fall back to.
-    const target = yield* Database.load(cursor.spec.target).pipe(Effect.orDie);
-    return yield* createSyncRoutine({
-      target,
-      cursor,
-      operation: sync.operation,
-      spec: sync.trigger,
-      remote: sync.remote,
-    });
-  });
+const syncRoutineName = (connection: Connection.Connection): string => {
+  const label = Obj.getLabel(connection) ?? connection.name;
+  return label ? `Sync — ${label}` : 'Sync';
+};

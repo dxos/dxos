@@ -11,15 +11,28 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trigger from '@dxos/compute/Trigger';
 import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Filter, type Key, Query } from '@dxos/echo';
-import { type Cursor } from '@dxos/link';
+import { type Connection, type Cursor } from '@dxos/link';
 
 /**
- * Finds the sync trigger bound to `cursor`: a sync Routine's trigger carries the cursor as its
- * `input.binding`, so the reverse-ref from the cursor reaches it whether or not a Routine owns it.
+ * Finds the (legacy, per-binding) sync trigger bound to `cursor`: an older sync Routine's trigger
+ * carries the cursor as its `input.binding`, so the reverse-ref from the cursor reaches it whether
+ * or not a Routine owns it. New sync routines are connection-level — see
+ * {@link findSyncTriggerForConnection}.
  */
 export const findSyncTriggerForBinding = (cursor: Cursor.ExternalCursor) =>
   Effect.gen(function* () {
     const triggers = yield* Database.query(Query.select(Filter.id(cursor.id)).referencedBy(Trigger.Trigger)).run;
+    return triggers.find((trigger) => !!trigger.spec);
+  });
+
+/**
+ * Finds the sync trigger of `connection`'s sync Routine: the trigger carries the connection as its
+ * `input.connection`, so the reverse-ref from the connection reaches it whether or not a Routine
+ * owns it.
+ */
+export const findSyncTriggerForConnection = (connection: Connection.Connection) =>
+  Effect.gen(function* () {
+    const triggers = yield* Database.query(Query.select(Filter.id(connection.id)).referencedBy(Trigger.Trigger)).run;
     return triggers.find((trigger) => !!trigger.spec);
   });
 
@@ -46,10 +59,19 @@ export const syncTriggerMonitorLayer = (
  * Force-runs a sync trigger through the monitor, which routes a `remote` trigger to EDGE and a local
  * one to the trigger dispatcher — the dispatcher being what carries the run's durable execution, so
  * a batched sync continues past its first capped run. The synthetic tick stands in for the timer
- * event a scheduled fire would have supplied.
+ * event a scheduled fire would have supplied. `data` (e.g. the pressed binding for pressed-first
+ * ordering) rides on a {@link TriggerEvent.DirectEvent} so the trigger's input templates
+ * (`{{event.data.*}}`) can pick it up; the dispatcher keeps the event across `runAgain` retries, so
+ * the hint survives continuation rounds.
  */
-export const fireSyncTrigger = (trigger: Trigger.Trigger): Effect.Effect<void, never, Trigger.TriggerMonitorService> =>
+export const fireSyncTrigger = (
+  trigger: Trigger.Trigger,
+  data?: Record<string, any>,
+): Effect.Effect<void, never, Trigger.TriggerMonitorService> =>
   Effect.gen(function* () {
     const monitor = yield* Trigger.TriggerMonitorService;
-    yield* monitor.invokeTrigger({ trigger, event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent });
+    const event = data
+      ? ({ data } satisfies TriggerEvent.DirectEvent)
+      : ({ tick: Date.now() } satisfies TriggerEvent.TimerEvent);
+    yield* monitor.invokeTrigger({ trigger, event });
   });

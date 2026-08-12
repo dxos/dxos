@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 
 import * as ConnectorSpec from '../../types/ConnectorSpec';
-import { ensureSyncTrigger, isCursorForConnection } from '../../util';
+import { isCursorForConnection } from '../../util';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
@@ -111,10 +111,9 @@ export const reconcileCursors = ({
         }),
       );
       invariant(Cursor.isExternal(cursor));
-      // Sets up recurring background sync for the binding, if the connector declares a trigger
-      // spec. Not specially protected — a failure here propagates like any other step in this loop
-      // (e.g. a `materializeTarget` failure); this function has no blanket catch of its own today.
-      yield* ensureSyncTrigger({ connector, cursor });
+      // No sync routine is created here: the connection's single account-level routine covers every
+      // binding (its fan-out queries the cursors at run time), and the routine itself is offered
+      // through the create-routine form by the caller on initial setup.
       added++;
     }
 

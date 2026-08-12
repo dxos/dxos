@@ -11,18 +11,18 @@ import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { ensureSyncTrigger } from './sync-routine';
 import { connectorIdsForTarget } from './target-connectors';
 
 /**
  * Bind `target` to an existing `connection` as a sync target: an external cursor authenticated by
- * the connection's access token, plus the recurring sync trigger the connector declares. Shared by
- * the connector-auth menu's reuse entry and {@link autoBindSingleConnection} so a binding made
- * either way is identical.
+ * the connection's access token. The new binding is covered by the connection's account-level sync
+ * routine (its fan-out queries the cursors at run time), so no routine is created here — and when
+ * the account has none, the target's own sync affordance offers it through the create-routine form.
+ * Shared by the connector-auth menu's reuse entry and {@link autoBindSingleConnection} so a binding
+ * made either way is identical.
  */
 export const bindConnectionToTarget = ({
   connection,
-  connector,
   target,
 }: {
   connection: Connection.Connection;
@@ -38,9 +38,6 @@ export const bindConnectionToTarget = ({
     }
     const cursor = yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target }));
     invariant(Cursor.isExternal(cursor));
-    if (connector) {
-      yield* ensureSyncTrigger({ connector, cursor });
-    }
     return cursor;
   }).pipe(Effect.orDie);
 
