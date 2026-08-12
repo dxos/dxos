@@ -14,7 +14,10 @@ import { meta } from '#meta';
 
 import * as ObservabilityOperation from './types/ObservabilityOperation';
 
-// TODO(wittjosiah): Hook up.
+// TODO(wittjosiah): Hook up — `SendEvent` drops its event for the same two reasons as the workerd
+//   variant (no non-browser transport, no way to read the user's telemetry preference); see the
+//   note in `ObservabilityPlugin.workerd.ts`. Node has fewer platform constraints than workerd, so
+//   it can likely share whatever sink that gap is closed with.
 export const ObservabilityPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(
     Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
