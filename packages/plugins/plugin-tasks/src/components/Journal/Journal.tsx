@@ -12,9 +12,9 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { TasksUtil } from '#types';
 
 import { type JournalEntry as JournalEntryObject, type Journal as JournalObject, makeEntry } from '../../types/Journal';
-import * as TasksUtil from '../../types/TasksUtil';
 import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;

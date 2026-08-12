@@ -13,7 +13,8 @@ import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
-import * as ProjectOperation from '../types/ProjectOperation';
+import { ProjectOperation } from '#types';
+
 import { createProjectActionExtension } from './app-graph-builder';
 
 describe('project app graph builder', () => {

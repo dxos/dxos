@@ -15,10 +15,9 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+import { SheetRange, SheetUtil } from '#types';
 
 import { type SheetModel } from '../../model';
-import * as SheetRange from '../../types/SheetRange';
-import * as SheetUtil from '../../types/SheetUtil';
 import { useSheetContext } from '../SheetRoot';
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
 

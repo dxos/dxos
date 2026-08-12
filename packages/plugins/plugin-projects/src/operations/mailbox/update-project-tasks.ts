@@ -11,7 +11,8 @@ import { log } from '@dxos/log';
 import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
-import * as ProjectOperation from '../../types/ProjectOperation';
+import { ProjectOperation } from '#types';
+
 import { messagesAscending, senderMatches, upsertTask } from './helpers';
 
 /** Task title/description for a tracked request message. */

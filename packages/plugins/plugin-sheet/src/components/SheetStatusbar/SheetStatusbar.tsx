@@ -9,7 +9,8 @@ import { Icon } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import * as SheetUtil from '../../types/SheetUtil';
+import { SheetUtil } from '#types';
+
 import { useSheetContext } from '../SheetRoot';
 
 export type SheetStatusbarProps = {};

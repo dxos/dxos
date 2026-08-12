@@ -27,6 +27,7 @@ export default defineConfig({
     'SheetCapabilities': 'src/types/SheetCapabilities.ts',
     'SheetEvents': 'src/types/SheetEvents.ts',
     'SheetOperation': 'src/types/SheetOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' }, storybook: true },

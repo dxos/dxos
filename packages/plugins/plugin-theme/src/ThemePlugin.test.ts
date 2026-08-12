@@ -12,9 +12,9 @@ import { createTestApp } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { ThemePlugin } from '#plugin';
+import { ThemeCapabilities } from '#types';
 
 import { meta } from './meta';
-import * as ThemeCapabilities from './types/ThemeCapabilities';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

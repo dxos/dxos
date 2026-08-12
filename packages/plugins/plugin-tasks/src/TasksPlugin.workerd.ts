@@ -7,8 +7,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import * as Journal from './types/Journal';
+import { Journal } from '#types';
 
 // Declared here rather than imported from `#capabilities`: that barrel pulls the React surface
 // into worker bundles.

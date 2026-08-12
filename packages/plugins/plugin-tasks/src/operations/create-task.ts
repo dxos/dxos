@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import * as TaskOperation from '../types/TaskOperation';
+import { TaskOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOperation.CreateTask.pipe(
   Operation.withHandler(

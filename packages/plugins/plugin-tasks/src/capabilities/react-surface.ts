@@ -12,8 +12,7 @@ import { Outline, TaskSet } from '@dxos/types';
 
 import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog, TaskSetArticle } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
-
-import * as Journal from '../types/Journal';
+import { Journal } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

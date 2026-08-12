@@ -12,8 +12,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as SheetCapabilities from '../types/SheetCapabilities';
-import * as SheetEvents from '../types/SheetEvents';
+import { SheetCapabilities, SheetEvents } from '#types';
 
 // Ordering-only: registers the sort comparator once the app graph exists; the body reads
 // nothing else.

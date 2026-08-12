@@ -10,8 +10,7 @@ import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
 
 import { meta } from '#meta';
-
-import * as ProjectCapabilities from './types/ProjectCapabilities';
+import { ProjectCapabilities } from '#types';
 
 // Headless variant registered by workers (e.g. the edge operation-service): operations and schema
 // only, so the React surface never reaches a bundle that cannot load it. The capability modules are

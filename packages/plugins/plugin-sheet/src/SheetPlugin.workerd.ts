@@ -7,8 +7,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-
-import * as Sheet from './types/Sheet';
+import { Sheet } from '#types';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

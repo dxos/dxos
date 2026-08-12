@@ -19,10 +19,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { Sheet } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import * as Sheet from './types/Sheet';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),

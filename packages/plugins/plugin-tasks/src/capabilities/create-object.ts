@@ -11,7 +11,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Outline } from '@dxos/types';
 
-import * as Journal from '../types/Journal';
+import { Journal } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

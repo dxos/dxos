@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Outline } from '@dxos/types';
 
-import * as OutlineOperation from '../types/OutlineOperation';
+import { OutlineOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof OutlineOperation.CreateOutline> = OutlineOperation.CreateOutline.pipe(
   Operation.withHandler(({ name }) =>

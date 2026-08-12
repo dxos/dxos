@@ -11,9 +11,7 @@ import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-
-import * as Sheet from '../../types/Sheet';
-import * as SheetUtil from '../../types/SheetUtil';
+import { Sheet, SheetUtil } from '#types';
 
 export type RangeListProps = {
   sheet: Sheet.Sheet;

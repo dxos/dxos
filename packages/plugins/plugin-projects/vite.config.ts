@@ -20,6 +20,7 @@ export default defineConfig({
     'ProjectMcpOperation': 'src/types/ProjectMcpOperation.ts',
     'ProjectOperation': 'src/types/ProjectOperation.ts',
     'ProjectsEvents': 'src/types/ProjectsEvents.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   // The first story in a file pays the whole lazy module-load bill — tens of seconds, against a

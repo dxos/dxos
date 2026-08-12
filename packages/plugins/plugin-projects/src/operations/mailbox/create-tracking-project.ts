@@ -12,8 +12,9 @@ import { log } from '@dxos/log';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
+import { ProjectOperation } from '#types';
+
 import { scaffoldProject } from '../../templates';
-import * as ProjectOperation from '../../types/ProjectOperation';
 import { syncProjectTasks } from './update-project-tasks';
 
 const INSTRUCTIONS = (label: string, senders: readonly string[]) => trim`

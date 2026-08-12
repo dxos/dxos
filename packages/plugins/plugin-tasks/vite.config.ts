@@ -21,6 +21,7 @@ export default defineConfig({
     'TaskOperation': 'src/types/TaskOperation.ts',
     'TasksEvents': 'src/types/TasksEvents.ts',
     'TasksUtil': 'src/types/TasksUtil.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

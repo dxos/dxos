@@ -9,9 +9,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
+import { ThemeCapabilities } from '#types';
 
 import { type ThemePluginOptions } from './react-context';
-import * as ThemeCapabilities from './types/ThemeCapabilities';
 
 const ReactContext = AppCapability.reactContext(() => import('./react-context'), {
   requires: [Capabilities.AtomRegistry, ThemeCapabilities.Settings],
