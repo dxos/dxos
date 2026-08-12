@@ -544,6 +544,95 @@ export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI
 export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
   Obj.getURI(mailbox).toString() + '#correspondents';
 
+/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link EnrichMailbox}). */
+export const createEnrichProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#enrich';
+
+/**
+ * The cost classes {@link EnrichMailbox} runs, in cascade order. Each tier's output gates the next,
+ * so the ordering is the contract — not a convenience:
+ *
+ * - `deterministic` — no LLM, no spend: contacts (the known-sender allow-list) and subscriptions.
+ * - `classify` — cheap hosted model over every ungated message: spam verdict + category tags. The
+ *   contacts from the previous tier are what keep known senders out of the model entirely.
+ * - `analyze` — per-message LLM fact extraction. Opt-in: unlike `classify` it has no per-run batch
+ *   cap, so it walks the whole feed.
+ *
+ * A `summarize` tier (per-thread summaries + task extraction over contact mail only) slots between
+ * `classify` and `analyze` once the mailbox-global operation exists; its artifacts are project-scoped
+ * today (`ProjectOperation.UpdateInvestorLog` / `UpdateProjectTasks`).
+ */
+export const MailboxTier = Schema.Literal('deterministic', 'classify', 'analyze');
+export type MailboxTier = Schema.Schema.Type<typeof MailboxTier>;
+
+/** Tiers run when the caller names none: the bounded ones (`analyze` walks the whole feed). */
+export const DEFAULT_ENRICH_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify'];
+
+export const EnrichMailbox = Operation.make({
+  meta: {
+    key: makeKey('enrichMailbox'),
+    name: 'Enrich Mailbox',
+    description:
+      'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
+    icon: 'ph--stack-simple--regular',
+  },
+  // Only the orchestrator's own needs: each spawned operation resolves its own services (an AI tier
+  // brings its own AiService), so the cascade itself stays runnable where no AI layer exists.
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox every tier operates on.',
+    }),
+    me: Schema.optional(
+      Schema.Array(Schema.String).annotations({
+        description:
+          "The user's own email addresses; without them the correspondent stage is skipped (nothing to derive).",
+      }),
+    ),
+    tiers: Schema.optional(
+      Schema.Array(MailboxTier).annotations({
+        description: 'Tiers to run, in cascade order; defaults to the bounded tiers.',
+      }),
+    ),
+    batchLimit: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Message cap for the classification tier (hard-capped at 100).',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotations({ description: 'Model name for the LLM tiers; defaults per operation.' }),
+    ),
+    provider: Schema.optional(
+      Schema.String.annotations({ description: 'AI provider id (e.g. ollama) for the analysis tier.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotations({
+        description: 'Attempt strict structured output in the LLM tiers; set false for local models.',
+      }),
+    ),
+    continueOnError: Schema.optional(
+      Schema.Boolean.annotations({
+        description:
+          'Keep going after a failed stage. Off by default: a later tier consumes the previous one, so a partial cascade yields results computed against a stale gate.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    completed: Schema.Number,
+    failed: Schema.Number,
+    skipped: Schema.Number,
+    /** Per-stage outcome in run order — the spawned operation's own output, or why it did not run. */
+    stages: Schema.Array(
+      Schema.Struct({
+        tier: MailboxTier,
+        operation: Schema.String,
+        status: Schema.Literal('completed', 'failed', 'skipped', 'cancelled'),
+        output: Schema.optional(Schema.Any),
+        error: Schema.optional(Schema.String),
+      }),
+    ),
+  }),
+}).pipe(Operation.idempotent);
+
 export const ExtractCorrespondents = Operation.make({
   meta: {
     key: makeKey('extractCorrespondents'),

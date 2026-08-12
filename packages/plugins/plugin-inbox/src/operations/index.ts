@@ -18,6 +18,7 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy([
   InboxOperation.ClassifyEmail.pipe(Operation.lazyHandler(() => import('./classify-email'))),
   InboxOperation.ClassifyMailbox.pipe(Operation.lazyHandler(() => import('./classify/classify-mailbox'))),
   InboxOperation.DraftEmailAndOpen.pipe(Operation.lazyHandler(() => import('./draft-email-and-open'))),
+  InboxOperation.EnrichMailbox.pipe(Operation.lazyHandler(() => import('./enrich/enrich-mailbox'))),
   InboxOperation.DraftEmail.pipe(Operation.lazyHandler(() => import('./draft-email'))),
   InboxOperation.ExtractContactFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/contact-extractor'))),
   InboxOperation.ExtractCorrespondents.pipe(
