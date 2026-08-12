@@ -19,11 +19,24 @@ runs:
         done
       shell: bash
 
+    # Both installers below can only fetch from GitHub releases, so an outage there stops every job
+    # in the repo from acquiring a toolchain at all — which is exactly what happened on 2026-08-12.
+    # These two binaries are small, immutable for a given pin, and served from the actions cache,
+    # which is separate infrastructure; a runner that has installed them once never needs the
+    # release CDN again. Saved below only after both are verified, so an outage cannot poison the key.
+    - name: Restore proto and moon
+      id: bin-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.proto/bin
+        key: proto-bin-v1-${{ runner.os }}-${{ runner.arch }}-proto-${{ steps.pins.outputs.proto }}-moon-${{ steps.pins.outputs.moon }}
+
     # TODO(wittjosiah): Install moon in docker image?
     # Tolerated rather than trusted: this step installs proto and moon over two unretried hops — it
     # curls an install script, and the script curls a GitHub release with a bare `curl --fail
     # --location` (proto.sh:111). One 503 from either fails the step and took the whole job with it
-    # until the fallback below existed.
+    # until the fallback below existed. Still run first when the cache misses, because it also
+    # restores the much larger toolchain cache that holds node, pnpm and bun.
     - uses: moonrepo/setup-toolchain@v0
       id: toolchain
       continue-on-error: true
@@ -32,7 +45,7 @@ runs:
         proto-version: ${{ steps.pins.outputs.proto }}
 
     # Only the restored toolchain cache is lost when the step above fails — `moon setup` reinstalls
-    # what it held, so a retried install here is enough to save the job.
+    # what it held, so recovering the two binaries here is enough to save the job.
     - name: Reinstall proto and moon
       if: steps.toolchain.outcome == 'failure'
       env:
@@ -44,20 +57,31 @@ runs:
         mkdir -p "$proto_home/temp" "$proto_home/bin"
         # moon.sh defaults to ~/.moon/bin; the action puts it beside proto and so does this.
         export MOON_INSTALL_DIR="$proto_home/bin"
+        installed_version() {
+          [ -x "$proto_home/bin/$1" ] || return 0
+          "$proto_home/bin/$1" --version 2>/dev/null | awk '{ print $2 }' || true
+        }
         install_tool() {
           tool=$1
           version=$2
           shift 2
+          if [ "$(installed_version "$tool")" = "$version" ]; then
+            echo "$tool $version is already installed."
+            return 0
+          fi
           script="$proto_home/temp/$tool-retry.sh"
-          for attempt in 1 2 3; do
+          # Spread over ~2 minutes: a release-CDN outage is measured in minutes, and three attempts
+          # 15 seconds apart all landed on the same 503.
+          for delay in 10 20 30 60 0; do
             if curl -fsSL --retry 3 --retry-all-errors -o "$script" "$scripts/$tool.sh" &&
               bash "$script" "$version" "$@"; then
               return 0
             fi
-            if [ "$attempt" != 3 ]; then
-              echo "::warning::Installing $tool $version failed (attempt $attempt of 3), retrying."
-              sleep $((attempt * 5))
+            if [ "$delay" = 0 ]; then
+              break
             fi
+            echo "::warning::Installing $tool $version failed, retrying in ${delay}s."
+            sleep "$delay"
           done
           echo "::error::Could not install $tool $version."
           return 1
@@ -70,34 +94,50 @@ runs:
         printf '%s\n' "$proto_home/bin" "$proto_home/shims" >> "$GITHUB_PATH"
       shell: bash
 
+    - name: Verify proto and moon
+      id: bins
+      env:
+        PINNED_MOON: ${{ steps.pins.outputs.moon }}
+        PINNED_PROTO: ${{ steps.pins.outputs.proto }}
+      run: |
+        proto_home="${PROTO_HOME:-$HOME/.proto}"
+        for pair in "proto:$PINNED_PROTO" "moon:$PINNED_MOON"; do
+          tool=${pair%%:*}
+          want=${pair#*:}
+          got=$( ("$proto_home/bin/$tool" --version 2>/dev/null || true) | awk '{ print $2 }')
+          if [ "$got" != "$want" ]; then
+            echo "::error::$tool is ${got:-<absent>} in $proto_home/bin, expected $want."
+            exit 1
+          fi
+        done
+        echo "verified=true" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    # Never fatal: parallel jobs race to write the same key, and the loser's reserve conflict is not
+    # a reason to fail a job whose toolchain is already verified.
+    - name: Save proto and moon
+      if: steps.bin-cache.outputs.cache-hit != 'true' && steps.bins.outputs.verified == 'true'
+      continue-on-error: true
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.proto/bin
+        key: ${{ steps.bin-cache.outputs.cache-primary-key }}
+
     # moon's SetupProto action — which every `moon setup` and `moon run` schedules — probes for
     # `$PROTO_HOME/tools/proto/<version>/proto` and downloads proto from GitHub when it is absent.
     # It is always absent: setup-toolchain runs `proto clean` before saving the toolchain cache, and
     # that always evicts proto's own entry (proto never records itself as used), so the restored
     # cache never carries it. That made every job pay an unretried network round-trip whose failure
-    # exits `moon setup` 1 with no error text at all. Copying the binary the step above just
-    # installed makes the probe succeed, so the action skips instead of reaching the network.
+    # exits `moon setup` 1 with no error text at all. Copying the binary verified above makes the
+    # probe succeed, so the action skips instead of reaching the network.
     - name: Seed proto's own toolchain entry
       env:
         PROTO_VERSION: ${{ steps.pins.outputs.proto }}
       run: |
         proto_home="${PROTO_HOME:-$HOME/.proto}"
-        proto_bin="$proto_home/bin/proto"
         target="$proto_home/tools/proto/$PROTO_VERSION/proto"
-        if [ -f "$target" ]; then
-          exit 0
+        if [ ! -f "$target" ]; then
+          mkdir -p "$(dirname "$target")"
+          cp "$proto_home/bin/proto" "$target"
         fi
-        # Every branch below falls through rather than failing: this step is an optimisation, and moon
-        # installs proto itself if the copy does not happen.
-        if [ ! -x "$proto_bin" ]; then
-          echo "::warning::No proto binary at $proto_bin — leaving the install to moon."
-          exit 0
-        fi
-        installed=$("$proto_bin" --version 2>/dev/null | awk '{ print $2 }' || true)
-        if [ "$installed" != "$PROTO_VERSION" ]; then
-          echo "::warning::proto at $proto_bin is ${installed:-<unreadable>}, not $PROTO_VERSION — leaving the install to moon."
-          exit 0
-        fi
-        mkdir -p "$(dirname "$target")"
-        cp "$proto_bin" "$target"
       shell: bash
