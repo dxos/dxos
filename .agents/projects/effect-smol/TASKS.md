@@ -421,6 +421,31 @@ Order matters — EDGE ships before Composer.
 - [ ] **Retire the v3 decoder** — gated on space coverage, not a release date; a space nobody opens
       keeps v3 documents indefinitely.
 
+## Blocked on credentials
+
+- [ ] **Record the missing `agent-runtime` redelivery fixture.** `AgentService.test.ts > recovers
+    queued tool results after reload` fails on a fixture miss that surfaces as a 15s timeout: the
+      agent process fails, and the test then waits for a completion that never comes. After a reload
+      `agent-process.ts` (~L268) redelivers a queued tool result as a synthetic `<result pid=N>`
+      **text** block rather than a tool-result part — main's design (`76dd26df`), not a v4 change —
+      and no fixture in the store records that shape (`grep -rl 'result pid=' .store/conversations`
+      returns nothing). So the path only passes when the result lands before the shutdown and no
+      redelivery happens at all. Needs a real provider call:
+      `     DX_ANTHROPIC_API_KEY=… DX_UPDATE_MODEL_FIXTURES=1 \
+      moon run agent-runtime:test -- src/agent-service/AgentService.test.ts
+    `
+      **Regenerate the whole file, never with `-t`** — the suite calls
+      `EntityId.dangerouslyDisableRandomness()` at module scope, so the ID sequence depends on how
+      many tests ran before; a single-test regeneration writes fixtures with IDs that do not match
+      the full-file run and corrupts the rest of the suite (see the `regenerate-model-fixture`
+      skill). `model-fixture` is a deliberately non-required workflow, so this does not block merge.
+- [ ] **Re-port the fixtures the codemod deliberately skipped.** `tools/codemods/migrate-model-fixtures.mjs`
+      applies the `usage` transform store-wide (a v3-shaped record cannot decode at all) but scopes
+      the tool-schema and error-text transforms to `ai` and `agent-runtime` — the only suites whose
+      model-fixture tests execute. The other five suites (`assistant-toolkit` ×2, `agent-runtime`
+      functions/xml-response, …) skip, so rewriting them would be unverifiable invention; they need
+      regenerating when re-enabled.
+
 ## Review follow-ups deferred (from the comprehensive branch review)
 
 - [ ] `effect-zod`: replace the hand-rolled `AnyAst` structural type (and its cast) with v4's real
