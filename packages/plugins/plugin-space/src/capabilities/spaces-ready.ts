@@ -29,9 +29,9 @@ import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
+import { SpaceCapabilities, SpaceOperation } from '#types';
+
 import { migrateToSettingsSpace } from '../migrations/settings-space';
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
-import * as SpaceOperation from '../types/SpaceOperation';
 import { resolveSettingsSpace } from '../util/settings-space';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;

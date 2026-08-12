@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 
-import * as SpaceOperation from '../types/SpaceOperation';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOperation.AddObject.pipe(
   Operation.withHandler(

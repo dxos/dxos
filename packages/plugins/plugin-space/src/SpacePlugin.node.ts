@@ -21,8 +21,7 @@ import {
 
 import { Commands, CreateObject, IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
-
-import * as SpaceSchema from './types/SpaceSchema';
+import { SpaceSchema } from '#types';
 
 export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?

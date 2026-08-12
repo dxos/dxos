@@ -28,9 +28,9 @@ import { Organization, Person } from '@dxos/types';
 import { ComplexMap } from '@dxos/util';
 
 import { translations } from '#translations';
+import { SpaceCapabilities } from '#types';
 
 import { SpaceOperationHandlerSet } from '../../operations';
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import { MergePreview } from '../MergePreview/MergePreview';
 import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack';
 import { TypeArticle } from './TypeArticle';

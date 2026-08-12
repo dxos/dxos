@@ -15,7 +15,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
 import { ViewModel } from '@dxos/schema';
 
-import * as SpaceOperation from '../../types/SpaceOperation';
+import { SpaceOperation } from '#types';
 
 export type ViewEditorProps = { view: View.View };
 

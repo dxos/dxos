@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import { SpaceCapabilities } from '#types';
 
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;

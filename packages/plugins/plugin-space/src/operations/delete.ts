@@ -9,8 +9,9 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
+import { SpaceOperation } from '#types';
+
 import { DefaultSpaceDeletionError } from '../errors';
-import * as SpaceOperation from '../types/SpaceOperation';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Delete> = SpaceOperation.Delete.pipe(
   Operation.withHandler(

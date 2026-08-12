@@ -35,6 +35,7 @@ export default defineConfig({
     'Settings': 'src/types/Settings.ts',
     'DraftEvent': 'src/types/DraftEvent.ts',
     'SystemTags': 'src/types/SystemTags.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   // Many stories here use `withClientProvider` (ECHO/Automerge-backed); per-file isolation

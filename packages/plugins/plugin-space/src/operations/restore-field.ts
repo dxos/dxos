@@ -9,7 +9,7 @@ import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypeURIFromQuery } from '@dxos/schema';
 
-import * as SpaceOperation from '../types/SpaceOperation';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RestoreField> = SpaceOperation.RestoreField.pipe(
   Operation.withHandler(

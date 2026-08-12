@@ -12,8 +12,9 @@ import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
+import { SpaceSchema } from '#types';
+
 import { migrateToSettingsSpace } from '../migrations/settings-space';
-import * as SpaceSchema from '../types/SpaceSchema';
 import { resolveSettingsSpace } from './settings-space';
 
 describe('resolveSettingsSpace', () => {

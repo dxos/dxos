@@ -10,9 +10,9 @@ import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 import { Entity } from '@dxos/echo';
 
 import { meta } from '#meta';
+import { SpaceOperation } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
-import * as SpaceOperation from '../types/SpaceOperation';
 
 type UndoMappingsOptions = {
   createInvitationUrl: (invitationCode: string) => string;

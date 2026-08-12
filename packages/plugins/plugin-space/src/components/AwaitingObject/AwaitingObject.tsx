@@ -15,8 +15,7 @@ import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-import * as SpaceOperation from '../../types/SpaceOperation';
+import { SpaceOperation } from '#types';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;
 const TOAST_TIMEOUT = 4 * 60 * 1_000;

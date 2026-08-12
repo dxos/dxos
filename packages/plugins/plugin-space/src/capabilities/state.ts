@@ -12,8 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import { SpaceCapabilities } from '#types';
 
 /** Default persisted state. */
 const defaultSpaceState: SpaceCapabilities.SpaceState = {

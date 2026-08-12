@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import * as SpaceOperation from '../types/SpaceOperation';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Share> = SpaceOperation.Share.pipe(
   Operation.withHandler(

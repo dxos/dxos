@@ -22,8 +22,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SpaceHomeDashboard, SpaceHomeRecent } from '#containers';
 import { translations } from '#translations';
+import { SpaceSurface } from '#types';
 
-import * as SpaceSurface from '../../types/SpaceSurface';
 import { SpaceHomeArticle } from './SpaceHomeArticle';
 
 class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.test.task', '0.1.0'))(

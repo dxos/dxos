@@ -11,8 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import * as SpaceOperation from '../../types/SpaceOperation';
+import { SpaceOperation } from '#types';
 
 export const ImportSpaceDialog = () => {
   const { t } = useTranslation(meta.profile.key);

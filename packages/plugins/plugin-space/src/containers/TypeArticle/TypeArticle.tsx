@@ -24,9 +24,8 @@ import { CardAnnotation } from '@dxos/schema';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
-import * as SpaceOperation from '../../types/SpaceOperation';
 import { useDuplicatesGroup } from './duplicatesGroup';
 import { useDuplicates } from './useDuplicates';
 

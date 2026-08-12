@@ -7,9 +7,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Obj } from '@dxos/echo';
 
+import { SpaceCapabilities, SpaceOperation } from '#types';
+
 import { CREATE_OBJECT_DIALOG } from '../constants';
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
-import * as SpaceOperation from '../types/SpaceOperation';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.OpenCreateObject> = SpaceOperation.OpenCreateObject.pipe(
   Operation.withHandler(

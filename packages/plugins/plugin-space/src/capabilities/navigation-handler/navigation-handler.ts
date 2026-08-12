@@ -17,8 +17,7 @@ import { HaloServicesLayer } from '@dxos/plugin-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { meta } from '#meta';
-
-import * as SpaceOperation from '../../types/SpaceOperation';
+import { SpaceOperation } from '#types';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;

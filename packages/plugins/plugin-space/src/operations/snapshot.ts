@@ -7,7 +7,7 @@ import { Query } from '@dxos/echo';
 import { DatabaseImpl, Serializer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 
-import * as SpaceOperation from '../types/SpaceOperation';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Snapshot> = SpaceOperation.Snapshot.pipe(
   Operation.withHandler((input) =>

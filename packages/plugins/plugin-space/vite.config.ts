@@ -30,6 +30,7 @@ export default defineConfig({
     'types/Settings': 'src/types/Settings.ts',
     'CollectionOperation': 'src/types/CollectionOperation.ts',
     'SpaceOperation': 'src/types/SpaceOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

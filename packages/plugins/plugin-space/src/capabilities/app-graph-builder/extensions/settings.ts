@@ -11,8 +11,7 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as SpaceSchema from '../../../types/SpaceSchema';
+import { SpaceSchema } from '#types';
 
 //
 // Extension Factory

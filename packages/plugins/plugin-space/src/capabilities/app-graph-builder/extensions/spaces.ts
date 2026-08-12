@@ -21,10 +21,8 @@ import { Expando } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
+import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
-import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
-import * as SpaceOperation from '../../../types/SpaceOperation';
-import * as SpaceSchema from '../../../types/SpaceSchema';
 import { getSpaceDisplayName } from '../../../util';
 import {
   CAN_DROP_SPACE,
