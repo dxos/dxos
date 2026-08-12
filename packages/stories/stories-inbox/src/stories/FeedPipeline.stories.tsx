@@ -42,7 +42,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
-import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/plugin';
+import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
