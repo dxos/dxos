@@ -61,7 +61,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
             // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
             // TODO(wittjosiah): Only reaches a directly-invoked sync; a triggered run reports through
             //   the dispatcher's own process, so its 401s show a generic failure instead of this prompt.
-            Effect.catchAllDefect((defect) =>
+            Effect.catchDefect((defect) =>
               RunAgainError.is(defect)
                 ? Effect.void
                 : isUnauthorizedError(defect)

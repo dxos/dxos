@@ -17,7 +17,7 @@ import { ProcessManagerPlugin } from './ProcessManagerPlugin';
 
 const LateEvent = ActivationEvent.make('org.dxos.test.lateLayerSpec');
 
-class TestService extends Context.Tag('org.dxos.test.lateService')<TestService, { value: string }>() {}
+class TestService extends Context.Service<TestService, { value: string }>()('org.dxos.test.lateService') {}
 
 const lateMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.lateLayerSpec'), name: 'Late LayerSpec' });
 

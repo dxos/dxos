@@ -2,11 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as SchemaAST from 'effect/SchemaAST';
-
 import { Ref } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 type RefProps = {
   ast: SchemaAST.AST;

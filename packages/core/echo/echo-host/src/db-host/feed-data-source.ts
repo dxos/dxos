@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
@@ -67,7 +67,7 @@ export class FeedDataSource implements IndexDataSource {
 
     // We also add new cursors from all previously unindexed spaces.
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
 

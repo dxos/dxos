@@ -3,7 +3,6 @@
 //
 
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
@@ -92,7 +91,7 @@ const handler = InboxOperation.ProcessMailbox.pipe(
         Pipeline.run({
           sink: (page) =>
             Effect.sync(() => {
-              const keys = Chunk.toReadonlyArray(page).map((message) => Date.parse(message.created));
+              const keys = page.map((message) => Date.parse(message.created));
               if (keys.length === 0) {
                 return;
               }
@@ -119,7 +118,7 @@ const handler = InboxOperation.ProcessMailbox.pipe(
       yield* pipeline.pipe(
         Effect.onError((cause) =>
           Effect.sync(() => {
-            if (!Cause.isInterruptedOnly(cause)) {
+            if (!Cause.hasInterruptsOnly(cause)) {
               Cursor.recordError(cursor, Cause.pretty(cause).slice(0, 500));
               reportStatus({ message: PROGRESS_STATUS_FAILED });
             }

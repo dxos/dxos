@@ -49,13 +49,9 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",
-    "@effect/experimental": "catalog:",
-    "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",
-    "@effect/workflow": "catalog:",
     "parsimmon": "catalog:",
     "tokenx": "^1.3.0"
   },

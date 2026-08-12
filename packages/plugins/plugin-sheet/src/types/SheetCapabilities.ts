@@ -28,7 +28,7 @@ export const ComputeGraphRegistry = Capability.makeSingleton<ComputeGraphRegistr
 export const GridInstances = Capability.makeSingleton<GridRegistry>()(`${meta.profile.key}.capability.gridInstances`);
 
 // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
-const ActionAxis = Schema.Union(Schema.Literal('row'), Schema.Literal('col'));
+const ActionAxis = Schema.Union([Schema.Literal('row'), Schema.Literal('col')]);
 
 export namespace SheetAction {
   export const RestoreAxis = Schema.Struct({

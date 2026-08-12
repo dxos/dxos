@@ -74,7 +74,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.GetDiscordChannels>
                     },
                   })),
                 ),
-                Effect.catchAll((error) => {
+                Effect.catch((error) => {
                   log.catch(error);
                   return Effect.succeed([]);
                 }),

@@ -54,7 +54,7 @@ export default Capability.makeModule(
             const loaded = yield* Effect.promise(() => space.waitUntilReady()).pipe(
               Effect.flatMap(() => Database.load(space.db.makeRef(eid))),
               Effect.as(true),
-              Effect.catchAll(() => Effect.succeed(false)),
+              Effect.catch(() => Effect.succeed(false)),
             );
             if (loaded) {
               return true;
@@ -66,7 +66,7 @@ export default Capability.makeModule(
           // unreachable edge cannot hang navigation.
           return yield* checkRemote(eid).pipe(
             Effect.timeout(EDGE_EXISTENCE_TIMEOUT),
-            Effect.catchAll(() => Effect.succeed(false)),
+            Effect.catch(() => Effect.succeed(false)),
           );
         }),
     };

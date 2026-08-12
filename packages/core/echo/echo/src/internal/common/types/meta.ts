@@ -36,9 +36,9 @@ export const ATTR_META = '@meta';
  * first use, and `Tag` is referenced type-only, so no `Tag` value import is needed.
  */
 const TagRefSchema = Schema.suspend(
-  (): Schema.Schema<Ref<Tag.Tag>, EncodedReference> =>
+  (): Schema.Codec<Ref<Tag.Tag>, EncodedReference> =>
     // The factory yields a loosely-typed `Ref<any>` schema; narrow it to the Tag-typed ref.
-    createEchoReferenceSchema(undefined, DXN.getName(TagTypeDXN), DXN.getVersion(TagTypeDXN)) as Schema.Schema<
+    createEchoReferenceSchema(undefined, DXN.getName(TagTypeDXN), DXN.getVersion(TagTypeDXN)) as Schema.Codec<
       Ref<Tag.Tag>,
       EncodedReference
     >,

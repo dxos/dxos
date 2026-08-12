@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -328,7 +327,7 @@ const fetchAttachments = (
               contentId: attachment.contentId,
             }),
           ),
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error, { blobId: attachment.blobId, name: attachment.name });
             return Effect.succeed(undefined);
           }),
@@ -395,7 +394,7 @@ const jmapIds = (
         conditions: conditions.length,
       });
 
-      return Stream.paginateChunkEffect(0, (position: number) =>
+      return Stream.paginate(0, (position: number) =>
         Effect.gen(function* () {
           const { ids } = yield* api.emailQuery(target, {
             filter,
@@ -408,7 +407,7 @@ const jmapIds = (
           options.onEnumerated?.(ids.length);
           const next =
             ids.length < JMAP_SYNC_CONFIG.listPageSize ? Option.none<number>() : Option.some(position + ids.length);
-          return [Chunk.fromIterable(ids), next];
+          return [ids, next] as const;
         }),
       );
     }),
@@ -439,7 +438,7 @@ const jmapEmailsForIds = (
             options.onRetrieved?.();
             return list[0];
           }),
-        ).pipe(Stream.filter(Predicate.isNotNullable)),
+        ).pipe(Stream.filter(Predicate.isNotNullish)),
       { concurrency: JMAP_SYNC_CONFIG.fetchConcurrency, bufferSize: 10 },
     ),
   );

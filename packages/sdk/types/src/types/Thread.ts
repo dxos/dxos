@@ -11,14 +11,14 @@ import { HiddenAnnotation } from '@dxos/echo/Annotation';
 
 import * as Message from './Message';
 
-export const ThreadStatus = Schema.Union(
+export const ThreadStatus = Schema.Union([
   Schema.Literal('staged'),
   Schema.Literal('active'),
   Schema.Literal('resolved'),
-);
+]);
 
 /** Per-thread agent firing policy. */
-export const AgentMode = Schema.Union(Schema.Literal('auto'), Schema.Literal('mention'));
+export const AgentMode = Schema.Union([Schema.Literal('auto'), Schema.Literal('mention')]);
 export type AgentMode = Schema.Schema.Type<typeof AgentMode>;
 
 /**

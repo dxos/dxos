@@ -3,8 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
+import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, type EntityId } from '@dxos/keys';
 
@@ -19,7 +19,7 @@ import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from '.
  * Object schema type with kind marker.
  */
 export type EchoObjectSchema<
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > = EchoTypeSchema<Self, {}, EntityKind.Object, Fields>;
 
@@ -31,7 +31,7 @@ export const EchoObjectSchema: {
   (
     dxn: DXN.DXN,
     options?: EchoTypeOptions,
-  ): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  ): <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ) => EchoObjectSchema<Self, Fields>;
 } = (dxn, options) => {
@@ -39,22 +39,32 @@ export const EchoObjectSchema: {
   const version = DXN.getVersion(dxn);
   invariant(version, `Type.makeObject requires a versioned DXN: ${dxn}`);
 
-  return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ): EchoObjectSchema<Self, Fields> => {
-    invariant(typeof TypeAnnotationId === 'symbol', 'Sanity.');
-    invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
+    // Annotation ids are string keys in Effect 4; this guards against a bundling mishap that
+    // leaves the id undefined, which would silently drop the annotation.
+    invariant(typeof TypeAnnotationId === 'string', 'Sanity.');
+    invariant(SchemaAST.isObjects(self.ast), 'Schema must be a TypeLiteral.');
 
-    // Extract fields from the schema if available (Struct schemas have .fields).
+    // Struct schemas expose `.fields`; retained for the schema's public field map.
     const fields = ((self as any).fields ?? {}) as Fields;
 
-    const schemaWithId = Schema.extend(self, Schema.Struct({ id: Schema.String }));
-    const ast = SchemaAST.annotations(schemaWithId.ast, {
+    // The id is prepended to the existing object node rather than rebuilt from `.fields`:
+    // rebuilding drops index signatures, which is how `Expando` and other record-shaped types are
+    // declared. (`mapFields` is unavailable here -- it is a `Struct` method and `self` is generic.)
+    const schemaWithId = new SchemaAST.Objects(
+      self.ast.propertySignatures.some((property) => property.name === 'id')
+        ? self.ast.propertySignatures
+        : [...self.ast.propertySignatures, new SchemaAST.PropertySignature('id', Schema.String.ast)],
+      self.ast.indexSignatures,
+    );
+    const ast = SchemaAST.annotate(schemaWithId, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
-      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+      ...makeTypeJsonSchemaAnnotation({
         kind: EntityKind.Object,
         typename,
         version,
@@ -73,7 +83,7 @@ export const EchoObjectSchema: {
   };
 };
 
-export const makeObjectType = <Self, _Schema extends Schema.Schema.Any>(
+export const makeObjectType = <Self, _Schema extends Schema.Top>(
   dxn: DXN.DXN,
   schema: _Schema,
   options?: { id?: EntityId },

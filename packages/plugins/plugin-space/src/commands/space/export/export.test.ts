@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as NodeContext from '@effect/platform-node/NodeContext';
-import * as FileSystem from '@effect/platform/FileSystem';
+import * as NodeServices from '@effect/platform-node/NodeServices';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
@@ -15,7 +15,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { handler } from './export';
 
-const ExportTestLayer = Layer.mergeAll(TestLayer, NodeContext.layer);
+const ExportTestLayer = Layer.mergeAll(TestLayer, NodeServices.layer);
 
 type ExportOutput = { spaceId: string; format: string; path: string; size: number };
 

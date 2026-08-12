@@ -2,18 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as PlatformCommand from '@effect/platform/Command';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 import * as Config from 'effect/Config';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
 import * as Schema from 'effect/Schema';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as PlatformCommand from 'effect/unstable/process/ChildProcess';
+import * as ChildProcessSpawner from 'effect/unstable/process/ChildProcessSpawner';
 
 import { findDxConfigFile, loadDxConfig } from '@dxos/app-framework/vite-plugin';
 import { type Client, ClientService } from '@dxos/client';
@@ -26,8 +27,8 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 /** Manifest emitted by the build (subset consumed here). Extends `Config2.Plugin` with build-time fields. */
 const ManifestSchema = Schema.Struct({
   ...Config2.Plugin.fields,
-  version: Schema.String.pipe(Schema.nonEmptyString()),
-  dependencies: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
+  version: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+  dependencies: Schema.optional(Schema.Record(Schema.String, Schema.String)),
 });
 type Manifest = Schema.Schema.Type<typeof ManifestSchema>;
 
@@ -52,23 +53,23 @@ const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
 export const publish = Command.make(
   'publish',
   {
-    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.text('app-password').pipe(
+    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.string('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    dir: Options.text('dir').pipe(
+    dir: Options.string('dir').pipe(
       Options.withDescription('Project directory containing dx.config.ts. Defaults to the current directory.'),
       Options.withDefault('.'),
     ),
     noBuild: Options.boolean('no-build').pipe(
       Options.withDescription('Skip running the build command (publish a pre-built dist).'),
     ),
-    assetBaseUrl: Options.text('asset-base-url').pipe(
+    assetBaseUrl: Options.string('asset-base-url').pipe(
       Options.withDescription('Skip upload and point the release at an already-hosted bundle directory.'),
       Options.optional,
     ),
-    edgeUrl: Options.text('edge-url').pipe(
+    edgeUrl: Options.string('edge-url').pipe(
       Options.withDescription(
         'Edge base URL for bundle upload (e.g. http://localhost:8787). Bypasses profile config; auth is skipped (requires WORKER_ENV=dev on the server).',
       ),
@@ -98,15 +99,15 @@ export const publish = Command.make(
         if (!options.noBuild && buildCommand) {
           yield* Console.log(`Building: ${buildCommand}`);
           const binDir = path.join(dir, 'node_modules', '.bin');
-          const exitCode = yield* PlatformCommand.make(
-            'sh',
-            '-c',
-            `export PATH="${binDir}:$PATH"; ${buildCommand}`,
-          ).pipe(
-            PlatformCommand.workingDirectory(dir),
-            PlatformCommand.stdout('inherit'),
-            PlatformCommand.stderr('inherit'),
-            PlatformCommand.exitCode,
+          // v4 folds the process options into `make` and runs a command through the spawner
+          // service rather than through combinators on the command itself.
+          const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+          const exitCode = yield* spawner.exitCode(
+            PlatformCommand.make('sh', ['-c', `export PATH="${binDir}:$PATH"; ${buildCommand}`], {
+              cwd: dir,
+              stdout: 'inherit',
+              stderr: 'inherit',
+            }),
           );
           if (exitCode !== 0) {
             return yield* Effect.fail(new Error(`Build failed (exit ${exitCode}): ${buildCommand}`));
@@ -120,7 +121,7 @@ export const publish = Command.make(
           return yield* Effect.fail(new Error(`manifest.json not found in ${outdir}. Did the build run?`));
         }
         const manifestRaw = yield* fs.readFileString(manifestPath);
-        const manifest: Manifest = yield* Schema.decodeUnknown(ManifestSchema)(JSON.parse(manifestRaw));
+        const manifest: Manifest = yield* Schema.decodeUnknownEffect(ManifestSchema)(JSON.parse(manifestRaw));
         const key = manifest.key;
         const version = manifest.version;
         const manifestHash = `sha256-${yield* Effect.promise(() => sha256Base64(new TextEncoder().encode(manifestRaw)))}`;

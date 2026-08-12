@@ -3,7 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 const ForeignKey_ = Schema.Struct({
   /**
@@ -17,7 +18,7 @@ const ForeignKey_ = Schema.Struct({
    */
   // TODO(wittjosiah): This annotation is currently used to ensure id field shows up in forms.
   // TODO(dmaretskyi): `false` is not a valid value for the annotation. Use a different annotation.
-  id: Schema.String.annotations({ [SchemaAST.IdentifierAnnotationId]: 'false' }),
+  id: Schema.String.annotate({ [SchemaAST.IdentifierAnnotationId]: 'false' }),
 });
 
 export type ForeignKey = Schema.Schema.Type<typeof ForeignKey_>;
@@ -25,4 +26,7 @@ export type ForeignKey = Schema.Schema.Type<typeof ForeignKey_>;
 /**
  * Reference to an object in a foreign database.
  */
-export const ForeignKey: Schema.Schema<ForeignKey> = ForeignKey_;
+// Annotated as `Codec`, not `Schema`: Effect 4's `Schema.Schema<T>` pins only `Type` and leaves the
+// service channels `unknown`, which propagates into every struct embedding this and blocks the
+// service-free decode APIs.
+export const ForeignKey: Schema.Codec<ForeignKey> = ForeignKey_;

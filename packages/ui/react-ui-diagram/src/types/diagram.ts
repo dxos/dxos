@@ -26,7 +26,7 @@ export const Size = Schema.Struct({
 
 export type Size = Schema.Schema.Type<typeof Size>;
 
-export const Side = Schema.Literal('top', 'right', 'bottom', 'left');
+export const Side = Schema.Literals(['top', 'right', 'bottom', 'left']);
 
 export type Side = Schema.Schema.Type<typeof Side>;
 
@@ -93,7 +93,7 @@ export type Graph = Schema.Schema.Type<typeof Graph>;
  */
 export const Projection = Schema.Struct({
   graph: Graph,
-  provenance: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  provenance: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 });
 
 export type Projection = Schema.Schema.Type<typeof Projection>;

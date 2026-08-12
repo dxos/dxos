@@ -18,12 +18,12 @@ export type ResolverMap = Record<string, ResolverType<any, any>>;
  * when one exists. This is the identity backbone shared by extractors (merge vs create) and by
  * deterministic mappers (e.g. calendar attendee email → Person).
  */
-export class Resolver extends Context.Tag('@dxos/extractor/Resolver')<
+export class Resolver extends Context.Service<
   Resolver,
   {
     resolve<T extends Type.AnyEntity, I>(type: T, input: I): Effect.Effect<Type.InstanceType<T> | undefined>;
   }
->() {}
+>()('@dxos/extractor/Resolver') {}
 
 export const resolve = <T extends Type.AnyEntity, I>(type: T, input: I) =>
   Effect.flatMap(Resolver, (service) =>

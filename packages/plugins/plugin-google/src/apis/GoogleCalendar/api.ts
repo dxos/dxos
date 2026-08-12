@@ -43,7 +43,7 @@ export const listEventsByStartTime = Effect.fn(function* (
     orderBy: 'startTime',
     ...(searchQuery ? { q: searchQuery } : {}),
   }).toString();
-  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(ListEventsResponse)));
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknownEffect(ListEventsResponse)));
 });
 
 /**
@@ -68,7 +68,7 @@ export const listEventsByUpdated = Effect.fn(function* (
     orderBy: 'updated',
     ...(searchQuery ? { q: searchQuery } : {}),
   }).toString();
-  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(ListEventsResponse)));
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknownEffect(ListEventsResponse)));
 });
 
 /**
@@ -77,7 +77,7 @@ export const listEventsByUpdated = Effect.fn(function* (
  */
 export const getEvent = Effect.fn(function* (calendarId: string, eventId: string) {
   const url = createUrl([API_URL, 'calendars', encodeURIComponent(calendarId), 'events', eventId]).toString();
-  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(Event)));
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknownEffect(Event)));
 });
 
 /**
@@ -104,7 +104,7 @@ export type CreateEventRequest = Schema.Schema.Type<typeof CreateEventRequest>;
 export const createEvent = Effect.fn('createEvent')(function* (calendarId: string, event: CreateEventRequest) {
   const url = createUrl([API_URL, 'calendars', encodeURIComponent(calendarId), 'events']).toString();
   return yield* makeGoogleApiRequest(url, { method: 'POST', body: JSON.stringify(event) }).pipe(
-    Effect.flatMap(Schema.decodeUnknown(Event)),
+    Effect.flatMap(Schema.decodeUnknownEffect(Event)),
   );
 });
 

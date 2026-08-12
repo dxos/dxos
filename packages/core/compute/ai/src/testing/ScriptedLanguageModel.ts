@@ -4,14 +4,14 @@
 
 // @import-as-namespace
 
-import * as AiError from '@effect/ai/AiError';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import type * as Prompt from '@effect/ai/Prompt';
-import * as Response from '@effect/ai/Response';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
+import * as AiError from 'effect/unstable/ai/AiError';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import type * as Prompt from 'effect/unstable/ai/Prompt';
+import * as Response from 'effect/unstable/ai/Response';
 
 import * as AiService from '../AiService';
 
@@ -35,7 +35,7 @@ export const SCRIPTED_MODEL_ID = 'scripted-model';
 const EPOCH = '1970-01-01T00:00:00.000Z';
 
 /** Zero-valued token usage; scripted turns carry no real accounting. */
-const ZERO_USAGE = { inputTokens: 0, outputTokens: 0, totalTokens: 0 } as const;
+const ZERO_USAGE = { inputTokens: { total: 0 }, outputTokens: { total: 0 } } as const;
 
 /**
  * A single fragment emitted within a scripted turn. Build with {@link text} / {@link toolCall}.
@@ -186,19 +186,23 @@ const encodeTurn = (
 };
 
 const exhausted = (index: number, length: number, route: string): AiError.AiError =>
-  new AiError.UnknownError({
+  new AiError.AiError({
     module: 'ScriptedLanguageModel',
     method: 'generateText',
-    description: `Scripted model exhausted: route ${route} requested turn ${index} but the script has only ${length}.`,
+    reason: new AiError.UnknownError({
+      description: `Scripted model exhausted: route ${route} requested turn ${index} but the script has only ${length}.`,
+    }),
   });
 
 const snippet = (raw: string): string => (raw.length > 160 ? `${raw.slice(0, 160)}…` : raw);
 
 const unmatched = (request: ScriptedRequest): AiError.AiError =>
-  new AiError.UnknownError({
+  new AiError.AiError({
     module: 'ScriptedLanguageModel',
     method: 'generateText',
-    description: `No scripted route matched the request. system=${JSON.stringify(snippet(request.system))} text=${JSON.stringify(snippet(request.text))}`,
+    reason: new AiError.UnknownError({
+      description: `No scripted route matched the request. system=${JSON.stringify(snippet(request.system))} text=${JSON.stringify(snippet(request.text))}`,
+    }),
   });
 
 /**

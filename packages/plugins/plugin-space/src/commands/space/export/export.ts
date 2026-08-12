@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import {
   CommandConfig,
@@ -51,9 +51,9 @@ export const handler = Effect.fn(function* ({ spaceId, output, format }: ExportA
 
   // Export reads the epoch root, and a closed space never becomes ready — so cap the wait.
   yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
-    Effect.timeoutFail({
+    Effect.timeoutOrElse({
       duration: SPACE_READY_TIMEOUT,
-      onTimeout: () => new SpaceNotReadyError({ context: { spaceId: resolvedSpaceId } }),
+      orElse: () => Effect.fail(new SpaceNotReadyError({ context: { spaceId: resolvedSpaceId } })),
     }),
   );
 
@@ -95,7 +95,7 @@ export const exportSpace = Command.make(
       ),
       Options.withDefault('binary' as const),
     ),
-    output: Options.text('output').pipe(
+    output: Options.string('output').pipe(
       Options.withAlias('o'),
       Options.withDescription('Output file, or a directory to write the generated filename into.'),
       Options.optional,

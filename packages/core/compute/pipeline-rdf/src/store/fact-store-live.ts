@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { type Quad } from 'n3';
 
 import { type SqlTransaction } from '@dxos/sql-sqlite';
@@ -41,7 +41,7 @@ const makeSelect = (source: Parameters<typeof selectTriples>[1]): FactStoreApi['
   return (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble));
 };
 
-export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.scoped(
+export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
   FactStore,
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;

@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import * as ts from 'typescript';
 
@@ -67,7 +67,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
   const manifest = yield* HttpClient.get(new URL('manifest.json', SCRIPT_PACKAGES_BUCKET)).pipe(
     Effect.flatMap((_) => _.json),
     Effect.flatMap(
-      Schema.decodeUnknown(
+      Schema.decodeUnknownEffect(
         Schema.Struct({
           files: Schema.Array(
             Schema.Struct({
@@ -88,7 +88,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
     Effect.fnUntraced(
       function* (filename) {
         const response = yield* HttpClient.get(new URL(filename, SCRIPT_PACKAGES_BUCKET)).pipe(
-          Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+          Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
         );
         const content = yield* response.text;
         const moduleName = filename.replace(/\.d\.(ts|mts)$/, '');
@@ -100,7 +100,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
           content,
         };
       },
-      Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+      Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
     ),
     { concurrency: 20 },
   );

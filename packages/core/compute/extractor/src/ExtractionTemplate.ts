@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import type * as Operation from '@dxos/compute/Operation';
@@ -90,7 +90,7 @@ export interface TemplateExtractorOptions<Payload, PayloadEncoded extends Record
   /** Optional registered operation, so the extractor is also a first-class operation. */
   readonly operation?: Operation.Definition<ExtractInput, ExtractResult>;
   /** Effect Schema for the LLM structured output. */
-  readonly payloadSchema: Schema.Schema<Payload, PayloadEncoded>;
+  readonly payloadSchema: Schema.Codec<Payload, PayloadEncoded>;
   /** Cheap pre-LLM candidacy check (keywords/domains/etc.). */
   readonly match: (source: Obj.Any) => MatchResult;
   /** Source text handed to the LLM. */
@@ -137,8 +137,8 @@ export const makeTemplateExtractor = <Payload, PayloadEncoded extends Record<str
       // Wrap genuine failures + defects (e.g. AiService unavailable) as ExtractError, but leave
       // fiber interruption untouched so cancellation propagates (neither catchAll nor
       // catchAllDefect catches interruption).
-      Effect.catchAll((error) => Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, error))),
-      Effect.catchAllDefect((defect) =>
+      Effect.catch((error) => Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, error))),
+      Effect.catchDefect((defect) =>
         Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, defect)),
       ),
     );

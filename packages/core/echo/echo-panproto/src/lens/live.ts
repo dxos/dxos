@@ -138,7 +138,7 @@ export const of = <S, T extends Record<string, any>>(obj: Obj.Unknown, lens: Len
 };
 
 /** The schema of the lensed shape, for a form or table rendering the target. */
-export const targetSchema = (lens: AnyLens): Schema.Schema.Any => {
+export const targetSchema = (lens: AnyLens): Schema.Top => {
   const target = lens.target as Type.AnyEntity;
-  return Type.isType(target) ? (Type.getSchema(target) as Schema.Schema.Any) : (lens.target as Schema.Schema.Any);
+  return Type.isType(target) ? (Type.getSchema(target) as Schema.Top) : (lens.target as Schema.Top);
 };

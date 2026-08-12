@@ -64,7 +64,6 @@
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/storybook-testing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormBuilder } from '@dxos/cli-util';
+import { Doc, FormBuilder } from '@dxos/cli-util';
 import { Connection } from '@dxos/link';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -64,7 +64,7 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
 /**
  * Pretty prints a connection for display using FormBuilder (id + connector — NO token value).
  */
-export const printConnection = (connection: Connection.Connection) => {
+export const printConnection = (connection: Connection.Connection): Doc.Doc<any> => {
   return FormBuilder.make({ title: connection.name ?? connection.connectorId ?? connection.id }).pipe(
     FormBuilder.set('id', connection.id),
     FormBuilder.set('connectorId', connection.connectorId ?? ''),
@@ -75,11 +75,11 @@ export const printConnection = (connection: Connection.Connection) => {
 /**
  * Pretty prints connection addition result with ANSI colors.
  */
-export const printTokenAdded = (source: string) =>
+export const printTokenAdded = (source: string): Doc.Doc<any> =>
   FormBuilder.make({ title: 'Connection added' }).pipe(FormBuilder.set('source', source), FormBuilder.build);
 
 /**
  * Pretty prints connection removal result with ANSI colors.
  */
-export const printConnectionRemoved = (name: string) =>
+export const printConnectionRemoved = (name: string): Doc.Doc<any> =>
   FormBuilder.make({ title: 'Connection removed' }).pipe(FormBuilder.set('connection', name), FormBuilder.build);

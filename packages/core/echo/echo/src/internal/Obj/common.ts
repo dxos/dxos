@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { getTypename } from '../Annotation';
 import { type AnyProperties } from '../common/types';
@@ -24,8 +25,8 @@ type SimplifiedSchemaFields<
   SchemaFields extends Schema.Struct.Fields,
   Options extends TypedObjectOptions,
 > = Options['partial'] extends boolean
-  ? Schema.SimplifyMutable<Partial<Schema.Struct.Type<SchemaFields>>>
-  : Schema.SimplifyMutable<Schema.Struct.Type<SchemaFields>>;
+  ? Struct.Simplify<Struct.Mutable<Partial<Schema.Struct.Type<SchemaFields>>>>
+  : Struct.Simplify<Struct.Mutable<Schema.Struct.Type<SchemaFields>>>;
 
 /**
  *
@@ -36,24 +37,21 @@ export type TypedObjectFields<
   SchemaFields extends Schema.Struct.Fields,
   Options extends TypedObjectOptions,
 > = SimplifiedSchemaFields<SchemaFields, Options> & { id: string } & (Options['record'] extends boolean
-    ? Schema.SimplifyMutable<Schema.IndexSignature.Type<Schema.IndexSignature.Records>>
+    ? Record<string, any>
     : {});
 
-export const makeTypedEntityClass = (
-  typename: string,
-  version: string,
-  baseSchema: Schema.Schema.AnyNoContext,
-): Schema.SchemaClass<any> => {
+export const makeTypedEntityClass = (typename: string, version: string, baseSchema: Schema.Top): Schema.Codec<any> => {
   return class {
     // Implement TypedObject properties.
     static readonly typename = typename;
     static readonly version = version;
 
     // Implement Schema.Schema properties.
-    // TODO(burdon): Comment required.
-    static readonly [Schema.TypeId] = schemaVariance;
+    // Effect 4 marks a schema with a string key carrying its own name, replacing v3's variance
+    // object; `annotations` became `annotate`.
+    static readonly [SCHEMA_TYPE_ID] = SCHEMA_TYPE_ID;
     static readonly ast = baseSchema.ast;
-    static readonly annotations = baseSchema.annotations.bind(baseSchema);
+    static readonly annotate = baseSchema.annotate.bind(baseSchema);
     static readonly pipe = baseSchema.pipe.bind(baseSchema);
 
     // TODO(burdon): Comment required.
@@ -68,8 +66,5 @@ export const makeTypedEntityClass = (
   } as any;
 };
 
-const schemaVariance = {
-  _A: (_: any) => _,
-  _I: (_: any) => _,
-  _R: (_: never) => _,
-};
+/** Effect 4's schema marker; the module declares it privately, so the literal is repeated here. */
+const SCHEMA_TYPE_ID = '~effect/Schema/Schema';

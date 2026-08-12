@@ -290,7 +290,9 @@ const runSyncLots = (
     SyncLotsHandler.handler(input).pipe(
       Effect.provideService(Operation.Service, {
         invoke: (operation, invokeInput) => {
-          if (operation === IbkrOperation.MaterializeInstrument) {
+          // Compared by key: v4 types the invoked operation generically, so the two `Definition`
+          // instantiations no longer overlap for a reference comparison.
+          if (operation.meta.key === IbkrOperation.MaterializeInstrument.meta.key) {
             return MaterializeInstrumentHandler.handler(
               invokeInput as Parameters<typeof MaterializeInstrumentHandler.handler>[0],
             ).pipe(Effect.provide(Database.layer(db)));
@@ -299,7 +301,7 @@ const runSyncLots = (
         },
         schedule: () => Effect.void,
         invokePromise: async () => ({ error: new Error('Not available') }),
-      } as Context.Tag.Service<typeof Operation.Service>),
+      } as Context.Service.Shape<typeof Operation.Service>),
     ),
     db,
   );

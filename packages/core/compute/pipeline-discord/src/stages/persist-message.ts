@@ -47,7 +47,7 @@ export const persistMessageStage = (): Stage.Stage<Type.Event, Type.Event, State
             yield* messages.put(toStored(event.target, event.message));
             return event;
           }).pipe(
-            Effect.catchAll((error) =>
+            Effect.catch((error) =>
               Effect.flatMap(StateStore, (store) =>
                 store
                   .setStatus(event.target.id, event.target.status, `persist-message: ${error.message}`)

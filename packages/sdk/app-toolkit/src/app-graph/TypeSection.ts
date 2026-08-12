@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
 import { type Space, isSpace } from '@dxos/client/echo';
@@ -124,7 +124,7 @@ export const createTypeSectionExtension = (
   const sectionSegments = options.groupSegment ? [options.groupSegment, typename] : [typename];
 
   /** The section's objects in their persisted order; empty means the section is suppressed. */
-  const queryOrderedObjects = (space: Space, get: Atom.Context): Obj.Unknown[] => {
+  const queryOrderedObjects = (space: Space, get: Atom.AtomContext): Obj.Unknown[] => {
     const objects = get(space.db.query(options.query ?? defaultQuery).atom) as Obj.Unknown[];
     if (objects.length === 0) {
       return [];
@@ -144,7 +144,7 @@ export const createTypeSectionExtension = (
     );
   };
 
-  const buildObjectNodes = (space: Space, get: Atom.Context, orderedObjects: Obj.Unknown[]) => {
+  const buildObjectNodes = (space: Space, get: Atom.AtomContext, orderedObjects: Obj.Unknown[]) => {
     const onRearrange = makeSectionRearrangeCallback(space, typename);
     return orderedObjects
       .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))

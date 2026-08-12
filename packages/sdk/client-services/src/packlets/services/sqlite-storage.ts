@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
@@ -43,10 +43,9 @@ export type SqliteStorageOptions = {
 /**
  * Effect service tag for {@link SqliteStorage}.
  */
-export class SqliteStorageService extends EffectContext.Tag('@dxos/client-services/SqliteStorage')<
-  SqliteStorageService,
-  SqliteStorage
->() {}
+export class SqliteStorageService extends EffectContext.Service<SqliteStorageService, SqliteStorage>()(
+  '@dxos/client-services/SqliteStorage',
+) {}
 
 /** Minimal cross-platform EventEmitter needed by the RandomAccessStorage contract. */
 class BaseEventEmitter {

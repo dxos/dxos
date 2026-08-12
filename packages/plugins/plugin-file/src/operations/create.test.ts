@@ -103,7 +103,7 @@ describe('FileOperation.Create', () => {
         FileOperation.Create,
         { file: makeFile('notes.txt', 'text/plain', new Uint8Array(8)), db: defaultSpace.db },
         { spaceId: defaultSpace.id },
-      ).pipe(Effect.catchAllCause((cause) => Effect.succeed(Cause.squash(cause)))),
+      ).pipe(Effect.catchCause((cause) => Effect.succeed(Cause.squash(cause)))),
     );
     expect(error).toBeInstanceOf(UnsupportedFileTypeError);
   });
@@ -118,7 +118,7 @@ describe('FileOperation.Create', () => {
         FileOperation.Create,
         { file: makeFile('big.png', 'image/png', oversized), db: defaultSpace.db },
         { spaceId: defaultSpace.id },
-      ).pipe(Effect.catchAllCause((cause) => Effect.succeed(Cause.squash(cause)))),
+      ).pipe(Effect.catchCause((cause) => Effect.succeed(Cause.squash(cause)))),
     );
     expect(error).toBeInstanceOf(FileTooLargeError);
   });

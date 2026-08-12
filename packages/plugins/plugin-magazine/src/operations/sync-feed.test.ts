@@ -94,6 +94,7 @@ describe('SyncFeed', () => {
         expect(guids).toEqual(['post-a', 'post-b']);
       },
       Effect.provide(TestLayer),
+      TestHelpers.withStubbedFetch,
       TestHelpers.provideTestContext,
     ),
   );
@@ -141,6 +142,7 @@ describe('SyncFeed', () => {
         expect(items[0].link).toBe('https://example.com/shared');
       },
       Effect.provide(TestLayer),
+      TestHelpers.withStubbedFetch,
       TestHelpers.provideTestContext,
     ),
   );

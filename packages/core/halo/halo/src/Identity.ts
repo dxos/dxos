@@ -19,7 +19,7 @@ import * as Invitation from './Invitation';
  * Device kind (platform / host class). Replaces the legacy protobuf `DeviceType` enum;
  * `agent`/`agent-managed` denote EDGE- or Hub-hosted agent devices.
  */
-export const DeviceKind = Schema.Literal('unknown', 'browser', 'native', 'mobile', 'agent', 'agent-managed');
+export const DeviceKind = Schema.Literals(['unknown', 'browser', 'native', 'mobile', 'agent', 'agent-managed']);
 export type DeviceKind = typeof DeviceKind.Type;
 
 /**
@@ -33,7 +33,7 @@ export const Info = Schema.Struct({
   identityKey: Schema.optional(Schema.String),
   displayName: Schema.optional(Schema.String),
   /** Arbitrary profile metadata. */
-  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 export type Info = typeof Info.Type;
 
@@ -52,7 +52,7 @@ export const DeviceInfo = Schema.Struct({
 export type DeviceInfo = typeof DeviceInfo.Type;
 
 /** How a recovery key is held. Mirrors `dxos.halo.credentials.IdentityRecovery.Kind`. */
-export const RecoveryKind = Schema.Literal('passkey', 'recovery-code', 'oauth', 'unknown');
+export const RecoveryKind = Schema.Literals(['passkey', 'recovery-code', 'oauth', 'unknown']);
 export type RecoveryKind = typeof RecoveryKind.Type;
 
 /**
@@ -80,7 +80,7 @@ export const Credential = Schema.Struct({
   id: Schema.optional(Schema.String),
   /** The subject assertion's `@type` (e.g. `dxos.halo.credentials.IdentityRecovery`). */
   type: Schema.String,
-  issuanceDate: Schema.optional(Schema.DateFromSelf),
+  issuanceDate: Schema.optional(Schema.Date),
   recovery: Schema.optional(RecoveryInfo),
 });
 export type Credential = typeof Credential.Type;
@@ -111,7 +111,7 @@ export type RecoverArgs =
  */
 /**
  * The service shape backing {@link Service}. Named (rather than inline in the `Context.Tag`) so
- * consumers referencing it — e.g. a capability typed `Context.Tag.Service<Identity.Service>` —
+ * consumers referencing it — e.g. a capability typed `Context.Service.Shape<typeof Identity.Service>` —
  * name it portably instead of expanding its structure and leaking the transitive
  * {@link Invitation} types into their declaration emit (TS2883).
  */
@@ -160,7 +160,7 @@ export interface ServiceApi {
   readonly invitations: Stream.Stream<readonly Invitation.Flow[]>;
 }
 
-export class Service extends Context.Tag('@dxos/halo/Identity')<Service, ServiceApi>() {}
+export class Service extends Context.Service<Service, ServiceApi>()('@dxos/halo/Identity') {}
 
 /** The local identity as a current-value stream (requires {@link Service}). */
 export const identity: Stream.Stream<Option.Option<Info>, never, Service> = Stream.unwrap(

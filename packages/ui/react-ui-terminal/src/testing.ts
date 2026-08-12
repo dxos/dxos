@@ -43,9 +43,10 @@ const pollTerminal = (element: HTMLElement, text: string): Effect.Effect<void> =
 export const waitForTerminal = (element: HTMLElement, text: string, timeout = DEFAULT_TIMEOUT): Promise<void> =>
   EffectEx.runPromise(
     pollTerminal(element, text).pipe(
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: timeout,
-        onTimeout: () => new Error(`Timed out waiting for "${text}". Terminal contents:\n${readTerminal(element)}`),
+        orElse: () =>
+          Effect.fail(new Error(`Timed out waiting for "${text}". Terminal contents:\n${readTerminal(element)}`)),
       }),
     ),
   );

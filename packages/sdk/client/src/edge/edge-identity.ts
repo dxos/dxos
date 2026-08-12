@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as Context from 'effect/Context';
 
 import { type EdgeIdentity } from '@dxos/edge-client';
 import { runServiceCall } from '@dxos/protocols';
@@ -20,15 +20,15 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
     identityDid: identity.did,
     peerKey: device.deviceKey.toHex(),
     presentCredentials: async ({ challenge }) => {
-      const identityService = client.services.rpc.IdentityService;
+      const rpc = client.services.rpc;
       const authCredential = await runServiceCall(
-        Runtime.defaultRuntime,
-        identityService.createAuthCredential(undefined),
+        Context.empty(),
+        rpc['IdentityService.createAuthCredential'](undefined),
         { label: 'IdentityService.createAuthCredential' },
       );
       return runServiceCall(
-        Runtime.defaultRuntime,
-        identityService.signPresentation({
+        Context.empty(),
+        rpc['IdentityService.signPresentation']({
           presentation: { credentials: [authCredential] },
           nonce: challenge,
         }),

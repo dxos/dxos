@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { ReactNode } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -39,7 +41,7 @@ const parseAppearance = (value: string | null): Settings.Appearance => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ tx: propsTx = defaultTx, platform }: ThemePluginOptions = {}) {
-    const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
+    const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
     const settingsAtom = yield* ThemeCapabilities.Settings;
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
 

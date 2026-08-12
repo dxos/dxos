@@ -68,7 +68,7 @@ const MapSurface = (props: MapSurfaceProps) => {
 
         return { id: row.id, location: { lat, lng } };
       })
-      .filter(Predicate.isNotNullable);
+      .filter(Predicate.isNotNullish);
   });
 
   return (

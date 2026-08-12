@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -1153,11 +1154,11 @@ describe('GraphBuilder', () => {
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        // Define a test service using Context.GenericTag pattern.
+        // Define a test service using Context.Service pattern.
         interface TestServiceInterface {
           getValue(): number;
         }
-        const TestService = Context.GenericTag<TestServiceInterface>('TestService');
+        const TestService = Context.Service<TestServiceInterface>('TestService');
 
         // Track whether the action was executed with the correct context.
         let executionResult: number | null = null;

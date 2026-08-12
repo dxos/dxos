@@ -37,13 +37,13 @@ export const Transcribe = Operation.make({
     icon: 'ph--subtitles--regular',
   },
   input: Schema.Struct({
-    video: Ref.Ref(Video.Video).annotations({ description: 'The video to transcribe.' }),
-    lang: Schema.optional(Schema.String).annotations({
+    video: Ref.Ref(Video.Video).annotate({ description: 'The video to transcribe.' }),
+    lang: Schema.optional(Schema.String).annotate({
       description: 'Language code (defaults to "en").',
     }),
   }),
   output: Schema.Struct({
-    transcript: Ref.Ref(Text.Text).annotations({ description: 'The generated transcript text object.' }),
+    transcript: Ref.Ref(Text.Text).annotate({ description: 'The generated transcript text object.' }),
   }),
   services: [Database.Service],
 });
@@ -60,10 +60,10 @@ export const Summarize = Operation.make({
     icon: 'ph--text-align-left--regular',
   },
   input: Schema.Struct({
-    video: Ref.Ref(Video.Video).annotations({ description: 'The video whose transcript to summarize.' }),
+    video: Ref.Ref(Video.Video).annotate({ description: 'The video whose transcript to summarize.' }),
   }),
   output: Schema.Struct({
-    summary: Ref.Ref(Text.Text).annotations({ description: 'The generated summary text object.' }),
+    summary: Ref.Ref(Text.Text).annotate({ description: 'The generated summary text object.' }),
   }),
   services: [Database.Service, AiService.AiService],
 });
@@ -83,13 +83,13 @@ export const FetchTranscript = Operation.make({
     icon: 'ph--closed-captioning--regular',
   },
   input: Schema.Struct({
-    video: Ref.Ref(Video.Video).annotations({ description: 'The video to fetch the transcript for.' }),
-    lang: Schema.optional(Schema.String).annotations({
+    video: Ref.Ref(Video.Video).annotate({ description: 'The video to fetch the transcript for.' }),
+    lang: Schema.optional(Schema.String).annotate({
       description: 'Preferred BCP-47 language code (defaults to "en").',
     }),
   }),
   output: Schema.Struct({
-    transcript: Ref.Ref(Text.Text).annotations({ description: 'The generated transcript text object.' }),
+    transcript: Ref.Ref(Text.Text).annotate({ description: 'The generated transcript text object.' }),
   }),
   services: [Database.Service],
 });
@@ -107,10 +107,10 @@ export const FetchDescription = Operation.make({
     icon: 'ph--text-align-left--regular',
   },
   input: Schema.Struct({
-    video: Ref.Ref(Video.Video).annotations({ description: 'The video to fetch the description for.' }),
+    video: Ref.Ref(Video.Video).annotate({ description: 'The video to fetch the description for.' }),
   }),
   output: Schema.Struct({
-    description: Schema.String.annotations({ description: 'The extracted video description.' }),
+    description: Schema.String.annotate({ description: 'The extracted video description.' }),
   }),
   services: [Database.Service],
 });

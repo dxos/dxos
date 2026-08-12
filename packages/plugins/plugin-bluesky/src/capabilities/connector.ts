@@ -45,7 +45,7 @@ const BSKY_OAUTH_SCOPES = ['transition:generic'] as const;
 
 /** Schema for the atproto pre-flight form (handle / DID). */
 const AtprotoPreflightForm = Schema.Struct({
-  handle: Schema.String.annotations({
+  handle: Schema.String.annotate({
     title: 'Handle',
     description: 'Your atproto handle or DID (e.g. user.bsky.social).',
     examples: ['user.bsky.social'],

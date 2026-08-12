@@ -3,23 +3,24 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 /** The property's type with an optional `T | undefined` union unwrapped to its inner `T`. */
 const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
-  if (!prop.isOptional || !SchemaAST.isUnion(prop.type)) {
+  if (!SchemaAST.isOptional(prop.type) || !SchemaAST.isUnion(prop.type)) {
     return prop.type;
   }
   // Drop the `undefined` member, preserving the remaining union (don't collapse `A | B | undefined` to `A`).
-  const defined = prop.type.types.filter((type) => type._tag !== 'UndefinedKeyword');
+  const defined = prop.type.types.filter((type) => type._tag !== 'Undefined');
   if (defined.length === 0) {
     return prop.type;
   }
-  return defined.length === 1 ? defined[0] : SchemaAST.Union.make(defined, prop.type.annotations);
+  return defined.length === 1
+    ? defined[0]
+    : new SchemaAST.Union(defined, prop.type.mode, prop.type.annotations, prop.type.checks);
 };
 
 /**

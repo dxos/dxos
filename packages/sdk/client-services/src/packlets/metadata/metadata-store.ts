@@ -71,10 +71,9 @@ export interface IMetadataStore {
 /**
  * Effect service tag for {@link IMetadataStore}.
  */
-export class IMetadataStoreService extends EffectContext.Tag('@dxos/client-services/IMetadataStore')<
-  IMetadataStoreService,
-  IMetadataStore
->() {}
+export class IMetadataStoreService extends EffectContext.Service<IMetadataStoreService, IMetadataStore>()(
+  '@dxos/client-services/IMetadataStore',
+) {}
 
 export interface AddSpaceOptions {
   key: PublicKey;

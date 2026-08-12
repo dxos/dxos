@@ -7,11 +7,11 @@ import type * as Schema from 'effect/Schema';
 
 import { createAnnotationHelper } from '@dxos/echo/internal';
 
-export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnnotationId');
+export const IconAnnotationId = '@dxos/schema/IconAnnotationId';
 
 export const IconAnnotation = createAnnotationHelper<string>(IconAnnotationId);
 
-export const getIconAnnotation = (schema: Schema.Schema.AnyNoContext): string | undefined =>
+export const getIconAnnotation = (schema: Schema.Codec<any, any>): string | undefined =>
   IconAnnotation.get(schema).pipe(Option.getOrUndefined) as string | undefined;
 
 /**
@@ -22,7 +22,7 @@ export const getIconAnnotation = (schema: Schema.Schema.AnyNoContext): string | 
 // TODO(burdon): Probably best not to include in type system? Instead incl. in plugin metadata.
 export const withIcon =
   (icon: string) =>
-  <Self extends Schema.Schema.All>(schema: Self) =>
-    schema.annotations({
+  <Self extends Schema.Top>(schema: Self) =>
+    schema.annotate({
       [IconAnnotationId]: icon,
     });

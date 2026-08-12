@@ -122,13 +122,15 @@ describe('without database', () => {
     };
   }
 
+  const NestedStruct = Schema.Struct({
+    name: Schema.optional(Schema.String),
+    arr: Schema.optional(Schema.Array(Schema.String)),
+    ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
+  });
+
   const TestSchema: Type.Obj<TestSchema> = Schema.Struct({
     text: Schema.optional(Schema.String),
-    nested: Schema.Struct({
-      name: Schema.optional(Schema.String),
-      arr: Schema.optional(Schema.Array(Schema.String)),
-      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
-    }),
+    nested: NestedStruct,
   }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0'))) as any;
 
   test('get schema on object', () => {
@@ -143,7 +145,8 @@ describe('without database', () => {
   // TODO(dmaretskyi): Fix -- right now we always return the root schema.
   test.skip('get schema on nested object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const NestedSchema = Type.getSchema(TestSchema).pipe(Schema.pluck('nested'), Schema.typeSchema);
+    // v4 dropped `Schema.pluck`; the standalone struct is the same projection.
+    const NestedSchema = Schema.toType(NestedStruct);
     expect(prepareAstForCompare(Type.getSchema(Obj.getType(obj.nested as Obj.Unknown)!).ast)).to.deep.eq(
       prepareAstForCompare(NestedSchema.ast),
     );
@@ -677,6 +680,22 @@ describe('Reactive Object with ECHO database', () => {
       const ref = Annotation.get(host, RootRefAnnotation).pipe(Option.getOrThrow);
       expect((await ref.load()).id).to.eq(root.id);
     });
+
+    // `useSpaceProperties`/`useObject` hand components a snapshot, so the snapshot read is what an
+    // app actually exercises; the meta dictionary holds the decoded `Ref` there too.
+    test('Annotation.get reads a Ref from a snapshot', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([RootCollection, TestSchema.Example]);
+
+      const root = db.add(Obj.make(RootCollection, { name: 'root' }));
+      const host = db.add(Obj.make(TestSchema.Example, { string: 'host' }));
+      Obj.update(host, (host) => {
+        Annotation.set(host, RootRefAnnotation, Ref.make(root));
+      });
+
+      const ref = Annotation.get(Obj.getSnapshot(host), RootRefAnnotation).pipe(Option.getOrThrow);
+      expect((await ref.load()).id).to.eq(root.id);
+    });
   });
 
   describe('isDeleted', () => {
@@ -1101,7 +1120,7 @@ describe('Reactive Object with ECHO database', () => {
     const Blob = Type.makeObject(DXN.make('com.example.type.blob', '0.1.0'))(
       Schema.Struct({
         name: Schema.String,
-        bytes: Schema.Uint8ArrayFromSelf,
+        bytes: Schema.Uint8Array,
       }),
     );
 

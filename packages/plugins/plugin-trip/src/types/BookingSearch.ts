@@ -23,25 +23,23 @@ import * as Segment from './Segment';
 
 /** Shared query fields (parallels `Segment.TransportFields`). Used directly as the input-form schema. */
 export const FlightSearchFields = Schema.Struct({
-  origin: Schema.optional(Schema.String.annotations({ title: 'Origin', description: 'IATA code', examples: ['JFK'] })),
+  origin: Schema.optional(Schema.String.annotate({ title: 'Origin', description: 'IATA code', examples: ['JFK'] })),
   destination: Schema.optional(
-    Schema.String.annotations({ title: 'Destination', description: 'IATA code', examples: ['LHR'] }),
+    Schema.String.annotate({ title: 'Destination', description: 'IATA code', examples: ['LHR'] }),
   ),
-  departureDate: Schema.optional(Format.DateTime.annotations({ title: 'Departure' })),
-  returnDate: Schema.optional(Format.DateTime.annotations({ title: 'Return' })),
+  departureDate: Schema.optional(Format.DateTime.annotate({ title: 'Departure' })),
+  returnDate: Schema.optional(Format.DateTime.annotate({ title: 'Return' })),
   serviceClass: Schema.optional(Segment.ServiceClass),
-  operator: Schema.optional(
-    Schema.String.annotations({ title: 'Operator', description: 'Preferred operator IATA code' }),
-  ),
-  passengers: Schema.optional(Schema.Number.annotations({ title: 'Passengers' })),
+  operator: Schema.optional(Schema.String.annotate({ title: 'Operator', description: 'Preferred operator IATA code' })),
+  passengers: Schema.optional(Schema.Number.annotate({ title: 'Passengers' })),
 });
 export interface FlightSearchFields extends Schema.Schema.Type<typeof FlightSearchFields> {}
 
-export const FlightSearchQuery = Schema.extend(FlightSearchFields, Schema.TaggedStruct('flight', {}));
+export const FlightSearchQuery = FlightSearchFields.pipe(Schema.fieldsAssign(Schema.TaggedStruct('flight', {}).fields));
 export interface FlightSearchQuery extends Schema.Schema.Type<typeof FlightSearchQuery> {}
 
 /** Discriminated union of all query kinds. Today only `flight` is populated. */
-export const SearchQuery = Schema.Union(FlightSearchQuery);
+export const SearchQuery = Schema.Union([FlightSearchQuery]);
 export type SearchQuery = Schema.Schema.Type<typeof SearchQuery>;
 
 /** A single leg within an offer. */
@@ -72,7 +70,7 @@ export const FlightOffer = Schema.TaggedStruct('flight', {
 export interface FlightOffer extends Schema.Schema.Type<typeof FlightOffer> {}
 
 /** Discriminated union of all offer kinds. Today only `flight` is populated. */
-export const Offer = Schema.Union(FlightOffer);
+export const Offer = Schema.Union([FlightOffer]);
 export type Offer = Schema.Schema.Type<typeof Offer>;
 
 /**

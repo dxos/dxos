@@ -46,7 +46,7 @@ export const useImageUrl = (file: File.File | undefined): string | undefined => 
       return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
     }).pipe(
       Effect.provide(Database.layer(db)),
-      Effect.catchAll(() => Effect.succeed(undefined)),
+      Effect.catch(() => Effect.succeed(undefined)),
     );
 
     void EffectEx.runPromise(program).then((url) => {

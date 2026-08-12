@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
@@ -17,7 +16,7 @@ import { Context } from '@dxos/context';
 import { Database, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as Context from 'effect/Context';
 
 import { Trigger } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, Rpc, serveBridgeService } from '@dxos/client-protocol';
@@ -87,12 +87,12 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
           });
           await acquired.wait();
         }
-        await EffectEx.runPromise(this.#services.rpc.WorkerService.start({ origin, lockKey }));
+        await EffectEx.runPromise(this.#services.rpc['WorkerService.start']({ origin, lockKey }));
 
         this.#loggingStreamCleanup?.();
         this.#loggingStreamCleanup = subscribeStream(
-          Runtime.defaultRuntime,
-          this.#services.rpc.LoggingService.queryLogs({ filters: this.#logFilter }),
+          Context.empty(),
+          this.#services.rpc['LoggingService.queryLogs']({ filters: this.#logFilter }),
           {
             onData: (entry) => {
               switch (entry.level) {

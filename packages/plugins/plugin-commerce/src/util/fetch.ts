@@ -58,7 +58,7 @@ export const fetchPage = (request: HttpRequest, options: FetchPageOptions = {}):
     return fetchViaProxy(request);
   }
   return renderViaCrx(request.url, { waitForSelector: options.waitForSelector, active: options.active }).pipe(
-    Effect.catchAll((error) => {
+    Effect.catch((error) => {
       log.info('render-proxy failed; falling back to edge proxy', { url: request.url, error: error.message });
       return fetchViaProxy(request);
     }),

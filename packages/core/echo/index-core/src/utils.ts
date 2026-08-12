@@ -34,10 +34,10 @@ export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE
  * - '\' -> '\\'
  * - contact with .
  */
-export const EscapedPropPath: Schema.SchemaClass<string, string> & {
+export const EscapedPropPath: Schema.Codec<string, string> & {
   escape: (path: EntityPropPath) => EscapedPropPath;
   unescape: (path: EscapedPropPath) => EntityPropPath;
-} = class extends Schema.String.annotations({ title: 'EscapedPropPath' }) {
+} = class extends Schema.String.annotate({ title: 'EscapedPropPath' }) {
   static escape(path: EntityPropPath): EscapedPropPath {
     return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
   }

@@ -47,7 +47,7 @@ export default Capability.makeModule(
         resolver.resolve(RemoteProcessManager.Service, {}).pipe(
           Effect.flatMap((manager) => manager.cancel?.({ space, trigger, pid }) ?? Effect.void),
           Effect.scoped,
-          Effect.catchAllCause((cause) =>
+          Effect.catchCause((cause) =>
             Effect.sync(() => log.warn('edge progress cancel failed', { space, trigger, pid, cause })),
           ),
         ),
@@ -74,7 +74,7 @@ export default Capability.makeModule(
       },
     });
 
-    // TODO(mykola): Possible bug source. Use `Effect.forkDaemon`.
+    // TODO(mykola): Possible bug source. Use `Effect.forkDetach`.
     const fiber = processManagerRuntime.runFork(
       monitor.subscribeToTraceMessages({ type: Trace.StatusUpdate.key }).pipe(
         Stream.runForEach((message) =>

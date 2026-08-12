@@ -12,7 +12,6 @@ import type * as ProcessManager from './ProcessManager';
  * Lives in its own module so consumers (notably `ProcessOperationInvoker.ts`)
  * can import it without pulling in `ProcessManager.ts` as a value import.
  */
-export class ProcessManagerService extends Context.Tag('@dxos/functions-runtime/ProcessManagerService')<
-  ProcessManagerService,
-  ProcessManager.Manager
->() {}
+export class ProcessManagerService extends Context.Service<ProcessManagerService, ProcessManager.Manager>()(
+  '@dxos/functions-runtime/ProcessManagerService',
+) {}

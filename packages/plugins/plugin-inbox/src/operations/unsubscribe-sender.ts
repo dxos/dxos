@@ -45,7 +45,7 @@ const handler = InboxOperation.UnsubscribeSender.pipe(
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               body: 'List-Unsubscribe=One-Click',
             }).then(() => true),
-          ).pipe(Effect.orElse(() => Effect.succeed(false)))
+          ).pipe(Effect.catch(() => Effect.succeed(false)))
         : false;
 
       return { filtered: true, unsubscribed };

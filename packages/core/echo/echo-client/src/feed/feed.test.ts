@@ -557,7 +557,7 @@ describe('Feed', () => {
       const feedService = await makeFeedClient(peer.host.feedService);
 
       const traceResult = await EffectEx.runPromise(
-        feedService.FeedService.queryFeed({
+        feedService['FeedService.queryFeed']({
           query: {
             spaceId: db.spaceId,
             feedIds: [traceFeed.id],
@@ -568,7 +568,7 @@ describe('Feed', () => {
       expect(traceResult.objects?.length).toBe(1);
 
       const dataResult = await EffectEx.runPromise(
-        feedService.FeedService.queryFeed({
+        feedService['FeedService.queryFeed']({
           query: {
             spaceId: db.spaceId,
             feedIds: [traceFeed.id],

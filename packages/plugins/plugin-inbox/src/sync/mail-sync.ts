@@ -150,10 +150,9 @@ export interface MailSyncProviderService {
  * Effect service carrying the provider a mail-sync run drives. A handler provides a layer whose
  * implementation captures the provider's API + resolver, so the shared harness never names them.
  */
-export class MailSyncProvider extends Context.Tag('@dxos/plugin-inbox/MailSyncProvider')<
-  MailSyncProvider,
-  MailSyncProviderService
->() {}
+export class MailSyncProvider extends Context.Service<MailSyncProvider, MailSyncProviderService>()(
+  '@dxos/plugin-inbox/MailSyncProvider',
+) {}
 
 /**
  * The reconcile branch, shared by both providers: resolves each change's foreignId to its feed message's

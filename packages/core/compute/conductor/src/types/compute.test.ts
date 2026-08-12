@@ -31,7 +31,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe('ValueBag', () => {
-  it.scoped(
+  it.effect(
     'ValueBag.unwrap',
     Effect.fnUntraced(
       function* ({ expect }) {

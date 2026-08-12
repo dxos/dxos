@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as AiError from '@effect/ai/AiError';
-import type * as Chat from '@effect/ai/Chat';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
+import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
+import * as AiError from 'effect/unstable/ai/AiError';
+import type * as Chat from 'effect/unstable/ai/Chat';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -23,7 +23,7 @@ import { TestingToolkit, testingLayer } from './toolkit';
 
 // TODO(dmaretskyi): What is the right stopping condition?
 export const hasToolCall = Effect.fn(function* (chat: Chat.Service) {
-  const history = yield* chat.history;
+  const history = yield* Ref.get(chat.history);
   const lastMessage = history.content.at(-1);
   return (
     (lastMessage?.role === 'assistant' && lastMessage.content.at(-1)?.type === 'tool-call') ||
@@ -52,7 +52,7 @@ export const agenticLoop: {
   }): Effect.Effect<
     Message.Message[],
     PromptPreprocessingError | AiError.AiError,
-    LanguageModel.LanguageModel | Tool.Requirements<Tools>
+    LanguageModel.LanguageModel | Tool.HandlerServices<Tools>
   >;
 } = Effect.fn('agenticLoop')(function* (opts) {
   const tk: Toolkit.Toolkit<{}> = opts.toolkit ?? (Toolkit.make() as any);
@@ -65,7 +65,7 @@ export const agenticLoop: {
       disableToolCallResolution: true,
       toolkit,
       prompt,
-    }).pipe(AiParser.parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
+    }).pipe(AiParser.parseResponse(), Stream.runCollect);
     const message = Obj.make(Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'assistant' },

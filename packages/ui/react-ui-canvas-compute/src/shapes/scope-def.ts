@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
@@ -12,9 +13,8 @@ import { ScopeComponent } from './Scope';
 // Kept out of `Scope.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
 
-export const ScopeShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const ScopeShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('scope'),
   }),
 );

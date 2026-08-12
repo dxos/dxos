@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
-import * as Registry from '@effect-atom/atom/Registry';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
@@ -38,7 +38,7 @@ const createServices = (config?: Config) =>
 
 export const Root = () => {
   const navigate = useNavigate();
-  const registry = useMemo(() => Registry.make(), []);
+  const registry = useMemo(() => AtomRegistry.make(), []);
 
   return (
     <ClientProvider

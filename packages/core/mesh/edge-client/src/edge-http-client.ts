@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { type Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -126,10 +126,9 @@ export type GetSpaceTriggersResponse = {
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
-export class EdgeHttpClientService extends EffectContext.Tag('@dxos/edge-client/EdgeHttpClient')<
-  EdgeHttpClientService,
-  EdgeHttpClient
->() {}
+export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientService, EdgeHttpClient>()(
+  '@dxos/edge-client/EdgeHttpClient',
+) {}
 
 /**
  * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).

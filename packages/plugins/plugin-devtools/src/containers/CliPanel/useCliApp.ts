@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 import { useEffect, useMemo } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -62,18 +62,24 @@ export const useCliApp = (client: Client) => {
       return undefined;
     }
 
-    // `provide` comes after the subcommands so the config reaches them in the type as well as at
-    // runtime; applied before, every subcommand still advertises `CommandConfig` as unmet.
-    const command = Command.make('dx', {
-      json: Options.boolean('json', { ifPresent: true }).pipe(Options.withDescription('JSON output.')),
-      verbose: Options.boolean('verbose', { ifPresent: true }).pipe(
-        Options.withAlias('v'),
-        Options.withDescription('Verbose output.'),
-      ),
-    }).pipe(
+    const command = Command.make('dx').pipe(
+      // Shared so they parse anywhere in the line — a plain command config is only read when `dx`
+      // itself is the leaf.
+      Command.withSharedFlags({
+        json: Options.boolean('json').pipe(Options.withDescription('JSON output.')),
+        verbose: Options.boolean('verbose').pipe(Options.withAlias('v'), Options.withDescription('Verbose output.')),
+      }),
       Command.withSubcommands([first, ...rest]),
-      Command.provide(({ json, verbose }) =>
-        Layer.succeed(CommandConfig, { json, verbose, profile: 'default', logLevel: 'info' }),
+      // After the subcommands so the config reaches them: `provide` wraps the handler it is applied
+      // to, and `withSubcommands` replaces that handler with one that dispatches to the children.
+      // The input widens to a union across the tree, hence the presence checks.
+      Command.provide((input) =>
+        Layer.succeed(CommandConfig, {
+          json: 'json' in input ? input.json : false,
+          verbose: 'verbose' in input ? input.verbose : false,
+          profile: 'default',
+          logLevel: 'info',
+        }),
       ),
     );
 

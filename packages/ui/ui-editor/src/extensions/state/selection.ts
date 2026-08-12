@@ -5,6 +5,7 @@
 import { type Extension, Transaction, type TransactionSpec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { debounce } from '@dxos/async';
 import { isTruthy } from '@dxos/util';
@@ -29,12 +30,12 @@ export type EditorSelectionState = {
 export const EditorSelection = Schema.Struct({
   anchor: Schema.Number,
   head: Schema.optional(Schema.Number),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export const EditorSelectionStateSchema = Schema.Struct({
   scrollTo: Schema.optional(Schema.Number),
   selection: Schema.optional(EditorSelection),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type EditorStateStore = {
   setState: (id: string, state: EditorSelectionState) => void;

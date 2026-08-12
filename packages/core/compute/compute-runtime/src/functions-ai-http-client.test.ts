@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { describe, test } from 'vitest';
 
 import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
@@ -32,7 +31,7 @@ const extractDefect = (exit: Exit.Exit<unknown, unknown>): Error | null => {
   if (Exit.isSuccess(exit)) {
     return null;
   }
-  return (Chunk.toReadonlyArray(Cause.defects(exit.cause))[0] as Error | undefined) ?? null;
+  return (exit.cause.reasons.filter(Cause.isDieReason).map((reason) => reason.defect)[0] as Error | undefined) ?? null;
 };
 
 describe('FunctionsAiHttpClient', () => {

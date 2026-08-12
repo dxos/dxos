@@ -4,9 +4,11 @@
 
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { Database, type Err, Obj, Ref, type Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
+import { SchemaAST } from '@dxos/effect';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -27,7 +29,7 @@ const ArtifactURI: Schema.Schema<string> & {
     schema: S,
     ref: ArtifactURI,
   ) => Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service>;
-} = class extends Schema.String.annotations({
+} = class extends Schema.String.annotate({
   // TODO(dmaretskyi): This section gets overriden.
   description: trim`
     The URI of the referenced object. Protocols accepted:
@@ -87,17 +89,21 @@ type ArtifactURI = Schema.Schema.Type<typeof ArtifactURI>;
 /**
  * Schema that decodes ECHO reference object from an LLM-friendly input.
  */
-export const RefFromLLM = Schema.transform(ArtifactURI, Ref.Ref(Obj.Unknown), {
-  decode: (fromA) => {
-    const eid = ArtifactURI.toEchoURI(fromA);
-    // Normalize to local form: strip any space authority so the ref resolves within the current
-    // space context. The AI commonly sends echo://SPACE/ENTITY format (mirroring what it sees in
-    // the database context), but cross-space resolution is not yet supported and the space ID
-    // encoded in the URI is always the current space anyway.
-    return EncodedReference.fromURI(EID.toLocal(eid));
-  },
-  encode: (toI) => EncodedReference.toURI(toI),
-  strict: false,
-}).annotations({
-  description: ArtifactURI.ast.annotations.description as string,
+export const RefFromLLM = ArtifactURI.pipe(
+  Schema.decodeTo(
+    Ref.Ref(Obj.Unknown),
+    SchemaTransformation.transform({
+      decode: (fromA) => {
+        const eid = ArtifactURI.toEchoURI(fromA);
+        // Normalize to local form: strip any space authority so the ref resolves within the current
+        // space context. The AI commonly sends echo://SPACE/ENTITY format (mirroring what it sees in
+        // the database context), but cross-space resolution is not yet supported and the space ID
+        // encoded in the URI is always the current space anyway.
+        return EncodedReference.fromURI(EID.toLocal(eid));
+      },
+      encode: (toI) => EncodedReference.toURI(toI) as never,
+    }),
+  ),
+).annotate({
+  description: SchemaAST.getDescriptionAnnotation(ArtifactURI.ast) as string,
 });

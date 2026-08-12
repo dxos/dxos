@@ -42,14 +42,14 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMailbox> = Inb
                 stats.updated += result.updated;
               }),
             ),
-            Effect.catchAllCause((cause) =>
+            Effect.catchCause((cause) =>
               Effect.sync(() => {
                 stats.failed++;
                 log.warn('extract mailbox: message failed after retry', {
                   err: Cause.squash(cause),
                   messageId: message.id,
                   extractorId,
-                  isDefect: !Cause.isFailure(cause),
+                  isDefect: !Cause.hasFails(cause),
                 });
               }),
             ),

@@ -22,7 +22,7 @@ export const Open = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    plugin: Schema.optional(Schema.String.annotations({ description: 'The plugin to open settings for.' })),
+    plugin: Schema.optional(Schema.String.annotate({ description: 'The plugin to open settings for.' })),
   }),
   output: Schema.Void,
 });

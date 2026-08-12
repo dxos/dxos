@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { DefaultOutput, JsonTransformInput } from '@dxos/conductor';
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -19,18 +20,16 @@ import { JsonComponent, JsonTransformComponent } from './Json';
 // Data
 //
 
-export const JsonShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const JsonShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('json'),
   }),
 );
 
 export type JsonShape = Schema.Schema.Type<typeof JsonShape>;
 
-export const JsonTransformShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const JsonTransformShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('json-transform'),
   }),
 );

@@ -4,8 +4,9 @@
 
 // @import-as-namespace
 
-import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import localforage from 'localforage';
 
 import { log } from '@dxos/log';
@@ -25,7 +26,7 @@ const STORAGE_KEY = `${meta.profile.key}.workspaces`;
 export const loadPersistedWorkspaces = (): Effect.Effect<NativeFilesystemCapabilities.FilesystemWorkspace[]> =>
   Effect.tryPromise(() => localforage.getItem<NativeFilesystemCapabilities.FilesystemWorkspace[]>(STORAGE_KEY)).pipe(
     Effect.map((stored) => stored ?? []),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to load persisted workspaces', { error });
         return [];
@@ -55,7 +56,7 @@ export interface FilesystemManager {
 
 /** Create a new FilesystemManager instance. */
 export const make = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>,
   markdownDocuments: MarkdownDocuments,
   directoryWatcher: DirectoryWatcher,
@@ -65,7 +66,7 @@ export const make = (
 
 class FilesystemManagerImpl implements FilesystemManager {
   constructor(
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
     private readonly _stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>,
     private readonly _markdownDocuments: MarkdownDocuments,
     private readonly _directoryWatcher: DirectoryWatcher,
@@ -85,7 +86,7 @@ class FilesystemManagerImpl implements FilesystemManager {
   }
 
   activateWorkspace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this._directoryWatcher.startWatching(workspace);
       yield* this._mirrorSpaceManager.getOrCreateSpace(workspace).pipe(Effect.asVoid);
       yield* this._markdownDocuments.syncFromDisk(workspace);
@@ -93,14 +94,14 @@ class FilesystemManagerImpl implements FilesystemManager {
   }
 
   deactivateWorkspace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this._directoryWatcher.stopWatching(workspace.id);
       this._markdownDocuments.evictForWorkspace(workspace);
     });
   }
 
   refreshWorkspaceContent(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this._markdownDocuments.evictForWorkspace(workspace);
       const refreshed = yield* refreshWorkspace(workspace);
       if (refreshed) {
@@ -116,10 +117,10 @@ class FilesystemManagerImpl implements FilesystemManager {
   }
 
   persistState(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const state = this._registry.get(this._stateAtom);
       yield* Effect.tryPromise(() => localforage.setItem(STORAGE_KEY, state.workspaces)).pipe(
-        Effect.catchAll((error) => {
+        Effect.catch((error) => {
           log.warn('Failed to persist workspace state', { error });
           return Effect.void;
         }),

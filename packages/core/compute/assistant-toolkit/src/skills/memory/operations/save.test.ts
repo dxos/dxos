@@ -33,7 +33,7 @@ describe('SaveMemory', () => {
         expect(memories[0].content).toBe('TypeScript');
 
         // The handler returns the stored entity so the agent can reference it by id.
-        const { id } = yield* Schema.decodeUnknown(Schema.Struct({ id: Schema.String }))(saved);
+        const { id } = yield* Schema.decodeUnknownEffect(Schema.Struct({ id: Schema.String }))(saved);
         expect(id).toBe(memories[0].id);
       },
       Effect.provide(OperationTestLayer),

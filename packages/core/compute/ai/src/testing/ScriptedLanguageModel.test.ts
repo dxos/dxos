@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import * as ScriptedLanguageModel from './ScriptedLanguageModel';
 
@@ -108,12 +108,12 @@ describe('ScriptedLanguageModel', () => {
       'fails loudly on an unmatched request and on per-route exhaustion',
       Effect.fnUntraced(function* ({ expect }) {
         const unmatched = yield* LanguageModel.generateText({ prompt: 'no route matches this' }).pipe(Effect.flip);
-        expect(unmatched.description).toContain('No scripted route matched');
+        expect(unmatched.message).toContain('No scripted route matched');
 
         const subAgent = { prompt: 'Complete the following task: compute.' };
         expect((yield* LanguageModel.generateText(subAgent)).text).toEqual('sub-1');
         const exhausted = yield* LanguageModel.generateText(subAgent).pipe(Effect.flip);
-        expect(exhausted.description).toContain('route sub-agent');
+        expect(exhausted.message).toContain('route sub-agent');
       }, Effect.provide(routedLayer())),
     );
 

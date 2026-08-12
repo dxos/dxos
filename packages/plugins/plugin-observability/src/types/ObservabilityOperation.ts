@@ -37,8 +37,8 @@ export const SendEvent = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    name: Schema.String.annotations({ description: 'The name of the event.' }),
-    properties: Schema.optional(Schema.Any).annotations({ description: 'Event properties.' }),
+    name: Schema.String.annotate({ description: 'The name of the event.' }),
+    properties: Schema.optional(Schema.Any).annotate({ description: 'Event properties.' }),
   }),
   output: Schema.Void,
 });

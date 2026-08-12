@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
       Effect.fn(function* ({ query }) {
         const capabilities = yield* Capability.Service;
         const client = yield* Capability.get(ClientCapabilities.Client).pipe(
-          Effect.catchAll(() => Effect.succeed(undefined)),
+          Effect.catch(() => Effect.succeed(undefined)),
         );
 
         // Resolvers read a space database to derive a navigation path, so this handler lives with the
@@ -45,7 +45,7 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
 
         const resolvers = capabilities.getAll(AppCapabilities.NavigationTargetResolver);
         const results = yield* Effect.forEach(resolvers, (resolver) =>
-          resolver(query).pipe(Effect.catchAll(() => Effect.succeed([]))),
+          resolver(query).pipe(Effect.catch(() => Effect.succeed([]))),
         ).pipe(Effect.provide(Database.layer(space.db)));
 
         // Best-first, as the operation's output promises. Sort is stable, so resolvers that declare no

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { create } from './create';
 import { credential } from './credential';
@@ -19,7 +19,7 @@ import { update } from './update';
 // for the CLI-first pairing flow (CLI hosts the device invitation; the browser joins), which
 // runs over the edge messenger rather than raw p2p.
 
-export const halo: Command.Command<any, any, any, any> = Command.make('halo').pipe(
+export const halo: Command.Command<any, any, any, any, any> = Command.make('halo').pipe(
   Command.withDescription('Manage HALO identity.'),
   Command.withSubcommands([create, credential, identity, keys, seed, share, update]),
 );

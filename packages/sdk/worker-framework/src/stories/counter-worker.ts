@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Stream from 'effect/Stream';
 
+import { EffectEx } from '@dxos/effect';
 import { RpcTiming } from '@dxos/worker-framework';
 import * as Worker from '@dxos/worker-framework/Worker';
 
@@ -38,7 +38,7 @@ const counterHandlers = CounterRpcs.toLayer(
         return count;
       }),
     subscribe: () =>
-      Stream.async<number, never>((emit) => {
+      EffectEx.streamFromEmitter<number, never>((emit) => {
         const listener = (value: number) => void emit.single(value);
         listeners.add(listener);
         void emit.single(count);
