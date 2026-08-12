@@ -3,10 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { Annotation } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 
 import { resolveLayoutField } from './resolve-layout-field';
 
@@ -38,7 +38,10 @@ describe('resolveLayoutField', () => {
     expect(resolved!.leafName).toBe('origin');
     expect(resolved!.labelType).toBeDefined();
     // The flagged type literal computes the place's label.
-    const label = Annotation.getLabelWithSchema(Schema.make(resolved!.labelType!), { name: 'JFK', code: 'JFK' } as any);
+    const label = Annotation.getLabelWithSchema(Schema.make<Schema.Top>(resolved!.labelType!), {
+      name: 'JFK',
+      code: 'JFK',
+    });
     expect(label).toBe('JFK');
   });
 

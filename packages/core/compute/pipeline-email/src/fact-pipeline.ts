@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
@@ -147,7 +146,7 @@ export const runFactPipeline = (options: {
       Pipeline.run({
         sink: (page) =>
           Effect.gen(function* () {
-            const units = Chunk.toReadonlyArray(page);
+            const units = page;
             if (units.length === 0) {
               return;
             }

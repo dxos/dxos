@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
-import type * as HttpClientError from '@effect/platform/HttpClientError';
 import type * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as ParseResult from 'effect/ParseResult';
+import type * as Schema from 'effect/Schema';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
+import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
 
 import * as Credential from '@dxos/compute/Credential';
 
@@ -27,8 +27,8 @@ type Requirements = HttpClient.HttpClient | GoogleCredentials | Credential.Crede
 export type GoogleCalendarApiError =
   | GoogleApiError
   | HttpClientError.HttpClientError
-  | Cause.TimeoutException
-  | ParseResult.ParseError;
+  | Cause.TimeoutError
+  | Schema.SchemaError;
 
 /**
  * Swappable Google Calendar API surface, the calendar peer of `GoogleMailApi`. Two jobs, and the
@@ -96,10 +96,9 @@ const paginate = (
   };
 };
 
-export class GoogleCalendarApi extends Context.Tag('@dxos/plugin-google/GoogleCalendarApi')<
-  GoogleCalendarApi,
-  GoogleCalendarApiService
->() {
+export class GoogleCalendarApi extends Context.Service<GoogleCalendarApi, GoogleCalendarApiService>()(
+  '@dxos/plugin-google/GoogleCalendarApi',
+) {
   /**
    * Live layer backed by the real Calendar HTTP client. Captures the auth/HTTP context once and
    * provides it to each request, so the resulting service methods carry no requirements.
@@ -108,7 +107,7 @@ export class GoogleCalendarApi extends Context.Tag('@dxos/plugin-google/GoogleCa
     GoogleCalendarApi,
     Effect.gen(function* () {
       const context = yield* Effect.context<Requirements>();
-      return GoogleCalendarApi.of({
+      const service: GoogleCalendarApiService = {
         listEventsByStartTime: (calendarId, timeMin, timeMax, pageSize, pageToken, searchQuery) =>
           Effect.provide(
             GoogleCalendar.listEventsByStartTime(calendarId, timeMin, timeMax, pageSize, pageToken, searchQuery),
@@ -122,7 +121,8 @@ export class GoogleCalendarApi extends Context.Tag('@dxos/plugin-google/GoogleCa
         getEvent: (calendarId, eventId) => Effect.provide(GoogleCalendar.getEvent(calendarId, eventId), context),
         createEvent: (calendarId, event) => Effect.provide(GoogleCalendar.createEvent(calendarId, event), context),
         deleteEvent: (calendarId, eventId) => Effect.provide(GoogleCalendar.deleteEvent(calendarId, eventId), context),
-      });
+      };
+      return service;
     }),
   );
 

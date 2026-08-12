@@ -46,11 +46,11 @@ export const autoSyncConnection = (
       (error): error is SyncRoutineMissingError => error instanceof SyncRoutineMissingError,
       () => Effect.sync(() => log.info('no sync routine; skipping auto sync', { connectorId: connector.id })),
     ),
-    Effect.catchAll((error) => Effect.sync(() => log.warn('auto sync failed', { connectorId: connector.id, error }))),
-    Effect.catchAllDefect((defect) =>
+    Effect.catch((error) => Effect.sync(() => log.warn('auto sync failed', { connectorId: connector.id, error }))),
+    Effect.catchDefect((defect) =>
       Effect.sync(() => log.warn('auto sync defect', { connectorId: connector.id, defect })),
     ),
-    Effect.forkDaemon,
+    Effect.forkDetach,
     Effect.asVoid,
   );
 };

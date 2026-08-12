@@ -77,7 +77,7 @@ export const syncConnectionBindings = <A, E, R>({
         sync(binding).pipe(
           // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
           // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
-          Effect.catchAllDefect((defect) =>
+          Effect.catchDefect((defect) =>
             RunAgainError.is(defect)
               ? Effect.sync((): A | undefined => {
                   wantsRerun = true;

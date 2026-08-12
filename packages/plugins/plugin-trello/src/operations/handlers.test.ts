@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';

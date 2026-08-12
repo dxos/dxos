@@ -65,10 +65,10 @@ export type SwarmNetworkManagerOptions = {
 /**
  * Effect service tag for {@link SwarmNetworkManager}.
  */
-export class SwarmNetworkManagerService extends EffectContext.Tag('@dxos/network-manager/SwarmNetworkManager')<
+export class SwarmNetworkManagerService extends EffectContext.Service<
   SwarmNetworkManagerService,
   SwarmNetworkManager
->() {}
+>()('@dxos/network-manager/SwarmNetworkManager') {}
 
 /**
  * Manages p2p connection to the swarm.

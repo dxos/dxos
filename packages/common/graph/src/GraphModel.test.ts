@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -14,12 +15,7 @@ import * as GraphModel from './GraphModel';
 // Create a registry for tests.
 const createRegistry = () => Registry.make();
 
-const TestNode = Schema.extend(
-  Graph.Node,
-  Schema.Struct({
-    value: Schema.String,
-  }),
-);
+const TestNode = Graph.Node.mapFields(Struct.assign({ value: Schema.String }));
 
 type TestNode = Schema.Schema.Type<typeof TestNode>;
 

@@ -7,7 +7,7 @@ import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from '
 
 import { Obj, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
@@ -103,7 +103,13 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   const showDescriptionToggle = descriptionOverflows || expanded;
 
   // The editable subset of the schema; catalog fields are omitted (read-only above).
-  const activitySchema = useMemo(() => omitId(Type.getSchema(Book.Book)).pipe(Schema.pick(...ACTIVITY_FIELDS)), []);
+  const activitySchema = useMemo(
+    // `SchemaAST.pick`, not `mapFields`: `omitId` returns a `Codec`, which carries no field
+    // literals for a struct operation.
+    () =>
+      Schema.make<Schema.Codec<any, any>>(SchemaAST.pick(omitId(Type.getSchema(Book.Book)).ast, [...ACTIVITY_FIELDS])),
+    [],
+  );
 
   // The activity form is uncontrolled — seeded once from the object, then each change written straight
   // back to it — mirroring ObjectProperties. A controlled `values` form re-seeds on every reactive

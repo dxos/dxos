@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -307,7 +307,7 @@ export type LinearPushResult = {
  * the whole pass over an unrecognised workflow).
  *
  * The push callbacks' error type is generic. The reconciler doesn't inspect
- * or recover from those errors — it propagates so the outer `Effect.either`
+ * or recover from those errors — it propagates so the outer `Effect.result`
  * at the call site can record the binding's `lastError`. Generic-`E` keeps
  * this module decoupled from the GraphQL error hierarchy of `LinearApi`.
  */
@@ -451,22 +451,22 @@ export const pushTeamUpdates: <E, R>(
 const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
   const db = Obj.getDatabase(binding);
   if (!db) {
-    return yield* Effect.dieMessage('Binding must be database-attached (no database derivable).');
+    return yield* Effect.die(new Error('Binding must be database-attached (no database derivable).'));
   }
 
   const toastIdSuffix = binding.id;
 
-  const outcome = yield* Effect.either(
+  const outcome = yield* Effect.result(
     Effect.gen(function* () {
       const externalId = binding.spec.externalId;
       if (!externalId) {
-        return yield* Effect.dieMessage('Cursor has no externalId; cannot resolve a Linear team.');
+        return yield* Effect.die(new Error('Cursor has no externalId; cannot resolve a Linear team.'));
       }
       // `binding.spec.options` is an opaque provider-defined record in the
       // shared contract; this connector owns and validates its shape.
       const options = binding.spec.options as LinearOperation.SyncOptions | undefined;
 
-      const syncResult = yield* Effect.either(
+      const syncResult = yield* Effect.result(
         Effect.gen(function* () {
           // Resolve the remote `Team` for this binding's `externalId`.
           const allTeams = yield* LinearApi.fetchTeams();
@@ -550,26 +550,26 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
       );
 
       // Record per-binding sync status on the binding (the binding IS the cursor).
-      if (syncResult._tag === 'Right') {
+      if (syncResult._tag === 'Success') {
         Cursor.advance(binding);
       } else {
-        Cursor.recordError(binding, formatLinearSyncFailure(syncResult.left));
+        Cursor.recordError(binding, formatLinearSyncFailure(syncResult.failure));
       }
 
-      if (syncResult._tag === 'Left') {
-        log.warn('linear sync: binding failed', { error: syncResult.left });
-        return yield* Effect.fail(syncResult.left);
+      if (syncResult._tag === 'Failure') {
+        log.warn('linear sync: binding failed', { error: syncResult.failure });
+        return yield* Effect.fail(syncResult.failure);
       }
 
       return {
         pulled: {
           teams: 1,
-          projects: syncResult.right.pulledProjects,
-          tasks: syncResult.right.pulledTasks,
+          projects: syncResult.success.pulledProjects,
+          tasks: syncResult.success.pulledTasks,
         },
         pushed: {
-          projects: syncResult.right.pushedProjects,
-          tasks: syncResult.right.pushedTasks,
+          projects: syncResult.success.pushedProjects,
+          tasks: syncResult.success.pushedTasks,
         },
       };
     }).pipe(
@@ -578,7 +578,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
     ),
   );
 
-  if (outcome._tag === 'Right') {
+  if (outcome._tag === 'Success') {
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
         id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
@@ -586,9 +586,9 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
         title: ['sync-toast.success.label', { ns: meta.profile.key }],
       }),
     );
-    return outcome.right;
+    return outcome.success;
   } else {
-    const message = formatLinearSyncFailure(outcome.left);
+    const message = formatLinearSyncFailure(outcome.failure);
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
         id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
@@ -597,7 +597,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
         description: message,
       }),
     );
-    return yield* Effect.fail(outcome.left);
+    return yield* Effect.fail(outcome.failure);
   }
 }, Effect.provide(FetchHttpClient.layer));
 

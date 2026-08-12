@@ -63,11 +63,9 @@
     "@dxos/client-services": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@effect/platform": "catalog:",
     "@types/js-yaml": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

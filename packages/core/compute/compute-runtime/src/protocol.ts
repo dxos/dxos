@@ -6,7 +6,6 @@ import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
@@ -19,7 +18,7 @@ import { LifecycleState, Resource } from '@dxos/context';
 import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SchemaAST } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -87,17 +86,6 @@ export const wrapFunctionHandler = (
 
       // eslint-disable-next-line no-useless-catch
       try {
-        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
-          try {
-            Schema.validateSync(func.input, { onExcessProperty: 'error' })(data);
-          } catch (error: any) {
-            throw new InvalidOperationInputError({
-              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
-              cause: error,
-            });
-          }
-        }
-
         await using funcContext = await new FunctionContext(context, opts).open();
 
         const types = [...(opts.types ?? []), ...(func.types ?? [])];
@@ -110,6 +98,19 @@ export const wrapFunctionHandler = (
           funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
             ? decodeRefsFromSchema(func.input.ast, data, funcContext.db)
             : data;
+
+        // Validated after ref hydration: the type side of a `Ref` field admits only a `Ref`
+        // instance, and callers send the encoded `{'/': dxn}` form.
+        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
+          try {
+            Schema.decodeUnknownSync(Schema.toType(func.input), { onExcessProperty: 'error' })(dataWithDecodedRefs);
+          } catch (error: any) {
+            throw new InvalidOperationInputError({
+              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
+              cause: error,
+            });
+          }
+        }
 
         let result: any = await func.handler(dataWithDecodedRefs);
 
@@ -136,7 +137,7 @@ export const wrapFunctionHandler = (
 
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
           try {
-            Schema.validateSync(func.output, { onExcessProperty: 'error' })(result);
+            Schema.decodeUnknownSync(Schema.toType(func.output), { onExcessProperty: 'error' })(result);
           } catch (error: any) {
             throw new InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
@@ -375,7 +376,7 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
   }
 
   switch (encoded._tag) {
-    case 'TypeLiteral': {
+    case 'Objects': {
       if (typeof value !== 'object' || value === null || Array.isArray(value)) {
         return value;
       }
@@ -389,14 +390,14 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       return result;
     }
 
-    case 'TupleType': {
+    case 'Arrays': {
       if (!Array.isArray(value)) {
         return value;
       }
 
-      // For arrays, effect uses TupleType with empty elements and a single rest element.
+      // For arrays, effect uses an `Arrays` node with empty elements and a single rest element.
       if (encoded.elements.length === 0 && encoded.rest.length === 1) {
-        const elementType = encoded.rest[0].type;
+        const elementType = encoded.rest[0];
         return (value as unknown[]).map((item) => decodeRefsFromSchema(elementType, item, db));
       }
 
@@ -415,12 +416,11 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
     }
 
     case 'Suspend': {
-      return decodeRefsFromSchema(encoded.f(), value, db);
+      return decodeRefsFromSchema(encoded.thunk(), value, db);
     }
 
-    case 'Refinement': {
-      return decodeRefsFromSchema(encoded.from, value, db);
-    }
+    // v4 has no `Refinement` node: a refined node IS its base node with checks attached, so the
+    // cases above already match it.
 
     default: {
       return value;

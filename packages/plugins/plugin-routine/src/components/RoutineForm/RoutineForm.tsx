@@ -11,6 +11,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { SchemaAST } from '@dxos/effect';
 import { ToggleGroup, ToggleGroupItem, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
 
@@ -21,6 +22,7 @@ import { InstructionsEditor } from '../InstructionsEditor';
 import {
   TriggerForm,
   type TriggerFormInput,
+  type TriggerFormValues,
   TriggerSection,
   applyTriggerValues,
   triggerFieldMap,
@@ -33,11 +35,14 @@ import {
 // as nested field sets at their respective paths.
 //
 
-const GeneralForm = Type.getSchema(Routine.Routine).pipe(Schema.pick('name', 'description'));
+// Pick the editable general fields from the Routine schema rather than redeclaring them.
+// `SchemaAST` rather than `mapFields`: `Type.getSchema` returns a `Codec`, which carries no field literals.
+type GeneralForm = Pick<Routine.Routine, 'name' | 'description'>;
+const GeneralFields = SchemaAST.pick(Type.getSchema(Routine.Routine).ast, ['name', 'description']);
 
 const RunnableActionForm = Schema.Struct({
   kind: Schema.Literal('runnable'),
-  operation: Ref.Ref(Operation.PersistentOperation).pipe(Schema.annotations({ title: 'Operation' }), Schema.optional),
+  operation: Ref.Ref(Operation.PersistentOperation).pipe(Schema.annotate({ title: 'Operation' }), Schema.optional),
 });
 
 const InstructionsActionForm = Schema.Struct({
@@ -46,16 +51,23 @@ const InstructionsActionForm = Schema.Struct({
 
 // Single action: an Operation (the routine's `spec.runnable`) or an owned Instructions edited inline (the
 // instructions content is not a form value — it is a separate owned object, edited by `InstructionsEditor`).
-const ActionForm = Schema.Union(RunnableActionForm, InstructionsActionForm);
+const ActionForm = Schema.Union([RunnableActionForm, InstructionsActionForm]);
 
-const RoutineFormSchema = Schema.extend(
-  GeneralForm,
-  Schema.Struct({
-    action: Schema.optional(ActionForm),
-    trigger: Schema.optional(TriggerForm),
-  }),
+type RoutineFormValues = GeneralForm & {
+  readonly action?: Schema.Schema.Type<typeof ActionForm>;
+  readonly trigger?: TriggerFormValues;
+};
+
+// General fields first so the form renders name/description above the action and trigger field sets.
+const RoutineFormSchema = Schema.make<Schema.Codec<RoutineFormValues, any>>(
+  SchemaAST.assignFields(
+    GeneralFields,
+    Schema.Struct({
+      action: Schema.optional(ActionForm),
+      trigger: Schema.optional(TriggerForm),
+    }).ast,
+  ),
 );
-type RoutineFormValues = Schema.Schema.Type<typeof RoutineFormSchema>;
 
 /** Flat view of the action union (`Partial` collapses a discriminated union to its common keys). */
 type ActionFormInput = {

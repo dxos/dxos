@@ -42,10 +42,10 @@ export interface AutomergeReplicator {
 /**
  * Effect service tag for {@link AutomergeReplicator}.
  */
-export class AutomergeReplicatorService extends EffectContext.Tag('@dxos/echo-host/AutomergeReplicator')<
+export class AutomergeReplicatorService extends EffectContext.Service<
   AutomergeReplicatorService,
   AutomergeReplicator
->() {}
+>()('@dxos/echo-host/AutomergeReplicator') {}
 
 /**
  * Replicator with explicit per-space wiring (used by edge replicators that maintain one logical
@@ -59,10 +59,10 @@ export interface EdgeAutomergeReplicator extends AutomergeReplicator {
 /**
  * Effect service tag for {@link EdgeAutomergeReplicator}.
  */
-export class EdgeAutomergeReplicatorService extends EffectContext.Tag('@dxos/echo-host/EdgeAutomergeReplicator')<
+export class EdgeAutomergeReplicatorService extends EffectContext.Service<
   EdgeAutomergeReplicatorService,
   EdgeAutomergeReplicator
->() {}
+>()('@dxos/echo-host/EdgeAutomergeReplicator') {}
 
 export interface AutomergeReplicatorContext {
   /**

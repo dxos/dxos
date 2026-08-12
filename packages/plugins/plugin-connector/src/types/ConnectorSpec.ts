@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type { Client } from '@dxos/client';
@@ -26,7 +26,7 @@ export const RemoteTarget = Schema.Struct({
   /** Optional secondary line. */
   description: Schema.String.pipe(Schema.optional),
   /** Service-specific extras for display. */
-  metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(Schema.optional),
+  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 });
 export interface RemoteTarget extends Schema.Schema.Type<typeof RemoteTarget> {}
 
@@ -114,7 +114,7 @@ export type ConnectorSync = {
   /** Create an empty local root object so a binding can be created eagerly. */
   materializeTarget?: Operation.Definition<MaterializeTargetInput, MaterializeTargetOutput>;
   /** Schema describing per-binding `.options`. */
-  optionsSchema?: Schema.Schema<any, any>;
+  optionsSchema?: Schema.Codec<any, any>;
   /**
    * Sync a binding as soon as it is created, instead of waiting for the user to ask. Defaults to
    * false: the first sync of a freshly authorized account is unbounded (full history, every bound
@@ -194,7 +194,7 @@ export type CredentialFormResult =
  */
 export type CredentialForm<Values = any> = {
   /** Schema rendered by the generic connector-form dialog. */
-  schema: Schema.Schema<Values, any>;
+  schema: Schema.Codec<Values, any>;
   /** Optional defaults pre-filled into the form. */
   defaultValues?: Partial<Values>;
   /**
@@ -207,7 +207,7 @@ export type CredentialForm<Values = any> = {
    * Build the next step of the connection flow from form values.
    *
    * Failures (`Effect.fail`) propagate to the coordinator and surface in the dialog's
-   * `Effect.catchAll` — use these for user-visible validation messages. Do NOT `Effect.orDie`
+   * `Effect.catch` — use these for user-visible validation messages. Do NOT `Effect.orDie`
    * validation errors; defects bypass the dialog's failure handler and crash the request.
    */
   onSubmit: (input: {

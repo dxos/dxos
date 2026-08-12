@@ -107,7 +107,7 @@ export const SetProviderTemplate = Operation.make({
     provider: Ref.Ref(Provider),
     // Passed as a JSON string (a JSON Schema draft 2020-12 object). Modelling the recursive
     // JSONSchema meta-type directly produces a tool input_schema the LLM provider rejects.
-    searchSchema: Schema.String.annotations({
+    searchSchema: Schema.String.annotate({
       description: 'The typed search fields as a JSON Schema (draft 2020-12) object, serialized to a JSON string.',
     }),
     request: RequestMapping,

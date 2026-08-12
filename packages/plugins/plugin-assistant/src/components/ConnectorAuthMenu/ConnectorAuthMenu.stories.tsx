@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
@@ -34,7 +34,7 @@ import { ConnectorAuthMenu } from './ConnectorAuthMenu';
  * none, so it renders as a "Connect" entry — together they exercise both item kinds and the
  * separator between them. `Default` renders the `ConnectorAuthMenu` component. `Toolbar` feeds the
  * same `connectorAuthActions` atom into an object toolbar the way studio/ibkr/inbox do. */
-const CredentialSchema = Schema.Struct({ apiKey: Schema.String.annotations({ title: 'API key' }) });
+const CredentialSchema = Schema.Struct({ apiKey: Schema.String.annotate({ title: 'API key' }) });
 
 const makeCredentialForm = (connectorId: string) => ({
   schema: CredentialSchema,

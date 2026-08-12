@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import { Chess as ChessJS } from 'chess.js';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { type FC, type SVGProps } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -89,7 +90,7 @@ export class ChessModel implements GameboardModel<ChessPiece> {
   private readonly _moveIndex = Atom.make(0);
 
   constructor(
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
     pgn?: string,
   ) {
     this.update(pgn);

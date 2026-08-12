@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
@@ -13,9 +14,8 @@ import { TextToImageComponent } from './TextToImage';
 // Kept out of `TextToImage.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
 
-export const TextToImageShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const TextToImageShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('text-to-image'),
   }),
 );

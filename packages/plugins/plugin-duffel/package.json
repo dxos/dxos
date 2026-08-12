@@ -96,7 +96,6 @@
     "@dxos/plugin-trip": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

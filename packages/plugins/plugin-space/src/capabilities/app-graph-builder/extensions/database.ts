@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -296,7 +296,7 @@ const createSchemaNode = ({
 }: {
   schema: Type.AnyEntity;
   space: Space;
-  get: Atom.Context;
+  get: Atom.AtomContext;
 }): Node.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:

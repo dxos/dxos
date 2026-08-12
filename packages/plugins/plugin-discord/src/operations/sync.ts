@@ -162,7 +162,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
 
             // Captured on the success path so the cursor's value + run status advance in one atomic update.
             let newestId: string | undefined;
-            const outcome = yield* Effect.either(
+            const outcome = yield* Effect.result(
               Effect.gen(function* () {
                 const rest = yield* DiscordREST;
 
@@ -212,7 +212,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayerFromToken(accessToken.token))),
             );
 
-            if (outcome._tag === 'Right') {
+            if (outcome._tag === 'Success') {
               Cursor.advance(binding, newestId);
               yield* Effect.ignore(
                 Operation.invoke(LayoutOperation.AddToast, {
@@ -221,9 +221,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                   title: ['sync-toast.success.label', { ns: meta.profile.key }],
                 }),
               );
-              return outcome.right;
+              return outcome.success;
             } else {
-              const message = formatDiscordSyncFailure(outcome.left);
+              const message = formatDiscordSyncFailure(outcome.failure);
               Cursor.recordError(binding, message);
               yield* Effect.ignore(
                 Operation.invoke(LayoutOperation.AddToast, {
@@ -233,7 +233,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                   description: message,
                 }),
               );
-              return yield* Effect.fail(outcome.left);
+              return yield* Effect.fail(outcome.failure);
             }
           }),
       }).pipe(

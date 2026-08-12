@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { makeWorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';

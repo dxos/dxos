@@ -145,7 +145,7 @@ const makeSource: Effect.Effect<SourceApi, never, DiscordREST> = Effect.gen(func
                 })),
             ),
             // A guild the bot was removed from mid-call should not fail discovery of the rest.
-            Effect.catchAll((error) => {
+            Effect.catch((error) => {
               log.catch(error);
               return Effect.succeed([]);
             }),

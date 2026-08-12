@@ -331,7 +331,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
       ),
     );
 
-    expect(Exit.isFailure(exit) && Cause.isInterruptedOnly(exit.cause)).toBe(true);
+    expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true);
     expect(statusUpdates.at(-1)?.message).toBe(PROGRESS_STATUS_CANCELLED);
     expect(statusUpdates.at(-1)?.progress?.key).toBe(createSyncProgressKey(mailbox));
   });
@@ -414,12 +414,14 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const dataset = generateGmailDataset({ count: 20, seed: 23, start: subDays(now, 10), end: subDays(now, 2) });
     const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
 
-    // Fault after the first commit page (GOOGLE_SYNC_CONFIG.commitPageSize = 10) — simulates a crash partway
-    // through the initial backward (newest-first) walk.
+    // Fault partway through the initial backward (newest-first) walk, past the point where the first
+    // commit page (GOOGLE_SYNC_CONFIG.commitPageSize = 10) has reached the sink. Faulting at exactly
+    // the page boundary would only prove how far the stream prefetches ahead of the commit, not that
+    // a committed page is durable.
     const exit = await EffectEx.runPromise(
       Effect.exit(runGoogleSync({ binding: Ref.make(binding) })).pipe(
         Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterMessages(10, dataset)),
+        Effect.provide(withFaultAfterMessages(18, dataset)),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);

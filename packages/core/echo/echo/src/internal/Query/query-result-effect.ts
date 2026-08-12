@@ -16,18 +16,17 @@ import type * as QueryResult from '../../QueryResult';
 export const makeQueryResultEffect = <T, E, R>(
   eff: Effect.Effect<QueryResult.QueryResult<T>, E, R>,
 ): QueryResult.QueryResultEffect<T, E, R> => {
-  return {
+  // Effect 4 replaced the spread-in `CommitPrototype` with `Prototype`, which takes the old
+  // `commit()` body as `evaluate` and builds the Effect-shaped base itself.
+  const base = Effectable.Prototype<Effect.Effect<QueryResult.QueryResult<T>, E, R>>({
+    label: '@dxos/echo/QueryResultEffect',
+    evaluate: () => eff,
+  });
+
+  return Object.assign(base, {
     run: Effect.flatMap(eff, (result) => Effect.promise(() => result.run())),
     first: Effect.flatMap(eff, (result) =>
-      Effect.promise(async () => Option.fromNullable(await result.firstOrUndefined())),
+      Effect.promise(async () => Option.fromNullishOr(await result.firstOrUndefined())),
     ),
-
-    // Effect internals: the result is itself an Effect, so it carries the commit prototype.
-    ...Effectable.CommitPrototype,
-    commit() {
-      return eff;
-    },
-    // Cast required: Effect's commit protocol is supplied at runtime via `CommitPrototype` and
-    // cannot be expressed by the object literal's static type.
-  } as any;
+  }) as QueryResult.QueryResultEffect<T, E, R>;
 };

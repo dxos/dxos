@@ -8,6 +8,8 @@ export * as EffectEx from './EffectEx';
 export { type Configuration as OtelConfiguration, layerOtel } from './otel';
 export * as Performance from './Performance';
 export * as RuntimeProvider from './RuntimeProvider';
+export * as GlobalValue from './internal/GlobalValue';
+export * as SchemaAST from './internal/schema-ast';
 export * as SchemaEx from './SchemaEx';
 
 // Re-export core types at the top level so TypeScript can name them in declaration files.

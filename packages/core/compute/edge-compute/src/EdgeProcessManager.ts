@@ -4,9 +4,10 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
 import { RemoteProcessManager } from '@dxos/compute-runtime';
@@ -29,7 +30,7 @@ import { createEdgeClient } from './edge-client';
  * A manager built without a client (the {@link layer} stub) omits `cancel`.
  */
 const makeManager = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   getEdgeClient?: () => EdgeHttpClient,
 ): RemoteProcessManager.Manager => {
   // TODO(edge): Populate from an EDGE process-tree endpoint once available.
@@ -54,7 +55,7 @@ const makeManager = (
                 Effect.asVoid,
                 // A missing/unreachable endpoint (e.g. an older edge deploy) must not surface as a defect
                 // from this fire-and-forget cancel — log and move on.
-                Effect.catchAll((error) => Effect.sync(() => log.warn('remote trigger cancel failed', { error }))),
+                Effect.catch((error) => Effect.sync(() => log.warn('remote trigger cancel failed', { error }))),
               );
             }),
         }

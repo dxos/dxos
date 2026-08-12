@@ -37,7 +37,7 @@ export const CreateTriggerFromTemplate = Operation.make({
     template: TriggerTemplate,
     enabled: Schema.optional(Schema.Boolean),
     scriptName: Schema.optional(Schema.String),
-    input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+    input: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   }),
   output: Schema.Void,
 });
@@ -80,7 +80,7 @@ export const RunPromptInNewChat = Operation.make({
     /** Skill keys to look up and bind to the new chat. */
     skills: Schema.optional(Schema.Array(Schema.String)),
     /** Raw instructions or an existing Routine object reference. */
-    instructions: Schema.Union(Schema.String, Ref.Ref(Instructions.Instructions)),
+    instructions: Schema.Union([Schema.String, Ref.Ref(Instructions.Instructions)]),
     /**
      * When true, skips opening the chat: runs the Agent prompt operation against the new chat via the compute runtime (traced).
      */

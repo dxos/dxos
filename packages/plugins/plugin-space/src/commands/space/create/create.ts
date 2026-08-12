@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { print, waitForSync } from '@dxos/cli-util';
@@ -55,7 +55,7 @@ export const handler = Effect.fn(function* ({ name }: { name: Option.Option<stri
 export const create = Command.make(
   'create',
   {
-    name: Options.text('name').pipe(Options.withDescription('The name of the space.'), Options.optional),
+    name: Options.string('name').pipe(Options.withDescription('The name of the space.'), Options.optional),
   },
   handler,
 ).pipe(Command.withDescription('Create a new space.'));

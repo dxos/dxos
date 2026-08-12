@@ -13,12 +13,12 @@ import { type ObjectExtractor } from './ObjectExtractor';
  * app-framework Capabilities — consuming plugins build this layer from whatever registration
  * mechanism they use (e.g. `Capability.getAll`) so this package stays framework-free.
  */
-export class ExtractorRegistry extends Context.Tag('@dxos/extractor/ExtractorRegistry')<
+export class ExtractorRegistry extends Context.Service<
   ExtractorRegistry,
   {
     readonly all: () => Effect.Effect<ReadonlyArray<ObjectExtractor>>;
   }
->() {}
+>()('@dxos/extractor/ExtractorRegistry') {}
 
 export const fromExtractors = (extractors: ReadonlyArray<ObjectExtractor>) =>
   Layer.succeed(

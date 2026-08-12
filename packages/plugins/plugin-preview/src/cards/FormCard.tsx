@@ -52,7 +52,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     }
   }, [staticType, subject]);
   const runtimeType = useType(db, fallbackTypeUri);
-  const schema = useMemo((): Schema.Schema.AnyNoContext | undefined => {
+  const schema = useMemo((): Schema.Codec<any, any> | undefined => {
     const resolvedType = runtimeType ?? staticType;
     return resolvedType ? omitId(Type.getSchema(resolvedType)) : undefined;
   }, [runtimeType, staticType]);

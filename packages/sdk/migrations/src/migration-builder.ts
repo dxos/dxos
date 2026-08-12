@@ -218,7 +218,7 @@ export class MigrationBuilder {
     props,
   }: {
     id?: string;
-    schema: Schema.Schema.AnyNoContext;
+    schema: Schema.Codec<any, any>;
     props: any;
   }): Promise<ObjectCore> {
     const core = new ObjectCore();

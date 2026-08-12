@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import type * as Context from 'effect/Context';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -206,8 +207,8 @@ export class CallManager extends Resource {
   // TODO(burdon): Can this be mocked?
   constructor(
     private readonly _client: Client,
-    private readonly _registry: Registry.Registry,
-    private readonly _haloIdentity: Context.Tag.Service<Identity.Service>,
+    private readonly _registry: Registry.AtomRegistry,
+    private readonly _haloIdentity: Context.Service.Shape<typeof Identity.Service>,
   ) {
     super();
     this._client.config.getOrThrow('runtime.services.edge.url');

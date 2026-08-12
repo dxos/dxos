@@ -95,7 +95,7 @@ const setMemberRole = async (
 /**
  * Builds the {@link HaloSpace.Service} implementation over a client's `spaces` proxy.
  */
-export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.Service> => ({
+export const makeSpaceService = (client: Client): Context.Service.Shape<typeof HaloSpace.Service> => ({
   spaces: streamFromClientObservable(client, () => client.spaces).pipe(
     Stream.map((spaces) => (spaces ?? []).map(toSpaceInfo)),
   ),

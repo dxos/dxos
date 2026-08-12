@@ -80,11 +80,11 @@ const RssCreate = Schema.Struct({
             : Effect.succeed(undefined),
         ),
       ),
-    ).annotations({ title: 'Name' }),
+    ).annotate({ title: 'Name' }),
   ),
 });
 
-const CreateSubscriptionSchema = Schema.Union(StandardSiteCreate, RssCreate);
+const CreateSubscriptionSchema = Schema.Union([StandardSiteCreate, RssCreate]);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -86,8 +86,7 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
-import * as Result from '@effect-atom/atom/Result';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 
@@ -127,7 +127,7 @@ const objectWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(obj: T): At
  * Atom family for ECHO refs — returns the live reactive object, not a snapshot.
  */
 const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined> => {
-  const effect = (get: Atom.Context) =>
+  const effect = (get: Atom.AtomContext) =>
     Effect.gen(function* () {
       const snapshot = get(makeAtom(ref));
       if (snapshot == null) {
@@ -139,7 +139,7 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
 
   return Function.pipe(
     Atom.make(effect),
-    Atom.map((result) => Result.getOrElse(result, () => undefined)),
+    Atom.map((result) => AsyncResult.getOrElse(result, () => undefined)),
   );
 });
 

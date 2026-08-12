@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { AiService } from '@dxos/ai';

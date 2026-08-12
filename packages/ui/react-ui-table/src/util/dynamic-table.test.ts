@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
 import { Format } from '@dxos/echo';

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Type } from '@dxos/echo';
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { SchemaAST } from '@dxos/effect';
 import { Card } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 

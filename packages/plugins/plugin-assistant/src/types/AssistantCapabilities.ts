@@ -4,8 +4,9 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
@@ -21,14 +22,12 @@ export const Settings = Capability.makeSingleton<Atom.Writable<Assistant.Setting
 
 export const OllamaManager = Capability.makeSingleton<Ollama.Manager>()(`${meta.profile.key}.capability.ollamaManager`);
 
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    /** Map of primary object dxn to current chat dxn. */
-    currentChat: Schema.Record({ key: Schema.String, value: Schema.UndefinedOr(Schema.String) }),
-    /** Map of chat object path to prompt text to auto-submit when the chat opens. */
-    pendingPrompts: Schema.Record({ key: Schema.String, value: Schema.UndefinedOr(Schema.String) }),
-  }),
-);
+export const StateSchema = Schema.Struct({
+  /** Map of primary object dxn to current chat dxn. */
+  currentChat: Schema.Record(Schema.String, Schema.UndefinedOr(Schema.String)),
+  /** Map of chat object path to prompt text to auto-submit when the chat opens. */
+  pendingPrompts: Schema.Record(Schema.String, Schema.UndefinedOr(Schema.String)),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type AssistantState = Schema.Schema.Type<typeof StateSchema>;
 
@@ -39,16 +38,16 @@ export const CompanionChatCache = Capability.makeSingleton<Atom.Writable<Record<
   `${meta.profile.key}.capability.companionChatCache`,
 );
 
-export const HomeSuggestionsCacheSchema = Schema.mutable(
-  Schema.Record({
-    key: Schema.String,
-    value: Schema.Struct({
+export const HomeSuggestionsCacheSchema = Schema.Record(
+  Schema.String,
+  Schema.mutableKey(
+    Schema.Struct({
       /** Epoch ms timestamp of the successful generation that produced these prompts. */
       generatedAt: Schema.Number,
       /** Non-empty, trimmed prompts from a successful generation. */
       prompts: Schema.Array(Schema.String),
     }),
-  }),
+  ),
 );
 export type HomeSuggestionsCache = Schema.Schema.Type<typeof HomeSuggestionsCacheSchema>;
 

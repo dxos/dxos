@@ -21,7 +21,7 @@ const RemoteTarget = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   description: Schema.String.pipe(Schema.optional),
-  metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(Schema.optional),
+  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 });
 
 /**
@@ -91,7 +91,7 @@ export const SyncSlackChannel = Operation.make({
       description: 'Connection whose credentials sync every bound Channel.',
     }),
     priority: Schema.String.pipe(
-      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
       Schema.optional,
     ),
   }),

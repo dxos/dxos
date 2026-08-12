@@ -78,7 +78,7 @@ export const SyncBlueskyTargets = Operation.make({
       description: 'Connection whose credentials sync every bound Bluesky target.',
     }),
     priority: Schema.String.pipe(
-      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
       Schema.optional,
     ),
   }),

@@ -47,7 +47,7 @@ export interface ProcessTraceServiceOptions {
  */
 export const createProcessTraceService = (
   opts: ProcessTraceServiceOptions,
-): Context.Tag.Service<typeof Trace.TraceService> => ({
+): Context.Service.Shape<typeof Trace.TraceService> => ({
   write: (event, data) => {
     try {
       // TODO(dmaretskyi): Batching.

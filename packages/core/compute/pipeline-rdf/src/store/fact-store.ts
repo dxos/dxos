@@ -30,4 +30,4 @@ export interface FactStoreApi {
   readonly clear: () => Effect.Effect<void, SemanticIndexError>;
 }
 
-export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactStore, FactStoreApi>() {}
+export class FactStore extends Context.Service<FactStore, FactStoreApi>()('@dxos/pipeline-rdf/FactStore') {}

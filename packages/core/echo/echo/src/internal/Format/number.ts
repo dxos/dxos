@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { FormatAnnotation, TypeFormat } from './types';
 
@@ -10,21 +11,27 @@ const encodeMultipleOf = (divisor: number) => 1 / Math.pow(10, divisor);
 
 const encodeMultiple =
   <A extends number>(divisor?: number) =>
-  <I, R>(self: Schema.Schema<A, I, R>) =>
-    divisor === undefined || divisor === 0 ? self : self.pipe(Schema.multipleOf(encodeMultipleOf(divisor)));
+  <I, R>(self: Schema.Codec<A, I, R>) =>
+    divisor === undefined || divisor === 0
+      ? self
+      : self.pipe(Schema.check(Schema.isMultipleOf(encodeMultipleOf(divisor))));
 
 /**
  * Convert number of digits to multipleOf annotation.
  */
-export const DecimalPrecision = Schema.transform(Schema.Number, Schema.Number, {
-  strict: true,
-  encode: (value) => encodeMultipleOf(value),
-  decode: (value) => Math.log10(1 / value),
-}).annotations({
+export const DecimalPrecision = Schema.Number.pipe(
+  Schema.decodeTo(
+    Schema.Number,
+    SchemaTransformation.transform({
+      encode: (value: number) => encodeMultipleOf(value),
+      decode: (value: number) => Math.log10(1 / value),
+    }),
+  ),
+).annotate({
   title: 'Number of digits',
 });
 
-export const CurrencyAnnotationId = Symbol.for('@dxos/schema/annotation/Currency');
+export const CurrencyAnnotationId = '@dxos/schema/annotation/Currency';
 
 export type CurrencyAnnotation = {
   decimals?: number;
@@ -38,7 +45,7 @@ export const Currency = ({ decimals, code }: CurrencyAnnotation = { decimals: 2 
   Schema.Number.pipe(
     encodeMultiple(decimals),
     FormatAnnotation.set(TypeFormat.Currency),
-    Schema.annotations({
+    Schema.annotate({
       title: 'Currency',
       description: 'Currency value',
       ...(code ? { [CurrencyAnnotationId]: code.toUpperCase() } : {}),
@@ -54,9 +61,9 @@ export type PercentAnnotation = {
  */
 export const Integer = () =>
   Schema.Number.pipe(
-    Schema.int(),
+    Schema.check(Schema.isInt()),
     FormatAnnotation.set(TypeFormat.Integer),
-    Schema.annotations({
+    Schema.annotate({
       title: 'Integer',
       description: 'Integer value',
     }),
@@ -70,7 +77,7 @@ export const Percent = ({ decimals }: PercentAnnotation = { decimals: 2 }) =>
   Schema.Number.pipe(
     encodeMultiple(decimals),
     FormatAnnotation.set(TypeFormat.Percent),
-    Schema.annotations({
+    Schema.annotate({
       title: 'Percent',
       description: 'Percentage value',
     }),
@@ -82,7 +89,7 @@ export const Percent = ({ decimals }: PercentAnnotation = { decimals: 2 }) =>
  */
 export const Timestamp = Schema.Number.pipe(
   FormatAnnotation.set(TypeFormat.Timestamp),
-  Schema.annotations({
+  Schema.annotate({
     title: 'Timestamp',
     description: 'Unix timestamp',
   }),

@@ -28,7 +28,7 @@ const TestLayer = AssistantTestLayer({
 // Control-plane only: the qualify:false path needs no LLM turn, so it runs ungated in CI.
 // Qualification itself (cheap-model relevance) is covered by the memoized agent-skill suite.
 describe('Agent relay (control plane)', () => {
-  it.scoped(
+  it.effect(
     'forwards onto the durable session for the chat feed',
     Effect.fnUntraced(
       function* (_) {

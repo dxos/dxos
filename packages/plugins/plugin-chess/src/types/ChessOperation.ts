@@ -21,16 +21,16 @@ export const Move = Operation.make({
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
-    game: Game.GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotate({
       description: 'The ID of the game object (variant must be Chess).',
     }),
-    move: Schema.String.annotations({
+    move: Schema.String.annotate({
       description: 'The move to make in the chess game.',
       examples: ['e4', 'Bf3'],
     }),
   }),
   output: Schema.Struct({
-    pgn: Schema.String.annotations({
+    pgn: Schema.String.annotate({
       description: 'The PGN of the game after the move was played.',
     }),
   }),
@@ -45,19 +45,19 @@ export const Play = Operation.make({
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
-    game: Game.GameRef(Chess.State).annotations({
+    game: Game.GameRef(Chess.State).annotate({
       description: 'The ID of the game object (variant must be Chess).',
     }),
-    side: Schema.optional(Schema.Literal('white', 'black', 'any')).annotations({
+    side: Schema.optional(Schema.Literals(['white', 'black', 'any'])).annotate({
       description: 'The side to play.',
       defaultValue: 'any',
     }),
   }),
   output: Schema.Struct({
-    pgn: Schema.String.annotations({
+    pgn: Schema.String.annotate({
       description: 'The PGN of the game after the move was played.',
     }),
-    move: Schema.optional(Schema.String).annotations({
+    move: Schema.optional(Schema.String).annotate({
       description: 'The move that was played.',
     }),
   }),
@@ -73,12 +73,12 @@ export const Print = Operation.make({
   },
   input: Schema.Struct({
     pgn: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Portable Game Notation.',
       }),
     ),
     fen: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Forsyth-Edwards Notation.',
       }),
     ),
@@ -98,7 +98,7 @@ export const RebuildPositionIndex = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    review: Ref.Ref(PlayerReview.Review).annotations({
+    review: Ref.Ref(PlayerReview.Review).annotate({
       description: 'Player review whose position index should be rebuilt.',
     }),
   }),

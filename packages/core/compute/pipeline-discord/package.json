@@ -40,9 +40,7 @@
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
-    "@effect/sql": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",

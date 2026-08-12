@@ -126,7 +126,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
  * markers; `Schema.Number` keeps the field context-free (`R = never`) so the struct stays assignable to `Form`.
  */
 const usageField = (title: string, description: string) =>
-  Schema.optional(Schema.Number.annotations({ title, description }));
+  Schema.optional(Schema.Number.annotate({ title, description }));
 
 /**
  * Build the Effect schema (one annotated field per limit) and matching values. Unlimited limits have no

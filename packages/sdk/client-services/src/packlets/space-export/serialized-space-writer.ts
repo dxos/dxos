@@ -248,7 +248,7 @@ const collectFeedMessages = async (
   try {
     while (true) {
       const result = await EffectEx.runPromise(
-        feedClient.FeedService.queryFeed({
+        feedClient['FeedService.queryFeed']({
           query: {
             spaceId,
             feedIds: [feedId],

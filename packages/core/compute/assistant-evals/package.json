@@ -48,7 +48,6 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
-    "@effect/ai": "catalog:",
     "autoevals": "^0.0.132",
     "effect": "catalog:",
     "evalite": "^0.19.0",

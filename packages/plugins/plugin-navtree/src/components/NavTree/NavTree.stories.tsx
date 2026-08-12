@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useEffect, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
@@ -159,7 +160,7 @@ const meta = {
             OperationHandlerSet.make(
               Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
                 Effect.gen(function* () {
-                  const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
+                  const registry: Registry.AtomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
                   registry.set(storyStateAtom, { tab: subject });
                 }),
               ),

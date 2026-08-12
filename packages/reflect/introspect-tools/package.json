@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/effect": "workspace:*",
     "@dxos/effect-zod": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

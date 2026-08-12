@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { DXN } from '@dxos/keys';
 
@@ -27,7 +27,8 @@ export const make = ({
   // Ollama's CORS preflight rejects the `traceparent` header Effect's HttpClient injects for
   // distributed tracing (a local model server participates in no trace), so disable propagation by
   // default — otherwise browser calls to Ollama fail the preflight. Callers may override.
-  transformClient = (client) => HttpClient.withTracerPropagation(client, false),
+  transformClient = (client) =>
+    HttpClient.transformResponse(client, Effect.provideService(HttpClient.TracerPropagationEnabled, false)),
   provider = Provider.ollama.id,
   models = Model.forProvider(provider),
 }: {
@@ -58,7 +59,7 @@ export const make = ({
     },
     Effect.succeed((model: DXN.DXN, options) => {
       const backend = options?.provider === provider ? backendById.get(model) : undefined;
-      return backend ? createModelLayer(backend) : Layer.fail(new AiModelNotAvailableError(model));
+      return backend ? createModelLayer(backend) : Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
     }),
   );
 };

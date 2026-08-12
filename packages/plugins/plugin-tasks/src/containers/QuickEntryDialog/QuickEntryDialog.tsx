@@ -17,9 +17,9 @@ import * as OutlineOperation from '../../types/OutlineOperation';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
-    Schema.filter((value) => value.trim().length > 0, { message: () => 'Entry cannot be empty.' }),
+    Schema.check(Schema.makeFilter((value: string) => value.trim().length > 0 || 'Entry cannot be empty.')),
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ description: 'Journal entry' }),
+    Schema.annotate({ description: 'Journal entry' }),
   ),
 });
 

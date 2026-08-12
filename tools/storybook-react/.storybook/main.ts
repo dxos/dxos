@@ -308,15 +308,7 @@ export const createConfig = ({
               'effect/Console',
               '@effect/platform',
               '@effect/platform-browser',
-              // Effect AI (with submodule exports).
-              '@effect/ai',
-              '@effect/ai/AiError',
-              '@effect/ai/Chat',
-              '@effect/ai/LanguageModel',
-              '@effect/ai/Prompt',
-              '@effect/ai/Response',
-              '@effect/ai/Tool',
-              '@effect/ai/Toolkit',
+              // Effect AI (absorbed into the core train under `effect/unstable/ai`).
               '@effect/ai-anthropic',
               '@effect/ai-anthropic/AnthropicClient',
               '@effect/ai-anthropic/AnthropicLanguageModel',

@@ -57,7 +57,7 @@ export const runConnectionSync = ({
         Effect.asVoid,
         // Continuation is dispatcher-driven; a direct invocation surfaces `runAgain` as a defect.
         // Accept the partial sync — an on-demand connector's next manual sync resumes the cursor.
-        Effect.catchAllDefect((defect) =>
+        Effect.catchDefect((defect) =>
           RunAgainError.is(defect)
             ? Effect.sync(() => log.info('sync capped; more on next run', { connectorId: connector.id }))
             : Effect.die(defect),
@@ -121,14 +121,14 @@ export const syncConnectionOrOfferRoutine = ({
                 syncConnectionOrOfferRoutine({ connection, connector, db, priority, subject }).pipe(
                   Effect.provideService(Operation.Service, invoker),
                   Effect.provideService(Capability.Service, capabilities),
-                  Effect.catchAll((error) =>
+                  Effect.catch((error) =>
                     Effect.sync(() => log.warn('sync after routine created failed', { error })),
                   ),
                 ),
               );
             },
           });
-        }).pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('offer sync routine failed', { error })))),
+        }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('offer sync routine failed', { error })))),
     ),
     Effect.provide(Database.layer(db)),
   );

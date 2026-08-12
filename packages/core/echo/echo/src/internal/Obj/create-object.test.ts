@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'util';
 import { describe, expect, test } from 'vitest';
@@ -21,10 +22,7 @@ import { objectToJSON } from './json-serializer';
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {
     const Contact = Schema.Struct({
-      name: Schema.String.pipe(
-        Schema.optional,
-        Schema.withConstructorDefault(() => 'Anonymous'),
-      ),
+      name: Schema.String.pipe(Schema.optional, Schema.withConstructorDefault(Effect.succeed('Anonymous'))),
       email: Schema.String.pipe(Schema.optional),
     });
 

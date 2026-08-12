@@ -76,7 +76,7 @@ const matchMessage = (source: Obj.Any): MatchResult => {
 const PlacePayload = Schema.Struct({ code: Schema.String, name: Schema.optional(Schema.String) });
 
 /** Travel mode of the extracted segment. Defaults to `flight` when the LLM omits it. */
-const SegmentKind = Schema.Literal('flight', 'train');
+const SegmentKind = Schema.Literals(['flight', 'train']);
 
 /** A single travel leg within a booking. */
 const SegmentPayload = Schema.Struct({
@@ -151,7 +151,7 @@ const findExistingSegment = (
     Effect.map((segments) => segments.find((segment) => isSameSegment(segment, payload))),
     // Recover (e.g. Segment type not registered, db closed) to undefined rather than letting an
     // unhandled rejection bubble through the operation handler.
-    Effect.catchAllDefect(() => Effect.succeed(undefined)),
+    Effect.catchDefect(() => Effect.succeed(undefined)),
   );
 };
 
@@ -183,7 +183,7 @@ const findExistingBookingByConfirmation = (
           booking.confirmationCode !== undefined && normalizeConfirmationCode(booking.confirmationCode) === normalized,
       ),
     ),
-    Effect.catchAllDefect(() => Effect.succeed(undefined)),
+    Effect.catchDefect(() => Effect.succeed(undefined)),
   );
 };
 
@@ -234,7 +234,7 @@ const findTripWithinGap = (
       }
       return best;
     }),
-    Effect.catchAllDefect(() => Effect.succeed(undefined)),
+    Effect.catchDefect(() => Effect.succeed(undefined)),
   );
 };
 
@@ -451,7 +451,7 @@ const resolveProvider = (
     }
 
     const orgs = yield* Effect.promise(() => db.query(Filter.type(Organization.Organization)).run()).pipe(
-      Effect.catchAllDefect(() => Effect.succeed([] as Organization.Organization[])),
+      Effect.catchDefect(() => Effect.succeed([] as Organization.Organization[])),
     );
     const match = orgs.find(
       (org) =>

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
 import * as Stream from 'effect/Stream';
 import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -71,7 +71,7 @@ describe('SystemService', () => {
     const statuses: SystemStatus[] = [];
     const first = new Trigger();
     const done = new Trigger();
-    const cleanup = subscribeStream(Runtime.defaultRuntime, systemService['SystemService.queryStatus']({}), {
+    const cleanup = subscribeStream(Context.empty(), systemService['SystemService.queryStatus']({}), {
       onData: ({ status }) => {
         statuses.push(status);
         first.wake();

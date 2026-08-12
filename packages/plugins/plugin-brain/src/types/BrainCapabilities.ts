@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
@@ -17,6 +19,6 @@ export const FactStoreRegistry = Capability.makeSingleton<import('../capabilitie
 );
 
 /** Writable atom holding the fact-analysis {@link BrainSettings.Settings} (model/provider/strict). */
-export const Settings = Capability.makeSingleton<
-  import('@effect-atom/atom-react').Atom.Writable<import('./BrainSettings').Settings>
->()(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./BrainSettings').Settings>>()(
+  `${meta.profile.key}.capability.settings`,
+);

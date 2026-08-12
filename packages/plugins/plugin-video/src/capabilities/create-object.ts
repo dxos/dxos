@@ -15,8 +15,8 @@ import * as Video from '../types/Video';
 
 /** Input schema for creating a Video; types the `props` passed to createObject and drives the create form. */
 const CreateVideoSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  url: Schema.optional(Schema.String.annotations({ title: 'URL', description: 'The source URL of the video.' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  url: Schema.optional(Schema.String.annotate({ title: 'URL', description: 'The source URL of the video.' })),
 });
 
 export default Capability.makeModule(

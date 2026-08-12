@@ -31,7 +31,7 @@ export const getFileXattrDXN = (filePath: string): Effect.Effect<string | undefi
     return invoke<string | null>('get_xattr', { path: filePath, name: XATTR_DXN_NAME });
   }).pipe(
     Effect.map((value) => value ?? undefined),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to read xattr', { filePath, error });
         return undefined;
@@ -50,7 +50,7 @@ export const setFileXattrDXN = (filePath: string, dxn: string): Effect.Effect<vo
     const { invoke } = await import('@tauri-apps/api/core');
     await invoke('set_xattr', { path: filePath, name: XATTR_DXN_NAME, value: dxn });
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to set xattr', { filePath, error });
       }),
@@ -76,7 +76,7 @@ const ensureComposerDir = (workspacePath: string): Effect.Effect<boolean> => {
     await mkdir(pathJoin(workspacePath, COMPOSER_CONFIG_DIR), { recursive: true });
     return true;
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to create .composer directory', { workspacePath, error });
         return false;
@@ -172,7 +172,7 @@ export const watchMarkdownFile = (
     );
     return unwatch;
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to watch file', { filePath, error });
         return null;
@@ -218,7 +218,7 @@ export const watchDirectory = (
     );
     return unwatch;
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to watch directory', { dirPath, error });
         return null;

@@ -642,7 +642,7 @@ export const type: {
     schema: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
-  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
+  <S extends Schema.Union<readonly Schema.Codec<any, any>[]>>(
     union: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
@@ -64,7 +63,7 @@ const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
         Stream.groupedWithin(64, '250 millis'),
         Stream.runForEach((batch) =>
           Effect.sync(() => {
-            const incoming = Chunk.toReadonlyArray(batch).flatMap(({ message, receivedAt }) =>
+            const incoming = batch.flatMap(({ message, receivedAt }) =>
               Trace.flatten(message).map((event) => ({
                 ...event,
                 seq: seqRef.current++,

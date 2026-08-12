@@ -22,8 +22,8 @@ export interface LayerSpec {
   readonly [TypeId]: TypeId;
 
   readonly affinity: Affinity;
-  readonly requires: readonly Context.Tag<any, any>[];
-  readonly provides: readonly Context.Tag<any, any>[];
+  readonly requires: readonly Context.Key<any, any>[];
+  readonly provides: readonly Context.Key<any, any>[];
 
   // opaque service creation function, layer provides the specified services and requires the specified requirements.
   readonly make: (context: LayerContext) => Layer.Layer<unknown, never, unknown>;
@@ -64,8 +64,8 @@ export interface LayerContext {
 
 interface MakeOpts {
   readonly affinity: Affinity;
-  readonly requires: readonly Context.Tag<any, any>[];
-  readonly provides: readonly Context.Tag<any, any>[];
+  readonly requires: readonly Context.Key<any, any>[];
+  readonly provides: readonly Context.Key<any, any>[];
 }
 
 /**
@@ -76,9 +76,9 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeOpts, Opts>
   make: (
     context: LayerContext,
   ) => Layer.Layer<
-    Context.Tag.Identifier<Opts['provides'][number]>,
+    Context.Service.Identifier<Opts['provides'][number]>,
     never,
-    Context.Tag.Identifier<Opts['requires'][number]>
+    Context.Service.Identifier<Opts['requires'][number]>
   >,
 ): LayerSpec => {
   return {

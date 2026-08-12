@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/config';
@@ -89,9 +89,9 @@ export const handler = Effect.fn(function* ({
 export const importCommand = Command.make(
   'import',
   {
-    file: Options.text('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
-    dataDir: Options.text('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
-    force: Options.boolean('force', { ifPresent: true }).pipe(Options.withDescription('Skip confirmation prompt.')),
+    file: Options.string('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
+    dataDir: Options.string('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
+    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
   },
   handler,
 ).pipe(Command.withDescription('Import profile.'));

@@ -79,13 +79,13 @@ export const createSingleCursor = (
     return { cursor, target, needsSyncRoutine };
   }).pipe(
     Effect.provide(Database.layer(db)),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('create single binding failed', { error });
         return undefined;
       }),
     ),
-    Effect.catchAllDefect((defect) =>
+    Effect.catchDefect((defect) =>
       Effect.sync(() => {
         log.warn('create single binding defect', { defect });
         return undefined;

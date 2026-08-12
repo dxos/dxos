@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
@@ -38,10 +38,10 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 );
 
 export namespace FileAction {
-  export const UploadAnnotationId = Symbol.for(`${meta.profile.key}.annotation.upload`);
+  export const UploadAnnotationId = `${meta.profile.key}.annotation.upload`;
 
   export const CreateFileSchema = Schema.Struct({
-    file: Schema.instanceOf(File).annotations({
+    file: Schema.instanceOf(File).annotate({
       [UploadAnnotationId]: ACCEPTED_MIME,
     }),
   });

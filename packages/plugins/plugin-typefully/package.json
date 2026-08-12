@@ -73,7 +73,6 @@
     "@dxos/plugin-blogger": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

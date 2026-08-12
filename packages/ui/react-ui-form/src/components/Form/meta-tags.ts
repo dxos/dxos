@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Tag } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 
 import { omitId } from '../../util';
@@ -26,11 +27,18 @@ export const META_TAGS_KEY = '_tags';
  * a schema for editing and drops `id`. Keyed by {@link META_TAGS_KEY} so it never collides with a
  * `tags` field the schema declares itself.
  */
-export const withMetaTags = (schema: Schema.Schema.AnyNoContext) =>
+export const withMetaTags = (schema: Schema.Codec<any, any>) =>
   omitId(
-    Schema.Struct({
-      [META_TAGS_KEY]: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.annotations({ title: 'Tags' }), Schema.optional),
-    }).pipe(Schema.extend(schema)),
+    // `SchemaAST.assignFields`, not v4's `Schema.fieldsAssign`: the latter needs both sides' fields
+    // at the type level, which a schema known only as a `Codec` cannot supply.
+    Schema.make<Schema.Codec<any, any>>(
+      SchemaAST.assignFields(
+        Schema.Struct({
+          [META_TAGS_KEY]: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.annotate({ title: 'Tags' }), Schema.optional),
+        }).ast,
+        schema.ast,
+      ),
+    ),
   );
 
 const isTag = Obj.instanceOf(Tag.Tag);

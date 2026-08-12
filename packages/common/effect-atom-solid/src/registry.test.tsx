@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import { render } from '@solidjs/testing-library';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { RegistryProvider, defaultRegistry, useRegistry } from './registry';
@@ -16,7 +16,7 @@ describe('registry', () => {
 
   describe('useRegistry', () => {
     test('returns the default registry', () => {
-      let capturedRegistry: Registry.Registry | null = null;
+      let capturedRegistry: AtomRegistry.AtomRegistry | null = null;
 
       function TestComponent() {
         capturedRegistry = useRegistry();
@@ -30,8 +30,8 @@ describe('registry', () => {
 
   describe('RegistryProvider', () => {
     test('provides a custom registry to children', () => {
-      const customRegistry = Registry.make();
-      let capturedRegistry: Registry.Registry | null = null;
+      const customRegistry = AtomRegistry.make();
+      let capturedRegistry: AtomRegistry.AtomRegistry | null = null;
 
       function Child() {
         capturedRegistry = useRegistry();

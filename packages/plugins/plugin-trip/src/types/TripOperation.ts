@@ -97,26 +97,26 @@ export const AddSegment = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    trip: Ref.Ref(Trip.Trip).annotations({ description: 'The trip to add the segment to.' }),
-    kind: Segment.Kind.annotations({
+    trip: Ref.Ref(Trip.Trip).annotate({ description: 'The trip to add the segment to.' }),
+    kind: Segment.Kind.annotate({
       description: 'Segment kind: flight, train, boat, road, accommodation, or activity.',
     }),
-    title: Schema.optional(Schema.String).annotations({
+    title: Schema.optional(Schema.String).annotate({
       description: 'Title or name (activity title, hotel name, etc.).',
     }),
-    origin: Schema.optional(Schema.String).annotations({
+    origin: Schema.optional(Schema.String).annotate({
       description: 'Origin place name for transport segments, or the location for accommodation/activity.',
     }),
-    destination: Schema.optional(Schema.String).annotations({
+    destination: Schema.optional(Schema.String).annotate({
       description: 'Destination place name for transport segments.',
     }),
-    departAt: Schema.optional(Schema.String).annotations({
+    departAt: Schema.optional(Schema.String).annotate({
       description: 'Start / departure / check-in time (ISO 8601).',
     }),
-    arriveAt: Schema.optional(Schema.String).annotations({
+    arriveAt: Schema.optional(Schema.String).annotate({
       description: 'End / arrival / check-out time (ISO 8601).',
     }),
-    notes: Schema.optional(Schema.String).annotations({ description: 'Freeform notes.' }),
+    notes: Schema.optional(Schema.String).annotate({ description: 'Freeform notes.' }),
   }),
   output: Schema.Struct({ segmentId: Schema.String }),
 });

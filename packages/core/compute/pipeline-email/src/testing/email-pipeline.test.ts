@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -10,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { existsSync } from 'node:fs';
 import { readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -138,14 +138,14 @@ type Stats = {
 // `R = never` before `EffectEx.runPromise` — the same "provide at the edge" idiom used elsewhere in
 // this repo (e.g. `Database.layer`). The heavy bits (Ollama runtime, better-sqlite3-backed db) live
 // here in the test harness, which is why the whole suite is env-gated.
-class Ctx extends Context.Tag('EmailPipelineCtx')<
+class Ctx extends Context.Service<
   Ctx,
   {
     readonly summarize: (text: string) => Promise<Summary>;
     readonly db: Database.Database;
     readonly stats: Stats;
   }
->() {}
+>()('EmailPipelineCtx') {}
 
 // Stage 1: LLM summarization. Appends a second text block carrying the summary and records spam /
 // keyword metadata on `Message.properties` (ContentBlock.Text has no metadata field). Produces a new
@@ -158,7 +158,7 @@ const summarizeStage: Stage.Stage<Message.Message, Message.Message, never, Ctx> 
     const { summarize } = yield* Ctx;
     const text = Message.extractText(message);
     const result = yield* Effect.tryPromise(() => summarize(text)).pipe(
-      Effect.orElse(() => Effect.succeed<Summary>({ summary: '', isSpam: false, keywords: [] })),
+      Effect.catch(() => Effect.succeed<Summary>({ summary: '', isSpam: false, keywords: [] })),
     );
     const summaryBlock: ContentBlock.Text = { _tag: 'text', text: result.summary };
     return Message.make({
@@ -286,7 +286,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         runtime.runPromise(
           Effect.scoped(LanguageModel.generateText({ prompt: [SUMMARIZE_PROMPT, text].join('\n\n') })).pipe(
             Effect.map((response) => parseSummary(response.text)),
-            Effect.catchAllCause((cause) =>
+            Effect.catchCause((cause) =>
               Effect.sync(() => {
                 log.warn('summarize failed; using empty summary', { model: MODEL, cause: Cause.pretty(cause) });
                 return { summary: '', isSpam: false, keywords: [] } satisfies Summary;
@@ -295,7 +295,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
           ),
         );
 
-      const context: Context.Tag.Service<typeof Ctx> = { summarize, db, stats };
+      const context: Context.Service.Shape<typeof Ctx> = { summarize, db, stats };
 
       // Index each message into the fact substrate. The model + provider ride on ExtractOptions so
       // pipeline-rdf resolves the Ollama model (its default is Anthropic); a failed extraction
@@ -408,7 +408,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         runtime.runPromise(
           Effect.scoped(LanguageModel.generateText({ prompt })).pipe(
             Effect.map((response) => response.text),
-            Effect.catchAllCause(() => Effect.succeed('')),
+            Effect.catchCause(() => Effect.succeed('')),
           ),
         );
       const drafts = await summarizeTopics(clusterThreads(threads), narrate);

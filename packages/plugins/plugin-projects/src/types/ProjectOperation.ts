@@ -81,9 +81,9 @@ export const UpdateProjectTasks = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotations({ description: 'Project whose task set receives the tasks.' }),
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox whose feed is scanned.' }),
-    senders: Schema.Array(Schema.String).annotations({
+    project: Ref.Ref(Project.Project).annotate({ description: 'Project whose task set receives the tasks.' }),
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox whose feed is scanned.' }),
+    senders: Schema.Array(Schema.String).annotate({
       description: 'Sender email addresses or bare domains whose messages are tracked as requests.',
     }),
   }),
@@ -105,8 +105,8 @@ export const UpdateTravelLog = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotations({ description: 'Project owning the Travel Bookings artifact.' }),
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox whose feed is scanned.' }),
+    project: Ref.Ref(Project.Project).annotate({ description: 'Project owning the Travel Bookings artifact.' }),
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox whose feed is scanned.' }),
   }),
   output: Schema.Struct({
     scanned: Schema.Number,
@@ -125,19 +125,19 @@ export const UpdateInvestorLog = Operation.make({
   },
   services: [AiService.AiService, Database.Service],
   input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotations({
+    project: Ref.Ref(Project.Project).annotate({
       description: 'Project owning the Investor Conversations artifact.',
     }),
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox whose feed is scanned.' }),
-    domains: Schema.Array(Schema.String).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox whose feed is scanned.' }),
+    domains: Schema.Array(Schema.String).annotate({
       description: 'Investor email addresses or bare domains to track.',
     }),
     summarize: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         description: 'Generate an LLM summary per conversation; defaults to a deterministic digest.',
       }),
     ),
-    model: Schema.optional(Schema.String.annotations({ description: 'Summary model name; defaults to Claude Haiku.' })),
+    model: Schema.optional(Schema.String.annotate({ description: 'Summary model name; defaults to Claude Haiku.' })),
   }),
   output: Schema.Struct({
     scanned: Schema.Number,
@@ -155,7 +155,7 @@ export const UpdateInvestorLog = Operation.make({
  *   for a free-mail sender, whose domain identifies no organization.
  * - `sender` — that person only.
  */
-export const TrackingScope = Schema.Literal('domain', 'sender');
+export const TrackingScope = Schema.Literals(['domain', 'sender']);
 export type TrackingScope = Schema.Schema.Type<typeof TrackingScope>;
 
 /**
@@ -163,7 +163,7 @@ export type TrackingScope = Schema.Schema.Type<typeof TrackingScope>;
  * the routine's runnable — this is what "a project is a policy over pipelines" means concretely: the
  * capability is mailbox-global, the project fixes its scope, its artifacts and its schedule.
  */
-export const TrackingPipeline = Schema.Literal('tasks', 'summaries', 'contacts');
+export const TrackingPipeline = Schema.Literals(['tasks', 'summaries', 'contacts']);
 export type TrackingPipeline = Schema.Schema.Type<typeof TrackingPipeline>;
 
 export const CreateTrackingProject = Operation.make({
@@ -176,17 +176,17 @@ export const CreateTrackingProject = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox the project tracks.' }),
-    message: Type.getSchema(Message.Message).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox the project tracks.' }),
+    message: Type.getSchema(Message.Message).annotate({
       description: 'Message whose sender seeds the project.',
     }),
-    scope: Schema.optional(TrackingScope).annotations({
+    scope: Schema.optional(TrackingScope).annotate({
       description: "Who to follow; defaults to the sender's domain when it identifies an organization.",
     }),
-    pipeline: Schema.optional(TrackingPipeline).annotations({
+    pipeline: Schema.optional(TrackingPipeline).annotate({
       description: 'Pipeline the scaffolded routine runs; defaults to request tracking (tasks).',
     }),
-    name: Schema.optional(Schema.String).annotations({ description: 'Project name; defaults from the scope.' }),
+    name: Schema.optional(Schema.String).annotate({ description: 'Project name; defaults from the scope.' }),
   }),
   output: Schema.Struct({
     projectId: Schema.String,

@@ -12,7 +12,7 @@ import { ATMOSPHERE_SOURCE, OAuthProvider } from '@dxos/protocols';
 
 /** Pre-flight form for the atproto OAuth flow: the user's handle becomes the login hint. */
 const AtprotoPreflightForm = Schema.Struct({
-  handle: Schema.String.annotations({
+  handle: Schema.String.annotate({
     title: 'Handle',
     description: 'Your atproto handle or DID (e.g. user.bsky.social).',
     examples: ['user.bsky.social'],

@@ -58,7 +58,7 @@ export const MaterializeLinearTarget = Operation.make({
  * `Issue.updatedAt`. Default — when unset — is "sync everything in the team."
  */
 export const SyncOptions = Schema.Struct({
-  maxDaysBack: Schema.Number.annotations({
+  maxDaysBack: Schema.Number.annotate({
     title: 'Sync history (days)',
     description: 'Pull issues updated within this many days. Leave empty to sync everything.',
   }).pipe(Schema.optional),
@@ -90,7 +90,7 @@ export const SyncLinearTeams = Operation.make({
       description: 'Connection whose credentials sync every bound team.',
     }),
     priority: Schema.String.pipe(
-      Schema.annotations({ description: 'Cursor id of the binding to sync first.' }),
+      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
       Schema.optional,
     ),
   }),

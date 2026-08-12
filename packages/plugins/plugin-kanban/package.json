@@ -176,8 +176,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "effect": "catalog:"
   },

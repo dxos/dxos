@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from '@effect-atom/atom/Atom';
-import type * as Result from '@effect-atom/atom/Result';
+import type * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { type Accessor, createSignal, onCleanup } from 'solid-js';
 
 import { useRegistry } from '../registry';
@@ -16,7 +16,7 @@ import { type SetAtomFn, createSetAtom } from './useAtomSet';
 export function useAtom<R, W, Mode extends 'value' | 'promise' | 'promiseExit' = never>(
   atom: Atom.Writable<R, W>,
   options?: {
-    readonly mode?: ([R] extends [Result.Result<any, any>] ? Mode : 'value') | undefined;
+    readonly mode?: ([R] extends [AsyncResult.AsyncResult<any, any>] ? Mode : 'value') | undefined;
   },
 ): readonly [Accessor<R>, SetAtomFn<R, W, Mode>] {
   const registry = useRegistry();

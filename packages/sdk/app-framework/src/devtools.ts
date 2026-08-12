@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as ParseResult from 'effect/ParseResult';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaIssue from 'effect/SchemaIssue';
 
 import * as Operation from '@dxos/compute/Operation';
+import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import * as Capabilities from './common/capabilities';
@@ -84,16 +85,18 @@ const MAX_TYPE_LENGTH = 60;
  * Top-level fields of a struct schema, so `operations()` says what an operation takes rather than
  * only what it is called. Non-struct schemas (`Schema.Void`, unions) have no field list.
  */
-const fieldsOf = (schema: Schema.Schema.Any | undefined): OperationField[] | undefined => {
+const formatIssue = SchemaIssue.makeFormatterStandardSchemaV1();
+
+const fieldsOf = (schema: Schema.Top | undefined): OperationField[] | undefined => {
   const ast = schema?.ast;
-  if (!ast || !SchemaAST.isTypeLiteral(ast)) {
+  if (!ast || !SchemaAST.isObjects(ast)) {
     return undefined;
   }
-  return ast.propertySignatures.map((property) => {
+  return SchemaAST.getPropertySignatures(ast).map((property) => {
     const type = String(property.type);
     return {
       name: String(property.name),
-      optional: property.isOptional,
+      optional: SchemaAST.isOptional(property.type),
       type: type.length > MAX_TYPE_LENGTH ? `${type.slice(0, MAX_TYPE_LENGTH)}…` : type,
     };
   });
@@ -189,12 +192,19 @@ export const setupDevtools = (manager: PluginManager.PluginManager): void => {
     // as `{ data: undefined }` with no error, and the operation quietly does nothing. Validating
     // here turns that silent no-op into the error the caller expected — the whole point of an
     // operation carrying a schema.
-    const validation = Schema.validateEither(definition.input)(input);
-    if (validation._tag === 'Left') {
-      // `ArrayFormatter` over `TreeFormatter`: the tree renders the whole schema before reaching the
-      // offending field, which buries `id: is missing` under a paragraph of unrelated shape.
-      const issues = ParseResult.ArrayFormatter.formatErrorSync(validation.left)
-        .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+    // Validated against the TYPE side: callers pass decoded values, so decoding the codec would
+    // report a materialized `Ref` as malformed at a path no caller can address.
+    const validation = Schema.decodeUnknownResult(
+      Schema.make<Schema.Codec<unknown, unknown>>(SchemaAST.toType(definition.input.ast)),
+      {
+        errors: 'all',
+      },
+    )(input);
+    if (Result.isFailure(validation)) {
+      // The flattened formatter over the tree one: the tree renders the whole schema before reaching
+      // the offending field, burying `id: is missing` under a paragraph of unrelated shape.
+      const issues = formatIssue(validation.failure.issue)
+        .issues.map((issue) => `${issue.path?.join('.') || '(root)'}: ${issue.message}`)
         .join('; ');
       throw new Error(`Invalid input for ${key} — ${issues}`);
     }

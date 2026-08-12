@@ -71,7 +71,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "isomorphic-ws": "catalog:",
     "ws": "catalog:"
   },

@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -183,7 +184,7 @@ describe('Graph', () => {
     const settled = await EffectEx.runPromise(
       Graph.waitFor(graph, EXAMPLE_ID).pipe(
         Effect.map(() => 'settled' as const),
-        Effect.timeoutTo({ duration: '50 millis', onTimeout: () => 'pending' as const, onSuccess: (value) => value }),
+        Effect.timeoutOrElse({ duration: '50 millis', orElse: () => Effect.succeed('pending' as const) }),
       ),
     );
     expect(settled).toEqual('pending');

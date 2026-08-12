@@ -19,7 +19,7 @@ describe('space create', () => {
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const logger = yield* TestConsole.TestConsole;
       // Catch timeout errors from sync, but still check output
-      yield* handler({ name: Option.none() }).pipe(Effect.catchAll(() => Effect.void));
+      yield* handler({ name: Option.none() }).pipe(Effect.catch(() => Effect.void));
       const logs = logger.logs;
       // Find the JSON output (should be logged before sync)
       // log.args is an array, so we need to check the first element
@@ -46,7 +46,7 @@ describe('space create', () => {
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const logger = yield* TestConsole.TestConsole;
       // Catch timeout errors from sync, but still check output
-      yield* handler({ name: Option.some('Test Space') }).pipe(Effect.catchAll(() => Effect.void));
+      yield* handler({ name: Option.some('Test Space') }).pipe(Effect.catch(() => Effect.void));
       const logs = logger.logs;
       // Find the JSON output (should be logged before sync)
       // log.args is an array, so we need to check the first element

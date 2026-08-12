@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
@@ -19,8 +19,8 @@ const ForexEffect = Operation.make({
     description: 'Returns the exchange rate between two currencies.',
   },
   input: Schema.Struct({
-    from: Schema.String.annotations({ description: 'The source currency' }),
-    to: Schema.String.annotations({ description: 'The target currency' }),
+    from: Schema.String.annotate({ description: 'The source currency' }),
+    to: Schema.String.annotate({ description: 'The target currency' }),
   }),
   output: Schema.Any,
 });
@@ -34,7 +34,7 @@ export default ForexEffect.pipe(
         HttpClient.execute,
         Effect.flatMap((response) => response.json),
         Effect.timeout('5 seconds'),
-        Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+        Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
         Effect.scoped,
       );
 

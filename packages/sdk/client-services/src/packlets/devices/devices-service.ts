@@ -7,6 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { SubscriptionList } from '@dxos/async';
 import { type EdgeConnection } from '@dxos/edge-client';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Device, DeviceKind, EdgeStatus, type QueryDevicesResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -28,7 +29,7 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
   }
 
   ['DevicesService.queryDevices'](): EffectStream.Stream<QueryDevicesResponse, Error> {
-    return EffectStream.async<QueryDevicesResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QueryDevicesResponse, Error>((emit) => {
       const update = () => {
         const deviceKeys = this._identityManager.identity?.authorizedDeviceKeys;
         if (!deviceKeys) {

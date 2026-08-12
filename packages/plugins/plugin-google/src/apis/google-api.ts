@@ -4,11 +4,11 @@
 
 // TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import * as Schedule from 'effect/Schedule';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { withAuthorization } from '@dxos/compute-runtime';
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -38,13 +38,15 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
   // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
   //  Is this an issue on Google's side or is it a bug in `@effect/platform`?
   //  https://github.com/Effect-TS/effect/issues/4568
-  const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+  const httpClientWithTracerDisabled = httpClient.pipe(
+    HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+  );
 
   let request;
   if (options.method === 'POST') {
     request = HttpClientRequest.post(url);
   } else if (options.method === 'DELETE') {
-    request = HttpClientRequest.del(url);
+    request = HttpClientRequest.make('DELETE')(url);
   } else {
     request = HttpClientRequest.get(url);
   }
@@ -63,12 +65,12 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
     // empty body, which parses to `{}`.
     Effect.flatMap((res) => res.text.pipe(Effect.map((text) => ({ status: res.status, body: parseJsonBody(text) })))),
     Effect.timeout('10 second'),
-    Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
+    Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
     Effect.scoped,
     Effect.withSpan('GoogleApiRequest'),
   );
 
-  const errorPayload = Predicate.isRecord(body) && Predicate.isRecord(body.error) ? body.error : undefined;
+  const errorPayload = Predicate.isObject(body) && Predicate.isObject(body.error) ? body.error : undefined;
   if (status < 200 || status >= 300 || errorPayload) {
     // Google mirrors the HTTP status in `error.code`; fall back to the transport status when the body
     // is not the expected JSON error shape (e.g. an HTML error page).
