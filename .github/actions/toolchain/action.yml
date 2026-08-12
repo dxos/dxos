@@ -1,0 +1,58 @@
+name: Toolchain
+description: Install proto and moon at the versions pinned in .prototools.
+
+runs:
+  using: 'composite'
+  steps:
+    # Read from `.prototools` rather than repeating the versions here: the action inputs below were
+    # two of the copies the pin file warns about, and a stale one silently installs the wrong moon.
+    - name: Read pinned versions
+      id: pins
+      run: |
+        for tool in proto moon; do
+          version=$(sed -n "s|^[[:space:]]*$tool[[:space:]]*=[[:space:]]*\"\([^\"]*\)\".*|\1|p" .prototools | head -1)
+          if [ -z "$version" ]; then
+            echo "::error::Could not read the $tool version from .prototools."
+            exit 1
+          fi
+          echo "$tool=$version" >> "$GITHUB_OUTPUT"
+        done
+      shell: bash
+
+    # TODO(wittjosiah): Install moon in docker image?
+    - uses: moonrepo/setup-toolchain@v0
+      with:
+        moon-version: ${{ steps.pins.outputs.moon }}
+        proto-version: ${{ steps.pins.outputs.proto }}
+
+    # moon's SetupProto action — which every `moon setup` and `moon run` schedules — probes for
+    # `$PROTO_HOME/tools/proto/<version>/proto` and downloads proto from GitHub when it is absent.
+    # It is always absent: setup-toolchain runs `proto clean` before saving the toolchain cache, and
+    # that always evicts proto's own entry (proto never records itself as used), so the restored
+    # cache never carries it. That made every job pay an unretried network round-trip whose failure
+    # exits `moon setup` 1 with no error text at all. Copying the binary the step above just
+    # installed makes the probe succeed, so the action skips instead of reaching the network.
+    - name: Seed proto's own toolchain entry
+      env:
+        PROTO_VERSION: ${{ steps.pins.outputs.proto }}
+      run: |
+        proto_home="${PROTO_HOME:-$HOME/.proto}"
+        proto_bin="$proto_home/bin/proto"
+        target="$proto_home/tools/proto/$PROTO_VERSION/proto"
+        if [ -f "$target" ]; then
+          exit 0
+        fi
+        # Every branch below falls through rather than failing: this step is an optimisation, and moon
+        # installs proto itself if the copy does not happen.
+        if [ ! -x "$proto_bin" ]; then
+          echo "::warning::No proto binary at $proto_bin — leaving the install to moon."
+          exit 0
+        fi
+        installed=$("$proto_bin" --version 2>/dev/null | awk '{ print $2 }' || true)
+        if [ "$installed" != "$PROTO_VERSION" ]; then
+          echo "::warning::proto at $proto_bin is ${installed:-<unreadable>}, not $PROTO_VERSION — leaving the install to moon."
+          exit 0
+        fi
+        mkdir -p "$(dirname "$target")"
+        cp "$proto_bin" "$target"
+      shell: bash

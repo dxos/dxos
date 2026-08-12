@@ -1,10 +1,10 @@
 # https://moonrepo.dev/docs/proto/config
 
 # IMPORTANT — this file is the intended source of truth for every version below, but not all of them can
-# live only here: a container image is built before proto exists, a GitHub Action takes its version as an
-# input, an npm manifest needs a literal. Those copies are kept to a minimum and each survivor is one that
-# could not be removed, so a bump here is only the first half of the change — sweep the repo for the old
-# version and update every hit:
+# live only here: a container image is built before proto exists, an npm manifest needs a literal. Those
+# copies are kept to a minimum and each survivor is one that could not be removed (CI reads its moon and
+# proto versions back out of this file), so a bump here is only the first half of the change — sweep the
+# repo for the old version and update every hit:
 #
 #   git grep -n '<old version>' -- ':!pnpm-lock.yaml'
 #
