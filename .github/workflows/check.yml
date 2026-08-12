@@ -92,17 +92,18 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # ─── Stage 1: gates that need no build ──────────────────────────────────────────────────────
+      # Ordered by measured cost, cheapest first, so the common failure lands in seconds instead of
+      # behind minutes of work it does not depend on; the whole stage is ~30 s. `format-check` leads
+      # because a single unformatted file fails every job in the workflow.
+      - name: Check formatting
+        run: pnpm run format-check
+
       - name: Check for import cycles
         run: pnpm run check-cycles
 
-      - name: Check public packages don't depend on private packages
-        run: pnpm run check-public-dependencies
-
       - name: Check publish config
         run: pnpm run check-publish-config
-
-      - name: Check public packages are published
-        run: pnpm run check-packages-published
 
       # Pre-1.0 a breaking change rides the minor; `major` is reserved for the deliberate 1.0.0 cut. The
       # groups are `fixed`, so one stray `major` versions every package to 1.0.0. Delete with the cut.
@@ -114,21 +115,30 @@ jobs:
         # sync-versions.mjs during release; fail the PR if a committed copy drifts out of sync.
         run: node scripts/sync-versions.mjs --check
 
-      - name: Check package.json paths
-        run: pnpm run pkg-lint
-
       - name: Check remote cache wiring
         run: node scripts/check-cache-wiring.mjs
 
-      # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
-      # config resolves workspace packages through their `source` export condition — so it needs no
-      # build and runs before the expensive `moon run :lint :build` step below.
-      - name: Check dependencies
-        run: pnpm run knip
+      - name: Check package.json paths
+        run: pnpm run pkg-lint
 
-      - name: Check formatting
-        run: pnpm run format-check
+      - name: Check public packages don't depend on private packages
+        run: pnpm run check-public-dependencies
 
+      - name: Check public packages are published
+        run: pnpm run check-packages-published
+
+      # `.npmrc` sets `strict-peer-dependencies` with `auto-install-peers=false`, so re-resolving is
+      # what surfaces an unsatisfiable peer. The `trap` restores the lockfile on failure as well as on
+      # success: `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`, which `.moon/tasks/all.yml`
+      # declares as an input to every task, so a rewritten copy would miss the cache for both stages
+      # below — the reason this step used to sit at the very end.
+      - name: Check for peer dependency issues
+        run: |
+          trap 'git checkout -- pnpm-lock.yaml' EXIT
+          pnpm install --resolution-only --no-frozen-lockfile
+
+      # ─── Stage 2: the compile gate ──────────────────────────────────────────────────────────────
+      # ~15 s warm, minutes cold, and the floor under everything below it.
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :lint :build --affected remote
@@ -137,6 +147,8 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :lint :build
 
+      # `check-module-structure` traces the built artifacts (`deps: [build]`), so it cannot move ahead
+      # of the gate however cheap it looks — its 5 s is a post-build number.
       - name: Check module structure (affected)
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :check-module-structure --affected remote
@@ -145,8 +157,42 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :check-module-structure
 
-      - name: Check for peer dependency issues
-        run: pnpm install --resolution-only --no-frozen-lockfile
+      # ─── Stage 3: the two slow checks ───────────────────────────────────────────────────────────
+      # ~2m30s and ~1m against ~30 s for all of stage 1, so these run last. Both are
+      # `continue-on-error` with a gate step below: fail-fast is free when steps are cheap, but here
+      # it would hide one failure behind the other at the cost of a whole further run of the job.
+      #
+      # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
+      # config resolves workspace packages through their `source` export condition — so it needs no
+      # build, but at 85% of the job's real work it earns no place ahead of anything.
+      - name: Check dependencies
+        id: knip
+        continue-on-error: true
+        run: pnpm run knip
+
+      # Static boot-graph budget over the production bundle. The class it catches is a property of an
+      # IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a refactor
+      # that relocates the edge silently drops the fix and neither the build nor the tests notice;
+      # three separate fixes were undone that way. Not `--affected`-scoped, because the offending edit
+      # lands in some other package. Here rather than on an `e2e` cell so that it gates the PR that
+      # introduces the regression: `e2e` runs on main/changeset-release or an explicit dispatch, so
+      # there it never gated one. `bundle` is not otherwise built in this workflow, so this step pays
+      # for it; stage 2 has at least warmed the library builds underneath it.
+      - name: Check boot budget
+        id: boot_budget
+        continue-on-error: true
+        run: moon run composer-app:check-boot-budget
+
+      - name: Report slow-check failures
+        if: ${{ steps.knip.outcome == 'failure' || steps.boot_budget.outcome == 'failure' }}
+        run: |
+          if [ "${{ steps.knip.outcome }}" = failure ]; then
+            echo '::error::knip failed — see the "Check dependencies" step.'
+          fi
+          if [ "${{ steps.boot_budget.outcome }}" = failure ]; then
+            echo '::error::boot budget failed — see the "Check boot budget" step.'
+          fi
+          exit 1
 
   test:
     strategy:
@@ -544,17 +590,6 @@ jobs:
 
       # No bundle step: the `e2e-ci` targets declare `bundle-e2e` as a dep, so moon hydrates it from the
       # cache `e2e-bundle` warmed.
-
-      # Static boot-graph budget over the bundle just built. The class it catches is a property of an
-      # IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a refactor
-      # that relocates the edge silently drops the fix and neither the build nor the tests notice;
-      # three separate fixes were undone that way. Not `--affected`-scoped, because the offending
-      # edit lands in some other package. NOTE: this job is gated to main/changeset-release/dispatch,
-      # so today the check runs post-merge and does not gate the PR that introduces the regression.
-      # One cell only: it is a property of the bundle, identical across every cell of the matrix.
-      - name: Check boot budget
-        if: ${{ matrix.browser == 'chromium' && matrix.shard == 'composer' }}
-        run: moon run composer-app:check-boot-budget
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.

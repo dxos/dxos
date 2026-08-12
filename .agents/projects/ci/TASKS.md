@@ -224,10 +224,19 @@ Browser gates are listed only where this work changed them. Ordered by cost to f
       masked failure could not make a green cell unfalsifiable; all eight uploads now agree.
 - [x] **Sync with main** (Changesets v3 added a `check-changeset-bumps` step whose script the branch
       lacked, so the `check` job failed until the merge) **and drop draft status.**
-- [ ] **Move `check-boot-budget` off the e2e cell.** It is static (a Node script reading
-      `out/composer/index.html`) but depends on the production `bundle`, which the composer cell does
-      not otherwise build — it cost 51 s in one chromium cell. `e2e-bundle` or `check` is the right
-      home; neither installs browsers for it.
+- [x] **Move `check-boot-budget` off the e2e cell** — it is now the last check in the `check` job's
+      stage 3, which also makes it gate the PR. Landed with the `check` job's
+      cost-ordered stages (DESIGN.md, "The `check` job runs in three stages"): stage 1 the ~30 s
+      no-build gates with `format-check` leading, stage 2 the compile gate, stage 3 `knip` +
+      `check-boot-budget` as the only report-all pair. The peer-dependency step moved from last to
+      stage 1 behind a `trap` that restores `pnpm-lock.yaml` — confirmed empirically that the
+      lockfile is a hash input to every task (editing it re-hashed a cached `dx-build:build`).
+- [x] **Measured the cold cost of `check-boot-budget` on the `check` job: 53 s**, of which
+      `composer-app:bundle` built from source in 28 s. Run 31539993812 reported 284 tasks completed
+      with 281 cached, so the libraries hydrated and only the bundle ran; the script itself is 28 ms.
+      The dedicated-job fallback (`needs: e2e-bundle`) is therefore not needed. Note the e2e cell's
+      former 50 s was NOT a cache hit as assumed — building this bundle simply costs ~30 s once its
+      closure is warm.
 
 ## Phase 4: Storybook failures the cache was hiding
 
