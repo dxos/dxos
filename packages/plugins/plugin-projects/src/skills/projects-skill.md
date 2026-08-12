@@ -56,7 +56,7 @@ onward — never pass a bare id where a ref is expected.
 - **Outline** — the free-text scratch surface (`outlineGet`/`outlineUpdate`). Keep a line
   starting `Resume:` holding the single next action, and a `Design: {"/": "<doc-id>"}` line
   pointing at the design document.
-- **Design document** — the durable *why*: decisions, findings, spec. Create the text object,
+- **Design document** — the durable _why_: decisions, findings, spec. Create the text object,
   then a document whose `content` references it (`createObject` typenames `org.dxos.type.text`
   and `org.dxos.type.document`).
 
@@ -94,7 +94,7 @@ onward — never pass a bare id where a ref is expected.
   2. Refresh the resume pointer: `outlineUpdate` the `Resume:` line to the single next action.
   3. Update `projectUpdate.goals` if goals were met/dropped/added, and `status` if the
      work-stream's state changed.
-  4. Push durable *why* (decisions, findings) into the design document, not the outline — the
+  4. Push durable _why_ (decisions, findings) into the design document, not the outline — the
      outline is scratch, the document is the record.
   5. Confirm the checkpoint in one short block (done / in-progress / next).
 - **`/project resume`** — reload at the start of a session:
@@ -117,15 +117,15 @@ onward — never pass a bare id where a ref is expected.
 
 ## Common mistakes
 
-| Mistake                                                            | Fix                                                                                          |
-| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.      |
-| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute an unpinned space.                             |
-| Passing a bare id where a ref envelope is expected                 | Wrap every object reference as `{"/": "<id>"}`.                                              |
-| Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.   |
-| Flat task list with no phase grouping                              | Create one parent task per phase; individual tasks are sub-tasks with `parent` set.          |
-| Leaving task status stale after work lands                         | `taskUpdate`/`taskComplete` in the same turn the work completes, not batched at the end.     |
-| Losing the resume pointer                                          | `outlineUpdate` the `Resume:` line at every checkpoint, not just at the very end.            |
-| Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.               |
-| Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.        |
-| Creating a new project when one for this work already exists       | `projectList` first; resume/extend the existing one instead of forking state.                |
+| Mistake                                                            | Fix                                                                                        |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.    |
+| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute an unpinned space.                           |
+| Passing a bare id where a ref envelope is expected                 | Wrap every object reference as `{"/": "<id>"}`.                                            |
+| Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators. |
+| Flat task list with no phase grouping                              | Create one parent task per phase; individual tasks are sub-tasks with `parent` set.        |
+| Leaving task status stale after work lands                         | `taskUpdate`/`taskComplete` in the same turn the work completes, not batched at the end.   |
+| Losing the resume pointer                                          | `outlineUpdate` the `Resume:` line at every checkpoint, not just at the very end.          |
+| Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.             |
+| Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.      |
+| Creating a new project when one for this work already exists       | `projectList` first; resume/extend the existing one instead of forking state.              |
