@@ -25,10 +25,15 @@ import { log } from '@dxos/log';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as CrmOperation from '@dxos/plugin-crm/CrmOperation';
+import { CrmPlugin } from '@dxos/plugin-crm/plugin';
+import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { ContactMessageExtractor } from '@dxos/plugin-inbox/operations';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -36,12 +41,12 @@ import { Panel, Toolbar } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { TagIndex } from '@dxos/schema';
+import { TagIndex, Text } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/storybook-testing';
 import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { StoryAiPlugin, loadMailboxFixture } from '../testing';
+import { StoryAiPlugin, type StorySeed, seedStoryMailbox } from '../testing';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
@@ -73,6 +78,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   );
   const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
   const contacts = useQuery(space.db, Filter.type(Person.Person));
+  const profiles = useQuery(space.db, Filter.type(ProfileOf.ProfileOf));
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);
   const [factStores] = useCapabilities(BrainCapabilities.FactStoreRegistry);
   const [runs, setRuns] = useState(0);
@@ -83,6 +89,11 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   // them into the registry, so the meters below mirror the app's statusbar (incl. cancel).
   const monitors = useProgressMonitors();
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+
+  // Messages with a recorded Message → extracted-object association on the Mailbox.
+  const linked = mailbox
+    ? messages.filter((message) => Mailbox.getExtractedObjectIds(mailbox, message.id).length > 0).length
+    : 0;
 
   const handleReset = useCallback(async () => {
     if (!invoker || !mailbox) {
@@ -139,6 +150,23 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     setRuns((count) => count + 1);
   }, [space, invoker, mailbox]);
 
+  // CRM pipeline: cursored contact extraction + per-contact Profile scaffold (deterministic; the
+  // extraction gate needs the seeded Organizations, so it pairs with the `crm` seed).
+  const handleCrm = useCallback(async () => {
+    if (!invoker || !mailbox) {
+      return;
+    }
+
+    const result = await invoker
+      .invokePromise(CrmOperation.ProcessMailbox, { mailbox: Ref.make(mailbox), research: true }, { spaceId: space.id })
+      .catch((err) => {
+        log.warn('crm process mailbox failed', { err });
+        return { error: String(err) };
+      });
+    setLast(result);
+    setRuns((count) => count + 1);
+  }, [space, invoker, mailbox]);
+
   const handleAnalyze = useCallback(async () => {
     if (!invoker || !mailbox) {
       return;
@@ -180,6 +208,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Button data-testid='extract' disabled={!invoker || !mailbox} onClick={() => void handleExtract()}>
             Extract
           </Toolbar.Button>
+          <Toolbar.Button data-testid='crm' disabled={!invoker || !mailbox} onClick={() => void handleCrm()}>
+            CRM
+          </Toolbar.Button>
           <Toolbar.Button data-testid='analyze' disabled={!invoker || !mailbox} onClick={() => void handleAnalyze()}>
             Analyze
           </Toolbar.Button>
@@ -194,6 +225,8 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             cursors: cursors.length,
             cursorMax: Cursor.parseKey(cursors[0]?.max),
             contacts: contacts.length,
+            profiles: profiles.length,
+            linked,
             facts,
             last,
           }}
@@ -242,13 +275,16 @@ const StoryProcessPlugin = Plugin.define(
 
 const DefaultStory = () => <ModuleContainer layout={[[ProcessRole], [ModuleRole.Database, ModuleRole.Logging]]} />;
 
+type StoryArgs = { seed: StorySeed };
+
 const meta = {
   title: 'stories/stories-inbox/ProcessPipeline',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
-    withPluginManager({
+    // Initializer form: the seed variant is a story arg, so one plugin set serves every story.
+    withPluginManager<StoryArgs>(({ args }) => ({
       setupEvents: [ActivationEvents.Startup],
       plugins: [
         ...corePlugins(),
@@ -257,28 +293,34 @@ const meta = {
             Cursor.Cursor,
             Feed.Feed,
             Mailbox.Mailbox,
+            Markdown.Document,
             Message.Message,
             Organization.Organization,
             Person.Person,
+            ProfileOf.ProfileOf,
             TagIndex.TagIndex,
+            Text.Text,
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => loadMailboxFixture(defaultSpace));
+              yield* Effect.promise(() => seedStoryMailbox(defaultSpace, args.seed));
             }),
         }),
         StorybookPlugin({}),
         InboxPlugin(),
         BrainPlugin(),
+        CrmPlugin(),
+        MarkdownPlugin(),
         ProgressPlugin(),
         StoryAiPlugin(),
         StoryProcessPlugin(),
       ],
-    }),
+    })),
   ],
+  args: { seed: 'fixture' },
   parameters: { layout: 'fullscreen', translations: debugTranslations },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
@@ -356,5 +398,56 @@ export const Test: Story = {
     const afterRerun = await waitFor((text) => /"runs":\s*1\b/.test(text) && /"processed":/.test(text));
     void expect(afterRerun).toMatch(new RegExp(`"processed":\\s*${messageCount}\\b`));
     void expect(afterRerun).toMatch(/"cursors":\s*1\b/);
+  },
+};
+
+/** The CRM demo seed: 3 demo messages plus the extraction-gate Organizations. */
+export const Crm: Story = {
+  args: { seed: 'crm' },
+};
+
+/**
+ * The deterministic CRM pipeline over the demo mailbox: every demo sender is at a known
+ * Organization, so one run creates one Person (org-linked) and one Profile per sender, records
+ * provenance on the Mailbox, and advances a durable feed cursor. A second run is an idempotent
+ * catch-up that creates nothing.
+ */
+export const CrmTest: Story = {
+  args: { seed: 'crm' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const waitFor = async (
+      predicate: (text: string) => boolean,
+      { timeout = 30_000, interval = 100 }: { timeout?: number; interval?: number } = {},
+    ): Promise<string> => {
+      const deadline = Date.now() + timeout;
+      let text = canvas.queryByTestId('counts')?.textContent ?? '';
+      while (Date.now() < deadline) {
+        if (predicate(text)) {
+          return text;
+        }
+        await new Promise((resolve) => setTimeout(resolve, interval));
+        text = canvas.queryByTestId('counts')?.textContent ?? '';
+      }
+      return text;
+    };
+
+    // The demo seed lands as one batch of three messages.
+    await waitFor((text) => /"messages":\s*3\b/.test(text));
+
+    // First pass: one Person + one Profile per demo sender, all provenance recorded, cursor created.
+    await userEvent.click(canvas.getByTestId('crm'));
+    const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
+    void expect(afterFirst).toMatch(/"contacts":\s*3\b/);
+    void expect(afterFirst).toMatch(/"profiles":\s*3\b/);
+    void expect(afterFirst).toMatch(/"linked":\s*3\b/);
+    void expect(afterFirst).toMatch(/"cursors":\s*1\b/);
+
+    // Second pass: idempotent catch-up — nothing new is created (`last.contacts` reports 0).
+    await userEvent.click(canvas.getByTestId('crm'));
+    const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
+    void expect(afterSecond).toMatch(/"profiles":\s*3\b/);
+    void expect(afterSecond).toMatch(/"contacts":\s*0\b/);
   },
 };

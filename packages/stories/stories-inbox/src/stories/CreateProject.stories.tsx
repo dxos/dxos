@@ -8,12 +8,14 @@ import React, { useCallback } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
+import { Role } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -25,10 +27,11 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
+import { ModuleContainer } from '@dxos/storybook-testing';
 import { AnchoredTo, Message } from '@dxos/types';
 
 // Story-only mock AiService so `CreateProjectFromMessage`'s LLM summary step runs without a real provider.
@@ -53,8 +56,11 @@ const MockAiServicePlugin = Plugin.define(
   Plugin.make,
 );
 
-const Story = () => {
-  const [space] = useSpaces();
+/** Role token for the story-local module, referenced by the `ModuleContainer` layout. */
+const CreateProjectRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.createProject');
+
+const CreateProjectModule = () => {
+  const space = useActiveSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const projects = useQuery(space?.db, Filter.type(Project.Project));
   const { invokePromise } = useOperationInvoker();
@@ -92,9 +98,32 @@ const Story = () => {
   );
 };
 
+/** Registers the story-local module surface for the `ModuleContainer` layout. */
+const StoryCreateProjectPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('story.inbox.createProjectModule'), name: 'Create Project Story Module' }),
+).pipe(
+  Plugin.addModule({
+    id: 'create-project-module',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(Capabilities.ReactSurface, [
+          Surface.create({
+            id: 'inbox.createProject',
+            filter: Surface.makeFilter(CreateProjectRole),
+            component: CreateProjectModule,
+          }),
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const DefaultStory = () => <ModuleContainer layout={[[CreateProjectRole]]} />;
+
 const meta = {
   title: 'stories/stories-inbox/CreateProject',
-  render: Story,
+  render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
@@ -115,6 +144,7 @@ const meta = {
         StorybookPlugin({}),
         InboxPlugin(),
         MockAiServicePlugin(),
+        StoryCreateProjectPlugin(),
       ],
     }),
   ],
@@ -123,7 +153,7 @@ const meta = {
     controls: { disable: true },
     translations: [...inboxTranslations, ...reactUiTranslations],
   },
-} satisfies Meta<typeof Story>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
