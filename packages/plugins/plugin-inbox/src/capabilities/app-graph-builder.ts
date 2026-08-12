@@ -15,7 +15,7 @@ import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
-import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
+import { findLiveBinding, syncTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { DraftMessage, Event, Message } from '@dxos/types';
@@ -357,21 +357,15 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when an external-sync cursor targets this mailbox. The cursor
-          // no longer relates to Connection directly, so the Connection is found by matching access
-          // tokens (reactive queries; loading synchronously isn't reliable here).
-          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
-          const cursor = cursors.find(
-            (candidate): candidate is Cursor.ExternalCursor =>
-              Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
+          // Sync appears only for a live binding — a cursor targeting this mailbox whose Connection
+          // still exists (reactive queries; loading synchronously isn't reliable here). The connector
+          // plugin's Connect action keys on the same predicate, so exactly one of the two is offered.
+          const binding = findLiveBinding(
+            get(db.query(Filter.type(Cursor.Cursor)).atom),
+            get(db.query(Filter.type(Connection.Connection)).atom),
+            mailbox,
           );
-          if (!cursor) {
-            return Effect.succeed([]);
-          }
-          const [connection] = get(
-            db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom,
-          );
-          if (!connection) {
+          if (!binding) {
             return Effect.succeed([]);
           }
           return Effect.gen(function* () {
@@ -475,12 +469,13 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when an external-sync cursor targets this calendar; the
-          // cursor's `spec.source` access token authenticates the sync.
-          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
-          const binding = cursors.find(
-            (candidate): candidate is Cursor.ExternalCursor =>
-              Cursor.isExternal(candidate) && isCursorForTarget(candidate, calendar),
+          // Sync appears only for a live binding — a cursor targeting this calendar whose Connection
+          // still exists (its `spec.source` access token authenticates the sync). The connector
+          // plugin's Connect action keys on the same predicate, so exactly one of the two is offered.
+          const binding = findLiveBinding(
+            get(db.query(Filter.type(Cursor.Cursor)).atom),
+            get(db.query(Filter.type(Connection.Connection)).atom),
+            calendar,
           );
           if (!binding) {
             return Effect.succeed([]);

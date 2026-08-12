@@ -11,7 +11,7 @@ import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import * as ConnectorSpec from '../../types/ConnectorSpec';
-import { ensureSyncTrigger } from '../../util';
+import { ensureSyncTrigger, removeOrphanedBindings } from '../../util';
 
 /**
  * Create exactly one binding for a single-target connector (no `getSyncTargets`):
@@ -46,6 +46,7 @@ export const createSingleCursor = (
       log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
       return;
     }
+    yield* removeOrphanedBindings(target);
     const cursor = yield* Database.add(
       Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
     );

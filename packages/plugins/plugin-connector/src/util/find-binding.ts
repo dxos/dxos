@@ -5,23 +5,85 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Filter, type Obj } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 
-import { isCursorForTarget } from './cursor-predicates';
+import { isCursorForConnection, isCursorForTarget } from './cursor-predicates';
+
+/** An object's binding: the external cursor that syncs it, plus the connection authenticating it. */
+export type LiveBinding = {
+  cursor: Cursor.ExternalCursor;
+  connection: Connection.Connection;
+};
 
 /**
- * Finds the external-sync {@link Cursor} whose target is the given object (mailbox, calendar, …).
- * The cursor's `spec.source` is the access token that authenticates sync for that object; credentials
- * and sync re-invocation flow from it.
+ * The external-sync {@link Cursor} targeting `target` together with the {@link Connection} whose
+ * access token authenticates it, or `undefined` when the target has no such pair.
+ *
+ * Both halves are required because deleting a connection does not cascade to the cursors referencing
+ * its access token, and a target holding such an orphan cannot sync — read as bound it would offer
+ * neither Connect (suppressed by the binding) nor Sync (suppressed by the missing connection). Pure
+ * over already-read lists so graph extensions and React hooks share one notion of "bound".
+ */
+export const findLiveBinding = (
+  cursors: readonly Cursor.Cursor[],
+  connections: readonly Connection.Connection[],
+  target: Obj.Unknown,
+): LiveBinding | undefined => {
+  for (const cursor of cursors) {
+    if (!Cursor.isExternal(cursor) || !isCursorForTarget(cursor, target)) {
+      continue;
+    }
+    const connection = connections.find((candidate) => isCursorForConnection(cursor, candidate));
+    if (connection) {
+      return { cursor, connection };
+    }
+  }
+};
+
+/**
+ * {@link findLiveBinding} over the target's whole space.
  *
  * `Cursor` has no reverse-ref index on `spec.target` (it's one level below a discriminated-union
  * struct field, which the typed `Query.referencedBy` key doesn't reach), so this scans every cursor
  * in the space and filters — mirrors this plugin's other cursor lookups.
  */
-export const findBindingForTarget = (target: Obj.Unknown) =>
+export const findLiveBindingForTarget = (
+  target: Obj.Unknown,
+): Effect.Effect<LiveBinding | undefined, never, Database.Service> =>
   Effect.gen(function* () {
     const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
-    return cursors.find(
-      (cursor): cursor is Cursor.ExternalCursor => Cursor.isExternal(cursor) && isCursorForTarget(cursor, target),
+    const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
+    return findLiveBinding(cursors, connections, target);
+  });
+
+/**
+ * The external-sync {@link Cursor} whose target is the given object (mailbox, calendar, …), when a
+ * connection still backs it. The cursor's `spec.source` is the access token that authenticates sync
+ * for that object; credentials and sync re-invocation flow from it.
+ */
+export const findBindingForTarget = (
+  target: Obj.Unknown,
+): Effect.Effect<Cursor.ExternalCursor | undefined, never, Database.Service> =>
+  findLiveBindingForTarget(target).pipe(Effect.map((binding) => binding?.cursor));
+
+/**
+ * Remove external cursors targeting `target` whose {@link Connection} is gone, returning how many
+ * were removed. Run before creating a new binding for an object: a re-bind would otherwise leave the
+ * orphan in place, and since a target's sync Routine is matched by target rather than by cursor, the
+ * recurring sync would keep firing against the dead binding instead of the new one.
+ */
+export const removeOrphanedBindings = (target: Obj.Unknown): Effect.Effect<number, never, Database.Service> =>
+  Effect.gen(function* () {
+    const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
+    const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
+    const orphaned = cursors.filter(
+      (cursor) =>
+        Cursor.isExternal(cursor) &&
+        isCursorForTarget(cursor, target) &&
+        !connections.some((connection) => isCursorForConnection(cursor, connection)),
     );
+    for (const cursor of orphaned) {
+      yield* Database.remove(cursor);
+    }
+    return orphaned.length;
   });

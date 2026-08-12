@@ -43,8 +43,11 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   const { available: canReauthenticate, reauthenticating, reauthenticate } = useReauthenticate(subject);
 
   const handleDelete = useCallback(() => {
-    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
-  }, [invokePromise, subject]);
+    // Cursors reference the connection's access token rather than the connection, so removing the
+    // connection alone strands them: their targets then read as bound (no Connect action) yet cannot
+    // sync. Same set the nav-tree delete action removes.
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject, ...bindings] });
+  }, [invokePromise, subject, bindings]);
 
   const handleRemoveBinding = useCallback(
     (binding: Cursor.ExternalCursor) => {

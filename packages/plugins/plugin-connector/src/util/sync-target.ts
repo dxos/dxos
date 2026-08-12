@@ -6,12 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj } from '@dxos/echo';
-import { Connection } from '@dxos/link';
+import { Database, Obj } from '@dxos/echo';
 
 import { ConnectionSyncError } from '../errors';
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { findBindingForTarget } from './find-binding';
+import { findLiveBindingForTarget } from './find-binding';
 import { syncBinding } from './sync-binding';
 
 /**
@@ -29,16 +28,14 @@ export const syncTarget = (
     }
 
     yield* Effect.gen(function* () {
-      const cursor = yield* findBindingForTarget(target);
-      if (!cursor) {
+      const binding = yield* findLiveBindingForTarget(target);
+      if (!binding) {
         return;
       }
 
-      const [connection] = yield* Database.query(
-        Filter.type(Connection.Connection, { accessToken: cursor.spec.source }),
-      ).run;
+      const { cursor, connection } = binding;
       const connectors = (yield* Capability.getAll(ConnectorSpec.Connector)).flat();
-      const connector = connectors.find((entry) => entry.id === connection?.connectorId);
+      const connector = connectors.find((entry) => entry.id === connection.connectorId);
       if (!connector) {
         return;
       }

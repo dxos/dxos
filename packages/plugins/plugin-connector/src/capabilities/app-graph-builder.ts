@@ -23,7 +23,7 @@ import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
 import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
 import * as ConnectorOperation from '../types/ConnectorOperation';
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { connectorAuthActions, isCursorForConnection, isCursorForTarget } from '../util';
+import { connectorAuthActions, findLiveBinding, isCursorForConnection, isCursorForTarget } from '../util';
 
 /**
  * Resolve the external-sync cursors authenticated by a connection's access token. Used by the
@@ -198,12 +198,13 @@ export default Capability.makeModule(
               return [];
             }
             const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
-            // bindTarget types are "connected" once an external-sync cursor targets the object;
-            // space-level types (no bindTarget) once any Connection for one of the connectorIds exists.
+            // bindTarget types are "connected" only while a live binding exists — a cursor targeting the
+            // object AND the connection backing it — because counting an orphaned cursor (its connection
+            // deleted) as connected hid Connect while the owning plugin's sync action, which needs that
+            // connection, hid too. Space-level types (no bindTarget) are connected once any Connection
+            // for one of the connectorIds exists.
             const connected = annotation.bindTarget
-              ? get(db.query(Filter.type(Cursor.Cursor)).atom).some(
-                  (cursor) => Cursor.isExternal(cursor) && isCursorForTarget(cursor, object),
-                )
+              ? findLiveBinding(get(db.query(Filter.type(Cursor.Cursor)).atom), allConnections, object) !== undefined
               : allConnections.some(
                   (connection) => connection.connectorId !== undefined && connectorIds.includes(connection.connectorId),
                 );

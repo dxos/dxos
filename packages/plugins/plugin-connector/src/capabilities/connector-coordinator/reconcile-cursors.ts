@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 
 import * as ConnectorSpec from '../../types/ConnectorSpec';
-import { ensureSyncTrigger, isCursorForConnection } from '../../util';
+import { ensureSyncTrigger, isCursorForConnection, removeOrphanedBindings } from '../../util';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
@@ -81,6 +81,7 @@ export const reconcileCursors = ({
       let target: Obj.Unknown;
       if (sel === firstNew && existingTarget) {
         target = yield* Database.load(existingTarget);
+        yield* removeOrphanedBindings(target);
         if (sel.name) {
           Obj.update(target, (target) => Obj.setLabel(target, sel.name!));
         }

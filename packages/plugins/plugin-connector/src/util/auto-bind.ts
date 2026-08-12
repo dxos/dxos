@@ -11,6 +11,7 @@ import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import * as ConnectorSpec from '../types/ConnectorSpec';
+import { removeOrphanedBindings } from './find-binding';
 import { ensureSyncTrigger } from './sync-routine';
 import { connectorIdsForTarget } from './target-connectors';
 
@@ -36,6 +37,7 @@ export const bindConnectionToTarget = ({
     if (name) {
       Obj.update(object, (object) => Obj.setLabel(object, name));
     }
+    yield* removeOrphanedBindings(object);
     const cursor = yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target }));
     invariant(Cursor.isExternal(cursor));
     if (connector) {

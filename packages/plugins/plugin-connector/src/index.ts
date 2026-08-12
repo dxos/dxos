@@ -7,16 +7,20 @@ export { CONNECTOR_AUTH_GROUP_ID, type ConnectorAuthActionsOptions, connectorAut
 export { ConnectionTestError } from './errors';
 export * from './meta';
 export {
+  type LiveBinding,
   autoBindSingleConnection,
   bindConnectionToTarget,
   connectorIdsForTarget,
   createSyncRoutine,
   ensureSyncTrigger,
   findBindingForTarget,
+  findLiveBinding,
+  findLiveBindingForTarget,
   findSyncTriggerForBinding,
   fireSyncTrigger,
   isCursorForConnection,
   isCursorForTarget,
+  removeOrphanedBindings,
   syncBinding,
   syncTarget,
 } from './util';
