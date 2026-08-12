@@ -1,6 +1,5 @@
 ---
 '@dxos/plugin-inbox': minor
-'@dxos/plugin-projects': minor
 '@dxos/types': patch
 ---
 

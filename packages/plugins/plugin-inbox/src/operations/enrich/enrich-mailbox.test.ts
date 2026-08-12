@@ -125,6 +125,30 @@ describe('EnrichMailbox cascade', () => {
   );
 
   it.effect(
+    'runs the tiers in cascade order however the caller lists them',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { mailbox } = yield* seedMailbox();
+
+        // `tiers` is a SET: a caller naming the cheap LLM tier before the deterministic one must not
+        // get a classification pass whose contact allow-list has not been built yet. Classification
+        // fails here (no AiService), which is what pins the order — the deterministic stages ran
+        // first and the failure lands on the third stage, not the first.
+        const result = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
+          mailbox: Ref.make(mailbox),
+          me: ME,
+          tiers: ['classify', 'deterministic'],
+        });
+
+        expect(result.stages.map((stage) => stage.tier)).toEqual(['deterministic', 'deterministic', 'classify']);
+        expect(result.stages.map((stage) => stage.status)).toEqual(['completed', 'completed', 'failed']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'stops the cascade when a stage fails, reporting the untried stages',
     Effect.fnUntraced(
       function* ({ expect }) {

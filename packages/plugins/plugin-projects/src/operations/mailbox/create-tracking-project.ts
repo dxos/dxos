@@ -78,13 +78,14 @@ const handler = ProjectOperation.CreateTrackingProject.pipe(
       if (!email) {
         return yield* Effect.dieMessage('Message has no sender email.');
       }
+      // The domain the project follows, or undefined to track the individual. A free-mail domain
+      // identifies no organization, so it can never widen the scope to a "team" — it degrades to the
+      // sender rather than following every gmail.com address.
       const domain = extractDomain(email);
-      // A free-mail domain identifies no organization, so it can never widen the scope to a "team"
-      // — `domain` degrades to the individual rather than following every gmail.com sender.
-      const corporate = !!domain && !isFreeMailDomain(domain);
-      const byDomain = (scope ?? 'domain') === 'domain' && corporate;
-      const senders = byDomain ? [domain!] : [email];
-      const label = byDomain ? organizationNameFromDomain(domain!) : (message.sender?.name ?? email);
+      const group =
+        (scope ?? 'domain') === 'domain' && domain !== undefined && !isFreeMailDomain(domain) ? domain : undefined;
+      const senders = group ? [group] : [email];
+      const label = group ? organizationNameFromDomain(group) : (message.sender?.name ?? email);
 
       const { runnable, input, suffix, routineLabel } = PIPELINES[pipeline]({ mailbox, senders });
       const project = db.add(

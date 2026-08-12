@@ -93,7 +93,8 @@ describe('SummarizeMailbox', { tags: ['model-fixture'] }, () => {
         const feed = yield* Database.load(mailbox.feed);
         const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
         const contactMessage = messages.find((message) => message.sender?.email === 'bob@known.example.com');
-        expect(annotation.parentMessage).toBe(contactMessage!.id);
+        expect(contactMessage).toBeDefined();
+        expect(annotation.parentMessage).toBe(contactMessage?.id);
 
         // Idempotent by parent id, not by cursor: a rerun finds nothing left to do.
         const rerun = yield* Operation.invoke(InboxOperation.SummarizeMailbox, { mailbox: Ref.make(mailbox) });

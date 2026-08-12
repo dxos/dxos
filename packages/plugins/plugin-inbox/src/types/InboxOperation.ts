@@ -609,6 +609,12 @@ export const SummarizeMailbox = Operation.make({
 export const MailboxTier = Schema.Literal('deterministic', 'classify', 'summarize', 'analyze');
 export type MailboxTier = Schema.Schema.Type<typeof MailboxTier>;
 
+/**
+ * Cascade order. Each tier consumes what the ones before it wrote, so this order — not the order the
+ * caller happens to list — is the one {@link EnrichMailbox} runs in.
+ */
+export const MAILBOX_TIER_ORDER: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize', 'analyze'];
+
 /** Tiers run when the caller names none: the bounded ones (`analyze` walks the whole feed). */
 export const DEFAULT_ENRICH_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
 
@@ -635,7 +641,8 @@ export const EnrichMailbox = Operation.make({
     ),
     tiers: Schema.optional(
       Schema.Array(MailboxTier).annotations({
-        description: 'Tiers to run, in cascade order; defaults to the bounded tiers.',
+        description:
+          'Tiers to run — a set, not a sequence: they always run in cascade order. Defaults to the bounded tiers.',
       }),
     ),
     batchLimit: Schema.optional(

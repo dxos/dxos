@@ -71,48 +71,64 @@ const handler = InboxOperation.EnrichMailbox.pipe(
 
       // The plan is built up front so the cascade is inspectable as data (and the progress total is
       // known before the first spawn). `Operation.invoke` returns a lazy Effect — nothing runs here.
-      const stages: Stage[] = [];
-      if (tiers.includes('deterministic')) {
-        stages.push({
-          tier: 'deterministic',
-          operation: InboxOperation.ExtractCorrespondents.meta.key.toString(),
-          // Correspondence is derived relative to the user's own addresses; without them
-          // `deriveCorrespondents` returns nothing, so an empty run would report a misleading zero.
-          skip: me.length === 0 ? 'no identity addresses supplied' : undefined,
-          run: Operation.invoke(InboxOperation.ExtractCorrespondents, { mailbox: Ref.make(mailbox), me }),
-        });
-        stages.push({
-          tier: 'deterministic',
-          operation: InboxOperation.ExtractSubscriptions.meta.key.toString(),
-          run: Operation.invoke(InboxOperation.ExtractSubscriptions, { mailbox: Ref.make(mailbox) }),
-        });
-      }
-      if (tiers.includes('classify')) {
-        stages.push({
-          tier: 'classify',
-          operation: InboxOperation.ClassifyMailbox.meta.key.toString(),
-          run: Operation.invoke(InboxOperation.ClassifyMailbox, {
-            mailbox: Ref.make(mailbox),
-            batchLimit,
-            model,
-            strict,
-          }),
-        });
-      }
-      if (tiers.includes('summarize')) {
-        stages.push({
-          tier: 'summarize',
-          operation: InboxOperation.SummarizeMailbox.meta.key.toString(),
-          run: Operation.invoke(InboxOperation.SummarizeMailbox, { mailbox: Ref.make(mailbox), model }),
-        });
-      }
-      if (tiers.includes('analyze')) {
-        stages.push({
-          tier: 'analyze',
-          operation: InboxOperation.AnalyzeMailbox.meta.key.toString(),
-          run: Operation.invoke(InboxOperation.AnalyzeMailbox, { mailbox: Ref.make(mailbox), model, provider, strict }),
-        });
-      }
+      //
+      // `tiers` selects WHICH tiers run, never their order: each tier consumes what the ones before
+      // it wrote, so the stages are always flattened in the canonical cascade order below. A caller
+      // asking for `['summarize', 'deterministic']` gets the same run as `['deterministic',
+      // 'summarize']` rather than a cascade that summarizes against contacts it has not extracted.
+      const plan: Record<InboxOperation.MailboxTier, () => Stage[]> = {
+        deterministic: () => [
+          {
+            tier: 'deterministic',
+            operation: InboxOperation.ExtractCorrespondents.meta.key.toString(),
+            // Correspondence is derived relative to the user's own addresses; without them
+            // `deriveCorrespondents` returns nothing, so an empty run would report a misleading zero.
+            skip: me.length === 0 ? 'no identity addresses supplied' : undefined,
+            run: Operation.invoke(InboxOperation.ExtractCorrespondents, { mailbox: Ref.make(mailbox), me }),
+          },
+          {
+            tier: 'deterministic',
+            operation: InboxOperation.ExtractSubscriptions.meta.key.toString(),
+            run: Operation.invoke(InboxOperation.ExtractSubscriptions, { mailbox: Ref.make(mailbox) }),
+          },
+        ],
+        classify: () => [
+          {
+            tier: 'classify',
+            operation: InboxOperation.ClassifyMailbox.meta.key.toString(),
+            run: Operation.invoke(InboxOperation.ClassifyMailbox, {
+              mailbox: Ref.make(mailbox),
+              batchLimit,
+              model,
+              strict,
+            }),
+          },
+        ],
+        summarize: () => [
+          {
+            tier: 'summarize',
+            operation: InboxOperation.SummarizeMailbox.meta.key.toString(),
+            run: Operation.invoke(InboxOperation.SummarizeMailbox, { mailbox: Ref.make(mailbox), model }),
+          },
+        ],
+        analyze: () => [
+          {
+            tier: 'analyze',
+            operation: InboxOperation.AnalyzeMailbox.meta.key.toString(),
+            run: Operation.invoke(InboxOperation.AnalyzeMailbox, {
+              mailbox: Ref.make(mailbox),
+              model,
+              provider,
+              strict,
+            }),
+          },
+        ],
+      };
+
+      const selected = new Set(tiers);
+      const stages: Stage[] = InboxOperation.MAILBOX_TIER_ORDER.filter((tier) => selected.has(tier)).flatMap((tier) =>
+        plan[tier](),
+      );
 
       log.info('enrich: cascade start', { mailbox: Obj.getURI(mailbox), tiers, stages: stages.length });
       reportStatus({ current: 0, total: stages.length });

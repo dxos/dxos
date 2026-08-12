@@ -26,7 +26,7 @@ export const Disposition = Schema.Literal(
   'synthetic', // synthetic message created by the system
   'cot', // chain-of-thought content in an assistant message
   'version-pin', // marker on a json block that pins an object version
-  'summary', // derived summary of the message named by `parentMessage`
+  'summary', // derived summary of the message named by `parentMessage`.
 );
 export type Disposition = Schema.Schema.Type<typeof Disposition>;
 

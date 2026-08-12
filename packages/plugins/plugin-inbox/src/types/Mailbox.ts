@@ -416,7 +416,10 @@ export const summaryIndex = (annotations: Iterable<MessageLike>): Map<string, st
 
   const index = new Map<string, string>();
   for (const [parent, annotation] of newest) {
-    index.set(parent, getSummaryText(annotation)!);
+    const summary = getSummaryText(annotation);
+    if (summary !== undefined) {
+      index.set(parent, summary);
+    }
   }
   return index;
 };

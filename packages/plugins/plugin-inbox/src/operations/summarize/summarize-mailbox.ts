@@ -20,6 +20,7 @@ import { trim } from '@dxos/util';
 
 import * as InboxOperation from '../../types/InboxOperation';
 import * as Mailbox from '../../types/Mailbox';
+import { withMailboxLock } from '../mailbox-lock';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -29,13 +30,19 @@ const SUMMARY_PROMPT = trim`
   points — just the summary.
 `;
 
+/** `Message.properties` is an open record, so its values are narrowed rather than asserted. */
+const stringProperty = (message: Message.Message, key: string): string | undefined => {
+  const value = message.properties?.[key];
+  return typeof value === 'string' ? value : undefined;
+};
+
 /** The body text handed to the model; snippets are short, so the text blocks are preferred. */
 const messageText = (message: Message.Message): string => {
   const body = message.blocks
     .filter((block) => block._tag === 'text')
     .map((block) => block.text)
     .join('\n\n');
-  const text = body.length > 0 ? body : ((message.properties?.snippet as string | undefined) ?? '');
+  const text = body.length > 0 ? body : (stringProperty(message, 'snippet') ?? '');
   return text.slice(0, 4_000);
 };
 
@@ -43,8 +50,115 @@ const promptFor = (message: Message.Message): string => {
   const sender = message.sender?.name
     ? `${message.sender.name} <${message.sender.email ?? ''}>`
     : (message.sender?.email ?? 'unknown');
-  return `${SUMMARY_PROMPT}\n\nFROM: ${sender}\nSUBJECT: ${message.properties?.subject ?? '(none)'}\n\n${messageText(message)}`;
+  return `${SUMMARY_PROMPT}\n\nFROM: ${sender}\nSUBJECT: ${stringProperty(message, 'subject') ?? '(none)'}\n\n${messageText(message)}`;
 };
+
+/** The pipeline body; the handler runs it under the mailbox lock. */
+const summarize = Effect.fnUntraced(function* (
+  mailbox: Mailbox.Mailbox,
+  { batchLimit, contactsOnly = true, model }: { batchLimit?: number; contactsOnly?: boolean; model?: string },
+) {
+  const limit = Math.min(
+    batchLimit ?? InboxOperation.DEFAULT_SUMMARIZE_MAILBOX_BATCH_LIMIT,
+    InboxOperation.MAX_SUMMARIZE_MAILBOX_BATCH_LIMIT,
+  );
+
+  const feed = yield* Database.load(mailbox.feed);
+  const { db } = yield* Database.Service;
+
+  const signal = yield* Cancellation.signal;
+  const traceWriter = yield* Trace.TraceService;
+  const progressKey = InboxOperation.createSummarizeProgressKey(mailbox);
+  let current = 0;
+  let total: number | undefined;
+  const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
+    current = patch.current ?? current;
+    total = patch.total ?? total;
+    traceWriter.write(Trace.StatusUpdate, {
+      message: patch.message ?? mailbox.name ?? 'Mailbox',
+      progress: { key: progressKey, current, total },
+    });
+  };
+
+  // The gate: senders the space already knows as people.
+  const people = yield* Database.query(Filter.type(Person.Person)).run;
+  const known = new Set(
+    people.flatMap((person) =>
+      (person.emails ?? []).map((email) => normalizeEmail(email.value)).filter((email): email is string => !!email),
+    ),
+  );
+
+  // Already-summarized messages are skipped by parent id rather than by feed position, so a
+  // cursor reset never re-bills work whose result is already in the feed.
+  const annotations = mailbox.annotations?.target;
+  const existing = annotations ? yield* Feed.query(annotations, Filter.type(Message.Message)).run : [];
+  const summarized = new Set(existing.map((annotation) => annotation.parentMessage).filter(Boolean));
+
+  const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+  const candidates = messages.filter((message) => {
+    if (summarized.has(message.id)) {
+      return false;
+    }
+    if (!contactsOnly) {
+      return true;
+    }
+    const sender = normalizeEmail(message.sender?.email);
+    return !!sender && known.has(sender);
+  });
+  const batch = candidates.slice(0, limit);
+  const remaining = candidates.length - batch.length;
+
+  log.info('summarize: pipeline start', {
+    mailbox: Obj.getURI(mailbox),
+    messages: messages.length,
+    knownSenders: known.size,
+    pending: candidates.length,
+    batch: batch.length,
+  });
+  reportStatus({ current: 0, total: batch.length });
+
+  const modelLayer = AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie);
+  let summarized_ = 0;
+  for (const message of batch) {
+    if (signal.aborted) {
+      break;
+    }
+
+    const text = yield* LanguageModel.generateText({ prompt: promptFor(message) }).pipe(
+      Effect.map((response) => response.text.trim()),
+      Effect.provide(modelLayer),
+      // A summary is advisory: one failed generation skips its message rather than failing the
+      // run and stranding the summaries already appended.
+      Effect.catchAllCause((cause) =>
+        Effect.sync(() => {
+          log.warn('summarize: generation failed', {
+            message: message.id,
+            cause: Cause.pretty(cause).slice(0, 200),
+          });
+          return '';
+        }),
+      ),
+    );
+    if (text.length > 0) {
+      const target = Mailbox.findOrCreateAnnotations(mailbox, db);
+      yield* Feed.append(target, [Mailbox.makeSummary({ message, text, model: model ?? DEFAULT_MODEL })]);
+      summarized_ += 1;
+    }
+    reportStatus({ current: summarized_, message: stringProperty(message, 'subject') });
+  }
+
+  yield* Effect.promise(() => db.flush());
+  log.info('summarize: pipeline done', {
+    mailbox: Obj.getURI(mailbox),
+    summarized: summarized_,
+    remaining,
+  });
+  reportStatus({
+    message: summarized_ === 0 && batch.length > 0 ? PROGRESS_STATUS_FAILED : PROGRESS_STATUS_COMPLETE,
+  });
+
+  return { pending: candidates.length, summarized: summarized_, remaining };
+});
 
 /**
  * Summarizes mail from known contacts into the mailbox's annotation feed — one immutable summary
@@ -58,111 +172,12 @@ const promptFor = (message: Message.Message): string => {
  */
 const handler = InboxOperation.SummarizeMailbox.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ mailbox: mailboxRef, batchLimit, contactsOnly = true, model }) {
-      const limit = Math.min(
-        batchLimit ?? InboxOperation.DEFAULT_SUMMARIZE_MAILBOX_BATCH_LIMIT,
-        InboxOperation.MAX_SUMMARIZE_MAILBOX_BATCH_LIMIT,
-      );
-
+    Effect.fnUntraced(function* ({ mailbox: mailboxRef, batchLimit, contactsOnly, model }) {
       const mailbox = yield* Database.load(mailboxRef);
-      const feed = yield* Database.load(mailbox.feed);
-      const { db } = yield* Database.Service;
-
-      const signal = yield* Cancellation.signal;
-      const traceWriter = yield* Trace.TraceService;
-      const progressKey = InboxOperation.createSummarizeProgressKey(mailbox);
-      let current = 0;
-      let total: number | undefined;
-      const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
-        current = patch.current ?? current;
-        total = patch.total ?? total;
-        traceWriter.write(Trace.StatusUpdate, {
-          message: patch.message ?? mailbox.name ?? 'Mailbox',
-          progress: { key: progressKey, current, total },
-        });
-      };
-
-      // The gate: senders the space already knows as people.
-      const people = yield* Database.query(Filter.type(Person.Person)).run;
-      const known = new Set(
-        people.flatMap((person) =>
-          (person.emails ?? []).map((email) => normalizeEmail(email.value)).filter((email): email is string => !!email),
-        ),
-      );
-
-      // Already-summarized messages are skipped by parent id rather than by feed position, so a
-      // cursor reset never re-bills work whose result is already in the feed.
-      const annotations = mailbox.annotations?.target;
-      const existing = annotations ? yield* Feed.query(annotations, Filter.type(Message.Message)).run : [];
-      const summarized = new Set(existing.map((annotation) => annotation.parentMessage).filter(Boolean));
-
-      const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-      const candidates = messages.filter((message) => {
-        if (summarized.has(message.id)) {
-          return false;
-        }
-        if (!contactsOnly) {
-          return true;
-        }
-        const sender = normalizeEmail(message.sender?.email);
-        return !!sender && known.has(sender);
-      });
-      const batch = candidates.slice(0, limit);
-      const remaining = candidates.length - batch.length;
-
-      log.info('summarize: pipeline start', {
-        mailbox: Obj.getURI(mailbox),
-        messages: messages.length,
-        knownSenders: known.size,
-        pending: candidates.length,
-        batch: batch.length,
-      });
-      reportStatus({ current: 0, total: batch.length });
-
-      const modelLayer = AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie);
-      let summarized_ = 0;
-      for (const message of batch) {
-        if (signal.aborted) {
-          break;
-        }
-
-        const text = yield* LanguageModel.generateText({ prompt: promptFor(message) }).pipe(
-          Effect.map((response) => response.text.trim()),
-          Effect.provide(modelLayer),
-          // A summary is advisory: one failed generation skips its message rather than failing the
-          // run and stranding the summaries already appended.
-          Effect.catchAllCause((cause) =>
-            Effect.sync(() => {
-              log.warn('summarize: generation failed', {
-                message: message.id,
-                cause: Cause.pretty(cause).slice(0, 200),
-              });
-              return '';
-            }),
-          ),
-        );
-        if (text.length > 0) {
-          const target = Mailbox.findOrCreateAnnotations(mailbox, db);
-          yield* Feed.append(target, [Mailbox.makeSummary({ message, text, model: model ?? DEFAULT_MODEL })]);
-          summarized_ += 1;
-        }
-        reportStatus({
-          current: summarized_,
-          message: (message.properties?.subject as string | undefined) ?? undefined,
-        });
-      }
-
-      yield* Effect.promise(() => db.flush());
-      log.info('summarize: pipeline done', {
-        mailbox: Obj.getURI(mailbox),
-        summarized: summarized_,
-        remaining,
-      });
-      reportStatus({
-        message: summarized_ === 0 && batch.length > 0 ? PROGRESS_STATUS_FAILED : PROGRESS_STATUS_COMPLETE,
-      });
-
-      return { pending: candidates.length, summarized: summarized_, remaining };
+      // Serialized per mailbox: the body reads which messages already carry a summary and then
+      // appends more, so an interleaved second run would re-summarize the same messages (and could
+      // provision a second annotation feed, orphaning the first).
+      return yield* withMailboxLock(mailbox, summarize(mailbox, { batchLimit, contactsOnly, model }));
     }),
   ),
   Operation.opaqueHandler,

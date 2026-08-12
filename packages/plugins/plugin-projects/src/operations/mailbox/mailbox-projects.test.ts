@@ -12,6 +12,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { TagIndex, Text } from '@dxos/schema';
@@ -223,8 +224,9 @@ describe('mailbox project pipelines', () => {
       expect(project?.name).toBe('Kirkconsult — Requests');
 
       // The tracking routine: owned by the project, runnable-bound, feed-triggered, disabled.
-      expect(project?.routines).toHaveLength(1);
-      const routine = yield* Effect.promise(() => project!.routines[0].load());
+      invariant(project);
+      expect(project.routines).toHaveLength(1);
+      const routine = yield* Effect.promise(() => project.routines[0].load());
       expect(routine.spec?.kind).toBe('runnable');
       expect(routine.triggers).toHaveLength(1);
       const trigger = yield* Effect.promise(() => routine.triggers[0].load());
@@ -233,7 +235,7 @@ describe('mailbox project pipelines', () => {
 
       // The backfill is idempotent with the routine's later firings: re-running the sync creates nothing.
       const rerun = yield* updateProjectTasks.handler({
-        project: Ref.make(project!),
+        project: Ref.make(project),
         mailbox: Ref.make(mailbox),
         senders: result.senders,
       });
@@ -266,10 +268,11 @@ describe('mailbox project pipelines', () => {
       const projects = yield* Database.query(Filter.type(Project.Project)).run;
       const project = projects.find((candidate) => candidate.id === result.projectId);
       expect(project?.name).toBe('Nicole — Threads');
-      const routine = yield* Effect.promise(() => project!.routines[0].load());
+      invariant(project);
+      const routine = yield* Effect.promise(() => project.routines[0].load());
       // Compared against the operation's own key, so renaming the operation moves this assertion
       // with it rather than leaving a stale string behind.
-      expect(String((routine.spec as { runnable?: { uri?: string } }).runnable?.uri)).toContain(
+      expect(routine.spec?.kind === 'runnable' && routine.spec.runnable.uri.toString()).toContain(
         ProjectOperation.UpdateInvestorLog.meta.key.toString(),
       );
     }).pipe(Effect.provide(testLayer())),
