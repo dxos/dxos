@@ -416,7 +416,15 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         // Pin the browser timezone so `Intl.DateTimeFormat().resolvedOptions().timeZone`
         // does not resolve to `Etc/Unknown` in headless CI containers — react-aria's
         // calendar feeds that value back into `Intl.DateTimeFormat`, which throws.
-        provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' } }),
+        provider: playwright({
+          contextOptions: { timezoneId: 'America/Los_Angeles' },
+          // The Claude Code cloud sandbox ships an older Chromium than Playwright's pin (which refuses
+          // to launch the headless shell it expects); point at the pre-installed binary. Gated so real
+          // dev/CI runs keep Playwright's own browsers (see the cloud-sandbox skill).
+          ...(process.env.CLAUDE_CODE_REMOTE
+            ? { launchOptions: { executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] } }
+            : {}),
+        }),
         instances: [{ browser: 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
