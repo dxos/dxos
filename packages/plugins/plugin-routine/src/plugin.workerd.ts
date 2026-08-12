@@ -4,7 +4,6 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Trigger from '@dxos/compute/Trigger';
 
 import { OperationHandler, Templates } from '#capabilities';
 import { meta } from '#meta';

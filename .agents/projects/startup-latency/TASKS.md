@@ -1133,11 +1133,10 @@ is built when `XPlugin.tsx` is evaluated no matter when the module activates.
       boot graph and deferring them defers nothing. Keep the change for consistency with
       `commands` and because it drops `#types` from ~50 plugin bodies, but do NOT record it as a
       startup lever. Untested: whether it moves `check-startup-budget` or lazy-chunk size.
-
-      Shape, for reference: 99 call sites across 52 packages became 62 modules. 44 packages share one
-              `schema.ts` across their platform variants (the arrays were previously restated per variant); 8
-              needed `schema.node.ts` / `schema.workerd.ts` because their variants really do register
-              different sets — plugin-inbox registers 9 in the browser and 4 headless.
+      Shape, for reference: 99 call sites across 52 packages became 62 modules. 44 packages share
+      one `schema.ts` across their platform variants (the arrays were previously restated per
+      variant); 8 needed `schema.node.ts` / `schema.workerd.ts` because their variants really do
+      register different sets — plugin-inbox registers 9 in the browser and 4 headless.
 
 ### Follow-up 2026-08-12 (a `#types` barrel import inside a plugin can close an eval cycle)
 

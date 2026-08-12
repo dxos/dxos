@@ -4,7 +4,6 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Message } from '@dxos/types';
 
 import {
   AppGraphBuilder,

@@ -7,7 +7,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import { HasConnection, Person } from '@dxos/types';
 
 import {
   AppGraphBuilder,

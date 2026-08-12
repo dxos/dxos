@@ -4,7 +4,6 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { HasConnection, Person } from '@dxos/types';
 
 import { Commands, CreateObject, IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
