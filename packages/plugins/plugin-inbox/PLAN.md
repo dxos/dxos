@@ -134,8 +134,10 @@ Six pipelines exist as operations, each cursored/idempotent, unit-tested, and dr
 
 Storage for derived text is settled: an **annotations feed** on the Mailbox (`Mailbox.annotations`),
 holding immutable `Message`s whose `parentMessage` names the subject and whose text block carries
-`disposition: 'summary'`. `Mailbox.mergeAnnotations` merges the two feeds on read; a re-derived
-summary appends and supersedes rather than overwriting. See `Mailbox.test.ts` → "Mailbox annotations".
+`disposition: 'summary'` and `mimeType: 'text/markdown'` (generated summaries may carry inline
+emphasis or links, and the text-block renderers select the markdown view over the plaintext one).
+`Mailbox.mergeAnnotations` merges the two feeds on read; a re-derived summary appends and supersedes
+rather than overwriting. See `Mailbox.test.ts` → "Mailbox annotations".
 
 ## Deliverable 1 — trigger the cascade from the mailbox
 
