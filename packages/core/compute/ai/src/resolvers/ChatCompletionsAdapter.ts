@@ -394,7 +394,9 @@ const toolsToRequest = (tools: ReadonlyArray<Tool.Any>): ChatTool[] | undefined 
   }
   const out: ChatTool[] = [];
   for (const tool of tools) {
-    if (!Tool.isUserDefined(tool)) {
+    // Operations project to dynamic tools, which carry their own JSON Schema; skipping them here would
+    // silently drop every operation-backed tool from the request.
+    if (!Tool.isUserDefined(tool) && !Tool.isDynamic(tool)) {
       continue;
     }
     out.push({

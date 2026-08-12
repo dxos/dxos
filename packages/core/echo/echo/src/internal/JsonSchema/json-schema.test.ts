@@ -744,6 +744,25 @@ describe('json-to-effect', () => {
     const effectSchema = toEffectSchema(jsonSchema);
     expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(input.ast));
   });
+
+  // An unconstrained value type serializes to the empty schema, so v4 emits no `additionalProperties`
+  // and the document reads as a closed struct. Operations persist their input schema through this
+  // round-trip (`Operation.serialize`), so losing it turned a property bag into a struct that accepts
+  // nothing — and the re-emitted tool schema was rejected by the model provider outright.
+  test('an open record survives the round-trip', ({ expect }) => {
+    const input = Schema.Struct({ properties: Schema.Record(Schema.String, Schema.Any) });
+
+    const jsonSchema = toJsonSchema(input);
+    const serialized = jsonSchema.properties?.properties;
+    expect(serialized?.additionalProperties).to.eq(true);
+
+    // Lossless: re-serializing the decoded schema reproduces the document.
+    expect(toJsonSchema(toEffectSchema(jsonSchema))).to.deep.eq(jsonSchema);
+
+    // And the decoded schema still accepts arbitrary keys.
+    const decoded = Schema.decodeUnknownSync(toEffectSchema(jsonSchema))({ properties: { any: 1, keys: 'ok' } });
+    expect(decoded).to.deep.eq({ properties: { any: 1, keys: 'ok' } });
+  });
 });
 
 describe('reference', () => {

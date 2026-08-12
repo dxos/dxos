@@ -409,10 +409,18 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
     );
 
     schema = Schema.Record(Schema.String, toEffectSchema(root.patternProperties[''], defs));
-  } else if (typeof root.additionalProperties !== 'object' || root.additionalProperties === null) {
+  } else if (
+    root.additionalProperties !== true &&
+    (typeof root.additionalProperties !== 'object' || root.additionalProperties === null)
+  ) {
     schema = Schema.Struct(structFields);
   } else {
-    const indexValue = toEffectSchema(root.additionalProperties as JsonSchemaType, defs);
+    // `true` states an open record without constraining its values, which is how an unconstrained
+    // value type serializes; anything else is the value's own schema.
+    const indexValue =
+      root.additionalProperties === true
+        ? Schema.Any
+        : toEffectSchema(root.additionalProperties as JsonSchemaType, defs);
     if (propertyList.length > 0) {
       // v4 spells "struct plus an index signature" as `StructWithRest`.
       schema = Schema.StructWithRest(Schema.Struct(structFields), [Schema.Record(Schema.String, indexValue)]);
@@ -588,6 +596,24 @@ const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): Schema
   SchemaAST.annotate(ast, schema as SchemaAST.Annotations);
 
 /**
+ * Restores the `additionalProperties` of an open record.
+ *
+ * v4 omits it when an index signature's value type is unconstrained (`Any`/`Unknown` serialize to the
+ * empty schema), leaving a bare `{type: 'object'}`. Absent `additionalProperties` means "anything
+ * allowed" in JSON Schema, but ECHO's decoder keys record-ness off the field's presence, so the
+ * round-trip rebuilt `Schema.Struct({})` and the record silently stopped accepting keys. The three
+ * emitted object shapes are distinguishable: a closed struct carries `properties` and
+ * `additionalProperties: false`, an empty struct arrives as the `anyOf` pair `restoreEmptyObject`
+ * handles, and only an open record has neither key.
+ */
+const restoreOpenRecord = (node: Record<string, any>): Record<string, any> => {
+  if (node.type !== 'object' || 'properties' in node || 'additionalProperties' in node) {
+    return node;
+  }
+  return { ...node, additionalProperties: true };
+};
+
+/**
  * Inlines the `allOf` wrapper Effect 4 emits for checks.
  *
  * v3 merged a refinement's keywords into the node; v4 nests them under `allOf`. ECHO's wire contract
@@ -693,7 +719,7 @@ const inlineAllOfDeep = (node: any): any => {
   }
   // `anyOf` collapses run first: they merge a branch up, and that branch carries the `allOf` wrapper
   // `inlineAllOf` has to flatten.
-  const inlined = collapseEchoRef(inlineAllOf(collapseNumberUnion(restoreEmptyObject(node))));
+  const inlined = collapseEchoRef(inlineAllOf(collapseNumberUnion(restoreOpenRecord(restoreEmptyObject(node)))));
   for (const [key, value] of Object.entries(inlined)) {
     if (value && typeof value === 'object') {
       inlined[key] = inlineAllOfDeep(value);

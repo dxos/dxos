@@ -419,7 +419,7 @@ export const mapAst = (
  * property type must carry the original context across or the key silently becomes required.
  * `SchemaAST.replaceContext` is internal, so this rebuilds through the public key combinators.
  */
-const retainContext = (original: SchemaAST.AST, mapped: SchemaAST.AST): SchemaAST.AST => {
+export const retainContext = (original: SchemaAST.AST, mapped: SchemaAST.AST): SchemaAST.AST => {
   if (!original.context || mapped.context) {
     return mapped;
   }

@@ -241,15 +241,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 yield* AgentEventsCell.set(inputQueue);
               }
 
-              // Skip reported tool results at head of queue (stale after reload).
-              while (inputQueue.length > 0) {
-                const head = inputQueue[0];
-                if (head._tag === 'tool_result' && toolCallManager.isReported(head.pid)) {
-                  inputQueue.shift();
-                  log.info('skip tool result that was reported synchronously', { pid: head.pid });
-                  continue;
-                }
-                break;
+              for (const pid of dropReportedToolResults(inputQueue, (pid) => toolCallManager.isReported(pid))) {
+                log.info('skip tool result that was reported synchronously', { pid });
               }
 
               const item = inputQueue.shift();
@@ -263,28 +256,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
               log('agent onAlarm handling', { tag: item._tag });
 
-              const prompt: ContentBlock.Any[] = Match.value(item).pipe(
-                Match.tag('prompt', (item) => [...item.content]),
-                Match.tag('tool_result', (item) =>
-                  item.isError
-                    ? [
-                        ContentBlock.Text.make({
-                          text: toolErrorResponse(item.pid, item.result as string),
-                          disposition: 'synthetic',
-                        }),
-                      ]
-                    : [
-                        ContentBlock.Text.make({
-                          text: toolResultResponse(item.pid, item.result),
-                          disposition: 'synthetic',
-                        }),
-                      ],
-                ),
-                Match.tag('alarm', (item) => [
-                  ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt, item.message), disposition: 'synthetic' }),
-                ]),
-                Match.exhaustive,
-              );
+              const prompt = agentEventToPrompt(item);
 
               log('begin request', { prompt });
               log('trace agent request begin');
@@ -444,7 +416,8 @@ const AgentEvent = Schema.Union([
     message: Schema.NullOr(Schema.String),
   }),
 ]);
-type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
+/** Exported so the pure queue/prompt helpers below can be exercised without spawning an agent. */
+export type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
 const AgentEventsCell = StorageService.cell(
   Schema.fromJsonString(Schema.Array(AgentEvent).pipe(Schema.mutable)),
@@ -570,6 +543,55 @@ export const isAgentWorkPending = ({
   alarmManager.wakeAt != null ||
   delegations.length > 0 ||
   toolCallManager.hasPendingToolResults();
+
+/**
+ * Discards tool results at the head of the queue whose values already reached the agent.
+ *
+ * A tool that returned inside its turn is reported synchronously AND left queued; after a reload the
+ * queue is replayed, so without this the model would be handed a result it has already seen. Only the
+ * head is examined: a result further back belongs to a turn that has not run yet.
+ *
+ * Mutates `queue` and returns the pids dropped, so the caller owns the logging.
+ */
+export const dropReportedToolResults = (
+  queue: AgentEvent[],
+  isReported: (pid: Process.ID) => boolean,
+): readonly Process.ID[] => {
+  const dropped: Process.ID[] = [];
+  while (queue.length > 0) {
+    const head = queue[0];
+    if (head._tag !== 'tool_result' || !isReported(head.pid)) {
+      break;
+    }
+    queue.shift();
+    dropped.push(head.pid);
+  }
+  return dropped;
+};
+
+/**
+ * Renders a queued event as the next turn's prompt.
+ *
+ * A tool result recovered across a reload is redelivered as a synthetic `<result pid=N>` TEXT block
+ * rather than a tool-result part, because the request it belonged to is gone and its tool-call id
+ * cannot be answered. `disposition: 'synthetic'` keeps it out of the user-visible transcript.
+ */
+export const agentEventToPrompt = (event: AgentEvent): ContentBlock.Any[] =>
+  Match.value(event).pipe(
+    Match.tag('prompt', (event) => [...event.content]),
+    Match.tag('tool_result', (event) => [
+      ContentBlock.Text.make({
+        text: event.isError
+          ? toolErrorResponse(event.pid, event.result as string)
+          : toolResultResponse(event.pid, event.result),
+        disposition: 'synthetic',
+      }),
+    ]),
+    Match.tag('alarm', (event) => [
+      ContentBlock.Text.make({ text: wakeUpPrompt(event.firedAt, event.message), disposition: 'synthetic' }),
+    ]),
+    Match.exhaustive,
+  );
 
 //
 // Alarms.

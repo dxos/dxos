@@ -31,7 +31,7 @@ import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Organization } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer, waitForMessage } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
 import { AGENT_PROCESS_KEY } from './agent-process';
 import * as AgentService from './AgentService';
@@ -250,21 +250,37 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* processManager.startup();
         yield* hydrate();
 
-        // Redelivery may re-issue tools from the interrupted turn.
-        yield* researchService.waitForTaskToAppear();
-        yield* researchService.completeAllTasks();
-
         session = yield* getSession(session.feed);
         yield* session.waitForCompletion();
 
-        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
-        const text = messages.map(Message.extractText).join('\n');
-        expect(text.toLocaleLowerCase()).toContain('cyberdyne');
+        // Recovery replays an already-queued result as a synthetic `<result pid=N>` block rather than
+        // re-issuing the tool, so the research must not run a second time — a re-issue would duplicate
+        // the side effects of an operation that had already completed.
+        //
+        // NOTE: whether the result is still queued at shutdown is a race with the agent consuming it,
+        // so this asserts the invariant that holds either way. Covering redelivery deterministically
+        // needs a seam that holds the turn loop while a result sits queued — see the effect-smol
+        // ledger entry "Cover the agent redelivery path deterministically".
+        expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
+        session = yield* getSession(session.feed);
+
+        // The recovery turn begins when the rehydrated process fires its alarm, which is after
+        // `waitForCompletion` settles (that only covers the turn in flight), so poll the feed for the
+        // reply instead. Asserting on the ASSISTANT's text and on a fact only the tool result carries:
+        // the prompt itself says "Cyberdyne", so matching that over every message would pass even when
+        // the recovered result never reached the model.
+        const recovered = yield* waitForMessage(
+          session.feed,
+          (message) =>
+            message.sender.role === 'assistant' && Message.extractText(message).toLocaleLowerCase().includes('nasdaq'),
+          { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 15_000 },
+        );
+        expect(Message.extractText(recovered).toLocaleLowerCase()).toContain('nasdaq');
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
   );
 
   it.effect(

@@ -1,11 +1,11 @@
 # effect-smol — Tasks
 
-_Resume: Phase 3 — edge's **build is green (83/83 moon tasks)** and its **test suites are green** against a locally linked dxos, after fixing two production defects the type-checker could not see (see "Production defects the test run surfaced"). dxos itself is green on build, node `:test` (233 projects), browser (153 tests) and workerd; two `plugin-review` storybook scenarios remain. Next: D7 — publish the dxos branch so edge's `catalog:dxos` pins can replace the local tarball overrides. Uncommitted: none._
+_Resume: Phase 3 — edge's **build is green (83/83 moon tasks)**; its **package-level suites are green** against a locally linked dxos, but the **`packages/services/edge/test` integration suite still fails** (the earlier "green" reading was a runner-timeout artifact — see the correction under "Run the edge test suites"). dxos itself is green: build, node `:test` (555 moon tasks), browser, workerd, and the `model-fixture` suites now replay clean; two flaky `plugin-review` storybook scenarios remain. Edge was verified against dxos **before** the tool-surface and JSON-Schema changes recorded under "Model fixtures", so it needs re-running once this lands — `edge:ai-service/.../tool-schema.test.ts` pins that surface. Next: D7 — publish the dxos branch so edge's `catalog:dxos` pins can replace the local tarball overrides._
 
 Migrate `dxos/dxos` from Effect 3 to Effect 4, then `dxos/edge`. The _why_, the decisions
 (D1–D7) and the findings (F1–F4) live in [DESIGN.md](./DESIGN.md) — this file is the ledger.
 
-Migrating on the beta (`4.0.0-beta.105`) — **not** gated on GA (D8).
+Migrating on the pre-release line (`4.0.0-rc.108`) — **not** gated on GA (D8).
 
 ## Phase 0: Audit and spike — DONE
 
@@ -275,16 +275,25 @@ cleared package _raises_ the visible error count rather than lowering it. Progre
       singleton while its only consumer reads it with `getAll` — two legitimate providers collided
       once the scheduler fixes let both activate; it is a registry capability now.
 
-- [ ] **Tier 1 — mechanical rewrites** (~2–3 wks): module paths, API renames, the 433 atom files.
-- [ ] **Tier 2 — services and runtime** (~3–6 wks): `Context.Tag` → `ServiceMap.Service` (126 class
-      decls), `ManagedRuntime`/`Runtime<R>` (`RuntimeProvider`, `dynamic-runtime`), `Cause`,
-      forking, `FiberRef` → `Context.Reference`.
-- [ ] **Tier 2 — layer memoization audit** (F3)
+The three "Tier" rows below were the **original up-front estimate**, written before the port started.
+They are superseded by the work actually recorded above — kept for the estimate-versus-actual record,
+not as open work. The one genuinely outstanding item from that plan is the layer-memoization audit.
+
+- [x] **Tier 1 — mechanical rewrites** (est. ~2–3 wks): module paths, API renames, the 433 atom files.
+      Landed via the codemods in `tools/codemods/` (see "Tier 3 codemod" and "Build the remaining
+      codemods" above).
+- [x] **Tier 2 — services and runtime** (est. ~3–6 wks): `Context.Tag` → `ServiceMap.Service` (126
+      class decls), `ManagedRuntime`/`Runtime<R>` (`RuntimeProvider`, `dynamic-runtime`), `Cause`,
+      forking, `FiberRef` → `Context.Reference`. Done — the workspace builds (325/325) and the node
+      suite passes (555 moon tasks).
+- [ ] **Tier 2 — layer memoization audit** (F3) — the one part of the original plan still open.
   - Shared MemoMap across `Effect.provide` produces no compile errors, only shared-instance bugs.
   - Audit `Layer.succeed`/`effect`/`mergeAll` sites and the composition convention; add
     `Layer.fresh` where isolation was implicit.
-- [ ] **Tier 3 — Schema rewrite** (~6–12 wks): call-site migration plus `ast.ts`,
-      `schema-validator.ts`, `json-schema.ts`, `react-ui-form`.
+- [x] **Tier 3 — Schema rewrite** (est. ~6–12 wks): call-site migration plus `ast.ts`,
+      `schema-validator.ts`, `json-schema.ts`, `react-ui-form` — all ported and green. The deeper
+      change the estimate implied (adopting `SchemaRepresentation` for stored schemas) was
+      deliberately scoped out; it is tracked under "PR review follow-ups" below.
 - [ ] **Add the annotation-resolver lint rule** (F2) — reading `ast.annotations` directly is wrong
       for any refined type.
 - [x] **Remove the spike's `as any` casts** before any of it ships — moot: the spike code never
@@ -421,15 +430,21 @@ Order matters — EDGE ships before Composer.
 - [ ] **Retire the v3 decoder** — gated on space coverage, not a release date; a space nobody opens
       keeps v3 documents indefinitely.
 
-## Blocked on credentials
+## Model fixtures — DONE
 
 `model-fixture` is a deliberately non-required workflow (see the header of
-`.github/workflows/model-fixture.yml`), so none of this blocks merge — but it is green on main and
-red here, so it is migration drift, not pre-existing rot.
+`.github/workflows/model-fixture.yml`). It is now green: `DX_RUN_MODEL_FIXTURE_TESTS=1 moon run
+'#model-fixture:test'` passes every tagged suite (`agent-runtime` 41, `assistant-toolkit` 93, `ai` 91,
+`assistant` 53, `plugin-commerce` 36, `plugin-assistant` 168), and the full node suite is green.
 
-- [ ] **Regenerate the `assistant-toolkit` and `agent-runtime` fixtures against a live provider.**
+Re-recorded against a live provider: `agent-runtime/AgentService.test.ts` (13),
+`assistant-toolkit` `skills/database/skill.test.ts` (20) and `skills/memory/skill.test.ts` (3).
+The other tagged suites never needed re-recording — they build toolkits with `Tool.make` directly
+rather than projecting operations, so nothing in their requests changed.
+
+- [x] **Regenerated the `assistant-toolkit` and `agent-runtime` fixtures against a live provider.**
       A recorded conversation is keyed on its parameters plus prompt, and v4 changed _what the
-      request contains_, so every request in those suites misses. Two independent shifts:
+      request contains_, so every request in those suites missed. Two independent shifts:
   - Tool `inputSchema` emission (optional properties become nullable `anyOf`, an empty `required`
     is dropped, `Schema.Number` gains the non-finite string branch). **Already ported** — run the
     replay with `DX_DUMP_FIXTURE_TOOLS=<dir>` and feed the dump to
@@ -447,15 +462,108 @@ red here, so it is migration drift, not pre-existing rot.
     many tests ran before; a single-test regeneration writes fixtures with IDs that do not match
     the full-file run and corrupts the rest of the suite (see the `regenerate-model-fixture`
     skill).
-- [ ] **Record the missing `agent-runtime` redelivery fixture.** `AgentService.test.ts`'s
-      `recovers queued tool results after reload` surfaces as a 15s timeout rather than a miss: the
-      miss kills the agent process, then the test waits for a completion that never comes. The
-      tool-schema port fixed its _first_ turn (the `research` call now replays); the second misses
-      because on reload `agent-process.ts` (~L268) redelivers a queued tool result as a synthetic
-      `<result pid=N>` **text** block rather than a tool-result part — main's design (`76dd26df`),
-      not a v4 change — and no fixture records that shape
-      (`grep -rl 'result pid=' .store/conversations` returns nothing). So the path only ever passed
-      when the result landed before the shutdown and no redelivery happened at all.
+- [x] **Four production defects the live regeneration surfaced**, each blocking the re-record and none
+      a fixture problem. The tool surface was broken end to end on this branch; the suites could not
+      have been re-recorded without these.
+  - **Optional tool parameters were advertised and validated as required.** In v4 optionality rides
+    on an AST node's `context`, and `assistant`'s `mapSchemaTypeForLLM` rebuilt every ref-bearing
+    node by hand (`new SchemaAST.Arrays/Objects/Union(…)`) passing only `annotations`, dropping
+    `context`. The database skill's `query` therefore emitted `required: ['in']` for a
+    `Schema.optional(Schema.Array(Ref))`; a model that legitimately omitted `in` had its call
+    rejected with `Missing key at ["in"]`, the agent gave up, and 7 of 20 tests failed on
+    unrelated-looking assertions (`expected false to be true` on a deletion that never ran). Fixed
+    by delegating recursion to `@dxos/effect`'s `mapAst`, which already carries
+    annotations/checks/encoding/`context` across a rebuild, plus its now-exported `retainContext`
+    for the wholesale `Ref` → `RefFromLLM` swap. Regression-tested at the primitive level in
+    `packages/common/effect/src/ast.test.ts` (`mapAst` keeps `optional`/`optionalKey`/`mutableKey`)
+    and at the projection level in `assistant/src/tool-runtime/services.test.ts`.
+  - **Audit the other hand-rolled AST rebuilds for the same `context` loss.** Found by
+    `grep -n 'new SchemaAST\.(Objects|Union|Arrays)('` — each passes `annotations` but omits
+    `checks`/`encoding`/`context`. Not fixed here because the intent differs per site and each wants
+    its own test; only the first rebuilds a _property's_ type, which is where optionality is lost:
+    - `compute/conductor/src/util/ast.ts` `getPropertyKeyIndexedAccess` — synthesizes a property
+      type as `new SchemaAST.Union(types, mode)` for indexed access over a union of structs, so an
+      optional property in the members comes back required. Same shape as the defect above.
+    - `echo/src/internal/Type/manipulation.ts` (`addFieldsToSchema`, `updateFieldsInSchema`,
+      `updateFieldNameInSchema`) and `ui/react-ui-table/src/util/schema.ts` `narrowSchema` — copy
+      property signatures verbatim (so per-key modifiers survive) but drop the object node's own
+      `checks`/`encoding`/`context`; `narrowSchema` also drops annotations and index signatures.
+    - `ui/react-ui-form/src/util/properties.ts` `unwrapOptional` — drops `context` deliberately
+      (that is the point) but takes `isMutable` with it; confirm that is intended.
+  - **A persisted open record decoded back as a closed struct.** `Operation.serialize` stores
+    `inputSchema: JsonSchema.toJsonSchema(operation.input)` and the tool surface is built from the
+    _deserialized_ operation, so every operation schema round-trips through ECHO. v4 emits no
+    `additionalProperties` when a record's value type is unconstrained (`Any`/`Unknown` serialize to
+    the empty schema), so `toEffectSchema` rebuilt `Schema.Struct({})` and the database skill's
+    property bag silently stopped accepting keys — which then re-emitted as v4's empty-struct `anyOf`
+    and was rejected by the provider. Real data loss, not just a wire nit. Fixed on both sides in
+    `echo/src/internal/JsonSchema/json-schema.ts`: `restoreOpenRecord` states `additionalProperties:
+true` for an object node that declares neither `properties` nor `additionalProperties`, and
+    `objectToEffectSchema` reads `true` back as a record with an unconstrained value. Round-trip
+    fidelity is pinned by a test in `json-schema.test.ts`.
+  - **A parameterless tool emitted a schema the provider rejects.** `EMPTY_PARAMETERS_SCHEMA` guarded
+    against v4's empty-struct emission (`{anyOf: [{type:'object'}, {type:'array'}]}`) with a
+    `toJsonSchema` annotation — but **v4 honours only a fixed annotation whitelist**
+    (title/description/default/examples/format/…, see `internal/schema/annotations.ts`), so the
+    workaround was inert and the `anyOf` reached the wire, where its `{type:'object'}` branch has no
+    `additionalProperties`. Since all tools travel in one payload, ONE parameterless operation failed
+    every request. Fixed by spelling it `Schema.Record(String, Never)`, whose natural emission is
+    `{type:'object', additionalProperties:false}`.
+  - **What the model was told and what we validated had diverged.** rc.108 describes a tool through
+    the provider's structured-output codec (`prepareTools` → `tryToolJsonSchema`, applied
+    unconditionally — NOT gated on `strict`) while `Toolkit.handle` validates the model's arguments
+    against the untransformed `parametersSchema`; `LanguageModel`'s `codecTransformer` reaches
+    `generateObject` only. So a record was advertised as an array of `[key, value]` pairs but validated
+    as an object (`Expected object`), and an optional key was advertised nullable-and-required but
+    validated as absent-or-`T` (`Expected string`/`Expected array`). Independently, **v4 core emits
+    `Schema.optional(T)` as `anyOf: [T, null]` yet its decoder rejects `null`** — it advertises a value
+    its own validator refuses. Disabling strict does not help; both rewrites are unconditional.
+    Fixed by projecting operations to **dynamic tools** (`Tool.dynamic`), whose JSON Schema
+    `Tool.getJsonSchema` returns verbatim, so we state the contract the model is actually held to —
+    optional keys as bare types omitted from `required`, open records as
+    `{type:'object', additionalProperties:true}`, exactly the pre-migration shape. A dynamic tool skips
+    parameter validation, so `makeToolExecutionService` now decodes the arguments itself at the single
+    boundary where they arrive, which also restores the `Ref`-from-URI coercion every ref-taking
+    operation depends on (`ref.tryLoad is not a function` without it). `Tool.Strict` stays `false`
+    because that contract is what strict mode forbids. Two call sites had to stop assuming
+    user-defined tools: `makeToolExecutionService`'s `handlersFor` and
+    `ai/src/resolvers/ChatCompletionsAdapter.ts`'s `toolsToRequest` (which would otherwise drop every
+    operation-backed tool from an OpenAI-compatible request).
+    Discarded after checking: `config.strictJsonSchema` is not an escape hatch — rc.108 spreads it
+    into the request body and the API rejects it as an extra input.
+- [x] **`agent-runtime`'s `recovers queued tool results after reload` no longer hangs.** Diagnosed:
+      the timeout was NOT a fixture miss. The test waited via `waitForTaskToAppear()` for a second
+      research task after reload, and that wait can never be satisfied on **either** path — on reload
+      `agent-process.ts` (~L268) redelivers a queued result as a synthetic `<result pid=N>` **text**
+      block instead of re-issuing the tool (main's design, `76dd26df`), and on the racier path the
+      result is consumed before the shutdown so nothing is redelivered at all. The wait was copied
+      from the sibling `restart during tool call`, where the tool _is_ re-issued because it was still
+      pending. Replaced with an assertion that the tool did not run twice; the suite replays green
+      against the committed fixtures, so no new fixture was needed.
+- [ ] **Pin the agent redelivery path by construction, not by timing.** The path itself is now
+      _covered_: `recovers queued tool results after reload` exercises the synthetic-redelivery branch
+      (confirmed by the `[synthetic] <result pid=N>` block in the run, and
+      `grep -rl 'result pid=' .store/conversations` now returns the first fixture that has ever
+      recorded that shape), and the assertion reads the ASSISTANT's reply and requires `nasdaq` — a
+      fact only the tool result carries, so it cannot pass on an abandoned turn the way the previous
+      `toContain('cyberdyne')` did (the prompt itself says "Cyberdyne").
+      What remains is determinism. Which path runs is still a race between `onChildEvent` persisting
+      the `tool_result` and `processManager.shutdown()`; it landed on redelivery in 10 of 10 uncached
+      replay runs and in every live run, but by timing rather than by construction. If a scheduling
+      change flips it, the corpus holds no fixture for the other path, so it fails as a miss rather
+      than degrading. Pinning it needs a seam in `agent-process.ts` that holds the turn loop while a
+      result sits queued — `AlarmManager` already takes an injectable `setAlarm`/`now`
+      (see `agent-process.test.ts`), so withholding the wake is the likely lever. Alternatives
+      considered and rejected as too invasive for the migration PR: a test-only knob on
+      `AgentProcessOptions`, and an alarm-suspension capability on `ProcessManager`/`ProcessHandle`
+      (real control-plane surface, and those files already carry migration churn).
+      **The logic itself no longer depends on the race.** `agentEventToPrompt` and
+      `dropReportedToolResults` are extracted from `onAlarm` and pinned in
+      `agent-service/redelivery.test.ts` (7 tests, no model call): the synthetic `<result pid=N>` /
+      `<error pid=N>` encoding, the `disposition: 'synthetic'` marking, and the rule that only a
+      REPORTED result at the HEAD of the queue is dropped — a result that was never reported must
+      survive, or recovery loses the value. So a future timing flip costs the e2e run's coverage of
+      that branch, not the guarantee.
 
 ## Review follow-ups deferred (from the comprehensive branch review)
 

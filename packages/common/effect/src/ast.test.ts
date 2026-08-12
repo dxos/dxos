@@ -18,6 +18,8 @@ import {
   isArrayType,
   isDiscriminatedUnion,
   isOption,
+  mapAst,
+  retainContext,
   visit,
 } from './internal/ast';
 import { type JsonPath, type JsonProp } from './internal/json-path';
@@ -224,5 +226,59 @@ describe('AST', () => {
     expect(isArrayType(Schema.Array(Schema.String).ast)).to.be.true;
     expect(isArrayType(findProperty(Schema.Struct({ a: Schema.Array(Schema.String) }), 'a' as JsonPath)!)).to.be.true;
     expect(isArrayType(Schema.Union([Schema.String, Schema.Array(Schema.String)]).ast)).to.be.false;
+  });
+});
+
+// Optionality and mutability ride on a node's `context` in v4, so any mapper that rebuilds a node
+// must carry it across. Losing it turns an optional key into a required one, which surfaces far from
+// the cause — a caller (or an LLM tool call) that legitimately omits the key fails with `Missing key`.
+describe('mapAst', () => {
+  /** Replaces every string leaf with a fresh node that carries no context, forcing ancestor rebuilds. */
+  const replaceStrings = (ast: SchemaAST.AST): SchemaAST.AST =>
+    SchemaAST.isStringKeyword(ast) ? Schema.Number.ast : mapAst(ast, (child) => replaceStrings(child));
+
+  // `JsonSchema` is an open record, so `required` arrives as `unknown`.
+  const requiredKeys = (schema: Schema.Top): readonly string[] => {
+    const { required } = Schema.toJsonSchemaDocument(schema).schema;
+    return Array.isArray(required) ? required.map(String) : [];
+  };
+
+  const remap = (schema: Schema.Top): Schema.Top => Schema.make<Schema.Top>(replaceStrings(schema.ast));
+
+  test('a rewritten property keeps `optional`', ({ expect }) => {
+    const remapped = remap(Schema.Struct({ a: Schema.optional(Schema.String), b: Schema.String }));
+    expect(requiredKeys(remapped)).to.deep.eq(['b']);
+  });
+
+  test('a rewritten property keeps `optionalKey`', ({ expect }) => {
+    // `optionalKey` puts the modifier on the value node itself, so a wholesale replacement of that
+    // node drops it unless the rebuild restores it.
+    const remapped = remap(Schema.Struct({ a: Schema.optionalKey(Schema.String), b: Schema.String }));
+    expect(requiredKeys(remapped)).to.deep.eq(['b']);
+  });
+
+  test('a rewritten property keeps `mutableKey`', ({ expect }) => {
+    const remapped = remap(Schema.Struct({ a: Schema.mutableKey(Schema.String) }));
+    const prop = SchemaAST.getPropertySignatures(remapped.ast).find((property) => property.name === 'a');
+    invariant(prop);
+    expect(SchemaAST.isMutable(prop.type)).to.be.true;
+  });
+
+  test('optionality survives a rewrite nested in an array and a union', ({ expect }) => {
+    const remapped = remap(
+      Schema.Struct({
+        list: Schema.optional(Schema.Array(Schema.String)),
+        either: Schema.optional(Schema.Union([Schema.String, Schema.Boolean])),
+        required: Schema.Boolean,
+      }),
+    );
+    expect(requiredKeys(remapped)).to.deep.eq(['required']);
+  });
+
+  test('retainContext carries optionality onto a replacement node', ({ expect }) => {
+    const original = Schema.optionalKey(Schema.String).ast;
+    expect(SchemaAST.isOptional(retainContext(original, Schema.Number.ast))).to.be.true;
+    // A replacement that already carries its own context is left alone.
+    expect(SchemaAST.isOptional(retainContext(Schema.String.ast, Schema.Number.ast))).to.be.false;
   });
 });

@@ -27,6 +27,7 @@ export {
   isNestedType,
   isOption,
   mapAst,
+  retainContext,
   unwrapOptional,
   visit,
 } from './internal/ast';
