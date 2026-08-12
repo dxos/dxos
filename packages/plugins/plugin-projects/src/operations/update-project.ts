@@ -11,17 +11,20 @@ import * as ProjectMcpOperation from '../types/ProjectMcpOperation';
 
 const handler: Operation.WithHandler<typeof ProjectMcpOperation.UpdateProject> = ProjectMcpOperation.UpdateProject.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ project: projectRef, name, description, goals }) {
+    Effect.fnUntraced(function* ({ project: projectRef, name, status, description, goals }) {
       const project = yield* Database.load(projectRef);
       // An empty patch must not mutate: `Obj.update` bumps meta and notifies reactive consumers
       // even when every assignment is skipped.
-      if (name === undefined && description === undefined && goals === undefined) {
+      if (name === undefined && status === undefined && description === undefined && goals === undefined) {
         return { project: Entity.toJSON(project) };
       }
 
       Obj.update(project, (project) => {
         if (name !== undefined) {
           project.name = name;
+        }
+        if (status !== undefined) {
+          project.status = status;
         }
         if (description !== undefined) {
           project.description = description;

@@ -49,6 +49,7 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.GetProject> = Pr
       return {
         id: project.id,
         name: project.name,
+        status: project.status,
         description: project.description,
         goals: [...(project.goals ?? [])],
         taskSet: taskSet

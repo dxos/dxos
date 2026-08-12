@@ -9,3 +9,4 @@ import { meta } from './meta';
 export const ProjectsPlugin = Plugin.lazy(meta, () => import('#plugin'));
 
 export { ProjectOperationHandlerSet } from './operations';
+export { ProjectsSkillDefinition } from './skills/projects-skill';

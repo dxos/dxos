@@ -32,7 +32,8 @@ export const ListProjects = Operation.make({
   meta: {
     key: makeKey('projectList'),
     name: 'List Projects',
-    description: 'List the projects in the space: id, name, description, goal count, and whether a task set is linked.',
+    description:
+      'List the projects in the space: id, name, status, description, goal count, and whether a task set is linked.',
     icon: 'ph--list-bullets--regular',
   },
   services: [Database.Service],
@@ -46,6 +47,7 @@ export const ListProjects = Operation.make({
       Schema.Struct({
         id: Schema.String,
         name: Schema.optional(Schema.String),
+        status: Schema.optional(Project.ProjectStatus),
         description: Schema.optional(Schema.String),
         hasTaskSet: Schema.Boolean,
         goalCount: Schema.Number,
@@ -68,6 +70,7 @@ export const GetProject = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     name: Schema.optional(Schema.String),
+    status: Schema.optional(Project.ProjectStatus),
     description: Schema.optional(Schema.String),
     goals: Schema.Array(Project.Goal),
     taskSet: Schema.optional(
@@ -88,13 +91,14 @@ export const UpdateProject = Operation.make({
   meta: {
     key: makeKey('projectUpdate'),
     name: 'Update Project',
-    description: 'Patch a project: name, description, or the goals list (what done means).',
+    description: 'Patch a project: name, status, description, or the goals list (what done means).',
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
     project: Ref.Ref(Project.Project),
     name: Schema.optional(Schema.String),
+    status: Schema.optional(Project.ProjectStatus),
     description: Schema.optional(Schema.String),
     /** Replaces the goals list wholesale; omit to leave goals untouched. */
     goals: Schema.optional(Schema.Array(Project.Goal)),
