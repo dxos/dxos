@@ -540,6 +540,36 @@ export const createProcessProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI
 /** Progress-registry key for a mailbox's fact-analysis monitor ({@link AnalyzeMailbox}). */
 export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#analyze';
 
+/** Progress-registry key for a mailbox's correspondent-extraction monitor ({@link ExtractCorrespondents}). */
+export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
+  Obj.getURI(mailbox).toString() + '#correspondents';
+
+export const ExtractCorrespondents = Operation.make({
+  meta: {
+    key: makeKey('extractCorrespondents'),
+    name: 'Extract Correspondents',
+    description: 'Creates Person objects for everyone the user has sent or replied to, derived from the mailbox feed.',
+    icon: 'ph--users--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed is scanned for correspondence.',
+    }),
+    me: Schema.Array(Schema.String).annotations({
+      description: "The user's own email addresses (outbound sender / inbound recipient identities).",
+    }),
+  }),
+  output: Schema.Struct({
+    /** Feed messages scanned. */
+    scanned: Schema.Number,
+    /** Distinct correspondents derived from the feed. */
+    correspondents: Schema.Number,
+    /** Person objects created (existing contacts are never duplicated). */
+    created: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
+
 /** Default page size for {@link ProcessMailbox} cursor commits. */
 export const DEFAULT_PROCESS_MAILBOX_PAGE_SIZE = 10;
 

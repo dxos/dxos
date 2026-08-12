@@ -70,6 +70,9 @@ import { StoryModulesPlugin } from '../testing/modules';
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
 
+/** The fixture corpus owner's addresses — the `me` input for `ExtractCorrespondents`. */
+const USER_EMAILS = ['rich.burdon@gmail.com', 'rich@braneframe.com'];
+
 /** Role token for the story-local process module, referenced by the `ModuleContainer` layout. */
 const ProcessRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.process');
 
@@ -146,6 +149,27 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       .invokePromise(InboxOperation.ProcessMailbox, { mailbox: Ref.make(mailbox) }, { spaceId: space.id })
       .catch((err) => {
         log.warn('process mailbox failed', { err });
+        return { error: String(err) };
+      });
+    setLast(result);
+    setRuns((count) => count + 1);
+  }, [space, invoker, mailbox]);
+
+  // Correspondent pipeline: Person per sender the user has sent or replied to (mechanical — the
+  // outbound signal is derived from the feed, so no Organization allow-list is needed).
+  const handlePeople = useCallback(async () => {
+    if (!invoker || !mailbox) {
+      return;
+    }
+
+    const result = await invoker
+      .invokePromise(
+        InboxOperation.ExtractCorrespondents,
+        { mailbox: Ref.make(mailbox), me: USER_EMAILS },
+        { spaceId: space.id },
+      )
+      .catch((err) => {
+        log.warn('extract correspondents failed', { err });
         return { error: String(err) };
       });
     setLast(result);
@@ -253,6 +277,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           </Toolbar.Button>
           <Toolbar.Button data-testid='process' disabled={!invoker || !mailbox} onClick={() => void handleProcess()}>
             Process
+          </Toolbar.Button>
+          <Toolbar.Button data-testid='people' disabled={!invoker || !mailbox} onClick={() => void handlePeople()}>
+            People
           </Toolbar.Button>
           <Toolbar.Button data-testid='crm' disabled={!invoker || !mailbox} onClick={() => void handleCrm()}>
             CRM

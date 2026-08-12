@@ -19,18 +19,19 @@ Run storybook play tests: `moon run stories-inbox:test` (or open the story on th
 
 ## Unit tests — plugin-inbox operations (`packages/plugins/plugin-inbox`)
 
-| File                                                   | Covers                                                                                                           |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `src/operations/process/process-mailbox.test.ts`       | cursored ProcessMailbox: tag+advance, incremental resume, reset cycle, foreign-cursor isolation, malformed dates |
-| `src/operations/analyze/analyze-mailbox.test.ts`       | fact-pipeline operation; cursor isolation from tagged consumers                                                  |
-| `src/operations/extractor/extract-mailbox.test.ts`     | mailbox-wide extraction                                                                                          |
-| `src/operations/extractor/extract-message.test.ts`     | single-message extraction                                                                                        |
-| `src/operations/extractor/ai-gate.test.ts`             | extraction AI gating                                                                                             |
-| `src/operations/extractor/summarize-extractor.test.ts` | summarize extractor                                                                                              |
-| `src/operations/sync.test.ts`                          | mailbox sync operation                                                                                           |
-| `src/types/Mailbox.test.ts`                            | mailbox helpers (filters, subscriptions, unsubscribe parsing, tagging)                                           |
-| `src/types/ExtractedFrom.test.ts`                      | extraction provenance                                                                                            |
-| `src/types/SystemTags.test.ts`                         | system tags                                                                                                      |
+| File                                                           | Covers                                                                                                                                                                     |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/operations/process/process-mailbox.test.ts`               | cursored ProcessMailbox: tag+advance, incremental resume, reset cycle, foreign-cursor isolation, malformed dates                                                           |
+| `src/operations/correspondents/extract-correspondents.test.ts` | ExtractCorrespondents: address-list parsing, correspondent derivation (outbound + direct replies, automated deny), idempotent Person creation, Organization link by domain |
+| `src/operations/analyze/analyze-mailbox.test.ts`               | fact-pipeline operation; cursor isolation from tagged consumers                                                                                                            |
+| `src/operations/extractor/extract-mailbox.test.ts`             | mailbox-wide extraction                                                                                                                                                    |
+| `src/operations/extractor/extract-message.test.ts`             | single-message extraction                                                                                                                                                  |
+| `src/operations/extractor/ai-gate.test.ts`                     | extraction AI gating                                                                                                                                                       |
+| `src/operations/extractor/summarize-extractor.test.ts`         | summarize extractor                                                                                                                                                        |
+| `src/operations/sync.test.ts`                                  | mailbox sync operation                                                                                                                                                     |
+| `src/types/Mailbox.test.ts`                                    | mailbox helpers (filters, subscriptions, unsubscribe parsing, tagging)                                                                                                     |
+| `src/types/ExtractedFrom.test.ts`                              | extraction provenance                                                                                                                                                      |
+| `src/types/SystemTags.test.ts`                                 | system tags                                                                                                                                                                |
 
 ## Unit tests — pipeline packages (`packages/core/compute`)
 
