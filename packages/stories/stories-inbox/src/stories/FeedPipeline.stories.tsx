@@ -23,6 +23,7 @@ import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -562,7 +563,11 @@ const StoryProcessPlugin = Plugin.define(
 
 const DefaultStory = () => (
   <ModuleContainer
-    layout={[[ProcessRole, StoryRole.Mailbox], [ModuleRole.Objects, StoryRole.Facts], [ModuleRole.Logging]]}
+    layout={[
+      [ProcessRole, StoryRole.Mailbox],
+      [ModuleRole.Objects, StoryRole.Facts],
+      [StoryRole.Trace, ModuleRole.Logging],
+    ]}
   />
 );
 
@@ -632,6 +637,8 @@ const meta = {
         }),
         StorybookPlugin({}),
         SpacePlugin({}),
+        // TracePanel (StoryRole.Trace / SwarmTrace cells) needs the assistant Settings capability.
+        AssistantPlugin(),
         InboxPlugin(),
         BrainPlugin(),
         ConnectorPlugin(),
