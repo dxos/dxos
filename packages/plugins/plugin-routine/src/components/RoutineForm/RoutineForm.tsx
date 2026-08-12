@@ -39,6 +39,8 @@ import {
 // `SchemaAST` rather than `mapFields`: `Type.getSchema` returns a `Codec`, which carries no field literals.
 type GeneralForm = Pick<Routine.Routine, 'name' | 'description'>;
 const GeneralFields = SchemaAST.pick(Type.getSchema(Routine.Routine).ast, ['name', 'description']);
+// The same fields as a schema, for the root field set that renders them.
+const GeneralForm = Schema.make<Schema.Codec<GeneralForm, any>>(GeneralFields);
 
 const RunnableActionForm = Schema.Struct({
   kind: Schema.Literal('runnable'),
