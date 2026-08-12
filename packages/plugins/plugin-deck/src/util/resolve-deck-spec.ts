@@ -4,8 +4,8 @@
 
 import * as Option from 'effect/Option';
 
-import { DeckSpec } from '@dxos/app-toolkit';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import { Obj, Type } from '@dxos/echo';
 import { type Node } from '@dxos/plugin-graph';
 

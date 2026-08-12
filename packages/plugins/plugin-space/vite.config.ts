@@ -27,6 +27,7 @@ export default defineConfig({
     'SpaceSchema': 'src/types/SpaceSchema.ts',
     'SpaceSurface': 'src/types/SpaceSurface.ts',
     'SpaceCapability': 'src/types/SpaceCapability.ts',
+    'types/Settings': 'src/types/Settings.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

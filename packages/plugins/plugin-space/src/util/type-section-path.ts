@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type CapabilityManager } from '@dxos/app-framework';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type GraphBuilder } from '@dxos/plugin-graph';

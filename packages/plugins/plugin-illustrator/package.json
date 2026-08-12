@@ -113,6 +113,11 @@
       "types": "./dist/types/src/types/IllustratorEvents.d.ts",
       "import": "./dist/lib/IllustratorEvents.mjs"
     },
+    "./IllustratorModel": {
+      "source": "./src/model/index.ts",
+      "types": "./dist/types/src/model/index.d.ts",
+      "import": "./dist/lib/model.mjs"
+    },
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",

@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 
-import { type Registry } from '@dxos/app-framework';
+import type * as Registry from '@dxos/app-framework/Registry';
 import { usePluginManager } from '@dxos/app-framework/ui';
 
 /**

@@ -8,6 +8,7 @@ export * as ExtractedFrom from './types/ExtractedFrom';
 export * as InboxCapabilities from './types/InboxCapabilities';
 export * as InboxEvents from './types/InboxEvents';
 export * as InboxOperation from './types/InboxOperation';
+export * as MailSend from './types/MailSend';
 export * as Mailbox from './types/Mailbox';
 export * as Settings from './types/Settings';
 export * as SyncOptions from './types/SyncOptions';

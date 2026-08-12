@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type CapabilityManager } from '@dxos/app-framework';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Obj } from '@dxos/echo';
 import { createAnnotationHelper } from '@dxos/echo/internal';
 

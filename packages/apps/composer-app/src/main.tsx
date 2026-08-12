@@ -15,8 +15,9 @@ import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } f
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { EdgeRegistryPluginProvider, PluginAssetCache } from '@dxos/app-framework';
+import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 import { bootLoader, useApp } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the

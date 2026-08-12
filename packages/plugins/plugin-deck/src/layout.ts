@@ -4,7 +4,7 @@
 
 import { produce } from 'immer';
 
-import { DeckSpec } from '@dxos/app-toolkit';
+import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 
 import * as DeckSchema from './types/DeckSchema';
 

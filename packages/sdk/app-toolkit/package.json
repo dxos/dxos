@@ -76,6 +76,11 @@
       "types": "./dist/types/src/types/ConnectorSync.d.ts",
       "import": "./dist/lib/types/ConnectorSync.mjs"
     },
+    "./DeckSpec": {
+      "source": "./src/app-graph/DeckSpec.ts",
+      "types": "./dist/types/src/app-graph/DeckSpec.d.ts",
+      "import": "./dist/lib/app-graph/DeckSpec.mjs"
+    },
     "./GraphPath": {
       "source": "./src/app/GraphPath.ts",
       "types": "./dist/types/src/app/GraphPath.d.ts",

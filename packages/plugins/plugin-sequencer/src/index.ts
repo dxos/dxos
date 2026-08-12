@@ -3,7 +3,6 @@
 //
 
 export * from './meta';
-export * from './plugin';
 export * as Note from './types/Note';
 export * as Patch from './types/Patch';
 export * as Score from './types/Score';

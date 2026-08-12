@@ -5,8 +5,8 @@
 import * as Either from 'effect/Either';
 import * as Schema from 'effect/Schema';
 
-import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
