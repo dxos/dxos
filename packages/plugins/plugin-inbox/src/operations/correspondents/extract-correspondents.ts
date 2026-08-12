@@ -11,10 +11,10 @@ import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { buildContactFromActor, getIdentityIndex } from '@dxos/extractor-lib';
+import { type ContactGraph, buildContactGraph, getIdentityIndex } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { Message, type Person } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import * as InboxOperation from '../../types/InboxOperation';
 import { deriveCorrespondents } from './correspondence';
@@ -63,26 +63,30 @@ const handler = InboxOperation.ExtractCorrespondents.pipe(
 
       let scanned = 0;
       let created = 0;
+      let organizations = 0;
       const pipeline = Stream.fromIterable(correspondents).pipe(
         Stage.map('build-contact', (correspondent) =>
           Effect.gen(function* () {
             scanned += 1;
             reportStatus({ current: scanned, message: correspondent.name ?? correspondent.email });
-            const contact = yield* buildContactFromActor(
+            return yield* buildContactGraph(
               { email: correspondent.email, name: correspondent.name },
               db,
               // The derivation already proved the outbound relationship; the automated flag keeps
               // deny-beats-allow for a correspondent only ever seen through list mail.
               { signals: { outbound: true, noReply: correspondent.automated }, index },
             );
-            return contact;
           }),
         ),
         Pipeline.run({
-          sink: (contact: Person.Person | undefined) =>
+          sink: (graph: ContactGraph) =>
             Effect.sync(() => {
-              if (contact) {
-                db.add(contact);
+              if (graph.organization) {
+                db.add(graph.organization);
+                organizations += 1;
+              }
+              if (graph.contact) {
+                db.add(graph.contact);
                 created += 1;
               }
             }),
@@ -107,9 +111,9 @@ const handler = InboxOperation.ExtractCorrespondents.pipe(
       );
 
       yield* Effect.promise(() => db.flush());
-      log.info('correspondents: pipeline done', { mailbox: Obj.getURI(mailbox), scanned, created });
+      log.info('correspondents: pipeline done', { mailbox: Obj.getURI(mailbox), scanned, created, organizations });
       reportStatus({ message: PROGRESS_STATUS_COMPLETE });
-      return { scanned: messages.length, correspondents: correspondents.length, created };
+      return { scanned: messages.length, correspondents: correspondents.length, created, organizations };
     }),
   ),
   Operation.opaqueHandler,

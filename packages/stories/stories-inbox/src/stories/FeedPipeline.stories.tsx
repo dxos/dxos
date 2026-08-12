@@ -637,10 +637,11 @@ export const CrmTest: Story = {
       return text;
     };
 
-    // The demo seed lands as one batch of three messages.
-    await waitFor((text) => /"messages":\s*3\b/.test(text));
+    // The demo seed lands as one batch of four messages.
+    await waitFor((text) => /"messages":\s*4\b/.test(text));
 
-    // First pass: one Person + one Profile per demo sender, all provenance recorded, cursor created.
+    // First pass: one Person + one Profile per allow-listed demo sender (the unknown-org Wayne
+    // sender is denied by the gate), all provenance recorded, cursor created.
     await userEvent.click(canvas.getByTestId('crm'));
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(/"contacts":\s*3\b/);

@@ -144,6 +144,10 @@ describe('ExtractCorrespondents operation', () => {
         expect(first.scanned).toBe(3);
         expect(first.correspondents).toBe(3);
         expect(first.created).toBe(2);
+        // Both correspondents share the corporate domain example.com → exactly one derived Organization.
+        expect(first.organizations).toBe(1);
+        const [organization] = yield* Database.query(Filter.type(Organization.Organization)).run;
+        expect(organization?.website).toBe('https://example.com');
 
         const people = yield* Database.query(Filter.type(Person.Person)).run;
         expect(people.map((person) => person.emails?.[0]?.value).sort()).toEqual([
@@ -158,7 +162,9 @@ describe('ExtractCorrespondents operation', () => {
           me: ME,
         });
         expect(rerun.created).toBe(0);
+        expect(rerun.organizations).toBe(0);
         expect((yield* Database.query(Filter.type(Person.Person)).run).length).toBe(2);
+        expect((yield* Database.query(Filter.type(Organization.Organization)).run).length).toBe(1);
 
         // Incremental: a new reply from a new sender yields exactly one more Person.
         yield* Effect.promise(() =>

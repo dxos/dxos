@@ -567,6 +567,8 @@ export const ExtractCorrespondents = Operation.make({
     correspondents: Schema.Number,
     /** Person objects created (existing contacts are never duplicated). */
     created: Schema.Number,
+    /** Organization objects created for correspondents' corporate domains (never duplicated). */
+    organizations: Schema.Number,
   }),
 }).pipe(Operation.idempotent);
 

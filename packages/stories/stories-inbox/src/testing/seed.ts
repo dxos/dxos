@@ -88,6 +88,25 @@ export const makeDemoMessages = (): Message.Message[] => [
       subject: 'Initech / Umbrella merger',
     },
   }),
+  // A sender at a corporate domain with NO seeded Organization: the contact extractor creates both
+  // the Person and a derived Organization (`wayne-enterprises.com` → "Wayne-enterprises"), while
+  // the CRM pipeline's allow-list gate still denies the sender (unknown org, not outbound).
+  Message.make({
+    threadId: 'demo-thread-wayne',
+    sender: {
+      email: 'lucius@wayne-enterprises.com',
+      name: 'Lucius Fox',
+    },
+    created: '2026-07-04T08:45:00.000Z',
+    blocks: [
+      ContentBlock.Text.make({
+        text: 'Wayne Enterprises would like to explore a joint applied-sciences venture. Lucius Fox will send the term sheet this week.',
+      }),
+    ],
+    properties: {
+      subject: 'Wayne Enterprises partnership',
+    },
+  }),
 ];
 
 /**
