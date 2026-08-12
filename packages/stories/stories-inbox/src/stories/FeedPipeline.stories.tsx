@@ -257,6 +257,21 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     setRuns((count) => count + 1);
   }, [space, invoker, mailbox]);
 
+  // Image enrichment: avatars (Gravatar) for Persons and logos (domain services) for Organizations
+  // missing an image, via the hardened CRM attach path. Needs the CORS proxy / image service.
+  const handleImages = useCallback(async () => {
+    if (!invoker || !mailbox) {
+      return;
+    }
+
+    const result = await invoker.invokePromise(CrmOperation.EnrichImages, {}, { spaceId: space.id }).catch((err) => {
+      log.warn('enrich images failed', { err });
+      return { error: String(err) };
+    });
+    setLast(result);
+    setRuns((count) => count + 1);
+  }, [space, invoker, mailbox]);
+
   // Spam/label classification: cursored ≤100-message batches; senders with a Person record are
   // short-circuited (tagged personal, never spam, no LLM call). Runs against the story's Ollama
   // AiService, so `strict: false` skips the structured-output pass local models never honor.
@@ -336,6 +351,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           >
             Auto Extract
           </Toolbar.Button>
+          <Toolbar.Button data-testid='images' disabled={!invoker || !mailbox} onClick={() => void handleImages()}>
+            Images
+          </Toolbar.Button>
           <Toolbar.Button data-testid='classify' disabled={!invoker || !mailbox} onClick={() => void handleClassify()}>
             Classify
           </Toolbar.Button>
@@ -353,6 +371,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             cursors: cursors.length,
             cursorMax: Cursor.parseKey(cursors[0]?.max),
             contacts: contacts.length,
+            images: contacts.filter((contact) => !!contact.image).length,
             subscriptions: mailbox?.subscriptions?.length ?? 0,
             profiles: profiles.length,
             trips: trips.length,

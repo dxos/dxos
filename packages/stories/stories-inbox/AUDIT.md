@@ -36,6 +36,14 @@ Run storybook play tests: `moon run stories-inbox:test` (or open the story on th
 | `src/types/ExtractedFrom.test.ts`                              | extraction provenance                                                                                                                                                                                                   |
 | `src/types/SystemTags.test.ts`                                 | system tags                                                                                                                                                                                                             |
 
+## Unit tests — plugin-crm (`packages/plugins/plugin-crm`)
+
+| File                                     | Covers                                                                                                                       |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `src/operations/enrich-images.test.ts`   | EnrichImages: Gravatar SHA-256 candidates, org logo/favicon candidates, skip paths (no email/domain), image-holders excluded |
+| `src/operations/process-mailbox.test.ts` | cursored CRM contact + profile pipeline                                                                                      |
+| `src/operations/research.test.ts`        | person/organization research                                                                                                 |
+
 ## Fixture harness (`src/test/`, this package)
 
 | File                                | Covers                                                                                                                                                                                                                                                                                                |
