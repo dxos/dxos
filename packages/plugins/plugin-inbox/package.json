@@ -293,6 +293,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-progress": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
