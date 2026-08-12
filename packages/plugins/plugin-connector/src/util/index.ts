@@ -11,4 +11,5 @@ export * from './sync-binding';
 export * from './sync-routine';
 export * from './sync-target';
 export * from './sync-trigger';
+export * from './target-account';
 export * from './target-connectors';

@@ -11,7 +11,13 @@ import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import * as ConnectorSpec from '../../types/ConnectorSpec';
-import { adoptOrphanedBinding, ensureSyncTrigger } from '../../util';
+import {
+  checkTargetAccount,
+  ensureSyncTrigger,
+  prepareTargetBinding,
+  readTargetAccount,
+  reportTargetAccountMismatch,
+} from '../../util';
 
 /**
  * Create exactly one binding for a single-target connector (no `getSyncTargets`):
@@ -26,10 +32,21 @@ export const createSingleCursor = (
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
-    const account = (yield* Database.load(connection.accessToken)).account;
+    const accessToken = yield* Database.load(connection.accessToken);
+    const account = accessToken.account;
     let target: Obj.Unknown | undefined;
     if (existingTarget) {
       target = yield* Database.load(existingTarget);
+      // The account is only known once the sign-in completes, so this is where a user who authorized the
+      // wrong account finds out. The connection stays (the credential is real); the binding is refused.
+      if (checkTargetAccount(target, accessToken.source, account) === 'mismatch') {
+        log.warn('refusing to bind: target syncs another account', {
+          target: target.id,
+          recorded: readTargetAccount(target, accessToken.source),
+          account,
+        });
+        return yield* reportTargetAccountMismatch(invoker);
+      }
       if (account) {
         Obj.update(target, (target) => Obj.setLabel(target, account));
       }
@@ -47,15 +64,15 @@ export const createSingleCursor = (
     }
     // A target the user is re-connecting may hold the dormant binding of an earlier connection; resuming
     // it keeps the synced range so the sync picks up where it left off.
-    const adopted = yield* adoptOrphanedBinding({
+    const adopted = yield* prepareTargetBinding({
       target,
+      accessToken,
       source: connection.accessToken,
-      account,
       connector,
     });
     const cursor =
       adopted ??
-      (yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, account, target: Ref.make(target) })));
+      (yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) })));
     invariant(Cursor.isExternal(cursor));
     log.info('bound single-target connector', {
       connectorId: connection.connectorId,

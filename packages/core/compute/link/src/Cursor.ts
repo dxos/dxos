@@ -34,13 +34,6 @@ export const ExternalSpec = Schema.Struct({
   kind: Schema.Literal('external'),
   /** Credential authenticating the remote source. */
   source: Ref.Ref(AccessToken.AccessToken),
-  /**
-   * Remote account the credential was issued for, copied from {@link AccessToken.account}. The token is
-   * owned by its `Connection` and cascade-deleted with it, so this is the only thing left identifying
-   * whose data the progress below describes: a re-bind resumes this cursor for the same account and
-   * starts a fresh one for any other. Absent on cursors written before this field existed.
-   */
-  account: Schema.String.pipe(Schema.optional),
   /** Local root object synced into (Mailbox, Kanban, Project, …). */
   target: Ref.Ref(Obj.Unknown),
   /** Remote foreign id (board id, calendar id, channel id, etc.). */
@@ -119,7 +112,6 @@ export const isFeed = (cursor: Cursor): cursor is FeedCursor => cursor.spec.kind
 
 export type MakeExternalProps = {
   readonly source: Ref.Ref<AccessToken.AccessToken>;
-  readonly account?: string;
   readonly target: Ref.Ref<Obj.Unknown>;
   readonly externalId?: string;
   readonly label?: string;
@@ -138,7 +130,6 @@ export const makeExternal = (props: MakeExternalProps): Cursor =>
     spec: {
       kind: 'external',
       source: props.source,
-      account: props.account,
       target: props.target,
       externalId: props.externalId,
       label: props.label,
@@ -205,22 +196,17 @@ export const writeSnapshot = (cursor: ExternalCursor, foreignId: string, snapsho
 };
 
 /**
- * Points an external cursor at a new credential for the same remote account, keeping every progress
- * field (`max`/`min`, `snapshots`, `token`) so the next run resumes instead of re-walking the horizon.
- * Clears `lastError`, which described the run that failed under the old credential. The caller owns
- * the same-account check — resuming another account's watermark would silently skip its data.
+ * Points an external cursor at a new credential, keeping every progress field (`max`/`min`,
+ * `snapshots`, `token`) so the next run resumes instead of re-walking the horizon. Clears `lastError`,
+ * which described the run that failed under the old credential. The caller owns the check that the new
+ * credential is for the same remote account — resuming another account's watermark would skip its data.
  */
-export const rebindSource = (
-  cursor: ExternalCursor,
-  source: Ref.Ref<AccessToken.AccessToken>,
-  account?: string,
-): void => {
+export const rebindSource = (cursor: ExternalCursor, source: Ref.Ref<AccessToken.AccessToken>): void => {
   Obj.update(cursor, (cursor) => {
     if (cursor.spec.kind !== 'external') {
       return;
     }
     cursor.spec.source = source;
-    cursor.spec.account = account;
     cursor.lastError = undefined;
   });
 };

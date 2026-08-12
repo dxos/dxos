@@ -49,8 +49,8 @@ describe('live bindings', () => {
       return db.add(Obj.make(Connection.Connection, { connectorId, accessToken: Ref.make(token) }));
     };
 
-    const bind = (connection: Connection.Connection, target: Obj.Unknown, account?: string) => {
-      const cursor = db.add(Cursor.makeExternal({ source: connection.accessToken, account, target: Ref.make(target) }));
+    const bind = (connection: Connection.Connection, target: Obj.Unknown) => {
+      const cursor = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }));
       invariant(Cursor.isExternal(cursor));
       return cursor;
     };

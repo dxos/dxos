@@ -10,8 +10,9 @@ import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
+import { type TargetAccountMismatchError } from '../errors';
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { adoptOrphanedBinding } from './binding-lifecycle';
+import { isTargetAccountMismatch, prepareTargetBinding } from './binding-lifecycle';
 import { ensureSyncTrigger } from './sync-routine';
 import { connectorIdsForTarget } from './target-connectors';
 
@@ -29,31 +30,31 @@ export const bindConnectionToTarget = ({
   connection: Connection.Connection;
   connector: ConnectorSpec.ConnectorEntry | undefined;
   target: Ref.Ref<Obj.Unknown>;
-}): Effect.Effect<Cursor.ExternalCursor, never, Database.Service> =>
+}): Effect.Effect<Cursor.ExternalCursor, TargetAccountMismatchError, Database.Service> =>
   Effect.gen(function* () {
-    const object = yield* Database.load(target);
-    const accessToken = yield* Database.load(connection.accessToken);
+    const object = yield* Database.load(target).pipe(Effect.orDie);
+    const accessToken = yield* Database.load(connection.accessToken).pipe(Effect.orDie);
+    // Settled first: a target that syncs another account is refused before anything is written.
+    const adopted = yield* prepareTargetBinding({
+      target: object,
+      accessToken,
+      source: connection.accessToken,
+      connector,
+    });
     const name = accessToken.account;
     if (name) {
       Obj.update(object, (object) => Obj.setLabel(object, name));
     }
-    // Resumes the account's dormant binding when the target has one, rather than syncing from scratch.
-    const adopted = yield* adoptOrphanedBinding({
-      target: object,
-      source: connection.accessToken,
-      account: name,
-      connector,
-    });
     if (adopted) {
       return adopted;
     }
-    const cursor = yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, account: name, target }));
+    const cursor = yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target }));
     invariant(Cursor.isExternal(cursor));
     if (connector) {
       yield* ensureSyncTrigger({ connector, cursor });
     }
     return cursor;
-  }).pipe(Effect.orDie);
+  });
 
 /**
  * Bind `target` to the one connection already authorized for its type, if there is exactly one.
@@ -91,10 +92,21 @@ export const autoBindSingleConnection = ({
       .getAll(ConnectorSpec.Connector)
       .flat()
       .find((entry) => entry.id === connection.connectorId);
-    const cursor = yield* bindConnectionToTarget({ connection, connector, target: Ref.make(target) });
-    log.info('auto-bound to the only authorized connection', {
-      typename: Obj.getTypename(target),
-      connectorId: connection.connectorId,
-    });
+    // Automatic, so a target already synced from another account is skipped silently rather than
+    // reported — there was no user action to explain a toast.
+    const cursor = yield* bindConnectionToTarget({ connection, connector, target: Ref.make(target) }).pipe(
+      Effect.catchIf(isTargetAccountMismatch, (error) =>
+        Effect.sync(() => {
+          log.info('not auto-binding: target syncs another account', { context: error.context });
+          return undefined;
+        }),
+      ),
+    );
+    if (cursor) {
+      log.info('auto-bound to the only authorized connection', {
+        typename: Obj.getTypename(target),
+        connectorId: connection.connectorId,
+      });
+    }
     return cursor;
   });

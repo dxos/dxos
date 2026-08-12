@@ -12,7 +12,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Connection, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
@@ -22,7 +22,29 @@ import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
 import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
 import * as ConnectorOperation from '../types/ConnectorOperation';
 import * as ConnectorSpec from '../types/ConnectorSpec';
-import { connectorAuthActions, findLiveBinding, isCursorForTarget } from '../util';
+import {
+  checkTargetAccount,
+  connectorAuthActions,
+  findLiveBinding,
+  isCursorForTarget,
+  isTokenForConnection,
+} from '../util';
+
+/**
+ * True when `connection`'s credential is for a different remote account than `target` already syncs, so
+ * binding the two would be refused (see `checkTargetAccount`). Unknown either way is not a
+ * contradiction: the connection stays on offer and the bind decides.
+ */
+const contradictsTargetAccount = (
+  connection: Connection.Connection,
+  accessTokens: readonly AccessToken.AccessToken[],
+  target: Obj.Unknown,
+): boolean => {
+  const accessToken = accessTokens.find((candidate) => isTokenForConnection(candidate, connection));
+  return (
+    accessToken !== undefined && checkTargetAccount(target, accessToken.source, accessToken.account) === 'mismatch'
+  );
+};
 
 /**
  * Reactive matcher: matches an ECHO object that has an external-sync {@link Cursor} targeting it and
@@ -173,6 +195,7 @@ export default Capability.makeModule(
               return [];
             }
             const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
+            const accessTokens = get(db.query(Filter.type(AccessToken.AccessToken)).atom);
             // bindTarget types are "connected" only while a live binding exists — a cursor targeting the
             // object AND the connection backing it — because counting an orphaned cursor (its connection
             // deleted) as connected hid Connect while the owning plugin's sync action, which needs that
@@ -193,7 +216,11 @@ export default Capability.makeModule(
               spaceId: db.spaceId,
               existingTarget: annotation.bindTarget ? Ref.make(object) : undefined,
               allConnectors,
-              allConnections,
+              // Reuse binds this object, so a connection for another account is not offered at all —
+              // the bind would be refused, and a menu entry that always errors is worse than no entry.
+              allConnections: annotation.bindTarget
+                ? allConnections.filter((connection) => !contradictsTargetAccount(connection, accessTokens, object))
+                : allConnections,
             });
           }),
       }),

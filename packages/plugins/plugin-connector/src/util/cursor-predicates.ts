@@ -3,7 +3,7 @@
 //
 
 import { EID, type Obj, type Ref } from '@dxos/echo';
-import { Connection, Cursor } from '@dxos/link';
+import { type AccessToken, Connection, Cursor } from '@dxos/link';
 
 /**
  * Entity id a ref addresses, or `undefined` if its URI is not an `echo:` EID.
@@ -39,3 +39,9 @@ export const isCursorForConnection = (
 /** True when `cursor`'s `spec.target` is the given object. */
 export const isCursorForTarget = (cursor: Cursor.Cursor, target: Obj.Unknown): boolean =>
   refEntityId(cursor.spec.target) === target.id;
+
+/** True when `accessToken` is the credential `connection` authenticates with. */
+export const isTokenForConnection = (
+  accessToken: AccessToken.AccessToken,
+  connection: Connection.Connection,
+): boolean => refEntityId(connection.accessToken) === accessToken.id;

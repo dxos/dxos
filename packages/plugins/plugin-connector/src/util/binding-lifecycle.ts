@@ -4,17 +4,22 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import type * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { type AccessToken, type Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
+import { TargetAccountMismatchError } from '../errors';
+import { meta } from '../meta';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 import { isCursorForConnection } from './cursor-predicates';
 import { findOrphanedBindingsForTarget } from './find-binding';
 import { ensureSyncTrigger } from './sync-routine';
 import { setSyncTriggerEnabled } from './sync-trigger';
+import { checkTargetAccount, recordTargetAccount } from './target-account';
 
 /**
  * Suspends a connection's bindings ahead of deleting it: their sync triggers are disabled, the cursors
@@ -62,57 +67,76 @@ export const removeBinding = (cursor: Cursor.ExternalCursor): Effect.Effect<void
     yield* Database.remove(cursor);
   });
 
-export type AdoptOrphanedBindingOptions = {
+export type PrepareTargetBindingOptions = {
   /** Object being bound (Mailbox, Calendar, …). */
   target: Obj.Unknown;
-  /** Credential the new connection authenticates with. */
+  /** Credential the connection authenticates with; its `source` keys the target's account record. */
+  accessToken: AccessToken.AccessToken;
+  /** Reference to the same credential, written onto a resumed cursor. */
   source: Ref.Ref<AccessToken.AccessToken>;
-  /** Remote account of `source`; a binding is only resumed when its own account matches this. */
-  account?: string;
-  /** Remote target id, when the connector binds several (calendars, boards); must also match. */
+  /** Remote target id, when the connector binds several (calendars, boards); must also match to resume. */
   externalId?: string;
-  /** Connector being bound, used to restore the binding's sync Routine. */
+  /** Connector being bound, used to restore a resumed binding's sync Routine. */
   connector?: ConnectorSpec.ConnectorEntry;
 };
 
 /**
- * Resumes the target's dormant binding for this account, if it has one: the cursor is pointed at the new
- * credential with its progress intact and its sync Routine re-enabled. Dormant bindings for any other
- * account are removed — their watermark describes a different remote mailbox, so resuming from it would
- * silently skip that account's data. Returns the adopted cursor, or `undefined` when the caller should
- * create a fresh binding.
+ * Settles what a target's existing state means for a new binding, and records the account it is now
+ * synced from. Returns the cursor the caller should use, or `undefined` when it should create a fresh
+ * one. Fails with {@link TargetAccountMismatchError} — before mutating anything — when the target
+ * already syncs a different account.
+ *
+ * Resuming is gated on the account rather than on the target alone because the cursor is a resume
+ * position, not just an association: `max` is a provider timestamp, so inheriting another account's
+ * watermark would leave every message older than it unfetched, silently.
  */
-export const adoptOrphanedBinding = ({
+export const prepareTargetBinding = ({
   target,
+  accessToken,
   source,
-  account,
   externalId,
   connector,
-}: AdoptOrphanedBindingOptions): Effect.Effect<Cursor.ExternalCursor | undefined, never, Database.Service> =>
+}: PrepareTargetBindingOptions): Effect.Effect<
+  Cursor.ExternalCursor | undefined,
+  TargetAccountMismatchError,
+  Database.Service
+> =>
   Effect.gen(function* () {
-    const orphaned = yield* findOrphanedBindingsForTarget(target);
-    if (orphaned.length === 0) {
-      return undefined;
+    const account = accessToken.account;
+    const check = checkTargetAccount(target, accessToken.source, account);
+    if (check === 'mismatch') {
+      return yield* Effect.fail(
+        new TargetAccountMismatchError({
+          targetId: target.id,
+          expected: readRecorded(target, accessToken.source),
+          actual: account!,
+        }),
+      );
     }
 
-    // An unrecorded account (a cursor written before `spec.account` existed, or a token that never
-    // reported one) is not evidence of a match, so those bindings start over rather than resume.
-    const adopted = orphaned.find(
-      (cursor) =>
-        account !== undefined &&
-        cursor.spec.account === account &&
-        (externalId === undefined || cursor.spec.externalId === undefined || cursor.spec.externalId === externalId),
-    );
+    const orphaned = yield* findOrphanedBindingsForTarget(target);
+    // Only a confirmed account may inherit progress; an unrecorded one starts over.
+    const adopted =
+      check === 'match'
+        ? orphaned.find(
+            (cursor) =>
+              externalId === undefined || cursor.spec.externalId === undefined || cursor.spec.externalId === externalId,
+          )
+        : undefined;
     for (const cursor of orphaned) {
       if (cursor !== adopted) {
         yield* removeBinding(cursor);
       }
     }
+
+    if (account !== undefined) {
+      recordTargetAccount(target, accessToken.source, account);
+    }
     if (!adopted) {
       return undefined;
     }
 
-    Cursor.rebindSource(adopted, source, account);
+    Cursor.rebindSource(adopted, source);
     // Restores the schedule suspended at disconnect; creates one if the connector gained a trigger spec
     // (or the Routine was removed) while the binding lay dormant.
     if (connector) {
@@ -122,3 +146,25 @@ export const adoptOrphanedBinding = ({
     log.info('resumed dormant binding', { account, target: target.id, max: adopted.max });
     return adopted;
   });
+
+/** The account a target is recorded as syncing; only called where a mismatch proved one exists. */
+const readRecorded = (target: Obj.Unknown, source: string): string => Obj.getKeys(target, source)[0]!.id;
+
+/**
+ * Tells the user why a completed sign-in bound nothing. The credential is real and the connection is
+ * kept — only the binding is refused — so without this the flow looks like it simply did nothing. The
+ * accounts themselves are not named: a `Label` carries no interpolation params, and the log has them.
+ */
+export const reportTargetAccountMismatch = (invoker: Operation.OperationService): Effect.Effect<void, never> =>
+  Effect.ignore(
+    invoker.invoke(LayoutOperation.AddToast, {
+      id: `${meta.profile.key}.account-mismatch`,
+      icon: 'ph--warning--regular',
+      title: ['account-mismatch.title', { ns: meta.profile.key }],
+      description: ['account-mismatch.description', { ns: meta.profile.key }],
+    }),
+  );
+
+/** True for the error {@link prepareTargetBinding} fails with, for callers that skip or report it. */
+export const isTargetAccountMismatch = (error: unknown): error is TargetAccountMismatchError =>
+  error instanceof TargetAccountMismatchError;

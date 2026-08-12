@@ -16,9 +16,13 @@ import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Expando } from '@dxos/schema';
 
+import { TargetAccountMismatchError } from '../errors';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 import { bindConnectionToTarget } from './auto-bind';
-import { adoptOrphanedBinding, suspendConnectionBindings } from './binding-lifecycle';
+import { suspendConnectionBindings } from './binding-lifecycle';
+import { readTargetAccount } from './target-account';
+
+const SOURCE = 'gmail.example';
 
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.bindingLifecycle.sync'), name: 'Test Sync' },
@@ -29,14 +33,15 @@ const TestSync = Operation.make({
 /** A scheduled connector, so each binding gets a sync Routine whose trigger can be suspended. */
 const connector: ConnectorSpec.ConnectorEntry = {
   id: 'gmail',
-  source: 'gmail.example',
+  source: SOURCE,
   sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
 };
 
 /**
- * A dormant binding — cursor kept, connection gone — is the state a disconnect leaves behind. Its
- * progress describes the remote account, so re-connecting the same account resumes it rather than
- * re-walking the horizon (which, past the feed's seeded boundary windows, would re-append messages).
+ * A dormant binding — cursor kept, connection gone — is the state a disconnect leaves behind. Whether
+ * its progress may be resumed is decided by the account recorded on the *target*, since that says whose
+ * data the target's feed already holds; the credential that would have said so is deleted with its
+ * connection.
  */
 describe('binding lifecycle', () => {
   let builder: EchoTestBuilder;
@@ -60,24 +65,28 @@ describe('binding lifecycle', () => {
       Expando.Expando,
     ]);
 
-    const addConnection = (account: string) => {
-      const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'gmail.example', token: 'tok', account }));
+    const addConnection = (account?: string) => {
+      const token = db.add(Obj.make(AccessToken.AccessToken, { source: SOURCE, token: 'tok', account }));
       const connection = db.add(
         Obj.make(Connection.Connection, { connectorId: 'gmail', accessToken: Ref.make(token) }),
       );
+      // Mirrors the coordinator: the token is owned by its connection, so deleting one deletes both.
       Obj.setParent(token, connection);
       return connection;
     };
 
-    const run = <A>(effect: Effect.Effect<A, never, Database.Service>): Promise<A> =>
+    const run = <A, E>(effect: Effect.Effect<A, E, Database.Service>): Promise<A> =>
       effect.pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
+
+    const bind = (connection: Connection.Connection, target: Obj.Unknown) =>
+      run(bindConnectionToTarget({ connection, connector, target: Ref.make(target) }));
 
     /** A target synced by `account` that has made progress, then had its connection deleted. */
     const dormantBinding = async (account: string) => {
       const connection = addConnection(account);
       const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
       await db.flush({ indexes: true });
-      const cursor = await run(bindConnectionToTarget({ connection, connector, target: Ref.make(target) }));
+      const cursor = await bind(connection, target);
       Cursor.advance(cursor, '1700000000000');
       await db.flush({ indexes: true });
 
@@ -90,18 +99,18 @@ describe('binding lifecycle', () => {
     const triggers = () => db.query(Filter.type(Trigger.Trigger)).run();
     const cursors = () => db.query(Filter.type(Cursor.Cursor)).run();
 
-    return { db, addConnection, run, dormantBinding, triggers, cursors };
+    return { db, addConnection, run, bind, dormantBinding, triggers, cursors };
   };
 
-  test('a new binding records the account it was authorized for', async ({ expect }) => {
-    const { db, addConnection, run } = await setup();
+  test('binding records the account on the target', async ({ expect }) => {
+    const { db, addConnection, bind } = await setup();
     const connection = addConnection('me@example.com');
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
     await db.flush({ indexes: true });
 
-    const cursor = await run(bindConnectionToTarget({ connection, connector, target: Ref.make(target) }));
+    await bind(connection, target);
 
-    expect(cursor.spec.account).toBe('me@example.com');
+    expect(readTargetAccount(target, SOURCE)).toBe('me@example.com');
   });
 
   test('deleting a connection suspends its bindings without discarding them', async ({ expect }) => {
@@ -116,12 +125,12 @@ describe('binding lifecycle', () => {
   });
 
   test('re-connecting the same account resumes the dormant binding', async ({ expect }) => {
-    const { db, addConnection, run, dormantBinding, triggers, cursors } = await setup();
+    const { db, addConnection, bind, dormantBinding, triggers, cursors } = await setup();
     const { target, cursor } = await dormantBinding('me@example.com');
 
     const connection = addConnection('me@example.com');
     await db.flush({ indexes: true });
-    const rebound = await run(bindConnectionToTarget({ connection, connector, target: Ref.make(target) }));
+    const rebound = await bind(connection, target);
     await db.flush({ indexes: true });
 
     // Same cursor, same high-water mark: the next sync resumes instead of re-walking the horizon.
@@ -135,46 +144,66 @@ describe('binding lifecycle', () => {
     expect(restored[0].input?.binding?.uri).toBe(Ref.make(cursor).uri);
   });
 
-  test('re-connecting a different account starts fresh, dropping the dormant binding', async ({ expect }) => {
-    const { db, addConnection, run, dormantBinding, cursors } = await setup();
+  test('re-connecting a different account is refused, leaving the target untouched', async ({ expect }) => {
+    const { db, addConnection, bind, dormantBinding, cursors } = await setup();
     const { target, cursor } = await dormantBinding('me@example.com');
 
     const connection = addConnection('someone-else@example.com');
     await db.flush({ indexes: true });
-    const rebound = await run(bindConnectionToTarget({ connection, connector, target: Ref.make(target) }));
+
+    // Binding would merge two accounts into one feed, so it fails instead of reconciling.
+    await expect(bind(connection, target)).rejects.toThrow(TargetAccountMismatchError);
     await db.flush({ indexes: true });
 
-    // Another account's watermark would silently skip its mail, so nothing is carried over.
-    expect(rebound.id).not.toBe(cursor.id);
-    expect(rebound.max).toBeUndefined();
-    expect(rebound.spec.account).toBe('someone-else@example.com');
-    expect((await cursors()).map((cursor) => cursor.id)).toEqual([rebound.id]);
+    // Nothing written: the dormant binding survives and the recorded account is unchanged.
+    expect((await cursors()).map((cursor) => cursor.id)).toEqual([cursor.id]);
+    expect(readTargetAccount(target, SOURCE)).toBe('me@example.com');
   });
 
-  test('a binding with no recorded account is not resumed', async ({ expect }) => {
-    const { db, addConnection, run, cursors } = await setup();
-    // A cursor written before `spec.account` existed: an absent account is not evidence of a match.
+  test('a target with no recorded account binds but does not inherit progress', async ({ expect }) => {
+    const { db, addConnection, bind, cursors } = await setup();
+    // A binding made before targets recorded their account: no evidence of a match, so no resume.
     const stale = addConnection('me@example.com');
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
     const legacy = db.add(Cursor.makeExternal({ source: stale.accessToken, target: Ref.make(target) }));
     invariant(Cursor.isExternal(legacy));
+    Cursor.advance(legacy, '1700000000000');
     await db.flush({ indexes: true });
     db.remove(stale);
     await db.flush({ indexes: true });
 
     const connection = addConnection('me@example.com');
     await db.flush({ indexes: true });
-    const adopted = await run(
-      adoptOrphanedBinding({
-        target,
-        source: connection.accessToken,
-        account: 'me@example.com',
-        connector,
-      }),
-    );
+    const rebound = await bind(connection, target);
     await db.flush({ indexes: true });
 
-    expect(adopted).toBeUndefined();
-    expect(await cursors()).toEqual([]);
+    expect(rebound.id).not.toBe(legacy.id);
+    expect(rebound.max).toBeUndefined();
+    expect((await cursors()).map((cursor) => cursor.id)).toEqual([rebound.id]);
+    // Recorded now, so the next disconnect/reconnect cycle can resume.
+    expect(readTargetAccount(target, SOURCE)).toBe('me@example.com');
+  });
+
+  test('a credential that reports no account never resumes', async ({ expect }) => {
+    const { db, addConnection, bind, cursors } = await setup();
+    const { target } = await (async () => {
+      const connection = addConnection('me@example.com');
+      const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
+      await db.flush({ indexes: true });
+      const cursor = await bind(connection, target);
+      Cursor.advance(cursor, '1700000000000');
+      db.remove(connection);
+      await db.flush({ indexes: true });
+      return { target };
+    })();
+
+    const anonymous = addConnection(undefined);
+    await db.flush({ indexes: true });
+    const rebound = await bind(anonymous, target);
+    await db.flush({ indexes: true });
+
+    // Unknown is not a contradiction, so the bind succeeds — but nothing is inherited.
+    expect(rebound.max).toBeUndefined();
+    expect((await cursors()).map((cursor) => cursor.id)).toEqual([rebound.id]);
   });
 });
