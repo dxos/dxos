@@ -79,6 +79,13 @@ export const SystemTag = {
     label: 'Forums',
     hue: 'purple',
   },
+  // Applied locally by the classification pipeline (`ClassifyMailbox`), and mappable from a
+  // provider's spam/junk folder by a future sync mapper.
+  spam: {
+    id: 'spam',
+    label: 'Spam',
+    hue: 'red',
+  },
 } as const;
 export type SystemTagId = keyof typeof SystemTag;
 

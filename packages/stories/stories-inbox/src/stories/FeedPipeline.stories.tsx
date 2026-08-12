@@ -257,6 +257,28 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     setRuns((count) => count + 1);
   }, [space, invoker, mailbox]);
 
+  // Spam/label classification: cursored ≤100-message batches; senders with a Person record are
+  // short-circuited (tagged personal, never spam, no LLM call). Runs against the story's Ollama
+  // AiService, so `strict: false` skips the structured-output pass local models never honor.
+  const handleClassify = useCallback(async () => {
+    if (!invoker || !mailbox) {
+      return;
+    }
+
+    const result = await invoker
+      .invokePromise(
+        InboxOperation.ClassifyMailbox,
+        { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL, strict: false },
+        { spaceId: space.id },
+      )
+      .catch((err) => {
+        log.warn('classify mailbox failed', { err });
+        return { error: String(err) };
+      });
+    setLast(result);
+    setRuns((count) => count + 1);
+  }, [space, invoker, mailbox]);
+
   const handleAnalyze = useCallback(async () => {
     if (!invoker || !mailbox) {
       return;
@@ -313,6 +335,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             onClick={() => void handleAutoExtract()}
           >
             Auto Extract
+          </Toolbar.Button>
+          <Toolbar.Button data-testid='classify' disabled={!invoker || !mailbox} onClick={() => void handleClassify()}>
+            Classify
           </Toolbar.Button>
           <Toolbar.Button data-testid='analyze' disabled={!invoker || !mailbox} onClick={() => void handleAnalyze()}>
             Analyze

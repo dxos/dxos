@@ -9,14 +9,14 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import * as InboxOperation from '../../types/InboxOperation';
-import { findProcessCursor } from './cursor';
+import { findFeedCursor } from './cursor';
 
-/** Clears the process-pipeline cursor so the next run re-processes the whole feed. */
+/** Clears a pipeline cursor (the process pipeline's by default) so the next run re-processes the feed. */
 const handler = InboxOperation.ResetProcessCursor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ mailbox: mailboxRef }) {
+    Effect.fnUntraced(function* ({ mailbox: mailboxRef, cursorId }) {
       const mailbox = yield* Database.load(mailboxRef);
-      const cursor = yield* findProcessCursor(mailbox);
+      const cursor = yield* findFeedCursor(mailbox, cursorId);
       if (!cursor) {
         return { reset: false };
       }

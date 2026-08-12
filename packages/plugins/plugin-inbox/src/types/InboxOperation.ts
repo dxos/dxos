@@ -601,18 +601,80 @@ export const ResetProcessCursor = Operation.make({
   meta: {
     key: makeKey('resetProcessCursor'),
     name: 'Reset Process Cursor',
-    description: 'Clears the process-pipeline cursor so the next run re-processes the whole mailbox feed.',
+    description: 'Clears a pipeline cursor so the next run re-processes the whole mailbox feed.',
     icon: 'ph--arrow-counter-clockwise--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
-      description: 'Mailbox whose process cursor is reset.',
+      description: 'Mailbox whose pipeline cursor is reset.',
     }),
+    cursorId: Schema.optional(
+      Schema.String.annotations({
+        description: "Consumer cursor id to reset (e.g. 'classifyMailbox'); defaults to the process pipeline's.",
+      }),
+    ),
   }),
   output: Schema.Struct({
     /** False when no cursor existed yet (nothing to reset). */
     reset: Schema.Boolean,
+  }),
+}).pipe(Operation.idempotent);
+
+/** Progress-registry key for a mailbox's classification monitor ({@link ClassifyMailbox}). */
+export const createClassifyProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#classify';
+
+/** Hard per-run cap on messages classified — LLM batches must stay bounded. */
+export const MAX_CLASSIFY_MAILBOX_BATCH_LIMIT = 100;
+
+/** Default number of messages classified per run ({@link ClassifyMailbox}). */
+export const DEFAULT_CLASSIFY_MAILBOX_BATCH_LIMIT = 100;
+
+/** Default number of messages classified per LLM call. */
+export const DEFAULT_CLASSIFY_MAILBOX_PAGE_SIZE = 20;
+
+export const ClassifyMailbox = Operation.make({
+  meta: {
+    key: makeKey('classifyMailbox'),
+    name: 'Classify Mailbox',
+    description:
+      'LLM spam detection and category labeling over the mailbox feed; senders with a known Person are never spam.',
+    icon: 'ph--shield-check--regular',
+  },
+  services: [AiService.AiService, Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed messages are classified.',
+    }),
+    batchLimit: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Maximum messages classified this run (hard-capped at 100).',
+      }),
+    ),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Messages per LLM call (and per cursor advance).',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotations({ description: 'Classification model name; defaults to Claude Haiku.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotations({
+        description:
+          'Attempt strict structured output before the lenient JSON-salvage path; set false for providers that never honor it (saves one generation per page).',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    /** Messages classified this run (LLM + known-person shortcut). */
+    processed: Schema.Number,
+    /** Messages tagged spam. */
+    spam: Schema.Number,
+    /** Messages short-circuited by a known-Person sender (tagged personal, never spam). */
+    known: Schema.Number,
+    /** Messages still pending beyond this run's batch limit. */
+    remaining: Schema.Number,
   }),
 }).pipe(Operation.idempotent);
 
