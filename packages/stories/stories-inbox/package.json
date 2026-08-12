@@ -26,7 +26,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-brain": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",

@@ -147,21 +147,87 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   const [last, setLast] = useState<unknown>();
   const [facts, setFacts] = useState(0);
 
-  const handleReset = useCallback(async () => {
+  /**
+   * The consolidated reset group, rendered as toolbar buttons (not actions — a reset zeroes the run
+   * counters rather than counting as a run). Same `StoryAction` shape so error handling is uniform.
+   */
+  const resets = useMemo<StoryAction[]>(() => {
     if (!invoker || !mailbox) {
-      return;
+      return [];
     }
 
-    const result = await invoker
-      .invokePromise(InboxOperation.ResetProcessCursor, { mailbox: Ref.make(mailbox) }, { spaceId: space.id })
-      .catch((err) => {
-        log.warn('reset process cursor failed', { err });
+    return [
+      {
+        // Every pipeline cursor at once: the tagged process/classify cursors (reset operation) and
+        // the analyze pipeline's UNTAGGED feed cursor (a plain object removal — it predates the
+        // tagged-consumer convention), so the next run of any cursored pipeline re-reads the feed.
+        id: 'reset',
+        label: 'Reset cursors',
+        run: async () => {
+          const process = await invoker.invokePromise(
+            InboxOperation.ResetProcessCursor,
+            { mailbox: Ref.make(mailbox) },
+            { spaceId: space.id },
+          );
+          const classify = await invoker.invokePromise(
+            InboxOperation.ResetProcessCursor,
+            { mailbox: Ref.make(mailbox), cursorId: 'classifyMailbox' },
+            { spaceId: space.id },
+          );
+          const feedUri = mailbox.feed.uri;
+          const cursors = await space.db.query(Filter.type(Cursor.Cursor)).run();
+          const analyze = cursors.find(
+            (cursor) =>
+              cursor.spec.kind === 'feed' &&
+              cursor.spec.source.uri === feedUri &&
+              Obj.getMeta(cursor).keys.length === 0,
+          );
+          if (analyze) {
+            space.db.remove(analyze);
+          }
+          return { process, classify, analyzeCursor: !!analyze };
+        },
+      },
+      {
+        // Clears the shared FactStore (not ECHO-reactive, so the count is zeroed explicitly).
+        id: 'reset-facts',
+        label: 'Reset facts',
+        run: async () => {
+          await EffectEx.runPromise(
+            factStores
+              .forSpace(space.id)
+              .clear()
+              .pipe(Effect.orElseSucceed(() => undefined)),
+          );
+          setFacts(0);
+          return { reset: 'facts' };
+        },
+      },
+      {
+        // Full client reset: wipes the profile (OPFS) and reloads the page.
+        id: 'reset-store',
+        label: 'Reset store',
+        run: async () => {
+          await client.reset();
+          window.location.reload();
+          return { reset: 'store' };
+        },
+      },
+    ];
+  }, [space, client, invoker, mailbox, factStores]);
+
+  const handleReset = useCallback(
+    async (reset: StoryAction) => {
+      const result = await reset.run().catch((err) => {
+        log.warn('reset failed', { reset: reset.id, err });
         return { error: String(err) };
       });
-    setLast(result);
-    setRuns(0);
-    setFacts(0);
-  }, [space, invoker, mailbox]);
+      setLast(result);
+      setRuns(0);
+      setFacts(0);
+    },
+    [setLast, setRuns, setFacts],
+  );
 
   /**
    * The selectable workbench pipelines. Each action's `run` returns the payload rendered as `last`;
@@ -310,54 +376,6 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         run: () => invoker.invokePromise(CrmOperation.EnrichImages, {}, { spaceId: space.id }),
       },
       //
-      // Story controls (folded from the ex-ControlsModule; resets are actions like everything else).
-      //
-      {
-        // Clears the shared FactStore (not ECHO-reactive, so the count refresh is explicit).
-        id: 'reset-facts',
-        label: 'Reset fact store',
-        run: async () => {
-          await EffectEx.runPromise(
-            factStores
-              .forSpace(space.id)
-              .clear()
-              .pipe(Effect.orElseSucceed(() => undefined)),
-          );
-          setFacts(0);
-          return { reset: 'facts' };
-        },
-      },
-      {
-        // Removes the analyze pipeline's UNTAGGED feed cursor (a different object from the tagged
-        // process/classify cursors the Reset button clears), so the next analyze re-reads the feed.
-        id: 'reset-analyze-cursor',
-        label: 'Reset analyze cursor',
-        run: async () => {
-          const feedUri = mailbox.feed.uri;
-          const cursors = await space.db.query(Filter.type(Cursor.Cursor)).run();
-          const existing = cursors.find(
-            (cursor) =>
-              cursor.spec.kind === 'feed' &&
-              cursor.spec.source.uri === feedUri &&
-              Obj.getMeta(cursor).keys.length === 0,
-          );
-          if (existing) {
-            space.db.remove(existing);
-          }
-          return { reset: 'analyze-cursor', removed: !!existing };
-        },
-      },
-      {
-        // Full client reset: wipes the profile (OPFS) and reloads the page.
-        id: 'reset-store',
-        label: 'Reset store',
-        run: async () => {
-          await client.reset();
-          window.location.reload();
-          return { reset: 'store' };
-        },
-      },
-      //
       // ProjectOperation
       //
       {
@@ -429,9 +447,16 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Button data-testid='reset' disabled={!invoker || !mailbox} onClick={() => void handleReset()}>
-            Reset
-          </Toolbar.Button>
+          {resets.map((reset) => (
+            <Toolbar.Button
+              key={reset.id}
+              data-testid={reset.id}
+              disabled={!invoker || !mailbox}
+              onClick={() => void handleReset(reset)}
+            >
+              {reset.label}
+            </Toolbar.Button>
+          ))}
           <Toolbar.Button data-testid='execute' disabled={!invoker || !mailbox} onClick={() => void handleExecute()}>
             Execute
           </Toolbar.Button>
