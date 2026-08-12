@@ -38,6 +38,9 @@ const ORGANIZATIONS = [
  */
 export const makeDemoMessages = (): Message.Message[] => [
   Message.make({
+    // `threadId` is load-bearing: the mailbox list's conversation view pulls messages through a
+    // threadId semi-join (see `buildThreadSemiJoin`), so a message without one never renders.
+    threadId: 'demo-thread-acme',
     sender: {
       email: 'jane@sequoia.com',
       name: 'Jane Partner',
@@ -53,6 +56,7 @@ export const makeDemoMessages = (): Message.Message[] => [
     },
   }),
   Message.make({
+    threadId: 'demo-thread-globex',
     sender: {
       email: 'bob@globex.com',
       name: 'Bob Smith',
@@ -68,6 +72,7 @@ export const makeDemoMessages = (): Message.Message[] => [
     },
   }),
   Message.make({
+    threadId: 'demo-thread-initech',
     sender: {
       email: 'alice@initech.com',
       name: 'Alice Johnson',
@@ -105,7 +110,7 @@ export const seedDemoMessages = (feed: Feed.Feed): Effect.Effect<void, never, Da
  * demo messages when no corpus has been pulled (CI, fresh checkout). The dev server SPA-fallbacks
  * unknown paths with HTML, so gate on the content type rather than the status alone.
  */
-export const loadMailboxFixture = async (space: Space, fixture = 'mailbox'): Promise<Mailbox.Mailbox> => {
+export const seedFromFixture = async (space: Space, fixture = 'mailbox'): Promise<Mailbox.Mailbox> => {
   const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
   await space.db.flush();
   const response = await fetch(`/fixtures/${fixture}.json`).catch(() => undefined);
@@ -121,7 +126,7 @@ export const loadMailboxFixture = async (space: Space, fixture = 'mailbox'): Pro
 };
 
 /** Adds a Mailbox with the shared demo messages on its feed, plus the extraction-gate Organizations. */
-export const seedCrmMailbox = async (space: Space): Promise<Mailbox.Mailbox> => {
+export const seedFromObjects = async (space: Space): Promise<Mailbox.Mailbox> => {
   const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
   await space.db.flush();
   const feed = await mailbox.feed.load();
@@ -130,9 +135,3 @@ export const seedCrmMailbox = async (space: Space): Promise<Mailbox.Mailbox> => 
   await space.db.flush({ indexes: true });
   return mailbox;
 };
-
-/** Selects a story mailbox seed — the arg a story passes through `withPluginManager`'s initializer. */
-export type StorySeed = 'fixture' | 'crm';
-
-export const seedStoryMailbox = (space: Space, kind: StorySeed = 'fixture'): Promise<Mailbox.Mailbox> =>
-  kind === 'crm' ? seedCrmMailbox(space) : loadMailboxFixture(space);

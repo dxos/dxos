@@ -81,7 +81,7 @@ type StoryArgs = {
 const DefaultStory = ({ seed = false }: StoryArgs) => (
   <>
     {seed && <SeedRunner />}
-    <ModuleContainer layout={[[StoryRole.Mailbox], [StoryRole.Message], [StoryRole.Controls, StoryRole.Facts]]} />
+    <ModuleContainer layout={[[StoryRole.Mailbox], [StoryRole.Message], [StoryRole.Controls]]} />
   </>
 );
 

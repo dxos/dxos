@@ -47,7 +47,7 @@ import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules';
-import { StoryAiPlugin, type StorySeed, seedStoryMailbox } from '../testing';
+import { StoryAiPlugin, seedFromFixture, seedFromObjects } from '../testing';
 import { StoryModulesPlugin } from '../testing/modules';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
@@ -277,17 +277,14 @@ const StoryProcessPlugin = Plugin.define(
 
 const DefaultStory = () => (
   <ModuleContainer
-    layout={[
-      [ProcessRole, StoryRole.Mailbox],
-      [ModuleRole.Database, ModuleRole.Logging],
-    ]}
+    layout={[[ProcessRole, StoryRole.Mailbox], [StoryRole.Facts], [ModuleRole.Database, ModuleRole.Logging]]}
   />
 );
 
-type StoryArgs = { seed: StorySeed };
+type StoryArgs = { seed: 'fixture' | 'crm' };
 
 const meta = {
-  title: 'stories/stories-inbox/ProcessPipeline',
+  title: 'stories/stories-inbox/FeedPipeline',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -313,7 +310,14 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => seedStoryMailbox(defaultSpace, args.seed));
+              yield* Effect.promise(() => {
+                switch (args.seed) {
+                  case 'fixture':
+                    return seedFromFixture(defaultSpace);
+                  case 'crm':
+                    return seedFromObjects(defaultSpace);
+                }
+              });
             }),
         }),
         StorybookPlugin({}),
