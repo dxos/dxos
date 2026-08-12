@@ -13492,9 +13492,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/pipeline':
-        specifier: workspace:*
-        version: link:../../core/compute/pipeline
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant

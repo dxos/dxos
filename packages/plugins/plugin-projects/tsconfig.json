@@ -49,9 +49,6 @@
       "path": "../../core/compute/extractor-lib"
     },
     {
-      "path": "../../core/compute/pipeline"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {

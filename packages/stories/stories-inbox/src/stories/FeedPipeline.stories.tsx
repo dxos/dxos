@@ -109,29 +109,30 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     space.db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
+
+  // Messages with a recorded Message → extracted-object association on the Mailbox.
+  const linked = messages.filter((message) => Mailbox.getExtractedObjectIds(mailbox, message.id).length > 0).length;
+
   const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
   const contacts = useQuery(space.db, Filter.type(Person.Person));
   const projects = useQuery(space.db, Filter.type(Project.Project));
-  const projectTasks = useQuery(space.db, Filter.type(Task.Task));
+  const tasks = useQuery(space.db, Filter.type(Task.Task));
   const profiles = useQuery(space.db, Filter.type(ProfileOf.ProfileOf));
   const trips = useQuery(space.db, Filter.type(Trip.Trip));
   const segments = useQuery(space.db, Filter.type(Segment.Segment));
   const relations = useQuery(space.db, Filter.type(ExtractedFrom.ExtractedFrom));
+
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);
   const [factStores] = useCapabilities(BrainCapabilities.FactStoreRegistry);
+
   const [runs, setRuns] = useState(0);
   const [last, setLast] = useState<unknown>();
   const [facts, setFacts] = useState(0);
 
+  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
   // Every invoker run is a process emitting `status.update` trace events; the progress sink projects
   // them into the registry, so the meters below mirror the app's statusbar (incl. cancel).
   const monitors = useProgressMonitors();
-  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
-
-  // Messages with a recorded Message → extracted-object association on the Mailbox.
-  const linked = mailbox
-    ? messages.filter((message) => Mailbox.getExtractedObjectIds(mailbox, message.id).length > 0).length
-    : 0;
 
   const handleReset = useCallback(async () => {
     if (!invoker || !mailbox) {
@@ -445,7 +446,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             linked,
             facts,
             projects: projects.length,
-            tasks: projectTasks.length,
+            tasks: tasks.length,
             last,
           }}
         />
