@@ -11,10 +11,9 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Event, Message } from '@dxos/types';
 
+import { Calendar, InboxOperation, Mailbox } from '#types';
+
 import { getCalendarsPath } from '../paths';
-import * as Calendar from '../types/Calendar';
-import * as InboxOperation from '../types/InboxOperation';
-import * as Mailbox from '../types/Mailbox';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

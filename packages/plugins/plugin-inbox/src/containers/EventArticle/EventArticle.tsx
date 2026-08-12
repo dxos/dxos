@@ -19,12 +19,9 @@ import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, ObjectArticle, useTargetConnection } from '#components';
+import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
 
 import { getCalendarEventPath, getEventNodeId } from '../../paths';
-import * as Calendar from '../../types/Calendar';
-import * as DraftEvent from '../../types/DraftEvent';
-import * as InboxOperation from '../../types/InboxOperation';
-import * as SystemTags from '../../types/SystemTags';
 
 // Stable fallback so `useAtomValue` always receives an atom when the event isn't starrable.
 const NOT_STARRED = Atom.make(false);

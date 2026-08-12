@@ -16,7 +16,8 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
+import { InboxOperation } from '#types';
+
 import { deriveCorrespondents } from './correspondence';
 
 /**

@@ -11,9 +11,9 @@ import { DXN, EID } from '@dxos/keys';
 import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 
 import { meta } from '#meta';
+import { Mailbox } from '#types';
 
 import { getMailboxPath } from '../paths';
-import * as Mailbox from '../types/Mailbox';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

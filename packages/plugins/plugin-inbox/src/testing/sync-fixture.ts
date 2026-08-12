@@ -17,7 +17,7 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
-import * as Mailbox from '../types/Mailbox';
+import { Mailbox } from '#types';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded with
 // a mailbox binding, plus the ambient services a provider's sync entry point requires. Published as

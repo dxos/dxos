@@ -10,8 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import * as InboxOperation from '../types/InboxOperation';
-import * as Mailbox from '../types/Mailbox';
+import { InboxOperation, Mailbox } from '#types';
 
 /** Default cron for the processing routine (hourly); the user edits the schedule on the trigger. */
 const DEFAULT_CRON = '0 * * * *';

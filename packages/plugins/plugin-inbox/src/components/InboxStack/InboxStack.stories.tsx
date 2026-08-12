@@ -17,8 +17,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
 import { Builder, MessagesOptions } from '#testing';
+import { Mailbox } from '#types';
 
-import * as Mailbox from '../../types/Mailbox';
 import { InboxStack, type InboxStackItem, InboxStackProps } from './InboxStack';
 
 type DefaultStoryProps = InboxStackProps & {

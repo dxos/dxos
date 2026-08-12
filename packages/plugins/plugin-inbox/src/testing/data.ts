@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Feed } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import * as Mailbox from '../types/Mailbox';
+import { Mailbox } from '#types';
+
 import { Builder } from './builder';
 
 /** Fixture tag dictionary — keys are stable across runs so builder can reference them. */

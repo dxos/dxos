@@ -14,8 +14,8 @@ import { Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
+import { InboxOperation, Mailbox } from '#types';
+
 import { InboxOperationHandlerSet } from '../index';
 import { deriveCorrespondents, parseAddressList } from './correspondence';
 

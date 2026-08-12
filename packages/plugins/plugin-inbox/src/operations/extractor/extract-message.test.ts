@@ -15,9 +15,8 @@ import { EffectEx } from '@dxos/effect';
 import { type ExtractError, type ExtractResult, type ObjectExtractor } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import * as ExtractedFrom from '../../types/ExtractedFrom';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
+import { ExtractedFrom, InboxCapabilities, InboxOperation } from '#types';
+
 import handler from './extract-message';
 
 const runExtractMessage = (

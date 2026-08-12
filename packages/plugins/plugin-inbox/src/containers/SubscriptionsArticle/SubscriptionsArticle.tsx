@@ -15,9 +15,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
+import { InboxOperation, Mailbox } from '#types';
 
 type SubscriptionTileData = {
   readonly subscription: Mailbox.Subscription;

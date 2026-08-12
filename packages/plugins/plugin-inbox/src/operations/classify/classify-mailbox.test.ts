@@ -13,8 +13,8 @@ import { Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
+import { InboxOperation, Mailbox } from '#types';
+
 import { getTaggedIds } from '../../types/SystemTags';
 import { InboxOperationHandlerSet } from '../index';
 

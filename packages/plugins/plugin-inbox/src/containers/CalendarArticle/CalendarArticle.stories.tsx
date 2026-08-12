@@ -17,9 +17,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Builder } from '#testing';
+import { Calendar } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import * as Calendar from '../../types/Calendar';
 import { CalendarArticle } from './CalendarArticle';
 
 type StoryArgs = {

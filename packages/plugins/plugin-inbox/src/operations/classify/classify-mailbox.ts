@@ -25,7 +25,8 @@ import { Tagging } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as InboxOperation from '../../types/InboxOperation';
+import { InboxOperation } from '#types';
+
 import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags';
 import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../process/cursor';
 

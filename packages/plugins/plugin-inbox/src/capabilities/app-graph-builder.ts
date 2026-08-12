@@ -23,6 +23,7 @@ import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
+import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
 import {
@@ -35,11 +36,6 @@ import {
   getSentId,
   getSubscriptionsId,
 } from '../paths';
-import * as Calendar from '../types/Calendar';
-import * as DraftEvent from '../types/DraftEvent';
-import * as InboxOperation from '../types/InboxOperation';
-import * as Mailbox from '../types/Mailbox';
-import * as SystemTags from '../types/SystemTags';
 import { getMessageLabel } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);

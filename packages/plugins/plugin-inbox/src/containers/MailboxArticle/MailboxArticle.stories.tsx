@@ -30,10 +30,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
+import { InboxCapabilities, Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as Mailbox from '../../types/Mailbox';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.

@@ -13,9 +13,7 @@ import { useNode } from '@dxos/plugin-graph/hooks';
 import { type Event, type Message } from '@dxos/types';
 
 import { EventArticle, MessageArticle } from '#containers';
-
-import * as Calendar from '../types/Calendar';
-import * as Mailbox from '../types/Mailbox';
+import { Calendar, Mailbox } from '#types';
 
 export type MessageArticleSurfaceProps = {
   role: string;
