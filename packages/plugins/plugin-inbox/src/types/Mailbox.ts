@@ -362,7 +362,7 @@ export const makeSummary = ({
     parentMessage: message.id,
     created,
     sender: {},
-    blocks: [{ _tag: 'text', text, disposition: 'summary' }],
+    blocks: [{ _tag: 'text', text, disposition: 'summary', mimeType: 'text/plain' }],
     properties: model ? { model } : undefined,
   });
 
