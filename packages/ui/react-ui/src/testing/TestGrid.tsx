@@ -13,7 +13,9 @@ const Root = ({ children }: PropsWithChildren) => {
 };
 
 const Stack = ({ children, orientation = 'horizontal', className, ...props }: StackProps) => {
-  const count = Children.count(children);
+  // `toArray`, not `count`: `count` includes null/undefined/boolean slots, so a conditional cell
+  // (`{selected && <Panel/>}`) would still claim a track and leave a gap when it renders nothing.
+  const count = Children.toArray(children).length;
   return (
     <div
       {...props}

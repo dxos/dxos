@@ -41,7 +41,8 @@ export const initializeMailbox = async (db: Database.Database, count = 0, thread
  * can exercise the annotation merge without running the summarization pipeline (or an LLM).
  *
  * Selection is index-based rather than random so a play test can rely on which messages carry one:
- * `ratio` 0.5 summarizes every other message. Returns how many were written.
+ * `ratio` 0.5 summarizes every other message. `ratio` is clamped to `[0, 1]`. Returns how many were
+ * written.
  */
 export const seedSummaries = async (db: Database.Database, mailbox: Mailbox.Mailbox, ratio = 0.5): Promise<number> => {
   const feed = await mailbox.feed?.tryLoad();
@@ -52,8 +53,12 @@ export const seedSummaries = async (db: Database.Database, mailbox: Mailbox.Mail
   const messages = await EffectEx.runAndForwardErrors(
     Feed.query(feed, Filter.type(Message.Message)).run.pipe(Effect.provide(Database.layer(db))),
   );
-  const step = Math.max(1, Math.round(1 / ratio));
-  const targets = messages.filter((_message, index) => index % step === 0);
+  // Cumulative rather than `index % step`: a step rounded from `1 / ratio` collapses every ratio
+  // above 0.5 to "all of them" (0.75 would summarize the whole feed).
+  const fraction = Math.min(Math.max(Number.isFinite(ratio) ? ratio : 0, 0), 1);
+  const targets = messages.filter(
+    (_message, index) => Math.floor((index + 1) * fraction) > Math.floor(index * fraction),
+  );
   if (targets.length === 0) {
     return 0;
   }

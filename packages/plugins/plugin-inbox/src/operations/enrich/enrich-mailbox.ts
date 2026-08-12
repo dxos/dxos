@@ -62,10 +62,16 @@ const handler = InboxOperation.EnrichMailbox.pipe(
 
       const traceWriter = yield* Trace.TraceService;
       const progressKey = InboxOperation.createEnrichProgressKey(mailbox);
+      // Both counters are held across updates: a meter reads the LATEST status, so emitting an
+      // undefined total on a current-only tick would blank the denominator mid-cascade.
+      let current = 0;
+      let total: number | undefined;
       const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
+        current = patch.current ?? current;
+        total = patch.total ?? total;
         traceWriter.write(Trace.StatusUpdate, {
           message: patch.message ?? mailbox.name ?? 'Mailbox',
-          progress: { key: progressKey, current: patch.current ?? 0, total: patch.total },
+          progress: { key: progressKey, current, total },
         });
       };
 
