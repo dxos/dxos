@@ -680,6 +680,22 @@ describe('Reactive Object with ECHO database', () => {
       const ref = Annotation.get(host, RootRefAnnotation).pipe(Option.getOrThrow);
       expect((await ref.load()).id).to.eq(root.id);
     });
+
+    // `useSpaceProperties`/`useObject` hand components a snapshot, so the snapshot read is what an
+    // app actually exercises; the meta dictionary holds the decoded `Ref` there too.
+    test('Annotation.get reads a Ref from a snapshot', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([RootCollection, TestSchema.Example]);
+
+      const root = db.add(Obj.make(RootCollection, { name: 'root' }));
+      const host = db.add(Obj.make(TestSchema.Example, { string: 'host' }));
+      Obj.update(host, (host) => {
+        Annotation.set(host, RootRefAnnotation, Ref.make(root));
+      });
+
+      const ref = Annotation.get(Obj.getSnapshot(host), RootRefAnnotation).pipe(Option.getOrThrow);
+      expect((await ref.load()).id).to.eq(root.id);
+    });
   });
 
   describe('isDeleted', () => {

@@ -10,29 +10,27 @@ import type * as Entity from '../../Entity';
 import { getMetaChecked } from '../common/api/meta';
 import { type Mutable, change } from '../common/proxy/reactive';
 import { isEntity, isSnapshot } from '../Entity/guard';
-import { getDictionary } from './dictionary';
 
 /**
  * Get the value of an annotation from an entity instance or snapshot.
  *
  * The value is read-only (schema types are readonly by default). To mutate it, use {@link update}
  * (which reads it as mutable inside a change transaction); the reactive proxy rejects mutation of the
- * live value outside an `Obj.update`. Snapshots return a decoded detached copy.
+ * live value outside an `Obj.update`. Snapshots return a detached copy.
  */
 export const get = <T>(
   target: Entity.Unknown | Entity.Snapshot,
   annotation: Annotation.Annotation<T>,
 ): Option.Option<T> => {
-  if (isSnapshot(target)) {
-    return getDictionary(getMetaChecked(target).annotations, annotation);
+  if (!isEntity(target) && !isSnapshot(target)) {
+    throw new TypeError('Target is not an annotation target.');
   }
-  if (isEntity(target)) {
-    const annotations = getMetaChecked(target).annotations;
-    // The dictionary slot is typed `unknown`; at runtime it holds the annotation's live value
-    // (the proxy codecs nested refs in both directions), so the read coerces to the declared type.
-    return annotation.key in annotations ? Option.some(annotations[annotation.key] as T) : Option.none();
-  }
-  throw new TypeError('Target is not an annotation target.');
+
+  // The dictionary slot is typed `unknown`; at runtime it holds the annotation's decoded value (the
+  // proxy codecs nested refs in both directions, and a snapshot deep-copies what the proxy yields),
+  // so the read coerces to the declared type rather than decoding a second time.
+  const annotations = getMetaChecked(target).annotations;
+  return annotation.key in annotations ? Option.some(annotations[annotation.key] as T) : Option.none();
 };
 
 /**
