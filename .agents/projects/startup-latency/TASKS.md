@@ -1068,3 +1068,45 @@ window entry, not composer boot). #12438 fixes it via `OperationHandlerSet.async
 
 Expanding the subpath lint across all packages is tracked as a `TODO(wittjosiah)` on
 `DXOS_SUBPATH_PACKAGES` in `dxos-subpath-imports.js`, beside the list it would replace.
+
+## Finding 2026-08-12 (`sideEffects: true` audit; barrel work is NOT a boot lever) — follow-ups
+
+Context: the `dxos-subpath-exports` branch moved every plugin's namespaces into per-directory
+barrels (`export * from './types'`). Two questions fell out.
+
+**MEASURED, NEGATIVE: `sideEffects: false` buys nothing at boot today.** Flipping `plugin-space`
+(9 namespaces, boot-critical) moved `check-boot-budget` by exactly zero — 25 preload entries /
+5.47 MB before and after, with `plugin-space:build` and `composer-app:bundle` both confirmed
+re-run uncached. The subpath migration already removed barrel traversal from the boot path, so
+there is no unused module reached through a barrel left for rollup to drop. Do not re-derive this
+expecting bytes. NOT measured: `check-startup-budget` (modules-at-ready) and total bundle beyond
+the preload closure — a win, if any, would show there.
+
+Also confirmed the barrel refactor itself is boot-neutral: the branch point measures the same
+25 / 5.47 MB as the branch tip. (The 23 / 5.31 MB quoted in this file's earlier notes is an older
+commit and is not comparable.)
+
+**Audit: 88 of 98 plugins have NO module-scope side effect at all.** The other 10 split three ways:
+
+- CSS/font imports (`plugin-excalidraw`, `plugin-explorer`, `plugin-presenter`, `plugin-tldraw`,
+  `plugin-onboarding`) — needs the array form (`"sideEffects": ["**/*.css"]`), never `false`.
+- Third-party augmentation imports (`plugin-terra` x5, `plugin-spacetime`) —
+  `import '@babylonjs/core/Meshes/thinInstanceMesh'` patches `Mesh.prototype`. Not removable;
+  scope with the array form instead.
+- Registration at import time — the refactorable ones, all the same anti-pattern:
+  1. `plugin-deck` `DeckPlugin.ts` — `setAutoFreeze(false)` at module scope; carries its own
+     `TODO(Zan)` to move it. Belongs in activation.
+  2. `plugin-library` `atproto/book-lens.ts` — `Panproto.registerTextFormat` / `registerRefType`.
+     The comment there explicitly leans on the flag ("plugin-library is `sideEffects: true`, so it
+     is retained"), which is the flag masking a real dependency. Export a `register()` and call it
+     from the capability that needs the lens.
+  3. `plugin-map-solid` — `components/MapSurface/index.ts` is nothing but `import './MapSurface'`,
+     existing only to fire a top-level `customElement('dx-map-surface', ...)`. Export
+     `registerMapSurface()` and call it from `capabilities/surface.tsx`.
+
+Follow-ups, in dependency order:
+
+- [ ] Move the three import-time registrations into activation (deck, library, map-solid).
+- [ ] Scope the CSS/augmentation packages to the array form rather than `true`.
+- [ ] Flip the remaining 88 to `"sideEffects": false` and measure `check-startup-budget`, not
+      `check-boot-budget` — the latter is already known flat.
