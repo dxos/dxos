@@ -254,18 +254,18 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Button data-testid='process' disabled={!invoker || !mailbox} onClick={() => void handleProcess()}>
             Process
           </Toolbar.Button>
-          <Toolbar.Button data-testid='extract' disabled={!invoker || !mailbox} onClick={() => void handleExtract()}>
-            Extract
-          </Toolbar.Button>
           <Toolbar.Button data-testid='crm' disabled={!invoker || !mailbox} onClick={() => void handleCrm()}>
             CRM
+          </Toolbar.Button>
+          <Toolbar.Button data-testid='extract' disabled={!invoker || !mailbox} onClick={() => void handleExtract()}>
+            Extract
           </Toolbar.Button>
           <Toolbar.Button
             data-testid='dispatch'
             disabled={!invoker || !mailbox}
             onClick={() => void handleAutoExtract()}
           >
-            Dispatch
+            Auto Extract
           </Toolbar.Button>
           <Toolbar.Button data-testid='analyze' disabled={!invoker || !mailbox} onClick={() => void handleAnalyze()}>
             Analyze
@@ -337,11 +337,11 @@ const DefaultStory = () => (
     layout={[
       [ProcessRole, StoryRole.Mailbox],
       [
-        StoryRole.Facts,
         // TODO(burdon): What is this for?
         StoryRole.Controls,
+        StoryRole.Facts,
       ],
-      [ModuleRole.Objects, ModuleRole.Logging],
+      [ModuleRole.Logging, ModuleRole.Objects],
     ]}
   />
 );
