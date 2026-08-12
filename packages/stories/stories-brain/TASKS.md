@@ -1,9 +1,8 @@
 # stories-brain research tasks
 
-_Resume: PR #12546 is IN THE MERGE QUEUE, so the branch is push-frozen — four local-only commits
-(`0d8c8ecf2a`, `fe7e64f2e9`, `1c754ce7c1`, `7cbff7f383`, all story/summary polish) go onto a
-follow-up PR once it merges. Next action: the 8 CodeRabbit comments on #12546 (list in "Mailbox
-pipeline suite → Follow-ups"). Uncommitted: none. Last: summaries are `text/markdown`._
+_Resume: PR #12546 open, all story/summary commits pushed and all 8 review comments addressed +
+resolved. Next action: watch Check to green, then land. Uncommitted: none. Last: review fixes
+(`bc19f424a1`) — canonical tier order, `withMailboxLock`, no casts or non-null assertions._
 
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
@@ -122,16 +121,17 @@ analyze`) with a mailbox-global default and per-project overrides (user chose op
 
 ### Follow-ups
 
-- [ ] **CodeRabbit review on #12546 (8 comments)** — verified substantive: changeset names two
-      Group B packages (should name one); `enrich-mailbox` builds stages in fixed order regardless of
-      the caller's `tiers` order; `summarize-mailbox` casts `properties?.snippet`/`subject` instead
-      of narrowing with `typeof`; mailbox-keyed single-flight for `SummarizeMailbox`/`EnrichMailbox`
-      (same gap as the ProcessMailbox item above); non-null assertions in `Mailbox.test.ts:96` and
-      `Mailbox.summaryIndex`; type suppressions in `create-tracking-project.ts`; a comment in
-      `ContentBlock.ts` missing its period. Reply per thread + resolve after fixing.
-- [ ] **Push blocked** — #12546 sits in the merge queue, which freezes the branch. Four local commits
-      (story polish + `text/markdown` summaries) need either a dequeue-push-reland or a follow-up PR
-      after it merges.
+- [x] **CodeRabbit review on #12546 (8 comments)** — all fixed, replied per thread, resolved
+      (`bc19f424a1`). The two that were more than mechanical: `tiers` is now documented and enforced
+      as a SET flattened through `InboxOperation.MAILBOX_TIER_ORDER` (honoring a caller's order would
+      let classification run before the contact gate it consumes — test:
+      `runs the tiers in cascade order however the caller lists them`), and `withMailboxLock`
+      (`operations/mailbox-lock.ts`) serializes `SummarizeMailbox` per mailbox URI so overlapping
+      runs cannot double-summarize or double-provision the annotation feed.
+- [ ] **Operation-layer single-flight (still open)** — the lock above is in-process and deliberately
+      NOT taken by `EnrichMailbox`, which spawns `SummarizeMailbox` and would deadlock on its own
+      child. A re-entrant or durable lease at the operation layer would close both this and the
+      `ProcessMailbox` gap above.
 - [ ] **Create-project-from-message UI** — the operation side is done; the message-context form is
       not built (PLAN.md deliverable 3).
 - [ ] **Summary provenance in the article** — the annotation records its `model` and `created`;
