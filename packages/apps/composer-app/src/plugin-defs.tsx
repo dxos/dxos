@@ -41,7 +41,7 @@ import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
-import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
+import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
@@ -187,7 +187,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     KanbanPlugin.make(),
     LibraryPlugin.make(),
     MapPlugin.make(),
-    isLocal && MapPluginSolid(),
+    isLocal && MapPluginSolid.make(),
     MarkdownPlugin.make(),
     MeetingPlugin.make(),
     MermaidPlugin.make(),

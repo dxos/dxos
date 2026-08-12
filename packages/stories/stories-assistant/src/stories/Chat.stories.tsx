@@ -84,9 +84,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
-        plugins: [MarkdownPlugin()],
+        plugins: [MarkdownPlugin.make()],
       };
     },
   }),
@@ -108,9 +108,9 @@ export const WithSubAgents: Story = {
       instructions: 'You delegate units of work to sub-agents using the available tools.',
     },
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
-        plugins: [MarkdownPlugin()],
+        plugins: [MarkdownPlugin.make()],
       };
     },
     skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
@@ -128,9 +128,9 @@ export const WithExecutionGraph: Story = {
   decorators: createDecorators({
     config: config.remote,
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
-        plugins: [MarkdownPlugin()],
+        plugins: [MarkdownPlugin.make()],
       };
     },
     skills: [MarkdownSkill.key],
@@ -143,9 +143,9 @@ export const WithExecutionGraph: Story = {
 export const WithWebSearch: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
-        plugins: [MarkdownPlugin()],
+        plugins: [MarkdownPlugin.make()],
       };
     },
     config: config.remote,
@@ -159,9 +159,9 @@ export const WithWebSearch: Story = {
 export const WithPlanning: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
-        plugins: [MarkdownPlugin()],
+        plugins: [MarkdownPlugin.make()],
       };
     },
     skills: [MarkdownSkill.key, PlanningSkill.key],
@@ -293,9 +293,9 @@ export const WithSubAgentsTest2: Story = {
       instructions: 'You delegate units of work to sub-agents using the available tools.',
     },
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/MarkdownPlugin');
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
-        plugins: [MarkdownPlugin()],
+        plugins: [MarkdownPlugin.make()],
       };
     },
     skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],

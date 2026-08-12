@@ -44,7 +44,7 @@ let storySpace: Space | undefined;
 const decorators = createDecorators({
   skills: [AssistantSkill.key],
   lazyPlugins: async () => {
-    const [{ Instructions, Project, Routine }, { Collection, Text }, { ProjectsPlugin }] = await Promise.all([
+    const [{ Instructions, Project, Routine }, { Collection, Text }, ProjectsPlugin] = await Promise.all([
       import('@dxos/compute'),
       Promise.all([import('@dxos/echo'), import('@dxos/schema')]).then(([echo, schema]) => ({
         Collection: echo.Collection,
@@ -53,7 +53,7 @@ const decorators = createDecorators({
       import('@dxos/plugin-projects/ProjectsPlugin'),
     ]);
     return {
-      plugins: [ProjectsPlugin()],
+      plugins: [ProjectsPlugin.make()],
       types: [Project.Project, Instructions.Instructions, Routine.Routine, Collection.Collection, Text.Text],
     };
   },
