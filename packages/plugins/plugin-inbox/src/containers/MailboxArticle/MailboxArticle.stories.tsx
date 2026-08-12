@@ -6,7 +6,7 @@ import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -17,8 +17,8 @@ import { useCapability } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -26,6 +26,9 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Panel, Toolbar } from '@dxos/react-ui';
+import { useSelection } from '@dxos/react-ui-attention';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -69,6 +72,23 @@ const SEARCH_TERM = 'invoice';
  */
 const HTML_ONLY_TERM = 'htmlonlyterm';
 
+const ATTENDABLE_ID = 'story';
+
+/** Plain projection of the selected message — the live proxy carries internals that add noise. */
+const messageJson = (message: Message.Message, summary?: string) => ({
+  id: message.id,
+  created: message.created,
+  threadId: message.threadId,
+  sender: message.sender,
+  properties: message.properties,
+  blocks: message.blocks.map((block) =>
+    block._tag === 'text'
+      ? { _tag: block._tag, disposition: block.disposition, length: block.text.length }
+      : { _tag: block._tag },
+  ),
+  summary,
+});
+
 type StoryArgs = {
   /** Number of messages to seed. */
   count?: number;
@@ -95,18 +115,57 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
     }
   }, [conversations, setSettings]);
 
+  // Clicking a row dispatches `LayoutOperation.Select` against the article's `attendableId`, so
+  // reading the same id here follows the list's selection without the story owning any state.
+  const selectedId = useSelection(ATTENDABLE_ID, 'single');
+  const feed = useResolveRef(mailbox?.feed);
+  const messages = useQuery(
+    space?.db,
+    feed
+      ? Query.select(Filter.type(Message.Message)).from([Scope.feed(Obj.getURI(feed, { prefer: 'absolute' }))])
+      : Query.select(Filter.nothing()),
+  );
+  const selected = messages.find((message) => message.id === selectedId);
+
+  // Summaries live on the mailbox's annotation feed keyed by `parentMessage`, so the JSON shows
+  // everything known about the message rather than just the message object.
+  const annotationsFeed = useResolveRef(mailbox?.annotations);
+  const annotations = useQuery(
+    space?.db,
+    annotationsFeed
+      ? Query.select(Filter.type(Message.Message)).from([
+          Scope.feed(Obj.getURI(annotationsFeed, { prefer: 'absolute' })),
+        ])
+      : Query.select(Filter.nothing()),
+  );
+  const summaries = useMemo(() => Mailbox.summaryIndex(annotations), [annotations]);
+
   if (!space?.db || !mailbox) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
   }
 
-  return <MailboxArticle role='article' subject={mailbox} attendableId='story' />;
+  return (
+    <div className='dx-container grid grid-cols-2'>
+      <MailboxArticle role='article' subject={mailbox} attendableId={ATTENDABLE_ID} />
+      <Panel.Root role='article'>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Toolbar.Text>{selected ? 'Selected message' : 'No selection'}</Toolbar.Text>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content data-testid='message-json' classNames='dx-container overflow-auto p-2 text-sm'>
+          {selected && <JsonHighlighter data={messageJson(selected, summaries.get(selected.id))} />}
+        </Panel.Content>
+      </Panel.Root>
+    </div>
+  );
 };
 
 const meta = {
   title: 'plugins/plugin-inbox/containers/MailboxArticle',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false, bound = false } }) => ({
       plugins: [
         ...corePlugins(),
