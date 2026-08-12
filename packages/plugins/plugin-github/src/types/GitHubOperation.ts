@@ -89,7 +89,7 @@ export const SyncGitHubRepositories = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection whose credentials sync every bound repository.',
     }),
     priority: Schema.String.pipe(

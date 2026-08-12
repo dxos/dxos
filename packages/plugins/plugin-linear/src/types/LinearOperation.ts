@@ -86,7 +86,7 @@ export const SyncLinearTeams = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection whose credentials sync every bound team.',
     }),
     priority: Schema.String.pipe(

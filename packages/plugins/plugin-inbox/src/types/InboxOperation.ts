@@ -133,7 +133,7 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection whose credentials sync every bound Mailbox.',
     }),
     priority: Schema.String.pipe(
@@ -178,7 +178,7 @@ export const JmapSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection whose credentials sync every bound Mailbox.',
     }),
     priority: Schema.String.pipe(
@@ -231,7 +231,7 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection whose credentials sync every bound Calendar.',
     }),
     priority: Schema.String.pipe(
@@ -322,7 +322,7 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection whose credentials sync every bound contact group.',
     }),
     priority: Schema.String.pipe(

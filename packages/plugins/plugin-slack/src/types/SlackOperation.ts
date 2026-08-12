@@ -87,7 +87,7 @@ export const SyncSlackChannel = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection whose credentials sync every bound Channel.',
     }),
     priority: Schema.String.pipe(

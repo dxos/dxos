@@ -297,7 +297,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // Board B fails — the sync handler fails and stamps the error on the binding.
     await syncTrelloBoardHandler
       .handler({ connection: Ref.make(connectionB) })
-      .pipe(stubOperationService, Effect.provide(layer), Effect.either, EffectEx.runAndForwardErrors);
+      .pipe(stubOperationService, Effect.provide(layer), Effect.result, EffectEx.runAndForwardErrors);
     expect(bindingB.lastError).toContain('boom');
     expect(bindingB.lastTick).toBeUndefined();
   });

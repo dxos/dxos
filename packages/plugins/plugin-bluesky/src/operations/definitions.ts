@@ -74,7 +74,7 @@ export const SyncBlueskyTargets = Operation.make({
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotations({
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection whose credentials sync every bound Bluesky target.',
     }),
     priority: Schema.String.pipe(

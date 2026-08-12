@@ -517,7 +517,7 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
 
   const toastIdSuffix = bound.id;
 
-  // Wrap the body in `Effect.either` so we can emit a toast on either path
+  // Wrap the body in `Effect.result` so we can emit a toast on either path
   // before returning. The toast distinguishes "the sync ran" from "the sync
   // crashed" (e.g. credential parse, fetch boards, no db); the persisted
   // `lastError` on the binding carries the diagnostic detail.
