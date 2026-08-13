@@ -11,6 +11,7 @@ import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal'
 import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
+import { ConvergenceKeyIntentStore } from './convergence-key-intent-store';
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import {
   type EntityMeta,
@@ -23,7 +24,6 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
-import { NaturalKeyIntentStore } from './natural-key-intent-store';
 
 /**
  * Result of a single indexing pass over a data source.
@@ -79,18 +79,18 @@ const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly 
 };
 
 /**
- * The natural key an indexed object contributes to the merge trigger, if any.
+ * The convergence key an indexed object contributes to the merge trigger, if any.
  *
  * Queue (feed) entities are out of merge scope — they have no automerge document to merge — and
  * relations are excluded: they are not merge subjects (endpoints would not be reconciled). The
  * empty string is not a key; grouping on it would merge unrelated entities.
  */
-const naturalKeyOf = (obj: IndexerObject): string | undefined => {
+const convergenceKeyOf = (obj: IndexerObject): string | undefined => {
   if (!obj.documentId || (obj.data as Record<string, unknown>)[ATTR_RELATION_SOURCE] !== undefined) {
     return undefined;
   }
-  const naturalKey = (obj.data[ATTR_META] as { naturalKey?: string } | undefined)?.naturalKey;
-  return typeof naturalKey === 'string' && naturalKey.length > 0 ? naturalKey : undefined;
+  const convergenceKey = (obj.data[ATTR_META] as { convergenceKey?: string } | undefined)?.convergenceKey;
+  return typeof convergenceKey === 'string' && convergenceKey.length > 0 ? convergenceKey : undefined;
 };
 
 /**
@@ -127,7 +127,7 @@ export interface IndexEngineParams {
   reverseRefIndex: ReverseRefIndex;
 
   /** Defaults to a fresh store; injectable for tests. */
-  naturalKeyIntents?: NaturalKeyIntentStore;
+  convergenceKeyIntents?: ConvergenceKeyIntentStore;
 }
 
 export class IndexEngine {
@@ -135,14 +135,14 @@ export class IndexEngine {
   readonly #objectMetaIndex: EntityMetaIndex;
   readonly #ftsIndex: FtsIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
-  readonly #naturalKeyIntents: NaturalKeyIntentStore;
+  readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
 
   constructor(params?: IndexEngineParams) {
     this.#tracker = params?.tracker ?? new IndexTracker();
     this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
     this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
     this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
-    this.#naturalKeyIntents = params?.naturalKeyIntents ?? new NaturalKeyIntentStore();
+    this.#convergenceKeyIntents = params?.convergenceKeyIntents ?? new ConvergenceKeyIntentStore();
   }
 
   migrate() {
@@ -151,7 +151,7 @@ export class IndexEngine {
       yield* this.#objectMetaIndex.migrate();
       yield* this.#ftsIndex.migrate();
       yield* this.#reverseRefIndex.migrate();
-      yield* this.#naturalKeyIntents.migrate();
+      yield* this.#convergenceKeyIntents.migrate();
     });
   }
 
@@ -186,36 +186,36 @@ export class IndexEngine {
   }
 
   /**
-   * Live rows carrying any of the given natural keys in one space — the detection point-lookup
-   * for natural-key merging.
+   * Live rows carrying any of the given convergence keys in one space — the detection point-lookup
+   * for convergence-key merging.
    */
-  queryByNaturalKeys(
+  queryByConvergenceKeys(
     spaceId: SpaceId,
-    naturalKeys: readonly string[],
+    convergenceKeys: readonly string[],
   ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
-    return this.#objectMetaIndex.queryByNaturalKeys(spaceId, naturalKeys);
+    return this.#objectMetaIndex.queryByConvergenceKeys(spaceId, convergenceKeys);
   }
 
   /**
-   * Pending natural-key merge intents (see {@link NaturalKeyIntentStore.record}).
+   * Pending convergence-key merge intents (see {@link ConvergenceKeyIntentStore.record}).
    */
-  takeNaturalKeyIntents(): Effect.Effect<
+  takeConvergenceKeyIntents(): Effect.Effect<
     { maxId: number; intents: Map<SpaceId, Set<string>> },
     SqlError.SqlError,
     SqlClient.SqlClient
   > {
-    return this.#naturalKeyIntents.take();
+    return this.#convergenceKeyIntents.take();
   }
 
   /**
-   * Clear a serviced natural-key intent up to the id returned by {@link takeNaturalKeyIntents}.
+   * Clear a serviced convergence-key intent up to the id returned by {@link takeConvergenceKeyIntents}.
    */
-  clearNaturalKeyIntents(
+  clearConvergenceKeyIntents(
     spaceId: SpaceId,
-    naturalKey: string,
+    convergenceKey: string,
     upToId: number,
   ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
-    return this.#naturalKeyIntents.clear(spaceId, naturalKey, upToId);
+    return this.#convergenceKeyIntents.clear(spaceId, convergenceKey, upToId);
   }
 
   queryType(
@@ -392,18 +392,18 @@ export class IndexEngine {
         return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
       }
 
-      // Natural keys in this batch, deduplicated — recorded as durable merge intents inside the
+      // Convergence keys in this batch, deduplicated — recorded as durable merge intents inside the
       // transaction below, atomically with the cursor advance that would otherwise be the only
       // record that these writes were ever seen.
-      const intents: { spaceId: SpaceId; naturalKey: string }[] = [];
+      const intents: { spaceId: SpaceId; convergenceKey: string }[] = [];
       const seenIntents = new Set<string>();
       for (const obj of objects) {
-        const naturalKey = naturalKeyOf(obj);
-        if (naturalKey !== undefined) {
-          const composite = JSON.stringify([obj.spaceId, naturalKey]);
+        const convergenceKey = convergenceKeyOf(obj);
+        if (convergenceKey !== undefined) {
+          const composite = JSON.stringify([obj.spaceId, convergenceKey]);
           if (!seenIntents.has(composite)) {
             seenIntents.add(composite);
-            intents.push({ spaceId: obj.spaceId, naturalKey });
+            intents.push({ spaceId: obj.spaceId, convergenceKey });
           }
         }
       }
@@ -417,7 +417,7 @@ export class IndexEngine {
           // Look up recordIds for the objects.
           yield* this.#objectMetaIndex.lookupRecordIds(objects);
 
-          yield* this.#naturalKeyIntents.record(intents);
+          yield* this.#convergenceKeyIntents.record(intents);
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(

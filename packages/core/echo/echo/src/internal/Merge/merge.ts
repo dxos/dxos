@@ -18,8 +18,8 @@ import { getSnapshot } from '../Obj';
 export type MergeCandidate = {
   readonly id: EntityId;
 
-  /** The declared natural key; candidates in one merge group all share it. */
-  readonly naturalKey?: string;
+  /** The declared convergence key; candidates in one merge group all share it. */
+  readonly convergenceKey?: string;
 
   /** User-defined data. A property present with value `undefined` counts as undefined. */
   readonly data: Readonly<Record<string, unknown>>;
@@ -52,28 +52,28 @@ export const toMergeCandidate = (entity: (Entity.Unknown | Entity.Snapshot) & { 
 
   return {
     id: entity.id,
-    naturalKey: meta.naturalKey,
+    convergenceKey: meta.convergenceKey,
     data: Object.fromEntries(data),
     keys: meta.keys,
   };
 };
 
 /**
- * Partition entities into merge groups by natural key.
+ * Partition entities into merge groups by convergence key.
  *
- * Entities that declare no natural key are not merge candidates and are omitted.
+ * Entities that declare no convergence key are not merge candidates and are omitted.
  */
-const groupByNaturalKey = (candidates: readonly MergeCandidate[]): Map<string, MergeCandidate[]> => {
+const groupByConvergenceKey = (candidates: readonly MergeCandidate[]): Map<string, MergeCandidate[]> => {
   const groups = new Map<string, MergeCandidate[]>();
   for (const candidate of candidates) {
-    if (candidate.naturalKey === undefined) {
+    if (candidate.convergenceKey === undefined) {
       continue;
     }
-    const group = groups.get(candidate.naturalKey);
+    const group = groups.get(candidate.convergenceKey);
     if (group) {
       group.push(candidate);
     } else {
-      groups.set(candidate.naturalKey, [candidate]);
+      groups.set(candidate.convergenceKey, [candidate]);
     }
   }
   return groups;
@@ -83,10 +83,10 @@ const groupByNaturalKey = (candidates: readonly MergeCandidate[]): Map<string, M
  * Groups holding more than one entity — i.e. the ones that actually need merging.
  */
 export const findMergeDuplicates = (candidates: readonly MergeCandidate[]): Map<string, MergeCandidate[]> => {
-  const groups = groupByNaturalKey(candidates);
-  for (const [naturalKey, group] of groups) {
+  const groups = groupByConvergenceKey(candidates);
+  for (const [convergenceKey, group] of groups) {
     if (group.length < 2) {
-      groups.delete(naturalKey);
+      groups.delete(convergenceKey);
     }
   }
   return groups;

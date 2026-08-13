@@ -560,7 +560,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
-   * Follow a natural-key merge redirect to the surviving entity, within the working set.
+   * Follow a convergence-key merge redirect to the surviving entity, within the working set.
    *
    * The synchronous counterpart of {@link _followMergeRedirectAsync}: it only sees entities
    * already loaded, so a miss here falls through to the resolve trap rather than being final.
@@ -713,7 +713,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
-   * Follow a natural-key merge redirect to the surviving entity, loading tombstones as needed.
+   * Follow a convergence-key merge redirect to the surviving entity, loading tombstones as needed.
    *
    * A merged-away loser is tombstoned but keeps replicating precisely so a reference that was
    * never rewritten still reaches the winner. An entity that is merely deleted carries no

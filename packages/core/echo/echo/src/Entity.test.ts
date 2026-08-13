@@ -130,60 +130,60 @@ describe('Entity', () => {
     });
   });
 
-  describe('getNaturalKey / setNaturalKey', () => {
-    test('an entity declares no natural key by default', () => {
-      expect(Entity.getNaturalKey(makeObject())).toBeUndefined();
+  describe('getConvergenceKey / setConvergenceKey', () => {
+    test('an entity declares no convergence key by default', () => {
+      expect(Entity.getConvergenceKey(makeObject())).toBeUndefined();
     });
 
-    test('round-trips a natural key', () => {
+    test('round-trips a convergence key', () => {
       const object = makeObject();
-      Entity.setNaturalKey(object, 'org.example.seed');
-      expect(Entity.getNaturalKey(object)).toBe('org.example.seed');
+      Entity.setConvergenceKey(object, 'org.example.seed');
+      expect(Entity.getConvergenceKey(object)).toBe('org.example.seed');
     });
 
     test('re-setting replaces rather than accumulates', () => {
       const object = makeObject();
-      Entity.setNaturalKey(object, 'org.example.seed');
-      Entity.setNaturalKey(object, 'org.example.seed@2');
-      expect(Entity.getNaturalKey(object)).toBe('org.example.seed@2');
+      Entity.setConvergenceKey(object, 'org.example.seed');
+      Entity.setConvergenceKey(object, 'org.example.seed@2');
+      expect(Entity.getConvergenceKey(object)).toBe('org.example.seed@2');
     });
 
-    test('undefined clears the natural key', () => {
+    test('undefined clears the convergence key', () => {
       const object = makeObject();
-      Entity.setNaturalKey(object, 'org.example.seed');
-      Entity.setNaturalKey(object, undefined);
-      expect(Entity.getNaturalKey(object)).toBeUndefined();
+      Entity.setConvergenceKey(object, 'org.example.seed');
+      Entity.setConvergenceKey(object, undefined);
+      expect(Entity.getConvergenceKey(object)).toBeUndefined();
     });
 
-    test('the natural key is independent of the registry key and version', () => {
+    test('the convergence key is independent of the registry key and version', () => {
       const object = makeObject();
       Obj.update(object, (object) => {
         Obj.getMeta(object).key = 'org.example.registry.entry';
         Obj.getMeta(object).version = '1.2.0';
       });
-      Entity.setNaturalKey(object, 'org.example.seed@2');
-      expect(Entity.getNaturalKey(object)).toBe('org.example.seed@2');
+      Entity.setConvergenceKey(object, 'org.example.seed@2');
+      expect(Entity.getConvergenceKey(object)).toBe('org.example.seed@2');
       expect(Obj.getMeta(object).key).toBe('org.example.registry.entry');
       expect(Obj.getMeta(object).version).toBe('1.2.0');
     });
 
     test('survives a snapshot round-trip', () => {
       const object = makeObject();
-      Entity.setNaturalKey(object, 'org.example.seed');
-      expect(Entity.getNaturalKey(Obj.getSnapshot(object))).toBe('org.example.seed');
+      Entity.setConvergenceKey(object, 'org.example.seed');
+      expect(Entity.getConvergenceKey(Obj.getSnapshot(object))).toBe('org.example.seed');
     });
 
     test('rejects relations — they are not merge subjects', () => {
       const relation = makeRelation(makeObject());
-      expect(() => Entity.setNaturalKey(relation, 'org.example.employment')).toThrow(TypeError);
+      expect(() => Entity.setConvergenceKey(relation, 'org.example.employment')).toThrow(TypeError);
     });
 
     test('rejects type entities — they are not merge subjects', () => {
-      expect(() => Entity.setNaturalKey(TestSchema.Person, 'org.example.person')).toThrow(TypeError);
+      expect(() => Entity.setConvergenceKey(TestSchema.Person, 'org.example.person')).toThrow(TypeError);
     });
 
     test('rejects an empty-string key', () => {
-      expect(() => Entity.setNaturalKey(makeObject(), '')).toThrow(TypeError);
+      expect(() => Entity.setConvergenceKey(makeObject(), '')).toThrow(TypeError);
     });
   });
 });

@@ -529,7 +529,7 @@ export class ObjectCore {
   }
 
   /**
-   * The entity this one was merged into, set on the loser of a natural-key merge.
+   * The entity this one was merged into, set on the loser of a convergence-key merge.
    * A bare id rather than an encoded reference, so reference-rewriting traversals do not mistake
    * the redirect for a data ref.
    */

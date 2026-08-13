@@ -12,7 +12,7 @@ import { type EntityMeta } from '@dxos/index-core';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-export type NaturalKeyMergerDeps = {
+export type ConvergenceKeyMergerDeps = {
   loadDoc: (ctx: Context, documentId: DocumentId) => Promise<DocHandle<DatabaseDirectory> | null>;
 
   /**
@@ -23,13 +23,13 @@ export type NaturalKeyMergerDeps = {
   flushDoc: (ctx: Context, documentId: DocumentId) => Promise<void>;
 
   /**
-   * Detection point lookup (`IndexEngine.queryByNaturalKeys`), already bound to the host
+   * Detection point lookup (`IndexEngine.queryByConvergenceKeys`), already bound to the host
    * runtime. Promise-typed so tests can supply rows without a database.
    */
-  queryByNaturalKeys: (spaceId: SpaceId, naturalKeys: readonly string[]) => Promise<readonly EntityMeta[]>;
+  queryByConvergenceKeys: (spaceId: SpaceId, convergenceKeys: readonly string[]) => Promise<readonly EntityMeta[]>;
 };
 
-export type NaturalKeyMergeResult = {
+export type ConvergenceKeyMergeResult = {
   /** Duplicate groups that required writes (a merge or a late-edit fold). */
   mergedGroups: number;
 
@@ -38,17 +38,17 @@ export type NaturalKeyMergeResult = {
 };
 
 /**
- * Merges natural-key duplicates surfaced by the indexing intent log — the worker-side trigger.
+ * Merges convergence-key duplicates surfaced by the indexing intent log — the worker-side trigger.
  *
  * The merge operates on the raw document structures via the storage-independent core in
  * `@dxos/echo/internal`; the writes replicate to clients like any other change, and the
  * `documentsSaved` event re-indexes the tombstones, which is what removes the losers from query
  * results everywhere.
  */
-export class NaturalKeyMerger {
-  readonly #deps: NaturalKeyMergerDeps;
+export class ConvergenceKeyMerger {
+  readonly #deps: ConvergenceKeyMergerDeps;
 
-  constructor(deps: NaturalKeyMergerDeps) {
+  constructor(deps: ConvergenceKeyMergerDeps) {
     this.#deps = deps;
   }
 
@@ -73,63 +73,63 @@ export class NaturalKeyMerger {
    */
   async mergeDuplicates(
     ctx: Context,
-    naturalKeys: ReadonlyMap<SpaceId, ReadonlySet<string>>,
-  ): Promise<NaturalKeyMergeResult> {
+    convergenceKeys: ReadonlyMap<SpaceId, ReadonlySet<string>>,
+  ): Promise<ConvergenceKeyMergeResult> {
     let mergedGroups = 0;
     const serviced = new Map<SpaceId, Set<string>>();
-    for (const [spaceId, keys] of naturalKeys) {
+    for (const [spaceId, keys] of convergenceKeys) {
       if (keys.size === 0) {
         continue;
       }
 
       let rows;
       try {
-        rows = await this.#deps.queryByNaturalKeys(spaceId, [...keys]);
+        rows = await this.#deps.queryByConvergenceKeys(spaceId, [...keys]);
       } catch (err) {
-        log.warn('natural-key detection failed; keys stay pending', { spaceId, keys: keys.size, err });
+        log.warn('convergence-key detection failed; keys stay pending', { spaceId, keys: keys.size, err });
         continue;
       }
 
       const groups = new Map<string, { objectId: EntityId; documentId: string }[]>();
       for (const row of rows) {
-        if (!row.naturalKey || !row.documentId) {
+        if (!row.convergenceKey || !row.documentId) {
           continue;
         }
-        const group = groups.get(row.naturalKey) ?? [];
+        const group = groups.get(row.convergenceKey) ?? [];
         if (!group.some(({ objectId }) => objectId === row.objectId)) {
           group.push({ objectId: row.objectId, documentId: row.documentId });
         }
-        groups.set(row.naturalKey, group);
+        groups.set(row.convergenceKey, group);
       }
 
       const servicedKeys = new Set<string>();
       serviced.set(spaceId, servicedKeys);
-      for (const naturalKey of keys) {
-        const group = groups.get(naturalKey);
+      for (const convergenceKey of keys) {
+        const group = groups.get(convergenceKey);
         if (group === undefined || group.length < 2) {
           // A lone row, or rows that no longer carry the key — nothing to merge.
-          servicedKeys.add(naturalKey);
+          servicedKeys.add(convergenceKey);
           continue;
         }
         try {
-          if (await this.mergeGroup(ctx, naturalKey, group)) {
+          if (await this.mergeGroup(ctx, convergenceKey, group)) {
             mergedGroups++;
           }
-          servicedKeys.add(naturalKey);
+          servicedKeys.add(convergenceKey);
         } catch (err) {
-          log.warn('natural-key merge group failed; will retry', { spaceId, naturalKey, err });
+          log.warn('convergence-key merge group failed; will retry', { spaceId, convergenceKey, err });
         }
       }
     }
 
     if (mergedGroups > 0) {
-      log('merged natural-key duplicates', { groups: mergedGroups });
+      log('merged convergence-key duplicates', { groups: mergedGroups });
     }
     return { mergedGroups, serviced };
   }
 
   /**
-   * Merge one natural-key group: the live candidates fold into the minimum-id winner, and
+   * Merge one convergence-key group: the live candidates fold into the minimum-id winner, and
    * already-redirected members get their late edits folded and their tombstones re-asserted.
    *
    * Public as the unit under test — `mergeDuplicates` adds detection and failure containment
@@ -137,7 +137,7 @@ export class NaturalKeyMerger {
    */
   async mergeGroup(
     ctx: Context,
-    naturalKey: string,
+    convergenceKey: string,
     group: readonly { objectId: EntityId; documentId: string }[],
   ): Promise<boolean> {
     // Load phase: awaited doc loads, during which replicated changes are free to land — nothing
@@ -159,7 +159,7 @@ export class NaturalKeyMerger {
     const candidates: GroupMember[] = [];
     const redirectedIds: EntityId[] = [];
     for (const [objectId, handle] of handles) {
-      const entity = _readEntity(handle, objectId, naturalKey);
+      const entity = _readEntity(handle, objectId, convergenceKey);
       if (!entity) {
         continue;
       }
@@ -171,9 +171,9 @@ export class NaturalKeyMerger {
       }
     }
 
-    let changed = candidates.length >= 2 && (await this.#mergeCandidates(ctx, naturalKey, candidates));
+    let changed = candidates.length >= 2 && (await this.#mergeCandidates(ctx, convergenceKey, candidates));
     for (const objectId of redirectedIds) {
-      changed = (await this.#foldRedirected(ctx, objectId, handles, naturalKey)) || changed;
+      changed = (await this.#foldRedirected(ctx, objectId, handles, convergenceKey)) || changed;
     }
     return changed;
   }
@@ -188,11 +188,11 @@ export class NaturalKeyMerger {
    * The only await is the durability flush between the winner write and the loser tombstones; the
    * loser callbacks re-verify eligibility after it.
    */
-  async #mergeCandidates(ctx: Context, naturalKey: string, candidates: readonly GroupMember[]): Promise<boolean> {
+  async #mergeCandidates(ctx: Context, convergenceKey: string, candidates: readonly GroupMember[]): Promise<boolean> {
     const result = mergeCandidates(
       candidates.map(({ objectId, entity }) => ({
         id: objectId,
-        naturalKey,
+        convergenceKey,
         data: (entity.data ?? {}) as Record<string, unknown>,
         keys: entity.meta?.keys,
       })),
@@ -231,7 +231,7 @@ export class NaturalKeyMerger {
         !entity ||
         entity.system?.mergedInto !== undefined ||
         entity.system?.deleted ||
-        entity.meta?.naturalKey !== naturalKey
+        entity.meta?.convergenceKey !== convergenceKey
       ) {
         return;
       }
@@ -306,7 +306,7 @@ export class NaturalKeyMerger {
           !entity ||
           entity.system?.mergedInto !== undefined ||
           entity.system?.deleted ||
-          entity.meta?.naturalKey !== naturalKey
+          entity.meta?.convergenceKey !== convergenceKey
         ) {
           return;
         }
@@ -355,13 +355,13 @@ export class NaturalKeyMerger {
     ctx: Context,
     loserId: EntityId,
     handles: ReadonlyMap<EntityId, DocHandle<DatabaseDirectory>>,
-    naturalKey: string,
+    convergenceKey: string,
   ): Promise<boolean> {
     const handle = handles.get(loserId);
     const doc = handle?.doc();
     const entity = doc?.objects?.[loserId];
     const mergedInto = entity?.system?.mergedInto;
-    if (!handle || !doc || !entity || mergedInto === undefined || entity.meta?.naturalKey !== naturalKey) {
+    if (!handle || !doc || !entity || mergedInto === undefined || entity.meta?.convergenceKey !== convergenceKey) {
       return false;
     }
     const mergedAtHeads = _watermarkUnion(entity);
@@ -459,10 +459,10 @@ type GroupMember = {
 const _readEntity = (
   handle: DocHandle<DatabaseDirectory>,
   objectId: EntityId,
-  naturalKey: string,
+  convergenceKey: string,
 ): EntityStructure | undefined => {
   const entity = handle.doc()?.objects?.[objectId];
-  if (!entity || (entity.system?.kind ?? 'object') !== 'object' || entity.meta?.naturalKey !== naturalKey) {
+  if (!entity || (entity.system?.kind ?? 'object') !== 'object' || entity.meta?.convergenceKey !== convergenceKey) {
     return undefined;
   }
   return entity;

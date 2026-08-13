@@ -134,7 +134,7 @@ export class ReverseRefIndex implements Index {
               yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
 
               // Document objects carry `@meta` only so the entity-meta index can extract the
-              // natural key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
+              // convergence key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
               // return everything merely tagged with it. Queue blocks always carried meta, so
               // their extraction is unchanged.
               const extractable = object.documentId

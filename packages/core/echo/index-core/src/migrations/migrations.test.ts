@@ -49,11 +49,11 @@ const objectMetaColumns = Effect.gen(function* () {
 });
 
 const DESIRED_COLUMNS = [
+  'convergenceKey',
   'createdAt',
   'deleted',
   'documentId',
   'entityKind',
-  'naturalKey',
   'objectId',
   'parent',
   'queueId',

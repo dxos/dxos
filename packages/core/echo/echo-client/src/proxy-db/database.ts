@@ -406,11 +406,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
-   * Collapse entities that declare the same natural key into one, and repoint references at the
+   * Collapse entities that declare the same convergence key into one, and repoint references at the
    * survivor.
    *
    * Merging is automatic — the worker runs it off the indexing stream as duplicates replicate in
-   * (see `echo-host`'s natural-key merge) — so this explicit pass exists for what the automatic
+   * (see `echo-host`'s convergence-key merge) — so this explicit pass exists for what the automatic
    * path deliberately leaves alone: rewriting references to name the survivor directly. Refs to
    * losers already resolve through the redirect; rewriting them is an optimization and the
    * compatibility path for clients too old to follow `mergedInto`.

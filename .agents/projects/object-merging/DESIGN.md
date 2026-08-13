@@ -48,11 +48,11 @@
     — delivered in phases, not restricted to objects. Relations are therefore merge
     _subjects_ eventually, not merely endpoints to be rewritten; the phasing is in §6.
 - **2026-07-30 (Josiah)** — **Revises "where the merge runs": on entity load, not on
-  space open.** Merging on open has to ask for every entity declaring a natural key,
+  space open.** Merging on open has to ask for every entity declaring a convergence key,
   which is unbounded and hydrates all of them just to discover that almost none are
   duplicated — a working-set bloat paid on every open for objects the session may
   never touch. Merging when an entity is hydrated instead makes the cost proportional
-  to use, and reduces detection to a **point lookup** (`naturalKey = X`, normally one
+  to use, and reduces detection to a **point lookup** (`convergenceKey = X`, normally one
   row) rather than a scan. See §4.7.
 - **2026-07-30 (Josiah)** — ~~Merge inside query evaluation~~ — implemented in the
   client's result presentation, then **superseded the next day** (below): writes
@@ -62,8 +62,8 @@
   stream** (option A of the review; §4.8 rewritten). `EchoHost._runUpdateIndexes`
   processes every document change — local writes and replication arrivals, and
   replication is the moment duplicates come into existence on a device. Each batch
-  reports the natural keys it saw (almost always none); a point lookup on the new
-  `objectMeta.naturalKey` column finds collisions; the merge runs on the raw
+  reports the convergence keys it saw (almost always none); a point lookup on the new
+  `objectMeta.convergenceKey` column finds collisions; the merge runs on the raw
   automerge documents via the storage-independent core. The client query path keeps
   only a **read-only** filter dropping already-redirected losers. Accepted trade-off:
   the never-see-two guarantee is eventual (~one indexing cycle) rather than
@@ -81,7 +81,7 @@
      rewriting is an optimization and the old-client compatibility path, as
      designed. `rewriteReferences` also now recurses into arrays and nested
      records (a collection's members live in an array).
-  3. **Objects only, enforced.** `Entity.setNaturalKey` rejects relations/types
+  3. **Objects only, enforced.** `Entity.setConvergenceKey` rejects relations/types
      and empty keys; detection filters `entityKind`; the worker re-verifies
      `system.kind` — previously a keyed relation would have been merged with its
      endpoints unreconciled.
@@ -90,8 +90,8 @@
      container-valued winner fields were rewritten (and concurrent nested edits
      clobbered) on every pass; `mergedFrom` was assigned as a whole list, which
      loses ids under concurrent merges (now append-in-place, dedup on read — same
-     for `meta.keys`); index rows created before the `naturalKey` column existed
-     were permanently invisible to detection (index-name versioning: the driving cursors were renamed, purging pre-`naturalKey` progress on upgrade);
+     for `meta.keys`); index rows created before the `convergenceKey` column existed
+     were permanently invisible to detection (index-name versioning: the driving cursors were renamed, purging pre-`convergenceKey` progress on upgrade);
      the detection lookup is chunked under SQLite's bound-variable cap; and `@meta`
      no longer leaks into full-text search matching or the reverse-ref index for
      document objects (it briefly made `Query.incoming()` on a Tag return everything
@@ -110,11 +110,11 @@
      computation, watermark heads, and the winner write share one tick;
      `_foldRedirected` re-reads everything fresh and advances the watermark
      **only when the fold write actually applied**; loser callbacks re-verify
-     the natural key (a concurrently re-keyed entity is a new identity, not a
+     the convergence key (a concurrently re-keyed entity is a new identity, not a
      loser) and deletion (respected, not converted into a redirect); a winner
      deleted during the flush stops the tombstones.
   2. **The trigger is a durable intent log, not a fire-and-forget set.** Natural
-     keys are recorded in `naturalKeyIntents` in the same SQLite transaction as
+     keys are recorded in `convergenceKeyIntents` in the same SQLite transaction as
      the index rows and cursors, and cleared only after the merge pass services
      the key; one throwing group is contained per-group and retried on the next
      pass; a crash between the cursor commit and the merge is recovered at the
@@ -179,27 +179,40 @@
   PR #12412; no semantic findings ("the approach with `mergedInto` seems right").
   Four restructurings, all behavior-preserving:
   1. **The public `Merge` namespace is dissolved.** Users declare identity with
-     `Entity.setNaturalKey` / `Entity.getNaturalKey` (beside the other meta
+     `Entity.setConvergenceKey` / `Entity.getConvergenceKey` (beside the other meta
      accessors); the machinery moved to `@dxos/echo/internal` as `mergeCandidates`,
      `toMergeCandidate`, `findMergeDuplicates`, `resolveMergeRedirect`
      (`src/internal/Merge/`). `selectWinner` was deleted (its min-id semantics live
-     inside `mergeCandidates`); `groupByNaturalKey` became a private helper.
+     inside `mergeCandidates`); `groupByConvergenceKey` became a private helper.
   2. **Index-name versioning replaced the cursor wipe.** The driving cursor names
      bumped (`fts5` → `fts6`, `reverseRef` → `reverseRef2`) and the old names purge
      via `DEPRECATED_INDEX_NAMES` — the tracker's existing declarative mechanism —
      retiring the `pragma_table_info` probe, the `DELETE FROM indexCursor`, and its
      wipe-before-ALTER ordering subtlety.
-  3. **The intent log moved out of the indexer** into `NaturalKeyIntentStore`
+  3. **The intent log moved out of the indexer** into `ConvergenceKeyIntentStore`
      (index-core), joining the same `SqlTransaction` in `IndexEngine.#update` — the
      coupling was transactional, never conceptual.
-  4. **`natural-key-merge.ts` became a class.** `NaturalKeyMerger` takes the
-     narrow `loadDoc`/`flushDoc`/`queryByNaturalKeys` seam as constructor deps
+  4. **`convergence-key-merge.ts` became a class.** `ConvergenceKeyMerger` takes the
+     narrow `loadDoc`/`flushDoc`/`queryByConvergenceKeys` seam as constructor deps
      (tests keep driving it with plain fakes); `EchoHost` constructs it once.
-     Also proposed in review, **declined for now (Josiah)**: renaming the field to
+     Also proposed in review, **declined (Josiah)**: renaming the field to
      `singletonKey` plus `Database.querySingleton`/`ensureSingleton` APIs — the name
      reads as a write-time uniqueness guarantee the engine deliberately does not make
-     (§4.4); the API sketch is noted against the Phase-2 `db.ensure` item. The field
-     name stays `naturalKey` while alternatives are gathered.
+     (§4.4); the API sketch is noted against the Phase-2 `db.ensure` item.
+- **2026-08-13, later (Josiah)** — **The field is renamed `naturalKey` →
+  `meta.convergenceKey`** (§4.4), resolving the review's naming thread with a
+  different name than the reviewer's proposal. `convergenceKey` names exactly the
+  guarantee the engine makes — entities sharing the key converge to one,
+  _eventually_ (convergence is a process word, so the eventual-ness that made
+  `singletonKey` dishonest is built in) — and it is house vocabulary in a
+  local-first codebase, where "natural key" required relational-database
+  background the reviewer flagged as meaningless to him. It also retires
+  `naturalKey`'s recorded accepted cost: the new name does hint that stamping it
+  opts the entity into active behavior. Accepted in exchange: it names the
+  consequence rather than the caller's assertion, and it is long — tolerable for
+  an advanced, mostly-internal feature. Everything renamed in one pass
+  (accessors, index column, intent store, merger class, migrations) — safe while
+  nothing has shipped.
 
 ---
 
@@ -511,38 +524,43 @@ The field is independent of `meta.version`, so identity and provenance may disag
 an entity can be seeded from registry entry `1.2.0` while its identity string names
 generation `2`, or names no generation at all.
 
-**Name: `meta.naturalKey`** (ratified 2026-07-30). It names what the caller asserts
-rather than what the system does with it — setting it is a claim about what the
-entity _is_, and merging is the consequence of two entities making the same claim.
-That keeps it honest across the phases: Phase 1 ships the field with no merge engine
-at all, where a name like `mergeKey` would be a lie, and Phase 3 moves the trigger
-into the indexer without invalidating it. It also imports the relational
-surrogate-vs-natural distinction exactly: `EntityId` is the surrogate (system-minted,
-random, meaningless outside the database), and §1's problem is that ECHO has only
-surrogates, so two peers creating "the same" entity mint two with no way to recognize
-the sameness.
+**Name: `meta.convergenceKey`** (renamed 2026-08-13; originally `meta.naturalKey`,
+ratified 2026-07-30). The current name states the guarantee the engine makes:
+entities sharing the key converge to one — eventually, because convergence is a
+process, which is exactly the invariant's strength (no write-time enforcement is
+implied). It is native vocabulary in a local-first codebase — §4.2's argument is
+literally a convergence argument — and it self-documents that stamping the key
+opts the entity into active behavior.
+
+The original name, `naturalKey`, named what the caller asserts rather than what
+the system does — the relational natural-key-beside-surrogate distinction
+(`EntityId` being the surrogate) — but review feedback (2026-08-13) flagged that
+reading it requires relational-database background, and its recorded accepted
+cost was that nothing about it hinted at the merge consequence. The rename trades
+that for the opposite cost: `convergenceKey` names the consequence rather than
+the assertion, and it is long — tolerable for an advanced, mostly-internal
+feature.
 
 The alternatives each misdescribed something: `canonicalKey` is wrong on the
 entities that matter (both duplicates carry the key, including the loser — only one
 is canonical); `singletonKey` implies write-time uniqueness enforcement, which was
 rejected along with deterministic ids (before the merge runs there genuinely _are_
 two entities with the key, so the invariant is eventual); `mergeKey` names the
-mechanism, reads oddly on an entity that never has a duplicate, and invites the
-mental model of opting into a behavior rather than asserting an identity.
-`identity`/`identityKey` were excluded outright — `IdentityKey` is the HALO identity
-public key across 17 files, so the collision would be actively misleading.
+mechanism narrowly, reads oddly on an entity that never has a duplicate, and
+shades toward destruction — losers persist as redirects rather than being merged
+away. `identity`/`identityKey` were excluded outright — `IdentityKey` is the HALO
+identity public key across 17 files, so the collision would be actively misleading.
 
-Accepted cost: the name carries no hint that stamping it opts the entity into
-merging, so that consequence belongs in the field's doc comment.
+The candidates weighed, for the record (`naturalKey` was chosen 2026-07-30;
+`convergenceKey` superseded it 2026-08-13):
 
-The candidates weighed, for the record (`naturalKey` is the one chosen):
-
-| Candidate      | Reads as                                                                                                     | Against                                                                                     |
-| -------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `naturalKey`   | Standard relational term: the natural key beside the surrogate key (`EntityId`). Precise about what it _is_. | Assumes DB vocabulary; understates the merge consequence.                                   |
-| `singletonKey` | States the invariant exactly: at most one live entity per `(space, key)`.                                    | "Singleton" carries OO baggage.                                                             |
-| `mergeKey`     | Most obvious at the call site: same `mergeKey` ⇒ merged.                                                     | Names the mechanism, not the property; reads oddly on an entity that never has a duplicate. |
-| `canonicalKey` | Pairs with the winner/redirect vocabulary (`mergedInto`).                                                    | "Canonical" describes the winning entity, not the key.                                      |
+| Candidate        | Reads as                                                                                                     | Against                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `convergenceKey` | The guarantee itself: entities sharing the key converge to one, eventually.                                  | Names the consequence, not the assertion; long.                                             |
+| `naturalKey`     | Standard relational term: the natural key beside the surrogate key (`EntityId`). Precise about what it _is_. | Assumes DB vocabulary; understates the merge consequence.                                   |
+| `singletonKey`   | States the invariant exactly: at most one live entity per `(space, key)`.                                    | Reads as write-time enforcement; "singleton" carries OO baggage.                            |
+| `mergeKey`       | Most obvious at the call site: same `mergeKey` ⇒ merged.                                                     | Names the mechanism, not the property; reads oddly on an entity that never has a duplicate. |
+| `canonicalKey`   | Pairs with the winner/redirect vocabulary (`mergedInto`).                                                    | "Canonical" describes the winning entity, not the key.                                      |
 
 ### 4.5 Rejected alternative: deterministic object ids
 
@@ -562,22 +580,22 @@ Phase 2's doctor diagnostic can surface them explicitly instead of a log warning
 **Decided 2026-07-30, revising "client on space open"; superseded 2026-07-31.** The
 load-path hook was never built: the worker/indexing trigger (§4.8) is write-driven,
 so it covers entities reached by id or reference without any per-load hook, and the
-`meta.naturalKey` index this section called for shipped as part of §4.8. Kept for
+`meta.convergenceKey` index this section called for shipped as part of §4.8. Kept for
 the reasoning about why space-open scanning was wrong.
 
 Merging on space open was implemented and reverted (see the ledger). Detection had to
-enumerate every entity declaring a natural key, so it scanned and hydrated the whole
+enumerate every entity declaring a convergence key, so it scanned and hydrated the whole
 space — which broke three tests asserting lazy loading, and is bloat paid on every
 open for objects the session may never touch.
 
-The trigger is **entity hydration** instead. When an entity carrying a natural key is
+The trigger is **entity hydration** instead. When an entity carrying a convergence key is
 loaded, look for others with the same key; merge only if more than one exists.
 
 Why this is the better shape:
 
 - **Cost is proportional to use.** An entity never loaded never costs anything.
-- **Detection becomes a point lookup.** `naturalKey = X` returns one row in the
-  common case and hydrates nothing extra, versus "every row with a natural key",
+- **Detection becomes a point lookup.** `convergenceKey = X` returns one row in the
+  common case and hydrates nothing extra, versus "every row with a convergence key",
   which hydrates everything to discover that almost none are duplicated.
 - **It fits the existing planner.** An equality filter on an indexed column is the
   same shape as the typename fast path, rather than a novel "all non-null, grouped"
@@ -590,7 +608,7 @@ Why this is the better shape:
 Consequences to design for:
 
 - **Re-entrancy.** The merge hydrates the other candidates, which would re-trigger the
-  merge; needs an in-flight guard keyed by natural key.
+  merge; needs an in-flight guard keyed by convergence key.
 - **Convergence is unaffected.** The merge function is deterministic and idempotent,
   so _when_ it runs does not change what it computes — only how soon peers converge.
 
@@ -606,18 +624,18 @@ fires exactly once per device regardless of how many tabs or clients are open.
 
 Mechanism:
 
-1. Natural keys seen in an indexing batch are recorded as **durable intents**
-   (`naturalKeyIntents` table) in the same SQLite transaction that commits the
+1. Convergence keys seen in an indexing batch are recorded as **durable intents**
+   (`convergenceKeyIntents` table) in the same SQLite transaction that commits the
    index rows and cursors — almost always none. The intent, not an in-memory set,
    is the trigger: it is cleared only after the merge pass services the key, so a
    crash or a faulted pass leaves it in place and the next pass (one runs at
    every startup) retries. One throwing group is contained per-group; the rest of
    the batch proceeds.
-2. A point lookup on the `objectMeta.naturalKey` column (new, indexed on
-   `(spaceId, naturalKey)`) returns the rows sharing the pending keys; a key with
+2. A point lookup on the `objectMeta.convergenceKey` column (new, indexed on
+   `(spaceId, convergenceKey)`) returns the rows sharing the pending keys; a key with
    more than one row is a duplicate group. Cost is proportional to writes that
-   carry a natural key — nil for everything else.
-3. The merge runs on the **raw automerge documents** (`db-host/natural-key-merge.ts`)
+   carry a convergence key — nil for everything else.
+3. The merge runs on the **raw automerge documents** (`db-host/convergence-key-merge.ts`)
    via the storage-independent `Merge` core — no live proxies exist host-side.
    Documents are loaded first (the only await); then classification, the merge
    computation, the losers' watermark heads, and the winner write happen **in one
@@ -655,7 +673,7 @@ the same state a slightly earlier call would have.
 Rules the implementation had to learn (each one a bug first):
 
 - **`objectStructureToJson` omitted `@meta` entirely**, so the indexer could never
-  see a natural key — the whole trigger was silently inert. It now includes the meta
+  see a convergence key — the whole trigger was silently inert. It now includes the meta
   section, matching the feed path, whose blocks always carried it.
 - **Query results are not unique** — the same entity can appear twice before
   presentation dedupes. Merging a repeat treated it as a duplicate of itself and
@@ -664,7 +682,7 @@ Rules the implementation had to learn (each one a bug first):
   show what was merged away; the option can sit at any AST depth because scoping
   wraps it.
 - **Objects only, and only automerge-backed ones** — enforced, not assumed:
-  `Entity.setNaturalKey` rejects relations and types, detection filters on
+  `Entity.setConvergenceKey` rejects relations and types, detection filters on
   `entityKind`, and the worker re-verifies `system.kind` against the document.
   (An earlier draft claimed reading meta off a relation throws — it does not;
   without the explicit guards a keyed relation was merged with its endpoints
@@ -714,7 +732,7 @@ the merge has no watermark to recover from.
 So the sequencing is lazy-first for correctness, proactive-later to shrink the window
 in which divergence can accumulate — not either/or.
 
-### 4.10 Mutating the natural key (decided 2026-08-03: treat as write-once)
+### 4.10 Mutating the convergence key (decided 2026-08-03: treat as write-once)
 
 The key is an identity assertion, and identity assertions are not meant to be
 revised — the guidance is **set it at creation and never change it**. The engine
@@ -745,7 +763,7 @@ whatever the code happens to do:
 None of these corrupts data or breaks resolution — the failure mode is stranded
 late edits on a tombstone whose group no longer contains its winner. If key
 mutation ever becomes a real workflow, the candidate hard guard is
-`Entity.setNaturalKey` throwing on a merged-away entity (needs `mergedInto`
+`Entity.setConvergenceKey` throwing on a merged-away entity (needs `mergedInto`
 visibility at the `Obj` layer — not currently exposed there).
 
 ### 4.6 Principal risks
@@ -928,7 +946,7 @@ settled, and the derived-key sub-question dissolved with them.
 
 ### Newly open, from the review
 
-6. ~~**Identity field name**~~ — **settled**: `meta.naturalKey`, ratified
+6. ~~**Identity field name**~~ — **settled**: `meta.convergenceKey`, ratified
    2026-07-30 (§4.4), shipped.
 7. **Merging `EntityKind.Type`** — types are entities and are now in scope, but a
    duplicate _type_ is not just a data merge: schema identity feeds the type

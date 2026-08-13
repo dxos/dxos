@@ -269,7 +269,7 @@ export class FtsIndex implements Index {
                   ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
                   : data;
               // Document objects carry `@meta` only so the entity-meta index can extract the
-              // natural key — full-text search must not match on foreign keys or identity
+              // convergence key — full-text search must not match on foreign keys or identity
               // strings the visible content never contains. Queue blocks always carried meta in
               // their snapshot (clients hydrate from it), so theirs stays.
               const searchable = object.documentId

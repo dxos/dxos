@@ -269,7 +269,7 @@ export const objectStructureToJson = (objectId: EntityId, structure: EntityStruc
   const parent = EntityStructure.getParent(structure)?.['/'];
   const source = EntityStructure.getRelationSource(structure)?.['/'];
   const target = EntityStructure.getRelationTarget(structure)?.['/'];
-  // Included so the indexer sees the meta section (notably `naturalKey`, the merge trigger) —
+  // Included so the indexer sees the meta section (notably `convergenceKey`, the merge trigger) —
   // matching the feed path, whose blocks carry `@meta` wholesale.
   const meta = structure.meta;
   const metaNotEmpty =

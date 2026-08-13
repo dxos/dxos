@@ -47,13 +47,13 @@ import {
   deriveCollectionIdFromSpaceId,
 } from '../automerge';
 import { AutomergeDataSource } from './automerge-data-source';
+import { ConvergenceKeyMerger } from './convergence-key-merge';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { DeletionResolver } from './deletion';
 import { FeedDataSource } from './feed-data-source';
 import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalFeedServiceImpl } from './local-feed-service';
-import { NaturalKeyMerger } from './natural-key-merge';
 import { QueryServiceImpl } from './query-service';
 import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager';
 
@@ -124,7 +124,7 @@ export class EchoHost extends Resource {
 
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexEngine: IndexEngine;
-  private readonly _naturalKeyMerger: NaturalKeyMerger;
+  private readonly _convergenceKeyMerger: ConvergenceKeyMerger;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
@@ -181,9 +181,9 @@ export class EchoHost extends Resource {
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();
 
-    this._naturalKeyMerger = new NaturalKeyMerger({
-      queryByNaturalKeys: (spaceId, keys) =>
-        this._indexEngine.queryByNaturalKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
+    this._convergenceKeyMerger = new ConvergenceKeyMerger({
+      queryByConvergenceKeys: (spaceId, keys) =>
+        this._indexEngine.queryByConvergenceKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
       loadDoc: (ctx, documentId) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId),
       flushDoc: (ctx, documentId) => this._automergeHost.flush(ctx, { documentIds: [documentId] }),
     });
@@ -895,14 +895,14 @@ export class EchoHost extends Resource {
         // silently dropped. The merge's own writes land back here via `documentsSaved`, which
         // re-indexes the tombstones; idempotence is what makes that follow-up pass a no-op.
         const { maxId, intents } = await this._indexEngine
-          .takeNaturalKeyIntents()
+          .takeConvergenceKeyIntents()
           .pipe(RuntimeProvider.runPromise(this._runtime));
         if (intents.size > 0) {
-          const { serviced } = await this._naturalKeyMerger.mergeDuplicates(this._ctx, intents);
+          const { serviced } = await this._convergenceKeyMerger.mergeDuplicates(this._ctx, intents);
           for (const [spaceId, keys] of serviced) {
             for (const key of keys) {
               await this._indexEngine
-                .clearNaturalKeyIntents(spaceId, key, maxId)
+                .clearConvergenceKeyIntents(spaceId, key, maxId)
                 .pipe(RuntimeProvider.runPromise(this._runtime));
             }
           }

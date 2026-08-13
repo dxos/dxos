@@ -229,8 +229,8 @@ export const EntityStructure = Object.freeze({
     return object.system?.deleted ?? false;
   },
 
-  getNaturalKey: (object: EntityStructure): string | undefined => {
-    return object.meta?.naturalKey;
+  getConvergenceKey: (object: EntityStructure): string | undefined => {
+    return object.meta?.convergenceKey;
   },
 
   getMergedInto: (object: EntityStructure): EntityId | undefined => {
@@ -371,14 +371,14 @@ export type EntityMeta = {
 
   /**
    * Caller-supplied domain identity, unique within a space: two entities carrying the same
-   * natural key are the same entity and are merged into one.
+   * convergence key are the same entity and are merged into one.
    *
    * Opaque to the storage engine — callers that need generations encode them in the string
    * (e.g. `com.example.seed@2`), which yields distinct entities because the strings differ.
    * Distinct from {@link key}/{@link version}, which record the registry entry an instance was
    * created from (provenance, not identity).
    */
-  naturalKey?: string;
+  convergenceKey?: string;
 
   /**
    * Dictionary of annotations to this entity.
@@ -443,7 +443,7 @@ export type EntitySystem = {
   createdAt?: number;
 
   /**
-   * Id of the entity this one was merged into, set on the loser of a natural-key merge.
+   * Id of the entity this one was merged into, set on the loser of a convergence-key merge.
    *
    * The loser is tombstoned but keeps replicating, so late peers can run the same merge and
    * follow the redirect. Every edge points at a smaller id, so chains are finite and acyclic
@@ -461,7 +461,7 @@ export type EntitySystem = {
   mergedAtHeads?: string[];
 
   /**
-   * Ids of the entities merged into this one, set on the winner of a natural-key merge.
+   * Ids of the entities merged into this one, set on the winner of a convergence-key merge.
    *
    * The reverse edge of {@link mergedInto}, stored rather than derived: finding it the other way
    * means scanning for entities whose `mergedInto` points here, which no index supports. Holding

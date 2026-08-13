@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: worker-side merging is live and hardened through three review rounds (§4.8; 2026-08-02, 2026-08-03 ×2); dmaretskyi's 2026-08-13 PR review drove a behavior-preserving restructuring (public API = `Entity.get/setNaturalKey`, machinery internal, index-name versioning, `NaturalKeyIntentStore`, `NaturalKeyMerger` class). Open: field-name decision (`singletonKey` declined; alternatives under review), singleton APIs vs Phase-2 `db.ensure`; then the backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. All suites green._
+_Resume: worker-side merging is live and hardened through three review rounds (§4.8; 2026-08-02, 2026-08-03 ×2); dmaretskyi's 2026-08-13 PR review drove a behavior-preserving restructuring (public API = `Entity.get/setConvergenceKey`, machinery internal, index-name versioning, `ConvergenceKeyIntentStore`, `ConvergenceKeyMerger` class) and the field was renamed `naturalKey` → `meta.convergenceKey` (Josiah, 2026-08-13, after declining `singletonKey`). Open: singleton APIs vs Phase-2 `db.ensure`; then the backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. All suites green._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -27,9 +27,10 @@ the phased rollout this ledger mirrors).
   - Merge-policy pluggability: left open, non-blocking; fixed semantics first.
 - [x] **Shape the identity field** — a **single opaque string**, not a
       `{ key, version }` struct; callers encode generations in the string.
-- [x] **Name the identity field** — **`meta.naturalKey`** (§4.4). Names the caller's
-      assertion rather than the mechanism, so it stays true in Phase 1 where the
-      field is inert and in Phase 3 where the indexer triggers the merge.
+- [x] **Name the identity field** — originally **`meta.naturalKey`** (§4.4; named the
+      caller's assertion rather than the mechanism); renamed **`meta.convergenceKey`**
+      2026-08-13 after review feedback — the new name states the engine's guarantee
+      (eventual convergence) in house vocabulary.
 
 ## Phase 0: Spike — SUBSUMED
 
@@ -45,8 +46,9 @@ than by a spike.
 
 ## Phase 1: Foundations (no merge engine)
 
-- [x] Dedicated identity field on `EntityMeta` — `meta.naturalKey`, a single optional
-      string, with `Merge.get/setNaturalKey`, `groupByNaturalKey`, `findDuplicates`.
+- [x] Dedicated identity field on `EntityMeta` — `meta.convergenceKey`, a single optional
+      string, with get/set accessors and grouping helpers (now
+      `Entity.get/setConvergenceKey` + internal `findMergeDuplicates`).
       Two hand-maintained meta field lists had to learn about it (see below).
 - [x] Pure merge core (`echo/src/Merge.ts`) — `selectWinner` (min id),
       set-wise `merge` (permutation-independent, not a pairwise fold),
@@ -78,8 +80,8 @@ than by a spike.
       watermark so the same edit is never folded twice.
 - [x] **Merge in the worker, off the indexing stream** (DESIGN.md §4.8, option A of
       the 2026-07-31 review; supersedes the one-day query-evaluation implementation).
-      `IndexingResult.naturalKeys` trigger set → `objectMeta.naturalKey` point lookup
-      → raw-document merge in `echo-host/db-host/natural-key-merge.ts`. Client query
+      `IndexingResult.convergenceKeys` trigger set → `objectMeta.convergenceKey` point lookup
+      → raw-document merge in `echo-host/db-host/convergence-key-merge.ts`. Client query
       path keeps a read-only filter dropping already-redirected losers. Covers
       entities reached by id/ref too — detection is write-driven, not result-set
       driven — which retires the separate merge-on-load item.
@@ -91,15 +93,15 @@ than by a spike.
       client executor; `mergedFrom`/`meta.keys` append-in-place + dedup-on-read;
       ref rewrite recurses into arrays/nested records; query filter keys on the
       deleted flag (no restored-zombie); one-time cursor reset backfills the
-      `naturalKey` column; chunked detection lookup; `@meta` stripped from FTS and
+      `convergenceKey` column; chunked detection lookup; `@meta` stripped from FTS and
       reverse-ref content for document objects.
 - [x] **2026-08-03 hardening** (second adversarial review; DESIGN decision log has
       the full list): worker reads/computes/writes in one synchronous block —
       load-time snapshots could put mid-merge edits below the fold watermark,
       permanently (one variant deterministic in a single pass); watermark advances
-      only when the fold write applied; loser callbacks re-verify the natural key
+      only when the fold write applied; loser callbacks re-verify the convergence key
       and deletion; winner deleted mid-flush stops the tombstones; **durable
-      natural-key intent log** (`naturalKeyIntents`, written transactionally with
+      convergence-key intent log** (`convergenceKeyIntents`, written transactionally with
       the index cursors, cleared per serviced key, per-group error containment) —
       no detected duplicate is ever silently dropped; winner doc flushed before
       loser tombstones (cross-document crash ordering); client executor skips
@@ -107,7 +109,7 @@ than by a spike.
       `foldLateEdits` never write to / fold into tombstoned or deleted parties;
       migration cursor wipe moved before the ALTER; DESIGN §4.10 (key mutation),
       canonicity→agreement, flag story, and stale claims reconciled. New unit
-      suite `echo-host/db-host/natural-key-merge.test.ts` drives the group merge
+      suite `echo-host/db-host/convergence-key-merge.test.ts` drives the group merge
       against real repo handles with injected mid-load/mid-flush mutations.
 - [x] **2026-08-03 hardening, later** (third adversarial review; DESIGN decision
       log "2026-08-03, later" has the full list): transitive deletion follows
@@ -124,19 +126,21 @@ than by a spike.
       state (residual value-register race documented in DESIGN §4.2 and
       `Merge.merge`'s doc). Regression tests in `Merge.test.ts` (prototype
       fields), `merge.test.ts` (relation/child at loser), and
-      `natural-key-merge.test.ts` (flush ordering ×2, concurrent-merge watermark
+      `convergence-key-merge.test.ts` (flush ordering ×2, concurrent-merge watermark
       conflict via forked-and-merged doc states).
 - [x] **2026-08-13 restructuring** (dmaretskyi PR review; DESIGN decision log
       "2026-08-13" has the rationale): public `Merge` namespace dissolved —
-      `Entity.get/setNaturalKey` is the user API, machinery
+      `Entity.get/setConvergenceKey` is the user API, machinery
       (`mergeCandidates`/`toMergeCandidate`/`findMergeDuplicates`/`resolveMergeRedirect`)
-      moved to `@dxos/echo/internal`, `selectWinner` deleted, `groupByNaturalKey`
+      moved to `@dxos/echo/internal`, `selectWinner` deleted, `groupByConvergenceKey`
       privatized; cursor wipe replaced by index-name versioning (`fts6`,
       `reverseRef2`, `DEPRECATED_INDEX_NAMES`); intent log split into
-      `NaturalKeyIntentStore` joining the same transaction; `NaturalKeyMerger`
-      class with constructor-injected `loadDoc`/`flushDoc`/`queryByNaturalKeys`.
-      Declined for now: `singletonKey` rename + `querySingleton`/`ensureSingleton`
-      APIs (name search continues; API sketch noted against `db.ensure`).
+      `ConvergenceKeyIntentStore` joining the same transaction; `ConvergenceKeyMerger`
+      class with constructor-injected `loadDoc`/`flushDoc`/`queryByConvergenceKeys`.
+      Declined: `singletonKey` rename + `querySingleton`/`ensureSingleton` APIs
+      (API sketch noted against `db.ensure`). Resolved 2026-08-13, later: the field
+      renamed `naturalKey` → `meta.convergenceKey` across code, index, migrations,
+      and docs (DESIGN decision log has the rationale).
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] **Decide the collaborative-text policy before adoption widens** (§4.6 risk).
@@ -149,11 +153,11 @@ than by a spike.
 
 ## Phase 3: Indexing & automation
 
-- [x] **`meta.naturalKey` index column** — `objectMeta.naturalKey` + migration +
-      `(spaceId, naturalKey)` index + `queryByNaturalKeys` point lookup; populated
+- [x] **`meta.convergenceKey` index column** — `objectMeta.convergenceKey` + migration +
+      `(spaceId, convergenceKey)` index + `queryByConvergenceKeys` point lookup; populated
       from `@meta` on index update (`objectStructureToJson` now emits the meta
       section, which it previously omitted entirely).
-- [ ] `Filter.naturalKey` equality pushdown for app-level lookups (optional; the
+- [ ] `Filter.convergenceKey` equality pushdown for app-level lookups (optional; the
       merge itself no longer needs it).
 - [x] Indexer key-collisions trigger the merge automatically — this is the shipped
       §4.8 mechanism, which also serves as the §4.9 proactive worker pass (event
@@ -189,7 +193,7 @@ Scope decision 2026-07-30: every entity kind that can be stored is in scope, pha
   `getSnapshot` (`echo/src/internal/Obj/snapshot.ts`) rebuilds meta from an explicit
   allowlist, so the field vanished from every snapshot; and `metaNotEmpty`
   (`echo-client/src/echo-handler/echo-handler.ts`) decides whether meta is persisted
-  at all, so an object whose _only_ meta was a natural key never wrote its meta
+  at all, so an object whose _only_ meta was a convergence key never wrote its meta
   section. **Fixed at the root**: both now enumerate `SCALAR_META_FIELDS`, derived
   from `EntityMetaSchema.fields`, so the next meta field needs one change.
 - **ECHO brand keys are strings, not symbols** (`~@dxos/echo/Kind` and friends), so
@@ -207,7 +211,7 @@ Scope decision 2026-07-30: every entity kind that can be stored is in scope, pha
   entity-meta column also fed full-text search and the reverse-ref index; both had
   to learn to strip it for document objects (queue blocks always carried it).
 - **Re-indexing is per-object, so a new column never backfills by itself.** Rows
-  written before `naturalKey` existed stay NULL until the object itself changes;
+  written before `convergenceKey` existed stay NULL until the object itself changes;
   the migration resets index cursors once when it adds the column to an existing
   table.
 - **A snapshot read before an `await` is not the document.** `handle.doc()` returns

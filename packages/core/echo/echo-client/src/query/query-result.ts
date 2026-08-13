@@ -266,7 +266,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * merged-away duplicate it did not create.
    *
    * Read-only by design: the merge itself runs in the worker off the indexing stream (see
-   * `echo-host`'s natural-key merge), and its tombstones leave query results through ordinary
+   * `echo-host`'s convergence-key merge), and its tombstones leave query results through ordinary
    * deleted-filtering once re-indexed. This filter only covers the gap in between — cached
    * reactive-query entries hydrated before the re-index. It keys on the deleted flag rather
    * than `mergedInto` (the merge writes both in one change) so that it can never hide a live

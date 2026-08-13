@@ -13,8 +13,8 @@ import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } f
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store';
 import { IndexTracker } from '../index-tracker';
-import { NaturalKeyIntentStore } from '../natural-key-intent-store';
 import { EntityMetaIndex } from './entity-meta-index';
 import type { IndexerObject } from './interface';
 
@@ -533,9 +533,9 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('cursors under retired index names are purged so pre-naturalKey data re-indexes', () =>
+  it.effect('cursors under retired index names are purged so pre-convergenceKey data re-indexes', () =>
     Effect.gen(function* () {
-      // A build before `naturalKey` tracked its progress under the retired names (`fts5`,
+      // A build before `convergenceKey` tracked its progress under the retired names (`fts5`,
       // `reverseRef`); rows it indexed hold NULL keys and re-indexing is per-object, so those
       // cursors must not survive the upgrade — the bumped names re-present every document.
       // Simulate the old vintage: its own init created the table before the retirement
@@ -582,23 +582,23 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('natural-key intents survive until cleared, bounded by the id captured at read time', () =>
+  it.effect('convergence-key intents survive until cleared, bounded by the id captured at read time', () =>
     Effect.gen(function* () {
-      const store = new NaturalKeyIntentStore();
+      const store = new ConvergenceKeyIntentStore();
       yield* store.migrate();
 
       const spaceId = SpaceId.random();
       yield* store.record([
-        { spaceId, naturalKey: 'example.com/thing/a' },
-        { spaceId, naturalKey: 'example.com/thing/b' },
-        { spaceId, naturalKey: 'example.com/thing/a' }, // Re-recorded — deduplicated on read.
+        { spaceId, convergenceKey: 'example.com/thing/a' },
+        { spaceId, convergenceKey: 'example.com/thing/b' },
+        { spaceId, convergenceKey: 'example.com/thing/a' }, // Re-recorded — deduplicated on read.
       ]);
 
       const { maxId, intents } = yield* store.take();
       expect([...(intents.get(spaceId) ?? [])].sort()).toEqual(['example.com/thing/a', 'example.com/thing/b']);
 
       // A key recorded after the read (a concurrent indexing pass) must survive the clear.
-      yield* store.record([{ spaceId, naturalKey: 'example.com/thing/a' }]);
+      yield* store.record([{ spaceId, convergenceKey: 'example.com/thing/a' }]);
       yield* store.clear(spaceId, 'example.com/thing/a', maxId);
       yield* store.clear(spaceId, 'example.com/thing/b', maxId);
 

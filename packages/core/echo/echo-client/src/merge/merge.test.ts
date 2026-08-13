@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { EchoTestBuilder } from '../testing';
 import { getMergedFrom, mergeDuplicates, resolveMerged, rewriteReferences } from './merge-executor';
 
-describe('natural-key merging', () => {
+describe('convergence-key merging', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -25,31 +25,31 @@ describe('natural-key merging', () => {
     await builder.close();
   });
 
-  // The natural key rides in `@meta`, so it has to survive create -> add -> flush -> query.
-  test('a natural key round-trips through the database', async ({ expect }) => {
+  // The convergence key rides in `@meta`, so it has to survive create -> add -> flush -> query.
+  test('a convergence key round-trips through the database', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });
     const db = await peer.createDatabase();
 
     await Effect.gen(function* () {
       const task = Obj.make(TestSchema.Task, { title: 'seeded' });
-      Entity.setNaturalKey(task, 'org.example.seed');
+      Entity.setConvergenceKey(task, 'org.example.seed');
       const added = yield* Database.add(task);
-      expect(Entity.getNaturalKey(added)).toBe('org.example.seed');
+      expect(Entity.getConvergenceKey(added)).toBe('org.example.seed');
 
       yield* Database.flush();
 
       const [queried] = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(Entity.getNaturalKey(queried)).toBe('org.example.seed');
+      expect(Entity.getConvergenceKey(queried)).toBe('org.example.seed');
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
-  test('the natural key survives a reload from storage', async ({ expect }) => {
+  test('the convergence key survives a reload from storage', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });
     const db = await peer.createDatabase();
 
     await Effect.gen(function* () {
       const task = Obj.make(TestSchema.Task, { title: 'seeded' });
-      Entity.setNaturalKey(task, 'org.example.seed');
+      Entity.setConvergenceKey(task, 'org.example.seed');
       yield* Database.add(task);
       yield* Database.flush();
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
@@ -60,22 +60,22 @@ describe('natural-key merging', () => {
 
     await Effect.gen(function* () {
       const [queried] = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(Entity.getNaturalKey(queried)).toBe('org.example.seed');
+      expect(Entity.getConvergenceKey(queried)).toBe('org.example.seed');
     }).pipe(Effect.provide(Database.layer(reopened)), EffectEx.runAndForwardErrors);
   });
 
   // The duplication this exists to fix: two uncoordinated writers each create "the same" object.
-  test('duplicates sharing a natural key are detected and merged deterministically', async ({ expect }) => {
+  test('duplicates sharing a convergence key are detected and merged deterministically', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });
     const db = await peer.createDatabase();
 
     await Effect.gen(function* () {
       const first = Obj.make(TestSchema.Task, { title: 'from the first writer' });
-      Entity.setNaturalKey(first, 'org.example.seed');
+      Entity.setConvergenceKey(first, 'org.example.seed');
       yield* Database.add(first);
 
       const second = Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' });
-      Entity.setNaturalKey(second, 'org.example.seed');
+      Entity.setConvergenceKey(second, 'org.example.seed');
       yield* Database.add(second);
 
       yield* Database.flush();
@@ -100,11 +100,11 @@ describe('natural-key merging', () => {
 
     await Effect.gen(function* () {
       const first = Obj.make(TestSchema.Task, { title: 'from the first writer' });
-      Entity.setNaturalKey(first, 'org.example.seed');
+      Entity.setConvergenceKey(first, 'org.example.seed');
       yield* Database.add(first);
 
       const second = Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' });
-      Entity.setNaturalKey(second, 'org.example.seed');
+      Entity.setConvergenceKey(second, 'org.example.seed');
       yield* Database.add(second);
 
       // Same tick as the adds, before the worker can see the documents; either engine computes
@@ -133,11 +133,11 @@ describe('natural-key merging', () => {
     await Effect.gen(function* () {
       // Ids are ULIDs minted in creation order, so the first-created duplicate wins the merge.
       const winner = Obj.make(TestSchema.Person, { name: 'Alice (first writer)' });
-      Entity.setNaturalKey(winner, 'org.example.alice');
+      Entity.setConvergenceKey(winner, 'org.example.alice');
       yield* Database.add(winner);
 
       const loser = Obj.make(TestSchema.Person, { name: 'Alice (second writer)' });
-      Entity.setNaturalKey(loser, 'org.example.alice');
+      Entity.setConvergenceKey(loser, 'org.example.alice');
       yield* Database.add(loser);
 
       const org = yield* Database.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
@@ -173,11 +173,11 @@ describe('natural-key merging', () => {
 
     await Effect.gen(function* () {
       const winner = Obj.make(TestSchema.Person, { name: 'Alice (first writer)' });
-      Entity.setNaturalKey(winner, 'org.example.alice');
+      Entity.setConvergenceKey(winner, 'org.example.alice');
       yield* Database.add(winner);
 
       const loser = Obj.make(TestSchema.Person, { name: 'Alice (second writer)' });
-      Entity.setNaturalKey(loser, 'org.example.alice');
+      Entity.setConvergenceKey(loser, 'org.example.alice');
       yield* Database.add(loser);
 
       const child = yield* Database.add(Obj.make(TestSchema.Task, { title: 'filed under Alice' }));
@@ -198,7 +198,7 @@ describe('natural-key merging', () => {
 
     const tasks = ['first', 'second', 'third'].map((title) => {
       const task = db.add(Obj.make(TestSchema.Task, { title }));
-      Entity.setNaturalKey(task, 'org.example.seed');
+      Entity.setConvergenceKey(task, 'org.example.seed');
       return task;
     });
     await db.flush();
@@ -222,7 +222,7 @@ describe('natural-key merging', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Entity.setNaturalKey(task, 'org.example.seed');
+        Entity.setConvergenceKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
       mergeDuplicates([first, second]);
@@ -243,11 +243,11 @@ describe('natural-key merging', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Entity.setNaturalKey(task, 'org.example.seed');
+        Entity.setConvergenceKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
 
-      // Declares no natural key, so it is a referrer rather than a merge candidate, and it points
+      // Declares no convergence key, so it is a referrer rather than a merge candidate, and it points
       // at the object that is about to lose the merge.
       const referrer = Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) });
       yield* Database.add(referrer);
@@ -273,7 +273,7 @@ describe('natural-key merging', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Entity.setNaturalKey(task, 'org.example.seed');
+        Entity.setConvergenceKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
       const referrer = Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) });
@@ -299,7 +299,7 @@ describe('natural-key merging', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Entity.setNaturalKey(task, 'org.example.seed');
+        Entity.setConvergenceKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
 
@@ -338,13 +338,13 @@ describe('natural-key merging', () => {
       const targetWinner = Obj.make(TestSchema.Task, { title: 'target winner' });
       const targetLoser = Obj.make(TestSchema.Task, { title: 'target loser' });
       for (const task of [targetWinner, targetLoser]) {
-        Entity.setNaturalKey(task, 'org.example.target');
+        Entity.setConvergenceKey(task, 'org.example.target');
         yield* Database.add(task);
       }
       const referrerWinner = Obj.make(TestSchema.Task, { title: 'referrer winner', previous: Ref.make(targetLoser) });
       const referrerLoser = Obj.make(TestSchema.Task, { title: 'referrer loser', previous: Ref.make(targetLoser) });
       for (const task of [referrerWinner, referrerLoser]) {
-        Entity.setNaturalKey(task, 'org.example.referrer');
+        Entity.setConvergenceKey(task, 'org.example.referrer');
         yield* Database.add(task);
       }
       mergeDuplicates([targetWinner, targetLoser, referrerWinner, referrerLoser]);
@@ -368,7 +368,7 @@ describe('natural-key merging', () => {
     const first = db.add(Obj.make(TestSchema.Task, { title: 'first' }));
     const second = db.add(Obj.make(TestSchema.Task, { title: 'second', description: 'only here' }));
     for (const task of [first, second]) {
-      Entity.setNaturalKey(task, 'org.example.seed');
+      Entity.setConvergenceKey(task, 'org.example.seed');
     }
     const referrer = db.add(Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) }));
     await db.flush();
@@ -387,7 +387,7 @@ describe('natural-key merging', () => {
     expect((await db.mergeDuplicates()).merged).toHaveLength(0);
   });
 
-  test('db.mergeDuplicates leaves a space with no natural keys untouched', async ({ expect }) => {
+  test('db.mergeDuplicates leaves a space with no convergence keys untouched', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });
     const db = await peer.createDatabase();
 
@@ -405,7 +405,7 @@ describe('natural-key merging', () => {
 
     const tasks = ['first', 'second', 'third'].map((title) => {
       const task = db.add(Obj.make(TestSchema.Task, { title }));
-      Entity.setNaturalKey(task, 'org.example.seed');
+      Entity.setConvergenceKey(task, 'org.example.seed');
       return task;
     });
 
@@ -435,7 +435,7 @@ describe('natural-key merging', () => {
 
     const tasks = ['a', 'b', 'c'].map((title) => {
       const task = db.add(Obj.make(TestSchema.Task, { title }));
-      Entity.setNaturalKey(task, 'org.example.seed');
+      Entity.setConvergenceKey(task, 'org.example.seed');
       return task;
     });
     const [smallest, middle, largest] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
@@ -472,7 +472,7 @@ describe('natural-key merging', () => {
 
       const tasks = ['first', 'second'].map((title) => {
         const task = db.add(Obj.make(TestSchema.Task, { title, description: title }));
-        Entity.setNaturalKey(task, 'org.example.seed');
+        Entity.setConvergenceKey(task, 'org.example.seed');
         return task;
       });
       await db.flush();
@@ -491,7 +491,7 @@ describe('natural-key merging', () => {
 
       for (const title of ['first', 'second', 'third']) {
         const task = db.add(Obj.make(TestSchema.Task, { title }));
-        Entity.setNaturalKey(task, 'org.example.seed');
+        Entity.setConvergenceKey(task, 'org.example.seed');
       }
       await db.flush();
       await waitForLiveCount(db, 1);
@@ -509,7 +509,7 @@ describe('natural-key merging', () => {
 
       for (const title of ['first', 'second']) {
         const task = db.add(Obj.make(TestSchema.Task, { title }));
-        Entity.setNaturalKey(task, 'org.example.seed');
+        Entity.setConvergenceKey(task, 'org.example.seed');
       }
       await db.flush();
       await waitForLiveCount(db, 1);
@@ -526,7 +526,7 @@ describe('natural-key merging', () => {
       }
     });
 
-    test('a query over entities with no natural key is untouched', async ({ expect }) => {
+    test('a query over entities with no convergence key is untouched', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
 
@@ -537,13 +537,13 @@ describe('natural-key merging', () => {
       expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(2);
     });
 
-    test('entities with distinct natural keys are both returned', async ({ expect }) => {
+    test('entities with distinct convergence keys are both returned', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
 
-      for (const naturalKey of ['org.example.seed', 'org.example.seed@2']) {
-        const task = db.add(Obj.make(TestSchema.Task, { title: naturalKey }));
-        Entity.setNaturalKey(task, naturalKey);
+      for (const convergenceKey of ['org.example.seed', 'org.example.seed@2']) {
+        const task = db.add(Obj.make(TestSchema.Task, { title: convergenceKey }));
+        Entity.setConvergenceKey(task, convergenceKey);
       }
       await db.flush();
 
@@ -551,14 +551,14 @@ describe('natural-key merging', () => {
     });
   });
 
-  test('objects with distinct natural keys are not duplicates', async ({ expect }) => {
+  test('objects with distinct convergence keys are not duplicates', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });
     const db = await peer.createDatabase();
 
     await Effect.gen(function* () {
-      for (const naturalKey of ['org.example.seed', 'org.example.seed@2', 'org.example.other']) {
-        const task = Obj.make(TestSchema.Task, { title: naturalKey });
-        Entity.setNaturalKey(task, naturalKey);
+      for (const convergenceKey of ['org.example.seed', 'org.example.seed@2', 'org.example.other']) {
+        const task = Obj.make(TestSchema.Task, { title: convergenceKey });
+        Entity.setConvergenceKey(task, convergenceKey);
         yield* Database.add(task);
       }
       yield* Database.flush();

@@ -28,8 +28,8 @@ const idD = '01DDDDDDDDDDDDDDDDDDDDDDDD' as EntityId;
 const candidate = (
   id: EntityId,
   data: Record<string, unknown> = {},
-  options: { naturalKey?: string; keys?: ForeignKey[] } = {},
-): MergeCandidate => ({ id, naturalKey: options.naturalKey ?? 'org.example.seed', data, keys: options.keys });
+  options: { convergenceKey?: string; keys?: ForeignKey[] } = {},
+): MergeCandidate => ({ id, convergenceKey: options.convergenceKey ?? 'org.example.seed', data, keys: options.keys });
 
 // Every permutation of the input, so order-independence is asserted exhaustively rather than sampled.
 const permutations = <T>(items: readonly T[]): T[][] => {
@@ -45,10 +45,10 @@ describe('merge core', () => {
   describe('toMergeCandidate', () => {
     test('builds a candidate from a live object', ({ expect }) => {
       const object = Obj.make(TestSchema.Task, { title: 'one' });
-      Entity.setNaturalKey(object, 'org.example.seed');
+      Entity.setConvergenceKey(object, 'org.example.seed');
       const candidate = toMergeCandidate(object);
       expect(candidate.id).toBe(object.id);
-      expect(candidate.naturalKey).toBe('org.example.seed');
+      expect(candidate.convergenceKey).toBe('org.example.seed');
       expect(candidate.data.title).toBe('one');
     });
 
@@ -56,7 +56,7 @@ describe('merge core', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second', description: 'only on second' });
       for (const object of [first, second]) {
-        Entity.setNaturalKey(object, 'org.example.seed');
+        Entity.setConvergenceKey(object, 'org.example.seed');
       }
       // Ids are ULIDs minted in creation order, so `first` is the winner.
       const result = mergeCandidates([toMergeCandidate(second), toMergeCandidate(first)]);
@@ -66,7 +66,7 @@ describe('merge core', () => {
       expect(result.data.description).toBe('only on second');
     });
 
-    test('objects without a natural key are not grouped as duplicates', ({ expect }) => {
+    test('objects without a convergence key are not grouped as duplicates', ({ expect }) => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       const duplicates = findMergeDuplicates([toMergeCandidate(first), toMergeCandidate(second)]);
@@ -77,9 +77,9 @@ describe('merge core', () => {
   describe('findMergeDuplicates', () => {
     test('partitions by key and drops groups of one', ({ expect }) => {
       const duplicates = findMergeDuplicates([
-        candidate(idA, {}, { naturalKey: 'one' }),
-        candidate(idB, {}, { naturalKey: 'two' }),
-        candidate(idC, {}, { naturalKey: 'two' }),
+        candidate(idA, {}, { convergenceKey: 'one' }),
+        candidate(idB, {}, { convergenceKey: 'two' }),
+        candidate(idC, {}, { convergenceKey: 'two' }),
       ]);
       expect([...duplicates.keys()]).toEqual(['two']);
       expect(duplicates.get('two')!.map(({ id }) => id)).toEqual([idB, idC]);
@@ -87,13 +87,13 @@ describe('merge core', () => {
 
     test('no duplicates in a set of distinct keys', ({ expect }) => {
       const duplicates = findMergeDuplicates([
-        candidate(idA, {}, { naturalKey: 'one' }),
-        candidate(idB, {}, { naturalKey: 'two' }),
+        candidate(idA, {}, { convergenceKey: 'one' }),
+        candidate(idB, {}, { convergenceKey: 'two' }),
       ]);
       expect(duplicates.size).toBe(0);
     });
 
-    test('entities without a natural key never group, not even with each other', ({ expect }) => {
+    test('entities without a convergence key never group, not even with each other', ({ expect }) => {
       const duplicates = findMergeDuplicates([
         { id: idA, data: {} },
         { id: idB, data: {} },
@@ -103,9 +103,9 @@ describe('merge core', () => {
 
     test('keys differing only by encoded generation do not group together', ({ expect }) => {
       const duplicates = findMergeDuplicates([
-        candidate(idA, {}, { naturalKey: 'org.example.seed' }),
-        candidate(idB, {}, { naturalKey: 'org.example.seed@2' }),
-        candidate(idC, {}, { naturalKey: 'org.example.seed@2' }),
+        candidate(idA, {}, { convergenceKey: 'org.example.seed' }),
+        candidate(idB, {}, { convergenceKey: 'org.example.seed@2' }),
+        candidate(idC, {}, { convergenceKey: 'org.example.seed@2' }),
       ]);
       expect([...duplicates.keys()]).toEqual(['org.example.seed@2']);
     });
@@ -203,7 +203,7 @@ describe('merge core', () => {
       const candidates = [candidate(idA, { title: 'A' }), candidate(idB, { title: 'B', extra: 'b' })];
       const once = mergeCandidates(candidates);
       const twice = mergeCandidates([
-        { id: once.winner, naturalKey: 'org.example.seed', data: once.data },
+        { id: once.winner, convergenceKey: 'org.example.seed', data: once.data },
         ...candidates,
       ]);
       expect(twice.data).toEqual(once.data);

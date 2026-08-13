@@ -13,9 +13,9 @@ import { getObjectCore, isEchoObject } from '../echo-handler';
  * What one merge pass did, for diagnostics and for asserting idempotence.
  */
 export type MergePassResult = {
-  /** One entry per natural key that had duplicates. */
+  /** One entry per convergence key that had duplicates. */
   readonly merged: readonly {
-    readonly naturalKey: string;
+    readonly convergenceKey: string;
     readonly winner: EntityId;
     readonly losers: readonly EntityId[];
   }[];
@@ -25,7 +25,7 @@ export type MergePassResult = {
  * Apply the deterministic merge to every group of duplicates among `entities`.
  *
  * This is the client-side executor behind `db.mergeDuplicates()`; the automatic path runs in the
- * worker off the indexing stream (`echo-host`'s natural-key merge). Being a pure function of the
+ * worker off the indexing stream (`echo-host`'s convergence-key merge). Being a pure function of the
  * candidate set, it is safe to run redundantly — a client pass racing the worker converges, and a
  * second pass over the same entities is a no-op. Groups of one are skipped, so a space with no
  * duplicates costs one grouping pass and no writes.
@@ -41,24 +41,24 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
   }
 
   const merged: {
-    naturalKey: string;
+    convergenceKey: string;
     winner: EntityId;
     losers: readonly EntityId[];
   }[] = [];
 
-  // Group on the natural key alone first. Building a `MergeCandidate` snapshots the entity, which is a
+  // Group on the convergence key alone first. Building a `MergeCandidate` snapshots the entity, which is a
   // deep copy — too costly to pay for every entity on a path that runs per query, when almost none
   // are duplicated.
   const groups = new Map<string, Obj.Unknown[]>();
   for (const entity of entities) {
-    const naturalKey = Entity.getNaturalKey(entity);
+    const convergenceKey = Entity.getConvergenceKey(entity);
     // The empty string is not a key — grouping on it would merge unrelated entities.
-    if (naturalKey === undefined || naturalKey.length === 0) {
+    if (convergenceKey === undefined || convergenceKey.length === 0) {
       continue;
     }
     // Objects only — relations are not merge subjects (their endpoints would not be reconciled).
     // Feed-backed entities have no automerge core to merge into (out of scope, see DESIGN.md);
-    // and an entity already merged away is not a candidate — it keeps its natural key so a late
+    // and an entity already merged away is not a candidate — it keeps its convergence key so a late
     // peer can still recognize it, so a query including tombstones would otherwise re-merge it.
     if (!Obj.isObject(entity) || !isEchoObject(entity) || getObjectCore(entity).getMergedInto() !== undefined) {
       continue;
@@ -70,15 +70,15 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
     if (getObjectCore(entity).isDeleted()) {
       continue;
     }
-    const group = groups.get(naturalKey);
+    const group = groups.get(convergenceKey);
     if (group) {
       group.push(entity);
     } else {
-      groups.set(naturalKey, [entity]);
+      groups.set(convergenceKey, [entity]);
     }
   }
 
-  for (const [naturalKey, group] of groups) {
+  for (const [convergenceKey, group] of groups) {
     if (group.length < 2) {
       continue;
     }
@@ -124,7 +124,7 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
     }
     getObjectCore(winner).addMergedFrom([...absorbed]);
 
-    merged.push({ naturalKey, winner: result.winner, losers: result.losers });
+    merged.push({ convergenceKey, winner: result.winner, losers: result.losers });
   }
 
   return { merged };
@@ -252,7 +252,7 @@ export const isMergedAway = (entity: Obj.Unknown): boolean =>
  * never folded twice.
  *
  * The worker performs the same fold automatically when a late edit re-indexes a tombstoned
- * loser (`echo-host`'s natural-key merge); this client-side pass is the manual counterpart.
+ * loser (`echo-host`'s convergence-key merge); this client-side pass is the manual counterpart.
  *
  * @returns The number of fields folded.
  */

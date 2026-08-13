@@ -83,8 +83,8 @@ export const EntityMeta = Schema.Struct({
   target: Schema.NullOr(EID.Schema),
   /** Parent object id (nullable). */
   parent: Schema.NullOr(EID.Schema),
-  /** Caller-supplied domain identity from `meta.naturalKey` (nullable); duplicates sharing one merge. */
-  naturalKey: Schema.NullOr(Schema.String),
+  /** Caller-supplied domain identity from `meta.convergenceKey` (nullable); duplicates sharing one merge. */
+  convergenceKey: Schema.NullOr(Schema.String),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
   /** Unix ms timestamp when the object was first indexed. */
@@ -145,20 +145,20 @@ export class EntityMetaIndex implements Index {
   );
 
   /**
-   * Document-backed object rows carrying any of the given natural keys in one space.
+   * Document-backed object rows carrying any of the given convergence keys in one space.
    *
-   * The detection point-lookup for natural-key merging: called with only the keys seen in a just
-   * indexed batch, so its cost is proportional to writes that carry a natural key. Tombstoned
+   * The detection point-lookup for convergence-key merging: called with only the keys seen in a just
+   * indexed batch, so its cost is proportional to writes that carry a convergence key. Tombstoned
    * rows are included — a merged-away loser that received late edits must be found so those
    * edits can be folded into the winner; the merge re-verifies every row against its document.
    */
-  queryByNaturalKeys = Effect.fn('EntityMetaIndex.queryByNaturalKeys')(
+  queryByConvergenceKeys = Effect.fn('EntityMetaIndex.queryByConvergenceKeys')(
     (
       spaceId: SpaceId,
-      naturalKeys: readonly string[],
+      convergenceKeys: readonly string[],
     ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (naturalKeys.length === 0) {
+        if (convergenceKeys.length === 0) {
           return [];
         }
         const sql = yield* SqlClient.SqlClient;
@@ -166,10 +166,10 @@ export class EntityMetaIndex implements Index {
         // clone can present thousands of keys in one batch, and a thrown query here would skip
         // detection for the whole batch with no retry.
         const results: EntityMeta[] = [];
-        for (let offset = 0; offset < naturalKeys.length; offset += QUERY_CHUNK_SIZE) {
-          const chunk = naturalKeys.slice(offset, offset + QUERY_CHUNK_SIZE);
+        for (let offset = 0; offset < convergenceKeys.length; offset += QUERY_CHUNK_SIZE) {
+          const chunk = convergenceKeys.slice(offset, offset + QUERY_CHUNK_SIZE);
           const rows =
-            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('naturalKey', chunk)} AND entityKind = 'object' AND queueId = ''`;
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('convergenceKey', chunk)} AND entityKind = 'object' AND queueId = ''`;
           results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
         }
         return results;
@@ -336,15 +336,15 @@ export class EntityMetaIndex implements Index {
                 source: string | null;
                 target: string | null;
                 parent: string | null;
-                naturalKey: string | null;
+                convergenceKey: string | null;
               };
               let existing: readonly ExistingRow[];
               if (documentId) {
                 existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, naturalKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
               } else if (queueId) {
                 existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, naturalKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, convergenceKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
               } else {
                 // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
                 existing = [];
@@ -393,10 +393,10 @@ export class EntityMetaIndex implements Index {
                   : null;
               // Parent (nullable).
               const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
-              // Natural key (nullable) — from the meta section of the serialized object.
-              const naturalKey = preserveBody
-                ? priorRow.naturalKey
-                : ((castData[ATTR_META] as { naturalKey?: string } | undefined)?.naturalKey ?? null);
+              // Convergence key (nullable) — from the meta section of the serialized object.
+              const convergenceKey = preserveBody
+                ? priorRow.convergenceKey
+                : ((castData[ATTR_META] as { convergenceKey?: string } | undefined)?.convergenceKey ?? null);
 
               const updatedAtTimestamp = object.updatedAt;
               // Prefer the creation timestamp stored in the document (survives compaction/migrations).
@@ -418,7 +418,7 @@ export class EntityMetaIndex implements Index {
                     source = ${source},
                     target = ${target},
                     parent = ${parent},
-                    naturalKey = ${naturalKey},
+                    convergenceKey = ${convergenceKey},
                     updatedAt = ${updatedAtTimestamp}
                   WHERE recordId = ${existing[0].recordId}
                 `;
@@ -426,12 +426,12 @@ export class EntityMetaIndex implements Index {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
-                    entityKind, typeDXN, deleted, source, target, parent, naturalKey, version,
+                    entityKind, typeDXN, deleted, source, target, parent, convergenceKey, version,
                     createdAt, updatedAt
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
-                    ${source}, ${target}, ${parent}, ${naturalKey}, ${version},
+                    ${source}, ${target}, ${parent}, ${convergenceKey}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}
                   )
                 `;

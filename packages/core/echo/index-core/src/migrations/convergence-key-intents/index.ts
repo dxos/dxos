@@ -11,4 +11,4 @@ export const MIGRATIONS = {
 };
 
 /** Own history table per store, since many stores share the client database. */
-export const MIGRATIONS_TABLE = 'natural_key_intent_migrations';
+export const MIGRATIONS_TABLE = 'convergence_key_intent_migrations';
