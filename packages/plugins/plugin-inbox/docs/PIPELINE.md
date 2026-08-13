@@ -17,8 +17,8 @@ Sibling docs: [`PLAN.md`](PLAN.md) (product plan), [`TASKS.md`](TASKS.md) (ledge
    plugin-crm, …) contribute additional processors.
 
 Half 1 already existed and was the template for half 2, which is now open too — though the passes it
-runs are still all mailbox-shaped and still all live in plugin-inbox. The
-[inventory](#inventory--every-pipeline-over-a-mailbox) below lists both halves in one table.
+runs are still all mailbox-shaped and still all live in plugin-inbox. The inventory below lists both
+halves, and their stages, in one table.
 
 ## Half 1 is done: `sync/mail-sync.ts`
 
@@ -44,34 +44,44 @@ The cascade now reads `InboxCapabilities.MailboxProcessor` contributions and ord
 (`capabilities/mailbox-processors.ts`), so there is no privileged built-in path to drift from the
 contributed one. **The menu items have not been retired yet** — that is D5.
 
-### Inventory — every pipeline over a mailbox
+### Inventory — every pipeline over a mailbox, and its stages
 
-One table, both halves. **Processor** is the contributed id (the topology key and the cursor tag);
-`—` means the pipeline is not a contributed processor and is invoked some other way. Note the two
-granularities D2 separates: the sync half's `Stage`s are `Stream → Stream` transforms _inside_ one
-run, while a processor is a whole separately-spawned operation.
+One table, both halves and both granularities. **Processor** is the contributed id (the topology key
+and the cursor tag); `—` means the pipeline is not a contributed processor. **Stages** are the
+`@dxos/pipeline` `Stage`s _inside_ one run — the finer unit D2 keeps separate from a processor, which
+is a whole separately-spawned operation. `⋈` is a stream merge, `»` a `Stream.grouped` page, and the
+last element of each chain is the `Pipeline.run` sink.
 
-| Pipeline (operation)          | Processor       | Owner           | Tier          | Cost               | Cursor                   | Invoked by                        |
-| ----------------------------- | --------------- | --------------- | ------------- | ------------------ | ------------------------ | --------------------------------- |
-| `GoogleMailSync`              | —               | plugin-google   | sync          | none               | `Cursor.ExternalCursor`  | Sync toolbar action, routine      |
-| `JmapSync`                    | —               | plugin-jmap     | sync          | none               | `Cursor.ExternalCursor`  | Sync toolbar action, routine      |
-| `ExtractCorrespondents`       | `contacts`      | plugin-inbox    | deterministic | none               | none — identity index    | Scan cascade                      |
-| `ExtractSubscriptions`        | `subscriptions` | plugin-inbox    | deterministic | none               | none — replaces state    | Scan cascade                      |
-| `ClassifyMailbox`             | `classify`      | plugin-inbox    | classify      | cheap LLM, ≤100    | tagged `classifyMailbox` | Scan cascade, after `contacts`    |
-| `SummarizeMailbox`            | `summarize`     | plugin-inbox    | summarize     | 1 call/msg, ≤50    | none — newest thread id  | Scan, after `contacts`+`classify` |
-| `AnalyzeMailbox`              | `analyze`       | plugin-inbox\*  | analyze       | 1 call/msg, no cap | tagged `analyzeMailbox`  | Scan (opt-in), brain `Analyze`    |
-| `CrmOperation.ProcessMailbox` | —               | plugin-crm      | —             | LLM (optional)     | tagged                   | `Process CRM` menu item\*\*       |
-| `UpdateProjectTasks`          | —               | plugin-projects | —             | none               | none — whole feed        | Project routine                   |
-| `UpdateTravelLog`             | —               | plugin-projects | —             | none               | none — whole feed        | Project routine                   |
-| `UpdateInvestorLog`           | —               | plugin-projects | —             | LLM                | none — whole feed        | Project routine                   |
-| `ExtractMailbox`              | —               | plugin-inbox    | —             | LLM                | none                     | nothing — `@deprecated`           |
+| Pipeline (owner)                    | Processor       | Tier          | Cost               | Cursor                   | Stages                                                                                                                       |
+| ----------------------------------- | --------------- | ------------- | ------------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `GoogleMailSync` (google)           | —               | sync          | none               | `Cursor.ExternalCursor`  | `dedup` → bound → `decode` ⋈ `reconcile` → attachments → contacts → drafts → `collect-stats` → commit-unit » `Cursor.commit` |
+| `JmapSync` (jmap)                   | —               | sync          | none               | `Cursor.ExternalCursor`  | same shared harness as above (`sync/mail-sync.ts`)                                                                           |
+| `ExtractCorrespondents` (inbox)     | `contacts`      | deterministic | none               | none — identity index    | `build-contact` → sink (add Organization / Person)                                                                           |
+| `ExtractSubscriptions` (inbox)      | `subscriptions` | deterministic | none               | none — replaces state    | `extract-unsubscribe` » 50 → sink (aggregate per sender)                                                                     |
+| `ClassifyMailbox` (inbox)           | `classify`      | classify      | cheap LLM, ≤100    | tagged `classifyMailbox` | » page → `classify` → sink (advance cursor per LLM page)                                                                     |
+| `SummarizeMailbox` (inbox)          | `summarize`     | summarize     | 1 call/msg, ≤50    | none — newest thread id  | **none** — plain loop over threads                                                                                           |
+| `AnalyzeMailbox` (inbox\*)          | `analyze`       | analyze       | 1 call/msg, no cap | tagged `analyzeMailbox`  | delegates to `runFactPipeline`: `facts-dedup` → `extract-facts-unit` → `facts-log` » page → sink (`putFacts` + advance)      |
+| `CrmOperation.ProcessMailbox` (crm) | —               | —             | LLM (optional)     | tagged                   | **none** — plain paged loop                                                                                                  |
+| `UpdateProjectTasks` (projects)     | —               | —             | none               | none — whole feed        | **none** — filter + regenerate                                                                                               |
+| `UpdateTravelLog` (projects)        | —               | —             | none               | none — whole feed        | **none** — filter + regenerate                                                                                               |
+| `UpdateInvestorLog` (projects)      | —               | —             | LLM                | none — whole feed        | **none** — filter + regenerate                                                                                               |
+| `ExtractMailbox` (inbox)            | —               | —             | LLM                | none                     | **none** — `@deprecated`                                                                                                     |
 
-\* Moves to plugin-brain under D5, which also retires the two menu items in the last column.
-\*\* Overlaps `contacts` in purpose and competes with it from a separate toolbar entry.
+\* Moves to plugin-brain under D5.
 
-The sync half's internal stages, for contrast — these are `@dxos/pipeline` `Stage`s, not processors:
-`decode` → dedup → cap → `reconcile` → `collect-stats` → commit, all inside a single `GoogleMailSync`
-or `JmapSync` run.
+Everything not marked `—` in **Processor** is invoked by the Scan cascade. The exceptions:
+`GoogleMailSync`/`JmapSync` run from the Sync toolbar action or a routine; `AnalyzeMailbox` is ALSO
+reachable from brain's `Analyze` menu item and `ProcessMailbox` only from crm's `Process CRM` — the
+duplication D5 removes. The projects trio run from project routines.
+
+Two things the stages column makes visible:
+
+- **Only four of the twelve have an internal pipeline at all.** The rest are plain loops, so the
+  `@dxos/pipeline` machinery is not the shared substrate it might look like from the sync half.
+- **On-arrival extraction is commented out of the sync chain** (`mail-sync.ts`), because it reaches
+  `Capability.Service` and invokes `ExtractMessage`, neither of which exists off-host. Factoring it
+  into a processor that runs where those services do is exactly what half 2 is for — a fifth candidate
+  for D6 beyond the projects trio.
 
 Per-message one-shots (`ExtractMessage`, `CreateProjectFromMessage`, `UnsubscribeSender`,
 `GenerateReply`, …) and the `ResetFeedCursor` utility are not pipelines and are excluded.
