@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Equal from 'effect/Equal';
+import * as Hash from 'effect/Hash';
 import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
@@ -12,6 +14,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaURI } from '../../Annotation/annotations';
+import { isEntity } from '../../Entity/guard';
 import { toEffectSchema } from '../../JsonSchema/json-schema';
 import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
@@ -204,6 +207,27 @@ Object.defineProperties(TypedObjectPrototype, {
         return undefined;
       }
       return (callback: (obj: any) => void) => executeChange(target, target, this, callback);
+    },
+  },
+  // Effect `Hash`/`Equal` traits, keyed by entity id. Without them Effect falls back to a
+  // structural hash that deep-reads the whole record and caches the result by reference, so a
+  // mutable ECHO object used as a hash-map key (e.g. `Atom.family`) keys expensively and goes
+  // stale on mutation. Keyed by the bare `id` — a plain data property that cannot throw — rather
+  // than by a derived URI, whose validation rejects malformed ids; ECHO ids are unique on their
+  // own, and `Equal` (not the hash) decides identity. Both traits ship together: a `Hash` that
+  // disagrees with `Equal` breaks every hash-map lookup. Nested records carry no `id` and fall
+  // back to reference identity.
+  [Hash.symbol]: {
+    get(this: ProxyTarget) {
+      const target = getRawTarget(this);
+      return () => (target.id !== undefined ? Hash.hash(target.id) : Hash.random(target));
+    },
+  },
+  [Equal.symbol]: {
+    get(this: ProxyTarget) {
+      const target = getRawTarget(this);
+      return (that: unknown) =>
+        target.id !== undefined ? isEntity(that) && that.id === target.id : getRawTarget(that) === target;
     },
   },
   [StaticTypeSchemaSlot]: {
