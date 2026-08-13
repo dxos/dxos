@@ -214,13 +214,6 @@ const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToP
 const FEED_SYNC_POLL_INTERVAL = 2_000;
 
 /**
- * Bounds the feed sync-state RPC. `getSyncState` awaits the automerge and feed halves together, and
- * the automerge half is already bounded, so leaving this one open lets a single unanswered call
- * hang the combined promise forever — stranding every caller that polls it for convergence.
- */
-const RPC_TIMEOUT = 20_000;
-
-/**
  * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
  * otherwise the EDGE peer.
  */
@@ -827,7 +820,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     const response = await runServiceCall(
       this.#runtime,
       this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
-      { timeout: RPC_TIMEOUT, label: 'FeedService.getSyncState' },
     );
     let blocksToPull = 0n;
     let blocksToPush = 0n;

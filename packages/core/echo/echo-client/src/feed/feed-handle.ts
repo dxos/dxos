@@ -38,13 +38,6 @@ const FEED_APPEND_BATCH_SIZE = 15;
 const POLLING_INTERVAL = 1_000;
 
 /**
- * Bounds the feed sync-state RPC, matching the data-service calls. Callers poll this to decide when
- * replication has converged, so an unanswered call strands the poll loop before it can reach its own
- * deadline.
- */
-const RPC_TIMEOUT = 20_000;
-
-/**
  * Client-side handle for a single feed, backed by an EDGE queue.
  * Internal to echo-client — feed operations are exposed through {@link DatabaseImpl}.
  */
@@ -416,7 +409,6 @@ export class FeedHandle {
         spaceId: this._spaceId,
         namespaces: [this._namespace],
       }),
-      { timeout: RPC_TIMEOUT, label: 'FeedService.getSyncState' },
     );
     const entry = response.namespaces?.find((state) => state.namespace === this._namespace);
     return {
