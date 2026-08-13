@@ -54,14 +54,16 @@ New model on `effect/Graph`; schema layer untouched.
 Whether activation-graph's wave/cycle machinery simplifies into general algorithms that sit
 alongside the ones Effect ships (and stops being app-framework-specific code).
 
-- [ ] **`waves` (layered topo)** — generic `waves(graph): NodeIndex[][]` (Kahn levels); evaluate
-      as a core `@dxos/graph` algorithm; activation-graph consumes it with edge-kind filtering.
-- [ ] **Annotated cycle extraction** — generic ordered cycle path with edge data (what
-      `findCyclePath` needs, what SCC alone loses); same home.
-- [ ] **Edge-kind-filtered views** — evaluate a read-time filtered-graph view (Effect's
-      `filterEdges` is a mutation; activation builds per-kind graphs today).
-- [ ] **Upstream check** — are `waves`/annotated-cycle worth proposing to Effect itself? If yes,
-      file the issue/PR and keep ours as the interim.
+- [x] **Spike all three** (2026-08-13, validated against real activation-graph test fixtures —
+      see DESIGN §Generic evaluation algorithms): `waves(graph, {includeEdge?})` (Kahn levels,
+      `Option.none` on cycle, ~35 lines, 4.4ms @5k nodes); `findCycle(graph, {includeEdge?})`
+      (ordered edge-annotated cycle witness, ~40 lines); `includeEdge` predicate replaces
+      per-kind graph builds. Activation-graph's algorithm code reduces to ~10 lines of calls.
+- [ ] **Implement in `@dxos/graph` algorithms layer** (Phase 1/2 work item) and port
+      activation-graph onto them; tests must pass unchanged.
+- [ ] **Upstream check** — propose `findCycle` first (Effect's `topo` throws witness-free — this
+      improves their error story), then `waves` (natural `topo` companion / `{levels: true}`);
+      keep `includeEdge` in our layer if upstream declines the predicate.
 
 ## Phase 6: app-graph reconciliation
 

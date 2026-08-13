@@ -181,12 +181,33 @@ surface; all call sites are in-repo — migrate in the same change, **no compat 
 - O3: `SelectionModel` split into its own package/module — orthogonal, decide at Phase 4.
 - O4: effect 4 rc pin — `unstable/reactivity` API drift risk until 4.0 stable; the wrapper isolates
   the blast radius to one package.
-- O5 (Phase 5): does activation-graph's wave/cycle machinery generalize into algorithms that sit
-  alongside Effect's — `waves` (layered/Kahn-level topo), ordered edge-annotated cycle extraction,
-  and read-time edge-filtered views (Effect's `filterEdges` is a mutation)? Possibly upstreamable
-  to Effect itself.
+- O5 (Phase 5): RESOLVED by spike (2026-08-13) — see §Generic evaluation algorithms.
 - O6 (Phase 6): RESOLVED by spike (2026-08-13) — see §app-graph reconciliation. Verdict: share
   views + algorithms (projection), not storage.
+
+## Generic evaluation algorithms (Phase 5 spike findings)
+
+Both of activation-graph's hand-rolled algorithms generalize cleanly to graph-level functions in
+the `dijkstra` family — validated against the real `activation-graph.test.ts` fixtures (hard-only
+waves, hard+soft layering, cyclic → none, ordered annotated cycle, parallel edges):
+
+- **`waves(graph, {includeEdge?})` → `Option<NodeIndex[][]>`** — Kahn levels (layered topological
+  sort): wave N = nodes whose longest included-edge incoming path has length N; `Option.none` on
+  cycle. Effect's `topo` uses the same Kahn machinery but flattens to a linear order and THROWS on
+  cycles — `waves` subsumes activation's need. ~35 lines; 4.4ms over 5000 nodes / 14.7k edges
+  (activation rounds are ~100–300 modules → sub-0.1ms).
+- **`findCycle(graph, {includeEdge?})` → `Array<{node, edge, edgeIndex}>`** — one cycle IN ORDER
+  with edge annotations (the diagnostic `findCyclePath` needs; SCC gives only unordered
+  membership, and Effect's `topo` throws `GraphError` with no witness). ~40 lines.
+- **`includeEdge` predicate** solves read-time edge-kind filtering — no per-kind graph builds, no
+  mutation-based `filterEdges`.
+
+Net effect on activation-graph: `computeActivationWaves` + `findCyclePath` (~60 lines) reduce to
+~10 lines of calls + module mapping; what stays app-framework-specific is only building the graph
+from capability declarations. Upstream candidates, in order of strength: `findCycle` (improves
+Effect's own cycle-error story — their `topo` currently throws witness-free), then `waves`
+(natural `topo` companion, possibly as `topo(graph, {levels: true})`); the `includeEdge` predicate
+may be too opinionated for upstream — keep it in our layer if so.
 
 ## app-graph reconciliation (Phase 6 spike findings)
 
