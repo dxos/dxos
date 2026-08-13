@@ -380,10 +380,15 @@ export const ClassifyEmail = Operation.make({
 /** @deprecated Use {@link ExtractContactFromMessage} + the message extractor pipeline instead. */
 export const ExtractContact = Operation.make({
   meta: { key: makeKey('extractContact'), name: 'Extract Contact', icon: 'ph--user--regular' },
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     db: Database.Database,
     actor: Actor.Actor,
+    /**
+     * Mailbox whose messages from this sender get labelled `important` once the contact exists.
+     * Optional: tagging lives in the mailbox's index, so a caller without one just creates the Person.
+     */
+    mailbox: Schema.optional(Ref.Ref(Mailbox.Mailbox)),
   }),
   output: Schema.Void,
 });

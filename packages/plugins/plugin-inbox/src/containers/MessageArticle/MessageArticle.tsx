@@ -205,10 +205,16 @@ export const MessageArticle = ({
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
       if (db && actor) {
-        void invoker.invokePromise(InboxOperation.ExtractContact, { db, actor });
+        // The mailbox is what carries the tag index, so passing it is what lets the operation label
+        // this sender's existing messages rather than only creating the Person.
+        void invoker.invokePromise(InboxOperation.ExtractContact, {
+          db,
+          actor,
+          ...(mailbox ? { mailbox: Ref.make(mailbox) } : {}),
+        });
       }
     },
-    [db, invoker],
+    [db, invoker, mailbox],
   );
 
   // Derives a tracking Project from the message and opens it. Failures surface rather than being
