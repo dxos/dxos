@@ -387,3 +387,73 @@ export const Progress: Story = {
     await expect(meter).toBeInTheDocument();
   },
 };
+
+// Regression guard for "the mailbox only ever shows one page": the list is a windowed
+// `usePagination` query (10 items) and the virtualizer must request the next page as its loaded edge
+// nears the viewport.
+export const Paging: Story = {
+  args: {
+    count: 50,
+    conversations: false,
+  },
+  play: async ({ canvasElement }) => {
+    const getTileCount = () => canvasElement.querySelectorAll('[data-object-id]').length;
+    await waitFor(() => expect(getTileCount()).toBeGreaterThan(0), { timeout: 12_000 });
+    const firstPage = getTileCount();
+
+    // The list's scroll container is the `ScrollArea.Viewport` — the tallest scrollable element on
+    // the canvas (it is not a Radix viewport, so there is no data attribute to match).
+    const viewport = [...canvasElement.querySelectorAll<HTMLElement>('*')]
+      .filter((element) => element.scrollHeight > element.clientHeight + 8 && element.clientHeight > 200)
+      .at(0);
+    if (!viewport) {
+      throw new Error('Mailbox scroll viewport not found.');
+    }
+
+    // Scroll to the loaded end, which is what arms the virtualizer's next-page trigger.
+    for (let attempt = 0; attempt < 8; attempt++) {
+      viewport.scrollTop = viewport.scrollHeight;
+      viewport.dispatchEvent(new Event('scroll', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      if (getTileCount() > firstPage) {
+        break;
+      }
+    }
+
+    await expect(getTileCount()).toBeGreaterThan(firstPage);
+  },
+};
+
+export const PagingGrouped: Story = {
+  args: {
+    count: 50,
+    conversations: true,
+    threads: 12,
+  },
+  play: async ({ canvasElement }) => {
+    const getTileCount = () => canvasElement.querySelectorAll('[data-object-id]').length;
+    await waitFor(() => expect(getTileCount()).toBeGreaterThan(0), { timeout: 12_000 });
+    const firstPage = getTileCount();
+
+    // The list's scroll container is the `ScrollArea.Viewport` — the tallest scrollable element on
+    // the canvas (it is not a Radix viewport, so there is no data attribute to match).
+    const viewport = [...canvasElement.querySelectorAll<HTMLElement>('*')]
+      .filter((element) => element.scrollHeight > element.clientHeight + 8 && element.clientHeight > 200)
+      .at(0);
+    if (!viewport) {
+      throw new Error('Mailbox scroll viewport not found.');
+    }
+
+    // Scroll to the loaded end, which is what arms the virtualizer's next-page trigger.
+    for (let attempt = 0; attempt < 8; attempt++) {
+      viewport.scrollTop = viewport.scrollHeight;
+      viewport.dispatchEvent(new Event('scroll', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      if (getTileCount() > firstPage) {
+        break;
+      }
+    }
+
+    await expect(getTileCount()).toBeGreaterThan(firstPage);
+  },
+};

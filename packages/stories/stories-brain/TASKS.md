@@ -80,10 +80,20 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       comment in the old tests while doing it: `AssistantTestLayer` DOES provide an `AiService` — the
       classify tier fails there on a 401, not on a missing service, which is why the genuine-failure
       test still holds. `analyze` cannot be exercised in that layer at all (no `FactStore`).
-- [ ] **Mailbox article often shows only one page of messages** (regression, ~2026-08-05) — the
-      list stops after the first page instead of paging on scroll; `usePagination` in
-      `MailboxArticle.tsx` is the suspect. Bisect against the week's commits to that file and the
-      `InboxStack` virtualization.
+- [ ] **Mailbox article often shows only one page of messages** (regression, ~2026-08-05) — NOT
+      reproducible in storybook: new `Paging` + `PagingGrouped` play tests in
+      `MailboxArticle.stories.tsx` scroll the list and it extends correctly (flat 10→20, grouped
+      10→12), so the article → `InboxStack` → `Mosaic.VirtualStack` →
+      `useVirtualizerPagination` → `usePagination.getNext` chain is intact. Instrumented findings that
+      narrow the app case: the trigger needs `scrollOffset > 0` whenever the loaded window is no
+      larger than `paginationThreshold` (page size 10 vs default threshold 12 — ALWAYS true for the
+      first page), and the offset it reads comes from the virtualizer's own scroll element. So the
+      leading hypothesis is that in the app the element that actually scrolls is NOT the one the
+      virtualizer measures (the deck plank vs the article's `ScrollArea.Viewport`), leaving
+      `scrollOffset` at 0 forever and the trigger permanently disarmed. NEXT: confirm on a live
+      session (debug port) by reading `scrollTop` on the article's viewport while scrolling; the fix
+      is then either the deck's scroll ownership or lowering the mailbox's `paginationThreshold`
+      below its page size.
 - [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
 - [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
