@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -12,7 +12,7 @@ import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { type ActionProperties } from '#types';
+import { NavTreeNode } from '#types';
 
 const fallbackIcon = 'ph--circle-dashed--regular';
 
@@ -26,7 +26,7 @@ const lgActionButtonProps = {
   density: 'lg' as const,
 };
 
-export type NavTreeItemActionMenuProps = ActionProperties & {
+export type NavTreeItemActionMenuProps = NavTreeNode.ActionProperties & {
   parent: Node.Node;
   path?: string[];
   caller?: string;

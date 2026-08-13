@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
@@ -29,7 +30,7 @@ import {
   useMenuScope,
   useMenuScoped,
 } from './MenuContext';
-import { ToolbarMenu } from './ToolbarMenu';
+import { ToolbarMenu, ToolbarMenuItems } from './ToolbarMenu';
 
 //
 // MenuProvider (internal) — the context provider used by Menu.Root.
@@ -229,7 +230,9 @@ const MenuContent = ({
  * - `Menu.Root` — context boundary (replaces `MenuProvider`); also provides a dropdown root.
  * - `Menu.Trigger` / `Menu.VirtualTrigger` — dropdown trigger (use with `Menu.Content`).
  * - `Menu.Content` — renders graph-backed dropdown items inside a portal.
- * - `Menu.Toolbar` — flat toolbar component with graph-backed item rendering.
+ * - `Menu.Toolbar` — attention-gated toolbar container; renders only its children.
+ * - `Menu.Items` — the graph-backed toolbar items; place it among `Menu.Toolbar`'s children,
+ *   whose JSX order controls where the items sit.
  */
 const Menu = {
   Root: MenuRoot,
@@ -237,6 +240,7 @@ const Menu = {
   Content: MenuContent,
   VirtualTrigger: NaturalDropdownMenu.VirtualTrigger,
   Toolbar: ToolbarMenu,
+  Items: ToolbarMenuItems,
 };
 
 export { Menu };

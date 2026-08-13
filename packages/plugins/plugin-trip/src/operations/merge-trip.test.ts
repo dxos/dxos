@@ -10,7 +10,8 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { Booking, Segment, Trip } from '../types';
+import { Booking, Segment, Trip } from '#types';
+
 import mergeTripHandler from './merge-trip';
 
 describe('MergeTrip', () => {

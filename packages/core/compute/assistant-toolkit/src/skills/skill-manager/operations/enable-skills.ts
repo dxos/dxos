@@ -3,10 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 
 import { Harness } from '@dxos/assistant';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 
 import { EnableSkills } from './definitions';
@@ -20,13 +21,13 @@ export default EnableSkills.pipe(
       for (const key of keys) {
         const result = yield* Skill.resolve(key).pipe(
           Effect.mapError(() => ({ key, reason: 'Skill not found in registry.' })),
-          Effect.either,
+          Effect.result,
         );
-        if (Either.isLeft(result)) {
-          rejected.push(result.left);
+        if (Result.isFailure(result)) {
+          rejected.push(result.failure);
           continue;
         }
-        if (!result.right.agentCanEnable) {
+        if (!result.success.agentCanEnable) {
           rejected.push({ key, reason: 'Skill does not allow agent auto-enable (agentCanEnable is not set).' });
           continue;
         }

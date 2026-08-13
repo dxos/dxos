@@ -9,7 +9,7 @@ import { type Obj, Type, View } from '@dxos/echo';
 import { type AnnotationHelper, createAnnotationHelper } from '@dxos/echo/internal';
 
 // TODO(wittjosiah): This won't serialize into echo. Migrate to `Annotation.make` to store in `PropertyMeta`.
-export const ViewAnnotationId = Symbol.for('@dxos/schema/annotation/View');
+export const ViewAnnotationId = '@dxos/schema/annotation/View';
 
 /** Ref-like Echo field to a persisted View document. */
 type EchoViewRefLike = { load?: () => Promise<View.View>; target?: View.View };

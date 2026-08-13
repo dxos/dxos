@@ -4,8 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Terra, TerraObject } from '#types';
+
 import { dot, makeSampler, radiusAt, scale, seaRadius, sub } from '../engine';
-import { Terra, TerraObject } from '../types';
 import { toUnit } from './geo';
 import { type ObjectState, evaluate, initialState } from './motion';
 

@@ -6,7 +6,7 @@ import React, { type KeyboardEvent } from 'react';
 
 import { ScrollArea } from '@dxos/react-ui';
 
-import { type TerraObject } from '#types';
+import { TerraObject } from '#types';
 
 /**
  * One object's telemetry at the panel's sampling instant. Plain data rather than `SimObject`, so

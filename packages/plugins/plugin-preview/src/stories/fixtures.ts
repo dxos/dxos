@@ -46,7 +46,7 @@ export const createPerson = (): Person.Person => {
 export const createProject = (): Pipeline.Pipeline => {
   return Obj.make(Pipeline.Pipeline, {
     name: random.person.fullName(),
-    image: 'https://dxos.network/dxos-logotype-blue.png',
+    image: 'https://media.dxos.network/dxos-logotype-blue.png',
     description: random.lorem.paragraph(),
     columns: [],
   });
@@ -83,10 +83,7 @@ export const createPersonEmpty = (): Person.Person => Obj.make(Person.Person, {}
 const TableLike = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   view: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
-  sizes: Schema.Record({ key: Schema.String, value: Schema.Number }).pipe(
-    Schema.mutable,
-    Annotation.FormInputAnnotation.set(false),
-  ),
+  sizes: Schema.Record(Schema.String, Schema.Number).pipe(Schema.mutableKey, Annotation.FormInputAnnotation.set(false)),
 }).pipe(Type.makeObject(DXN.make('org.dxos.test.tableLike', '0.1.0')));
 type TableLike = Type.InstanceType<typeof TableLike>;
 

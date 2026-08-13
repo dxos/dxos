@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+
+import { Ibkr, IbkrOperation } from '#types';
 
 import { IBKR_SOURCE, tickerSource } from '../constants';
 import { parseClosedLots, parseOpenLots } from '../services';
-import { Ibkr, IbkrOperation } from '../types';
 import { latestReportFromFeed } from './feed';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.SyncLots> = IbkrOperation.SyncLots.pipe(

@@ -10,8 +10,9 @@ import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Operation, Trace } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -39,7 +40,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe('Streaming pipelines', () => {
-  it.scoped(
+  it.effect(
     'synchronous stream sum pipeline',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -58,7 +59,7 @@ describe('Streaming pipelines', () => {
     ),
   );
 
-  it.scopedLive(
+  it.live(
     'asynchronous stream sum pipeline',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -92,7 +93,12 @@ const sumAggregator = defineComputeNode({
   output: Schema.Struct({ result: Schema.Number }),
   exec: synchronizedComputeFunction(({ stream }) =>
     Effect.gen(function* () {
-      const result = yield* stream.pipe(Stream.runFold(0, (acc, x) => acc + x));
+      const result = yield* stream.pipe(
+        Stream.runFold(
+          () => 0,
+          (acc: number, x: number) => acc + x,
+        ),
+      );
       return { result };
     }),
   ),

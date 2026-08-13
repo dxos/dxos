@@ -11,7 +11,8 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { type Message } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
-import { type Assistant } from '../../types';
+import { Assistant } from '#types';
+
 import { type ChatEvent } from '../Chat';
 import { componentRegistry, createBlockRenderer } from './registry';
 import { type MessageSpan, MessageSyncer } from './sync';

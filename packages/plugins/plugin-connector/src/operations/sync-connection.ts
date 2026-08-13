@@ -4,15 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, RunAgainError } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { RunAgainError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
+import { ConnectorOperation, ConnectorSpec } from '#types';
+
 import { connectionDeckSubject } from '../constants';
 import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
-import { Connector, ConnectorOperation } from '../types';
 import { isCursorForConnection, syncBinding } from '../util';
 
 /** How many of a connection's bindings sync at once. */
@@ -28,7 +31,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       }
 
       const connection = yield* Database.load(connectionRef).pipe(Effect.provide(Database.layer(db)));
-      const connectors = (yield* Capability.Service).getAll(Connector).flat();
+      const connectors = (yield* Capability.getAll(ConnectorSpec.Connector)).flat();
       const connector = connectors.find((entry) => entry.id === connection.connectorId);
       if (!connector?.sync) {
         return { synced: 0 };
@@ -58,7 +61,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
             // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
             // TODO(wittjosiah): Only reaches a directly-invoked sync; a triggered run reports through
             //   the dispatcher's own process, so its 401s show a generic failure instead of this prompt.
-            Effect.catchAllDefect((defect) =>
+            Effect.catchDefect((defect) =>
               RunAgainError.is(defect)
                 ? Effect.void
                 : isUnauthorizedError(defect)

@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Database, Type } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
-import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 
 import { meta } from '#meta';
 import { Mailbox } from '#types';
@@ -22,7 +22,7 @@ export default Capability.makeModule(
         if (!query?.uri) {
           return [
             {
-              path: getPluginSettingsSectionPath(meta.profile.key),
+              path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
               label: 'Inbox settings',
               type: 'settings',
             },
@@ -36,7 +36,7 @@ export default Capability.makeModule(
 
         const { db } = yield* Database.Service;
         const ref = db.makeRef(targetUri);
-        const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
+        const object = yield* Database.load(ref).pipe(Effect.catch(() => Effect.succeed(null)));
         if (!object || !Mailbox.instanceOf(object)) {
           return [];
         }
@@ -50,6 +50,6 @@ export default Capability.makeModule(
         ];
       });
 
-    return Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver);
+    return Capability.contribute(AppCapabilities.NavigationTargetResolver, resolver);
   }),
 );

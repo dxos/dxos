@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useProgress } from '@dxos/app-toolkit/ui';
+import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 
 import { InputPanel } from '../components';
 import { PIPELINE_RUN, usePipelineStory } from './pipeline-context';
@@ -14,7 +14,7 @@ export const InputModule = () => {
   const { mode, onModeChange, initialDocument, parse, datasets, sampleTranscript, onLoadDataset, onInput } =
     usePipelineStory();
   // Busy while a run is in flight (from the progress monitor, not local state).
-  const busy = useProgress(PIPELINE_RUN)?.status === 'running';
+  const busy = useProgressMonitor(PIPELINE_RUN)?.status === 'running';
   return (
     <InputPanel
       mode={mode}

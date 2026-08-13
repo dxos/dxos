@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionCapabilities } from '#types';
 
@@ -21,7 +22,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
 
     const transcriptionManagerProvider: TranscriptionCapabilities.TranscriptionManagerProvider = ({
       messageEnricher,
@@ -42,8 +43,6 @@ export default Capability.makeModule(
       return transcriptionManager;
     };
 
-    return [
-      Capability.contributes(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider),
-    ];
+    return Capability.contribute(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider);
   }),
 );

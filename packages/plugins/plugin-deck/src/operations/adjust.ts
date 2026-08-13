@@ -6,17 +6,20 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Graph } from '@dxos/plugin-graph';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
+import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
+
 import { incrementPlank } from '../layout';
-import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
-import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, computeActiveUpdates } from '../util';
+import { computeActiveUpdates } from '../util';
 import { addCompanionPlank, updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
@@ -66,7 +69,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
             Graph.getNode(graph, input.id),
             Option.map((node) =>
               Graph.getConnections(graph, node.id, 'child')
-                .filter((n) => n.type === PLANK_COMPANION_TYPE)
+                .filter((n) => n.type === DeckSchema.PLANK_COMPANION_TYPE)
                 .toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
                 ),
@@ -76,14 +79,14 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
 
           if (companions.length > 0) {
             const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-            const selected = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
+            const selected = viewState.get(CompanionViewState.aspect, CompanionViewState.CONTEXT);
             const preferred = selected.variant
               ? companions.find((companion) => Attention.getLinkedVariant(companion.id) === selected.variant)
               : undefined;
             const companion = preferred ?? companions[0];
             if (!preferred) {
               // Merge (don't replace) so seeding the variant preserves the persisted split points.
-              viewState.update(companionAspect, COMPANION_VIEW_STATE_CONTEXT, (prev) => ({
+              viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({
                 ...prev,
                 variant: Attention.getLinkedVariant(companion.id),
               }));

@@ -13,7 +13,7 @@ import { Text as TextType } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Journal, getDateString } from '#types';
+import { Journal, TasksUtil } from '#types';
 
 import { Journal as JournalComponent } from './Journal';
 
@@ -41,7 +41,7 @@ const JournalsStory = () => {
         Obj.make(Journal.Journal, {
           name: 'Journal 1',
           entries: dates.reduce(
-            (acc, date) => ({ ...acc, [getDateString(date)]: Ref.make(Journal.makeEntry(date)) }),
+            (acc, date) => ({ ...acc, [TasksUtil.getDateString(date)]: Ref.make(Journal.makeEntry(date)) }),
             {},
           ),
         }),

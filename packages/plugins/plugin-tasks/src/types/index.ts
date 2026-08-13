@@ -1,9 +1,9 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
-
-export * from './util';
 
 export * as Journal from './Journal';
 export * as OutlineOperation from './OutlineOperation';
 export * as TaskOperation from './TaskOperation';
+export * as TasksEvents from './TasksEvents';
+export * as TasksUtil from './TasksUtil';

@@ -37,7 +37,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
@@ -59,13 +59,15 @@ import {
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { Drawing } from '@dxos/plugin-illustrator';
-import { Calendar, Mailbox, SystemTags } from '@dxos/plugin-inbox';
-import { Kanban } from '@dxos/plugin-kanban';
-import { Map as MapView } from '@dxos/plugin-map';
-import { Markdown } from '@dxos/plugin-markdown';
-import { Sheet } from '@dxos/plugin-sheet';
-import { Tldraw } from '@dxos/plugin-tldraw';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
+import * as MapView from '@dxos/plugin-map/Map';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Table } from '@dxos/react-ui-table/types';
 import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
@@ -90,21 +92,21 @@ const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 //
 const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
   S.Struct({
-    title: S.String.pipe(S.annotations({ title: 'Batch' })),
-    date: S.optional(S.String.pipe(S.annotations({ title: 'Date' }))),
-    origin: S.optional(S.String.pipe(S.annotations({ title: 'Origin / Lot' }))),
-    machine: S.optional(S.String.pipe(S.annotations({ title: 'Machine' }))),
-    roaster: S.optional(Ref.Ref(Person.Person).annotations({ title: 'Roaster' })),
-    greenWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Green (kg)' }))),
-    roastWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Roast (kg)' }))),
-    chargeTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Charge (°C)' }))),
-    firstCrackTime: S.optional(S.String.pipe(S.annotations({ title: 'First Crack' }))),
-    developmentTime: S.optional(S.String.pipe(S.annotations({ title: 'Dev Time' }))),
-    dropTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Drop (°C)' }))),
-    roastLevel: S.optional(S.String.pipe(S.annotations({ title: 'Roast Level' }))),
-    status: S.Literal('planned', 'roasted', 'cupped', 'approved').pipe(
+    title: S.String.pipe(S.annotate({ title: 'Batch' })),
+    date: S.optional(S.String.pipe(S.annotate({ title: 'Date' }))),
+    origin: S.optional(S.String.pipe(S.annotate({ title: 'Origin / Lot' }))),
+    machine: S.optional(S.String.pipe(S.annotate({ title: 'Machine' }))),
+    roaster: S.optional(Ref.Ref(Person.Person).annotate({ title: 'Roaster' })),
+    greenWeightKg: S.optional(S.Number.pipe(S.annotate({ title: 'Green (kg)' }))),
+    roastWeightKg: S.optional(S.Number.pipe(S.annotate({ title: 'Roast (kg)' }))),
+    chargeTemp: S.optional(S.Number.pipe(S.annotate({ title: 'Charge (°C)' }))),
+    firstCrackTime: S.optional(S.String.pipe(S.annotate({ title: 'First Crack' }))),
+    developmentTime: S.optional(S.String.pipe(S.annotate({ title: 'Dev Time' }))),
+    dropTemp: S.optional(S.Number.pipe(S.annotate({ title: 'Drop (°C)' }))),
+    roastLevel: S.optional(S.String.pipe(S.annotate({ title: 'Roast Level' }))),
+    status: S.Literals(['planned', 'roasted', 'cupped', 'approved']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      S.annotations({
+      S.annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -118,7 +120,7 @@ const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
         },
       }),
     ),
-    notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
+    notes: S.optional(S.String.pipe(S.annotate({ title: 'Notes' }))),
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),

@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -98,11 +98,10 @@ describe('Operation', () => {
 
     test('supports services array with Context.Tag instances', async () => {
       // Define service tags.
-      class DatabaseService extends Context.Tag('@dxos/DatabaseService')<
-        DatabaseService,
-        { query: (sql: string) => string[] }
-      >() {}
-      class AiService extends Context.Tag('@dxos/AiService')<AiService, { prompt: (text: string) => string }>() {}
+      class DatabaseService extends Context.Service<DatabaseService, { query: (sql: string) => string[] }>()(
+        '@dxos/DatabaseService',
+      ) {}
+      class AiService extends Context.Service<AiService, { prompt: (text: string) => string }>()('@dxos/AiService') {}
 
       // Create operation with declared services.
       const op = Operation.make({
@@ -212,10 +211,9 @@ describe('Operation', () => {
 
     test('handler can use services declared on operation', async () => {
       // Define service tags.
-      class DatabaseService extends Context.Tag('@test/DatabaseService')<
-        DatabaseService,
-        { query: (sql: string) => string[] }
-      >() {}
+      class DatabaseService extends Context.Service<DatabaseService, { query: (sql: string) => string[] }>()(
+        '@test/DatabaseService',
+      ) {}
 
       // Create operation with declared services.
       const op = Operation.make({
@@ -245,11 +243,12 @@ describe('Operation', () => {
     });
 
     test('handler using undeclared service is a type error', () => {
-      class DeclaredService extends Context.Tag('@test/DeclaredService')<DeclaredService, { declared: () => void }>() {}
-      class UndeclaredService extends Context.Tag('@test/UndeclaredService')<
-        UndeclaredService,
-        { undeclared: () => void }
-      >() {}
+      class DeclaredService extends Context.Service<DeclaredService, { declared: () => void }>()(
+        '@test/DeclaredService',
+      ) {}
+      class UndeclaredService extends Context.Service<UndeclaredService, { undeclared: () => void }>()(
+        '@test/UndeclaredService',
+      ) {}
 
       const op = Operation.make({
         input: Schema.Void,

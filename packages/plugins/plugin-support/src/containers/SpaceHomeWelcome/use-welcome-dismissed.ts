@@ -3,11 +3,10 @@
 //
 
 import * as Option from 'effect/Option';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
+import { useSettingsSpaceProperties } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
-import { type Space } from '@dxos/react-client/echo';
 
 import { WelcomeDismissedAnnotation } from '../../annotations';
 
@@ -16,13 +15,12 @@ import { WelcomeDismissedAnnotation } from '../../annotations';
 // every edit.
 
 /**
- * Reactively read the per-space "welcome dismissed" annotation (synced via space properties) and a
- * setter that persists it. `useObject` subscribes to the properties object, so the Hide button, the
+ * Reactively read the app-wide "welcome dismissed" annotation from the settings space and a setter
+ * that persists it. `useObject` subscribes to the properties object, so the Hide button, the
  * Settings "Show welcome page" action, and other devices all re-render live.
  */
-export const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) => void] => {
-  const spaceProperties = useMemo(() => space?.properties, [space]);
-  const [properties, updateProperties] = useObject(spaceProperties);
+export const useWelcomeDismissed = (): [boolean, (value: boolean) => void] => {
+  const [properties, updateProperties] = useSettingsSpaceProperties();
   const dismissed = properties
     ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
     : false;

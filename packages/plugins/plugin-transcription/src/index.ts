@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './meta';
-export * from './skills';
-export * from './types';
+export * as TranscriptionPlugin from './TranscriptionPlugin';
+export * from '#meta';
+export * from '#skills';
+export * from '#types';

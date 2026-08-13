@@ -5,7 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation, OperationHandlerSet, Skill, Template } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -26,9 +29,9 @@ export const RetrieveSubject = Operation.make({
   },
   services: [SubjectIndex],
   input: Schema.Struct({
-    subject: Schema.String.annotations({ description: 'Person or organization name, e.g. "Nicole Gudmand".' }),
+    subject: Schema.String.annotate({ description: 'Person or organization name, e.g. "Nicole Gudmand".' }),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum source messages to return (default 10).',
       }),
     ),

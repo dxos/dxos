@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -15,8 +15,9 @@ import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
-import { Result, Search } from '../../types';
+import { meta } from '#meta';
+import { Result, Search } from '#types';
+
 import { ResultDetail } from './ResultDetail';
 import { ResultTile } from './ResultTile';
 
@@ -143,7 +144,9 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} attendableId={id}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content>

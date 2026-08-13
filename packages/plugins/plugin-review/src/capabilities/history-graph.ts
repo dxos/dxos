@@ -5,10 +5,11 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj } from '@dxos/echo';
-import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 import { ReviewCapabilities } from '#types';
@@ -40,6 +41,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extension);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extension);
   }),
 );

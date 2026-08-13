@@ -386,9 +386,9 @@ const MapMarkers = ({ selected, markers, lines, onSelect }: MapMarkersProps) => 
               // TODO(burdon): Create custom icon from bundled assets.
               // TODO(burdon): Selection state.
               new L.Icon({
-                iconUrl: 'https://dxos.network/marker-icon.png',
-                iconRetinaUrl: 'https://dxos.network/marker-icon-2x.png',
-                shadowUrl: 'https://dxos.network/marker-shadow.png',
+                iconUrl: 'https://media.dxos.network/marker-icon.png',
+                iconRetinaUrl: 'https://media.dxos.network/marker-icon-2x.png',
+                shadowUrl: 'https://media.dxos.network/marker-shadow.png',
                 iconSize: [25, 41],
                 iconAnchor: [12, 41],
                 popupAnchor: [1, -34],

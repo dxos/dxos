@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Event, synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
@@ -18,6 +19,7 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
 import { type KeyringApi, KeyringApiService } from './keyring';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
 
 const KeyRecordCodec = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
 
@@ -42,17 +44,20 @@ export class SqliteKeyring implements KeyringApi {
     this.#runtime = runtime;
   }
 
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
-    'SqliteKeyring.migrate',
-  )(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`CREATE TABLE IF NOT EXISTS keyring (
-          public_key TEXT PRIMARY KEY,
-          record BLOB NOT NULL
-        )`;
-    }).pipe(Effect.withSpan('SqliteKeyring.migrate')),
-  )();
+  /**
+   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
+   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
+   * `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
+    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
+  ).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('SqliteKeyring.migrate'),
+  );
 
   async sign(key: PublicKey, message: Uint8Array): Promise<Uint8Array> {
     const keyPair = await this._getKey(key);

@@ -2,15 +2,34 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-export const CrxSettings = Capability.lazy('CrxSettings', () => import('./settings'));
-export const InstallPageActions = Capability.lazy('InstallPageActions', () => import('./install-page-actions'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { CrxCapabilities, CrxEvents } from '#types';
+
+export const CrxSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
+  provides: [CrxCapabilities.Settings],
+});
+export const InstallPageActions = Capability.lazyModule(
+  'InstallPageActions',
+  {
+    requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry, CrxCapabilities.Settings],
+    provides: [],
+    activatesOn: CrxEvents.Start,
+  },
+  () => import('./install-page-actions'),
 );
-export const PageActionProvider = Capability.lazy('PageActionProvider', () => import('./page-action-provider'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const PageActionProvider = Capability.lazyModule(
+  'PageActionProvider',
+  { provides: [CrxCapabilities.PageAction], activatesOn: CrxEvents.Start },
+  () => import('./page-action-provider'),
+);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});

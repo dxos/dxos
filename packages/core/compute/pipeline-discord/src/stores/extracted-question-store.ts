@@ -2,12 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
+
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { StoreError } from '../errors';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/extracted-question';
 
 /** A question a user asked in a message: the (user × channel × message × question) record. */
 export type ExtractedQuestion = {
@@ -29,21 +34,20 @@ export interface ExtractedQuestionStoreApi {
 
 const fail = (message: string) => (cause: unknown) => new StoreError({ message, cause });
 
-const migrate = (sql: SqlClient.SqlClient) =>
-  Effect.gen(function* () {
-    yield* sql`CREATE TABLE IF NOT EXISTS extracted_question (
-      message_id TEXT NOT NULL,
-      question TEXT NOT NULL,
-      author_id TEXT NOT NULL,
-      author_label TEXT,
-      target_id TEXT NOT NULL,
-      asked_at TEXT,
-      PRIMARY KEY (message_id, question)
-    )`;
-    // `list(targetId)` filters by target — index it so the lookup does not scan the whole table
-    // (mirrors MessageStore's `message_target` index).
-    yield* sql`CREATE INDEX IF NOT EXISTS extracted_question_target ON extracted_question (target_id, message_id)`;
-  });
+/**
+ * Applies any migrations this database has not recorded yet.
+ *
+ * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+ * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+ */
+const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+  Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('discord.extractedQuestionStore.migrate'),
+  );
 
 type Row = {
   readonly message_id: string;
@@ -63,35 +67,35 @@ const toQuestion = (row: Row): ExtractedQuestion => ({
   ...(row.asked_at !== null ? { askedAt: row.asked_at } : {}),
 });
 
-export class ExtractedQuestionStore extends Context.Tag('@dxos/pipeline-discord/ExtractedQuestionStore')<
-  ExtractedQuestionStore,
-  ExtractedQuestionStoreApi
->() {
-  static layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlClient> = Layer.scoped(
-    ExtractedQuestionStore,
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* migrate(sql).pipe(Effect.orDie);
-      return {
-        put: (question) =>
-          sql`INSERT INTO extracted_question (message_id, question, author_id, author_label, target_id, asked_at)
+export class ExtractedQuestionStore extends Context.Service<ExtractedQuestionStore, ExtractedQuestionStoreApi>()(
+  '@dxos/pipeline-discord/ExtractedQuestionStore',
+) {
+  static layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+    Layer.effect(
+      ExtractedQuestionStore,
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* migrate().pipe(Effect.orDie);
+        return {
+          put: (question) =>
+            sql`INSERT INTO extracted_question (message_id, question, author_id, author_label, target_id, asked_at)
             VALUES (${question.messageId}, ${question.question}, ${question.authorId},
               ${question.authorLabel ?? null}, ${question.targetId}, ${question.askedAt ?? null})
             ON CONFLICT(message_id, question) DO NOTHING`.pipe(
-            Effect.asVoid,
-            Effect.mapError(fail('Failed to persist extracted question')),
-          ),
-        list: (targetId) =>
-          (targetId !== undefined
-            ? sql<Row>`SELECT * FROM extracted_question WHERE target_id = ${targetId} ORDER BY message_id ASC`
-            : sql<Row>`SELECT * FROM extracted_question ORDER BY message_id ASC`
-          ).pipe(
-            Effect.map((rows) => rows.map(toQuestion)),
-            Effect.mapError(fail('Failed to list extracted questions')),
-          ),
-      };
-    }),
-  );
+              Effect.asVoid,
+              Effect.mapError(fail('Failed to persist extracted question')),
+            ),
+          list: (targetId) =>
+            (targetId !== undefined
+              ? sql<Row>`SELECT * FROM extracted_question WHERE target_id = ${targetId} ORDER BY message_id ASC`
+              : sql<Row>`SELECT * FROM extracted_question ORDER BY message_id ASC`
+            ).pipe(
+              Effect.map((rows) => rows.map(toQuestion)),
+              Effect.mapError(fail('Failed to list extracted questions')),
+            ),
+        };
+      }),
+    );
 
   static layerMemory: Layer.Layer<ExtractedQuestionStore> = Layer.sync(ExtractedQuestionStore, () => {
     const byKey = new Map<string, ExtractedQuestion>();

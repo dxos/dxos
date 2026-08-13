@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 
 /**
  * Compute graph node started executing.
@@ -70,10 +70,9 @@ export const ComputeCustomEvent = Trace.EventType('compute.custom', {
  * Carries the current compute node context (e.g., the executing node id).
  * Provided by the compute graph executor when invoking a node's compute function.
  */
-export class ComputeNodeContext extends Context.Tag('@dxos/conductor/ComputeNodeContext')<
-  ComputeNodeContext,
-  { readonly nodeId: string }
->() {
+export class ComputeNodeContext extends Context.Service<ComputeNodeContext, { readonly nodeId: string }>()(
+  '@dxos/conductor/ComputeNodeContext',
+) {
   static layerNoop: Layer.Layer<ComputeNodeContext> = Layer.succeed(ComputeNodeContext, { nodeId: '' });
 }
 

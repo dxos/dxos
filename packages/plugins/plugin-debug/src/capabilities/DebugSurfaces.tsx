@@ -4,29 +4,33 @@
 
 // Surface components that cannot be expressed as a `props` mapper, because they call hooks or compose.
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppAnnotation, type AppCapabilities, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Logger } from '@dxos/react-ui-debug';
 
 import { DebugObjectPanel, DebugSettings, DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
-import { type Settings } from '#types';
+import { Settings } from '#types';
 
 /** Returns `onOpen` and `canOpen` for the ObjectsTree "Open" action. */
 const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoker>['invokePromise']) => {
   const client = useClient();
-  const spaceSettings = useAtomCapability(SpaceCapabilities.Settings);
+  const spaceSettings = useAtomCapability(SpaceCapabilities.SettingsAtom);
   const showHidden = spaceSettings?.showHidden ?? false;
 
   const allTypes = useAtomValue(useMemo(() => client.graph.registry.query(Filter.type(Type.Type)).atom, [client]));

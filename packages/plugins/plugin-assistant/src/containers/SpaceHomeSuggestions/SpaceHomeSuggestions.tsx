@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { HomeSection, useOperationInvoker } from '@dxos/app-framework/ui';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 

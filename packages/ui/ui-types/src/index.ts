@@ -13,4 +13,4 @@ export * from './palette';
 export * from './size';
 export * from './slot';
 export * from './theme';
-export * from './translations';
+export * from '#translations';

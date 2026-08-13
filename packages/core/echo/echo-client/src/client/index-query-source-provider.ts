@@ -3,7 +3,7 @@
 //
 
 import * as Array from 'effect/Array';
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -25,7 +25,13 @@ import { isNonNullable } from '@dxos/util';
 import { type FeedHandle } from '../feed/feed-handle';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
-import { type QuerySource, type SourceEntry, getTargetSpacesForQuery } from '../query';
+import {
+  type QuerySource,
+  type SourceEntry,
+  getQueryDeletedOption,
+  getTargetSpacesForQuery,
+  queryTargetsSpacesOrFeeds,
+} from '../query';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -54,7 +60,7 @@ export interface ObjectLoader {
 
 export type IndexQueryProviderProps = {
   service: QueryService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -81,7 +87,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 
 export type IndexQuerySourceProps = {
   service: QueryService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -149,6 +155,13 @@ export class IndexQuerySource implements QuerySource {
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
     this._query = query;
+    // The index serves spaces and feeds; a query whose explicit scopes target neither
+    // (e.g. registry-only) is answered entirely by other sources. Forwarding it anyway
+    // made the whole query fail on edge — the query host rejects space-less queries, and
+    // the fail-fast merge in `GraphQueryContext.run` discarded the registry source's results.
+    if (!queryTargetsSpacesOrFeeds(query)) {
+      return [];
+    }
     return new Promise((resolve, reject) => {
       this._runOneShot(query, resolve, reject);
     });
@@ -169,6 +182,11 @@ export class IndexQuerySource implements QuerySource {
     // Don't start a reactive remote query until the query context is started (calls `open()`).
     // This prevents `.query(...).run()` from accidentally triggering a REACTIVE query in addition to the ONE_SHOT query.
     if (!this._open) {
+      return;
+    }
+
+    // Same gate as `run`: no space/feed scope means nothing here to watch.
+    if (!queryTargetsSpacesOrFeeds(query)) {
       return;
     }
 
@@ -205,7 +223,7 @@ export class IndexQuerySource implements QuerySource {
 
     cleanup = subscribeStream(
       this._params.runtime,
-      this._params.service.QueryService.execQuery({
+      this._params.service['QueryService.execQuery']({
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
@@ -244,7 +262,7 @@ export class IndexQuerySource implements QuerySource {
 
     this._streamCleanup = subscribeStream(
       this._params.runtime,
-      this._params.service.QueryService.execQuery({
+      this._params.service['QueryService.execQuery']({
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
@@ -471,6 +489,13 @@ export class IndexQuerySource implements QuerySource {
       return null;
     }
 
+    // The host's index lags a local delete: its in-flight response still lists the object, and
+    // because results are a union across sources any stale entry resurfaces it after the working
+    // set has already dropped it. The local flag is authoritative here.
+    if (!this._matchesDeletedOption(object)) {
+      return null;
+    }
+
     const queryResult: SourceEntry = {
       id: object.id,
       result: object,
@@ -479,6 +504,19 @@ export class IndexQuerySource implements QuerySource {
       group: _groupFromRemoteResult(result),
     };
     return queryResult;
+  }
+
+  /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
+  private _matchesDeletedOption(object: Entity.Unknown): boolean {
+    const deleted = Entity.isDeleted(object);
+    switch (this._query === undefined ? 'exclude' : getQueryDeletedOption(this._query)) {
+      case 'exclude':
+        return !deleted;
+      case 'only':
+        return deleted;
+      case 'include':
+        return true;
+    }
   }
 
   /**

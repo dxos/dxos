@@ -6,12 +6,12 @@
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
-import * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Scope from 'effect/Scope';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { RpcTiming } from '@dxos/worker-framework';
 
@@ -51,7 +51,7 @@ export const makeClientOverProtocol = <G, ProtocolError, ProtocolRequirements>(
     const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
     const protocolLayer = timingEnabled ? protocol.pipe(Layer.provideMerge(RpcTiming.clientLayer())) : protocol;
 
-    // Build the transport into the caller's scope (extended via `Scope.extend`) rather than
+    // Build the transport into the caller's scope (extended via `Scope.provide`) rather than
     // `Effect.provide`-ing the layer directly: that would bind the transport's lifetime to this
     // construction effect, tearing the worker connection down the instant the client is returned
     // (the client is used later by the caller). `Layer.build` keeps it alive for the caller's scope.
@@ -72,7 +72,7 @@ export const makeClient = <G>(
 ): Effect.Effect<unknown, never, Scope.Scope> =>
   makeClientOverProtocol(
     RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
-      Layer.provide(BrowserWorker.layerPlatform(() => port)),
+      Layer.provide(BrowserWorker.layer(() => port)),
     ),
     group,
     options,

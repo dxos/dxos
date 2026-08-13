@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Cursor } from '@dxos/link';
-import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
-import { type Mailbox } from '@dxos/plugin-inbox';
+import { Connection, Cursor } from '@dxos/link';
+import { isCursorForTarget } from '@dxos/plugin-connector';
+import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 /**

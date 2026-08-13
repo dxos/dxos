@@ -64,7 +64,6 @@
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -75,15 +74,14 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/platform": "catalog:",
     "effect": "catalog:",
     "esbuild": "catalog:",
     "esbuild-wasm": "catalog:",
     "iso-did": "catalog:"
   },
   "devDependencies": {
-    "@effect/vitest": "catalog:",
+    "@aws-sdk/client-s3": "catalog:",
+    "@dxos/echo-client": "workspace:*",
     "vitest": "catalog:"
   },
   "peerDependencies": {

@@ -12,8 +12,7 @@ import { Panel } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';
-import { FeedOperation } from '#types';
-import { Subscription } from '#types';
+import { FeedOperation, Subscription } from '#types';
 
 import { FeedToolbar } from './FeedToolbar';
 

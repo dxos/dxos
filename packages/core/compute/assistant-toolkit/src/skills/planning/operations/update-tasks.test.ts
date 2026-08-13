@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
@@ -30,7 +31,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('UpdateTasks', () => {
-  it.scoped(
+  it.effect(
     'adds items to the checklist',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -57,14 +58,14 @@ describe('UpdateTasks', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'adds items to the checklist without an agent, and checks off completed ones',
     Effect.fnUntraced(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
         expect(chat.outline).toBeUndefined();
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const binder = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));
 

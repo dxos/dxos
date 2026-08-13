@@ -5,15 +5,17 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
-import { ConnectionTestError, Connector, type CredentialForm, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { BlueskyOperation } from '#operations';
+import { BlueskyTargetOptions } from '#types';
+
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
-import { BlueskyOperation } from '../operations';
 import { BlueskyApi } from '../services';
-import { BlueskyTargetOptions } from '../types';
 
 /**
  * OAuth scopes for Bluesky.
@@ -44,14 +46,14 @@ const BSKY_OAUTH_SCOPES = ['transition:generic'] as const;
 
 /** Schema for the atproto pre-flight form (handle / DID). */
 const AtprotoPreflightForm = Schema.Struct({
-  handle: Schema.String.annotations({
+  handle: Schema.String.annotate({
     title: 'Handle',
     description: 'Your atproto handle or DID (e.g. user.bsky.social).',
     examples: ['user.bsky.social'],
   }),
 });
 
-const credentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightForm>> = {
+const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightForm>> = {
   schema: AtprotoPreflightForm,
   defaultValues: { handle: '' },
   // atproto pre-flight: capture the handle as a `loginHint` and let the
@@ -67,7 +69,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightF
  * offer to reauthenticate. Credentials resolve through the client (handle → PDS
  * → proxy), so `client` is required here where HTTP-only connectors ignore it.
  */
-const testConnection: TestConnection = ({ connection, client }) =>
+const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
   BlueskyApi.getSavedFeeds().pipe(
     Effect.provide(BlueskyApi.Credentials.fromConnection(Ref.make(connection), client)),
     Effect.asVoid,
@@ -86,7 +88,7 @@ const testConnection: TestConnection = ({ connection, client }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: BLUESKY_PROVIDER_ID,
         source: BLUESKY_SOURCE,

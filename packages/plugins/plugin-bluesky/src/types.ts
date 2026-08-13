@@ -41,7 +41,7 @@ export const BlueskyTargetOptions = Schema.Struct({
    * Capped at {@link MAX_PAGES_HARD_CAP} regardless of value.
    */
   maxPages: Schema.Number.pipe(
-    Schema.annotations({
+    Schema.annotate({
       title: 'Max pages per sync',
       description:
         'How many XRPC pages to walk per sync. Higher = more history per pass; bounded by an internal safety cap.',

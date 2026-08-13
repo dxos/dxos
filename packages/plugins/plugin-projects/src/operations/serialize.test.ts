@@ -4,9 +4,9 @@
 
 import { describe, test } from '@effect/vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
-import { ProjectOperationHandlerSet } from './index';
+import { ProjectOperationHandlerSet } from '#operations';
 
 describe('operation serialization', () => {
   // Remote hosts (edge operation-service) build a `PersistentOperation` record for every

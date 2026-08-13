@@ -12,8 +12,8 @@ import React, {
 } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import type * as Node from '@dxos/app-graph/Node';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
-import { type Node } from '@dxos/plugin-graph';
 import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 

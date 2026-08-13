@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
 import { Book } from '#types';
 

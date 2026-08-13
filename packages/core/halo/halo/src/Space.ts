@@ -20,28 +20,28 @@ import * as Invitation from './Invitation';
  * implies the previous: `pull` < `read` < `edit` < `admin`. Replaces the legacy
  * `SpaceMember.Role` enum.
  */
-export const Access = Schema.Literal('pull', 'read', 'edit', 'admin');
+export const Access = Schema.Literals(['pull', 'read', 'edit', 'admin']);
 export type Access = typeof Access.Type;
 
 /**
  * Lifecycle state of a space. Replaces the legacy `SpaceState` protobuf enum (subset relevant to
  * consumers).
  */
-export const State = Schema.Literal('inactive', 'closed', 'ready');
+export const State = Schema.Literals(['inactive', 'closed', 'ready']);
 export type State = typeof State.Type;
 
 /**
  * Who may join a space. Replaces the legacy `MembershipPolicy` protobuf enum: `invite` admits
  * members via invitation only; `locked` admits no new members.
  */
-export const MembershipPolicy = Schema.Literal('invite', 'locked');
+export const MembershipPolicy = Schema.Literals(['invite', 'locked']);
 export type MembershipPolicy = typeof MembershipPolicy.Type;
 
 /**
  * Whether a space replicates through EDGE. Replaces the legacy `EdgeReplicationSetting` protobuf
  * enum.
  */
-export const EdgeReplication = Schema.Literal('disabled', 'enabled');
+export const EdgeReplication = Schema.Literals(['disabled', 'enabled']);
 export type EdgeReplication = typeof EdgeReplication.Type;
 
 /**
@@ -55,7 +55,7 @@ export const Member = Schema.Struct({
   identityKey: Schema.optional(Schema.String),
   displayName: Schema.optional(Schema.String),
   /** Arbitrary profile metadata (e.g. avatar emoji, hue). */
-  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   role: Access,
   /** Whether the member is currently online. */
   online: Schema.Boolean,
@@ -94,40 +94,45 @@ export type CreateOptions = {
  * {@link Invitation.Flow}s driven through the {@link Invitation} flow verbs; `invitations`
  * observes the active (host-created) space-invitation flows.
  */
-export class Service extends Context.Tag('@dxos/halo/Space')<
-  Service,
-  {
-    /**
-     * All spaces known to the local identity as a stream that emits the current set immediately
-     * on subscription. Take the first element for a one-shot read; subscribe for updates.
-     */
-    readonly spaces: Stream.Stream<readonly Info[]>;
-    /** Resolve a space by id. */
-    readonly get: (id: SpaceId) => Effect.Effect<Option.Option<Info>>;
-    /** Create a new space. */
-    readonly create: (options?: CreateOptions) => Effect.Effect<Info, SpaceError>;
-    /** Resolve once the space has reached the `ready` state. */
-    readonly waitReady: (id: SpaceId) => Effect.Effect<void, SpaceError>;
-    /** Enable or disable EDGE replication for a space. */
-    readonly setEdgeReplication: (id: SpaceId, setting: EdgeReplication) => Effect.Effect<void, SpaceError>;
-    /** A space's membership; emits the current set immediately, then on join/leave/role/presence. */
-    readonly members: (id: SpaceId) => Stream.Stream<readonly Member[]>;
-    /** Change a member's access level (Keyhive delegation). */
-    readonly updateMemberRole: (id: SpaceId, subject: IdentityDid, role: Access) => Effect.Effect<void, SpaceError>;
-    /** Remove a member (Keyhive revocation). */
-    readonly removeMember: (id: SpaceId, subject: IdentityDid) => Effect.Effect<void, SpaceError>;
-    /** Initiate a space invitation (host side). */
-    readonly share: (id: SpaceId, options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, SpaceError>;
-    /** Redeem a space-invitation code (guest side). */
-    readonly join: (code: string) => Effect.Effect<Invitation.Flow, SpaceError>;
-    /** A space's active (host-created) invitation flows; emits the current set immediately. */
-    readonly invitations: (id: SpaceId) => Stream.Stream<readonly Invitation.Flow[]>;
-    /** Export a space to an archive. */
-    readonly export: (id: SpaceId) => Effect.Effect<Archive, SpaceError>;
-    /** Import a space from an archive. */
-    readonly import: (archive: Archive, options?: { tags?: readonly string[] }) => Effect.Effect<Info, SpaceError>;
-  }
->() {}
+/**
+ * The service shape backing {@link Service}. Named (rather than inline in the `Context.Tag`) so
+ * consumers referencing it — e.g. a capability typed `Context.Service.Shape<typeof Space.Service>` — name
+ * it portably instead of expanding its structure and leaking the transitive {@link Invitation}
+ * types into their declaration emit (TS2883).
+ */
+export interface ServiceApi {
+  /**
+   * All spaces known to the local identity as a stream that emits the current set immediately
+   * on subscription. Take the first element for a one-shot read; subscribe for updates.
+   */
+  readonly spaces: Stream.Stream<readonly Info[]>;
+  /** Resolve a space by id. */
+  readonly get: (id: SpaceId) => Effect.Effect<Option.Option<Info>>;
+  /** Create a new space. */
+  readonly create: (options?: CreateOptions) => Effect.Effect<Info, SpaceError>;
+  /** Resolve once the space has reached the `ready` state. */
+  readonly waitReady: (id: SpaceId) => Effect.Effect<void, SpaceError>;
+  /** Enable or disable EDGE replication for a space. */
+  readonly setEdgeReplication: (id: SpaceId, setting: EdgeReplication) => Effect.Effect<void, SpaceError>;
+  /** A space's membership; emits the current set immediately, then on join/leave/role/presence. */
+  readonly members: (id: SpaceId) => Stream.Stream<readonly Member[]>;
+  /** Change a member's access level (Keyhive delegation). */
+  readonly updateMemberRole: (id: SpaceId, subject: IdentityDid, role: Access) => Effect.Effect<void, SpaceError>;
+  /** Remove a member (Keyhive revocation). */
+  readonly removeMember: (id: SpaceId, subject: IdentityDid) => Effect.Effect<void, SpaceError>;
+  /** Initiate a space invitation (host side). */
+  readonly share: (id: SpaceId, options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, SpaceError>;
+  /** Redeem a space-invitation code (guest side). */
+  readonly join: (code: string) => Effect.Effect<Invitation.Flow, SpaceError>;
+  /** A space's active (host-created) invitation flows; emits the current set immediately. */
+  readonly invitations: (id: SpaceId) => Stream.Stream<readonly Invitation.Flow[]>;
+  /** Export a space to an archive. */
+  readonly export: (id: SpaceId) => Effect.Effect<Archive, SpaceError>;
+  /** Import a space from an archive. */
+  readonly import: (archive: Archive, options?: { tags?: readonly string[] }) => Effect.Effect<Info, SpaceError>;
+}
+
+export class Service extends Context.Service<Service, ServiceApi>()('@dxos/halo/Space') {}
 
 /** All spaces as a current-value stream (requires {@link Service}). */
 export const spaces: Stream.Stream<readonly Info[], never, Service> = Stream.unwrap(

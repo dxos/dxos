@@ -5,14 +5,14 @@
 import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
-import { CollaborationOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
-import { Markdown } from '../types';
+import { Markdown } from '#types';
 
 /** Splice `insert` over `[from, from+del)` on a Text and dispose any branch binding. */
 const splice = (text: Text.Text, from: number, del: number, insert: string) => {

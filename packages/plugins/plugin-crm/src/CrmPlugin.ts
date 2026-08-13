@@ -2,50 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+// @import-as-namespace
 
-import {
-  AppGraphBuilder,
-  AutomationTemplates,
-  MailboxAction,
-  OperationHandler,
-  ProjectTemplates,
-  SkillDefinition,
-} from '#capabilities';
-import { meta } from '#meta';
-import { translations } from '#translations';
-import { ProfileOf } from '#types';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
+import { meta as pluginMeta } from '#meta';
 
-export const CrmPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSchemaModule({ schema: [ProfileOf.ProfileOf] }),
-  Plugin.addModule({
-    id: 'crm-automation-templates',
-    activatesOn: AppActivationEvents.SetupSchema,
-    activate: AutomationTemplates,
-  }),
-  // Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu.
-  Plugin.addModule({
-    id: 'crm-mailbox-action',
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: MailboxAction,
-  }),
-  Plugin.addModule({
-    id: 'crm-project-templates',
-    activatesOn: AppActivationEvents.SetupSchema,
-    activate: ProjectTemplates,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
-  Plugin.make,
-);
+/** Plugin metadata, available without loading the plugin body. */
+export const meta = pluginMeta;
 
-export default CrmPlugin;
+/** Constructs the plugin; the body loads on first enable. */
+export const make = Plugin.lazy(meta, () => import('#plugin'));

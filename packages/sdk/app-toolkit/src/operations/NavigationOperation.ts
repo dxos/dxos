@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, URI } from '@dxos/keys';
 
 const NAVIGATION_PLUGIN = 'org.dxos.plugin.navigation';
@@ -18,9 +18,9 @@ const NAVIGATION_PLUGIN = 'org.dxos.plugin.navigation';
  * stays out of the wire format (it also holds `Position.last`, an Infinity that would not survive JSON).
  */
 const TargetSchema = Schema.Struct({
-  path: Schema.String.annotations({ description: 'Navigation path to use with the Open operation.' }),
-  label: Schema.String.annotations({ description: 'Human-readable label.' }),
-  type: Schema.String.annotations({ description: 'Object type.' }),
+  path: Schema.String.annotate({ description: 'Navigation path to use with the Open operation.' }),
+  label: Schema.String.annotate({ description: 'Human-readable label.' }),
+  type: Schema.String.annotate({ description: 'Object type.' }),
 });
 
 /**
@@ -56,7 +56,7 @@ export const ResolveNavigationTargets = Operation.make({
     ),
   }),
   output: Schema.Struct({
-    targets: Schema.Array(TargetSchema).annotations({
+    targets: Schema.Array(TargetSchema).annotate({
       description:
         'Resolved targets, best-first: a resolver that knows where the object actually lives precedes the generic database-path answer, so the first target is the one to open.',
     }),

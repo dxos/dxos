@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Database, type Key } from '@dxos/echo';
@@ -19,18 +19,20 @@ import { isBun } from '@dxos/util';
 export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFoundError, ClientService> =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    return yield* Option.fromNullable(client.spaces.get(spaceId));
-  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(spaceId))));
+    // v4 no longer yields an `Option` as an `Effect`, so the miss fails directly.
+    const space = client.spaces.get(spaceId);
+    return space ?? (yield* Effect.fail(new SpaceNotFoundError(spaceId)));
+  });
 
 export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
     return Option.getOrElse(spaceId, () => {
-      const personal = AppSpace.getPersonalSpace(client);
-      if (!personal) {
-        throw new Error('No space ID provided and no personal space found.');
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      if (!defaultSpace) {
+        throw new Error('No space ID provided and no default space found.');
       }
-      return personal.id;
+      return defaultSpace.id;
     });
   });
 
@@ -44,19 +46,20 @@ export const spaceLayer = (
 
     // Resolution order when fallbackToPersonalSpace is true:
     //   1. the explicit spaceId arg (if provided);
-    //   2. the space tagged `org.dxos.space.personal`;
-    //   3. the first available space.
-    // This keeps profiles created outside composer-app (which is what creates
-    // the personal-space tag on identity creation) usable — the alternative
+    //   2. the space designated as default by the settings space;
+    //   3. the first user-visible space.
+    // This keeps profiles created outside composer-app (which is what designates
+    // a default space on identity creation) usable — the alternative
     // is a "Space not found" throw deep inside CredentialsService.
     const resolveSpace = () => {
       if (!fallbackToPersonalSpace) {
-        return spaceId$.pipe(Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))));
+        return spaceId$.pipe(Option.flatMap((id) => Option.fromNullishOr(client.spaces.get(id))));
       }
       return spaceId$.pipe(
-        Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-        Option.orElse(() => Option.fromNullable(AppSpace.getPersonalSpace(client))),
-        Option.orElse(() => Option.fromNullable(client.spaces.get()[0])),
+        Option.flatMap((id) => Option.fromNullishOr(client.spaces.get(id))),
+        Option.orElse(() => Option.fromNullishOr(AppSpace.getDefaultSpace(client))),
+        // Not the raw first space: the settings space is created first and holds app config only.
+        Option.orElse(() => Option.fromNullishOr(client.spaces.get().find(AppSpace.isVisibleSpace))),
       );
     };
 
@@ -78,7 +81,7 @@ export const spaceLayer = (
       throw new Error('Space not found');
     },
   };
-  const db = Layer.scoped(
+  const db = Layer.effect(
     Database.Service,
     Effect.acquireRelease(
       Effect.gen(function* () {

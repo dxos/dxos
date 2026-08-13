@@ -5,13 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import type * as Node from '@dxos/app-graph/Node';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type Node } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -28,18 +29,12 @@ import { Plank } from './Plank';
 random.seed(99);
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
-  Plugin.addModule({
-    id: Capability.getModuleTag(DeckState),
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: () => DeckState(),
-  }),
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
+  Plugin.addModule(DeckState),
+  Plugin.addModule(OperationHandler),
   Plugin.make,
 );
 
-const TestExtension = Capability.contributes(
+const TestExtension = Capability.contribute(
   Capabilities.ReactSurface,
   Surface.create({
     id: 'storyArticle',

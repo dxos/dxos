@@ -9,11 +9,11 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { ComputeGraphContextProvider, Sheet, useComputeGraph } from '#components';
-import { SheetCapabilities, type Sheet as SheetType } from '#types';
+import { ComputeGraphContextProvider, Sheet as SheetComponent, useComputeGraph } from '#components';
+import { Sheet, SheetCapabilities } from '#types';
 
 export type SheetArticleProps = AppSurface.ObjectArticleProps<
-  SheetType.Sheet,
+  Sheet.Sheet,
   {
     ignoreAttention?: boolean;
   }
@@ -50,19 +50,19 @@ const SheetArticleInner = ({
   }
 
   return (
-    <Sheet.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
+    <SheetComponent.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
       <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square'}>
         <Panel.Toolbar asChild>
-          <Sheet.Toolbar />
+          <SheetComponent.Toolbar />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Sheet.Content />
+          <SheetComponent.Content />
         </Panel.Content>
         <Panel.Statusbar asChild>
-          <Sheet.Statusbar />
+          <SheetComponent.Statusbar />
         </Panel.Statusbar>
       </Panel.Root>
-    </Sheet.Root>
+    </SheetComponent.Root>
   );
 };
 

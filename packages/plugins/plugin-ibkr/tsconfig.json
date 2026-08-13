@@ -25,9 +25,6 @@
       "path": "../../common/errors"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -58,10 +55,10 @@
       "path": "../../core/mesh/edge-client"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-framework"
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -113,9 +110,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

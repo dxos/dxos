@@ -2,24 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-/** Create the triple store, entity, and cursor tables (idempotent). */
-export const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-  Effect.gen(function* () {
-    const sql = yield* SqlClient.SqlClient;
-    yield* sql`CREATE TABLE IF NOT EXISTS triples (
-      s TEXT NOT NULL, p TEXT NOT NULL, o TEXT NOT NULL,
-      oType TEXT NOT NULL, g TEXT NOT NULL DEFAULT ''
-    )`;
-    yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS triples_unique ON triples (s, p, o, oType, g)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS triples_spo ON triples (s, p, o)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS triples_pos ON triples (p, o)`;
-    yield* sql`CREATE TABLE IF NOT EXISTS entities (
-      id TEXT PRIMARY KEY, kind TEXT NOT NULL, label TEXT NOT NULL,
-      aliases TEXT NOT NULL DEFAULT '[]', ref TEXT
-    )`;
-    yield* sql`CREATE TABLE IF NOT EXISTS cursors (source TEXT PRIMARY KEY, hash TEXT NOT NULL)`;
-  });
+import { SqlTransaction } from '@dxos/sql-sqlite';
+
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../../migrations';
+
+/**
+ * Applies any migrations this database has not recorded yet.
+ *
+ * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+ * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+ */
+export const migrate = (): Effect.Effect<
+  void,
+  SqlError.SqlError,
+  SqlClient.SqlClient | SqlTransaction.SqlTransaction
+> =>
+  Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('pipeline-rdf.migrate'),
+  );

@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { Outline } from '@dxos/types';
 
+import { OutlineOperation } from '#types';
+
 import { InvalidOperationInput } from '../errors';
-import { OutlineOperation } from '../types';
 
 /**
  * Item-wise upsert is the default so an agent can flip one checkbox without rewriting the

@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, print, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter, Query } from '@dxos/echo';
@@ -18,8 +18,8 @@ export const remove = Command.make(
   'remove',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.text('typename').pipe(Options.withDescription('The typename to query.'), Options.optional),
-    id: Options.text('id').pipe(Options.withDescription('The object ID.'), Options.optional),
+    typename: Options.string('typename').pipe(Options.withDescription('The typename to query.'), Options.optional),
+    id: Options.string('id').pipe(Options.withDescription('The object ID.'), Options.optional),
   },
   ({ typename, id }) =>
     Effect.gen(function* () {

@@ -4,17 +4,23 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
+import { LOAD_PLUGIN_DIALOG } from '#containers';
 import { REGISTRY_ID, meta } from '#meta';
 
 import { getCategoryPredicate, getRemotePluginIds } from '../categories';
-import { LOAD_PLUGIN_DIALOG } from '../containers';
 
 /**
  * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it
@@ -41,7 +47,9 @@ const toDisplayPlugin = (entry: Plugin.Meta): Plugin.Plugin =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    // Hoisted so connector bodies read reactively via `get(...)` instead of a sync
+    // `Capability.get`, establishing a dependency that heals once the capability lands.
+    const pluginManagerAtom = yield* Capability.atom(Capabilities.PluginManager);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -85,7 +93,10 @@ export default Capability.makeModule(
         url: { key: 'category', kind: 'item', path: [] },
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
-          const manager = capabilities.get(Capabilities.PluginManager);
+          const [manager] = get(pluginManagerAtom);
+          if (!manager) {
+            return Effect.succeed([]);
+          }
           const plugins = get(manager.plugins);
           const filterContext = {
             core: get(manager.core),
@@ -185,7 +196,10 @@ export default Capability.makeModule(
         url: { key: 'registry', kind: 'item', path: [] },
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
-          const manager = capabilities.get(Capabilities.PluginManager);
+          const [manager] = get(pluginManagerAtom);
+          if (!manager) {
+            return Effect.succeed([]);
+          }
           const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.profile.key));
 
           const installedNodes = manager.getPlugins().map((plugin) =>
@@ -225,6 +239,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { CallsCapabilities } from '#types';
 
@@ -17,7 +17,7 @@ export default Capability.makeModule(
     // manager's activation ordering.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(CallsCapabilities.CallTransportProvider, {
+    return Capability.contribute(CallsCapabilities.CallTransportProvider, {
       kind: CLOUDFLARE_TRANSPORT_KIND,
       label: 'Cloudflare',
       join: async (roomId) => {

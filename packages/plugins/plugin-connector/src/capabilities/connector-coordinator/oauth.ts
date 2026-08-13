@@ -8,7 +8,7 @@ import { Context as DxContext } from '@dxos/context';
 import { type Key } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 
-import { type ConnectorEntry } from '#types';
+import { ConnectorSpec } from '#types';
 
 /**
  * Parses `postMessage` payload from the OAuth relay into a narrow result.
@@ -38,10 +38,19 @@ export const decodeOAuthMessageData = (
   return { tag: 'invalid' };
 };
 
+/**
+ * Whether a `postMessage` payload is shaped like an OAuth reply, regardless of whether it decodes.
+ *
+ * Separates "the relay answered and we rejected it" from "the relay never answered" when reporting a
+ * discarded message, without reporting every unrelated message the window receives.
+ */
+export const isOAuthShapedMessage = (data: unknown): boolean =>
+  typeof data === 'object' && data !== null && ('success' in data || 'accessTokenId' in data);
+
 export const initiateOAuthFlow = (
   edge: EdgeHttpClient,
   spaceId: Key.SpaceId,
-  oauth: NonNullable<ConnectorEntry['oauth']>,
+  oauth: NonNullable<ConnectorSpec.ConnectorEntry['oauth']>,
   accessTokenId: string,
   loginHint: string | undefined,
 ): Effect.Effect<{ authUrl: string }, Error> =>

@@ -2,13 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const ProjectOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create-chat'),
-  () => import('./create-project'),
-  () => import('./create-routine'),
-  () => import('./get-project'),
-  () => import('./list-projects'),
-  () => import('./update-project'),
-);
+import { ProjectMcpOperation, ProjectOperation } from '#types';
+
+export const ProjectOperationHandlerSet = OperationHandlerSet.lazy([
+  ProjectOperation.CreateChat.pipe(Operation.lazyHandler(() => import('./create-chat'))),
+  ProjectOperation.Create.pipe(Operation.lazyHandler(() => import('./create-project'))),
+  ProjectOperation.CreateRoutine.pipe(Operation.lazyHandler(() => import('./create-routine'))),
+  ProjectOperation.CreateTrackingProject.pipe(Operation.lazyHandler(() => import('./mailbox/create-tracking-project'))),
+  ProjectOperation.UpdateInvestorLog.pipe(Operation.lazyHandler(() => import('./mailbox/update-investor-log'))),
+  ProjectOperation.UpdateProjectTasks.pipe(Operation.lazyHandler(() => import('./mailbox/update-project-tasks'))),
+  ProjectOperation.UpdateTravelLog.pipe(Operation.lazyHandler(() => import('./mailbox/update-travel-log'))),
+  ProjectMcpOperation.GetProject.pipe(Operation.lazyHandler(() => import('./get-project'))),
+  ProjectMcpOperation.ListProjects.pipe(Operation.lazyHandler(() => import('./list-projects'))),
+  ProjectMcpOperation.UpdateProject.pipe(Operation.lazyHandler(() => import('./update-project'))),
+]);

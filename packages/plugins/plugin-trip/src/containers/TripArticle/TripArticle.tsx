@@ -6,13 +6,14 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { MapInline } from '@dxos/plugin-map';
-import { MapCapabilities } from '@dxos/plugin-map/types';
+import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
+import * as MapRole from '@dxos/plugin-map/MapRole';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -284,7 +285,9 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           <Panel.Root>
             <Panel.Toolbar>
               <Menu.Root {...menuActions} attendableId={attendableId}>
-                <Menu.Toolbar />
+                <Menu.Toolbar>
+                  <Menu.Items />
+                </Menu.Toolbar>
               </Menu.Root>
             </Panel.Toolbar>
             <Panel.Content asChild>
@@ -298,7 +301,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
-              <Surface.Surface type={MapInline} data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}

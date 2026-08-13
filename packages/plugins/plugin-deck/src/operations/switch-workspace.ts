@@ -4,12 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
-import { DeckCapabilities, defaultDeck } from '../types';
+import { DeckCapabilities, DeckSchema } from '#types';
+
 import { openableChildren } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
@@ -26,7 +30,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
           const newDecks = state.decks[input.subject]
             ? state.decks
-            : { ...state.decks, [input.subject]: { ...defaultDeck } };
+            : { ...state.decks, [input.subject]: { ...DeckSchema.defaultDeck } };
           return {
             ...state,
             previousDeck: shouldUpdatePrevious ? state.activeDeck : state.previousDeck,

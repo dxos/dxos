@@ -35,9 +35,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/TerraPlugin.tsx",
-      "types": "./dist/types/src/TerraPlugin.d.ts",
-      "default": "./dist/lib/TerraPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -57,18 +57,47 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./Terra": {
+      "source": "./src/types/Terra.ts",
+      "types": "./dist/types/src/types/Terra.d.ts",
+      "import": "./dist/lib/Terra.mjs"
+    },
+    "./TerraCapabilities": {
+      "source": "./src/types/TerraCapabilities.ts",
+      "types": "./dist/types/src/types/TerraCapabilities.d.ts",
+      "import": "./dist/lib/TerraCapabilities.mjs"
+    },
+    "./TerraObject": {
+      "source": "./src/types/TerraObject.ts",
+      "types": "./dist/types/src/types/TerraObject.d.ts",
+      "import": "./dist/lib/TerraObject.mjs"
+    },
+    "./TerraPlugin": {
+      "source": "./src/TerraPlugin.ts",
+      "types": "./dist/types/src/TerraPlugin.d.ts",
+      "import": "./dist/lib/TerraPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Terra": [
+        "dist/types/src/types/Terra.d.ts"
+      ],
+      "TerraCapabilities": [
+        "dist/types/src/types/TerraCapabilities.d.ts"
+      ],
+      "TerraObject": [
+        "dist/types/src/types/TerraObject.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -96,6 +125,7 @@
   "devDependencies": {
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/seedrandom": "catalog:",

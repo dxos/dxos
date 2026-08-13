@@ -2,7 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+
+import { NativeFilesystemCapabilities, NativeFilesystemEvents } from '#types';
 
 export * as FilesystemManager from './FilesystemManager';
-export const State = Capability.lazy('State', () => import('./state'));
+export const State = Capability.lazyModule(
+  'State',
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
+    provides: [NativeFilesystemCapabilities.State, NativeFilesystemCapabilities.FilesystemManager],
+    activatesOn: NativeFilesystemEvents.Start,
+  },
+  () => import('./state'),
+);

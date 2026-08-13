@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+
+import { SlackOperation } from '#types';
 
 import { SlackApi } from '../services';
-import { SlackOperation } from '../types';
 
 /**
  * Friendly label for a Slack conversation, derived from its type:

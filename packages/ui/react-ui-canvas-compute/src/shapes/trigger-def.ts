@@ -3,8 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
-import { Trigger, TriggerEvent } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { VoidInput } from '@dxos/conductor';
 import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
@@ -18,9 +20,8 @@ import { createTriggerSpec, getOutputSchema } from './trigger-spec';
 // Kept out of `Trigger.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
 
-const TriggerShapeSchema = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+const TriggerShapeSchema = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('trigger'),
     functionTrigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
   }),
@@ -32,7 +33,7 @@ export interface TriggerShape extends ComputeShape {
   functionTrigger?: Ref.Ref<Trigger.Trigger>;
 }
 
-export const TriggerShape: Schema.Schema<TriggerShape> = TriggerShapeSchema as any;
+export const TriggerShape: Schema.Codec<TriggerShape> = TriggerShapeSchema as any;
 
 export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
   spaceId?: SpaceId;

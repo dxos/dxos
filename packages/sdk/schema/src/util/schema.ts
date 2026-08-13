@@ -10,7 +10,7 @@ import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
 import { type Mutable } from '@dxos/echo/Obj';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { DXN, PublicKey } from '@dxos/keys';
+import { DXN, PublicKey, type URI } from '@dxos/keys';
 
 export type SelectOptionType = typeof SelectOption.Type;
 
@@ -24,11 +24,11 @@ export type SchemaPropertyDefinition = {
 
 export const createDefaultSchema = () => {
   const struct = Schema.Struct({
-    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+    title: Schema.optional(Schema.String).annotate({ title: 'Title' }),
     status: Schema.optional(
-      Schema.Literal('todo', 'in-progress', 'done')
+      Schema.Literals(['todo', 'in-progress', 'done'])
         .pipe(FormatAnnotation.set(Format.TypeFormat.SingleSelect))
-        .annotations({
+        .annotate({
           title: 'Status',
           [PropertyMetaAnnotationId]: {
             singleSelect: {
@@ -41,7 +41,7 @@ export const createDefaultSchema = () => {
           },
         }),
     ),
-    description: Schema.optional(Schema.String).annotations({
+    description: Schema.optional(Schema.String).annotate({
       title: 'Description',
     }),
   });
@@ -49,20 +49,26 @@ export const createDefaultSchema = () => {
   return Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0'))(struct);
 };
 
-export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Promise<Type.AnyEntity | undefined> => {
-  if (!DXN.isDXN(dxn)) {
+export const getSchema = async (
+  dxn: URI.URI | DXN.DXN,
+  registry?: Registry.Registry,
+): Promise<Type.AnyEntity | undefined> => {
+  if (!DXN.isDXN(dxn) || !registry) {
     return;
   }
 
-  const version = DXN.getVersion(dxn);
-  if (!version || !registry) {
-    return;
-  }
-  // `dxn` is already a canonical `dxn:<typename>:<version>` DXN; pass it through
-  // directly rather than rebuilding a DXN string.
-  const entity = registry.getByURI(dxn);
+  // `dxn` is already a canonical DXN; pass it through directly rather than rebuilding a DXN string.
+  // The registry indexes types by their versioned typename DXN, but a reference stored in JSON
+  // schema carries only the typename (`createSchemaReference` writes no version), so an unversioned
+  // target falls back to matching on typename alone.
+  const entity =
+    registry.getByURI(dxn) ??
+    (DXN.getVersion(dxn) === undefined ? findTypeByTypename(registry, DXN.getName(dxn)) : undefined);
   return entity != null && Type.isType(entity) ? entity : undefined;
 };
+
+const findTypeByTypename = (registry: Registry.Registry, typename: string) =>
+  registry.list().find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
 
 // TODO(burdon): Factor out.
 export const getSchemaFromPropertyDefinitions = (
@@ -70,11 +76,11 @@ export const getSchemaFromPropertyDefinitions = (
   properties: SchemaPropertyDefinition[],
 ): Type.Type => {
   // TODO(burdon): Move to echo-schema.
-  const typeToSchema: Record<TypeEnum, Schema.Any> = {
+  const typeToSchema: Record<TypeEnum, Schema.Top> = {
     [TypeEnum.String]: Schema.String.pipe(Schema.optional),
     [TypeEnum.Number]: Schema.Number.pipe(Schema.optional),
     [TypeEnum.Boolean]: Schema.Boolean.pipe(Schema.optional),
-    [TypeEnum.Object]: Schema.Object.pipe(Schema.optional),
+    [TypeEnum.Object]: Schema.ObjectKeyword.pipe(Schema.optional),
     // TODO(ZaymonFC): Arrays are undercooked, we should specify the item type / format as well.
     [TypeEnum.Array]: Schema.Array(Schema.Any),
     [TypeEnum.Ref]: Schema.String.pipe(Schema.optional), // TODO(burdon): Is this correct for refs?

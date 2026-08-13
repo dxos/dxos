@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { type ComponentProps } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
@@ -20,19 +21,19 @@ import {
   ResetDialog,
   UsageContainer,
 } from '#containers';
-import { Account, type ClientPluginOptions } from '#types';
+import { Account, ClientOptions } from '#types';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants';
 
-type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
+type ReactSurfaceOptions = Pick<ClientOptions.ClientPluginOptions, 'onReset' | 'identityTestActions'> & {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ createInvitationUrl, onReset }: ReactSurfaceOptions) {
+  Effect.fnUntraced(function* ({ createInvitationUrl, onReset, identityTestActions }: ReactSurfaceOptions) {
     const capabilityManager = yield* Capability.Service;
 
-    return Capability.contributes(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: Account.Profile,
         filter: AppSurface.literal(AppSurface.Article, Account.Profile),
@@ -42,7 +43,7 @@ export default Capability.makeModule(
         id: Account.Devices,
         filter: AppSurface.literal(AppSurface.Article, Account.Devices),
         component: DevicesContainer,
-        props: () => ({ createInvitationUrl }),
+        props: () => ({ createInvitationUrl, identityTestActions }),
       }),
       Surface.create({
         id: Account.Security,

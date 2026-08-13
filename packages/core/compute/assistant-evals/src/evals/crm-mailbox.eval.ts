@@ -8,9 +8,9 @@ import { evalite } from 'evalite';
 
 import { Obj, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { CrmPlugin } from '@dxos/plugin-crm/plugin';
-import { ProfileOf } from '@dxos/plugin-crm/types';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
+import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -84,7 +84,7 @@ const task = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  plugins: [CrmPlugin(), MarkdownPlugin()],
+  plugins: [CrmPlugin.make(), MarkdownPlugin.make()],
   // Research (web search) + CRM + markdown tool calls chain across several turns; observed ~95s live.
   timeout: 150_000,
   dbQuery: () =>

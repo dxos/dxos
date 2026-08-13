@@ -71,7 +71,7 @@ export const translations = [
         'shortcuts-dialog.title': 'Shortcuts',
         'welcome.title': 'Welcome to Composer',
         'welcome.description':
-          'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn how to get started.',
+          'This is your default space. Open a ticket from the Support assistant, or start the guided tour to learn how to get started.',
         'start-tour.button': 'Start tour',
         'hide-welcome.button': 'Hide Welcome',
         // Settings.

@@ -11,10 +11,10 @@ import { useObject } from '@dxos/echo-react';
 import { Card, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { FundamentalsPanel, TradingViewChart } from '#components';
+import { Ibkr, IbkrOperation } from '#types';
 
 import { meta } from '../../meta';
 import { resolveTradingViewSymbol } from '../../services';
-import { type Ibkr, IbkrOperation } from '../../types';
 
 export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Ibkr.Instrument>;
 

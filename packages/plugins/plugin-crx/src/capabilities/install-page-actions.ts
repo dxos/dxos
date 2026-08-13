@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
@@ -16,9 +17,9 @@ import { installPageActionListeners } from '../page-actions';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const settingsAtom = yield* Capability.get(CrxCapabilities.Settings);
+    const invoker = yield* Capabilities.OperationInvoker;
+    const registry = yield* Capabilities.AtomRegistry;
+    const settingsAtom = yield* CrxCapabilities.Settings;
 
     // NOTE: The `Label` tuple only supports `ns`/`count`/`defaultValue`, so the
     // success toast uses a plain key rather than interpolating the action label.
@@ -41,5 +42,7 @@ export default Capability.makeModule(
     });
 
     log.info('CRX page-actions bridge installed');
+
+    return [];
   }),
 );

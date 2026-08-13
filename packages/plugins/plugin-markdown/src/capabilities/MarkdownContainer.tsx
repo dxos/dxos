@@ -12,7 +12,7 @@ import { type Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { MarkdownArticle, type MarkdownArticleProps } from '#containers';
-import { type Markdown, MarkdownCapabilities } from '#types';
+import { Markdown, MarkdownCapabilities } from '#types';
 
 import { editorViewModeAspect } from './editor-view-state';
 

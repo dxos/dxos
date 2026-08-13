@@ -3,30 +3,33 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as Struct from 'effect/Struct';
 
+import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 // TODO(ZaymonFC): Do this one at a time. This might be dangerous.
-export const addFieldsToSchema = (
-  schema: Schema.Schema.AnyNoContext,
-  fields: Schema.Struct.Fields,
-): Schema.Schema.AnyNoContext => {
-  const schemaExtension = Schema.partial(Schema.Struct(fields));
-  return Schema.extend(schema, schemaExtension).annotations(
-    schema.ast.annotations,
-  ) as any as Schema.Schema.AnyNoContext;
+export const addFieldsToSchema = (schema: Schema.Top, fields: Schema.Struct.Fields): Schema.Top => {
+  const ast = schema.ast as SchemaAST.Objects;
+  invariant(SchemaAST.isObjects(ast));
+
+  // Rebuilt through the AST like its siblings below: `mapFields` is a `Struct` operation and this
+  // takes any `Schema.Top`.
+  const added = (Schema.Struct(fields).mapFields(Struct.map(Schema.optional)).ast as SchemaAST.Objects)
+    .propertySignatures;
+
+  return Schema.make<Schema.Top>(
+    new SchemaAST.Objects([...ast.propertySignatures, ...added], ast.indexSignatures, ast.annotations),
+  );
 };
 
-export const updateFieldsInSchema = (
-  schema: Schema.Schema.AnyNoContext,
-  fields: Schema.Struct.Fields,
-): Schema.Schema.AnyNoContext => {
-  const ast = schema.ast as SchemaAST.TypeLiteral;
-  invariant(SchemaAST.isTypeLiteral(ast));
+export const updateFieldsInSchema = (schema: Schema.Top, fields: Schema.Struct.Fields): Schema.Top => {
+  const ast = schema.ast as SchemaAST.Objects;
+  invariant(SchemaAST.isObjects(ast));
 
   const updatedProperties = [...ast.propertySignatures];
-  const propertiesToUpdate = (Schema.partial(Schema.Struct(fields)).ast as SchemaAST.TypeLiteral).propertySignatures;
+  const propertiesToUpdate = (Schema.Struct(fields).mapFields(Struct.map(Schema.optional)).ast as SchemaAST.Objects)
+    .propertySignatures;
   for (const property of propertiesToUpdate) {
     const index = updatedProperties.findIndex((p) => p.name === property.name);
     if (index !== -1) {
@@ -36,30 +39,23 @@ export const updateFieldsInSchema = (
     }
   }
 
-  return Schema.make(new SchemaAST.TypeLiteral(updatedProperties, ast.indexSignatures, ast.annotations));
+  return Schema.make<Schema.Top>(new SchemaAST.Objects(updatedProperties, ast.indexSignatures, ast.annotations));
 };
 
-export const removeFieldsFromSchema = (
-  schema: Schema.Schema.AnyNoContext,
-  fieldNames: string[],
-): Schema.Schema.AnyNoContext => {
-  return Schema.make(SchemaAST.omit(schema.ast, fieldNames)).annotations(schema.ast.annotations);
+export const removeFieldsFromSchema = (schema: Schema.Top, fieldNames: string[]): Schema.Top => {
+  return Schema.make<Schema.Top>(SchemaAST.omit(schema.ast, fieldNames));
 };
 
 export const updateFieldNameInSchema = (
-  schema: Schema.Schema.AnyNoContext,
+  schema: Schema.Top,
   { before, after }: { before: PropertyKey; after: PropertyKey },
-): Schema.Schema.AnyNoContext => {
-  const ast = schema.ast as SchemaAST.TypeLiteral;
-  invariant(SchemaAST.isTypeLiteral(ast));
+): Schema.Top => {
+  const ast = schema.ast as SchemaAST.Objects;
+  invariant(SchemaAST.isObjects(ast));
 
-  return Schema.make(
-    new SchemaAST.TypeLiteral(
-      ast.propertySignatures.map((p) =>
-        p.name === before
-          ? new SchemaAST.PropertySignature(after, p.type, p.isOptional, p.isReadonly, p.annotations)
-          : p,
-      ),
+  return Schema.make<Schema.Top>(
+    new SchemaAST.Objects(
+      ast.propertySignatures.map((p) => (p.name === before ? new SchemaAST.PropertySignature(after, p.type) : p)),
       ast.indexSignatures,
       ast.annotations,
     ),

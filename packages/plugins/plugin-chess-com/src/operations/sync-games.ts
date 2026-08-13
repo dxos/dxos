@@ -6,14 +6,15 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Game } from '@dxos/plugin-game/types';
+import * as Chess from '@dxos/plugin-chess/Chess';
+import * as Game from '@dxos/plugin-game/Game';
+
+import { ChessComAccount, ChessComOperation } from '#types';
 
 import { ChessComHttpClientLayer, type RemoteGame, fetchAllGames, fetchPlayer } from '../services';
-import { ChessComAccount, ChessComOperation } from '../types';
 
 const gameForeignId = (uuid: string): string => `game/${uuid}`;
 

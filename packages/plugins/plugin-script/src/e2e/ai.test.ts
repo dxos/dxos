@@ -7,7 +7,7 @@ import { test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { FunctionsServiceClient } from '@dxos/edge-compute';

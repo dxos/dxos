@@ -10,7 +10,8 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Operation, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
@@ -18,7 +19,8 @@ import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { InboxOperation, Mailbox } from '../types';
+import { InboxOperation, Mailbox } from '#types';
+
 import { renderMarkdown } from '../util';
 
 const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = InboxOperation.ClassifyEmail.pipe(

@@ -31,7 +31,7 @@ describe('formats', () => {
       birthday: '1999-06-11',
     };
 
-    const validate = Schema.validateSync(TestSchema);
+    const validate = Schema.decodeSync(Schema.toType(TestSchema));
     validate(data);
 
     {

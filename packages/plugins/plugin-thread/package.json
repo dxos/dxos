@@ -49,14 +49,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ThreadPlugin.workerd.ts",
-        "node": "./src/ThreadPlugin.node.ts",
-        "default": "./src/ThreadPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/ThreadPlugin.d.ts",
-      "workerd": "./dist/lib/ThreadPlugin.workerd.mjs",
-      "node": "./dist/lib/ThreadPlugin.node.mjs",
-      "default": "./dist/lib/ThreadPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -76,23 +76,55 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./ChannelBackend": {
+      "source": "./src/types/ChannelBackend.ts",
+      "types": "./dist/types/src/types/ChannelBackend.d.ts",
+      "import": "./dist/lib/ChannelBackend.mjs"
+    },
+    "./ThreadCapabilities": {
+      "source": "./src/types/ThreadCapabilities.ts",
+      "types": "./dist/types/src/types/ThreadCapabilities.d.ts",
+      "import": "./dist/lib/ThreadCapabilities.mjs"
+    },
+    "./ThreadEvents": {
+      "source": "./src/types/ThreadEvents.ts",
+      "types": "./dist/types/src/types/ThreadEvents.d.ts",
+      "import": "./dist/lib/ThreadEvents.mjs"
+    },
+    "./ThreadOperation": {
+      "source": "./src/types/ThreadOperation.ts",
+      "types": "./dist/types/src/types/ThreadOperation.d.ts",
+      "import": "./dist/lib/ThreadOperation.mjs"
+    },
+    "./ThreadPlugin": {
+      "source": "./src/ThreadPlugin.ts",
+      "types": "./dist/types/src/ThreadPlugin.d.ts",
+      "import": "./dist/lib/ThreadPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ChannelBackend": [
+        "dist/types/src/types/ChannelBackend.d.ts"
+      ],
+      "ThreadCapabilities": [
+        "dist/types/src/types/ThreadCapabilities.d.ts"
+      ],
+      "ThreadEvents": [
+        "dist/types/src/types/ThreadEvents.d.ts"
+      ],
+      "ThreadOperation": [
+        "dist/types/src/types/ThreadOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -101,36 +133,34 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
-    "@dxos/echo-react": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -143,7 +173,7 @@
     "@dxos/react-ui-form": "workspace:^",
     "@dxos/react-ui-menu": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

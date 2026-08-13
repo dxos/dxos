@@ -2,13 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-
-import { meta } from './meta';
-
-export const ReviewPlugin = Plugin.lazy(meta, () => import('#plugin'));
-
-export * from './meta';
-
 // Additive: lets other plugins embed the comments panel in their own companion surfaces.
+
+export * as ReviewPlugin from './ReviewPlugin';
+export * from '#meta';
+export * from '#types';
 export { CommentsArticle } from '#containers';

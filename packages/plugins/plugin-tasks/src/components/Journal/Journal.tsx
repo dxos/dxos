@@ -12,14 +12,15 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { Journal as JournalType, getDateString, parseDateString } from '#types';
+import { TasksUtil } from '#types';
 
+import { type JournalEntry as JournalEntryObject, type Journal as JournalObject, makeEntry } from '../../types/Journal';
 import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
 export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
-  journal: JournalType.Journal;
+  journal: JournalObject;
 };
 
 // TODO(burdon): Virtualize.
@@ -38,16 +39,19 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
     [journalSnapshot],
   );
 
-  const hasTodayEntry = useMemo(() => entryRefs.some(({ dateKey }) => dateKey === getDateString()), [entryRefs]);
+  const hasTodayEntry = useMemo(
+    () => entryRefs.some(({ dateKey }) => dateKey === TasksUtil.getDateString()),
+    [entryRefs],
+  );
 
   const handleCreateEntry = useCallback(() => {
     if (!journal) {
       return;
     }
 
-    const entry = JournalType.makeEntry();
+    const entry = makeEntry();
     Obj.update(journal, (journal) => {
-      journal.entries[getDateString(date)] = Ref.make(entry);
+      journal.entries[TasksUtil.getDateString(date)] = Ref.make(entry);
     });
   }, [journal, date]);
 
@@ -77,7 +81,7 @@ Journal.displayName = 'Journal';
 
 type JournalEntryProps = ThemedClassName<
   {
-    entryRef: Ref.Ref<JournalType.JournalEntry>;
+    entryRef: Ref.Ref<JournalEntryObject>;
     onSelect?: (event: { date: Date }) => void;
   } & Pick<OutlineRootProps, 'autoFocus'>
 >;
@@ -90,8 +94,8 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
   const outlinerRef = useRef<OutlineController>(null);
   const [focused, setFocused] = useState(false);
 
-  const date = entry ? parseDateString(entry.date) : undefined;
-  const isToday = entry ? getDateString() === entry.date : false;
+  const date = entry ? TasksUtil.parseDateString(entry.date) : undefined;
+  const isToday = entry ? TasksUtil.getDateString() === entry.date : false;
   const isRecent = useMemo(() => (entry ? Date.now() - new Date(entry.date).getTime() < RECENT : false), [entry?.date]);
 
   const handleFocus = useCallback(() => {

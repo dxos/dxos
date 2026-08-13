@@ -2,28 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
+// @import-as-namespace
 
-import { BeaconServiceModule, ReactSurface } from '#capabilities';
-import { meta } from '#meta';
-import { translations } from '#translations';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-export const IrohBeaconPlugin = Plugin.define(meta).pipe(
-  // Beacon service: creates transport + starts broadcasting.
-  Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
-    activate: BeaconServiceModule,
-  }),
+import { meta as pluginMeta } from '#meta';
 
-  // Status indicator surface.
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+/** Plugin metadata, available without loading the plugin body. */
+export const meta = pluginMeta;
 
-  // Translations.
-  AppPlugin.addTranslationsModule({ translations }),
-
-  Plugin.make,
-);
-
-export default IrohBeaconPlugin;
+/** Constructs the plugin; the body loads on first enable. */
+export const make = Plugin.lazy(meta, () => import('#plugin'));

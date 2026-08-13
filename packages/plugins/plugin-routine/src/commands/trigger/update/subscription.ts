@@ -2,18 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 
@@ -78,8 +79,8 @@ const extractCurrentTypename = (spec: Trigger.SubscriptionSpec | undefined): Opt
       Match.value(q.filter).pipe(
         Match.withReturnType<Option.Option<string>>(),
         Match.when({ type: 'object' }, (f) =>
-          Option.fromNullable(f.typename).pipe(
-            Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined)),
+          Option.fromNullishOr(f.typename).pipe(
+            Option.flatMap((dxn) => Option.fromNullishOr(DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined)),
           ),
         ),
         Match.orElse(() => Option.none()),

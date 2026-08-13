@@ -2,16 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
 import React, { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -37,6 +36,7 @@ export const SwarmTraceModule = () => {
   if (!space) {
     return null;
   }
+
   return <SwarmTraceModuleContainer space={space} />;
 };
 
@@ -63,7 +63,7 @@ const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
         Stream.groupedWithin(64, '250 millis'),
         Stream.runForEach((batch) =>
           Effect.sync(() => {
-            const incoming = Chunk.toReadonlyArray(batch).flatMap(({ message, receivedAt }) =>
+            const incoming = batch.flatMap(({ message, receivedAt }) =>
               Trace.flatten(message).map((event) => ({
                 ...event,
                 seq: seqRef.current++,

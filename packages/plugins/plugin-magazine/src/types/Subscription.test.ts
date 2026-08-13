@@ -11,7 +11,8 @@ import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { StateMap, TagIndex } from '@dxos/schema';
 
-import { Magazine, Subscription } from './index';
+import * as Magazine from './Magazine';
+import * as Subscription from './Subscription';
 
 describe('per-Post state keyed by entity id', () => {
   let builder: EchoTestBuilder;

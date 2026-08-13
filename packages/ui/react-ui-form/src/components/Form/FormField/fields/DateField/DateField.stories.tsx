@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { Format } from '@dxos/echo';
@@ -16,10 +17,10 @@ import { Form } from '../../../Form';
 
 // DateField covers all three temporal formats; show each.
 const schema = Schema.Struct({
-  date: Format.DateOnly.annotations({ title: 'Date' }),
-  time: Format.TimeOnly.annotations({ title: 'Time' }),
-  dateTime: Format.DateTime.annotations({ title: 'Date & time' }),
-}).pipe(Schema.mutable);
+  date: Format.DateOnly.annotate({ title: 'Date' }),
+  time: Format.TimeOnly.annotate({ title: 'Time' }),
+  dateTime: Format.DateTime.annotate({ title: 'Date & time' }),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 type Values = Schema.Schema.Type<typeof schema>;
 

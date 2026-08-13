@@ -5,10 +5,11 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Type, View } from '@dxos/echo';
-import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
+import * as SpaceForm from '@dxos/plugin-space/SpaceForm';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { meta } from '#meta';
@@ -17,8 +18,8 @@ export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.pipe(
-    Schema.annotations({ title: 'Select type' }),
-    TypeInputOptionsAnnotation.set({
+    Schema.annotate({ title: 'Select type' }),
+    SpaceForm.TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],
     }),
@@ -41,12 +42,9 @@ export const OnTypeAdded = Operation.make({
 
 export const Create = Operation.make({
   meta: { key: makeKey('create'), name: 'Create Table', icon: 'ph--table--regular' },
-  input: Schema.extend(
-    Schema.Struct({
-      db: Database.Database,
-    }),
-    CreateTableSchema,
-  ),
+  input: Schema.Struct({
+    db: Database.Database,
+  }).mapFields(Struct.assign(CreateTableSchema.fields)),
   output: Schema.Struct({
     object: Type.getSchema(Table.Table),
   }),
@@ -67,8 +65,8 @@ export const ExportColumnSchema = Schema.Struct({
   title: Schema.String,
   // `Format.TypeEnum`/`Format.TypeFormat` are string enums; encoding them as plain Number/String
   // would diverge from the `ExportColumn` consumer type and reject the values the table projection emits.
-  type: Schema.optional(Schema.Enums(Format.TypeEnum)),
-  format: Schema.optional(Schema.Enums(Format.TypeFormat)),
+  type: Schema.optional(Schema.Enum(Format.TypeEnum)),
+  format: Schema.optional(Schema.Enum(Format.TypeFormat)),
   referencePath: Schema.optional(Schema.Any),
 });
 
@@ -80,7 +78,7 @@ export const ExportRows = Operation.make({
     icon: 'ph--export--regular',
   },
   input: Schema.Struct({
-    format: Schema.Literal('csv', 'json', 'xml'),
+    format: Schema.Literals(['csv', 'json', 'xml']),
     rows: Schema.Array(Schema.Any),
     columns: Schema.Array(ExportColumnSchema),
   }),

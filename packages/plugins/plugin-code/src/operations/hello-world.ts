@@ -4,13 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { SourceFile } from '#types';
-
-import { CodeOperation } from '../types';
+import { CodeOperation, SourceFile } from '#types';
 
 const HELLO_PATH = 'src/hello.ts';
 

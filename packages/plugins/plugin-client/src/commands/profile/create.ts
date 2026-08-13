@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
 import * as Record from 'effect/Record';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, print } from '@dxos/cli-util';
 import { DX_CONFIG, getProfileConfigPath } from '@dxos/client-protocol';
@@ -37,8 +37,8 @@ const makeTemplate = (edgeUrl: string) => trim`
 `;
 
 const TEMPLATES = {
-  default: makeTemplate('https://edge-production.dxos.workers.dev'),
-  main: makeTemplate('https://edge-main.dxos.workers.dev'),
+  default: makeTemplate('https://dxos.network'),
+  main: makeTemplate('https://main.dxos.network'),
   dev: makeTemplate('https://edge.dxos.workers.dev'),
   local: makeTemplate('http://localhost:8787'),
 } as const;
@@ -50,7 +50,7 @@ export const create = Command.make(
       Options.withDescription('Template to use'),
       Options.withDefault('default'),
     ),
-    name: Options.text('name').pipe(Options.withDescription('Profile name'), Options.optional),
+    name: Options.string('name').pipe(Options.withDescription('Profile name'), Options.optional),
   },
   Effect.fnUntraced(function* ({ template, name }) {
     const { json } = yield* CommandConfig;

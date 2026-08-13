@@ -2,27 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
+import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Operation, Process, RunAgainError, Trigger, TriggerEvent } from '@dxos/compute';
+import { RunAgainError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Entity, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -181,7 +185,7 @@ const MAX_TRACKED_INVOCATIONS = 10;
 const MAX_TRACKED_ERRORS = 10;
 
 // TODO(dmaretskyi): Extract a separate TriggerMonmitor service to @dxos/compute that would work with both local and edge dispatcher.
-export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
+export class TriggerDispatcher extends Context.Service<
   TriggerDispatcher,
   {
     readonly timeControl: TimeControl;
@@ -232,7 +236,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      */
     getCurrentTime(): Date;
   }
->() {
+>()('@dxos/functions/TriggerDispatcher') {
   static layer = (
     options: Omit<TriggerDispatcherOptions, 'services'>,
   ): Layer.Layer<TriggerDispatcher, never, TriggerDispatcherServices> =>
@@ -248,7 +252,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
 const DEFAULT_MAX_CONCURRENCY = 5;
 const DEFAULT_FAILURE_COOLDOWN = Duration.seconds(30);
 
-class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
+class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
   readonly timeControl: TimeControl;
 
@@ -282,7 +286,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * manual, and retry drain). Enforces {@link _maxConcurrency} on top of any per-trigger
    * concurrency. Created eagerly so it can wrap invocations without an initialization effect.
    */
-  private _concurrencyLimiter: Effect.Semaphore;
+  private _concurrencyLimiter: Semaphore.Semaphore;
 
   /**
    * Monotonic counter assigning FIFO ordering to pending retries so re-enqueued retries land at
@@ -297,7 +301,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
     this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;
-    this._concurrencyLimiter = Effect.unsafeMakeSemaphore(this._maxConcurrency);
+    this._concurrencyLimiter = Semaphore.makeUnsafe(this._maxConcurrency);
   }
 
   private _isInCooldown = (triggerId: string): boolean => {
@@ -333,7 +337,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * Publish the current per-trigger runtime state onto the observable dispatcher state so the UI
    * can render cursor/next-run/cooldown/retry status.
    */
-  private _publishRuntimeStatuses = (registry: Registry.Registry): void => {
+  private _publishRuntimeStatuses = (registry: Registry.AtomRegistry): void => {
     const triggers: TriggerRuntimeStatus[] = Array.fromIterable(this._runtimeState.values()).map((entry) => ({
       triggerId: entry.trigger.id,
       nextExecution: entry.nextExecution,
@@ -353,7 +357,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   }
 
   start = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (this._running) {
         return;
       }
@@ -371,7 +375,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
         this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
-          Effect.tapErrorCause((cause) => {
+          Effect.tapCause((cause) => {
             const error = EffectEx.causeToError(cause);
             log.error('trigger dispatcher error', { error });
             this._running = false;
@@ -384,17 +388,17 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             );
             return Effect.void;
           }),
-          Effect.forkDaemon,
+          Effect.forkDetach,
         );
       } else {
-        return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
+        return yield* Effect.die(new Error('TriggerDispatcher started in manual time control mode'));
       }
 
       log.info('TriggerDispatcher started', { timeControl: this.timeControl });
     }).pipe(Effect.provide(this._services));
 
   stop = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (!this._running) {
         return;
       }
@@ -422,7 +426,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }).pipe(Effect.provide(this._services));
 
   invokeTrigger = (options: InvokeTriggerOptions): Effect.Effect<TriggerExecutionResult> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const { trigger, event } = options;
       log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
@@ -446,13 +450,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Sandboxed section. The global concurrency limiter wraps the actual op invocation so that
       // the total number of concurrent invocations across all triggers/kinds never exceeds
       // `_maxConcurrency`, on top of any per-trigger concurrency enforced at the call sites.
-      const result = yield* Effect.gen(this, function* () {
+      const result = yield* Effect.gen({ self: this }, function* () {
         if (!trigger.enabled) {
-          return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
+          return yield* Effect.die(new Error('Attempting to invoke disabled trigger'));
         }
 
         if (!trigger.runnable) {
-          return yield* Effect.dieMessage('Trigger has no runnable reference');
+          return yield* Effect.die(new Error('Trigger has no runnable reference'));
         }
 
         // Resolve the operation definition from the persistent record.
@@ -489,9 +493,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
         return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
           Stream.runCollect,
-          Effect.map(Chunk.head),
-          Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () => Effect.dieMessage('Trigger invocation produced no output')),
+          Effect.map(Array.head),
+          Effect.flatMap((result) => Effect.fromOption(result)),
+          Effect.catchTag('NoSuchElementError', () => Effect.die(new Error('Trigger invocation produced no output'))),
         );
       }).pipe(this._concurrencyLimiter.withPermits(1), Effect.exit);
 
@@ -518,7 +522,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       } else {
         // TODO(wittjosiah): A fiber interrupt (e.g. a scheduled timer fire colliding with an in-flight
         //   `runAgain` retry, or the dispatcher stopping) reaches here and arms a failure cooldown. An
-        //   interrupt is not a genuine failure — distinguish `Cause.isInterrupted(result.cause)` and
+        //   interrupt is not a genuine failure — distinguish `Cause.hasInterrupts(result.cause)` and
         //   treat it as neutral (re-schedulable, no cooldown) instead.
         const cooldownMs = Duration.toMillis(this._failureCooldown);
         const until = new Date(this.getCurrentTime().getTime() + cooldownMs);
@@ -533,9 +537,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       this._publishRuntimeStatuses(registry);
       registry.update(
         this._state,
-        Struct.evolve({
-          invocations: Array.map((_) =>
-            _.invocationId === invocation.invocationId ? { ..._, result: () => result } : _,
+        (state): TriggerDispatcherState => ({
+          ...state,
+          invocations: state.invocations.map((_) =>
+            _.invocationId === invocation.invocationId ? { ..._, result } : _,
           ),
         }),
       );
@@ -553,7 +558,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   invokeScheduledTriggers = ({ kinds = ['timer', 'feed', 'subscription'], untilExhausted = false } = {}): Effect.Effect<
     TriggerExecutionResult[]
   > =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* this.refreshTriggers();
       const invocations: TriggerExecutionResult[] = [];
       for (const kind of kinds) {
@@ -754,7 +759,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             // Direct triggers are only invoked through invokeTrigger.
             break;
           default: {
-            return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
+            return yield* Effect.die(new Error(`Unknown trigger kind: ${kind}`));
           }
         }
       }
@@ -774,7 +779,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * concurrency limit (enforced within {@link invokeTrigger}) and are processed FIFO.
    */
   private _drainRetries = ({ untilExhausted }: { untilExhausted: boolean }): Effect.Effect<TriggerExecutionResult[]> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const invocations: TriggerExecutionResult[] = [];
       while (true) {
         const pending: { trigger: Trigger.Trigger; enqueuedAt: number; event: TriggerEvent.TriggerEvent }[] = [];
@@ -817,9 +822,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     });
 
   advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (this.timeControl !== 'manual') {
-        return yield* Effect.dieMessage('advanceTime can only be used in manual time control mode');
+        return yield* Effect.die(new Error('advanceTime can only be used in manual time control mode'));
       }
 
       const millis = Duration.toMillis(duration);
@@ -840,7 +845,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   };
 
   refreshTriggers = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const triggers = yield* this._fetchTriggers();
       this._triggers = triggers;
       const currentTriggerIds = new Set(triggers.map((t) => t.id));
@@ -864,8 +869,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           // Parse cron expression using Effect's Cron module
           const cronEither = Cron.parse(timerSpec.cron);
 
-          if (Either.isRight(cronEither)) {
-            const cron = cronEither.right;
+          if (Result.isSuccess(cronEither)) {
+            const cron = cronEither.success;
             const now = this.getCurrentTime();
             const nextExecution = entry.nextExecution ?? Cron.next(cron, now);
 
@@ -884,7 +889,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             log.error('Invalid cron expression', {
               triggerId: trigger.id,
               cron: timerSpec.cron,
-              error: cronEither.left.message,
+              error: cronEither.failure.message,
             });
           }
         } else {
@@ -903,7 +908,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       .pipe(Effect.provide(this._services));
 
   private _fetchTriggers = () =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const objects = yield* Database.query(
         Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.fetchTriggers'),
       ).run;
@@ -912,7 +917,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
   private _startNaturalTimeProcessing = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 

@@ -6,9 +6,9 @@ import React from 'react';
 
 import { Select } from '@dxos/react-ui';
 
-import { type ChatPresetProps } from '#types';
+import { AssistantPreset } from '#types';
 
-export const ChatPresets = ({ presets, preset, onPresetChange }: ChatPresetProps) => {
+export const ChatPresets = ({ presets, preset, onPresetChange }: AssistantPreset.ChatPresetProps) => {
   return (
     <Select.Root value={preset} onValueChange={onPresetChange}>
       <Select.TriggerButton classNames='text-sm' />

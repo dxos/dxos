@@ -4,9 +4,10 @@
 
 import * as Option from 'effect/Option';
 
-import { AppAnnotation, DeckSpec } from '@dxos/app-toolkit';
+import type * as Node from '@dxos/app-graph/Node';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import { Obj, Type } from '@dxos/echo';
-import { type Node } from '@dxos/plugin-graph';
 
 /**
  * The deck spec a node declares, from either place it can come from.

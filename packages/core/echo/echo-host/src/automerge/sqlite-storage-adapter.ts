@@ -3,19 +3,26 @@
 //
 
 import { type Chunk, type StorageAdapterInterface, type StorageKey } from '@automerge/automerge-repo';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { log } from '@dxos/log';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type MaybePromise } from '@dxos/util';
 
-import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
+
+export interface StorageAdapterDataMonitor {
+  recordBytesStored(count: number): void;
+  recordBytesLoaded(count: number): void;
+  recordLoadDuration(durationMs: number): void;
+  recordStoreDuration(durationMs: number): void;
+}
 
 export type SqliteStorageAdapterProps = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
@@ -30,7 +37,6 @@ export type SqliteStorageCallbacks = {
 /**
  * SQLite-backed automerge StorageAdapterInterface.
  * Stores automerge document chunks in the `automerge_chunks` table.
- * Replaces LevelDBStorageAdapter.
  */
 export class SqliteStorageAdapter implements StorageAdapterInterface {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
@@ -58,20 +64,19 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Creates the automerge_chunks table if it does not exist.
+   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
+   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
+   * `BEGIN` / `COMMIT` — rejected in workerd.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
-    'SqliteStorageAdapter.migrate',
-  )(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`CREATE TABLE IF NOT EXISTS automerge_chunks (
-          key TEXT PRIMARY KEY,
-          data BLOB NOT NULL
-        )`;
-      log('automerge_chunks table ready');
-    }).pipe(Effect.withSpan('SqliteStorageAdapter.migrate')),
-  )();
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
+    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
+  ).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('SqliteStorageAdapter.migrate'),
+  );
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
     if (!this.isOpen) {
@@ -188,16 +193,39 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return;
     }
+    await RuntimeProvider.runPromise(this.#runtime)(this.removeRangeEffect(keyPrefix));
+  }
+
+  /**
+   * {@link removeRange} as an effect, so a caller deleting the several ranges a document spans can
+   * commit them as one transaction.
+   */
+  removeRangeEffect(keyPrefix: StorageKey): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     const prefix = encodeKey(keyPrefix);
     const glob = prefix + '-*';
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR key GLOB ${glob}`;
-      }),
-    );
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR key GLOB ${glob}`;
+    }).pipe(Effect.withSpan('SqliteStorageAdapter.removeRange'));
   }
 }
+
+/**
+ * Key space `SubductionStorageBridge` writes into this same table, as
+ * `[SUBDUCTION_PREFIX, <family>, <sedimentreeId>, ...]`. Disjoint from a document's classical
+ * `<documentId>-*` keys, so collection has to sweep it explicitly — on the subduction transport it
+ * holds most of the document's bytes.
+ */
+export const SUBDUCTION_PREFIX = 'subduction';
+
+export const SUBDUCTION_KEY_FAMILIES = [
+  'ids',
+  'commits',
+  'blobs',
+  'fragments',
+  'fragment-blobs',
+  'remote-heads',
+] as const;
 
 /** Coerces a value to a plain Uint8Array (Buffer is a subclass in Node.js but not identical). */
 const toUint8Array = (value: Uint8Array): Uint8Array =>

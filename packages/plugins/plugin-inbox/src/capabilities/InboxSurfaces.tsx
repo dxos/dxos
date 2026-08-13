@@ -7,8 +7,8 @@
 
 import React from 'react';
 
+import { getParentId } from '@dxos/app-graph';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { getParentId } from '@dxos/plugin-graph';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { type Event, type Message } from '@dxos/types';
 

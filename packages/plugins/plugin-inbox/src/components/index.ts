@@ -15,6 +15,5 @@ export * from './ObjectArticle';
 export * from './RelatedContacts';
 export * from './RelatedEvents';
 export * from './RelatedMessages';
-export * from './Show';
 export * from './Toolbar';
 export * from './ViewMode';

@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Credential, Operation } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
@@ -16,7 +17,7 @@ export const SyncIssues = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    team: Schema.String.annotations({
+    team: Schema.String.annotate({
       description: 'Linear team id.',
     }),
   }),

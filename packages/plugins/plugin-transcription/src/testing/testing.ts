@@ -13,11 +13,11 @@ import { type ContentBlock, Message } from '@dxos/types';
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Type.makeObject(DXN.make('org.dxos.type.test', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.annotations({
+    title: Schema.String.annotate({
       title: 'Title',
       description: 'Product title',
     }),
-    description: Schema.String.annotations({
+    description: Schema.String.annotate({
       title: 'Description',
       description: 'Product description',
     }),

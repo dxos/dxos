@@ -11,8 +11,7 @@ import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { rangeFromIndex } from '#types';
-import { Sheet } from '#types';
+import { Sheet, SheetUtil } from '#types';
 
 export type RangeListProps = {
   sheet: Sheet.Sheet;
@@ -39,7 +38,9 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
       </Input.Root>
       {sheet.ranges.length === 0 ? (
         <Message.Root>
-          <Message.Title>{t('no-ranges.message')}</Message.Title>
+          <Message.Content>
+            <Message.Title>{t('no-ranges.message')}</Message.Title>
+          </Message.Content>
         </Message.Root>
       ) : (
         <OrderedList.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
@@ -63,7 +64,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
                   >
                     <div className='flex grow items-center truncate px-2'>
                       {t('range.title', {
-                        position: rangeToA1Notation(rangeFromIndex(sheetProp, range.range)),
+                        position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
                         key: t(`range-key.${range.key}.label`),
                         value: t(`range-value.${range.value}.label`),
                       })}

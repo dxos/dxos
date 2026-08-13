@@ -3,3 +3,4 @@
 //
 
 export * as CallsCapabilities from './CallsCapabilities';
+export * as CallsEvents from './CallsEvents';

@@ -6,7 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Feed, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -24,7 +25,7 @@ describe('SchemaList', () => {
       function* (_) {
         const schemas = yield* Operation.invoke(SchemaList, {});
 
-        const rows = yield* Schema.decodeUnknown(
+        const rows = yield* Schema.decodeUnknownEffect(
           Schema.Array(Schema.Struct({ typename: Schema.String, kind: Schema.String })),
         )(schemas);
         const typenames = rows.map((row) => row.typename);

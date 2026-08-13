@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 import { Entity } from '@dxos/echo';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
+import { SpaceOperation } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
 
@@ -20,7 +22,7 @@ type UndoMappingsOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl, observability }: UndoMappingsOptions) {
     return [
-      Capability.contributes(Capabilities.UndoMapping, [
+      Capability.contribute(Capabilities.UndoMapping, [
         UndoMapping.make({
           operation: SpaceOperation.DeleteField,
           inverse: SpaceOperation.RestoreField,
@@ -49,7 +51,7 @@ export default Capability.makeModule(
           },
         }),
       ]),
-      Capability.contributes(SpaceOperationConfig, {
+      Capability.contribute(SpaceOperationConfig, {
         createInvitationUrl,
         observability: observability ?? false,
       }),

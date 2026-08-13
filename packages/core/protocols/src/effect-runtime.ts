@@ -3,9 +3,9 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Runtime from 'effect/Runtime';
 import * as Stream from 'effect/Stream';
 
 import { EffectEx } from '@dxos/effect';
@@ -22,27 +22,29 @@ import { RpcClosedError, TimeoutError } from './errors/index.ts';
  * callers can suppress shutdown races; other failures rethrow with their original identity.
  */
 export const runServiceCall = <A>(
-  runtime: Runtime.Runtime<never>,
+  runtime: Context.Context<never>,
   effect: Effect.Effect<A, any, never>,
   options?: { timeout?: number; label?: string },
 ): Promise<A> => {
   const call = options?.timeout
     ? effect.pipe(
-        Effect.timeoutFail({
+        Effect.timeoutOrElse({
           duration: options.timeout,
-          onTimeout: () =>
-            new TimeoutError({
-              message: `RPC timeout: ${options.label ?? 'call'}`,
-              context: { timeout: options.timeout },
-            }),
+          orElse: () =>
+            Effect.fail(
+              new TimeoutError({
+                message: `RPC timeout: ${options.label ?? 'call'}`,
+                context: { timeout: options.timeout },
+              }),
+            ),
         }),
       )
     : effect;
-  return Runtime.runPromiseExit(runtime)(call).then((exit) => {
+  return Effect.runPromiseExit(Effect.provideContext(call, runtime)).then((exit) => {
     if (Exit.isSuccess(exit)) {
       return exit.value;
     }
-    if (Cause.isInterruptedOnly(exit.cause)) {
+    if (Cause.hasInterruptsOnly(exit.cause)) {
       throw new RpcClosedError();
     }
     throw EffectEx.causeToError(exit.cause);
@@ -61,7 +63,7 @@ export type StreamSubscription<A> = {
  * so it survives being forked from a short-lived effect, and cleanup is the sole owner.
  */
 export const subscribeStream = <A>(
-  runtime: Runtime.Runtime<never>,
+  runtime: Context.Context<never>,
   stream: Stream.Stream<A, any, never>,
   { onData, onError, onClose }: StreamSubscription<A>,
 ): (() => void) => {
@@ -80,13 +82,14 @@ export const subscribeStream = <A>(
   const fiber = stream.pipe(
     Stream.runForEach((value) => Effect.sync(() => onData(value))),
     Effect.matchCause({
-      onFailure: (cause) => finish(Cause.isInterruptedOnly(cause) ? undefined : EffectEx.causeToError(cause)),
+      onFailure: (cause) => finish(Cause.hasInterruptsOnly(cause) ? undefined : EffectEx.causeToError(cause)),
       onSuccess: () => finish(),
     }),
-    Runtime.runFork(runtime),
+    Effect.provideContext(runtime),
+    Effect.runFork,
   );
   return () => {
     done = true;
-    fiber.unsafeInterruptAsFork(fiber.id());
+    fiber.interruptUnsafe();
   };
 };

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
@@ -20,11 +20,11 @@ export type FieldBinding = Schema.Schema.Type<typeof FieldBinding>;
 
 /** How to turn criteria into an HTTP request. */
 export const RequestMapping = Schema.Struct({
-  method: Schema.Literal('GET', 'POST'),
+  method: Schema.Literals(['GET', 'POST']),
   urlTemplate: Schema.String,
-  query: Schema.optional(Schema.Record({ key: Schema.String, value: FieldBinding })),
-  body: Schema.optional(Schema.Record({ key: Schema.String, value: FieldBinding })),
-  headers: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
+  query: Schema.optional(Schema.Record(Schema.String, FieldBinding)),
+  body: Schema.optional(Schema.Record(Schema.String, FieldBinding)),
+  headers: Schema.optional(Schema.Record(Schema.String, Schema.String)),
 });
 export type RequestMapping = Schema.Schema.Type<typeof RequestMapping>;
 
@@ -41,20 +41,20 @@ export type FieldExtractor = Schema.Schema.Type<typeof FieldExtractor>;
 
 /** How to turn an HTTP response into result objects. */
 export const ResultMapping = Schema.Struct({
-  responseType: Schema.Literal('html', 'json'),
+  responseType: Schema.Literals(['html', 'json']),
   // CSS selector (html) or JSONPath (json) selecting each listing.
   itemLocator: Schema.String,
-  fields: Schema.Record({ key: Schema.String, value: FieldExtractor }),
+  fields: Schema.Record(Schema.String, FieldExtractor),
 });
 export type ResultMapping = Schema.Schema.Type<typeof ResultMapping>;
 
 /** A configured search provider (API or scrape target). */
 export class Provider extends Type.makeObject<Provider>(DXN.make('org.dxos.type.commerce.Provider', '0.1.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.annotations({ title: 'Name' })),
-    url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
+    name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
+    url: Schema.String.pipe(Schema.annotate({ title: 'URL' })),
     description: Schema.optional(Schema.String),
-    kind: Schema.Literal('api', 'scrape').pipe(Schema.annotations({ title: 'Kind' })),
+    kind: Schema.Literals(['api', 'scrape']).pipe(Schema.annotate({ title: 'Kind' })),
     // Raw JSONSchema of the typed search fields; authored by the skill and hidden from forms
     // (it is converted to an Effect Schema to drive the Search criteria form).
     searchSchema: JsonSchema.JsonSchema.pipe(FormInputAnnotation.set(false), Schema.optional),

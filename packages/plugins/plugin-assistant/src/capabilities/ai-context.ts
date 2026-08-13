@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Harness } from '@dxos/assistant';
-import { type LayerSpec } from '@dxos/compute';
+import type * as LayerSpec from '@dxos/compute/LayerSpec';
 
 //
 // Capability Module
@@ -18,6 +19,4 @@ import { type LayerSpec } from '@dxos/compute';
 // Annotated so the contributed `LayerSpec` type is nameable in the emitted declaration.
 const harnessSpec: LayerSpec.LayerSpec = Harness.layerSpec;
 
-export default Capability.makeModule(() =>
-  Effect.succeed([Capability.contributes(Capabilities.LayerSpec, harnessSpec)]),
-);
+export default Capability.makeModule(() => Effect.succeed(Capability.contribute(Capabilities.LayerSpec, harnessSpec)));

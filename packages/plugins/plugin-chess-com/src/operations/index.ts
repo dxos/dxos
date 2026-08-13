@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const ChessComOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./sync-games'),
-  () => import('./clear-synced-games'),
-);
+import { ChessComOperation } from '#types';
+
+export const ChessComOperationHandlerSet = OperationHandlerSet.lazy([
+  ChessComOperation.SyncGames.pipe(Operation.lazyHandler(() => import('./sync-games'))),
+  ChessComOperation.ClearSyncedGames.pipe(Operation.lazyHandler(() => import('./clear-synced-games'))),
+]);

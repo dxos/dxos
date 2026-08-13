@@ -8,11 +8,10 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
-import * as TestClock from 'effect/TestClock';
+import * as TestClock from 'effect/testing/TestClock';
 import { describe, expect } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { OperationInvoker } from '@dxos/operation';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
@@ -47,7 +46,7 @@ describe('HistoryTracker', () => {
       expect(tracker.canUndo()).toBe(false);
 
       // Fork compute operation and advance clock.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      const fiber = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
       yield* TestClock.adjust('20 millis');
       yield* Fiber.join(fiber);
 
@@ -96,7 +95,7 @@ describe('HistoryTracker', () => {
       const tracker = HistoryTracker.make(invoker, undoRegistry);
 
       // Fork compute operation: 2 * 2 = 4.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      const fiber = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
       yield* TestClock.adjust('20 millis');
       yield* Fiber.join(fiber);
 
@@ -125,7 +124,7 @@ describe('HistoryTracker', () => {
       const collector = yield* createEventCollector(invoker);
 
       // Fork compute operation (emits one success event).
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      const fiber = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
       yield* TestClock.adjust('20 millis');
       yield* Fiber.join(fiber);
 
@@ -165,12 +164,12 @@ describe('HistoryTracker', () => {
       const collector = yield* createEventCollector(invoker);
 
       // Fork compute with 2 → 4.
-      const fiber1 = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      const fiber1 = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
       yield* TestClock.adjust('20 millis');
       yield* Fiber.join(fiber1);
 
       // Fork compute with 3 → 6.
-      const fiber2 = yield* Effect.fork(invoker.invoke(Compute, { value: 3 }));
+      const fiber2 = yield* Effect.forkChild(invoker.invoke(Compute, { value: 3 }));
       yield* TestClock.adjust('30 millis');
       yield* Fiber.join(fiber2);
 
@@ -199,10 +198,10 @@ describe('HistoryTracker', () => {
         UndoRegistry.make(() => []),
       );
 
-      const result = yield* tracker.undo().pipe(Effect.either);
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') {
-        expect(result.left.message).toContain('empty');
+      const result = yield* tracker.undo().pipe(Effect.result);
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        expect(result.failure.message).toContain('empty');
       }
     }),
   );
@@ -226,11 +225,11 @@ describe('HistoryTracker', () => {
           const undoables = yield* PubSub.subscribe(tracker.undoable);
 
           // Fork compute operation and advance clock.
-          const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+          const fiber = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
           yield* TestClock.adjust('20 millis');
           yield* Fiber.join(fiber);
 
-          const undoable = yield* Queue.take(undoables);
+          const undoable = yield* PubSub.take(undoables);
           expect(undoable.message).toEqual(testMessage);
         }),
       );
@@ -261,11 +260,11 @@ describe('HistoryTracker', () => {
           const undoables = yield* PubSub.subscribe(tracker.undoable);
 
           // Fork compute operation and advance clock (2 * 2 = 4).
-          const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+          const fiber = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
           yield* TestClock.adjust('20 millis');
           yield* Fiber.join(fiber);
 
-          const undoable = yield* Queue.take(undoables);
+          const undoable = yield* PubSub.take(undoables);
           expect(undoable.message).toEqual(['computed-2-to-4', { ns: 'test' }]);
         }),
       );
@@ -295,7 +294,7 @@ describe('HistoryTracker', () => {
       expect(tracker.canUndo()).toBe(false);
 
       // Compute 2 * 2 = 4, which is < 10, so deriveContext returns undefined.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      const fiber = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
       yield* TestClock.adjust('20 millis');
       yield* Fiber.join(fiber);
 
@@ -334,7 +333,7 @@ describe('HistoryTracker', () => {
 
       // Compute 5 * 2 = 10, which is >= 10, so deriveContext returns a value.
       // Handler sleeps for value * 10 = 50ms.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 5 }));
+      const fiber = yield* Effect.forkChild(invoker.invoke(Compute, { value: 5 }));
       yield* TestClock.adjust('50 millis');
       yield* Fiber.join(fiber);
 

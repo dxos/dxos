@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import type * as Tool from 'effect/unstable/ai/Tool';
 
 import { type AiParser, type ConsolePrinter } from '@dxos/ai';
 import { type Message } from '@dxos/types';

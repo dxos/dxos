@@ -2,22 +2,84 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import * as Effect from 'effect/Effect';
 
-export const AgentRunner = Capability.lazy('AgentRunner', () => import('./agent-runner'));
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const Markdown = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+
+import type { ReviewPluginOptions } from '#plugin';
+import { AgentIdentity, CommentCapabilities, ReviewCapabilities, ReviewEvents } from '#types';
+
+export const AgentIdentityModule = Capability.inlineModule(
+  'agent-identity',
+  {
+    provides: [AgentIdentity.AgentIdentity],
+    props: (options: ReviewPluginOptions) => options.agentIdentity ?? AgentIdentity.DEFAULT_AGENT_IDENTITY,
+  },
+  (identity) => Effect.succeed([Capability.contribute(AgentIdentity.AgentIdentity, identity)]),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const CommentsSettings = Capability.lazy('CommentsSettings', () => import('./settings'));
-export const CommentState = Capability.lazy('CommentState', () => import('./state'));
-export const HistoryGraph = Capability.lazy('HistoryGraph', () => import('./history-graph'));
-export const HistorySurface = Capability.lazy('HistorySurface', () => import('./history-surface'));
-export const ReviewState = Capability.lazy('ReviewState', () => import('./review-state'));
-export const MarkdownBinding = Capability.lazy('MarkdownBinding', () => import('./markdown-binding'));
-export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));
+export const AgentRunner = Capability.lazyModule(
+  'AgentRunner',
+  { provides: [CommentCapabilities.AgentRunner], activatesOn: ReviewEvents.Start },
+  () => import('./agent-runner'),
+);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
+  name: 'HistoryGraph',
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const Markdown = Capability.lazyModule(
+  'MarkdownExtension',
+  // OperationInvoker/AtomRegistry are ambient. `CommentCapabilities.State` is declared because the
+  // provider callbacks read it and it is contributed by this plugin's own idle-gated module, which
+  // markdown start can otherwise precede.
+  {
+    requires: [CommentCapabilities.State],
+    provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.ViewModeExtension],
+    activatesOn: MarkdownEvents.Start,
+  },
+  () => import('./markdown-extension'),
+);
+// Markdown owns the editor-binding socket; this plugin owns the version-aware behaviour, and gates
+// the history companion for markdown documents.
+export const MarkdownBinding = Capability.lazyModule(
+  'MarkdownBinding',
+  {
+    provides: [MarkdownCapabilities.EditorBindingHook, ReviewCapabilities.HistoryProvider],
+    activatesOn: MarkdownEvents.Start,
+  },
+  () => import('./markdown-binding'),
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
+export const HistorySurface = AppCapability.surface(() => import('./history-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
+  name: 'HistorySurface',
+});
+export const CommentsSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
+  provides: [CommentCapabilities.Settings],
+});
+export const CommentState = Capability.lazyModule(
+  'CommentState',
+  // Headless: comments sync in a markdown document with no review surface ever rendered, so gating
+  // this on the review UI's start is wrong. Ungated (hence idle) it is also pullable by the
+  // consumers that need it earlier, which a start-gated provider is not.
+  { provides: [CommentCapabilities.State] },
+  () => import('./state'),
+);
+export const ReviewState = Capability.lazyModule(
+  'ReviewState',
+  { provides: [ReviewCapabilities.ReviewRenderPolicy], activatesOn: ReviewEvents.Start },
+  () => import('./review-state'),
+);
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+  activatesOn: ReviewEvents.Start,
+});

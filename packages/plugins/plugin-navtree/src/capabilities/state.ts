@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Graph, Node } from '@dxos/plugin-graph';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from '#types';
@@ -29,10 +31,10 @@ const defaultStateEntries: [string, NavTreeCapabilities.NavTreeItemState][] = [
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
+    const registry = yield* Capabilities.AtomRegistry;
+    const layoutAtom = yield* AppCapabilities.Layout;
     // Persistence backend for per-path expansion (`open`); replaces the hand-rolled localStorage blob.
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
 
     // Mirror of the layout's active planks. An item registers its path only on its first render, which
     // can happen long after the layout change that made it current, so entries derive `current` from
@@ -147,16 +149,13 @@ export default Capability.makeModule(
         }
         Graph.expand(graph, nodeId, 'child');
       }
-    }).pipe(Effect.forkDaemon);
+    }).pipe(Effect.forkDetach);
 
-    return Capability.contributes(
-      NavTreeCapabilities.State,
-      {
-        getItem,
-        getItemAtom,
-        setItem,
-      },
-      () => Effect.sync(() => unsubscribe()),
-    );
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+    return Capability.contribute(NavTreeCapabilities.State, {
+      getItem,
+      getItemAtom,
+      setItem,
+    });
   }),
 );

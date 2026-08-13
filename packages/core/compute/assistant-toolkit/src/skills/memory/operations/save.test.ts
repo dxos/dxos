@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -33,7 +33,7 @@ describe('SaveMemory', () => {
         expect(memories[0].content).toBe('TypeScript');
 
         // The handler returns the stored entity so the agent can reference it by id.
-        const { id } = yield* Schema.decodeUnknown(Schema.Struct({ id: Schema.String }))(saved);
+        const { id } = yield* Schema.decodeUnknownEffect(Schema.Struct({ id: Schema.String }))(saved);
         expect(id).toBe(memories[0].id);
       },
       Effect.provide(OperationTestLayer),

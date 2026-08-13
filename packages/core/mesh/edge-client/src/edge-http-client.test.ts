@@ -74,13 +74,21 @@ describe('EdgeHttpClient blobs', () => {
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
       if (url.endsWith('/auth')) {
-        return new Response(null, { status: 200 });
+        return new Response(JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
       return new Response(null, { status: 200 });
     });
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity({
+      peerKey: 'peer-key',
+      identityDid: 'did:halo:test',
+      presentCredentials: async (): Promise<Presentation> => ({}),
+    });
     const bytes = new Uint8Array([1, 2, 3]);
     await client.putBlob(Context.default(), 'abc123', bytes, { contentType: 'application/octet-stream' });
 
@@ -126,6 +134,40 @@ describe('EdgeHttpClient blobs', () => {
     expect(fileCalls.length).toBe(2);
     expect((fileCalls[1][1]?.headers as Record<string, string>).Authorization).toMatch(/^VerifiablePresentation/);
   });
+
+  // A 401 whose `WWW-Authenticate` yields nothing signable must surface as itself. Gating on
+  // header presence alone sent these through the auth path, where the missing challenge threw and
+  // was rewrapped as a generic 'Error processing request.', hiding the actual status.
+  for (const { name, header } of [
+    { name: 'an unrelated scheme', header: 'Bearer realm="upstream"' },
+    // Edge emits this when its server keypair is unconfigured.
+    { name: 'an empty VP challenge', header: 'VerifiablePresentation challenge=""' },
+  ]) {
+    test(`a 401 carrying ${name} is not retried through the auth path`, async ({ expect }) => {
+      const identity: EdgeIdentity = {
+        peerKey: 'peer-key',
+        identityDid: 'did:halo:test',
+        presentCredentials: async (): Promise<Presentation> => ({}),
+      };
+
+      const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+        if (requestUrl(input).endsWith('/auth')) {
+          return new Response(null, { status: 404 });
+        }
+        return new Response(null, { status: 401, headers: { 'WWW-Authenticate': header } });
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const client = new EdgeHttpClient('https://edge.example.com');
+      client.setIdentity(identity);
+
+      await expect(client.getBlob(Context.default(), 'abc123')).rejects.toThrow(/HTTP code 401/);
+
+      // Exactly one attempt at the resource: no auth retry.
+      const fileCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes('/api/file/abc123'));
+      expect(fileCalls.length).toBe(1);
+    });
+  }
 
   test('getBlob returns bytes on success', async ({ expect }) => {
     const fetchMock = vi.fn(async (input: any) => {
@@ -175,3 +217,63 @@ describe('EdgeHttpClient blobs', () => {
     expect(fetchMock).toHaveBeenCalled();
   });
 });
+
+describe('EdgeHttpClient api key', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('uploadPluginBundle sends the key as a Bearer header without the /auth prefetch', async ({ expect }) => {
+    const fetchMock = vi.fn(
+      async (_input: any, _init?: RequestInit) =>
+        new Response(JSON.stringify({ success: true, data: { moduleUrl: 'url' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com', { apiKey: 'secret-key' });
+    // Mirror uploadBundleDirect's call shape: VP auth off, so the api key is the only credential.
+    await client.uploadPluginBundle(Context.default(), { slug: 'x', version: '1', files: [] }, { auth: false });
+
+    const authCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/auth'));
+    expect(authCall).toBeUndefined();
+    const uploadCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/registry/upload'));
+    expect((uploadCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
+  });
+
+  test('a rejected api key is terminal — no retry on the auth 401', async ({ expect }) => {
+    const fetchMock = vi.fn(
+      async (_input: any, _init?: RequestInit) =>
+        new Response(null, {
+          status: 401,
+          headers: { 'WWW-Authenticate': 'VerifiablePresentation challenge=Y2hhbGxlbmdl' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com', { apiKey: 'rejected-key' });
+    await expect(
+      client.uploadPluginBundle(Context.default(), { slug: 'x', version: '1', files: [] }),
+    ).rejects.toMatchObject({ isRetryable: false });
+    expect(fetchMock.mock.calls.length).toBe(1);
+  });
+
+  test('putBlob sends the key as a Bearer header without the /auth prefetch', async ({ expect }) => {
+    const fetchMock = vi.fn(async (_input: any, _init?: RequestInit) => new Response(null, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com', { apiKey: 'secret-key' });
+    await client.putBlob(Context.default(), 'abc123', new Uint8Array([1, 2, 3]));
+
+    const authCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/auth'));
+    expect(authCall).toBeUndefined();
+    const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/api/file/abc123'));
+    expect((putCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
+  });
+});
+
+/** Narrow a `fetch` input to its URL string, covering all three shapes the contract allows. */
+const requestUrl = (input: RequestInfo | URL): string =>
+  input instanceof URL ? input.toString() : typeof input === 'string' ? input : input.url;

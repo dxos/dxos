@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useEffect, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { Trigger } from '@dxos/compute';
 import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/compute-runtime';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 
@@ -26,7 +27,7 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
     Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-routine.useTriggerRuntimeControls'),
   );
 
-  const [dispatcher, setDispatcher] = useState<Context.Tag.Service<TriggerDispatcher> | undefined>(undefined);
+  const [dispatcher, setDispatcher] = useState<Context.Service.Shape<typeof TriggerDispatcher> | undefined>(undefined);
 
   const init = useSpaceCallback(
     db?.spaceId,

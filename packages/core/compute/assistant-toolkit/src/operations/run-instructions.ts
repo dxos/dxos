@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
@@ -17,7 +17,9 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { Operation, Template, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Template from '@dxos/compute/Template';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -31,9 +33,16 @@ import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
 
-const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Schema.All => {
-  // Routines default to Void output; completeJob still needs to accept arbitrary success payloads.
-  if ('$id' in output && output.$id === '/schemas/unknown') {
+/** `Instructions.make` defaults `output` to `Schema.Void`; this is what that serializes to. */
+const UNDECLARED_OUTPUT = JsonSchema.toJsonSchema(Schema.Void);
+
+const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Top => {
+  // A routine that declares no output still has to let `completeJob` carry an arbitrary success
+  // payload — decoding against the default would reject one with `Expected null | undefined`.
+  const undeclared =
+    ('$id' in output && output.$id === '/schemas/unknown') ||
+    ('type' in output && output.type === (UNDECLARED_OUTPUT as { type?: unknown }).type);
+  if (undeclared) {
     return Schema.Any;
   }
   return JsonSchema.toEffectSchema(output);
@@ -111,7 +120,7 @@ export default RunInstructions.pipe(
           resultSink,
         });
 
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         yield* Effect.promise(() =>
@@ -134,9 +143,9 @@ export default RunInstructions.pipe(
           );
 
         return yield* Deferred.poll(resultSink).pipe(
+          Effect.flatMap(Effect.fromOption),
           Effect.flatten,
-          Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () =>
+          Effect.catchTag('NoSuchElementError', () =>
             Effect.gen(function* () {
               yield* session
                 .createRequest({
@@ -151,9 +160,9 @@ export default RunInstructions.pipe(
                 );
 
               return yield* Deferred.poll(resultSink).pipe(
+                Effect.flatMap(Effect.fromOption),
                 Effect.flatten,
-                Effect.flatten,
-                Effect.catchTag('NoSuchElementException', () =>
+                Effect.catchTag('NoSuchElementError', () =>
                   Effect.fail(new PromptError('Agent did not signal task completion.', {})),
                 ),
               );
@@ -161,10 +170,8 @@ export default RunInstructions.pipe(
           ),
         );
       },
-      Effect.tapBoth({
-        onSuccess: () => Database.flush(),
-        onFailure: () => Database.flush(),
-      }),
+      // v4 dropped `tapBoth`; `onExit` runs the finalizer on either outcome.
+      Effect.onExit(() => Database.flush()),
       Effect.scoped,
     ),
   ),
@@ -172,24 +179,24 @@ export default RunInstructions.pipe(
 );
 
 const makePromptAgentToolkit = (options: {
-  output: Schema.Schema.All;
+  output: Schema.Top;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
     Tool.make('completeJob', {
-      parameters: {
+      parameters: Schema.Struct({
         success: Schema.optional(options.output),
         failure: Schema.optional(
           Schema.Struct({
-            message: Schema.String.annotations({
+            message: Schema.String.annotate({
               description: 'Short message describing the error.',
             }),
-            description: Schema.optional(Schema.String).annotations({
+            description: Schema.optional(Schema.String).annotate({
               description: 'Optional longer message describing in detail what went wrong',
             }),
           }),
         ),
-      },
+      }),
     }),
   ) {}
   const layer = PromptAgentToolkit.toLayer({
@@ -215,7 +222,7 @@ interface ToolExecutionServiceOptions {
 }
 
 const ToolExecutionService = ({ feed }: ToolExecutionServiceOptions) =>
-  Layer.unwrapEffect(
+  Layer.unwrap(
     Effect.gen(function* () {
       const operationInvoker = yield* Operation.Service;
       return makeToolExecutionService({

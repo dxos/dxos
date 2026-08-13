@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -23,17 +23,17 @@ export const SetAlarm = Operation.make({
   },
   input: Schema.Struct({
     in: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Duration from now expressed as "<number> <unit>", e.g. "30 seconds", "5 minutes", "2 hours".',
       }),
     ),
     at: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Absolute ISO-8601 timestamp to wake at, e.g. "2026-06-04T18:00:00.000Z".',
       }),
     ),
     message: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Optional reminder surfaced verbatim when the alarm fires.',
       }),
     ),

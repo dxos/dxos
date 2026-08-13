@@ -3,7 +3,7 @@
 //
 
 import { type TerraConfigValues, type Vec3, seaRadius } from '../engine';
-import { type TerraObject } from '../types';
+import * as TerraObject from '../types/TerraObject';
 import { BOOST_FRACTION, DESCENT_FRACTION, behaviorFor } from './behaviors';
 import { angleBetween, bearingTo, toUnit } from './geo';
 import { FALLBACK_UNIT, clampNonNegative, walkRoute } from './path';

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
@@ -10,14 +9,22 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Stream from 'effect/Stream';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
-import { Capabilities, Capability, Plugin, PluginManager } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { AiSession, PartialBlock } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
-import { AgentService, Credential, Operation, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as AgentService from '@dxos/compute/AgentService';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -77,7 +84,7 @@ const makeTestRuntime = Effect.gen(function* () {
     | ServiceResolver.ServiceResolver
   >();
   const manager = PluginManager.make({
-    pluginLoader: (id: string) => Effect.dieMessage(`No plugins in test runtime: ${id}`),
+    pluginLoader: (id: string) => Effect.die(new Error(`No plugins in test runtime: ${id}`)),
     plugins: [],
   });
   const runtime: Capabilities.ProcessManagerRuntime = ManagedRuntime.make(
@@ -94,12 +101,12 @@ const makeTestRuntime = Effect.gen(function* () {
 });
 
 describe('AiChatProcessor streaming', () => {
-  it.scoped(
+  it.effect(
     'upserts partials, finalizes complete blocks, ignores late partials, and flushes on completion',
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         // The scripted stream: a growing partial for m1, its finalization, a late (stale) partial

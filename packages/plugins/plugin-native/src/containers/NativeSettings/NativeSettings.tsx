@@ -2,18 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { NativeCapabilities, type Update } from '#types';
+import { NativeCapabilities, Settings, Update } from '#types';
+
+export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 type Pending = null | 'check' | 'install' | 'relaunch';
 

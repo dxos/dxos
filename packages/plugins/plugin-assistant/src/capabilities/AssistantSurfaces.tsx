@@ -7,10 +7,10 @@
 import React, { useEffect } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppCapabilities } from '@dxos/app-toolkit';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/client/echo';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -18,7 +18,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings, SpaceHomeSuggestions, TracePanel, TriggerStatus } from '#containers';
-import { type Assistant } from '#types';
+import { Assistant } from '#types';
 
 export type AssistantSettingsSurfaceProps = {
   subject: AppCapabilities.Settings;

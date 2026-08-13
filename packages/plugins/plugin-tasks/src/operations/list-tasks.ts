@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
+import { TaskOperation } from '#types';
+
 import { InvalidOperationInput } from '../errors';
-import { TaskOperation } from '../types';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;

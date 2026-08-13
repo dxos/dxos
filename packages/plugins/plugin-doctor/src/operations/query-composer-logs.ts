@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { DoctorOperation } from '../types';
+import { DoctorOperation } from '#types';
+
 import { HARD_LIMIT_ENTRIES, type LogRecord, type QueryInput, runQuery } from './internal/log-query';
 import { readLogRows } from './internal/log-reader';
 
@@ -58,7 +59,7 @@ export default DoctorOperation.QueryComposerLogs.pipe(
           }),
         catch: (err) => err,
       }).pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           Effect.sync(() => {
             log.warn('plugin-doctor: log-reader threw', { err });
             return { total: 0, opened: false } as const;

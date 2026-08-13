@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { credentialsLayerConfig } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { TestHelpers } from '@dxos/effect/testing';
 
 import { default as fetchMessages } from './fetch-messages';

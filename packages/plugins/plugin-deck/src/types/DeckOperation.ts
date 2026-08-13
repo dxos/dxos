@@ -6,24 +6,24 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
-const PartAdjustmentSchema = Schema.Union(
-  Schema.Literal('close').annotations({ description: 'Close the plank.' }),
-  Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
-  Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
-  Schema.Literal('expand').annotations({
+const PartAdjustmentSchema = Schema.Union([
+  Schema.Literal('close').annotate({ description: 'Close the plank.' }),
+  Schema.Literal('companion').annotate({ description: 'Open the companion plank side-by-side.' }),
+  Schema.Literal('fullscreen').annotate({ description: 'Toggle fullscreen display of the plank.' }),
+  Schema.Literal('expand').annotate({
     description: "Toggle the plank filling the deck, leaving only the other planks' spines beside it.",
   }),
-  Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
-  Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
-);
+  Schema.Literal('increment-start').annotate({ description: 'Move the plank towards the start of the deck.' }),
+  Schema.Literal('increment-end').annotate({ description: 'Move the plank towards the end of the deck.' }),
+]);
 
 export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
 
@@ -36,8 +36,8 @@ export const Adjust = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    id: Schema.String.annotations({ description: 'The id of the plank to adjust.' }),
-    type: PartAdjustmentSchema.annotations({ description: 'The type of adjustment to make.' }),
+    id: Schema.String.annotate({ description: 'The id of the plank to adjust.' }),
+    type: PartAdjustmentSchema.annotate({ description: 'The type of adjustment to make.' }),
   }),
   output: Schema.Void,
 });
@@ -51,8 +51,8 @@ export const UpdatePlankSize = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    id: Schema.String.annotations({ description: 'The id of the plank to resize.' }),
-    size: Schema.Number.annotations({ description: 'The new size of the plank.' }),
+    id: Schema.String.annotate({ description: 'The id of the plank to resize.' }),
+    size: Schema.Number.annotate({ description: 'The new size of the plank.' }),
   }),
   output: Schema.Void,
 });
@@ -83,7 +83,7 @@ export const UpdatePlankSizes = Operation.make({
   input: Schema.Struct({
     // Applied in one update, so a split whose panes trade width never renders a frame with one pane
     // resized and the other not.
-    sizes: Schema.Record({ key: Schema.String, value: Schema.Number }).annotations({
+    sizes: Schema.Record(Schema.String, Schema.Number).annotate({
       description: 'New sizes, keyed by plank id.',
     }),
   }),

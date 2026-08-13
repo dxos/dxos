@@ -4,7 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Terra, TerraObject } from '../types';
+import { Terra, TerraObject } from '#types';
+
 import { evaluate, initialState } from './motion';
 import { type TrailSpec, trailPuffs } from './trail';
 

@@ -4,16 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Skill, Trigger } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { scaffoldProject } from '@dxos/plugin-projects/templates';
-import { type ProjectCapabilities } from '@dxos/plugin-projects/types';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
-import { CrmOperation } from '../types';
+import { CrmOperation } from '#types';
 
 /** Skills for the project's chats: CRM tools plus the research/database/document utilities. */
 const PROJECT_SKILL_KEYS = [

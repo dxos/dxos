@@ -35,9 +35,9 @@
       "default": "./dist/lib/neutral/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/LibraryPlugin.tsx",
-      "types": "./dist/types/src/LibraryPlugin.d.ts",
-      "default": "./dist/lib/neutral/LibraryPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -47,7 +47,7 @@
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -57,20 +57,25 @@
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+    "./Book": {
+      "source": "./src/types/Book.ts",
+      "types": "./dist/types/src/types/Book.d.ts",
+      "default": "./dist/lib/neutral/Book.mjs"
+    },
+    "./LibraryEvents": {
+      "source": "./src/types/LibraryEvents.ts",
+      "types": "./dist/types/src/types/LibraryEvents.d.ts",
+      "default": "./dist/lib/neutral/LibraryEvents.mjs"
+    },
+    "./LibraryPlugin": {
+      "source": "./src/LibraryPlugin.ts",
+      "types": "./dist/types/src/LibraryPlugin.d.ts",
+      "default": "./dist/lib/neutral/LibraryPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -82,39 +87,26 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-panproto": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
-    "@dxos/react-ui-masonry": "workspace:*",
-    "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-search": "workspace:*",
-    "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "foliate-js": "catalog:"
   },
   "devDependencies": {
-    "@dxos/plugin-preview": "workspace:*",
-    "@dxos/plugin-testing": "workspace:*",
-    "@dxos/plugin-theme": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

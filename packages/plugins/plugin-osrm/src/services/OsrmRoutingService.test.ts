@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type Place, Routing } from '@dxos/plugin-trip/types';
+import type * as Place from '@dxos/plugin-trip/Place';
+import * as Routing from '@dxos/plugin-trip/Routing';
 
 import { makeOsrmRoutingService } from './OsrmRoutingService';
 

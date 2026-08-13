@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
 const Forex = Operation.make({
@@ -15,8 +15,8 @@ const Forex = Operation.make({
     description: 'Returns the exchange rate between two currencies.',
   },
   input: Schema.Struct({
-    from: Schema.String.annotations({ description: 'The source currency' }),
-    to: Schema.String.annotations({ description: 'The target currency' }),
+    from: Schema.String.annotate({ description: 'The source currency' }),
+    to: Schema.String.annotate({ description: 'The target currency' }),
   }),
   output: Schema.Any,
 });

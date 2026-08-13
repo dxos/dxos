@@ -2,12 +2,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { applyMerge, findDuplicates, planMerge } from '@dxos/extractor';
 import { invariant } from '@dxos/invariant';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
+
 import { resolveIdentitySpec } from './helpers';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.MergeDuplicates> = SpaceOperation.MergeDuplicates.pipe(

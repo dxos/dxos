@@ -5,15 +5,17 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
-import { Credential } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
+
+import { GitHubOperation } from '#types';
 
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
 import { GitHubApi } from '../services';
-import { GitHubOperation } from '../types';
 
 /**
  * Service-specific token-created hook for GitHub.
@@ -24,7 +26,7 @@ import { GitHubOperation } from '../types';
  * and continues so a failed `/user` cannot block the Connection already
  * created.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     if (accessToken.account) {
       return;
@@ -43,7 +45,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * (401/403 on a revoked grant) or transport failure surfaces as a user-facing
  * error so the connection UI can offer to reauthenticate.
  */
-const testConnection: TestConnection = ({ accessToken }) =>
+const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
     GitHubApi.fetchUser().pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token }))),
   ).pipe(
@@ -54,7 +56,7 @@ const testConnection: TestConnection = ({ accessToken }) =>
   );
 
 /**
- * Contributes a single `Connector` entry that wires GitHub's two operations,
+ * Contributes a single `ConnectorSpec.Connector` entry that wires GitHub's two operations,
  * its target materializer, and the token-created hook to the `'github.com'`
  * source. plugin-connector routes by `connectorId`.
  *
@@ -67,7 +69,7 @@ const testConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: GITHUB_PROVIDER_ID,
         source: GITHUB_SOURCE,

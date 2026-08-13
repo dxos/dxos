@@ -166,7 +166,9 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
     <Menu.Root {...menuActions} attendableId={STORY_ATTENDABLE_ID}>
       <Panel.Root role='article'>
         <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <div className='relative grow overflow-hidden'>

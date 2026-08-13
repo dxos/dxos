@@ -25,7 +25,7 @@ import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { type Notebook } from '#types';
+import { Notebook } from '#types';
 
 import { type ComputeGraph } from '../../notebook';
 import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';

@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -65,7 +65,7 @@ describe('QueryMemories', () => {
 });
 
 const titles = (results: readonly unknown[]) =>
-  Schema.decodeUnknown(Schema.Array(Schema.Struct({ title: Schema.String })))(results).pipe(
+  Schema.decodeUnknownEffect(Schema.Array(Schema.Struct({ title: Schema.String })))(results).pipe(
     Effect.map((rows) => rows.map((row) => row.title)),
   );
 

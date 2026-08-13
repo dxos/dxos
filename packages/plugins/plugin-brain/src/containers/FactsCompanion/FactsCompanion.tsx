@@ -10,7 +10,7 @@ import { FactViewer } from '@dxos/react-ui-rdf';
 
 import { BrainCapabilities } from '#types';
 
-import { type FactStoreRegistry } from '../../capabilities';
+import { type FactStoreRegistry } from '../../capabilities/fact-store';
 import { useFacts } from './use-facts';
 
 /**

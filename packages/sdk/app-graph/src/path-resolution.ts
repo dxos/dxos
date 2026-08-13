@@ -3,6 +3,7 @@
 //
 
 import * as Array from 'effect/Array';
+import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -166,6 +167,11 @@ type KeyedExtension = { id: string; path: string[] | GraphBuilder.PathResolver }
 /**
  * Materialize a candidate qualified node id and confirm it exists: expand its ancestors, then check
  * the node is known. Returns the id on success, `null` otherwise.
+ *
+ * Expansion only triggers population — the objects behind it load out of band — so on a cold
+ * restore the check can run before the node lands and report a false absence. Waiting for a node
+ * that has not arrived is the caller's job ({@link resolveKeyId} races one deadline across every
+ * candidate), so this stays immediate and a speculative candidate falls through at once.
  */
 const materializeCandidate = async (
   builder: GraphBuilder.GraphBuilder,
@@ -191,38 +197,49 @@ const resolveKeyId = async (
   workspace: string,
   extensions: ReadonlyArray<KeyedExtension>,
   id: string,
+  wait?: Duration.Input,
 ): Promise<string | null> => {
   // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
   const idSegments = id.split(builder.urlGrammar.tailSeparator);
-  for (const extension of extensions) {
-    if (Array.isArray(extension.path)) {
-      const resolved = await materializeCandidate(
-        builder,
-        [workspaceBaseId, ...extension.path, ...idSegments].join('/'),
-      );
-      if (resolved) {
-        return resolved;
-      }
-    }
-  }
+  const candidateIds: string[] = extensions
+    .filter((extension) => Array.isArray(extension.path))
+    .map((extension) => [workspaceBaseId, ...(extension.path as string[]), ...idSegments].join('/'));
 
   // 2. Dynamic resolver: the extension computes the candidate id from runtime data (self-contained
-  // Effect; a defect degrades to no candidate rather than crashing resolution).
+  // Effect; a defect degrades to no candidate rather than crashing resolution). Ordered after the
+  // static ones, which is the declared precedence.
   for (const extension of extensions) {
     if (typeof extension.path === 'function') {
       const candidateId = await EffectEx.runPromise(
-        extension.path({ id, workspace, workspaceBaseId }).pipe(Effect.catchAllDefect(() => Effect.succeed(null))),
+        extension.path({ id, workspace, workspaceBaseId }).pipe(Effect.catchDefect(() => Effect.succeed(null))),
       );
       if (candidateId) {
-        const resolved = await materializeCandidate(builder, candidateId);
-        if (resolved) {
-          return resolved;
-        }
+        candidateIds.push(candidateId);
       }
     }
   }
 
-  return null;
+  // Immediate pass in precedence order, so an already-materialized node still resolves to the
+  // first extension that claims it.
+  for (const candidateId of candidateIds) {
+    const resolved = await materializeCandidate(builder, candidateId);
+    if (resolved) {
+      return resolved;
+    }
+  }
+  if (wait === undefined || candidateIds.length === 0) {
+    return null;
+  }
+
+  // One deadline for the pair, raced across every candidate — per-candidate waits run serially, so
+  // N key-sharing extensions would multiply the caller's bound by N. Dynamic candidates wait too:
+  // they name the recursive shapes (nested collections) whose containers are the slowest to
+  // materialize, which is exactly what the wait exists for.
+  return EffectEx.runPromise(
+    Effect.raceAll(
+      candidateIds.map((candidateId) => Graph.waitFor(builder.graph, candidateId).pipe(Effect.as(candidateId))),
+    ).pipe(Effect.timeoutOrElse({ duration: wait, orElse: () => Effect.succeed<string | null>(null) })),
+  );
 };
 
 /**
@@ -249,34 +266,32 @@ const resolveLinked = async (
 const resolveUrlAsync = async (
   builder: GraphBuilder.GraphBuilder,
   parsed: { workspace: string; pairs: ReadonlyArray<UrlPair> },
+  options?: ResolveUrlOptions,
 ): Promise<Array<ResolvedPair | null>> => {
   const keyTable = buildKeyTable(builder);
   const allExtensions = builder.getExtensions();
-  const results: Array<ResolvedPair | null> = [];
-  // Tracks the most recently resolved *item* node, the base for `linked` pairs — a linked pair
-  // always attaches to the preceding item, never to another linked pair.
-  let lastItemNodeId: string | undefined;
+  const results: Array<ResolvedPair | null> = parsed.pairs.map(() => null);
 
-  for (let pairIndex = 0; pairIndex < parsed.pairs.length; pairIndex++) {
-    const pair = parsed.pairs[pairIndex];
-
-    // Linked pair: resolves against the preceding item by variant, not the workspace base — the linked
-    // resolution tier. Produced by no extension (it is a grammar key), so it is matched before the key
-    // table, and it is not itself an item, so it does not become the base for a following linked pair.
-    if (pair.key === builder.urlGrammar.linkedKey) {
-      const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
-      results.push(nodeId ? { pairIndex, nodeId } : null);
-      continue;
+  // The chain partitions into `[item, linked*]` groups: a linked pair resolves against the
+  // preceding ITEM, and item pairs resolve against the workspace base, so groups are independent.
+  // Running them concurrently is what keeps the caller's per-pair deadline a wall-clock bound —
+  // resolving serially spends it once per plank, and a multi-plank cold deep link then exceeds the
+  // module activation timeout, which disables the plugin rather than degrading to not-found.
+  const groups: Array<number[]> = [];
+  parsed.pairs.forEach((pair, pairIndex) => {
+    if (pair.key === builder.urlGrammar.linkedKey && groups.length > 0) {
+      groups[groups.length - 1].push(pairIndex);
+    } else {
+      groups.push([pairIndex]);
     }
+  });
 
+  const resolveItem = async (pairIndex: number): Promise<string | null> => {
+    const pair = parsed.pairs[pairIndex];
     const extensionIdList = keyTable.get(pair.key);
     if (!extensionIdList || extensionIdList.length === 0) {
       log.warn('unknown URL prefix key', { key: pair.key });
-      results.push(null);
-      if (pair.id !== undefined) {
-        lastItemNodeId = undefined;
-      }
-      continue;
+      return null;
     }
 
     const workspaceBaseId = `${Node.RootId}/${pair.workspace}`;
@@ -290,10 +305,33 @@ const resolveUrlAsync = async (
     // A normal key addresses a node by id; an id-less singleton key (e.g. `home`) addresses a fixed node
     // whose terminal segment IS the key — resolve it the same way with the key standing in for the id
     // (`root/<ws>/<...path>/<key>`).
-    const nodeId = await resolveKeyId(builder, workspaceBaseId, pair.workspace, extensions, pair.id ?? pair.key);
-    results.push(nodeId ? { pairIndex, nodeId } : null);
-    lastItemNodeId = nodeId ?? undefined;
-  }
+    return resolveKeyId(
+      builder,
+      workspaceBaseId,
+      pair.workspace,
+      extensions,
+      pair.id ?? pair.key,
+      options?.wait?.(pairIndex),
+    );
+  };
+
+  await Promise.all(
+    groups.map(async ([headIndex, ...linkedIndexes]) => {
+      const headPair = parsed.pairs[headIndex];
+      // A leading linked pair has no item to attach to (groups only start with one when the chain
+      // opens with it), so it resolves to nothing rather than against a stale base.
+      const headNodeId = headPair.key === builder.urlGrammar.linkedKey ? null : await resolveItem(headIndex);
+      results[headIndex] = headNodeId ? { pairIndex: headIndex, nodeId: headNodeId } : null;
+
+      // Linked pairs attach to this group's item, and to each other in order.
+      let lastItemNodeId = headNodeId ?? undefined;
+      for (const pairIndex of linkedIndexes) {
+        const pair = parsed.pairs[pairIndex];
+        const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
+        results[pairIndex] = nodeId ? { pairIndex, nodeId } : null;
+      }
+    }),
+  );
 
   return results;
 };
@@ -308,10 +346,20 @@ const resolveUrlAsync = async (
  * how a `null` is surfaced is the caller's concern. A linked pair resolves against the *preceding
  * item's* node, not the raw preceding pair.
  */
+export type ResolveUrlOptions = {
+  /**
+   * How long to wait for a pair's candidate node to materialize, by pair index. Per-pair because
+   * the answer differs: a pair whose object is known to exist is merely late, while one nothing
+   * vouches for is absent and must not hold up the restore. Return `undefined` to read immediately.
+   */
+  readonly wait?: (pairIndex: number) => Duration.Input | undefined;
+};
+
 export const resolveUrl = (
   builder: GraphBuilder.GraphBuilder,
   parsed: { workspace: string; pairs: ReadonlyArray<UrlPair> },
-): Effect.Effect<Array<ResolvedPair | null>> => Effect.promise(() => resolveUrlAsync(builder, parsed));
+  options?: ResolveUrlOptions,
+): Effect.Effect<Array<ResolvedPair | null>> => Effect.promise(() => resolveUrlAsync(builder, parsed, options));
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of

@@ -8,7 +8,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 
-import { type Bookmark } from '#types';
+import { Bookmark } from '#types';
 
 import { useImageLoads } from '../useImageLoads';
 

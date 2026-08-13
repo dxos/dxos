@@ -4,7 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -17,6 +18,8 @@ import { setDeep } from '@dxos/util';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
+
+import { DebugPortSettings } from '../DebugPortSettings';
 
 type Toast = {
   title: string;
@@ -65,12 +68,12 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     download(file, fileName);
 
     if (onUpload) {
-      const personalSpace = AppSpace.getPersonalSpace(client);
-      if (!personalSpace) {
-        log.error('no personal space available for upload');
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      if (!defaultSpace) {
+        log.error('no default space available for upload');
         return;
       }
-      const info = await onUpload(personalSpace.db, new File([file], fileName));
+      const info = await onUpload(defaultSpace.db, new File([file], fileName));
       if (!info) {
         log.error('diagnostics failed to upload to IPFS');
         return;
@@ -244,6 +247,8 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
               </Select.Root>
             </Form.Row>
           </Form.Section>
+
+          <DebugPortSettings disabled={!onSettingsChange} />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

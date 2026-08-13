@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { Segment, Trip, TripOperation } from '../types';
+import { Segment, Trip, TripOperation } from '#types';
+
 import { type Place } from '../types/Place';
 
 type DetailsInput = {

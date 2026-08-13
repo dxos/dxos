@@ -7,10 +7,10 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { ProjectSkill } from '@dxos/assistant-toolkit';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { TablePlugin } from '@dxos/plugin-table/plugin';
+import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import { Table } from '@dxos/react-ui-table/types';
 import { trim } from '@dxos/util';
 
@@ -69,7 +69,7 @@ const task = createEvalRunner({
   input: Schema.Unknown,
   output: Schema.Unknown,
   skills: [...getDefaultSkills(), Ref.make(ProjectSkill.make())],
-  plugins: [TablePlugin()],
+  plugins: [TablePlugin.make()],
   types: [Project.Project, Collection.Collection, Table.Table],
   // Multi-tool scenario (create table + file + upserts), so allow more round-trips.
   timeout: 150_000,

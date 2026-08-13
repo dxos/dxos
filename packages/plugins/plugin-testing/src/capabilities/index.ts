@@ -2,11 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { StorybookCapabilities } from '#types';
+
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
+export const State = Capability.lazyModule(
+  'State',
+  // Shell state read by `Layout` on its first render — same class as the deck's `DeckState`.
+  { activatesOn: ActivationEvents.Startup, provides: [StorybookCapabilities.LayoutState, AppCapabilities.Layout] },
+  () => import('./state'),
 );
-export const State = Capability.lazy('State', () => import('./state'));

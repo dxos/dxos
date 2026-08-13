@@ -1,0 +1,29 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+
+import {
+  AppGraphBuilder,
+  HistoryGraph,
+  OperationHandler,
+  ReviewState,
+  SkillDefinition,
+  UndoMappings,
+} from '#capabilities';
+import { meta } from '#meta';
+
+export const ReviewPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(HistoryGraph),
+  Plugin.addModule(ReviewState),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(UndoMappings),
+  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.make,
+);
+
+export default ReviewPlugin;

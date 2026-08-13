@@ -30,7 +30,6 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-panproto": "workspace:*",
@@ -39,19 +38,17 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
+    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "fast-check": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

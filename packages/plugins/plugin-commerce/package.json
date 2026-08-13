@@ -20,9 +20,14 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/CommercePlugin.tsx",
-      "types": "./dist/types/src/CommercePlugin.d.ts",
-      "default": "./dist/lib/CommercePlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -32,13 +37,58 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./package.json": "./package.json",
+    "./CommerceEvents": {
+      "source": "./src/types/CommerceEvents.ts",
+      "types": "./dist/types/src/types/CommerceEvents.d.ts",
+      "import": "./dist/lib/CommerceEvents.mjs"
+    },
+    "./CommercePlugin": {
+      "source": "./src/CommercePlugin.ts",
+      "types": "./dist/types/src/CommercePlugin.d.ts",
+      "import": "./dist/lib/CommercePlugin.mjs"
+    },
+    "./Provider": {
+      "source": "./src/types/Provider.ts",
+      "types": "./dist/types/src/types/Provider.d.ts",
+      "import": "./dist/lib/Provider.mjs"
+    },
+    "./Result": {
+      "source": "./src/types/Result.ts",
+      "types": "./dist/types/src/types/Result.d.ts",
+      "import": "./dist/lib/Result.mjs"
+    },
+    "./Search": {
+      "source": "./src/types/Search.ts",
+      "types": "./dist/types/src/types/Search.d.ts",
+      "import": "./dist/lib/Search.mjs"
+    },
+    "./SearchOperation": {
+      "source": "./src/types/SearchOperation.ts",
+      "types": "./dist/types/src/types/SearchOperation.d.ts",
+      "import": "./dist/lib/SearchOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CommerceEvents": [
+        "dist/types/src/types/CommerceEvents.d.ts"
+      ],
+      "Provider": [
+        "dist/types/src/types/Provider.d.ts"
+      ],
+      "Result": [
+        "dist/types/src/types/Result.d.ts"
+      ],
+      "Search": [
+        "dist/types/src/types/Search.d.ts"
+      ],
+      "SearchOperation": [
+        "dist/types/src/types/SearchOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -47,6 +97,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -58,10 +109,8 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
@@ -79,11 +128,13 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:"
   },
   "peerDependencies": {

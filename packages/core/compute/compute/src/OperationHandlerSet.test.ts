@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import * as Operation from './Operation';
@@ -38,6 +40,8 @@ describe('OperationHandlerSet.reactive', () => {
     let resolveCount = 0;
     const trackingSet: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+      definitions: () => [],
+      getHandlerFor: () => Promise.resolve(undefined),
       getHandlers: () => Promise.resolve([makeHandler(KEY_A, 'A')]),
       handlers: Effect.sync(() => {
         resolveCount++;
@@ -59,6 +63,8 @@ describe('OperationHandlerSet.reactive', () => {
     let callCount = 0;
     const flakySet: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+      definitions: () => [],
+      getHandlerFor: () => Promise.resolve(undefined),
       getHandlers: () => Promise.resolve([]),
       handlers: Effect.suspend(() => {
         callCount++;
@@ -93,5 +99,96 @@ describe('OperationHandlerSet.reactive', () => {
 
     registry.set(atom, []);
     expect(await reactive.getHandlers()).toEqual([]);
+  });
+});
+
+describe('OperationHandlerSet.lazy', () => {
+  test('definitions enumerate without loading any handler body', async ({ expect }) => {
+    let loads = 0;
+    const set = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => (loads++, Promise.resolve({ default: makeHandler(KEY_A, 'A') }))),
+      ),
+    ]);
+    expect(set.definitions().map((definition) => definition.meta.key)).toEqual([KEY_A]);
+    expect(loads).toEqual(0);
+  });
+
+  test('resolving one operation loads only that module', async ({ expect }) => {
+    const loads = { a: 0, b: 0 };
+    const set = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => (loads.a++, Promise.resolve({ default: makeHandler(KEY_A, 'A') }))),
+      ),
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_B } }).pipe(
+        Operation.lazyHandler(() => (loads.b++, Promise.resolve({ default: makeHandler(KEY_B, 'B') }))),
+      ),
+    ]);
+    const found = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
+    expect(found.meta.key).toEqual(KEY_A);
+    expect(loads).toEqual({ a: 1, b: 0 });
+    // Cached per key across lookups.
+    await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
+    expect(loads.a).toEqual(1);
+  });
+
+  test('merge loads only the matched child', async ({ expect }) => {
+    const loads = { a: 0, b: 0 };
+    const setA = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => (loads.a++, Promise.resolve({ default: makeHandler(KEY_A, 'A') }))),
+      ),
+    ]);
+    const setB = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_B } }).pipe(
+        Operation.lazyHandler(() => (loads.b++, Promise.resolve({ default: makeHandler(KEY_B, 'B') }))),
+      ),
+    ]);
+    const merged = OperationHandlerSet.merge(setA, setB);
+
+    const fromA = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
+    expect(fromA.meta.key).toEqual(KEY_A);
+    expect(loads).toEqual({ a: 1, b: 0 });
+
+    const fromB = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_B));
+    expect(fromB.meta.key).toEqual(KEY_B);
+    expect(loads).toEqual({ a: 1, b: 1 });
+  });
+
+  test('merge enumerates definitions without loading any handler', async ({ expect }) => {
+    let loaded = 0;
+    const set = OperationHandlerSet.merge(
+      OperationHandlerSet.lazy([
+        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+          Operation.lazyHandler(() => (loaded++, Promise.resolve({ default: makeHandler(KEY_A, 'A') }))),
+        ),
+      ]),
+      OperationHandlerSet.make(makeHandler(KEY_B, 'B')),
+    );
+
+    expect(
+      set
+        .definitions()
+        .map((definition) => definition.meta.key)
+        .sort(),
+    ).toEqual([KEY_A, KEY_B]);
+    expect(loaded).toEqual(0);
+  });
+
+  test('an earlier make-set override wins over a later lazy set for the same key', async ({ expect }) => {
+    // A materialized `make` set answers per-key lookups directly, so resolution honors
+    // contribution order — a later lazy contribution must not shadow an earlier override
+    // (e.g. a story or test stubbing an operation a plugin also handles).
+    const overrideHandler = makeHandler(KEY_A, 'override');
+    const override = OperationHandlerSet.make(overrideHandler);
+    const lazySet = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => Promise.resolve({ default: makeHandler(KEY_A, 'plugin') })),
+      ),
+    ]);
+    const merged = OperationHandlerSet.merge(override, lazySet);
+
+    const found = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
+    expect(found).toBe(overrideHandler);
   });
 });

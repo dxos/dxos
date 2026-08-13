@@ -5,9 +5,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { type Chat as ChatType } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -15,7 +16,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { type ChatEvent, ChatPrompt } from '#components';
 import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
-import { AssistantCapabilities, AssistantOperation, type ChatType } from '#types';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 import { getChatPath } from '../../paths';
 

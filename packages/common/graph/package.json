@@ -28,12 +28,9 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
-    "@dxos/random": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {

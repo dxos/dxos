@@ -4,10 +4,10 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Record from 'effect/Record';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
@@ -454,6 +454,13 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
     automergeHost: host,
     spaceStateManager: new SpaceStateManager({ runtime }),
     updateIndexes: async () => {},
+    getSpaceStats: async () => ({ objects: { alive: 0, deleted: 0 }, documents: 0, feeds: 0, feedBlocks: 0 }),
+    runGarbageCollection: async () => ({
+      unlinkedObjects: 0,
+      removedDocuments: 0,
+      removedIndexEntries: 0,
+      purgedFeedBlocks: 0,
+    }),
   });
 
   // Bridge the host's DataService handlers to an in-process effect-rpc client (no wire hop).
@@ -477,7 +484,7 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
 function* createProxyRepos(dataService: DataService.Client): Generator<RepoProxy> {
   for (let i = 0; i < 1_00; i++) {
     // Counter just to protect against infinite loops.
-    yield new RepoProxy(dataService, Runtime.defaultRuntime, SpaceId.random());
+    yield new RepoProxy(dataService, EffectContext.empty(), SpaceId.random());
   }
   throw new Error('Too many repos requested');
 }

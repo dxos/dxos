@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { AssistantTestLayer, runMemoizedTests } from '../testing';
+import { AssistantTestLayer } from '../testing';
 
 // Define a calendar event artifact schema.
 class CalendarEvent extends Type.makeObject<CalendarEvent>(DXN.make('com.example.type.calendarEvent', '0.1.0'))(
@@ -31,11 +31,11 @@ class CalendarEvent extends Type.makeObject<CalendarEvent>(DXN.make('com.example
 const TestToolkit = Toolkit.make(
   Tool.make('Calculator', {
     description: 'Basic calculator tool',
-    parameters: {
-      input: Schema.String.annotations({
+    parameters: Schema.Struct({
+      input: Schema.String.annotate({
         description: 'The calculation to perform.',
       }),
-    },
+    }),
     success: Schema.Struct({
       result: Schema.Number,
     }),
@@ -71,7 +71,7 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(toolkitLayer),
 );
 
-describe.skipIf(!runMemoizedTests())('AiRequest.Request', () => {
+describe('AiRequest.Request', { tags: ['model-fixture'] }, () => {
   it.effect(
     'no tools',
     Effect.fnUntraced(

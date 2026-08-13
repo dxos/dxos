@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 
-import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '../types';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '#types';
 
 export default NativeFilesystemOperation.CloseDirectory.pipe(
   Operation.withHandler(

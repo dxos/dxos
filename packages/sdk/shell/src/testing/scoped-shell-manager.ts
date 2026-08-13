@@ -59,10 +59,17 @@ export class ScopedShellManager {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
     const input = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`);
-    // Wait for the input to be both visible and enabled before filling. The input is conditionally
-    // mounted based on the invitation state machine (connectingSpaceInvitation →
-    // inputtingSpaceVerificationCode), so a fixed sleep races the transition.
-    await input.waitFor({ state: 'visible' });
+    // The input is conditionally mounted by the invitation state machine, so a bare timeout cannot say
+    // whether the invitation stalled before this step; name what the shell is showing instead.
+    await input.waitFor({ state: 'visible' }).catch(async (err) => {
+      const showing = await peer
+        .locator('[data-testid]')
+        .evaluateAll((elements) => [...new Set(elements.map((element) => element.dataset.testid))].join(', '))
+        .catch(() => '(unavailable)');
+      throw new Error(`${type} invitation never reached the auth-code step; shell is showing: ${showing}`, {
+        cause: err,
+      });
+    });
     await input.fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }

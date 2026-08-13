@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Format } from '@dxos/echo';
 import { Column, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
@@ -16,9 +16,9 @@ import { OutlineOperation } from '#types';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
-    Schema.filter((value) => value.trim().length > 0, { message: () => 'Entry cannot be empty.' }),
+    Schema.check(Schema.makeFilter((value: string) => value.trim().length > 0 || 'Entry cannot be empty.')),
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ description: 'Journal entry' }),
+    Schema.annotate({ description: 'Journal entry' }),
   ),
 });
 

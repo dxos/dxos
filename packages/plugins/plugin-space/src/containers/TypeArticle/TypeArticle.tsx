@@ -5,14 +5,15 @@
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
-import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -23,8 +24,8 @@ import { CardAnnotation } from '@dxos/schema';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { SpaceOperation } from '../../operations';
 import { useDuplicatesGroup } from './duplicatesGroup';
 import { useDuplicates } from './useDuplicates';
 
@@ -80,10 +81,29 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   // TODO(burdon): Factor out as an aspect?
   const duplicates = useDuplicates({ space, type, objects, enabled: layout === 'duplicates' });
+  const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const stagedPreview = mergePreview?.typeUri === typeUri ? mergePreview : undefined;
+
+  // Merged-away ids would otherwise linger in the shared selection and the companion's card stack.
+  // Functional update against the live selection: the merge operation is async, so a snapshot of
+  // `selectedIds` taken at confirm time would drop any selection change made while it ran.
+  const { update: updateSelection } = useViewStateActions(Selection.aspect, typeUri);
+  const handleConfirmed = useCallback(
+    (objectIds: string[]) =>
+      updateSelection((previous) => ({
+        mode: 'multi',
+        ids: Selection.resolve(previous, 'multi').filter((id) => !objectIds.includes(id)),
+      })),
+    [updateSelection],
+  );
+
   const duplicatesGroup = useDuplicatesGroup({
     typeUri,
     typename: Type.getTypename(type),
+    spaceId: space.id,
+    selectedIds,
     duplicates,
+    onConfirmed: handleConfirmed,
   });
 
   // Duplicates is offered only for types some plugin registered an identity rule for:
@@ -196,17 +216,25 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   // The card grid backs two layouts — every object for `masonry`, only the group under review for
   // `duplicates` — so the items are resolved here and the grid itself is declared once.
   const tiles = layout === 'duplicates' ? duplicates.current : results;
-  const tileItems = useMemo<TileData[]>(
-    () =>
-      tiles.map((object) => ({
-        object,
-        current: selectedIds.includes(object.id),
-        onSelect: toggleSelected,
-        onOpen: handleOpen,
-        onDelete: Obj.getParent(object) ? undefined : handleDelete,
-      })),
-    [tiles, selectedIds, toggleSelected, handleOpen, handleDelete],
-  );
+  const tileItems = useMemo<TileData[]>(() => {
+    const toTile = (object: Obj.Unknown): TileData => ({
+      object,
+      current: selectedIds.includes(object.id),
+      onSelect: toggleSelected,
+      onOpen: handleOpen,
+      onDelete: Obj.getParent(object) ? undefined : handleDelete,
+    });
+    // While a merge is staged the participants fold into one read-only result card; members the
+    // selection excluded stay behind as normal cards.
+    if (layout === 'duplicates' && stagedPreview) {
+      const participants = new Set(stagedPreview.objectIds);
+      return [
+        { object: stagedPreview.preview, current: true },
+        ...tiles.filter((object) => !participants.has(object.id)).map(toTile),
+      ];
+    }
+    return tiles.map(toTile);
+  }, [layout, stagedPreview, tiles, selectedIds, toggleSelected, handleOpen, handleDelete]);
 
   // A type with no objects at all has nothing for any layout to show; past that each layout says
   // when it is empty for its own reason.
@@ -227,14 +255,16 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
           <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
             {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
             <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-              <Menu.Toolbar />
+              <Menu.Toolbar>
+                <Menu.Items />
+              </Menu.Toolbar>
             </Menu.Root>
           </Panel.Toolbar>
           <Panel.Content>
             <LayoutPanel value='masonry' empty={noResults}>
               <Masonry.Root Tile={TileAdapter}>
                 <Masonry.Content>
-                  <Masonry.Viewport cacheKey={typeUri} getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+                  <Masonry.Viewport cacheKey={typeUri} getId={(data) => data.object.id} items={tileItems} />
                 </Masonry.Content>
               </Masonry.Root>
             </LayoutPanel>
@@ -255,7 +285,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
               <LayoutPanel value='duplicates' empty={noDuplicates}>
                 <Masonry.Root Tile={TileAdapter}>
                   <Masonry.Content>
-                    <Masonry.Viewport cacheKey={typeUri} getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+                    <Masonry.Viewport cacheKey={typeUri} getId={(data) => data.object.id} items={tileItems} />
                   </Masonry.Content>
                 </Masonry.Root>
               </LayoutPanel>
@@ -277,11 +307,12 @@ const LayoutPanel = ({ value, empty, children }: PropsWithChildren<{ value: Layo
   </Tabs.Panel>
 );
 
+/** Callbacks are absent on the staged merge-result tile, which is read-only. */
 type TileData = {
   object: Obj.Unknown;
   current: boolean;
-  onSelect: (id: string) => void;
-  onOpen: (object: Obj.Unknown) => void;
+  onSelect?: (id: string) => void;
+  onOpen?: (object: Obj.Unknown) => void;
   onDelete?: (object: Obj.Unknown) => void;
 };
 
@@ -315,18 +346,22 @@ const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) =
   // `Focus.Item` calls `onCurrentChange` on click and on Enter. A card click toggles selection —
   // the companion follows the selection, so navigating away on every click would fight the review
   // workflow; opening stays available from the card menu.
-  const handleCurrentChange = useCallback(() => onSelect(object.id), [onSelect, object]);
+  const handleCurrentChange = useCallback(() => onSelect?.(object.id), [onSelect, object]);
 
   const menuItems = useMemo(
     () => [
-      {
-        icon: 'ph--arrow-square-out--regular',
-        label: t('open-object.label', {
-          ns: typename ?? meta.profile.key,
-          defaultValue: t('open-object.label'),
-        }),
-        onClick: () => onOpen(object),
-      },
+      ...(onOpen
+        ? [
+            {
+              icon: 'ph--arrow-square-out--regular',
+              label: t('open-object.label', {
+                ns: typename ?? meta.profile.key,
+                defaultValue: t('open-object.label'),
+              }),
+              onClick: () => onOpen(object),
+            },
+          ]
+        : []),
       ...(onDelete
         ? [
             {
@@ -345,7 +380,7 @@ const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) =
 
   return (
     <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <Card.Root fullWidth classNames={['dx-hover cursor-pointer', current && 'dx-current']}>
+      <Card.Root fullWidth classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
         <Card.Header>
           <Card.Block>
             <Icon icon={icon} classNames={iconStyles?.text} />

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { invariant } from '@dxos/invariant';
 
@@ -20,10 +20,10 @@ const defaultPluginLoader =
       return { plugin };
     });
 
-type SubCommands = [Command.Command<any, any, any, any>, ...Array<Command.Command<any, any, any, any>>];
+type SubCommands = [Command.Command<any, any, any, any, any>, ...Array<Command.Command<any, any, any, any, any>>];
 
 export type CreateCliAppOptions = {
-  rootCommand: Command.Command<any, any, any, any>;
+  rootCommand: Command.Command<any, any, any, any, any>;
   subCommands?: SubCommands;
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
@@ -79,18 +79,18 @@ export const createCliApp = Effect.fn(function* ({
     module: 'org.dxos.app-framework.atom-registry',
   });
 
-  // Activate startup event to load CLI commands and Effect layers.
+  // Activate startup event to load Effect layers.
   yield* manager.activate(ActivationEvents.Startup);
+
+  // Awaited, not forked: the command tree below is built from one read of the capability, so a
+  // command still activating when that read happens would be missing from the binary's help.
+  yield* manager.activate(ActivationEvents.CommandsRequested);
 
   // Gather all layers and merge them into a single layer.
   const layers = manager.capabilities.getAll(Capabilities.Layer);
   const capabilityServiceLayer = Layer.succeed(Capability.Service, manager.capabilities);
   const pluginServiceLayer = Layer.succeed(Plugin.Service, manager);
-  const layer = (Layer.mergeAll as (...args: Layer.Layer<any, any, any>[]) => Layer.Layer<any, any, never>)(
-    capabilityServiceLayer,
-    pluginServiceLayer,
-    ...layers,
-  );
+  const layer = Layer.mergeAll(capabilityServiceLayer, pluginServiceLayer, ...layers);
 
   // Gather all commands and provide them to the root command.
   const pluginCommands = manager.capabilities.getAll(Capabilities.Command);

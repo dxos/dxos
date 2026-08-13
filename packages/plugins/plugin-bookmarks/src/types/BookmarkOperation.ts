@@ -7,9 +7,9 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
-import { PageAction } from '@dxos/plugin-crx/types';
+import * as PageAction from '@dxos/plugin-crx/PageAction';
 import { Text } from '@dxos/schema';
 
 import * as Bookmark from './Bookmark';
@@ -23,7 +23,7 @@ export const AddFromSnapshot = Operation.make({
   },
   input: Schema.Struct({
     snapshot: PageAction.Snapshot,
-    target: Database.Database.annotations({ description: 'The database to add the bookmark to.' }),
+    target: Database.Database.annotate({ description: 'The database to add the bookmark to.' }),
   }),
   output: Schema.Struct({
     id: Schema.String,
@@ -42,10 +42,10 @@ export const Summarize = Operation.make({
     icon: 'ph--text-align-left--regular',
   },
   input: Schema.Struct({
-    bookmark: Ref.Ref(Bookmark.Bookmark).annotations({ description: 'The bookmark to summarize.' }),
+    bookmark: Ref.Ref(Bookmark.Bookmark).annotate({ description: 'The bookmark to summarize.' }),
   }),
   output: Schema.Struct({
-    summary: Ref.Ref(Text.Text).annotations({ description: 'The generated summary text object.' }),
+    summary: Ref.Ref(Text.Text).annotate({ description: 'The generated summary text object.' }),
   }),
   services: [Database.Service, AiService.AiService],
 });

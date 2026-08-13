@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Excalidraw } from '#types';

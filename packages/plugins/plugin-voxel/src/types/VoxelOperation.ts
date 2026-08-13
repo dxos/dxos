@@ -6,23 +6,23 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import { MODEL_TYPES, type ModelType } from '../models';
+import { MODEL_TYPES } from '../models';
 import * as Voxel from './Voxel';
 
 const VoxelCoord = Schema.Struct({
-  x: Schema.Number.annotations({ description: 'X coordinate.' }),
-  y: Schema.Number.annotations({ description: 'Y coordinate.' }),
-  z: Schema.Number.annotations({ description: 'Z coordinate (height).' }),
-  hue: Schema.String.annotations({ description: 'Chromatic hue name (e.g., blue, red, green).' }),
+  x: Schema.Number.annotate({ description: 'X coordinate.' }),
+  y: Schema.Number.annotate({ description: 'Y coordinate.' }),
+  z: Schema.Number.annotate({ description: 'Z coordinate (height).' }),
+  hue: Schema.String.annotate({ description: 'Chromatic hue name (e.g., blue, red, green).' }),
 });
 
 const Position = Schema.Struct({
-  x: Schema.Number.annotations({ description: 'X coordinate.' }),
-  y: Schema.Number.annotations({ description: 'Y coordinate.' }),
-  z: Schema.Number.annotations({ description: 'Z coordinate (height).' }),
+  x: Schema.Number.annotate({ description: 'X coordinate.' }),
+  y: Schema.Number.annotate({ description: 'Y coordinate.' }),
+  z: Schema.Number.annotate({ description: 'Z coordinate (height).' }),
 });
 
 export const QueryWorld = Operation.make({
@@ -33,7 +33,7 @@ export const QueryWorld = Operation.make({
     icon: 'ph--cube--regular',
   },
   input: Schema.Struct({
-    world: Ref.Ref(Voxel.World).annotations({
+    world: Ref.Ref(Voxel.World).annotate({
       description: 'The voxel world to query.',
     }),
   }),
@@ -62,15 +62,15 @@ export const AddVoxels = Operation.make({
     icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
-    world: Ref.Ref(Voxel.World).annotations({
+    world: Ref.Ref(Voxel.World).annotate({
       description: 'The voxel world to modify.',
     }),
-    voxels: Schema.Array(VoxelCoord).annotations({
+    voxels: Schema.Array(VoxelCoord).annotate({
       description: 'Array of voxels to add.',
     }),
   }),
   output: Schema.Struct({
-    added: Schema.Number.annotations({ description: 'Number of voxels added.' }),
+    added: Schema.Number.annotate({ description: 'Number of voxels added.' }),
   }),
   services: [Database.Service],
 });
@@ -83,15 +83,15 @@ export const RemoveVoxels = Operation.make({
     icon: 'ph--minus--regular',
   },
   input: Schema.Struct({
-    world: Ref.Ref(Voxel.World).annotations({
+    world: Ref.Ref(Voxel.World).annotate({
       description: 'The voxel world to modify.',
     }),
-    positions: Schema.Array(Position).annotations({
+    positions: Schema.Array(Position).annotate({
       description: 'Array of positions to remove.',
     }),
   }),
   output: Schema.Struct({
-    removed: Schema.Number.annotations({ description: 'Number of voxels removed.' }),
+    removed: Schema.Number.annotate({ description: 'Number of voxels removed.' }),
   }),
   services: [Database.Service],
 });
@@ -104,27 +104,25 @@ export const GenerateShape = Operation.make({
     icon: 'ph--cube--regular',
   },
   input: Schema.Struct({
-    world: Ref.Ref(Voxel.World).annotations({
+    world: Ref.Ref(Voxel.World).annotate({
       description: 'The voxel world to modify.',
     }),
-    shape: (
-      Schema.Union(...MODEL_TYPES.map((type) => Schema.Literal(type))) as unknown as Schema.Schema<ModelType>
-    ).annotations({
+    shape: Schema.Literals(MODEL_TYPES).annotate({
       description: `Shape type: ${MODEL_TYPES.join(', ')}.`,
     }),
     origin: Schema.Struct({
-      x: Schema.Number.annotations({ description: 'X coordinate of the origin.' }),
-      y: Schema.Number.annotations({ description: 'Y coordinate of the origin.' }),
-      z: Schema.Number.annotations({ description: 'Z coordinate of the origin.' }),
-    }).annotations({
+      x: Schema.Number.annotate({ description: 'X coordinate of the origin.' }),
+      y: Schema.Number.annotate({ description: 'Y coordinate of the origin.' }),
+      z: Schema.Number.annotate({ description: 'Z coordinate of the origin.' }),
+    }).annotate({
       description: 'Origin point for the shape.',
     }),
-    hue: Schema.String.annotations({
+    hue: Schema.String.annotate({
       description: 'Chromatic hue name (e.g., blue, red, green).',
     }),
   }),
   output: Schema.Struct({
-    added: Schema.Number.annotations({ description: 'Number of voxels added.' }),
+    added: Schema.Number.annotate({ description: 'Number of voxels added.' }),
   }),
   services: [Database.Service],
 });

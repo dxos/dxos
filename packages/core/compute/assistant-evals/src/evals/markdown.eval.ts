@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Database } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { trim } from '@dxos/util';
 
 import { findObject, objectExists } from '../assertions';
@@ -24,7 +24,7 @@ const draftTask = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  plugins: [MarkdownPlugin()],
+  plugins: [MarkdownPlugin.make()],
   dbQuery: () => objectExists(Markdown.Document, () => true),
 });
 
@@ -54,7 +54,7 @@ const appendTask = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  plugins: [MarkdownPlugin()],
+  plugins: [MarkdownPlugin.make()],
   dbQuery: () =>
     Effect.gen(function* () {
       const doc = yield* findObject(Markdown.Document, (d) => d.name === 'Empty Notes');

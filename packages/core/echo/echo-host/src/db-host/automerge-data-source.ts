@@ -44,7 +44,7 @@ const hasChanged = (cursor: string | undefined, currentHeads: A.Heads): boolean 
 
 /**
  * Data source that fetches objects from AutomergeHost.
- * Iterates all documents from HeadsStore and tracks document heads as cursors to detect changes.
+ * Iterates all documents from SqliteHeadsStore and tracks document heads as cursors to detect changes.
  */
 export class AutomergeDataSource implements IndexDataSource {
   readonly sourceName = 'automerge';
@@ -60,7 +60,7 @@ export class AutomergeDataSource implements IndexDataSource {
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // Build a map of documentId -> cursor for quick lookup.
       const cursorMap = new Map<string, string>();
       for (const cursor of cursors) {
@@ -69,7 +69,7 @@ export class AutomergeDataSource implements IndexDataSource {
         }
       }
 
-      // Find changed documents by iterating all documents from HeadsStore.
+      // Find changed documents by iterating all documents from SqliteHeadsStore.
       const changedDocuments = yield* Effect.promise(async () => {
         const result: { documentId: DocumentId; heads: A.Heads }[] = [];
         const limit = opts?.limit ?? Infinity;

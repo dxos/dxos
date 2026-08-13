@@ -7,15 +7,15 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Game } from '@dxos/plugin-game/types';
+import * as Chess from '@dxos/plugin-chess/Chess';
+import * as Game from '@dxos/plugin-game/Game';
 
-import { ChessComAccount, ChessComOperation } from '../types';
-import { ChessComOperationHandlerSet } from './index';
+import { ChessComOperationHandlerSet } from '#operations';
+import { ChessComAccount, ChessComOperation } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 

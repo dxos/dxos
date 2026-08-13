@@ -4,28 +4,29 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
-import { NativePasskey } from '@dxos/app-toolkit';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
-import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
-import { DeckPlugin } from '@dxos/plugin-deck/plugin';
-import { GraphPlugin } from '@dxos/plugin-graph/plugin';
-import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
-import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
-import { OnboardingPlugin } from '@dxos/plugin-onboarding/plugin';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
-import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
-import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
-import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout/plugin';
-import { SpacePlugin } from '@dxos/plugin-space/plugin';
-import { SpotlightPlugin } from '@dxos/plugin-spotlight/plugin';
-import { StatusBarPlugin } from '@dxos/plugin-status-bar/plugin';
-import { ThemePlugin } from '@dxos/plugin-theme/plugin';
+import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
+import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
+import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
+import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
+import * as ObservabilityPlugin from '@dxos/plugin-observability/ObservabilityPlugin';
+import * as OnboardingPlugin from '@dxos/plugin-onboarding/OnboardingPlugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
+import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
+import * as SimpleLayoutPlugin from '@dxos/plugin-simple-layout/SimpleLayoutPlugin';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import * as SpotlightPlugin from '@dxos/plugin-spotlight/SpotlightPlugin';
+import * as StatusBarPlugin from '@dxos/plugin-status-bar/StatusBarPlugin';
+import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 
 import { downloadLogs } from './util';
 
@@ -40,6 +41,8 @@ export type State = {
 };
 
 export type PluginConfig = State & {
+  /** Raises a fatal client-initialization failure to the entry point (see `onFatalError` in main.tsx). */
+  onFatalError?: (error: unknown) => void;
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;
@@ -60,21 +63,29 @@ export const getCorePlugins = ({
   services,
   observability,
   logStore,
+  onFatalError,
   isLocal,
   isTauri,
   isPopover,
   isMobile,
 }: PluginConfig): Plugin.Plugin[] => {
-  const layoutPlugin = isPopover ? SpotlightPlugin() : isMobile ? SimpleLayoutPlugin({}) : DeckPlugin();
+  const layoutPlugin = isPopover ? SpotlightPlugin.make() : isMobile ? SimpleLayoutPlugin.make({}) : DeckPlugin.make();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
-    AttentionPlugin(),
-    ClientPlugin({
+    AttentionPlugin.make(),
+    ClientPlugin.make({
       config,
       services,
       shareableLinkOrigin: origin,
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,
+      // Inverse of the onboarding gate (`DX_HUB_URL` present => welcome screen): where the gate
+      // runs it already offers joining a device and recovering an identity on a clean profile, so
+      // the storage-wiping variants are only wanted in local testing.
+      identityTestActions: !config.values.runtime?.app?.env?.DX_HUB_URL,
+      // The forked init is outside the render tree, so a failure or a stalled handshake reaches
+      // the user only if the entry point raises it — React never sees one.
+      onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),
       onReset: ({ target }) =>
         Effect.sync(() => {
           localStorage.clear();
@@ -97,29 +108,29 @@ export const getCorePlugins = ({
     // `SetupConnectors` (the event every connector-contributing plugin activates on), registers the
     // Connection/AccessToken/Cursor schema, and runs the coordinator that materializes and binds
     // targets. Without it a plugin like Inbox contributes connectors nobody ever asks for.
-    ConnectorPlugin(),
-    GraphPlugin(),
+    ConnectorPlugin.make(),
+    GraphPlugin.make(),
     layoutPlugin,
-    NavTreePlugin(),
-    ObservabilityPlugin({
+    NavTreePlugin.make(),
+    ObservabilityPlugin.make({
       namespace: appKey,
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
     }),
-    OnboardingPlugin({ generateExemplarSpace: !isLocal }),
+    OnboardingPlugin.make({ generateExemplarSpace: !isLocal }),
     ProcessManagerPlugin(),
-    ProgressPlugin(),
-    RegistryPlugin(),
-    RoutinePlugin(),
-    SettingsPlugin(),
-    SpacePlugin({
+    ProgressPlugin.make(),
+    RegistryPlugin.make(),
+    RoutinePlugin.make(),
+    SettingsPlugin.make(),
+    SpacePlugin.make({
       observability: true,
       shareableLinkOrigin: origin,
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,
     }),
-    StatusBarPlugin(),
-    ThemePlugin({
+    StatusBarPlugin.make(),
+    ThemePlugin.make({
       appName: 'Composer',
       platform: isMobile ? 'mobile' : 'desktop',
     }),

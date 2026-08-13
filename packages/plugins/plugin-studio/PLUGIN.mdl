@@ -127,7 +127,7 @@ type GenerationService                # StudioCapabilities.GenerationService (ar
     generate: (request: { prompt, count?, …config }, options: { apiKey?: Redacted<string> })
       => Promise<{ variants: VariantData[] }>
   capability:
-    # Capability.make<GenerationService>(`${meta.profile.key}.capability.generation-service`)
+    # Capability.make<GenerationService>(`${meta.profile.key}.capability.generationService`)
 ```
 
 ```mdl

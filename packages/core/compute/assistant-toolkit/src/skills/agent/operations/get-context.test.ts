@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
@@ -73,7 +73,7 @@ const setupBoundAgent = Effect.fnUntraced(function* () {
   const chat = yield* Agent.loadChat(agent);
   const chatFeed = chat?.feed?.target;
   invariant(chatFeed, 'Agent chat feed not found.');
-  const runtime = yield* Effect.runtime<Database.Service>();
+  const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed: chatFeed, runtime });
   yield* Effect.promise(() => binder.bind({ objects: [Ref.make(agent)] }));
 

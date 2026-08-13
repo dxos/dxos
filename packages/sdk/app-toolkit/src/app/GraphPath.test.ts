@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import { Graph } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
 import { Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 

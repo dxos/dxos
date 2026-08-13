@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
-import { type RoutineCapabilities } from '@dxos/plugin-routine/types';
+import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { CrmOperation } from '../types';
+import { CrmOperation } from '#types';
 
 /**
  * CRM automation template: the routine-only counterpart of the `crmPipeline` project template. The

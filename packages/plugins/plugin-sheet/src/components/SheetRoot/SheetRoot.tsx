@@ -18,7 +18,7 @@ import {
   useGridContext,
 } from '@dxos/react-ui-grid';
 
-import { type Sheet } from '#types';
+import { Sheet } from '#types';
 
 import { type SheetModel, useSheetModel } from '../../model';
 import { SheetContext } from './SheetContext';

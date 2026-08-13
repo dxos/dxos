@@ -15,7 +15,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
@@ -27,7 +28,7 @@ import { SampleDeckCompanionSurface, SampleStatusSurface } from './SampleSurface
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       // --- Article surface ---
       // The primary content view. `oneOf(object(Article, ...), object(Section, ...))`
       // registers this component for both full-article and inline-section roles.

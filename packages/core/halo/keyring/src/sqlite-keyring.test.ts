@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { verifySignature } from '@dxos/crypto';
@@ -18,7 +18,7 @@ import { SqliteKeyring } from './sqlite-keyring';
 const makeRuntime = () => {
   const rt = ManagedRuntime.make(SqlTransaction.layer.pipe(Layer.provideMerge(sqliteLayerMemory)).pipe(Layer.orDie));
   onTestFinished(() => rt.dispose());
-  return rt.runtimeEffect;
+  return rt.contextEffect;
 };
 
 describe('SqliteKeyring', () => {

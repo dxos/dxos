@@ -49,14 +49,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ClientPlugin.workerd.ts",
-        "node": "./src/ClientPlugin.node.ts",
-        "default": "./src/ClientPlugin.ts"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
       },
-      "types": "./dist/types/src/ClientPlugin.d.ts",
-      "workerd": "./dist/lib/ClientPlugin.workerd.mjs",
-      "node": "./dist/lib/ClientPlugin.node.mjs",
-      "default": "./dist/lib/ClientPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",
@@ -80,11 +80,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -94,9 +89,71 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./Account": {
+      "source": "./src/types/Account.ts",
+      "types": "./dist/types/src/types/Account.d.ts",
+      "import": "./dist/lib/Account.mjs"
+    },
+    "./AccountCache": {
+      "source": "./src/types/AccountCache.ts",
+      "types": "./dist/types/src/types/AccountCache.d.ts",
+      "import": "./dist/lib/AccountCache.mjs"
+    },
+    "./ClientAction": {
+      "source": "./src/types/ClientAction.ts",
+      "types": "./dist/types/src/types/ClientAction.d.ts",
+      "import": "./dist/lib/ClientAction.mjs"
+    },
+    "./ClientCapabilities": {
+      "source": "./src/types/ClientCapabilities.ts",
+      "types": "./dist/types/src/types/ClientCapabilities.d.ts",
+      "import": "./dist/lib/ClientCapabilities.mjs"
+    },
+    "./ClientEvents": {
+      "source": "./src/types/ClientEvents.ts",
+      "types": "./dist/types/src/types/ClientEvents.d.ts",
+      "import": "./dist/lib/ClientEvents.mjs"
+    },
+    "./ClientOptions": {
+      "source": "./src/types/ClientOptions.ts",
+      "types": "./dist/types/src/types/ClientOptions.d.ts",
+      "import": "./dist/lib/ClientOptions.mjs"
+    },
+    "./ClientPlugin": {
+      "source": "./src/ClientPlugin.ts",
+      "types": "./dist/types/src/ClientPlugin.d.ts",
+      "import": "./dist/lib/ClientPlugin.mjs"
+    },
+    "./PasskeyError": {
+      "source": "./src/types/PasskeyError.ts",
+      "types": "./dist/types/src/types/PasskeyError.d.ts",
+      "import": "./dist/lib/PasskeyError.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Account": [
+        "dist/types/src/types/Account.d.ts"
+      ],
+      "AccountCache": [
+        "dist/types/src/types/AccountCache.d.ts"
+      ],
+      "ClientAction": [
+        "dist/types/src/types/ClientAction.d.ts"
+      ],
+      "ClientCapabilities": [
+        "dist/types/src/types/ClientCapabilities.d.ts"
+      ],
+      "ClientEvents": [
+        "dist/types/src/types/ClientEvents.d.ts"
+      ],
+      "ClientOptions": [
+        "dist/types/src/types/ClientOptions.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -104,6 +161,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/cli-util": "workspace:*",
@@ -114,9 +172,7 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -126,20 +182,16 @@
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/cli": "catalog:",
-    "@effect/platform": "catalog:",
     "effect": "catalog:",
     "react-qr-rounded": "catalog:",
     "yaml": "catalog:"
@@ -147,11 +199,9 @@
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/printer": "catalog:",
-    "@effect/printer-ansi": "catalog:",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
@@ -161,8 +211,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

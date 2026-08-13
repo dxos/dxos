@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 
-import { TableOperation } from '../types';
+import { TableOperation } from '#types';
+
 import { exportRows } from './export-rows-format';
 
 const handler: Operation.WithHandler<typeof TableOperation.ExportRows> = TableOperation.ExportRows.pipe(

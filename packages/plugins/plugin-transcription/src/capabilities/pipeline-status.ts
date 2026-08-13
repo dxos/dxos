@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { TranscriptionCapabilities } from '#types';
 
@@ -18,6 +18,6 @@ export default Capability.makeModule(
     const statusAtom = Atom.make<{ phase: TranscriptionCapabilities.PipelinePhase }>({ phase: 'idle' }).pipe(
       Atom.keepAlive,
     );
-    return Capability.contributes(TranscriptionCapabilities.PipelineStatus, statusAtom);
+    return Capability.contribute(TranscriptionCapabilities.PipelineStatus, statusAtom);
   }),
 );

@@ -12,6 +12,7 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
@@ -24,7 +25,7 @@ import type { Operation } from './index';
  * Schema type that accepts any Encoded form but requires no Context.
  * This allows ECHO object schemas where Type !== Encoded due to [KindId] symbol.
  */
-type Schema<T> = Schema$.Schema<T, any, never>;
+type Schema<T> = Schema$.Codec<T, any, never, never>;
 
 export const DefinitionTypeId = '~@dxos/operation/OperationDefinition' as const;
 export type DefinitionTypeId = typeof DefinitionTypeId;
@@ -88,7 +89,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * Effect services required by this operation.
    * These services will be automatically provided to the handler at invocation time.
    */
-  readonly services: readonly Context.Tag<any, any>[];
+  readonly services: readonly Context.Key<any, any>[];
 }
 
 /**
@@ -137,6 +138,50 @@ export type WithHandler<T extends Definition.Any> = T & {
   handler: Definition.HandlerType<T>;
 };
 
+export const LazyHandlerTypeId = '~@dxos/operation/LazyHandler' as const;
+export type LazyHandlerTypeId = typeof LazyHandlerTypeId;
+
+/**
+ * A definition paired with the module that implements it. The pairing is TYPED — the loaded
+ * module's default must be `WithHandler<Def>` for the same `Def` — so a definition can no longer be
+ * wired to another operation's handler and fail only at dispatch.
+ */
+export interface LazyHandler<Def extends Definition.Any = Definition.Any> {
+  readonly [LazyHandlerTypeId]: LazyHandlerTypeId;
+  readonly definition: Def;
+  readonly load: () => Promise<{ default: WithHandler<Def> }>;
+}
+
+/** Whether a value is a {@link LazyHandler}. */
+export const isLazyHandler = (value: unknown): value is LazyHandler =>
+  typeof value === 'object' && value !== null && LazyHandlerTypeId in value;
+
+/**
+ * Pairs a definition with a lazily-imported handler module, keeping the handler body out of the
+ * static graph while checking that it implements THIS definition.
+ *
+ * @example
+ * ```ts
+ * GetBlueskyTargets.pipe(Operation.lazyHandler(() => import('./get-bluesky-targets')))
+ * ```
+ */
+export const lazyHandler: {
+  <Def extends Definition<any, any>>(load: () => Promise<{ default: WithHandler<Def> }>): (op: Def) => LazyHandler<Def>;
+  <Def extends Definition<any, any>>(op: Def, load: () => Promise<{ default: WithHandler<Def> }>): LazyHandler<Def>;
+} = (<Def extends Definition<any, any>>(
+  opOrLoad: Def | (() => Promise<{ default: WithHandler<Def> }>),
+  load?: () => Promise<{ default: WithHandler<Def> }>,
+) => {
+  const make = (op: Def, loader: () => Promise<{ default: WithHandler<Def> }>): LazyHandler<Def> => ({
+    [LazyHandlerTypeId]: LazyHandlerTypeId,
+    definition: op,
+    load: loader,
+  });
+  return load === undefined
+    ? (op: Def) => make(op, opOrLoad as () => Promise<{ default: WithHandler<Def> }>)
+    : make(opOrLoad as Def, load);
+}) as any;
+
 /**
  * Checks if a value is an operation definition.
  */
@@ -171,7 +216,7 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 ): Definition<
   Schema$.Schema.Type<P['input']>,
   Schema$.Schema.Type<P['output']>,
-  Context.Tag.Identifier<NonNullable<P['services']>[number]>
+  Context.Service.Identifier<NonNullable<P['services']>[number]>
 > => {
   return {
     [DefinitionTypeId]: {},
@@ -388,7 +433,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
   return make({
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
-    services: record.services?.map((service) => Context.GenericTag(service)) ?? [],
+    services: record.services?.map((service) => Context.Service(service)) ?? [],
     executionMode: 'async',
     types: [],
     meta: {
@@ -433,23 +478,21 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
  * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
  * the app-level `Label` type so values flow into UI toasts unchanged.
  */
-export const Label = Schema.Union(
+export const Label = Schema.Union([
   Schema.String,
   // `Schema.mutable` mirrors the app-level `Label` (whose tuple is mutable), so decoded values are
   // assignable to UI toast `title`/`label` slots without a readonly-vs-mutable tuple mismatch.
   Schema.mutable(
-    Schema.Tuple(
+    Schema.Tuple([
       Schema.String,
-      Schema.mutable(
-        Schema.Struct({
-          ns: Schema.String,
-          count: Schema.optional(Schema.Number),
-          defaultValue: Schema.optional(Schema.String),
-        }),
-      ),
-    ),
+      Schema.Struct({
+        ns: Schema.String,
+        count: Schema.optional(Schema.Number),
+        defaultValue: Schema.optional(Schema.String),
+      }).mapFields(Struct.map(Schema.mutableKey)),
+    ]),
   ),
-);
+]);
 export type Label = Schema.Schema.Type<typeof Label>;
 
 /**
@@ -604,7 +647,7 @@ export const McpTool = Schema$.Struct({
    * Safety class the server maps to MCP tool hints: `read` is side-effect free (readOnlyHint),
    * `write` mutates space data, `destructive` deletes or is otherwise irreversible.
    */
-  safety: Schema$.Literal('read', 'write', 'destructive'),
+  safety: Schema$.Literals(['read', 'write', 'destructive']),
   /** Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`). */
   aspect: Schema$.optional(Schema$.String),
 });
@@ -692,7 +735,7 @@ export interface OperationService {
  * ```
  */
 // TODO(dmaretskyi): Rename Operation.Invoker
-export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
+export class Service extends Context.Service<Service, OperationService>()('@dxos/operation/Service') {}
 
 //
 // Namespace functions - ergonomic access to Operation.Service methods.

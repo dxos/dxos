@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type PathResolution } from '@dxos/app-graph';
-import { UrlPath } from '@dxos/app-toolkit';
+import type * as PathResolution from '@dxos/app-graph/PathResolution';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { log } from '@dxos/log';
 
 /** Reverse-mapped `(key, id?, workspace)` representation of every plank id worth serializing. */

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
@@ -17,8 +17,8 @@ import INSTRUCTIONS from './update-tasks.md?raw';
  * `Outline.upsertChecklistItems`); `in-progress` renders unchecked, nuance lives in conversation.
  */
 const ChecklistTask = Schema.Struct({
-  title: Schema.String.annotations({ description: 'Task title; also the key for updates.' }),
-  status: Schema.Literal('todo', 'in-progress', 'done'),
+  title: Schema.String.annotate({ description: 'Task title; also the key for updates.' }),
+  status: Schema.Literals(['todo', 'in-progress', 'done']),
 });
 
 export const UpdateTasks = Operation.make({

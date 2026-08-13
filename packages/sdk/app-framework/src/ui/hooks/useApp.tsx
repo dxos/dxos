@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EffectEx } from '@dxos/effect';
@@ -19,6 +18,7 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
+import { setupDevtools } from '../../devtools';
 import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
@@ -68,7 +68,6 @@ export type UseAppOptions = {
   defaults?: string[];
   /**
    * Additional activation events to fire before startup.
-   * These are fired alongside SetupReactSurface before the Startup event.
    */
   setupEvents?: ActivationEvent.ActivationEvent[];
   cacheEnabled?: boolean;
@@ -190,8 +189,8 @@ export const useApp = ({
 
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
-      const listener = yield* Effect.forkDaemon(
-        Queue.take(queue).pipe(
+      const listener = yield* Effect.forkDetach(
+        PubSub.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
               // Event-level Startup activated (no `module` field) fires once,
@@ -284,7 +283,6 @@ export const useApp = ({
 
       yield* Effect.all([
         ...setupEvents.map((event) => manager.activate(event)),
-        manager.activate(ActivationEvents.SetupReactSurface),
         manager.activate(ActivationEvents.Startup),
       ]);
 
@@ -309,7 +307,7 @@ export const useApp = ({
       clearTimeout(timeoutId);
       void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
-        void EffectEx.runAndForwardErrors(manager.shutdown());
+        EffectEx.runDetached(manager.shutdown());
       }
     };
   }, [manager]);
@@ -335,11 +333,6 @@ export const useApp = ({
     ),
     [fallback, manager, surfaces, ready, error],
   );
-};
-
-const setupDevtools = (manager: PluginManager.PluginManager) => {
-  (globalThis as any).composer ??= {};
-  (globalThis as any).composer.manager = manager;
 };
 
 /**

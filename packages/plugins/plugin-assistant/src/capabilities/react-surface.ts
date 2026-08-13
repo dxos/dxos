@@ -5,14 +5,15 @@
 import * as Effect from 'effect/Effect';
 import { type ComponentProps } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, Chat } from '@dxos/assistant-toolkit';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
+import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import { Position } from '@dxos/util';
 
 import {
@@ -37,7 +38,7 @@ import {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
@@ -46,13 +47,13 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spaceHomePrompt',
-        filter: Surface.makeFilter(SpaceHomePinBottom),
+        filter: Surface.makeFilter(SpaceSurface.SpaceHomePinBottom),
         component: SpaceHomePrompt,
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
         id: 'spaceHomeSuggestions',
-        filter: Surface.makeFilter(SpaceHomeContent),
+        filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
         position: Position.last,
         component: SpaceHomeSuggestionsSurface,
         props: ({ data: { space } }) => ({ space }),
@@ -120,7 +121,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'integrationPrompt',
-        filter: Surface.makeFilter(ChatSurface, (data) => data.role === 'integration-prompt'),
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
         component: IntegrationPrompt,
         // `data.data` is model-supplied JSON (untyped); narrow `service` before use.
         props: ({ data }) => ({ service: typeof data.data?.service === 'string' ? data.data.service : undefined }),

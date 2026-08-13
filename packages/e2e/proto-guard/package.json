@@ -29,22 +29,18 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/config": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "fast-deep-equal": "catalog:",
     "pkg-up": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {
-    "@types/yargs": "catalog:"
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@types/yargs": "catalog:",
+    "fast-deep-equal": "catalog:"
   },
   "publishConfig": {
     "access": "restricted"

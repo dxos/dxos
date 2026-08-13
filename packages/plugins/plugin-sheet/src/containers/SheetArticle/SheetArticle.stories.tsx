@@ -6,11 +6,13 @@ import { type Meta } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { ComputeGraphRegistry } from '@dxos/compute-hyperformula';
 import { createMockedComputeRuntimeProvider } from '@dxos/compute-hyperformula/testing';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -21,8 +23,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useComputeGraph } from '#components';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
 import { translations } from '#translations';
-import { SheetCapabilities, SheetOperation } from '#types';
-import { Sheet } from '#types';
+import { Sheet, SheetCapabilities, SheetOperation } from '#types';
 
 import RangeList from '../RangeList';
 import { SheetArticle } from './SheetArticle';
@@ -42,8 +43,8 @@ const meta = {
     withPluginManager({
       plugins: [...corePlugins()],
       capabilities: [
-        Capability.contributes(SheetCapabilities.ComputeGraphRegistry, registry),
-        Capability.contributes(
+        Capability.contribute(SheetCapabilities.ComputeGraphRegistry, registry),
+        Capability.contribute(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(
             Operation.withHandler(SheetOperation.DropAxis, ({ model, axis, axisIndex }) =>

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -38,7 +38,7 @@ const DefaultStory = ({ settings }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-support/containers/SupportSettings',
   component: DefaultStory,
-  // The container resolves the personal space and invokes an operation, so it needs both contexts.
+  // The container resolves the default space and invokes an operation, so it needs both contexts.
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),

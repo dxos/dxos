@@ -6,16 +6,17 @@ import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 /**
  * @param schema
  * @param property
  */
-export const pickProperty = <S extends Schema.Schema.Any, K extends keyof Schema.Schema.Type<S>>(
+export const pickProperty = <S extends Schema.Top, K extends keyof Schema.Schema.Type<S>>(
   schema: S,
   property: K,
-): Schema.Schema<Schema.Schema.Type<S>[K], Schema.Schema.Encoded<S>[K], Schema.Schema.Context<S>> => {
+): Schema.Codec<Schema.Schema.Type<S>[K], any> => {
   return Schema.make(getPropertyKeyIndexedAccess(schema.ast, property).type);
 };
 
@@ -24,8 +25,10 @@ export const pickProperty = <S extends Schema.Schema.Any, K extends keyof Schema
 
 /** @internal */
 export const getPropertyKeyIndexedAccess = (ast: SchemaAST.AST, name: PropertyKey): SchemaAST.PropertySignature => {
+  // v4's property signature carries only a name and a type; the modifiers live on the type's
+  // context, and there is no `Refinement` node to unwrap.
   switch (ast._tag) {
-    case 'TypeLiteral': {
+    case 'Objects': {
       const ps = getTypeLiteralPropertySignature(ast, name);
       if (ps) {
         return ps;
@@ -35,21 +38,20 @@ export const getPropertyKeyIndexedAccess = (ast: SchemaAST.AST, name: PropertyKe
     case 'Union':
       return new SchemaAST.PropertySignature(
         name,
-        SchemaAST.Union.make(ast.types.map((ast) => getPropertyKeyIndexedAccess(ast, name).type)),
-        false,
-        true,
+        new SchemaAST.Union(
+          ast.types.map((member) => getPropertyKeyIndexedAccess(member, name).type),
+          ast.mode,
+        ),
       );
     case 'Suspend':
-      return getPropertyKeyIndexedAccess(ast.f(), name);
-    case 'Refinement':
-      return getPropertyKeyIndexedAccess(ast.from, name);
+      return getPropertyKeyIndexedAccess(ast.thunk(), name);
   }
 
-  return new SchemaAST.PropertySignature(name, SchemaAST.neverKeyword, false, true);
+  return new SchemaAST.PropertySignature(name, SchemaAST.neverKeyword);
 };
 
 const getTypeLiteralPropertySignature = (
-  ast: SchemaAST.TypeLiteral,
+  ast: SchemaAST.Objects,
   name: PropertyKey,
 ): SchemaAST.PropertySignature | undefined => {
   // from property signatures...
@@ -62,7 +64,7 @@ const getTypeLiteralPropertySignature = (
   if (Predicate.isString(name)) {
     let out: SchemaAST.PropertySignature | undefined;
     for (const is of ast.indexSignatures) {
-      const parameterBase = getParameterBase(is.parameter);
+      const parameterBase = is.parameter;
       switch (parameterBase._tag) {
         case 'TemplateLiteral': {
           // const regex = getTemplateLiteralRegExp(parameterBase)
@@ -72,9 +74,9 @@ const getTypeLiteralPropertySignature = (
           // break
           throw new Error('TODO');
         }
-        case 'StringKeyword': {
+        case 'String': {
           if (out === undefined) {
-            out = new SchemaAST.PropertySignature(name, is.type, false, true);
+            out = new SchemaAST.PropertySignature(name, is.type);
           }
         }
       }
@@ -84,23 +86,9 @@ const getTypeLiteralPropertySignature = (
     }
   } else if (Predicate.isSymbol(name)) {
     for (const is of ast.indexSignatures) {
-      const parameterBase = getParameterBase(is.parameter);
-      if (SchemaAST.isSymbolKeyword(parameterBase)) {
-        return new SchemaAST.PropertySignature(name, is.type, false, true);
+      if (SchemaAST.isSymbolKeyword(is.parameter)) {
+        return new SchemaAST.PropertySignature(name, is.type);
       }
     }
-  }
-};
-
-export const getParameterBase = (
-  ast: SchemaAST.Parameter,
-): SchemaAST.StringKeyword | SchemaAST.SymbolKeyword | SchemaAST.TemplateLiteral => {
-  switch (ast._tag) {
-    case 'StringKeyword':
-    case 'SymbolKeyword':
-    case 'TemplateLiteral':
-      return ast;
-    case 'Refinement':
-      return getParameterBase(ast.from);
   }
 };

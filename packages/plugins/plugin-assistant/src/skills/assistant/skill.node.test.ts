@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -27,7 +27,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('Assistant Skill', () => {
-  // TODO(dmaretskyi): Regenerate memoized conversation with ALLOW_LLM_GENERATION=1.
+  // TODO(dmaretskyi): Regenerate memoized conversation with DX_UPDATE_MODEL_FIXTURES=1.
   it.effect.skip(
     'works with Database skill to create objects',
     Effect.fnUntraced(

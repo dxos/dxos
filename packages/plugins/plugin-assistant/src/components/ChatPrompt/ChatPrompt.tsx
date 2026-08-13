@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
@@ -25,7 +25,7 @@ import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
-import { type ChatPresetProps } from '#types';
+import { AssistantPreset } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat';
@@ -50,7 +50,7 @@ export type ChatPromptProps = Merge<
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
-  ChatPresetProps
+  AssistantPreset.ChatPresetProps
 >;
 
 export const ChatPrompt = ({

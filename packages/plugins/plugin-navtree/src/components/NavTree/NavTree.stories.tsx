@@ -2,18 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useEffect, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { Focus, IconButton, Input, Main, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -21,14 +26,13 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
+import { NavTreePlugin } from '#plugin';
 import { storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
 
-import { NavTreePlugin } from '../../NavTreePlugin';
-
 random.seed(1234);
 
-const StoryState = Capability.make<Atom.Atom<{ tab: string }>>('story-state');
+const StoryState = Capability.makeSingleton<Atom.Atom<{ tab: string }>>()('org.dxos.test.storyState');
 
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
@@ -140,7 +144,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({
+        StorybookPlugin.make({
           initialState: { sidebarState: 'expanded' },
         }),
 
@@ -149,14 +153,14 @@ const meta = {
       capabilities: () => {
         const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
         return [
-          Capability.contributes(StoryState, storyStateAtom),
-          Capability.contributes(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
-          Capability.contributes(
+          Capability.contribute(StoryState, storyStateAtom),
+          Capability.contribute(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
+          Capability.contribute(
             Capabilities.OperationHandler,
             OperationHandlerSet.make(
               Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
                 Effect.gen(function* () {
-                  const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
+                  const registry: Registry.AtomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
                   registry.set(storyStateAtom, { tab: subject });
                 }),
               ),

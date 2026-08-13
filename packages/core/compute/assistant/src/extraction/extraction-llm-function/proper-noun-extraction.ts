@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { type Database, Obj } from '@dxos/echo';
@@ -18,7 +18,7 @@ const EXTRACTION_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
  * Proper nouns extracted from transcript text.
  */
 export const ProperNouns = Schema.Struct({
-  properNouns: Schema.Array(Schema.String).annotations({
+  properNouns: Schema.Array(Schema.String).annotate({
     description: 'Proper nouns (names of people, organizations, places, products) mentioned in the text.',
   }),
 });

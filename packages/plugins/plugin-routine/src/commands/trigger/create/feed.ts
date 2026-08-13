@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as HashMap from 'effect/HashMap';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Ref, Feed as Feed$ } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
@@ -50,7 +50,8 @@ export const feed = Command.make(
 
       const input = yield* Option.match(options.input, {
         onNone: () => promptForSchemaInput(fn.inputSchema ? JsonSchema.toEffectSchema(fn.inputSchema) : undefined),
-        onSome: (value) => Effect.succeed(Object.fromEntries(HashMap.toEntries(value))),
+        // v4's key/value flag yields a plain record rather than a `HashMap`.
+        onSome: (value) => Effect.succeed(value),
       });
 
       // Always prompt for enabled if functionId is not provided.

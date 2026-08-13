@@ -2,5 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './meta';
-export * from './types';
+export * as BoardPlugin from './BoardPlugin';
+export * from '#meta';
+export * from '#types';

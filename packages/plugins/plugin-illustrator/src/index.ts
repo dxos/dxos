@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
-export * as IllustratorModel from './model';
-export * from './operations';
-export * from './skills';
-export * from './types';
-export * from './util';
+export * as IllustratorModel from '#model';
+export * as IllustratorPlugin from './IllustratorPlugin';
+export * from '#meta';
+export * from '#operations';
+export * from '#skills';
+export * from '#types';
+export * from '#util';

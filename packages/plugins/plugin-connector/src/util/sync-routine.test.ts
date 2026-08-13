@@ -6,12 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Operation, Routine, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -41,11 +44,11 @@ const types = [
 ];
 
 const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
-  const { personalSpace } = await EffectEx.runAndForwardErrors(
+  const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );
   await harness.waitForEvent(ClientEvents.SpacesReady);
-  return personalSpace.db;
+  return defaultSpace.db;
 };
 
 /** Persists an external-sync cursor targeting `target`, standing in for a connector-created binding. */
@@ -66,7 +69,7 @@ const findSyncRoutine = (db: Database.Database, target: Obj.Unknown) =>
 
 describe('createSyncRoutine', () => {
   test('creates a routine with a timer trigger bound to the target’s cursor', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
@@ -101,7 +104,7 @@ describe('createSyncRoutine', () => {
   });
 
   test('marks the trigger remote for a connector that syncs on EDGE', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
@@ -119,7 +122,7 @@ describe('createSyncRoutine', () => {
   });
 
   test('is idempotent: a second call is a no-op once a sync routine is connected', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
@@ -142,7 +145,7 @@ describe('createSyncRoutine', () => {
   });
 
   test('two calls racing on one binding create a single routine', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));

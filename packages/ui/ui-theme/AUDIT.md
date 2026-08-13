@@ -467,8 +467,11 @@ overriding or delete the hooks.
 
 - **`dx-container` (114 uses) and `dx-expander` (43) have won** — only ~5 hand-rolled
   `flex-1 min-h-0` remain (~97% adoption). Keep them; clean the ~14 sites that redundantly stack
-  `overflow-hidden`/`h-full` on top, and reconcile the `min-bs-0` logical-property dialect
-  (6 sites in 2 files) to `min-h-0` per the physical-sizing convention.
+  `overflow-hidden`/`h-full` on top. The `min-bs-0` logical-property dialect is reconciled to
+  `min-h-0`, along with every other `bs-*`/`is-*`/`pli-*`/`plb-*`/`mli-*`/`mlb-*`/`pis-*`/`pie-*`
+  usage: those came from `tailwindcss-logical`, dropped in the Tailwind v4 migration (#10611), so
+  they had been generating no CSS at all. Note `mbs-*`/`mbe-*`/`pbs-*`/`pbe-*`/`ps-*`/`pe-*` are
+  v4 natives and remain valid.
 - **`dx-fullscreen` is unadopted** (4 uses vs 60 `absolute inset-0`) — adopt it mechanically or
   delete it. **`dx-column` is dead** (1 real use) and its name collides with the `dx-column-root`
   marker — delete.

@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import React, {
   type FC,
   Fragment,
@@ -17,14 +20,17 @@ import React, {
   useRef,
 } from 'react';
 
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import { Capabilities, Role } from '../../../common';
-import { usePluginManager } from '../PluginManager';
+import { ActivationEvents, Capabilities, Role } from '../../../common';
+import { type PluginManager } from '../../../core';
+import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
 import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
+import { type SurfaceManager } from './SurfaceManager';
 import { useSurfaceManager } from './SurfaceManagerContext';
 import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
@@ -33,6 +39,31 @@ import { type Definition, type Props, type TypedProps, type WebComponentDefiniti
 const DEBUG = import.meta.env?.VITE_DEBUG;
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
+
+/**
+ * Fires the role's surface demand event so modules gated on it load (see the `roles` option of
+ * the surface module maker). Safe to call repeatedly: the surface manager claims the first
+ * demand per role, which keeps mount cost flat where Surface instances are numerous (every card
+ * in a grid mounts one) instead of re-entering the scheduler.
+ */
+const requestSurfaces = (
+  surfaceManager: SurfaceManager,
+  manager: PluginManager.PluginManager | undefined,
+  role: string,
+): void => {
+  if (!manager || !surfaceManager.requestRole(role)) {
+    return;
+  }
+  EffectEx.runDetached(
+    manager
+      .activate(ActivationEvents.SurfacesRequested(role))
+      .pipe(
+        Effect.onExit((exit) =>
+          Exit.isFailure(exit) ? Effect.sync(() => surfaceManager.releaseRole(role)) : Effect.void,
+        ),
+      ),
+  );
+};
 
 /**
  * Wrapper component for rendering Web Component surfaces.
@@ -198,6 +229,13 @@ export const SurfaceComponent = memo(
     const effectiveRole = type?.role ?? '';
     const roleCandidates = useAtomValue(surfaceManager.candidatesAtom(effectiveRole));
 
+    // Rendering a surface for a role is the demand signal for role-gated modules: their
+    // contributions land in the candidates atom and re-render this surface.
+    const pluginManager = useOptionalPluginManager();
+    useEffect(() => {
+      requestSurfaces(surfaceManager, pluginManager, effectiveRole);
+    }, [surfaceManager, pluginManager, effectiveRole]);
+
     // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
     const definitions = matchCandidates(roleCandidates, effectiveRole, data);
     // `limit != null` (not truthiness) so an explicit `limit={0}` renders nothing.
@@ -313,6 +351,7 @@ type IsSurfaceAvailable = <TToken extends Role.Role<any>>(args: { type: TToken; 
  */
 export const useIsSurfaceAvailable = (): IsSurfaceAvailable => {
   const surfaceManager = useSurfaceManager();
+  const pluginManager = useOptionalPluginManager();
   const registry = useContext(RegistryContext);
   return useCallback<IsSurfaceAvailable>(
     (args: { type: Role.Role<any>; data?: Props['data'] }) => {
@@ -327,8 +366,14 @@ export const useIsSurfaceAvailable = (): IsSurfaceAvailable => {
         args.data,
       );
 
+      if (candidates.length === 0) {
+        // A miss may mean the role's modules are gated and not yet loaded: fire the demand
+        // event so a later check (or a mounted Surface) sees the loaded contributions.
+        requestSurfaces(surfaceManager, pluginManager, effectiveRole);
+      }
+
       return candidates.length > 0;
     },
-    [surfaceManager, registry],
+    [surfaceManager, pluginManager, registry],
   );
 };

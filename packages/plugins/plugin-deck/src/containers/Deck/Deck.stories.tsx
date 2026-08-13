@@ -2,20 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -35,14 +42,7 @@ import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import {
-  DeckCapabilities,
-  type EphemeralDeckState,
-  type Settings,
-  type StoredDeckState,
-  defaultDeck,
-  getMode,
-} from '#types';
+import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
 import { Deck } from './Deck';
 
@@ -163,7 +163,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       enableNativeRedirect: false,
     }).pipe(Atom.keepAlive);
 
-    return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
+    return [Capability.contribute(DeckCapabilities.Settings, settingsAtom)];
   }),
 );
 
@@ -171,16 +171,16 @@ const storyDeckSettings = Capability.makeModule(() =>
 // persists to localStorage, which otherwise leaks planks between stories.
 const storyDeckState = Capability.makeModule(() =>
   Effect.sync(() => {
-    const stateAtom = Atom.make<StoredDeckState>({
+    const stateAtom = Atom.make<DeckSchema.StoredDeckState>({
       sidebarState: 'closed',
       complementarySidebarState: 'closed',
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
-      decks: { default: { ...defaultDeck } },
+      decks: { default: { ...DeckSchema.defaultDeck } },
     }).pipe(Atom.keepAlive);
 
-    const ephemeralAtom = Atom.make<EphemeralDeckState>({
+    const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({
       fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,
@@ -201,7 +201,7 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
@@ -213,32 +213,33 @@ const storyDeckState = Capability.makeModule(() =>
     }).pipe(Atom.keepAlive);
 
     return [
-      Capability.contributes(DeckCapabilities.State, stateAtom),
-      Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(DeckCapabilities.State, stateAtom),
+      Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
+  // Shell state the Deck reads through the strict hooks on its first render, so it belongs on the
+  // startup pass rather than the idle default these would otherwise normalize to.
   Plugin.addModule({
     id: 'story-deck-settings',
-    activatesOn: AppActivationEvents.SetupSettings,
+    activatesOn: ActivationEvents.Startup,
+    provides: [DeckCapabilities.Settings],
     activate: storyDeckSettings,
   }),
   Plugin.addModule({
     id: 'story-deck-state',
-    activatesOn: AppActivationEvents.AppGraphReady,
+    activatesOn: ActivationEvents.Startup,
+    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
     activate: storyDeckState,
   }),
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSurfaceModule({
-    id: 'story-surfaces',
-    activate: () =>
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
+    Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
       Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+        Capability.contribute(Capabilities.ReactSurface, [
           Surface.create({
             id: 'storyLauncher',
             filter: Surface.makeFilter(
@@ -283,79 +284,83 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           }),
         ]),
       ),
-  }),
-  AppPlugin.addAppGraphModule({
-    id: 'story-graph',
-    activate: Effect.fnUntraced(function* () {
-      const extensions = yield* Effect.all([
-        GraphBuilder.createExtension({
-          id: 'storyItems',
-          match: NodeMatcher.whenRoot,
-          connector: () =>
-            Effect.succeed([
-              ...STORY_ITEMS.map((item) =>
+    ),
+  ),
+  Plugin.addModule(
+    Capability.inlineModule(
+      'story-graph',
+      { provides: [AppCapabilities.AppGraphBuilder] },
+      Effect.fnUntraced(function* () {
+        const extensions = yield* Effect.all([
+          GraphBuilder.createExtension({
+            id: 'storyItems',
+            match: NodeMatcher.whenRoot,
+            connector: () =>
+              Effect.succeed([
+                ...STORY_ITEMS.map((item) =>
+                  Node.make({
+                    id: item.id,
+                    type: 'story-item',
+                    data: item,
+                    properties: { label: item.title, icon: item.icon },
+                  }),
+                ),
+                // The launcher declares its chain on the node, the way the app resolves it off the type.
                 Node.make({
-                  id: item.id,
-                  type: 'story-item',
-                  data: item,
-                  properties: { label: item.title, icon: item.icon },
+                  id: LAUNCHER_ID,
+                  type: 'story-launcher',
+                  data: { id: LAUNCHER_ID, title: 'Inbox', launcher: true },
+                  properties: {
+                    label: 'Inbox',
+                    icon: 'ph--tray--regular',
+                    deck: { levels: [{ key: 'list' }, { key: 'message' }] },
+                  },
                 }),
+              ]),
+          }),
+          GraphBuilder.createExtension({
+            id: 'storyLauncherMessages',
+            match: NodeMatcher.whenNodeType('story-launcher'),
+            connector: () =>
+              Effect.succeed(
+                LAUNCHER_MESSAGES.map((message) =>
+                  Node.make({
+                    id: message.id,
+                    type: 'story-message',
+                    data: message,
+                    properties: { label: message.title, icon: message.icon },
+                  }),
+                ),
               ),
-              // The launcher declares its chain on the node, the way the app resolves it off the type.
-              Node.make({
-                id: LAUNCHER_ID,
-                type: 'story-launcher',
-                data: { id: LAUNCHER_ID, title: 'Inbox', launcher: true },
-                properties: {
-                  label: 'Inbox',
-                  icon: 'ph--tray--regular',
-                  deck: { levels: [{ key: 'list' }, { key: 'message' }] },
-                },
-              }),
-            ]),
-        }),
-        GraphBuilder.createExtension({
-          id: 'storyLauncherMessages',
-          match: NodeMatcher.whenNodeType('story-launcher'),
-          connector: () =>
-            Effect.succeed(
-              LAUNCHER_MESSAGES.map((message) =>
-                Node.make({
-                  id: message.id,
-                  type: 'story-message',
-                  data: message,
-                  properties: { label: message.title, icon: message.icon },
+          }),
+          // Every story plank carries the same two companions, so the companion can be watched moving from
+          // plank to plank as attention changes.
+          GraphBuilder.createExtension({
+            id: 'storyItemCompanions',
+            match: (node) =>
+              node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
+            connector: (node) =>
+              Effect.succeed([
+                AppNode.makeCompanion({
+                  variant: 'alpha',
+                  label: 'Companion Alpha',
+                  icon: 'ph--sidebar--regular',
+                  data: { variant: 'alpha', parentId: node.id },
+                  position: Position.first,
                 }),
-              ),
-            ),
-        }),
-        // Every story plank carries the same two companions, so the companion can be watched moving from
-        // plank to plank as attention changes.
-        GraphBuilder.createExtension({
-          id: 'storyItemCompanions',
-          match: (node) =>
-            node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
-          connector: (node) =>
-            Effect.succeed([
-              AppNode.makeCompanion({
-                variant: 'alpha',
-                label: 'Companion Alpha',
-                icon: 'ph--sidebar--regular',
-                data: { variant: 'alpha', parentId: node.id },
-                position: Position.first,
-              }),
-              AppNode.makeCompanion({
-                variant: 'beta',
-                label: 'Companion Beta',
-                icon: 'ph--chat-circle--regular',
-                data: { variant: 'beta', parentId: node.id },
-              }),
-            ]),
-        }),
-      ]);
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
-    }),
-  }),
+                AppNode.makeCompanion({
+                  variant: 'beta',
+                  label: 'Companion Beta',
+                  icon: 'ph--chat-circle--regular',
+                  data: { variant: 'beta', parentId: node.id },
+                }),
+              ]),
+          }),
+        ]);
+        return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());
+      }),
+    ),
+  ),
   Plugin.make,
 );
 
@@ -363,7 +368,7 @@ type DefaultStoryProps = {
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
-  sidebarState?: StoredDeckState['sidebarState'];
+  sidebarState?: DeckSchema.StoredDeckState['sidebarState'];
   /** Which planks open with their companion showing, as 1-based positions. */
   companionPlanks?: number[];
   /** Open the launcher fixture as the first plank (the mailbox-shaped path). */
@@ -446,7 +451,6 @@ const meta = {
     withMosaic(),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
-      setupEvents: [AppActivationEvents.SetupSettings],
     }),
   ],
   parameters: {

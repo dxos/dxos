@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
@@ -30,7 +31,7 @@ export const EnableSkills = Operation.make({
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
-    keys: Schema.Array(Schema.String).annotations({
+    keys: Schema.Array(Schema.String).annotate({
       description: 'The keys of the skills to enable.',
       examples: [['org.dxos.skill.memory', 'org.dxos.skill.database']],
     }),

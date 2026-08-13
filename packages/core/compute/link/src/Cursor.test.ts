@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, test } from 'vitest';
@@ -67,7 +66,7 @@ describe('Cursor.layer', () => {
     });
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([makeUnit(50), makeUnit(40)])).pipe(
+      Cursor.commit([makeUnit(50), makeUnit(40)]).pipe(
         Effect.provide(Cursor.layer({ cursor, feed, foreignKeySource: 'test', maxKey: 0, stats: { newMessages: 0 } })),
         Effect.provide(Database.layer(db)),
       ),
@@ -92,7 +91,7 @@ describe('Cursor.layer', () => {
     });
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([makeUnit(50), makeUnit(40)])).pipe(
+      Cursor.commit([makeUnit(50), makeUnit(40)]).pipe(
         Effect.provide(
           Cursor.layer({
             cursor,
@@ -112,7 +111,7 @@ describe('Cursor.layer', () => {
     expect(cursor.min).toBe('40');
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([makeUnit(60), makeUnit(70)])).pipe(
+      Cursor.commit([makeUnit(60), makeUnit(70)]).pipe(
         Effect.provide(
           Cursor.layer({
             cursor,
@@ -444,7 +443,7 @@ describe('commit with objectless units', () => {
     };
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([retagUnit])).pipe(
+      Cursor.commit([retagUnit]).pipe(
         Effect.provide(
           Cursor.layer({
             cursor,
@@ -485,7 +484,7 @@ describe('commit with objectless units', () => {
     const retagUnit: Cursor.CommitUnit = { foreignId: 'id-existing', key: 0 };
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([appendUnit, retagUnit])).pipe(
+      Cursor.commit([appendUnit, retagUnit]).pipe(
         Effect.provide(
           Cursor.layer({
             cursor,

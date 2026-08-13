@@ -4,5 +4,6 @@
 
 // Public API exports.
 
-export * from './meta';
-export * from './types';
+export * as SamplePlugin from './SamplePlugin';
+export * from '#meta';
+export * from '#types';

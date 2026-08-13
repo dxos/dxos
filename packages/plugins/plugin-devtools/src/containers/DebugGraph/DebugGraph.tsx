@@ -4,8 +4,8 @@
 
 import React from 'react';
 
+import * as Graph from '@dxos/app-graph/Graph';
 import { Tree } from '@dxos/devtools';
-import { Graph } from '@dxos/plugin-graph';
 import { Panel, ScrollArea } from '@dxos/react-ui';
 
 export type DebugGraphProps = { graph: Graph.Graph; root: string };

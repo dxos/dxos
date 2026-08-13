@@ -4,8 +4,9 @@
 
 import { describe, test } from 'vitest';
 
+import { Terra, TerraObject } from '#types';
+
 import { type Vec3, makeSampler, radiusAt, seaRadius } from '../engine';
-import { Terra, TerraObject } from '../types';
 import { CRUISE_ALTITUDE, behaviorFor } from './behaviors';
 import { angleBetween, slerp, toUnit } from './geo';
 import { buildNavGrid } from './nav-grid';

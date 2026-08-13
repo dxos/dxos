@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom';
 import * as Predicate from 'effect/Predicate';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Obj, type View } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
@@ -30,11 +30,11 @@ import { type TableModel, type TableRow } from './table-model';
  * different grid planes.
  */
 export class TablePresentation<T extends TableRow = TableRow> {
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
   private fieldProjectionCache = new Map<string, ReturnType<typeof this.model.projection.getFieldProjection>>();
 
   constructor(
-    registry: Registry.Registry,
+    registry: Registry.AtomRegistry,
     private readonly model: TableModel<T>,
   ) {
     this._registry = registry;
@@ -193,7 +193,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
         const tags = targetArray
           .map(getLabel)
-          .filter(Predicate.isNotNullable)
+          .filter(Predicate.isNotNullish)
           .map((title) => {
             return `<span class="dx-tag" data-hue="neutral">${title}</span>`;
           })

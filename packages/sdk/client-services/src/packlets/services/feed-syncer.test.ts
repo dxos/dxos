@@ -71,7 +71,7 @@ const createEdgeConnection = ({
     close: async () => {},
     send: async (ctx, routerMessage: RouterMessage) => {
       const decoded = cborDecode(routerMessage.payload!.value) as ProtocolMessage;
-      await syncServer.handleMessage(ctx, decoded).pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+      await syncServer.handleMessage(ctx, decoded).pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
     },
     onMessage: (listener: (message: RouterMessage) => void) => {
       messageListeners.add(listener);
@@ -98,8 +98,8 @@ const createFeedSyncHarness = async ({
   const serverFeedStore = createFeedStore('server', true);
   const clientFeedStore = createFeedStore('client', false);
 
-  await serverFeedStore.migrate().pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
-  await clientFeedStore.migrate().pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+  await serverFeedStore.migrate().pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
+  await clientFeedStore.migrate().pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
 
   const messageListeners = new Set<(message: RouterMessage) => void>();
   const syncServer = new SyncServer({
@@ -125,7 +125,7 @@ const createFeedSyncHarness = async ({
   const edgeClient = createEdgeConnection({ syncServer, serverRuntime, messageListeners });
 
   const syncer = new FeedSyncer({
-    runtime: clientRuntime.runtimeEffect,
+    runtime: clientRuntime.contextEffect,
     feedStore: clientFeedStore,
     edgeClient: edgeClient as any,
     peerId: 'client',
@@ -163,7 +163,7 @@ describe('FeedSyncer', () => {
           data: new Uint8Array([1, 2, 3]),
         },
       ])
-      .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
 
     await syncer.open(new Context());
 
@@ -175,7 +175,7 @@ describe('FeedSyncer', () => {
           position: -1,
           query: { feedIds: [serverFeedId] },
         })
-        .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
 
       expect(blocks).toHaveLength(1);
       expect(blocks[0].data).toEqual(new Uint8Array([1, 2, 3]));
@@ -191,7 +191,7 @@ describe('FeedSyncer', () => {
           data: new Uint8Array([9, 8, 7]),
         },
       ])
-      .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
 
     await vi.waitFor(async () => {
       const { blocks } = await serverFeedStore
@@ -201,7 +201,7 @@ describe('FeedSyncer', () => {
           position: -1,
           query: { feedIds: [clientFeedId] },
         })
-        .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+        .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
 
       expect(blocks).toHaveLength(1);
       expect(blocks[0].data).toEqual(new Uint8Array([9, 8, 7]));
@@ -225,7 +225,7 @@ describe('FeedSyncer', () => {
           data: new Uint8Array([9, 8, 7]),
         },
       ])
-      .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
 
     await syncer.open(new Context());
 
@@ -237,7 +237,7 @@ describe('FeedSyncer', () => {
           position: -1,
           query: { feedIds: [clientFeedId] },
         })
-        .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+        .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
 
       expect(blocks).toHaveLength(1);
       expect(blocks[0].data).toEqual(new Uint8Array([9, 8, 7]));
@@ -262,7 +262,7 @@ describe('FeedSyncer', () => {
           data: new Uint8Array([1, 2, 3]),
         },
       ])
-      .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
 
     await syncer.open(new Context());
 
@@ -274,7 +274,7 @@ describe('FeedSyncer', () => {
           position: -1,
           query: { feedIds: [serverFeedId] },
         })
-        .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
 
       expect(blocks).toHaveLength(1);
       expect(blocks[0].data).toEqual(new Uint8Array([1, 2, 3]));
@@ -289,7 +289,7 @@ describe('FeedSyncer', () => {
           data: new Uint8Array([4, 5, 6]),
         },
       ])
-      .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
 
     await new Promise((resolve) => setTimeout(resolve, 250));
     {
@@ -300,7 +300,7 @@ describe('FeedSyncer', () => {
           position: -1,
           query: { feedIds: [serverFeedId] },
         })
-        .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
       expect(blocks).toHaveLength(1);
     }
 
@@ -314,7 +314,7 @@ describe('FeedSyncer', () => {
           position: -1,
           query: { feedIds: [serverFeedId] },
         })
-        .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
 
       expect(blocks).toHaveLength(2);
       expect(blocks[1].data).toEqual(new Uint8Array([4, 5, 6]));
@@ -345,7 +345,7 @@ describe('FeedSyncer', () => {
           data: new Uint8Array([7, 8, 9]),
         },
       ])
-      .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(serverRuntime.contextEffect));
 
     await syncer.open(new Context());
 
@@ -357,7 +357,7 @@ describe('FeedSyncer', () => {
           position: -1,
           query: { feedIds: [serverDataFeedId] },
         })
-        .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
       const traceResult = await clientFeedStore
         .query({
           spaceId,
@@ -365,7 +365,7 @@ describe('FeedSyncer', () => {
           position: -1,
           query: { feedIds: [serverTraceFeedId] },
         })
-        .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+        .pipe(RuntimeProvider.runPromise(clientRuntime.contextEffect));
 
       expect(dataResult.blocks).toHaveLength(1);
       expect(traceResult.blocks).toHaveLength(1);

@@ -6,14 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { CrawlError } from '@dxos/crawler';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DiscordPipeline, QuestionStore } from '@dxos/pipeline-discord';
 
+import { DiscordOperation } from '#types';
+
 import { discordSourceLayerFromConnection, getCrawlRuntime } from '../services';
-import { DiscordOperation } from '../types';
 
 /**
  * Runs the crawl on the session crawl runtime (which owns the SQLite-backed stores) so state

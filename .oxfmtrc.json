@@ -20,7 +20,8 @@
   "ignorePatterns": [
     "*.tpl",
     "**/*.mdx",
-    "**/*.conversations.json",
+    ".agents/reviews/**",
+    ".store/**",
     "**/README.md",
     "**/__swc_snapshots__/**",
     "**/gen/**",

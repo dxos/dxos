@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { Button, Column, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type Support } from '#types';
+import { Support } from '#types';
 
 export type SupportArticleProps = AppSurface.ObjectArticleProps<Support.Ticket>;
 

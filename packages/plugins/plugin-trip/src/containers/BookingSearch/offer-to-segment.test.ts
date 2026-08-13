@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type BookingSearch } from '#types';
+import { BookingSearch } from '#types';
 
 import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
 

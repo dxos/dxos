@@ -6,13 +6,15 @@ import * as Schema from 'effect/Schema';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
+import { SchemaAST } from '@dxos/effect';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -22,9 +24,13 @@ import { ObjectCard } from '#components';
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
 
-// Pick the editable header fields from the Project schema rather than redeclaring them.
-const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
-type HeaderValues = Schema.Schema.Type<typeof HeaderValues>;
+// Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
+// `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
+// and the field types are re-attached here.
+type HeaderValues = Pick<Project.Project, 'name' | 'description'>;
+const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
+  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description']),
+);
 
 // The Context section edits only the instructions' standing context objects.
 const CONTEXT_FIELDS: readonly string[] = ['objects'];
@@ -113,7 +119,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     <Menu.Root {...actions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
-          <Menu.Toolbar classNames='dx-document' />
+          <Menu.Toolbar classNames='dx-document'>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content>
           <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>

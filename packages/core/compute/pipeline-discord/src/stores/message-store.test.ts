@@ -8,6 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
+import { SqlTransaction } from '@dxos/sql-sqlite';
+
 import { MessageStore, type StoredMessage } from './message-store';
 
 const message = (id: string, over: Partial<StoredMessage> = {}): StoredMessage => ({
@@ -65,6 +67,9 @@ describe('MessageStore', () => {
   suite('memory', MessageStore.layerMemory);
   suite(
     'sql',
-    MessageStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
+    MessageStore.layerSql.pipe(
+      Layer.provideMerge(SqlTransaction.layer),
+      Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
+    ),
   );
 });

@@ -2,34 +2,35 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
+
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { type AgentRegistryApi, type Identifier, type Observation, type Profile } from '../AgentRegistry';
 import { StateError } from '../errors';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/agent-registry';
 
-/** Create the agent + identifier tables (idempotent). */
-export const migrate = (sql: SqlClient.SqlClient) =>
-  Effect.gen(function* () {
-    yield* sql`CREATE TABLE IF NOT EXISTS agent (
-      id TEXT PRIMARY KEY,
-      label TEXT,
-      message_count INTEGER NOT NULL DEFAULT 0,
-      first_seen TEXT,
-      last_seen TEXT,
-      ref TEXT
-    )`;
-    // kind 'identifier' rows carry a real (namespace, value); kind 'alias' rows map a merged
-    // agent id onto its canonical agent (the sameAs record).
-    yield* sql`CREATE TABLE IF NOT EXISTS agent_identifier (
-      key TEXT PRIMARY KEY,
-      kind TEXT NOT NULL,
-      namespace TEXT,
-      value TEXT,
-      agent_id TEXT NOT NULL
-    )`;
-    yield* sql`CREATE INDEX IF NOT EXISTS agent_identifier_agent ON agent_identifier (agent_id)`;
-  });
+/**
+ * Applies any migrations this database has not recorded yet.
+ *
+ * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+ * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+ */
+export const migrate = (): Effect.Effect<
+  void,
+  SqlError.SqlError,
+  SqlClient.SqlClient | SqlTransaction.SqlTransaction
+> =>
+  Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('crawler.agentRegistry.migrate'),
+  );
 
 type AgentRow = {
   readonly id: string;

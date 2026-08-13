@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation, Project } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
@@ -38,7 +39,7 @@ export const ListProjects = Operation.make({
   input: Schema.Struct({
     /** Substring match on name (case-insensitive). */
     match: Schema.optional(Schema.String),
-    limit: Schema.optional(Schema.Number).annotations({ description: 'Page size (default 50, max 200).' }),
+    limit: Schema.optional(Schema.Number).annotate({ description: 'Page size (default 50, max 200).' }),
   }),
   output: Schema.Struct({
     projects: Schema.Array(

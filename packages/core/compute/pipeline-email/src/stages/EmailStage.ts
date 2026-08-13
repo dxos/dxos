@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 
 import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { type IdentityIndex, overlayIdentityIndex } from '@dxos/extractor';
-import { buildContactFromActor, getIdentityIndex, identitySpecs } from '@dxos/extractor-lib';
+import { buildContactFromActor, getIdentityIndex, identitySpecs, senderSignals } from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
@@ -141,20 +141,6 @@ export const extractContacts = (): Stage.Stage<Change, Change, never, Database.S
 };
 
 /**
- * The sender signals the shared extraction gate reads, taken from the fields provider mappers
- * already record on `properties`. `Precedence`/`Auto-Submitted` are folded into `bulk` by the mapper
- * where available.
- */
-const senderSignals = (message: Message.Message) => {
-  const properties = message.properties ?? {};
-  return {
-    noReply: properties.noReply === true,
-    listUnsubscribe: typeof properties.listUnsubscribe === 'string' ? properties.listUnsubscribe : undefined,
-    bulk: properties.bulk === true,
-  };
-};
-
-/**
  * Turns each of the item's `attachments` into a Blob object (via the database's configured storage
  * backend — edge in Composer) and adds a {@link Message.Attachment} pointing at it to the message.
  * {@link toCommitUnit} finds these blobs again via each attachment's ref (inlined, since the
@@ -181,7 +167,7 @@ export const processAttachments = (): Stage.Stage<Change, Change, never, Databas
         const blob: Blob.Blob | undefined = yield* Blob.fromBytes(attachment.bytes, {
           type: attachment.mimeType,
         }).pipe(
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error, { foreignId: mapped.foreignId, name: attachment.name, size: attachment.size });
             return Effect.succeed(undefined);
           }),

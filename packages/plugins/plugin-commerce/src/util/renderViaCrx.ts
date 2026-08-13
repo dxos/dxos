@@ -74,7 +74,7 @@ export const isCrxRenderAvailable = (): boolean =>
  * if the extension is unavailable, rejects the request, or does not ack within the timeout.
  */
 export const renderViaCrx = (url: string, options: RenderOptions = {}): Effect.Effect<string, FetchError> =>
-  Effect.async<string, FetchError>((resume) => {
+  Effect.callback<string, FetchError>((resume) => {
     if (typeof window === 'undefined' || !isCrxRenderAvailable()) {
       resume(Effect.fail(new FetchError('Composer render-proxy extension is not available')));
       return;

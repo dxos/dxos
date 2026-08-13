@@ -14,6 +14,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
+    SpotlightCapabilities: 'src/types/SpotlightCapabilities.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

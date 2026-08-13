@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import { Icon, IconButton, ScrollArea, Tooltip, composable, composableProps } from '@dxos/react-ui';
 import { Treegrid, TREEGRID_PATH_SEPARATOR } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';

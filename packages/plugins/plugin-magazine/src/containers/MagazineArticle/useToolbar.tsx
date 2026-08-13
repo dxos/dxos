@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomSet } from '@effect-atom/atom-react';
+import { useAtomSet } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -13,7 +15,7 @@ import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { type MagazineView } from '#atoms';
 import { meta } from '#meta';
-import { FeedOperation, type Magazine } from '#types';
+import { FeedOperation, Magazine } from '#types';
 
 export type UseToolbarProps = {
   magazine: Magazine.Magazine;

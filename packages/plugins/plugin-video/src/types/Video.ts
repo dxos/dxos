@@ -16,26 +16,26 @@ import { Text } from '@dxos/schema';
  */
 export class Video extends Type.makeObject<Video>(DXN.make('org.dxos.type.video', '0.1.0'))(
   Schema.Struct({
-    name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
+    name: Schema.optional(Schema.String).annotate({ title: 'Name' }),
     // Plain string with a URL format hint. `Format.URL`'s regex rejects query strings (e.g.
     // `?v=...`), which video URLs always carry, so the branded format cannot be used here.
     url: Schema.String.pipe(
-      Schema.annotations({ title: 'URL', description: 'The source URL of the video.' }),
+      Schema.annotate({ title: 'URL', description: 'The source URL of the video.' }),
       FormatAnnotation.set(TypeFormat.URL),
       Schema.optional,
     ),
     description: Schema.String.pipe(
-      Schema.annotations({ title: 'Description', description: 'The full published description of the video.' }),
+      Schema.annotate({ title: 'Description', description: 'The full published description of the video.' }),
       FormatAnnotation.set(TypeFormat.Text),
       Schema.optional,
     ),
     transcript: Ref.Ref(Text.Text).pipe(
-      Schema.annotations({ description: 'Generated transcript.' }),
+      Schema.annotate({ description: 'Generated transcript.' }),
       FormInputAnnotation.set(false),
       Schema.optional,
     ),
     summary: Ref.Ref(Text.Text).pipe(
-      Schema.annotations({ description: 'Generated summary.' }),
+      Schema.annotate({ description: 'Generated summary.' }),
       FormInputAnnotation.set(false),
       Schema.optional,
     ),

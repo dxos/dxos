@@ -5,15 +5,15 @@
 import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
-import { CollaborationOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { type DecodedAutomergePrimaryValue, getObjectOnBranch, getRangeFromCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { cherryPickHunk } from '@dxos/ui-editor/headless';
 
-import { Markdown } from '../types';
+import { Markdown } from '#types';
 
 /** Narrow a decoded automerge value to a keyed record so string fields can be read without a cast. */
 const isRecord = (value: unknown): value is { readonly [key: string]: DecodedAutomergePrimaryValue } =>

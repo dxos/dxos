@@ -2,19 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Atom from '@effect-atom/atom/Atom';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import type { PaginationResult } from '@dxos/echo-react';
+import { type Database, Filter, Obj } from '@dxos/echo';
+import { type PaginationResult, useQuery } from '@dxos/echo-react';
+import { EID } from '@dxos/keys';
 import { Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Avatar, CardTile, Row } from '@dxos/react-ui-card';
+import { CardTile, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
-import { type Message } from '@dxos/types';
+import { type Actor, type Message, Person } from '@dxos/types';
 
-import { useGmailTags } from '#hooks';
+import { useVisibleTags } from '#hooks';
 
 import { getMessageBodyText, getMessageProps } from '../../util';
 import { isMessageGroup } from './is-message-group';
@@ -66,6 +68,30 @@ const EMPTY_TAGS_ATOM = Atom.make((): InboxStackTag[] => []);
 
 const NOT_STARRED_ATOM = Atom.make(() => false);
 
+/**
+ * Resolves any sender's contact from ONE query of the space's people, so a list of tiles costs a
+ * single query rather than one per row (which is why the tiles were previously contact-blind).
+ */
+const useContactLookup = (db?: Database.Database) => {
+  const people = useQuery(db, Filter.type(Person.Person));
+  return useMemo(() => {
+    if (!db) {
+      return undefined;
+    }
+    const byEmail = new Map<string, EID.EID>();
+    for (const person of people) {
+      const eid = EID.tryParse(Obj.getURI(person).toString());
+      if (!eid) {
+        continue;
+      }
+      for (const email of person.emails ?? []) {
+        byEmail.set(email.value.toLowerCase(), eid);
+      }
+    }
+    return (actor: Actor.Actor) => (actor.email ? byEmail.get(actor.email.toLowerCase()) : undefined);
+  }, [db, people]);
+};
+
 export type InboxStackProps = {
   id: string;
   /** Stack entries in display order: individual messages, conversation groups, or a mix. */
@@ -95,6 +121,13 @@ export type InboxStackProps = {
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, tiles render a highlighted best-match snippet instead of the default preview. */
   searchQuery?: string;
+  /**
+   * Resolves each sender's contact for the whole list from ONE query, rather than a query hook per
+   * row: passing it makes every tile's avatar interactive (hover card / create contact) at list cost.
+   */
+  db?: Database.Database;
+  /** Creates the Person for a sender the space does not know (the avatar's hover affordance). */
+  onContactCreate?: (actor: Actor.Actor) => void;
   onAction?: InboxStackActionHandler;
 };
 
@@ -114,12 +147,15 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
       enableIgnoreSender,
       enableCreateTopic,
       searchQuery,
+      db,
+      onContactCreate,
       onAction,
       ...props
     },
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    const getContact = useContactLookup(db);
 
     const tileItems = useMemo(
       () =>
@@ -135,6 +171,8 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                   enableIgnoreSender,
                   enableCreateTopic,
                   searchQuery,
+                  getContact,
+                  onContactCreate,
                   onAction,
                 }
               : {
@@ -144,10 +182,22 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                   enableIgnoreSender,
                   enableCreateTopic,
                   searchQuery,
+                  getContact,
+                  onContactCreate,
                   onAction,
                 },
         ),
-      [items, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction],
+      [
+        items,
+        tagsAtom,
+        starredAtom,
+        enableIgnoreSender,
+        enableCreateTopic,
+        searchQuery,
+        getContact,
+        onContactCreate,
+        onAction,
+      ],
     );
 
     // The incoming `currentId` is a message ID (set when a specific message becomes selected),
@@ -221,7 +271,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
           onSelectionChange={handleSelectionChange}
         >
           <ScrollArea.Root padding centered>
-            <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
+            <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={StackTile}
                 items={tileItems}
@@ -233,7 +283,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                 pagination={pagination}
               />
               {loading && (
-                <div role='status' className='grid place-items-center pli-2 plb-3'>
+                <div role='status' className='grid place-items-center px-2 py-3'>
                   <Icon
                     icon='ph--spinner-gap--regular'
                     size={5}
@@ -282,18 +332,31 @@ type MessageTileData = {
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, the tile renders a highlighted best-match snippet. */
   searchQuery?: string;
+  /** List-level contact lookup (see `InboxStackProps.db`). */
+  getContact?: (actor: Actor.Actor) => EID.EID | undefined;
+  onContactCreate?: (actor: Actor.Actor) => void;
   onAction?: InboxStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, searchQuery, onAction } = data;
+  const {
+    message,
+    tagsAtom,
+    starredAtom,
+    enableIgnoreSender,
+    enableCreateTopic,
+    searchQuery,
+    getContact,
+    onContactCreate,
+    onAction,
+  } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
   const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
   const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
-  const messageTags = useGmailTags(tags);
+  const messageTags = useVisibleTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
   // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
@@ -368,8 +431,13 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         }
       />
       <Card.Body>
-        <Row.Person actor={message.sender} avatar role='from' onClick={handleAvatarClick} />
-
+        <Row.Person
+          actor={message.sender}
+          role='from'
+          getContact={getContact}
+          onContactCreate={onContactCreate}
+          onClick={handleAvatarClick}
+        />
         {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
           <Card.Row>
@@ -378,7 +446,6 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
             </Card.Text>
           </Card.Row>
         )}
-
         <Row.Tags tags={messageTags} onTagClick={handleTagClick} />
       </Card.Body>
     </CardTile.Root>
@@ -401,6 +468,9 @@ type ConversationTileData = {
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, each message's snippet renders a highlighted best-match. */
   searchQuery?: string;
+  /** List-level contact lookup (see `InboxStackProps.db`). */
+  getContact?: (actor: Actor.Actor) => EID.EID | undefined;
+  onContactCreate?: (actor: Actor.Actor) => void;
   onAction?: InboxStackActionHandler;
 };
 
@@ -416,6 +486,8 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
       enableIgnoreSender,
       enableCreateTopic,
       searchQuery,
+      getContact,
+      onContactCreate,
       onAction,
     } = data;
     const latest = messages[0];
@@ -503,6 +575,8 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
               key={message.id}
               message={message}
               searchQuery={searchQuery}
+              getContact={getContact}
+              onContactCreate={onContactCreate}
               onMessageClick={handleMessageClick}
             />
           ))}
@@ -527,6 +601,9 @@ type ConversationMessageRowProps = {
   message: Message.Message;
   /** Active mailbox search term; when set, renders a highlighted best-match snippet. */
   searchQuery?: string;
+  /** List-level contact lookup (see `InboxStackProps.db`). */
+  getContact?: (actor: Actor.Actor) => EID.EID | undefined;
+  onContactCreate?: (actor: Actor.Actor) => void;
   onMessageClick: (event: MouseEvent, messageId: string) => void;
 };
 
@@ -535,7 +612,13 @@ type ConversationMessageRowProps = {
  * memoized per message via `useMemo` — inlining it in the `messages.map` would recompute the
  * snippet on every keystroke for every message in the conversation.
  */
-const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: ConversationMessageRowProps) => {
+const ConversationMessageRow = ({
+  message,
+  searchQuery,
+  getContact,
+  onContactCreate,
+  onMessageClick,
+}: ConversationMessageRowProps) => {
   const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
   const searchSnippet = useMemo(
     () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
@@ -543,9 +626,11 @@ const ConversationMessageRow = ({ message, searchQuery, onMessageClick }: Conver
   );
 
   return (
-    <Card.Row>
-      <Card.Block>
-        <Avatar actor={message.sender} size={6} />
+    <Card.Row classNames='items-start'>
+      {/* `h-8`, matching the name line: centring the avatar over the whole two-line row (name +
+          snippet) left it hanging below the name it belongs to. */}
+      <Card.Block classNames='h-8 items-center'>
+        <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
       </Card.Block>
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>

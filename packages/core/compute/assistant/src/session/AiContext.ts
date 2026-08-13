@@ -4,15 +4,18 @@
 
 // @import-as-namespace
 
-import { Atom, Registry as AtomRegistry } from '@effect-atom/atom';
 import * as EArray from 'effect/Array';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
 import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { RuntimeProvider } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -58,9 +61,9 @@ export class Bindings {
 
 export type BinderOptions = {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Database.Service>;
-  /** @effect-atom/atom-react Registry for reactive state management. */
-  registry?: AtomRegistry.Registry;
+  runtime: Context.Context<Database.Service>;
+  /** @effect/atom-react Registry for reactive state management. */
+  registry?: AtomRegistry.AtomRegistry;
 };
 
 /**
@@ -70,9 +73,9 @@ export type BinderOptions = {
 export class Binder extends Resource {
   private readonly _skills = Atom.make<Skill.Skill[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
-  private readonly _registry: AtomRegistry.Registry;
+  private readonly _registry: AtomRegistry.AtomRegistry;
   private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Database.Service>;
+  private readonly _runtime: Context.Context<Database.Service>;
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 
@@ -128,7 +131,9 @@ export class Binder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this.#bindingsQuery = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Query.type(Binding)));
+    this.#bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      Feed.query(this._feed, Query.type(Binding)),
+    );
 
     // Process initial state before returning.
     const initialResults = await this.#bindingsQuery.run();
@@ -236,7 +241,7 @@ export class Binder extends Resource {
     this._registry.set(this._objects, nextObjects);
 
     log('bind', { skills: addedSkills.length, objects: addedObjects.length });
-    await Runtime.runPromise(this._runtime)(
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.append(this._feed, [
         Obj.make(Binding, {
           skills: {
@@ -276,7 +281,7 @@ export class Binder extends Resource {
     }
 
     log('unbind', { skills: skills?.length, objects: objects?.length });
-    await Runtime.runPromise(this._runtime)(
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.append(this._feed, [
         Obj.make(Binding, {
           skills: {

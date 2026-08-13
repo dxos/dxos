@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -16,8 +17,7 @@ import { Attention } from '@dxos/react-ui-attention';
 import { usePostContentAtom } from '#atoms';
 import { PostContent } from '#components';
 import { meta } from '#meta';
-import { FeedOperation } from '#types';
-import { Subscription } from '#types';
+import { FeedOperation, Subscription } from '#types';
 
 import { PostToolbar } from './PostToolbar';
 

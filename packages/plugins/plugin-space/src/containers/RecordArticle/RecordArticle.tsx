@@ -14,7 +14,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useRelatedObjects } from '#hooks';
 import { meta } from '#meta';
-import { Prompts } from '#types';
+import { SpaceSurface } from '#types';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -63,7 +63,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
               <Input.Root>
                 <Input.Label>{t('related-actions.label')}</Input.Label>
               </Input.Root>
-              <Surface.Surface type={Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
+              <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </div>
 
             {related.length > 0 && (

@@ -21,6 +21,13 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
     data safety). Never run `git worktree add` to "fix" it.
   - `main` → STOP, write nothing, tell the user. Never create a worktree or
     branch to escape — the harness owns those.
+- **Cloud sandbox sessions differ.** If `CLAUDE_CODE_REMOTE` is set you are in the Claude Code
+  cloud sandbox, where `.claude/settings.json` hooks do NOT run: `/mode` and `/project` are
+  inert, and the branch/worktree guards enforce nothing — you are the only thing upholding the
+  Non-negotiables. `moon`, `gh`, and `oxfmt` are not on `PATH` (use `pnpm exec moon`
+  and the `mcp__github__*` tools), dependencies are installed but not built, and the container
+  is ephemeral, so push before you stop. Full details, including how to reach HTTPS from
+  Chromium → `cloud-sandbox` skill.
 - First reply: confirm these instructions and follow the reporting rule below.
 - If unsure how to implement something, ask rather than guess.
 
@@ -124,15 +131,22 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Test all: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`
 - Lint & fix: `moon run :lint -- --fix`
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
+- Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
 - Storybook: `moon run storybook-react:serve` (port 9009)
 
-Ignore the `Auth token DEPOT_TOKEN does not exist` warning (remote-cache auth).
+A remote-cache warning from moon is harmless — builds work, they just don't share the team's
+cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
+once per machine, for every worktree.
 
 ## Code style
 
 Universal rules. Deeper conventions live in skills — see the pointers below.
 
 - TypeScript, single quotes. Prefer functional style and arrow functions.
+- **Prefer Effect over async/Promise.** Raw Promises belong only at platform boundaries —
+  dynamic `import()` and browser callback APIs (wrap the latter with `Effect.async`). Use
+  `Effect.sleep`/`Effect.gen` instead of `setTimeout`/`async` orchestration. (Exception:
+  tests that need real macrotask turns across runtimes — TestClock virtualizes `Effect.sleep`.)
 - Import order, blank line between groups:
   builtin → external → @dxos → internal → parent → sibling.
 - Prefer named exports; avoid default exports. Use barrel imports.
@@ -178,6 +192,8 @@ Deeper conventions:
 
 ## Where things live
 
+- **Cloud sandbox / Claude Code on the web** — hooks that don't run, missing tooling, and the
+  HTTPS egress proxy → `cloud-sandbox` skill (`.agents/skills/cloud-sandbox/SKILL.md`).
 - **`.agents/` vs `agents/`** — `.agents/` (dot) holds agent **control state**
   (skills, the project registry); `agents/` (no dot) holds **user-visible
   artifacts** (instructions, prompts, superpowers specs/plans/handoffs).
@@ -193,6 +209,11 @@ Deeper conventions:
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **SQLite schema changes** — adding a migration, creating a new SQLite-backed
+  store, or anything under `src/migrations/` →
+  [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).
+  Read it before reaching for Prisma: there is no driver adapter for the
+  browser client, which is why the schema is hand-written SQL.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.

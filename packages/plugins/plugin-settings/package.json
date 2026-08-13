@@ -17,20 +17,19 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
-    "#plugin": "./src/SettingsPlugin.ts",
+    "#plugin": "./src/plugin.ts",
     "#translations": "./src/translations.ts",
-    "#types": "./src/types/index.ts"
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
@@ -41,9 +40,26 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./SettingsPath": {
+      "source": "./src/types/SettingsPath.ts",
+      "types": "./dist/types/src/types/SettingsPath.d.ts",
+      "import": "./dist/lib/SettingsPath.mjs"
+    },
+    "./SettingsPlugin": {
+      "source": "./src/SettingsPlugin.ts",
+      "types": "./dist/types/src/SettingsPlugin.d.ts",
+      "import": "./dist/lib/SettingsPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SettingsPath": [
+        "dist/types/src/types/SettingsPath.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -54,7 +70,6 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*"
   },

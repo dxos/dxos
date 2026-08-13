@@ -4,16 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { ScriptOperationHandlerSet } from '#operations';
 
 import { ScriptHandlers } from '../skills/functions';
 
-export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(
+    return Capability.contribute(
       Capabilities.OperationHandler,
       OperationHandlerSet.merge(ScriptOperationHandlerSet, ScriptHandlers),
     );

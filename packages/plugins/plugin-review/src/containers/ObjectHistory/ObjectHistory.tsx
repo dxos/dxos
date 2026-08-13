@@ -35,7 +35,9 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
 
   // Selection is session-local: collaborators each view their own version.
   const objectId = subject.id;
-  const selection = useViewState(ReviewCapabilities.viewAspect, objectId).selection ?? { kind: 'current' as const };
+  const selection = useViewState(ReviewCapabilities.viewAspect, objectId).selection ?? {
+    kind: 'current' as const,
+  };
   const { update } = useViewStateActions(ReviewCapabilities.viewAspect, objectId);
   const setSelection = useCallback(
     (next: ReviewCapabilities.VersionSelection) => update((prev) => ({ ...prev, selection: next })),

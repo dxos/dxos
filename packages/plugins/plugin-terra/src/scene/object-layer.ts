@@ -8,9 +8,10 @@ import { Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
 import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 
+import { TerraObject } from '#types';
+
 import { scale } from '../engine';
 import { type SimObject } from '../sim';
-import { type TerraObject } from '../types';
 import { easeHeading } from './heading';
 import { createObjectForm } from './object-forms';
 import { SCALE_FACTOR, objectFrame } from './orientation';

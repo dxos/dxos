@@ -45,7 +45,7 @@ export const TypeEntityId = Symbol.for('@dxos/echo/TypeEntity');
  * Public callers should use `Type.getSchema(Obj.getType(obj))` instead.
  */
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
-export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
+export const getSchema = (obj: unknown | undefined): Schema.Codec<any, any> | undefined => {
   if (obj) {
     return (obj as any)[SchemaId];
   }
@@ -54,7 +54,7 @@ export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext 
 /**
  * @internal
  */
-export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext): void => {
+export const setSchema = (obj: any, schema: Schema.Codec<any, any>): void => {
   Object.defineProperty(obj, SchemaId, {
     value: schema,
     writable: false,

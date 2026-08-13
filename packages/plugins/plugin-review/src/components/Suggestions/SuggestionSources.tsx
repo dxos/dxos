@@ -10,7 +10,7 @@ import { type Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 import { Branch, Version } from '@dxos/versioning';
 
-import { type ResolvedSuggestionBranch } from '../../hooks';
+import { type ResolvedSuggestionBranch } from '#hooks';
 
 type VersionedObject = Parameters<typeof Branch.bind>[0];
 type BranchRecord = Parameters<typeof Branch.bind>[1];

@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const LinearOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./get-teams'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-);
+import { LinearOperation } from '#types';
+
+export const LinearOperationHandlerSet = OperationHandlerSet.lazy([
+  LinearOperation.GetLinearTeams.pipe(Operation.lazyHandler(() => import('./get-teams'))),
+  LinearOperation.MaterializeLinearTarget.pipe(Operation.lazyHandler(() => import('./materialize-target'))),
+  LinearOperation.SyncLinearTeams.pipe(Operation.lazyHandler(() => import('./sync'))),
+]);

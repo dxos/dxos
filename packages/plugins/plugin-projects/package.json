@@ -18,34 +18,34 @@
       "types": "./dist/types/src/capabilities/index.d.ts",
       "default": "./dist/lib/capabilities.mjs"
     },
-    "#containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/containers.mjs"
-    },
-    "#operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/operations.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
       "default": "./dist/lib/components.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/meta.mjs"
     },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/operations.mjs"
+    },
     "#plugin": {
       "source": {
-        "workerd": "./src/ProjectsPlugin.workerd.ts",
-        "default": "./src/ProjectsPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/ProjectsPlugin.d.ts",
-      "workerd": "./dist/lib/ProjectsPlugin.workerd.mjs",
-      "default": "./dist/lib/ProjectsPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -64,16 +64,7 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    },
+    "./package.json": "./package.json",
     "./templates": {
       "source": "./src/templates/index.ts",
       "types": "./dist/types/src/templates/index.d.ts",
@@ -83,16 +74,64 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
+    "./ProjectCapabilities": {
+      "source": "./src/types/ProjectCapabilities.ts",
+      "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
+      "import": "./dist/lib/ProjectCapabilities.mjs"
+    },
+    "./ProjectMcpOperation": {
+      "source": "./src/types/ProjectMcpOperation.ts",
+      "types": "./dist/types/src/types/ProjectMcpOperation.d.ts",
+      "import": "./dist/lib/ProjectMcpOperation.mjs"
+    },
+    "./ProjectOperation": {
+      "source": "./src/types/ProjectOperation.ts",
+      "types": "./dist/types/src/types/ProjectOperation.d.ts",
+      "import": "./dist/lib/ProjectOperation.mjs"
+    },
+    "./ProjectsEvents": {
+      "source": "./src/types/ProjectsEvents.ts",
+      "types": "./dist/types/src/types/ProjectsEvents.d.ts",
+      "import": "./dist/lib/ProjectsEvents.mjs"
+    },
+    "./ProjectsPlugin": {
+      "source": "./src/ProjectsPlugin.ts",
+      "types": "./dist/types/src/ProjectsPlugin.d.ts",
+      "import": "./dist/lib/ProjectsPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ProjectCapabilities": [
+        "dist/types/src/types/ProjectCapabilities.d.ts"
+      ],
+      "ProjectMcpOperation": [
+        "dist/types/src/types/ProjectMcpOperation.d.ts"
+      ],
+      "ProjectOperation": [
+        "dist/types/src/types/ProjectOperation.d.ts"
+      ],
+      "ProjectsEvents": [
+        "dist/types/src/types/ProjectsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
@@ -100,16 +139,17 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
@@ -124,6 +164,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "vite": "catalog:"

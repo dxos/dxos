@@ -37,9 +37,6 @@
       "path": "../../../common/keys"
     },
     {
-      "path": "../../../common/kv-store"
-    },
-    {
       "path": "../../../common/log"
     },
     {
@@ -50,9 +47,6 @@
     },
     {
       "path": "../../../common/test-utils"
-    },
-    {
-      "path": "../../../common/timeframe"
     },
     {
       "path": "../../../common/tracing"

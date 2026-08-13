@@ -77,7 +77,7 @@ describe.skip('Search', () => {
 });
 
 const COMPOSER_DXOS_DOC = `
-![img](https://dxos.network/dxos-logotype-blue.png)
+![img](https://media.dxos.network/dxos-logotype-blue.png)
 # Welcome to Composer by DXOS
 
 ## What is Composer?

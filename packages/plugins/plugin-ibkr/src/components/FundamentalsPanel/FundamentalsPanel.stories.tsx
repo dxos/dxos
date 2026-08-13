@@ -8,8 +8,8 @@ import { fn } from 'storybook/test';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Ibkr } from '#types';
 
-import { type Ibkr } from '../../types';
 import { FundamentalsPanel } from './FundamentalsPanel';
 
 const aaplSnapshot = {

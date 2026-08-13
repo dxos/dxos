@@ -10,17 +10,20 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SampleOperation } from '#types';
-import { SampleItem } from '#types';
+import { SampleItem, SampleOperation } from '#types';
 
 // Section type constant used to identify the "Samples" section node.
 // A second extension matches this type to populate child nodes.
@@ -28,8 +31,6 @@ const SAMPLE_SECTION_TYPE = 'sample-section';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
     const extensions = yield* Effect.all([
       // --- Root-level action ---
       // `NodeMatcher.whenRoot` matches the graph root, making this action appear
@@ -175,6 +176,6 @@ export default Capability.makeModule(
     ]);
 
     // All extensions are flattened and contributed as a single array.
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

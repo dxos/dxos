@@ -6,7 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +17,7 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 
 import { Agent, Chat } from '../../../types';
 import DelegationSkill from '../skill';
-import { DelegateTask } from './delegate-task';
+import { DelegateTask } from './definitions';
 import { DelegationHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
@@ -44,7 +45,7 @@ const invokeDelegateTask = (input: { title: string }, chatFeed: Feed.Feed) =>
   );
 
 describe('DelegateTask', () => {
-  it.scoped(
+  it.effect(
     'promotes delegated work to a durable in-progress agent task',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -83,7 +84,7 @@ describe('DelegateTask', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'reuses the outline task set across delegations',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -113,7 +114,7 @@ describe('DelegateTask', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'fails on an empty title',
     Effect.fnUntraced(
       function* ({ expect }) {

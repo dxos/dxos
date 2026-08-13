@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './meta';
+export * as MapPlugin from './MapPlugin';
+export * from './events';
+export * from '#meta';

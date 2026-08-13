@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
@@ -26,7 +28,7 @@ import { type ToolbarStateAtom, useToolbarState } from './useToolbarState';
 type ToolbarActionsContext = {
   model: SheetModel;
   stateAtom: ToolbarStateAtom;
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   cursorFallbackRange?: CompleteCellRange;
   customActions?: Atom.Atom<ActionGraphProps>;
 };
@@ -82,7 +84,9 @@ export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 });

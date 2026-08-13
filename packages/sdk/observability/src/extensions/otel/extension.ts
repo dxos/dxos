@@ -74,8 +74,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const headers =
     _headers ??
     Match.value(isNode()).pipe(
-      Match.when(true, () => Option.fromNullable(process.env.DX_OTEL_HEADERS ?? buildSecrets.OTEL_HEADERS)),
-      Match.when(false, () => Option.fromNullable(config.values.runtime?.app?.env?.DX_OTEL_HEADERS)),
+      Match.when(true, () => Option.fromNullishOr(process.env.DX_OTEL_HEADERS ?? buildSecrets.OTEL_HEADERS)),
+      Match.when(false, () => Option.fromNullishOr(config.values.runtime?.app?.env?.DX_OTEL_HEADERS)),
       Match.exhaustive,
       Option.map((raw) => parseHeaders(raw)),
       Option.getOrElse(() => undefined),

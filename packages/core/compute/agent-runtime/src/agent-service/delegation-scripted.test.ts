@@ -9,8 +9,9 @@ import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 
@@ -91,7 +92,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('AgentProcess delegation lifecycle (scripted)', () => {
-  it.scoped(
+  it.effect(
     'delegates work to a sub-agent and folds the result back on completion',
     Effect.fnUntraced(
       function* (_) {

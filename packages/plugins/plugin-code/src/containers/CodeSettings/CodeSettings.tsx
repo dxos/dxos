@@ -14,19 +14,19 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { Settings as SettingsType } from '#types';
+import { Settings } from '#types';
 
 const SERVICE = 'anthropic.com';
 
 export type CodeSettingsProps = AppSurface.SettingsData;
 
 /**
- * Settings panel for the Code plugin: manages the Anthropic API key (stored as
+ * Settings.Settings panel for the Code plugin: manages the Anthropic API key (stored as
  * an ECHO `AccessToken`) and the schema-driven build-service `endpoint`.
  */
 export const CodeSettings = ({ subject }: CodeSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { settings, updateSettings } = useSettingsState<SettingsType.Settings>(subject.atom);
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const spaces = useSpaces();
   const space = spaces[0];
   const tokens = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: SERVICE }));
@@ -60,7 +60,7 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
 
   return (
     <Form.Root
-      schema={SettingsType.Settings}
+      schema={Settings.Settings}
       values={settings}
       variant='settings'
       onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}

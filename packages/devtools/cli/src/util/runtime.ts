@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as ConfigError from 'effect/ConfigError';
+import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
@@ -14,8 +14,11 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { type Credential, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import type * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Trace from '@dxos/compute/Trace';
 import { type Database, type Key, Registry } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 
@@ -28,7 +31,7 @@ export type AiChatServices =
   | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
-export const Provider = Schema.Literal('edge', 'lmstudio', 'ollama');
+export const Provider = Schema.Literals(['edge', 'lmstudio', 'ollama']);
 export type Provider = Schema.Schema.Type<typeof Provider>;
 
 export type LayerOptions = {
@@ -95,7 +98,7 @@ export const chatLayer = ({
     Layer.provideMerge(credentialsLayerFromDatabase()),
     // Resolves server-custodied tokens through EDGE; the client is only touched when one is hit.
     Layer.provideMerge(
-      Layer.unwrapEffect(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
+      Layer.unwrap(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
     ),
     Layer.provideMerge(spaceLayer(spaceId, true)),
     Layer.provideMerge(Trace.writerLayerNoop),

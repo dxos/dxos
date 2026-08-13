@@ -27,11 +27,10 @@
   "dependencies": {
     "@dxos/halo": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@effect-atom/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
-    "react": "catalog:",
-    "react-dom": "catalog:"
+    "react": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:",

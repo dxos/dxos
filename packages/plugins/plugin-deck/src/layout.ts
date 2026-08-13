@@ -4,9 +4,9 @@
 
 import { produce } from 'immer';
 
-import { DeckSpec } from '@dxos/app-toolkit';
+import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 
-import { type DeckAction } from '#types';
+import { DeckSchema } from '#types';
 
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
@@ -80,7 +80,7 @@ export const closeEntry = (deck: string[], entryId: string): string[] => {
   });
 };
 
-export const incrementPlank = (deck: string[], adjustment: DeckAction.Adjustment): string[] => {
+export const incrementPlank = (deck: string[], adjustment: DeckSchema.DeckAction.Adjustment): string[] => {
   return produce(deck, (draft) => {
     const index = draft.findIndex((id) => id === adjustment.id);
     if (

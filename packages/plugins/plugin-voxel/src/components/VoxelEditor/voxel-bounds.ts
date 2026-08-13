@@ -4,7 +4,7 @@
 
 /* eslint-disable react/no-unknown-property */
 
-import { type Voxel } from '#types';
+import { Voxel } from '#types';
 
 import { type VoxelBounds } from './VoxelEditor';
 

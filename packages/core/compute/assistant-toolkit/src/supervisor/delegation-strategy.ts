@@ -8,8 +8,8 @@ import * as Exit from 'effect/Exit';
 
 import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
-import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, EntityId } from '@dxos/keys';
@@ -143,7 +143,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       // capabilities), minus the delegation skill itself — otherwise a sub-agent could
       // recursively delegate. Resolved from the conversation's AiContext bindings.
       const inheritedSkills = yield* Effect.gen(function* () {
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
         return binder.getSkills().filter((skill) => Obj.getMeta(skill).key !== DelegationSkill.key);
       }).pipe(Effect.scoped);

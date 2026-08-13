@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
 // TODO(wittjosiah): Formalize with a stricter schema if we evolve this protocol.
@@ -19,7 +20,7 @@ type SpotlightInvokePayload = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
 
     const unlisten = yield* Effect.promise(async () => {
       const { listen } = await import('@tauri-apps/api/event');
@@ -49,10 +50,11 @@ export default Capability.makeModule(
       });
     });
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unlisten();
       }),
     );
+    return [];
   }),
 );

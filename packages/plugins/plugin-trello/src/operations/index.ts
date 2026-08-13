@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const TrelloOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./get-trello-boards'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-);
+import { TrelloOperation } from '#types';
+
+export const TrelloOperationHandlerSet = OperationHandlerSet.lazy([
+  TrelloOperation.GetTrelloBoards.pipe(Operation.lazyHandler(() => import('./get-trello-boards'))),
+  TrelloOperation.MaterializeTrelloTarget.pipe(Operation.lazyHandler(() => import('./materialize-target'))),
+  TrelloOperation.SyncTrelloBoard.pipe(Operation.lazyHandler(() => import('./sync'))),
+]);

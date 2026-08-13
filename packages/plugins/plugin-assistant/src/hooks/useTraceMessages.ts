@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { pipe } from 'effect/Function';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { Trace } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Trace from '@dxos/compute/Trace';
 import { Filter, Query } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 

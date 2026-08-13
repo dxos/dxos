@@ -2,58 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+// @import-as-namespace
 
-import {
-  AppGraphBuilder,
-  OperationHandler,
-  ReactRoot,
-  ReactSurface,
-  SpotlightDismiss,
-  State,
-  UrlHandler,
-} from '#capabilities';
-import { meta } from '#meta';
-import { translations } from '#translations';
-import { SimpleLayoutEvents } from '#types';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-export type SimpleLayoutPluginOptions = {
-  /** Determines if running in popover window context (hides mobile-specific UI). */
-  isPopover?: boolean;
-};
+import { meta as pluginMeta } from '#meta';
 
-export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ isPopover = false }) => ({
-    id: Capability.getModuleTag(State),
-    activatesOn: ActivationEvents.Startup,
-    firesAfterActivation: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
-    activate: () => State({ initialState: { isPopover } }),
-  })),
-  Plugin.addModule(({ isPopover = false }) => ({
-    id: Capability.getModuleTag(SpotlightDismiss),
-    activatesOn: ActivationEvents.Startup,
-    activate: () => SpotlightDismiss({ isPopover }),
-  })),
-  Plugin.addModule({
-    id: Capability.getModuleTag(ReactRoot),
-    activatesOn: ActivationEvents.Startup,
-    activate: ReactRoot,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(ReactSurface),
-    activatesOn: ActivationEvents.Startup,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(UrlHandler),
-    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, SimpleLayoutEvents.StateReady),
-    activate: UrlHandler,
-  }),
-  Plugin.make,
-);
+/** Plugin metadata, available without loading the plugin body. */
+export const meta = pluginMeta;
 
-export default SimpleLayoutPlugin;
+/** Constructs the plugin; the body loads on first enable. */
+export const make = Plugin.lazy(meta, () => import('#plugin'));

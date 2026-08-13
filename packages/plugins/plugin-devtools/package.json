@@ -30,14 +30,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/DevtoolsPlugin.workerd.ts",
-        "node": "./src/DevtoolsPlugin.node.ts",
-        "default": "./src/DevtoolsPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/DevtoolsPlugin.d.ts",
-      "workerd": "./dist/lib/DevtoolsPlugin.workerd.mjs",
-      "node": "./dist/lib/DevtoolsPlugin.node.mjs",
-      "default": "./dist/lib/DevtoolsPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -57,18 +57,39 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./Devtools": {
+      "source": "./src/types/Devtools.ts",
+      "types": "./dist/types/src/types/Devtools.d.ts",
+      "import": "./dist/lib/Devtools.mjs"
+    },
+    "./DevtoolsEvents": {
+      "source": "./src/types/DevtoolsEvents.ts",
+      "types": "./dist/types/src/types/DevtoolsEvents.d.ts",
+      "import": "./dist/lib/DevtoolsEvents.mjs"
+    },
+    "./DevtoolsPlugin": {
+      "source": "./src/DevtoolsPlugin.ts",
+      "types": "./dist/types/src/DevtoolsPlugin.d.ts",
+      "import": "./dist/lib/DevtoolsPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Devtools": [
+        "dist/types/src/types/Devtools.d.ts"
+      ],
+      "DevtoolsEvents": [
+        "dist/types/src/types/DevtoolsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -76,58 +97,35 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@antv/graphlib": "catalog:",
-    "@antv/layout": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/cli-util": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/compute-hyperformula": "workspace:*",
-    "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-host": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/log-store-idb": "workspace:*",
-    "@dxos/operation": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-inbox": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
-    "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/plugin-status-bar": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-canvas-compute": "workspace:*",
-    "@dxos/react-ui-canvas-editor": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-introspect": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/tracing": "workspace:*",
-    "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@tldraw/tldraw": "catalog:",
-    "react-resize-detector": "catalog:"
+    "@dxos/react-ui-terminal": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -136,11 +134,9 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

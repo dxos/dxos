@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Operation from '@dxos/compute/Operation';
 
-import { DeckCapabilities, DeckOperation } from '../types';
+import { DeckCapabilities, DeckOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof DeckOperation.ToggleExpose> = DeckOperation.ToggleExpose.pipe(
   Operation.withHandler(
