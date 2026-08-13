@@ -267,9 +267,10 @@ const isEchoReferenceNode = (node: JsonSchemaType): boolean =>
 export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Codec<any, any> => {
   const defs = root.$defs ? { ..._defs, ...root.$defs } : (_defs ?? {});
 
-  // Tested before the generic object branch: a reference now carries `type: 'object'` (see
-  // `collapseEchoRef`), and matching on that first would rebuild it as a plain `{ '/': string }`
-  // struct, silently losing the reference semantics.
+  // Tested before the generic object branch: a reference structurally *is* an object, so one that
+  // arrives carrying `type: 'object'` (a widened wire schema, or a hand-written one) would match
+  // that branch first and rebuild as a plain `{ '/': string }` struct, silently losing the
+  // reference semantics.
   const isReference = isEchoReferenceNode(root);
   if (!isReference && 'type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
@@ -636,9 +637,10 @@ const inlineAllOf = (node: Record<string, any>): Record<string, any> => {
     (branch: any) =>
       branch &&
       typeof branch === 'object' &&
-      // A reference declares `type: 'object'` (see `collapseEchoRef`) yet is still a plain keyword
-      // contribution, so it stays inlinable; without the exemption an annotated reference keeps its
-      // `allOf` wrapper and loses the sibling annotation that prompted the wrapper.
+      // A reference structurally is an object yet is still a plain keyword contribution, so one
+      // that arrives carrying `type: 'object'` (a widened wire schema) stays inlinable; without the
+      // exemption an annotated reference keeps its `allOf` wrapper and loses the sibling annotation
+      // that prompted the wrapper.
       (isEchoReferenceNode(branch) || !('type' in branch)) &&
       // ECHO's reference sentinel is not a JSON Schema pointer into a definitions map, so a branch
       // carrying it is still a plain keyword contribution.
@@ -652,25 +654,23 @@ const inlineAllOf = (node: Record<string, any>): Record<string, any> => {
 };
 
 /**
- * Normalizes an ECHO reference node.
+ * Collapses an ECHO reference back to its `$ref` form.
  *
  * The reference's encoded side is a struct so that Effect 4 will serialize it at all (declarations
- * have no JSON schema representation), which emits the `{ '/': string }` shape. Those structural
- * keywords are **kept**: a reference *is* an object on the wire, and consumers that do not know
- * ECHO's `$ref` sentinel — language models reading an MCP tool schema, most of all — decide whether
- * an argument is structured JSON by looking for `type`. Without it they send the envelope as a
- * JSON string and the call fails to decode. `$ref` siblings are permitted from JSON Schema
- * 2019-09 onward, and ECHO readers still match on `$ref`, so nothing that understood these nodes
- * before is affected.
- *
- * `additionalProperties: false` is still dropped: it would contradict the sibling `reference`
- * keyword for a strict validator. Keyed on ECHO's own reference id, so no other node is affected.
+ * have no JSON schema representation), but that also emits the `{ '/': string }` shape. The
+ * structural keys are dropped to keep the serialized form identical to what existing readers and
+ * persisted schemas already carry — adding `type: 'object'` here would change the stored
+ * representation of every echo type that embeds a reference, and an older `toEffectSchema` matches
+ * the generic object branch before the sentinel, silently rebuilding such a reference as a plain
+ * struct. Consumers that need the structural keywords (e.g. an MCP tool schema read by a language
+ * model) add them at their own wire boundary instead. Keyed on ECHO's own reference id, so no
+ * other node is affected.
  */
 const collapseEchoRef = (node: Record<string, any>): Record<string, any> => {
   if (node.$ref !== JSON_SCHEMA_ECHO_REF_ID) {
     return node;
   }
-  const { additionalProperties, ...rest } = node;
+  const { type, properties, required, additionalProperties, ...rest } = node;
   return rest;
 };
 
