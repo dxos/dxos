@@ -3777,7 +3777,7 @@
 - 50877ea571-3773 - ignored - no-casts - packages/plugins/plugin-preview/src/stories/fixtures.ts:16
 - 50877ea571-3774 - ignored - no-casts - packages/plugins/plugin-preview/src/stories/fixtures.ts:67
 - 50877ea571-3775 - resolved - workspace-deps - packages/plugins/plugin-progress/package.json:86
-- 50877ea571-3776 - unresolved - no-compat-shims - packages/plugins/plugin-progress/src/plugin.ts:5
+- 50877ea571-3776 - resolved - no-compat-shims - packages/plugins/plugin-progress/src/plugin.ts:5
 - 50877ea571-3777 - ignored - no-casts - packages/plugins/plugin-projects/src/templates/inbox-research.test.ts:78
 - 50877ea571-3778 - ignored - no-casts - packages/plugins/plugin-projects/src/templates/inbox-research.test.ts:81
 - 50877ea571-3779 - ignored - no-casts - packages/plugins/plugin-projects/src/templates/inbox-research.test.ts:89
@@ -3996,7 +3996,7 @@
 - 50877ea571-3992 - ignored - no-casts - packages/plugins/plugin-tldraw/src/model/scene.test.ts:152
 - 50877ea571-3993 - ignored - no-casts - packages/plugins/plugin-tldraw/src/model/scene.test.ts:173
 - 50877ea571-3994 - ignored - no-casts - packages/plugins/plugin-tldraw/src/model/scene.test.ts:195
-- 50877ea571-3995 - unresolved - no-compat-shims - packages/plugins/plugin-transcription/src/normalization/normalization.ts:24
+- 50877ea571-3995 - resolved - no-compat-shims - packages/plugins/plugin-transcription/src/normalization/normalization.ts:24
 - 50877ea571-3996 - ignored - no-casts - packages/plugins/plugin-transcription/src/operations/summarize.ts:62
 - 50877ea571-3997 - ignored - no-casts - packages/plugins/plugin-transcription/src/stories/Pipeline.stories.tsx:131
 - 50877ea571-3998 - ignored - no-casts - packages/plugins/plugin-transcription/src/testing/decorators.ts:22
