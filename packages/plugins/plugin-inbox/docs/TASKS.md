@@ -10,6 +10,9 @@ model-routing items deliberately stayed behind.
 
 **Phases map to PRs.** One phase = one PR. Do not start a phase before its predecessor is open.
 
+Pipeline architecture (the processor-topology target, and the analysis behind it) lives in
+[`PIPELINE.md`](PIPELINE.md). Phase 5 below is its work-list.
+
 ---
 
 ## Phase 0: RecordArticle toolbar + menu (P0) — plugin-space
@@ -389,3 +392,32 @@ Setup: storybook against the `@dxos/fixtures` mailbox corpus (391 real messages)
 
 - [ ] **F1** — `ui/react-ui-card/Row` → Default. Click the star. It toggles filled ↔ outline and the
       label alternates star/unstar. (Verified headlessly on :9013; confirm visually.)
+
+---
+
+## Phase 5: Processor topology (design agreed 2026-08-13)
+
+Design + full analysis: [`PIPELINE.md`](PIPELINE.md). Decisions settled with the user: capability
+contribution (not an Effect service), Kafka-Streams naming (`Processor` / `Topology`, since
+`Pipeline` and `Stage` are taken by `@dxos/pipeline` at a finer granularity), a DAG for ordering so
+it can be surfaced to the user for reordering via tooling, failure policy derived from the DAG, and
+generalize now with mailbox as instance #1.
+
+### Tasks
+
+- [ ] **Failing test for the missing-`FactStore` classification**, then the uniform gate — any
+      `ServiceNotAvailableError` reports `skipped` with the tag named, instead of `failed` aborting
+      the cascade. `FactStore` is the only service any mailbox pipeline needs beyond
+      `AiService`/`Database`/`Trace`, so a per-processor soft-precondition mechanism would be
+      machinery for one case. Removes the workaround at `scan-mailbox.test.ts:166`.
+- [ ] **Tag `AnalyzeMailbox`'s cursor with an explicit id** (+ one-time migration for existing
+      untagged cursors). Today it identifies its cursor by having **zero** meta keys, so any future
+      consumer that forgets to tag its own gets silently adopted and analysis resumes from that
+      consumer's watermark — silent under-analysis, no error.
+- [ ] **`MailboxProcessor` capability + topology resolution** in the harness; port the five built-ins
+      off the hardcoded `plan: Record<MailboxTier, () => Stage[]>`.
+- [ ] **Move `AnalyzeMailbox` to plugin-brain**; make `CrmOperation.ProcessMailbox` a contributed
+      processor rather than a rival toolbar button. plugin-inbox then drops `@dxos/pipeline-rdf`, and
+      the missing-`FactStore` case becomes structurally impossible rather than merely handled.
+- [ ] **Generalize off `Mailbox`** to a feed-generic processor host. Second instance already exists
+      (plugin-projects' three whole-feed pipelines); transcription is a third.
