@@ -154,10 +154,53 @@ surface; all call sites are in-repo — migrate in the same change, **no compat 
   alongside Effect's — `waves` (layered/Kahn-level topo), ordered edge-annotated cycle extraction,
   and read-time edge-filtered views (Effect's `filterEdges` is a mutation)? Possibly upstreamable
   to Effect itself.
-- O6 (Phase 6): reconcile `@dxos/app-graph` onto this core. It independently converged on the same
-  granular pattern (`Atom.family` per node id, writable `_edges` family, `keepAlive`, labels) but
-  materializes nodes lazily from connectors rather than holding an eager canonical graph value —
-  the central delta to resolve (shared core vs shared atom surface vs stay separate).
+- O6 (Phase 6): RESOLVED by spike (2026-08-13) — see §app-graph reconciliation. Verdict: share
+  views + algorithms (projection), not storage.
+
+## app-graph reconciliation (Phase 6 spike findings)
+
+`@dxos/app-graph` independently converged on the granular pattern (`Atom.family` per node id,
+writable per-node `_edges` family, `keepAlive`, labels; `useNavTreeModel` already derives atoms
+over `node()`/`connections()`). The storage designs differ for a *semantic* reason, not a
+historical one:
+
+| | `@dxos/app-graph` | planned `@dxos/graph` core |
+|---|---|---|
+| graph is | **virtual/lazily materialized** — connectors expand on demand, unbounded | **complete data** — canvas/compute docs, serializable |
+| storage | sharded writable family atoms, O(1) writes, **no global node list** | one canonical COW graph value in a root atom |
+| dangling edges | legal (arrival order arbitrary; filtered at read) | `addEdge` throws on missing endpoint |
+| removal | tombstone (`Option.none`, atom persists, pending expands resurrect) | real removal |
+| edges | relation-typed (kind+direction), per-node **ordered** adjacency, inverse lists maintained, no payload | edge objects with id + data payload |
+| algorithms | hand-rolled `traverse` (visitor DFS), `getPath` (DFS scan), `waitForPath` (**500ms poll**), `toJSON` | full `effect/Graph` library |
+
+**Decision: Option B + C. Option A (rebasing app-graph storage onto the canonical graph) is
+rejected** — it would need dangling-edge staging, tombstone emulation, and ordered-relation
+encoding, all to force a virtual graph into a complete-data representation, with regression risk
+across all plugin UI.
+
+- **B — Effect-Graph projection** (spike-verified end-to-end): keep sharded storage; add one thing
+  to `GraphImpl` — an enumerable `idsAtom` maintained in `addNode`/`removeNode` (no global node
+  list exists today). A derived (non-keepAlive) `snapshotAtom` reads ids + node/edge atoms and
+  builds `{graph, byId}`, skipping tombstones and dangling edges; dangling targets that later
+  materialize join the snapshot automatically. Serves `traverse`→`dfs` walkers, `toJSON`,
+  devtools, and `getPath`→`dijkstra`/`bfs` (an upgrade: shortest path vs first-DFS-found). A
+  `pathAtom(target)` family with path-equality cutoff replaces `waitForPath`'s 500ms poll with a
+  reactive fire-on-arrival (verified: fires when a late node lands).
+- **C — shared view helpers**: extract the granular-atom patterns (family + equality cutoff,
+  keepAlive/immediate-mount footgun ownership) from the new core so both packages sit on the same
+  primitives and vocabulary.
+
+Projection perf (~2100 nodes, app-graph-shaped tree, mounted subscriber):
+
+| | |
+|---|---:|
+| rebuild per **batched** flush (app-graph already `Atom.batch`es flushes) | 1 rebuild, ~17ms |
+| same 50 writes unbatched (worst case, must never happen) | 100 rebuilds, 588ms |
+| unmounted (no algorithm subscriber) | fully lazy, 0 cost per write |
+
+The snapshot must NOT be `keepAlive` — default auto-dispose makes it free when unused; transient
+consumers (navtree reveal) mount it only while waiting. Batched flushes are already app-graph's
+behavior; the projection makes that an explicit invariant.
 
 ## Spike artifacts
 
