@@ -4,7 +4,7 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { isValidLocalId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
@@ -111,7 +111,7 @@ export class SurfaceManager {
   /** Drops definitions with an invalid local id, warning once per id. */
   #dropInvalid(definitions: Definition[]): Definition[] {
     return definitions.filter((definition) => {
-      if (isValidLocalId(definition.id)) {
+      if (DXN.isValidPath(definition.id)) {
         return true;
       }
       if (!this.#warnedInvalidIds.has(definition.id)) {

@@ -8,7 +8,6 @@ export * as URI from './URI';
 
 export * from './identity-did';
 export * from './entity-id';
-export * from './local-id';
 export * from './parse-id';
 export * from './public-key';
 export * from './space-id';

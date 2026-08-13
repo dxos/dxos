@@ -89,7 +89,7 @@ const invalidIdMeta = Plugin.makeMeta({
 });
 
 // Contributes a single surface with a hyphenated (invalid) local id for role A.
-// Widened to `string` so it reaches the runtime check: `LocalId` rejects a malformed literal at the
+// Widened to `string` so it reaches the runtime check: `DXN.Path` rejects a malformed literal at the
 // authoring site, and this exercises the computed ids it deliberately lets through.
 const invalidId: string = 'gallery-article';
 

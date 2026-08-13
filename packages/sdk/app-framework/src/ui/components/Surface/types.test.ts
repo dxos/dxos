@@ -11,7 +11,7 @@ import { useIsSurfaceAvailable } from './SurfaceComponent';
 import { indexByRole } from './SurfaceManager';
 import { type Filter, create, isFilter, makeFilter } from './types';
 
-// Widened to `string` so it reaches the runtime check: `LocalId` rejects a malformed literal at the
+// Widened to `string` so it reaches the runtime check: `DXN.Path` rejects a malformed literal at the
 // authoring site, and these cases exercise the computed ids it deliberately lets through.
 const INVALID_ID: string = 'gallery-article';
 

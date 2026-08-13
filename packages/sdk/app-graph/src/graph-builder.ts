@@ -14,7 +14,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Type } from '@dxos/echo';
-import { type LocalId, isValidLocalId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -776,7 +776,9 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
  * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
  */
 export type CreateExtensionRawOptions<Id extends string = string> = {
-  id: LocalId<Id>;
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    : Id;
   relation?: Node.RelationInput;
   position?: Position.Position;
   url?: UrlBinding;
@@ -802,7 +804,7 @@ export const createExtensionRaw = <const Id extends string = string>(
     actions: _actions,
     actionGroups: _actionGroups,
   } = extension;
-  if (!isValidLocalId(id)) {
+  if (!DXN.isValidPath(id)) {
     log.warn(
       'dropping graph extension with invalid id; the final segment must be camelCase (no hyphens or underscores)',
       {
@@ -912,7 +914,9 @@ export const createExtensionRaw = <const Id extends string = string>(
  * Use Effect.orDie on any failable effects inside callbacks.
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never, Id extends string = string> = {
-  id: LocalId<Id>;
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    : Id;
   match: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TMatched>;
   actions?: (
     matched: TMatched,

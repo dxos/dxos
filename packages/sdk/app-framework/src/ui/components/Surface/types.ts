@@ -4,7 +4,7 @@
 
 import type { ComponentType, FC, PropsWithChildren, ReactNode } from 'react';
 
-import type { LocalId } from '@dxos/keys';
+import type { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { MakeOptional, Position } from '@dxos/util';
 
@@ -206,7 +206,9 @@ export type TypedReactDefinition<
   P extends Record<string, any> = ComponentProps<T>,
   Id extends string = string,
 > = Readonly<{
-  id: LocalId<Id>;
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    : Id;
   filter: Filter<T>;
   position?: Position.Position;
   /**
@@ -237,7 +239,9 @@ export type TypedReactDefinition<
  * Typed Web Component surface definition.
  */
 export type TypedWebComponentDefinition<T extends Record<string, any> = any, Id extends string = string> = Readonly<{
-  id: LocalId<Id>;
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    : Id;
   filter: Filter<T>;
   tagName: string;
   position?: Position.Position;
