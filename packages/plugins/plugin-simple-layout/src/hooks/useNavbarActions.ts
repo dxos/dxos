@@ -6,7 +6,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
@@ -70,7 +70,7 @@ export const useNavbarActions = (): NavbarActions => {
         edges.push({ source: 'root', target: mainMenuGroup.id, relation: 'child' });
 
         // Get menu actions from root actions (on 'action' edge relation).
-        const rootActions = get(graph.actions(Node.RootId));
+        const rootActions = get(graph.actions(AppGraphNode.RootId));
         const menuActions = rootActions.filter((node) => node.properties.disposition === 'menu');
 
         // Add menu actions as children of the dropdown group.

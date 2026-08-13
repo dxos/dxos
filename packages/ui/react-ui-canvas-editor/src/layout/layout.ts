@@ -16,7 +16,7 @@ import {
 } from '@antv/layout';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { Edge, type GraphModel, Node } from '@dxos/graph';
+import { GraphEdge, type GraphModel, GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
@@ -132,14 +132,14 @@ const createLayout = (type: LayoutKind, options: CommonLayoutOptions) => {
 // TODO(burdon): Preserve existing position with Shape adapter.
 const toLayoutGraph = ({ nodes, edges }: GraphModel.AnyData): NaturalGraph<PlainObject, PlainObject> => {
   return new NaturalGraph<PlainObject, PlainObject>({
-    nodes: nodes.map((node: Node.Any) => ({
+    nodes: nodes.map((node: GraphNode.Any) => ({
       id: node.id,
       data: {
         x: getDeep(node.data, ['center', 'x']) ?? 0,
         y: getDeep(node.data, ['center', 'y']) ?? 0,
       },
     })),
-    edges: edges.map((edge: Edge.Any) => ({
+    edges: edges.map((edge: GraphEdge.Any) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,

@@ -4,7 +4,7 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { Edge, GraphModel, Node } from '@dxos/graph';
+import { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,13 +17,13 @@ import { visitValues } from '@dxos/util';
 // - https://observablehq.com/@d3/psr-b1919-21
 // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
-export type SpaceGraphNode = Node.Of<{
+export type SpaceGraphNode = GraphNode.Of<{
   label: string;
   object?: Obj.Unknown;
 }>;
 
 // TODO(burdon): Differentiate between refs and relations.
-export type SpaceGraphEdge = Edge.Any;
+export type SpaceGraphEdge = GraphEdge.Any;
 
 class SpaceGraphBuilder extends GraphModel.AbstractBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
 

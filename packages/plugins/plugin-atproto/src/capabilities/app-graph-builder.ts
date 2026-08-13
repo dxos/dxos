@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -49,7 +49,7 @@ const whenPublishable: NodeMatcher.NodeMatcher<Obj.Unknown> = (node, get) => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'atprotoCompanion',
         match: whenPublishable,
         connector: (object) =>
@@ -65,7 +65,7 @@ export default Capability.makeModule(
 
       // Virtual "PDS" node in the system section — only when the space holds an atproto connection.
       // Positioned between Database (0) and Devtools (Infinity).
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'pdsSection',
         url: { key: PDS_URL_KEY, kind: 'singleton', path: [GraphPath.GroupSegments.system] },
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
@@ -77,7 +77,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
           return Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               // Segment id (no '/'); the graph qualifies it under the space's system group. Must equal
               // the registered singleton URL key — see {@link PDS_URL_KEY}.
               id: PDS_URL_KEY,

@@ -7,14 +7,14 @@ import * as Struct from 'effect/Struct';
 
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Edge, GraphModel, Node } from '@dxos/graph';
+import { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 
 /**
  * Base type for all shapes.
  */
-export const Shape = Node.Node.mapFields((fields) => Struct.omit(fields, ['type'])).pipe(
+export const Shape = GraphNode.GraphNode.mapFields((fields) => Struct.omit(fields, ['type'])).pipe(
   // TODO(burdon): Breaks graph contract?
   Schema.fieldsAssign({
     type: Schema.String,
@@ -29,7 +29,7 @@ export type Shape = Schema.Schema.Type<typeof Shape>;
 /**
  * Connections between shapes.
  */
-export const Connection = Edge.Edge.mapFields(
+export const Connection = GraphEdge.GraphEdge.mapFields(
   Struct.assign({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -42,7 +42,7 @@ export default Capability.makeModule(
       capabilities.getAll(AppCapabilities.AnchorResolver).find(({ key }) => key === typename);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'commentsCompanion',
         match: (node, get) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
@@ -63,7 +63,7 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'commentToolbar',
         match: (node, get) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {

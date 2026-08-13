@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -18,7 +18,7 @@ export const DIAGNOSTICS_DECK_COMPANION_ID = 'diagnostics';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: `${meta.profile.key}.diagnosticsDeckCompanion`,
         match: NodeMatcher.whenRoot,
         connector: () =>

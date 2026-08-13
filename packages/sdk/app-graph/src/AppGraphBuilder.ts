@@ -19,8 +19,8 @@ import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/
 
 import { scheduleTask, yieldOrContinue } from '#scheduler';
 
+import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
 import {
   getParentId,

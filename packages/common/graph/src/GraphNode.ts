@@ -8,13 +8,13 @@ import * as Schema from 'effect/Schema';
 
 import { type Specialize } from '@dxos/util';
 
-export const Node = Schema.Struct({
+export const GraphNode = Schema.Struct({
   id: Schema.String,
   type: Schema.optional(Schema.String),
   data: Schema.optional(Schema.Any),
 });
 
-interface Base extends Schema.Schema.Type<typeof Node> {}
+interface Base extends Schema.Schema.Type<typeof GraphNode> {}
 
 /**
  * A node whose data is unconstrained.

@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type BuilderExtensions } from '@dxos/app-graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -27,7 +27,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
   return Effect.runSync(
     Effect.all([
       // Create app menu actions.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'appMenu',
         match: NodeMatcher.whenRoot,
         actions: () =>
@@ -46,12 +46,12 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
           ),
       }),
       // Create user account node.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'userAccount',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               id: 'user-account',
               type: 'user-account',
               properties: {
@@ -64,7 +64,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                 status: 'active',
               },
               nodes: [
-                Node.make({
+                AppGraphNode.make({
                   id: 'profile',
                   type: 'profile',
                   properties: {
@@ -72,7 +72,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                     icon: 'ph--user--regular',
                   },
                 }),
-                Node.make({
+                AppGraphNode.make({
                   id: 'devices',
                   type: 'devices',
                   properties: {
@@ -80,7 +80,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                     icon: 'ph--devices--regular',
                   },
                 }),
-                Node.make({
+                AppGraphNode.make({
                   id: 'security',
                   type: 'security',
                   properties: {
@@ -93,7 +93,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
           ]),
       }),
       // Create space (workspace) nodes directly under root.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaces',
         match: NodeMatcher.whenRoot,
         connector: (_, get) =>
@@ -114,7 +114,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
             });
 
             return Array.from({ length: get(count) }, (_, i) =>
-              Node.make({
+              AppGraphNode.make({
                 id: `space-${i}`,
                 type: 'space',
                 properties: getProperties(`space-${i}`, {
@@ -128,7 +128,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
           }),
       }),
       // Create space actions.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaceActions',
         match: NodeMatcher.whenNodeType('space'),
         actions: () =>
@@ -146,7 +146,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
           ),
       }),
       // Create object nodes.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'objects',
         match: NodeMatcher.whenNodeType('space'),
         connector: (_, get) =>
@@ -167,7 +167,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
             });
 
             return Array.from({ length: get(count) }, (_, i) =>
-              Node.make({
+              AppGraphNode.make({
                 id: `object-${i}`,
                 type: 'object',
                 properties: getProperties(`object-${i}`, {
@@ -181,7 +181,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
           }),
       }),
       // Create object actions.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'objectActions',
         match: NodeMatcher.whenNodeType('object'),
         actions: () =>

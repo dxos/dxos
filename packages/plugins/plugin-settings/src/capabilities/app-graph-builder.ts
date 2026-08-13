@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Plugin$ from '@dxos/app-framework/Plugin';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -27,7 +27,7 @@ export default Capability.makeModule(
     const settingsAtom = capabilities.atom(AppCapabilities.Settings);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'action',
         match: NodeMatcher.whenRoot,
         actions: () =>
@@ -47,12 +47,12 @@ export default Capability.makeModule(
             },
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'core',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               id: SettingsPath.SETTINGS_ID,
               type: meta.profile.key,
               properties: {
@@ -65,7 +65,7 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'plugins',
         url: { key: 'plugin', kind: 'item', path: [] },
         match: NodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
@@ -90,7 +90,7 @@ export default Capability.makeModule(
                 }),
               )
               .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
-                Node.make({
+                AppGraphNode.make({
                   id: `${SettingsPath.SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
                   type: 'category',
                   data: settings,

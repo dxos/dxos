@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
@@ -24,7 +24,7 @@ export default Capability.makeModule(
 
     // TODO(wittjosiah): Factor out.
     // TODO(wittjosiah): Handle removal of actions.
-    const visitor = (node: Node.Node, path: string[]) => {
+    const visitor = (node: AppGraphNode.Node, path: string[]) => {
       let shortcut: string | undefined;
       if (typeof node.properties.keyBinding === 'object') {
         const availablePlatforms = Object.keys(node.properties.keyBinding);
@@ -40,7 +40,7 @@ export default Capability.makeModule(
         shortcut = node.properties.keyBinding;
       }
 
-      if (shortcut && Node.isAction(node)) {
+      if (shortcut && AppGraphNode.isAction(node)) {
         Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
           shortcut,
           handler: () => void runAction(invoker, pluginContext, node, { parent: node, caller: KEY_BINDING }),
@@ -60,7 +60,7 @@ export default Capability.makeModule(
 
     // TODO(burdon): Create context and plugin.
     Keyboard.singleton.initialize();
-    Keyboard.singleton.setCurrentContext(Node.RootId);
+    Keyboard.singleton.setCurrentContext(AppGraphNode.RootId);
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {

@@ -5,9 +5,9 @@
 import * as Option from 'effect/Option';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
+import * as GraphBuilder from '../AppGraphBuilder';
+import * as Node from '../AppGraphNode';
 import * as Graph from '../graph';
-import * as GraphBuilder from '../graph-builder';
-import * as Node from '../node';
 
 export type SetupGraphBuilderOptions = {
   registry?: Registry.AtomRegistry;

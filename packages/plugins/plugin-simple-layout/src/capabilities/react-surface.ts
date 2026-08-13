@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'home',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === Node.RootId),
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === AppGraphNode.RootId),
         component: Home,
       }),
       Surface.create({

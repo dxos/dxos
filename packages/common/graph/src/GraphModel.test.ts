@@ -11,12 +11,12 @@ import { describe, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 
 import * as GraphModel from './GraphModel';
-import * as Node from './Node';
+import * as GraphNode from './GraphNode';
 
 // Create a registry for tests.
 const createRegistry = () => Registry.make();
 
-const TestNode = Node.Node.mapFields(Struct.assign({ value: Schema.String }));
+const TestNode = GraphNode.GraphNode.mapFields(Struct.assign({ value: Schema.String }));
 
 type TestNode = Schema.Schema.Type<typeof TestNode>;
 
@@ -178,20 +178,20 @@ describe('Graph', () => {
 
   test('optional', ({ expect }) => {
     {
-      const graph = new GraphModel.GraphModel<Node.Of<string>>();
+      const graph = new GraphModel.GraphModel<GraphNode.Of<string>>();
       const node = graph.addNode({ id: 'test', data: 'test' });
       expect(node.data.length).to.eq(4);
     }
 
     {
-      const graph = new GraphModel.GraphModel<Node.Any>();
+      const graph = new GraphModel.GraphModel<GraphNode.Any>();
       const node = graph.addNode({ id: 'test' });
       expect(node.data?.length).to.be.undefined;
     }
   });
 
   test('add and remove subgraphs', ({ expect }) => {
-    const graph = new GraphModel.GraphModel<Node.Of<TestData>>();
+    const graph = new GraphModel.GraphModel<GraphNode.Of<TestData>>();
     graph.builder
       .addNode({ id: 'node1', data: { value: 'test' } })
       .addNode({ id: 'node2', data: { value: 'test' } })

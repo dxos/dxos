@@ -9,8 +9,8 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import type * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
@@ -75,7 +75,7 @@ export default Capability.makeModule(
      * so the caller can tear down the connection subscription.
      */
     const provisionForPlank = (plankId: string, companionVariant: string | undefined): boolean => {
-      const node: Node.Node | null = Graph.getNode(graph, plankId).pipe(Option.getOrNull);
+      const node: AppGraphNode.Node | null = Graph.getNode(graph, plankId).pipe(Option.getOrNull);
       if (!node || !Obj.isObject(node.data) || Obj.instanceOf(Chat.Chat, node.data)) {
         return false;
       }

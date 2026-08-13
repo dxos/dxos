@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import * as Node from './node';
+import * as Node from './AppGraphNode';
 import * as NodeMatcher from './node-matcher';
 
 describe('NodeMatcher', () => {

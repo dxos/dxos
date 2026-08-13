@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
@@ -62,7 +62,7 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
           const isExpanded = state.drawerState === 'expanded';
           const toggleExpandAction = {
             id: 'drawer-toggle-expand',
-            type: Node.ActionType,
+            type: AppGraphNode.ActionType,
             properties: {
               icon: isExpanded ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular',
               label: isExpanded ? t('collapse-drawer.label') : t('expand-drawer.label'),
@@ -78,7 +78,7 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
         // Add close button.
         const closeAction = {
           id: 'drawer-close',
-          type: Node.ActionType,
+          type: AppGraphNode.ActionType,
           properties: {
             icon: 'ph--x--regular',
             label: t('close-drawer.label'),

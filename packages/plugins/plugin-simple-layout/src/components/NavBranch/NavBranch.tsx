@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph/hooks';
@@ -65,7 +65,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
   );
 };
 
-const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
+const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();

@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Entity, Obj, type Type } from '@dxos/echo';
 
-import * as Node from './node';
+import * as Node from './AppGraphNode';
 
 /**
  * Type for a node matcher function that returns an Option of the matched data.

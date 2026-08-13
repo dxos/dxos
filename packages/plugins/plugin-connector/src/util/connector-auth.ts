@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Database, type Key, Obj, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
@@ -71,7 +71,7 @@ export const connectorAuthActions = ({
   existingTarget,
   allConnectors,
   allConnections,
-}: ConnectorAuthActionsOptions): Node.NodeArg<typeof Node.actionGroupSymbol>[] => {
+}: ConnectorAuthActionsOptions): AppGraphNode.NodeArg<typeof AppGraphNode.actionGroupSymbol>[] => {
   const offered = offeredConnectors(allConnectors, connectorIds);
   // Reuse binds the object as a new sync target, so only offer it when there is a target to bind.
   const connections = existingTarget ? reusableConnections(allConnections, connectorIds) : [];

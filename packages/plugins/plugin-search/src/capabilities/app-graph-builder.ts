@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -26,7 +26,7 @@ export default Capability.makeModule(
     // `AppCapabilities.Layout`; hoisting the atom lets the connector heal reactively if it lands.
     const layoutCapabilityAtom = yield* Capability.atom(AppCapabilities.Layout);
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaceSearch',
         match: NodeMatcher.whenRoot,
         connector: (node, get) =>
@@ -50,7 +50,7 @@ export default Capability.makeModule(
             ];
           }).pipe(Effect.orDie),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'root',
         match: NodeMatcher.whenRoot,
         actions: () =>

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj, Type } from '@dxos/echo';
@@ -21,11 +21,11 @@ import { meta } from '#meta';
 
 /** Creates companion panel extensions: object settings, related, and selected-objects. */
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/plugin-graph types (TS2883).
-export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.BuilderExtension[][]> = Effect.fnUntraced(
+export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.BuilderExtension[][]> = Effect.fnUntraced(
   function* () {
     return yield* Effect.all([
       // Object settings plank companion.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'settings',
         match: NodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
@@ -41,7 +41,7 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
       }),
 
       // Related objects plank companion.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'related',
         match: NodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
@@ -57,7 +57,7 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
       }),
 
       // View selected objects companion.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'selectedObjects',
         match: (node) => {
           // Type/schema node (e.g. a TypeArticle plank): the table's own row selection feeds this

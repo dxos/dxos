@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import * as Node from './node';
+import * as Node from './AppGraphNode';
 
 // PRIMARY separates top-level components (e.g., node ID from relation) in compound string keys used within the app-graph package.
 const PRIMARY = '\u0001';

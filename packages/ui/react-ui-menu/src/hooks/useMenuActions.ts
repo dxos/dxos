@@ -7,12 +7,12 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type DependencyList, useCallback, useContext, useMemo } from 'react';
 
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
 
 import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 
-export type ActionGraphNodes = Node.NodeArg<any>[];
+export type ActionGraphNodes = AppGraphNode.NodeArg<any>[];
 export type ActionGraphEdges = Graph.Edge[];
 export type ActionGraphProps = {
   nodes: ActionGraphNodes;
@@ -33,14 +33,17 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
   // which would trigger atom state updates in other components (setState-in-render React warning).
   const graph = useMemo(() => {
     const newGraph = Graph.make({ registry });
-    newGraph.pipe(Graph.addNodes(menuGraphProps.nodes as Node.NodeArg<any>[]), Graph.addEdges(menuGraphProps.edges));
+    newGraph.pipe(
+      Graph.addNodes(menuGraphProps.nodes as AppGraphNode.NodeArg<any>[]),
+      Graph.addEdges(menuGraphProps.edges),
+    );
     return newGraph;
   }, [registry, menuGraphProps]);
 
   const items: MenuItemsAccessor = useCallback(
     (group?: MenuItemGroup) => {
       // TODO(wittjosiah): Migrate to using action relation instead of child.
-      return graph.connections(group?.id || Node.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
+      return graph.connections(group?.id || AppGraphNode.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
     },
     [graph],
   );

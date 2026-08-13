@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -30,7 +30,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // CRM section group — created here so it only appears when the CRM plugin is active and
       // hides when it has no children (i.e. the space has no organizations or people).
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: GraphPath.GroupSegments.crm,
         match: AppNodeMatcher.whenSpace,
         connector: (space) =>
@@ -48,7 +48,7 @@ export default Capability.makeModule(
       // Type-collection nodes under the CRM group. Each node opens the generic collection article
       // (see react-surface). A type is shown only when the space has objects of it, mirroring the
       // natural type folders under the Database section.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'crmTypes',
         url: { key: 'crm', kind: 'item', path: [GraphPath.GroupSegments.crm] },
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.crm),
@@ -84,7 +84,7 @@ const createTypeNode = ({
   space: Space;
   get: Atom.AtomContext;
   registered: ReadonlyMap<string, Type.AnyEntity>;
-}): Node.NodeArg<Type.AnyEntity> | null => {
+}): AppGraphNode.NodeArg<Type.AnyEntity> | null => {
   const typename = Type.getTypename(type);
   const objects = get(space.db.query(Filter.type(Type.getURI(type))).atom);
   if (objects.length === 0) {
@@ -95,7 +95,7 @@ const createTypeNode = ({
   const entity = registered.get(typename) ?? type;
   const annotation = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(entity)));
 
-  return Node.make({
+  return AppGraphNode.make({
     id: GraphPath.getTypeSlug(entity),
     type: CRM_TYPE_NODE,
     data: entity,

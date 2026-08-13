@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Edge, GraphModel } from '@dxos/graph';
+import { GraphEdge, GraphModel } from '@dxos/graph';
 import { random } from '@dxos/random';
 
 import { type TestNode } from './model';
@@ -23,7 +23,7 @@ export const createNode = (type: string = undefined): TestNode => ({
 export const createNodes = (n = 0, types?: string[]): TestNode[] =>
   Array.from({ length: n }, () => createNode(types ? random.helpers.arrayElement(types) : undefined));
 
-export const createEdge = (source: TestNode, target: TestNode): Edge.Any => ({
+export const createEdge = (source: TestNode, target: TestNode): GraphEdge.Any => ({
   id: `${source.id}-${target.id}`,
   source: source.id,
   target: target.id,

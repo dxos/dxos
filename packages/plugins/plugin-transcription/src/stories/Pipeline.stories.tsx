@@ -27,9 +27,9 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
 import { qualifyId } from '@dxos/app-graph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -104,7 +104,7 @@ const StoryGraphPlugin = () =>
         { provides: [AppCapabilities.AppGraphBuilder] },
         Effect.fnUntraced(function* () {
           const capabilities = yield* Capability.Service;
-          const extensions = yield* GraphBuilder.createExtension({
+          const extensions = yield* AppGraphBuilder.createExtension({
             id: 'storyDocs',
             match: NodeMatcher.whenRoot,
             connector: (_, get) =>
@@ -154,7 +154,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const attendableId = doc && qualifyId(Node.RootId, doc.id);
+  const attendableId = doc && qualifyId(AppGraphNode.RootId, doc.id);
   // Mark the editor attended so its toolbar (and the contributed record action) are active.
   const attentionAttrs = useAttentionAttributes(attendableId);
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);

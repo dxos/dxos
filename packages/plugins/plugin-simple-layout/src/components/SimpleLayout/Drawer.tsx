@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
@@ -82,7 +82,7 @@ Drawer.displayName = DRAWER_NAME;
  * Resolves which companion to show based on variant preference.
  * Falls back to first available if preferred variant not available.
  */
-const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string) => {
+const useSelectedCompanion = (companions: AppGraphNode.Node[], preferredVariant?: string) => {
   const selectedCompanion = useMemo(() => {
     if (companions.length === 0) {
       return undefined;

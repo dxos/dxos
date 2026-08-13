@@ -3,7 +3,7 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { Edge, GraphModel } from '@dxos/graph';
+import { GraphEdge, GraphModel } from '@dxos/graph';
 import { EntityId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
@@ -77,7 +77,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
     const input = target.property ?? DEFAULT_INPUT;
     const edge: ComputeEdge = {
       // Ports disambiguate the parallel edges a pair of nodes may carry.
-      id: Edge.createId({ source: sourceId, target: targetId, relation: `${output}-${input}` }),
+      id: GraphEdge.createId({ source: sourceId, target: targetId, relation: `${output}-${input}` }),
       source: sourceId,
       target: targetId,
       output,

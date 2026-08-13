@@ -10,9 +10,9 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import * as GraphBuilder from './AppGraphBuilder';
+import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import * as GraphBuilder from './graph-builder';
-import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
 import * as PathResolution from './path-resolution';
 

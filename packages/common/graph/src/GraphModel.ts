@@ -14,8 +14,8 @@ import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type MakeOptional, type Specialize } from '@dxos/util';
 
-import { type Any as AnyEdge, Edge as EdgeSchema, createId as createEdgeId } from './Edge';
-import { type Any as AnyNode, Node as NodeSchema } from './Node';
+import { type Any as AnyEdge, GraphEdge as EdgeSchema, createId as createEdgeId } from './GraphEdge';
+import { type Any as AnyNode, GraphNode as NodeSchema } from './GraphNode';
 
 /**
  * Serialized graph; the shape persisted by ECHO types and returned by the model's snapshot.

@@ -22,10 +22,10 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
+import * as GraphBuilder from '../AppGraphBuilder';
+import * as Node from '../AppGraphNode';
 import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
-import * as GraphBuilder from '../graph-builder';
-import * as Node from '../node';
 import { JsonTree } from './Tree';
 
 const DEFAULT_PERIOD = 500;

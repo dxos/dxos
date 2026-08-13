@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -37,7 +37,7 @@ export default Capability.makeModule(
             targetNodeId: getRoutinesPath(space.db.spaceId),
           }),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaceSettingsAutomation',
         url: { key: 'routines', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
         match: NodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
@@ -54,7 +54,7 @@ export default Capability.makeModule(
           ]);
         },
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'automationCompanion',
         match: NodeMatcher.whenEchoObjectMatches,
         connector: () =>
@@ -68,7 +68,7 @@ export default Capability.makeModule(
             }),
           ]),
       }),
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'routineRuns',
         type: Routine.Routine,
         connector: () =>

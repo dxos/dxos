@@ -10,9 +10,9 @@ import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
+import * as GraphBuilder from './AppGraphBuilder';
+import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import * as GraphBuilder from './graph-builder';
-import * as Node from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);

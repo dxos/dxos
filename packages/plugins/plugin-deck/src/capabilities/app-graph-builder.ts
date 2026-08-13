@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -26,13 +26,13 @@ export default Capability.makeModule(
     const deckStateAtom = yield* Capability.atom(DeckCapabilities.State);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'notFound',
         match: NodeMatcher.whenRoot,
         connector: () => Effect.succeed([AppNode.makeNotFound()]),
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'root',
         match: NodeMatcher.whenRoot,
         actions: (_node, get) =>

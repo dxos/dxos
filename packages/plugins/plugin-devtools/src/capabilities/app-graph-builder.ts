@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -26,12 +26,12 @@ export default Capability.makeModule(
     const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'root',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'resetData',
               data: () =>
                 Effect.sync(() => {
@@ -45,15 +45,15 @@ export default Capability.makeModule(
           ]),
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'devtools',
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system)),
-        connector: (_nodeOrSpace: Node.Node | Space, get) =>
+        connector: (_nodeOrSpace: AppGraphNode.Node | Space, get) =>
           Effect.gen(function* () {
             const [graph] = get(appGraphAtom);
 
             return [
-              Node.make({
+              AppGraphNode.make({
                 id: Devtools.nodeId(Devtools.id),
                 data: null,
                 type: Devtools.id,
@@ -63,16 +63,16 @@ export default Capability.makeModule(
                   position: Position.last,
                 },
                 nodes: [
-                  Node.make({
+                  AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.AppGraph),
                     type: `${meta.profile.key}.app-graph`,
-                    data: { graph: graph?.graph, root: Node.RootId },
+                    data: { graph: graph?.graph, root: AppGraphNode.RootId },
                     properties: {
                       label: ['debug-app-graph.label', { ns: meta.profile.key }],
                       icon: 'ph--graph--regular',
                     },
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.ToolsExplorer),
                     data: Devtools.ToolsExplorer,
                     type: Devtools.id,
@@ -81,7 +81,7 @@ export default Capability.makeModule(
                       icon: 'ph--toolbox--regular',
                     },
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.Cli),
                     data: Devtools.Cli,
                     type: Devtools.id,
@@ -90,7 +90,7 @@ export default Capability.makeModule(
                       icon: 'ph--terminal-window--regular',
                     },
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.Client.id),
                     data: null,
                     type: Devtools.id,
@@ -99,7 +99,7 @@ export default Capability.makeModule(
                       icon: 'ph--users--regular',
                     },
                     nodes: [
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Client.Config),
                         data: Devtools.Client.Config,
                         type: Devtools.id,
@@ -108,7 +108,7 @@ export default Capability.makeModule(
                           icon: 'ph--gear--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Client.Storage),
                         data: Devtools.Client.Storage,
                         type: Devtools.id,
@@ -117,7 +117,7 @@ export default Capability.makeModule(
                           icon: 'ph--hard-drives--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Client.Sqlite),
                         data: Devtools.Client.Sqlite,
                         type: Devtools.id,
@@ -126,7 +126,7 @@ export default Capability.makeModule(
                           icon: 'ph--database--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Client.Logs),
                         data: Devtools.Client.Logs,
                         type: Devtools.id,
@@ -135,7 +135,7 @@ export default Capability.makeModule(
                           icon: 'ph--file-text--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Client.Diagnostics),
                         data: Devtools.Client.Diagnostics,
                         type: Devtools.id,
@@ -146,7 +146,7 @@ export default Capability.makeModule(
                       }),
                     ],
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.Halo.id),
                     data: null,
                     type: Devtools.id,
@@ -155,7 +155,7 @@ export default Capability.makeModule(
                       icon: 'ph--identification-badge--regular',
                     },
                     nodes: [
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Halo.Identity),
                         data: Devtools.Halo.Identity,
                         type: Devtools.id,
@@ -164,7 +164,7 @@ export default Capability.makeModule(
                           icon: 'ph--identification-badge--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Halo.Devices),
                         data: Devtools.Halo.Devices,
                         type: Devtools.id,
@@ -173,7 +173,7 @@ export default Capability.makeModule(
                           icon: 'ph--devices--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Halo.Keyring),
                         data: Devtools.Halo.Keyring,
                         type: Devtools.id,
@@ -182,7 +182,7 @@ export default Capability.makeModule(
                           icon: 'ph--key--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Halo.Credentials),
                         data: Devtools.Halo.Credentials,
                         type: Devtools.id,
@@ -193,7 +193,7 @@ export default Capability.makeModule(
                       }),
                     ],
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.Echo.id),
                     data: null,
                     type: Devtools.id,
@@ -202,7 +202,7 @@ export default Capability.makeModule(
                       icon: 'ph--database--regular',
                     },
                     nodes: [
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Spaces),
                         data: Devtools.Echo.Spaces,
                         type: Devtools.id,
@@ -211,7 +211,7 @@ export default Capability.makeModule(
                           icon: 'ph--graph--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Space),
                         data: Devtools.Echo.Space,
                         type: Devtools.id,
@@ -220,7 +220,7 @@ export default Capability.makeModule(
                           icon: 'ph--planet--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Feeds),
                         data: Devtools.Echo.Feeds,
                         type: Devtools.id,
@@ -229,7 +229,7 @@ export default Capability.makeModule(
                           icon: 'ph--list-bullets--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Objects),
                         data: Devtools.Echo.Objects,
                         type: Devtools.id,
@@ -238,7 +238,7 @@ export default Capability.makeModule(
                           icon: 'ph--cube--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Schema),
                         data: Devtools.Echo.Schema,
                         type: Devtools.id,
@@ -247,7 +247,7 @@ export default Capability.makeModule(
                           icon: 'ph--database--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Registry),
                         data: Devtools.Echo.Registry,
                         type: Devtools.id,
@@ -256,7 +256,7 @@ export default Capability.makeModule(
                           icon: 'ph--books--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Automerge),
                         data: Devtools.Echo.Automerge,
                         type: Devtools.id,
@@ -265,7 +265,7 @@ export default Capability.makeModule(
                           icon: 'ph--gear-six--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Queues),
                         data: Devtools.Echo.Queues,
                         type: Devtools.id,
@@ -274,7 +274,7 @@ export default Capability.makeModule(
                           icon: 'ph--queue--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Members),
                         data: Devtools.Echo.Members,
                         type: Devtools.id,
@@ -283,7 +283,7 @@ export default Capability.makeModule(
                           icon: 'ph--users--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Echo.Metadata),
                         data: Devtools.Echo.Metadata,
                         type: Devtools.id,
@@ -294,7 +294,7 @@ export default Capability.makeModule(
                       }),
                     ],
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.Mesh.id),
                     data: null,
                     type: Devtools.id,
@@ -303,7 +303,7 @@ export default Capability.makeModule(
                       icon: 'ph--graph--regular',
                     },
                     nodes: [
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Mesh.Signal),
                         data: Devtools.Mesh.Signal,
                         type: Devtools.id,
@@ -312,7 +312,7 @@ export default Capability.makeModule(
                           icon: 'ph--wifi-high--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Mesh.Swarm),
                         data: Devtools.Mesh.Swarm,
                         type: Devtools.id,
@@ -321,7 +321,7 @@ export default Capability.makeModule(
                           icon: 'ph--users-three--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Mesh.Network),
                         data: Devtools.Mesh.Network,
                         type: Devtools.id,
@@ -332,7 +332,7 @@ export default Capability.makeModule(
                       }),
                     ],
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.Edge.id),
                     data: null,
                     type: Devtools.id,
@@ -341,7 +341,7 @@ export default Capability.makeModule(
                       icon: 'ph--cloud--regular',
                     },
                     nodes: [
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Edge.Dashboard),
                         data: Devtools.Edge.Dashboard,
                         type: Devtools.id,
@@ -350,7 +350,7 @@ export default Capability.makeModule(
                           icon: 'ph--computer-tower--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Edge.Workflows),
                         data: Devtools.Edge.Workflows,
                         type: Devtools.id,
@@ -359,7 +359,7 @@ export default Capability.makeModule(
                           icon: 'ph--function--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Edge.Traces),
                         data: Devtools.Edge.Traces,
                         type: Devtools.id,
@@ -368,7 +368,7 @@ export default Capability.makeModule(
                           icon: 'ph--line-segments--regular',
                         },
                       }),
-                      Node.make({
+                      AppGraphNode.make({
                         id: Devtools.nodeId(Devtools.Edge.Testing),
                         data: Devtools.Edge.Testing,
                         type: Devtools.id,
@@ -386,7 +386,7 @@ export default Capability.makeModule(
       }),
 
       // Devtools deck companion.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'devtoolsOverview',
         match: NodeMatcher.whenRoot,
         connector: () =>

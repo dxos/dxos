@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { invariant } from '@dxos/invariant';
 import { type Specialize } from '@dxos/util';
 
-export const Edge = Schema.Struct({
+export const GraphEdge = Schema.Struct({
   id: Schema.String,
   type: Schema.optional(Schema.String),
   source: Schema.String,
@@ -17,7 +17,7 @@ export const Edge = Schema.Struct({
   data: Schema.optional(Schema.Any),
 });
 
-interface Base extends Schema.Schema.Type<typeof Edge> {}
+interface Base extends Schema.Schema.Type<typeof GraphEdge> {}
 
 /**
  * An edge whose data is unconstrained.

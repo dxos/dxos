@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -23,7 +23,7 @@ export default Capability.makeModule(
     // `Capability.getAll` snapshot, which would never heal once the capability lands.
     const markerProvidersAtom = yield* Capability.atom(MapCapabilities.MarkerProvider);
 
-    const extensions = yield* GraphBuilder.createExtension({
+    const extensions = yield* AppGraphBuilder.createExtension({
       id: MapOperation.Toggle.meta.key,
       match: (node, get) => Option.map(NodeMatcher.whenEchoType(View.View)(node, get), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
@@ -33,7 +33,7 @@ export default Capability.makeModule(
           return Effect.succeed([]);
         }
         return Effect.succeed([
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: `${view.id}.toggle-map`,
             data: () => Operation.invoke(MapOperation.Toggle, undefined),
             properties: {
@@ -54,7 +54,7 @@ export default Capability.makeModule(
       NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Map.Map)),
     );
 
-    const companion = yield* GraphBuilder.createExtension({
+    const companion = yield* AppGraphBuilder.createExtension({
       id: 'mapCompanion',
       match: whenPlottable,
       connector: (object, get) =>

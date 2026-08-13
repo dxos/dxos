@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { GraphModel, Node } from '@dxos/graph';
+import { GraphModel, GraphNode } from '@dxos/graph';
 import { random } from '@dxos/random';
 
 import { createEdge, createNode } from './data';
 
-export type TestNode = Node.Any & {
+export type TestNode = GraphNode.Any & {
   label?: string;
   children?: TestNode[];
 };

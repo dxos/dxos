@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj } from '@dxos/echo';
@@ -21,7 +21,7 @@ export default Capability.makeModule(
       capabilities.getAll(ReviewCapabilities.HistoryProvider).find(({ id }) => id === typename);
 
     // Version history plank companion, gated per-type by a HistoryProvider contribution.
-    const extension = yield* GraphBuilder.createExtension({
+    const extension = yield* AppGraphBuilder.createExtension({
       id: 'history',
       match: (node) => {
         if (!Obj.isObject(node.data)) {

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
 
 /**
  * A node's graph children that can be opened as planks, in graph order.
@@ -13,5 +13,5 @@ import * as Node from '@dxos/app-graph/Node';
  */
 export const openableChildren = (graph: Graph.ExpandableGraph, id: string): string[] =>
   Graph.getConnections(graph, id, 'child')
-    .filter((node) => !Node.isActionLike(node) && !node.properties.disposition)
+    .filter((node) => !AppGraphNode.isActionLike(node) && !node.properties.disposition)
     .map((node) => node.id);

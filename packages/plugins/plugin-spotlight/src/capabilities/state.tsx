@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
         dialogOpen: state.dialogOpen,
         sidebarOpen: false,
         complementarySidebarOpen: false,
-        workspace: Node.RootId,
+        workspace: AppGraphNode.RootId,
         active: [],
         inactive: [],
         scrollIntoView: undefined,

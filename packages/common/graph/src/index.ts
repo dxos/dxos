@@ -4,6 +4,6 @@
 
 export * from './selection';
 
-export * as Edge from './Edge';
+export * as GraphEdge from './GraphEdge';
 export * as GraphModel from './GraphModel';
-export * as Node from './Node';
+export * as GraphNode from './GraphNode';

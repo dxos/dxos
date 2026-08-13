@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
 import { l0ItemType } from '../../util';
 import { L1Panel, type L1PanelProps } from './L1Panel';
@@ -12,7 +12,7 @@ import { L1Panel, type L1PanelProps } from './L1Panel';
 export type L1TabsProps = Pick<L1PanelProps, 'open' | 'onBack'> & {
   currentItemId: string;
   path: string[];
-  topLevelItems: Node.Node[];
+  topLevelItems: AppGraphNode.Node[];
 };
 
 /**

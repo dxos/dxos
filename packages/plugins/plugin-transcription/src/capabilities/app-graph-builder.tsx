@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -22,7 +22,7 @@ const whenMarkdownDocument = NodeMatcher.whenAll(
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const extensions = yield* GraphBuilder.createExtension({
+    const extensions = yield* AppGraphBuilder.createExtension({
       id: 'transcriptionToolbar',
       match: (node, get) => whenMarkdownDocument(node, get),
       // The control owns recording state, mode, device selection, and entity-extraction —
@@ -32,7 +32,7 @@ export default Capability.makeModule(
       // action atom stable across recording changes.
       actions: (matched) =>
         Effect.succeed([
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: 'transcription',
             data: () => Effect.void,
             properties: {

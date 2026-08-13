@@ -14,9 +14,9 @@ import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
+import * as GraphBuilder from './AppGraphBuilder';
+import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import * as GraphBuilder from './graph-builder';
-import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
 import { qualifyId } from './util';
 

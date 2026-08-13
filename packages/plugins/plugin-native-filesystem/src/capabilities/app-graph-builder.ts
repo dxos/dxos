@@ -7,10 +7,10 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -69,18 +69,18 @@ export const createFilesystemEntryExtensions = (
 ) => {
   // Files/directories sit at a variable-depth, data-dependent path (`root/<workspace>/<dir>/…/<id>`), so
   // forward URL resolution walks the current workspace tree to rebuild the node path from the entry id.
-  const resolve: GraphBuilder.PathResolver = ({ id, workspace }) =>
+  const resolve: AppGraphBuilder.PathResolver = ({ id, workspace }) =>
     Effect.sync(() => {
       const ws = readState().workspaces.find((item) => item.id === workspace);
       if (!ws) {
         return null;
       }
       const chain = findEntryAncestorChain(ws.children, id, []);
-      return chain ? [Node.RootId, workspace, ...chain, id].join('/') : null;
+      return chain ? [AppGraphNode.RootId, workspace, ...chain, id].join('/') : null;
     });
 
   return Effect.all([
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'workspaceEntries',
       url: { key: 'file', kind: 'item', path: resolve },
       match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
@@ -104,7 +104,7 @@ export const createFilesystemEntryExtensions = (
       },
     }),
 
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'directoryEntries',
       url: { key: 'file', kind: 'item', path: resolve },
       match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
@@ -147,7 +147,7 @@ export default Capability.makeModule(
     );
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'primaryActions',
         position: Position.first,
         match: NodeMatcher.whenRoot,
@@ -171,7 +171,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'workspaces',
         match: NodeMatcher.whenRoot,
         connector: (_node, get) => {
@@ -214,7 +214,7 @@ export default Capability.makeModule(
                 onRearrange = (nextOrder) => {
                   Graph.sortEdges(
                     graph,
-                    Node.RootId,
+                    AppGraphNode.RootId,
                     'outbound',
                     nextOrder.map((item) => {
                       if (NativeFilesystemCapabilities.isFilesystemWorkspace(item)) {
@@ -236,7 +236,7 @@ export default Capability.makeModule(
                 workspaceRearrangeCache.set(workspace.id, onRearrange);
               }
 
-              return Node.make({
+              return AppGraphNode.make({
                 id: workspace.id,
                 type: FILESYSTEM_TYPE,
                 data: workspace,
@@ -255,12 +255,12 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'workspaceSettings',
         match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
         connector: () =>
           Effect.succeed([
-            Node.make({
+            AppGraphNode.make({
               id: GENERAL_TYPE,
               type: GENERAL_TYPE,
               data: GENERAL_TYPE,
@@ -286,9 +286,9 @@ const constructEntryNode = (
   filesystemManager: MarkdownResolver,
   workspaceId: string,
   get: Atom.AtomContext,
-): Node.NodeArg<any> | null => {
+): AppGraphNode.NodeArg<any> | null => {
   if (NativeFilesystemCapabilities.isFilesystemDirectory(entry)) {
-    return Node.make({
+    return AppGraphNode.make({
       id: entry.id,
       type: DIRECTORY_TYPE,
       data: entry,
@@ -305,7 +305,7 @@ const constructEntryNode = (
     void get(filesystemManager.markdownBindingAtom(file.id));
     const text = filesystemManager.getByFileId(file.id);
     if (text) {
-      return Node.make({
+      return AppGraphNode.make({
         id: file.id,
         type: Type.getTypename(Text.Text),
         data: text,
@@ -319,7 +319,7 @@ const constructEntryNode = (
       });
     }
 
-    return Node.make({
+    return AppGraphNode.make({
       id: file.id,
       type: MARKDOWN_PENDING_TYPE,
       data: null,

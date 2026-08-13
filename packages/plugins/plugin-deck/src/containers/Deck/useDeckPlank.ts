@@ -5,8 +5,8 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
@@ -40,7 +40,7 @@ export type UseDeckPlankOptions = {
 };
 
 export type DeckPlank = {
-  node: Node.Node | undefined;
+  node: AppGraphNode.Node | undefined;
   capabilities: PlankCapabilities;
   /** Grouped sigil-menu actions, or `undefined` when the node is unresolved. */
   sigilActions: AttentionSigilAction[][] | undefined;
@@ -107,7 +107,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
       return undefined;
     }
 
-    return [actions.filter((action) => Node.hasDisposition(action, PLANK_ACTION_DISPOSITIONS))].filter(
+    return [actions.filter((action) => AppGraphNode.hasDisposition(action, PLANK_ACTION_DISPOSITIONS))].filter(
       (group) => group.length > 0,
     );
   }, [actions, node]);
@@ -117,7 +117,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
       // Only actions whose `data` is a function are runnable graph actions; the menu-action view type
       // (AttentionSigilAction) is widened, so narrow at this runtime-checked boundary.
       if (typeof action.data === 'function') {
-        void runAction(action as Node.Action, { parent: node, caller: meta.profile.key });
+        void runAction(action as AppGraphNode.Action, { parent: node, caller: meta.profile.key });
       }
     },
     [node, runAction],

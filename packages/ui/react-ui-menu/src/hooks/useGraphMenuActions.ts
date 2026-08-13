@@ -5,8 +5,8 @@
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
 
 import { applyPresentation } from '../presentation';
 import {
@@ -21,7 +21,7 @@ export type GraphMenuOptions = {
   /** Group the actions descend from. Defaults to the menu root (top-level toolbar items). */
   rootId?: string;
   /** Keep only the actions the predicate accepts (e.g. by `disposition`). */
-  filter?: (action: Node.ActionLike) => boolean;
+  filter?: (action: AppGraphNode.ActionLike) => boolean;
   /**
    * Disposition key this surface renders — when set, each action's `presentation[surface]` chrome
    * override (if any) is merged into its properties, letting one action multi-target dispositions
@@ -31,7 +31,7 @@ export type GraphMenuOptions = {
 };
 
 /**
- * Flatten a node's contributed actions (and nested {@link Node.ActionGroup}s) into the
+ * Flatten a node's contributed actions (and nested {@link AppGraphNode.ActionGroup}s) into the
  * `{ nodes, edges }` an {@link useMenuActions} / `Menu` consumes. The action nodes are spliced
  * verbatim, so their Effect `data` (and captured `_actionContext`) execute via `executeMenuAction`
  * without any `onAction` wiring.
@@ -40,11 +40,11 @@ export type GraphMenuOptions = {
  * direct actions for `id` (a node id at the top level, a group id when expanding a group).
  */
 export const buildGraphMenu = (
-  resolve: (id: string) => Node.ActionLike[],
+  resolve: (id: string) => AppGraphNode.ActionLike[],
   nodeId: string,
   options: GraphMenuOptions = {},
 ): ActionGraphProps => {
-  const { rootId = Node.RootId, filter, surface } = options;
+  const { rootId = AppGraphNode.RootId, filter, surface } = options;
   const nodes: ActionGraphNodes = [];
   const edges: ActionGraphEdges = [];
   const seen = new Set<string>();
@@ -62,7 +62,7 @@ export const buildGraphMenu = (
       seen.add(action.id);
       nodes.push((surface ? applyPresentation(action, surface) : action) as ActionGraphNodes[number]);
       // A group's children are the actions contributed for the group's own id.
-      if (Node.isActionGroup(action)) {
+      if (AppGraphNode.isActionGroup(action)) {
         visit(action.id, action.id);
       }
     }

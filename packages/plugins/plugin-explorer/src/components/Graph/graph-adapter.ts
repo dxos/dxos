@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Edge, GraphModel, Node } from '@dxos/graph';
+import { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 
 export type GraphNode = {
   id?: string;
@@ -26,7 +26,7 @@ export class GraphAdapter implements GraphData {
   private readonly _links: GraphLink[] = [];
 
   constructor(private readonly graph: GraphModel.AnyData) {
-    this._nodes = graph.nodes.map((node: Node.Any) => ({
+    this._nodes = graph.nodes.map((node: GraphNode.Any) => ({
       id: node.id,
       type: node.type,
       data: node.data,
@@ -37,8 +37,8 @@ export class GraphAdapter implements GraphData {
 
     // Filter out edges where source or target node doesn't exist.
     this._links = graph.edges
-      .filter((edge: Edge.Any) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
-      .map((edge: Edge.Any) => ({
+      .filter((edge: GraphEdge.Any) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
+      .map((edge: GraphEdge.Any) => ({
         type: edge.type,
         source: edge.source,
         target: edge.target,

@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -24,7 +24,7 @@ import { Pane } from '../Pane';
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
 export type PlankProps = ThemedClassName<{
-  node: Node.Node;
+  node: AppGraphNode.Node;
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */

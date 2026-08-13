@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import type * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import type * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { Key } from '@dxos/echo';
 
 import { findTypeSectionPath } from './type-section-path';
@@ -29,7 +29,7 @@ describe('findTypeSectionPath', () => {
   });
 
   test('ignores dynamic resolvers, singletons, and unrelated static paths', ({ expect }) => {
-    const extensions: Array<Pick<GraphBuilder.BuilderExtension, 'url'>> = [
+    const extensions: Array<Pick<AppGraphBuilder.BuilderExtension, 'url'>> = [
       // Dynamic path (nested collections) — locates by runtime data, not a fixed section.
       { url: { key: 'object', kind: 'item', path: () => Effect.succeed(null) } },
       // Singleton (settings page) — the trailing segment is the node itself, not a typename.

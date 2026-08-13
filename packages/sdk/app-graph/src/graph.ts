@@ -16,7 +16,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
-import * as Node from './node';
+import * as Node from './AppGraphNode';
 import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, shallowEqual } from './util';
 
 const graphSymbol = Symbol('graph');

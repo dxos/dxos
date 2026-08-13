@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { GraphModel, Node } from '@dxos/graph';
+import { GraphModel, GraphNode } from '@dxos/graph';
 import {
   CanvasBoard,
   CanvasGraphModel,
@@ -27,7 +27,7 @@ describe('compute', () => {
     expect(Schema.is(ComputeShape)(node)).toBe(true);
     expect(Schema.is(Polygon)(node)).toBe(true);
     expect(Schema.is(CanvasBoard.Shape)(node)).toBe(true);
-    expect(Schema.is(Node.Node)(node)).toBe(true);
+    expect(Schema.is(GraphNode.GraphNode)(node)).toBe(true);
 
     const graph: GraphModel.AnyData = { nodes: [], edges: [] };
     graph.nodes.push(node);

@@ -7,8 +7,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -54,7 +54,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'shareCallLink',
         type: Channel.Channel,
         actions: (channel, get) => {
@@ -83,7 +83,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'callCompanion',
         type: Channel.Channel,
         connector: (channel, get) =>
@@ -120,7 +120,7 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
       }),
 
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'callTranscript',
         type: Channel.Channel,
         actions: (channel, get) =>
@@ -204,7 +204,7 @@ export default Capability.makeModule(
 
       // While in this meeting's call, show the whole meeting article as a companion so the primary
       // plank can hold the call (its Call tab).
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'meetingCallCompanion',
         type: Meeting.Meeting,
         connector: (meeting, get) =>
@@ -233,7 +233,7 @@ export default Capability.makeModule(
 
       // Contribute meeting actions onto Event nodes (plugin-inbox stays meeting-agnostic): "Create meeting"
       // while the event has no meeting yet, otherwise "Open meeting" (where the call is started/joined).
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'createMeetingForEvent',
         type: Event.Event,
         actions: (event, get) =>

@@ -4,10 +4,10 @@
 
 import { useEffect } from 'react';
 
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import type * as Node from '@dxos/app-graph/Node';
 
-export const useNodeActionExpander = (node?: Node.Node) => {
+export const useNodeActionExpander = (node?: AppGraphNode.Node) => {
   useEffect(() => {
     if (node) {
       const frame = requestAnimationFrame(() => {

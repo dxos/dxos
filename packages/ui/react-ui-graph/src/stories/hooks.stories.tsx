@@ -10,7 +10,7 @@ import { select } from 'd3';
 import React, { type PropsWithChildren, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { Edge, GraphModel } from '@dxos/graph';
+import { GraphEdge, GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -30,7 +30,7 @@ import { useGrid, useSvgContext, useZoom } from '../hooks';
 import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '../testing';
 
 type ComponentProps = PropsWithChildren<{
-  graph: () => GraphModel.Data<TestNode, Edge.Any>;
+  graph: () => GraphModel.Data<TestNode, GraphEdge.Any>;
   projectorOptions?: GraphForceProjectorOptions;
   count?: number;
   interval?: number;

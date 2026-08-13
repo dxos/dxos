@@ -7,8 +7,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 
 import * as UrlPath from './UrlPath';
@@ -22,7 +22,7 @@ import * as UrlPath from './UrlPath';
  * that doesn't parse under the grammar, or whose target pair doesn't resolve to an existing node.
  */
 export const resolveInternalLink = (
-  builder: GraphBuilder.GraphBuilder,
+  builder: AppGraphBuilder.GraphBuilder,
   pathname: string,
 ): Effect.Effect<Option.Option<string>> =>
   Effect.gen(function* () {
@@ -47,7 +47,7 @@ export const resolveInternalLink = (
  * outbound counterpart to {@link resolveInternalLink}. Returns `Option.none()` for a node with no
  * key-declaring producer (unmapped — see `PathResolution.representNode`).
  */
-export const getShareableLinkPath = (builder: GraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> => {
+export const getShareableLinkPath = (builder: AppGraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> => {
   // Composed from the node's own stamped `urlSegment` (`/<key>[/<id>]`) plus the workspace prefix — the
   // segment is the single source; `representNode` remains the multi-pair (deck) machinery.
   const urlSegment: string | undefined = Option.getOrUndefined(Graph.getNode(builder.graph, nodeId))?.properties

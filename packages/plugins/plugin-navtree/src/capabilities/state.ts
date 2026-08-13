@@ -7,8 +7,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Path } from '@dxos/react-ui-list';
@@ -21,7 +21,7 @@ import { navTreeOpenAspect } from './nav-tree-view-state';
 const defaultOpen = false;
 
 /** L0 (top-level workspace) paths are direct children of root — not part of the expandable tree model. */
-const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === Node.RootId;
+const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === AppGraphNode.RootId;
 
 /** Default state entries for initial tree structure. */
 // TODO(thure): Initialize these dynamically.

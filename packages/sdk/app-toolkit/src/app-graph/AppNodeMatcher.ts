@@ -6,7 +6,7 @@
 
 import * as Option from 'effect/Option';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space, isSpace } from '@dxos/client/echo';
 
 /**
@@ -32,7 +32,7 @@ export const SETTINGS_SECTION_TYPE = 'org.dxos.plugin.space.settings';
  * });
  * ```
  */
-export const whenSpace = (node: Node.Node): Option.Option<Space> =>
+export const whenSpace = (node: AppGraphNode.Node): Option.Option<Space> =>
   node.type === SPACE_NODE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
 /**
@@ -50,7 +50,7 @@ export const whenSpace = (node: Node.Node): Option.Option<Space> =>
  * });
  * ```
  */
-export const whenSpaceSettings = (node: Node.Node): Option.Option<Space> => {
+export const whenSpaceSettings = (node: AppGraphNode.Node): Option.Option<Space> => {
   const maybeSpace = node.properties.space;
   return node.type === SETTINGS_SECTION_TYPE && isSpace(maybeSpace) ? Option.some(maybeSpace) : Option.none();
 };
@@ -71,7 +71,7 @@ export const whenSpaceSettings = (node: Node.Node): Option.Option<Space> => {
  */
 export const whenNavTreeGroup =
   (groupType: string) =>
-  (node: Node.Node): Option.Option<Space> => {
+  (node: AppGraphNode.Node): Option.Option<Space> => {
     const maybeSpace = node.properties.space;
     return node.type === groupType && isSpace(maybeSpace) ? Option.some(maybeSpace) : Option.none();
   };

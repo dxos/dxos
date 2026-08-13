@@ -7,8 +7,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
 import { Filter, Key, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,7 +22,7 @@ export const NOT_FOUND_NODE_ID = 'not-found';
  * Canonical qualified path for the not-found sentinel node.
  * Navigation resolvers return this when a target does not exist.
  */
-export const NOT_FOUND_PATH = `${Node.RootId}/${NOT_FOUND_NODE_ID}`;
+export const NOT_FOUND_PATH = `${AppGraphNode.RootId}/${NOT_FOUND_NODE_ID}`;
 
 export const NOT_FOUND_NODE_TYPE = 'org.dxos.type.not-found';
 
@@ -63,7 +63,7 @@ export const validateNavigationTarget = (params: {
   const { graph, subjectId, checkLocalExistence, checkRemoteExistence } = params;
 
   // Skip validation for system paths.
-  if (subjectId === NOT_FOUND_PATH || subjectId === Node.RootId || GraphPath.isPinnedWorkspace(subjectId)) {
+  if (subjectId === NOT_FOUND_PATH || subjectId === AppGraphNode.RootId || GraphPath.isPinnedWorkspace(subjectId)) {
     return Effect.succeed(subjectId);
   }
 

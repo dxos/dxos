@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -94,7 +94,7 @@ describe('connectorAuthActions', () => {
     });
     expect(actions).toHaveLength(1);
     const group = actions[0];
-    expect(group.type).toBe(Node.ActionGroupType);
+    expect(group.type).toBe(AppGraphNode.ActionGroupType);
     expect(group.actions?.map((action) => action.id)).toEqual(['connect-a', 'connect-b']);
   });
 
@@ -135,7 +135,7 @@ describe('connectorAuthActions', () => {
       allConnections: [connection],
     });
     const [reuse] = actions[0].actions ?? [];
-    invariant(Node.isAction(reuse));
+    invariant(AppGraphNode.isAction(reuse));
     await EffectEx.runAndForwardErrors(reuse.data());
 
     const cursors = await db.query(Filter.type(Cursor.Cursor)).run();
@@ -174,7 +174,7 @@ describe('connectorAuthActions', () => {
       allConnections: [connection],
     });
     const [reuse] = actions[0].actions ?? [];
-    invariant(Node.isAction(reuse));
+    invariant(AppGraphNode.isAction(reuse));
     await EffectEx.runAndForwardErrors(reuse.data());
 
     expect(Obj.getLabel(target)).toBe('me@example.com');

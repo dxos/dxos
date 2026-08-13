@@ -7,8 +7,8 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -71,7 +71,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       // AI section group — created here so it shows only when the assistant plugin is active.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: GraphPath.GroupSegments.ai,
         match: AppNodeMatcher.whenSpace,
         connector: (space) =>
@@ -86,12 +86,12 @@ export default Capability.makeModule(
           ]),
       }),
 
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'root',
         type: Chat.Chat,
         actions: (chat) => {
           return Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: AssistantOperation.UpdateChatName.meta.key,
               data: () =>
                 Effect.gen(function* () {
@@ -110,12 +110,12 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'assistant',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'importComputeOperations',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
@@ -144,7 +144,7 @@ export default Capability.makeModule(
                 icon: 'ph--download-simple--regular',
               },
             }),
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: AssistantOperation.ToggleTracePanelDebug.meta.key,
               data: () => Operation.invoke(AssistantOperation.ToggleTracePanelDebug, {}),
               properties: {
@@ -156,7 +156,7 @@ export default Capability.makeModule(
       }),
 
       // Don't show assistant companion when a chat is already the primary object.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'companionChat',
         match: whenNonChatObject,
         connector: (object, get) =>
@@ -193,7 +193,7 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'invocations',
         match: NodeMatcher.whenAny(
           NodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
@@ -210,7 +210,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'trace',
         match: NodeMatcher.whenRoot,
         connector: () =>
@@ -234,7 +234,7 @@ export default Capability.makeModule(
       }),
 
       // Create-chat action on the Chats section header.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'chatsSectionActions',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -242,7 +242,7 @@ export default Capability.makeModule(
         },
         actions: (space) =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'create-chat',
               data: () =>
                 Effect.gen(function* () {

@@ -5,8 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
@@ -35,7 +35,7 @@ export type L1PanelProps = {
   /** The tab's workspace id, which may name a workspace that has no graph node. */
   id: string;
   /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
-  item?: Node.Node;
+  item?: AppGraphNode.Node;
   isCurrent: boolean;
   onBack?: () => void;
 };
@@ -111,7 +111,7 @@ const L1PanelContent = ({
   path,
   item,
   onBack,
-}: Pick<L1PanelProps, 'open' | 'path' | 'onBack'> & { item: Node.Node }) => {
+}: Pick<L1PanelProps, 'open' | 'path' | 'onBack'> & { item: AppGraphNode.Node }) => {
   const navTreeContext = useNavTreeContext();
 
   return (
@@ -145,7 +145,7 @@ const L1PanelContent = ({
 /**
  * Header row.
  */
-const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: Node.Node }) => {
+const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: AppGraphNode.Node }) => {
   const { t } = useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
@@ -185,8 +185,8 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
 };
 
 type L1MenuActions = {
-  menuActions: Node.Action[];
-  onAction: (action: Node.Action, params?: Node.InvokeProps) => void;
+  menuActions: AppGraphNode.Action[];
+  onAction: (action: AppGraphNode.Action, params?: AppGraphNode.InvokeProps) => void;
 };
 
 /**
@@ -199,7 +199,7 @@ const MenuActions = ({
   menuActions,
   onAction,
 }: {
-  item: Node.Node;
+  item: AppGraphNode.Node;
 } & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
   const { t } = useTranslation(meta.profile.key);
 
@@ -217,7 +217,7 @@ const MenuActions = ({
         size={4}
         label={toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
-        onClick={() => onAction(menuActions[0] as Node.Action)}
+        onClick={() => onAction(menuActions[0] as AppGraphNode.Action)}
       />
     );
   }
@@ -243,13 +243,13 @@ const MenuActions = ({
 /**
  * Builds the menu actions for the L1 panel header.
  */
-const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'path'> & { item: Node.Node }): L1MenuActions => {
+const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'path'> & { item: AppGraphNode.Node }): L1MenuActions => {
   const runAction = useActionRunner();
 
   const menuActions = getListActions(useActions(item));
 
   const onAction = useCallback(
-    (action: Node.Action, params?: Node.InvokeProps) => {
+    (action: AppGraphNode.Action, params?: AppGraphNode.InvokeProps) => {
       void runAction(action, { ...params, path });
     },
     [runAction, path],

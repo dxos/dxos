@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -46,7 +46,7 @@ const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxesSection',
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.communications),
         connector: (space, get) => {
@@ -69,7 +69,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxListing',
         url: { key: 'mail', kind: 'item', path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()] },
         match: (node) => {
@@ -83,7 +83,7 @@ export default Capability.makeModule(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               const mailboxSnapshot = get(Obj.atom(mailbox));
 
-              return Node.make({
+              return AppGraphNode.make({
                 id: mailboxSnapshot.id,
                 type: Type.getTypename(Mailbox.Mailbox),
                 data: mailbox,
@@ -100,7 +100,7 @@ export default Capability.makeModule(
                 nodes: [
                   // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
                   // static with no rename/delete actions.
-                  Node.make({
+                  AppGraphNode.make({
                     id: getAllMailId(),
                     type: FILTER_TYPE,
                     data: mailbox,
@@ -111,7 +111,7 @@ export default Capability.makeModule(
                       filter: '',
                     },
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: getSentId(),
                     type: FILTER_TYPE,
                     data: mailbox,
@@ -123,7 +123,7 @@ export default Capability.makeModule(
                       systemTag: 'sent' satisfies SystemTags.SystemTagId,
                     },
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: getDraftsId(),
                     type: FILTER_TYPE,
                     data: mailbox,
@@ -135,7 +135,7 @@ export default Capability.makeModule(
                       systemTag: 'draft' satisfies SystemTags.SystemTagId,
                     },
                   }),
-                  Node.make({
+                  AppGraphNode.make({
                     id: getSubscriptionsId(),
                     type: MAILBOX_SUBSCRIPTIONS_TYPE,
                     data: mailbox,
@@ -147,7 +147,7 @@ export default Capability.makeModule(
                     },
                   }),
                   ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) =>
-                    Node.make({
+                    AppGraphNode.make({
                       id: `filter-${kebabize(name)}`,
                       type: FILTER_TYPE,
                       data: mailbox,
@@ -158,9 +158,9 @@ export default Capability.makeModule(
                         filter,
                       },
                       actions: [
-                        Node.makeAction({
+                        AppGraphNode.makeAction({
                           id: 'rename-filter',
-                          data: (params?: Node.InvokeProps) =>
+                          data: (params?: AppGraphNode.InvokeProps) =>
                             Operation.invoke(InboxOperation.RenameFilter, {
                               mailbox,
                               name,
@@ -172,7 +172,7 @@ export default Capability.makeModule(
                             disposition: 'list-item',
                           },
                         }),
-                        Node.makeAction({
+                        AppGraphNode.makeAction({
                           id: 'delete-filter',
                           data: () =>
                             Effect.sync(() => {
@@ -199,7 +199,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxDraftsActions',
         // Contributes "create draft", scoped to the Drafts view.
         match: (node) =>
@@ -213,7 +213,7 @@ export default Capability.makeModule(
           }
 
           return Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'createDraft',
               data: () =>
                 Operation.invoke(InboxOperation.DraftEmailAndOpen, {
@@ -237,7 +237,7 @@ export default Capability.makeModule(
       // though messages aren't enumerated in the nav tree. Each node's data is the message Echo object
       // itself (so it picks up the standard object companions — assistant, properties, info, debug);
       // the surrounding conversation is looked up by `MessageArticle` when the message is opened.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxMessages',
         url: { key: 'message', kind: 'item', path: [GraphPath.GroupSegments.communications, getMailboxesSectionId()] },
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
@@ -256,7 +256,7 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             [...feedMessages, ...draftMessages].map((message) =>
-              Node.make({
+              AppGraphNode.make({
                 id: message.id,
                 type: Type.getTypename(Message.Message),
                 data: message,
@@ -271,7 +271,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'mailboxesSectionActions',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -279,7 +279,7 @@ export default Capability.makeModule(
         },
         actions: (space) =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'create-mailbox',
               data: () =>
                 Operation.invoke(SpaceOperation.OpenCreateObject, {
@@ -311,7 +311,7 @@ export default Capability.makeModule(
       // Every event in a calendar's feed, plus its local draft events, as a hidden child of the
       // calendar node — so `…/calendars/<calendarId>/<eventId>` resolves via the `event` key for any
       // deep-link shape.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'calendarEvents',
         url: { key: 'event', kind: 'item', path: [GraphPath.GroupSegments.communications, calendarTypename] },
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
@@ -330,7 +330,7 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             [...feedEvents, ...draftEvents].map((event) =>
-              Node.make({
+              AppGraphNode.make({
                 id: event.id,
                 type: Type.getTypename(Event.Event),
                 data: event,
@@ -345,7 +345,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'syncMailbox',
         // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
@@ -401,7 +401,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'processMailbox',
         // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
@@ -496,7 +496,7 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'syncCalendar',
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (calendar, get) => {

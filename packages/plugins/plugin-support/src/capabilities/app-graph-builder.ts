@@ -7,9 +7,9 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
 import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -54,12 +54,12 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'root',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: HelpOperation.Start.meta.key,
               data: Effect.fnUntraced(function* () {
                 yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
@@ -76,7 +76,7 @@ export default Capability.makeModule(
                 testId: 'helpPlugin.openHelp',
               },
             }),
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'openShortcuts',
               data: Effect.fnUntraced(function* () {
                 yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
@@ -98,7 +98,7 @@ export default Capability.makeModule(
       // Plank companion: contributes a "Help" panel for every ECHO object
       // article. The panel surface (`help-companion` in react-surface)
       // renders the owning plugin's `meta.description`.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'helpCompanion',
         match: NodeMatcher.whenEchoObject,
         connector: () =>
@@ -115,7 +115,7 @@ export default Capability.makeModule(
 
       // Deck companion: feedback / help tab in the complementary sidebar (R1).
       // Renders the FeedbackPanel via the `deck-companion--help` surface.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'help',
         match: NodeMatcher.whenRoot,
         connector: () =>
@@ -134,7 +134,7 @@ export default Capability.makeModule(
       // Deck companion: Discord community tab in the complementary sidebar (R1).
       // Renders the Discord widget iframe via the `deck-companion--discord` surface.
       // Hidden by default; toggled via the showDiscordCompanion setting.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'discord',
         match: NodeMatcher.whenRoot,
         connector: (_root, get) => {
@@ -162,7 +162,7 @@ export default Capability.makeModule(
       // by plugin-space: type === SpaceSchema.SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
       // conditional on the default space and the welcome not being dismissed — read reactively via
       // the space properties atom so the actions appear/disappear live without a React re-render cycle.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaceHomeActions',
         match: (node): Option.Option<Space> => {
           const space = (node.properties as { space?: unknown }).space;
@@ -187,7 +187,7 @@ export default Capability.makeModule(
           }
 
           return Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: HelpOperation.Start.meta.key,
               data: Effect.fnUntraced(function* () {
                 yield* Capabilities.updateAtomValue(HelpCapabilities.State, (state) => ({ ...state, showHints: true }));
@@ -201,7 +201,7 @@ export default Capability.makeModule(
                 testId: 'supportPlugin.startTour',
               },
             }),
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: HelpOperation.HideWelcome.meta.key,
               data: Effect.fnUntraced(function* () {
                 yield* Operation.invoke(HelpOperation.HideWelcome);
