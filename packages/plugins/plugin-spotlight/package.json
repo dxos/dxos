@@ -94,7 +94,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",

@@ -140,7 +140,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",

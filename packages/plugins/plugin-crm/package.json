@@ -130,7 +130,6 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/pipeline": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",

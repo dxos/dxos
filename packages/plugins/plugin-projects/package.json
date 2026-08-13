@@ -144,7 +144,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",

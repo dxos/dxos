@@ -185,7 +185,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

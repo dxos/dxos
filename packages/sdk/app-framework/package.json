@@ -131,7 +131,6 @@
   "dependencies": {
     "@babel/core": "catalog:",
     "@babel/preset-typescript": "catalog:",
-    "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",

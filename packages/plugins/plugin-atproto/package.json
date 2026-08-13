@@ -107,7 +107,6 @@
     "@dxos/link": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

@@ -64,9 +64,6 @@
       "path": "../plugin-connector"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-kanban"
     }
   ]

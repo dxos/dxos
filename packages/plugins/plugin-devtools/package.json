@@ -111,7 +111,6 @@
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",

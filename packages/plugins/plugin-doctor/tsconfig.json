@@ -57,9 +57,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../plugin-graph"
     }
   ]
 }

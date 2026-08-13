@@ -184,7 +184,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",

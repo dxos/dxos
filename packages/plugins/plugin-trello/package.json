@@ -102,7 +102,6 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",

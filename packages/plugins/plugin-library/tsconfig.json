@@ -62,9 +62,6 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-space"
     }
   ]

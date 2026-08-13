@@ -7674,9 +7674,6 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -8520,9 +8517,6 @@ importers:
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../plugin-game
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -8650,9 +8644,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -8771,9 +8762,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -9083,9 +9071,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
@@ -9198,9 +9183,6 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../../core/compute/pipeline
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -9389,9 +9371,6 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../plugin-illustrator
@@ -9682,9 +9661,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../plugin-script
@@ -9861,9 +9837,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -10059,9 +10032,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -11381,9 +11351,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -11539,9 +11506,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
@@ -11663,9 +11627,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -11966,9 +11927,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -12206,9 +12164,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -12488,9 +12443,6 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -12815,9 +12767,6 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -13079,9 +13028,6 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -13370,9 +13316,6 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -13548,9 +13491,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -13887,9 +13827,6 @@ importers:
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../plugin-game
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -14062,9 +13999,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -14947,9 +14881,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-navtree':
         specifier: workspace:*
         version: link:../plugin-navtree
@@ -15520,9 +15451,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -15882,9 +15810,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -16124,9 +16049,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -16297,9 +16219,6 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-kanban':
         specifier: workspace:*
         version: link:../plugin-kanban
@@ -16385,9 +16304,6 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -16561,9 +16477,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -17022,9 +16935,6 @@ importers:
       '@babel/preset-typescript':
         specifier: 'catalog:'
         version: 7.27.1(@babel/core@7.28.0)
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../app-graph
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

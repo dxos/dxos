@@ -144,7 +144,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
     "@dxos/operation": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
