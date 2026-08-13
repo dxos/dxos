@@ -299,12 +299,17 @@ describe('merge convergence', () => {
     await waitForLiveWinner(db2, globalMinimum);
 
     // Every id — including the one merged away twice — reaches the global minimum by following
-    // redirects transitively, and the straggler edit survived the chain collapse.
+    // redirects transitively, and the straggler edit survived the chain collapse. Polled: the
+    // live winner settles before the tombstoned members finish replicating, and a chain resolved
+    // over a partial working set dead-ends at whichever hop is still missing.
     for (const db of [db1, db2]) {
-      const all = await allTasks(db);
-      for (const id of [first.id, second.id, third.id]) {
-        expect(resolveMerged(id, all)).toBe(globalMinimum);
-      }
+      await waitForCondition({
+        condition: async () => {
+          const all = await allTasks(db);
+          return [first.id, second.id, third.id].every((id) => resolveMerged(id, all) === globalMinimum);
+        },
+        timeout: 10_000,
+      });
       await waitForCondition({
         condition: async () => {
           const [live] = await liveTasks(db);
