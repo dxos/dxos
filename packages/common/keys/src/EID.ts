@@ -33,7 +33,7 @@ const LOCAL_LEGACY_RE = /^echo:\/(?!\/)([^/]+)$/;
  * - `echo://<spaceId>` — space.
  * - `echo:///<objectId>` — local (space-less) object.
  *
- * @deprecated form: the single-slash local form `echo:/<objectId>` is retired in favour of the
+ * Deprecated form: the single-slash local form `echo:/<objectId>` is retired in favour of the
  * triple-slash `echo:///<objectId>` form. It is still accepted on read (and normalized by `parse`)
  * so existing persisted data keeps resolving, but it is no longer produced — do not emit it in new
  * code. Construct local EIDs with `make({ entityId })`.

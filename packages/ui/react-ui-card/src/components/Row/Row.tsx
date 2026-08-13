@@ -22,7 +22,7 @@ import { mx, toHue } from '@dxos/ui-theme';
 
 import { useActorContact } from '../../hooks';
 import { translationKey } from '../../translations';
-import { Avatar, avatarName } from '../Avatar';
+import { Avatar, type AvatarProps, avatarName } from '../Avatar';
 
 /**
  * Shared Card-row primitives rendered inside a `Card.Body`. These are the single source for the
@@ -241,6 +241,8 @@ type RowPersonProps = {
    * `undefined` means "no contact" (the create affordance), not "unknown yet".
    */
   getContact?: (actor: Actor.Actor) => EID.EID | undefined;
+  /** Avatar size: 6 for a dense list row (the default), 9 for a message tile's own header. */
+  size?: AvatarProps['size'];
   onContactCreate?: (actor: Actor.Actor) => void;
   /** Render a trailing remove button (e.g. attendee rows in the editable event header). */
   onRemove?: () => void;
@@ -251,10 +253,10 @@ type RowPersonProps = {
 /**
  * Static avatar variant — no contact resolution. Suitable for virtualized list tiles.
  */
-const PersonAvatarRow = ({ actor, onClick }: Pick<RowPersonProps, 'actor' | 'onClick'>) => (
+const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' | 'size' | 'onClick'>) => (
   <Card.Row>
     <Card.Block>
-      <Avatar actor={actor} onClick={onClick} />
+      <Avatar actor={actor} size={size} onClick={onClick} />
     </Card.Block>
     <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
   </Card.Row>
@@ -269,7 +271,10 @@ const PersonAvatarRow = ({ actor, onClick }: Pick<RowPersonProps, 'actor' | 'onC
  * the same. Separate from {@link PersonAvatarRow} only because resolving a contact costs a query hook
  * per row: a virtualized list keeps the static variant.
  */
-export type ContactAvatarProps = Pick<RowPersonProps, 'actor' | 'role' | 'db' | 'getContact' | 'onContactCreate'> & {
+export type ContactAvatarProps = Pick<
+  RowPersonProps,
+  'actor' | 'role' | 'db' | 'getContact' | 'size' | 'onContactCreate'
+> & {
   onClick?: (event: MouseEvent) => void;
 };
 
@@ -281,7 +286,15 @@ export type ContactAvatarProps = Pick<RowPersonProps, 'actor' | 'role' | 'db' | 
  * Exported because the same treatment belongs to every surface showing a person — `Row.Person`'s
  * gutter, but also list tiles that lay their rows out themselves.
  */
-export const ContactAvatar = ({ actor, role, db, getContact, onContactCreate, onClick }: ContactAvatarProps) => {
+export const ContactAvatar = ({
+  actor,
+  role,
+  db,
+  getContact,
+  size = 6,
+  onContactCreate,
+  onClick,
+}: ContactAvatarProps) => {
   const { t } = useTranslation(translationKey);
   // Unconditional hook, but a `getContact` caller passes no `db`, so it runs no query.
   const resolved = useActorContact(getContact ? undefined : db, actor);
@@ -327,12 +340,14 @@ export const ContactAvatar = ({ actor, role, db, getContact, onContactCreate, on
           variant='ghost'
           iconOnly
           icon='ph--user-circle-plus--regular'
-          size={5}
+          // One step below the avatar it replaces, so the button reads as an affordance rather than
+          // as a heavier stand-in for the face.
+          size={Number(size) >= 8 ? 6 : 5}
           label={t('create-contact.label')}
           onClick={handleContactCreate}
         />
       ) : (
-        <Avatar actor={actor} onClick={onClick} />
+        <Avatar actor={actor} size={size} onClick={onClick} />
       )}
     </div>
   );
@@ -340,7 +355,16 @@ export const ContactAvatar = ({ actor, role, db, getContact, onContactCreate, on
 
 ContactAvatar.displayName = 'ContactAvatar';
 
-const PersonContactRow = ({ actor, role, db, getContact, onContactCreate, onRemove, onClick }: RowPersonProps) => {
+const PersonContactRow = ({
+  actor,
+  role,
+  db,
+  getContact,
+  size,
+  onContactCreate,
+  onRemove,
+  onClick,
+}: RowPersonProps) => {
   const { t } = useTranslation(translationKey);
 
   return (
@@ -351,6 +375,7 @@ const PersonContactRow = ({ actor, role, db, getContact, onContactCreate, onRemo
           role={role}
           db={db}
           getContact={getContact}
+          size={size}
           onContactCreate={onContactCreate}
           onClick={onClick}
         />
@@ -376,7 +401,7 @@ const RowPerson = ({ onClick, ...props }: RowPersonProps) =>
   props.db || props.getContact ? (
     <PersonContactRow {...props} onClick={onClick} />
   ) : (
-    <PersonAvatarRow actor={props.actor} onClick={onClick} />
+    <PersonAvatarRow actor={props.actor} size={props.size} onClick={onClick} />
   );
 
 RowPerson.displayName = 'Row.Person';
@@ -431,6 +456,38 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
 RowTags.displayName = 'Row.Tags';
 
 //
+// Star
+//
+
+type RowStarProps = {
+  starred?: boolean;
+  /** Toggle handler; the button renders only when provided. */
+  onToggle?: () => void;
+};
+
+/**
+ * Star toggle for a `Card.Block` leading gutter (shared by event/message tiles and headers). Stops
+ * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
+ */
+const RowStar = ({ starred, onToggle }: RowStarProps) => {
+  const handleClick = useCallback<NonNullable<IconButtonProps['onClick']>>(
+    (event) => {
+      event.stopPropagation();
+      onToggle?.();
+    },
+    [onToggle],
+  );
+
+  if (!onToggle) {
+    return null;
+  }
+
+  return <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
+};
+
+RowStar.displayName = 'Row.Star';
+
+//
 // Attachments
 //
 
@@ -468,38 +525,6 @@ const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
 RowAttachments.displayName = 'Row.Attachments';
 
 //
-// Star
-//
-
-type RowStarProps = {
-  starred?: boolean;
-  /** Toggle handler; the button renders only when provided. */
-  onToggle?: () => void;
-};
-
-/**
- * Star toggle for a `Card.Block` leading gutter (shared by event/message tiles and headers). Stops
- * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
- */
-const RowStar = ({ starred, onToggle }: RowStarProps) => {
-  const handleClick = useCallback<NonNullable<IconButtonProps['onClick']>>(
-    (event) => {
-      event.stopPropagation();
-      onToggle?.();
-    },
-    [onToggle],
-  );
-
-  if (!onToggle) {
-    return null;
-  }
-
-  return <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
-};
-
-RowStar.displayName = 'Row.Star';
-
-//
 // Row
 //
 
@@ -508,8 +533,8 @@ export const Row = {
   Ref: RowRef,
   Person: RowPerson,
   Tags: RowTags,
-  Attachments: RowAttachments,
   Star: RowStar,
+  Attachments: RowAttachments,
 };
 
 export type { RowAttachmentsProps, RowDateProps, RowPersonProps, RowRefProps, RowStarProps, RowTagsProps };
