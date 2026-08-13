@@ -160,23 +160,64 @@ describe('ScanMailbox cascade', () => {
         // assistant is up asks for a model nobody serves. That is a precondition, not a fault: the
         // deterministic work stands, the cascade reports no failure, and each AI tier says why it did
         // not run (rather than the first one being blamed for the rest).
+        // `analyze` is included: it is missing a DIFFERENT precondition (a FactStore no plugin here
+        // contributes), so one run exercises both flavours and shows each tier naming its own reason
+        // rather than inheriting the first one's.
         const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
-          // `analyze` is left out: it needs a FactStore this layer does not provide, so it would fail
-          // for a reason that has nothing to do with the model.
-          tiers: ['deterministic', 'classify', 'summarize'],
+          tiers: ['deterministic', 'classify', 'summarize', 'analyze'],
           model: 'com.example.model.does-not-exist.default',
         });
 
         expect(result.failed).toBe(0);
         expect(result.completed).toBe(2);
-        expect(result.stages.map((stage) => stage.status)).toEqual(['completed', 'completed', 'skipped', 'skipped']);
-        for (const stage of result.stages.slice(2)) {
+        expect(result.stages.map((stage) => stage.status)).toEqual([
+          'completed',
+          'completed',
+          'skipped',
+          'skipped',
+          'skipped',
+        ]);
+        for (const stage of result.stages.slice(2, 4)) {
           expect(stage.error).toBe('ai unavailable (assistant not ready)');
         }
+        expect(result.stages.at(-1)).toMatchObject({
+          tier: 'analyze',
+          error: '@dxos/pipeline-rdf/FactStore unavailable',
+        });
 
         // The deterministic tier's writes are intact.
+        expect((yield* Database.query(Filter.type(Person.Person)).run).length).toBe(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'skips a tier whose service no plugin contributed, rather than failing the cascade',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { mailbox } = yield* seedMailbox();
+
+        // `analyze` declares `FactStore`, which only plugin-brain contributes; this layer has no such
+        // provider, so the process invoker rejects at spawn time. That is the same class of unmet
+        // precondition as an absent `AiService` — the host app did not contribute something a tier
+        // declared — and must be reported the same way, or one uninstalled plugin turns a healthy
+        // mailbox's scan red and strands the deterministic work behind it.
+        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+          mailbox: Ref.make(mailbox),
+          me: ME,
+          tiers: ['deterministic', 'analyze'],
+        });
+
+        expect(result.failed).toBe(0);
+        expect(result.completed).toBe(2);
+        expect(result.stages.map((stage) => stage.status)).toEqual(['completed', 'completed', 'skipped']);
+        expect(result.stages.at(-1)?.error).toContain('unavailable');
+
+        // The deterministic tier's writes survive the skip.
         expect((yield* Database.query(Filter.type(Person.Person)).run).length).toBe(1);
       },
       Effect.provide(TestLayer),

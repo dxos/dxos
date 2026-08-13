@@ -405,11 +405,18 @@ generalize now with mailbox as instance #1.
 
 ### Tasks
 
-- [ ] **Failing test for the missing-`FactStore` classification**, then the uniform gate — any
-      `ServiceNotAvailableError` reports `skipped` with the tag named, instead of `failed` aborting
-      the cascade. `FactStore` is the only service any mailbox pipeline needs beyond
-      `AiService`/`Database`/`Trace`, so a per-processor soft-precondition mechanism would be
-      machinery for one case. Removes the workaround at `scan-mailbox.test.ts:166`.
+- [x] **Uniform precondition gate** — REPRODUCED FIRST, then fixed. The failing test confirmed the
+      inference exactly: `ServiceNotAvailable: Service not available: @dxos/pipeline-rdf/FactStore` →
+      `completed: 2, failed: 1, skipped: 0`. `unmetPrecondition` (new `operations/precondition.ts`)
+      now recognises any `ServiceNotAvailableError` and reports `skipped` with the tag named; the two
+      AI flavours keep their own wording, since users experience "the assistant is not up" as one
+      thing rather than a missing tag. Uniform over the tag rather than per-stage: the soft set is not
+      a property of the stage, it is whatever the deployment did not contribute, and `Database`/`Trace`
+      cannot be missing (the cascade could not have spawned). Matched structurally with a message
+      fallback, not by class — the error is flattened crossing the invocation boundary, which is why
+      `ai-gate.ts` was already written that way. 7 tests; the workaround at `scan-mailbox.test.ts:166`
+      is gone and that test now exercises BOTH precondition flavours in one run, each tier naming its
+      own reason instead of inheriting the first one's.
 - [ ] **Tag `AnalyzeMailbox`'s cursor with an explicit id** (+ one-time migration for existing
       untagged cursors). Today it identifies its cursor by having **zero** meta keys, so any future
       consumer that forgets to tag its own gets silently adopted and analysis resumes from that
