@@ -14,6 +14,8 @@ const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Gra
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {
   mailboxes: 'mailboxes',
+  inbox: 'inbox',
+  starred: 'starred',
   allMail: 'all-mail',
   sent: 'sent',
   drafts: 'drafts',
@@ -30,6 +32,12 @@ export const getMailboxesPath = (spaceId: string): string =>
 /** Canonical qualified path to a specific mailbox within a space. */
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxesPath(spaceId)}/${mailboxId}`;
+
+/** Canonical segment ID for the "Inbox" child node. */
+export const getInboxId = (): string => Segments.inbox;
+
+/** Canonical segment ID for the "Starred" child node. */
+export const getStarredId = (): string => Segments.starred;
 
 /** Canonical segment ID for the "All Mail" (unfiltered) child node. */
 export const getAllMailId = (): string => Segments.allMail;

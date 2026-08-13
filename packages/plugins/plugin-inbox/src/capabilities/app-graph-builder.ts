@@ -31,10 +31,12 @@ import {
   getAllMailId,
   getCalendarsPath,
   getDraftsId,
+  getInboxId,
   getMailboxDraftsPath,
   getMailboxesPath,
   getMailboxesSectionId,
   getSentId,
+  getStarredId,
   getSubscriptionsId,
 } from '../paths';
 import { getMessageLabel } from '../util';
@@ -101,12 +103,39 @@ export default Capability.makeModule(
                   // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
                   // static with no rename/delete actions.
                   Node.make({
+                    id: getInboxId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['inbox.label', { ns: meta.profile.key }],
+                      icon: 'ph--tray--regular',
+                      iconHue: 'rose',
+                      // Gmail/JMAP both model the inbox as positive membership (Gmail's INBOX label,
+                      // JMAP's inbox role), so archiving removes this tag rather than adding one —
+                      // no complement operator is needed here or in `MailboxArticle`.
+                      filter: '#inbox',
+                      systemTag: 'inbox' satisfies SystemTags.SystemTagId,
+                    },
+                  }),
+                  Node.make({
+                    id: getStarredId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['starred.label', { ns: meta.profile.key }],
+                      icon: 'ph--star--regular',
+                      iconHue: 'rose',
+                      filter: '#starred',
+                      systemTag: 'starred' satisfies SystemTags.SystemTagId,
+                    },
+                  }),
+                  Node.make({
                     id: getAllMailId(),
                     type: FILTER_TYPE,
                     data: mailbox,
                     properties: {
                       label: ['all-mail.label', { ns: meta.profile.key }],
-                      icon: 'ph--tray--regular',
+                      icon: 'ph--stack--regular',
                       iconHue: 'rose',
                       filter: '',
                     },

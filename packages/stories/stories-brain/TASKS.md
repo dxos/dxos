@@ -142,12 +142,25 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       `onOpen` uses for a message), so a PDF/image gets the deck's own surface rather than an inline
       preview. Needs: a click handler on `Row.Attachments` (react-ui-card, currently presentational),
       the attachment ref resolved to its Blob/object DXN, and a surface that renders that type.
-- [ ] **Starred virtual folder in the navtree** (requested 2026-08-13) — add a mailbox child node in
-      the app graph (beside `All Mail` / `Sent` / `Drafts` / `Subscriptions`) that opens the mailbox
-      with a starred filter. The pieces exist: those siblings are graph nodes carrying a
-      `properties.filter` / `systemTag` that `MailboxArticle` reads, and starred membership already
-      lives in the mailbox tag index (`SystemTags.systemTagKey('starred')`), so this is a node plus a
-      filter, not new query machinery.
+- [x] **Inbox + Starred virtual folders in the navtree** (requested 2026-08-13) — `Inbox`
+      (`systemTag: 'inbox'`) and `Starred` (`systemTag: 'starred'`) mailbox child nodes in
+      `app-graph-builder.ts`, `getInboxId`/`getStarredId` in `paths.ts`, `inbox.label`/`starred.label`
+      translations. No new query machinery: the siblings' `properties.filter`/`systemTag` path that
+      `MailboxArticle` reads already resolves membership through the mailbox tag index. `All Mail`
+      moved to `ph--stack--regular` because `Inbox` takes the tray icon. FOUND: `inbox.label` already
+      existed as a DEAD key (nothing referenced it) — removed the orphan instead of duplicating it.
+      NOTE: the mailbox ROOT node already carried `filter: '#inbox'` + `systemTag: 'inbox'` as a
+      placeholder, so the root and the new child resolve to the same view — which is what Gmail does
+      (the account row _is_ the inbox).
+- [ ] **`InboxOperation.ArchiveMessage` — Gmail semantics** (decided 2026-08-13) — archive REMOVES the
+      `inbox` system tag. There is no `archived` tag and the filter language needs no complement
+      operator: Gmail's INBOX is a label and JMAP's inbox is a mailbox role, so both providers already
+      map onto `SystemTags` (`plugin-google/…/sync/system-tags.ts:14`, `plugin-jmap/…/sync/system-tags.ts:13`)
+      and un-archiving is simply re-adding the tag. This is why "Inbox = non-archived" needs no
+      negation — modelling an `archived` tag _and_ a complement would be a second, divergent model of
+      the same fact. Surface: `translations.ts` already carries an orphan `'action-archive.menu':
+    'Archive'` referenced by nothing, so an archive affordance was started and abandoned — wire the
+      menu item to it. Fold into the conversation-menu item below.
 - [ ] **ConversationStack avatar has no contact affordance** (reported 2026-08-13) — the message tile
       renders a bare `Avatar`, so the popover/create mechanism the `Row.Person` surfaces got is absent
       in `MessageArticle`. Swap it for the exported `ContactAvatar` and host `ContactPreview` in the

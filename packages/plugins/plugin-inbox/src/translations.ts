@@ -59,7 +59,6 @@ export const translations = [
         'draft.label': 'New message',
         'event.label': 'Event',
         'facts.label': 'Facts',
-        'inbox.label': 'Inbox',
 
         'no-connections.label': 'No connections configured',
 
@@ -142,6 +141,8 @@ export const translations = [
         'delete-filter.label': 'Delete filter',
 
         'mailboxes-section.label': 'Mailboxes',
+        'inbox.label': 'Inbox',
+        'starred.label': 'Starred',
         'all-mail.label': 'All Mail',
         'sent.label': 'Sent',
         'drafts.label': 'Drafts',
