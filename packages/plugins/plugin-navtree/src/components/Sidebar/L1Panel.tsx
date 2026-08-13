@@ -24,10 +24,17 @@ import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
 
 /**
- * Delay before the unavailable-workspace message appears: a workspace whose space is still loading has
- * no graph node yet and materializes into a real panel on its own, so it must not flash during that window.
+ * Delay before the unavailable-workspace message appears, timed from the last change to the set of
+ * space workspaces rather than from mount, so it lands only once that set has held still.
  */
 const RENDER_DELAY = '1s';
+
+/**
+ * Width held for the item-end slot (`org.dxos.role.navtreeItemEnd`), whose surface resolves after the
+ * tree has painted: a bare `min-content` track starts collapsed and re-truncates every label in the
+ * panel when it lands. Sized to what fills it, an `AttentionGlyph` (`w-3`) inset by `mx-1`.
+ */
+const ITEM_END_SIZE = '1.25rem';
 
 export type L1PanelProps = {
   open?: boolean;
@@ -36,6 +43,14 @@ export type L1PanelProps = {
   id: string;
   /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
   item?: Node.Node;
+  /**
+   * Identity of the set of space workspaces in the graph; empty until the client has published its
+   * space list. Gates the unavailable message, which is a claim about that list: it stays hidden
+   * while the set is empty, and each change to it restarts {@link RENDER_DELAY} so the claim is
+   * made only once spaces have stopped arriving. Every identity ends up with at least a settings
+   * space, so an empty set means not-loaded-yet rather than nothing-to-show.
+   */
+  spaces?: string;
   isCurrent: boolean;
   onBack?: () => void;
 };
@@ -45,7 +60,7 @@ export type L1PanelProps = {
  * longer exists, or persisted deck state pointing at one after a profile switch — the panel body is the
  * unavailable-workspace message, so the sidebar is never blank.
  */
-const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps) => {
+const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
@@ -75,13 +90,18 @@ const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps)
         (item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
-          <Empty
-            label={t('workspace-unavailable.description')}
-            // Second grid row, so the message clears the rail exactly as the tree does, and hugging its
-            // top rather than stretching to the row's full height.
-            classNames='row-start-2 self-start animate-fade-in'
-            style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
-          />
+          !!spaces && (
+            <Empty
+              // Remounting restarts the delay animation, which is how a set that is still filling
+              // in keeps deferring the message.
+              key={spaces}
+              label={t('workspace-unavailable.description')}
+              // Second grid row, so the message clears the rail exactly as the tree does, and
+              // hugging its top rather than stretching to the row's full height.
+              classNames='row-start-2 self-start animate-fade-in'
+              style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
+            />
+          )
         ))}
     </Tabs.Panel>
   );
@@ -127,7 +147,7 @@ const L1PanelContent = ({
             path={path}
             levelOffset={5}
             draggable
-            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
+            gridTemplateColumns={`[tree-row-start] minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
             renderColumns={NavTreeItemColumns}
             blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
@@ -157,7 +177,9 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
   return (
     <div
       data-tauri-drag-region
-      className='grid grid-cols-[28px_1fr_min-content_min-content] w-full items-center dx-app-drag dx-density-lg'
+      className='grid w-full items-center dx-app-drag dx-density-lg'
+      // Same late item-end surface as the tree rows below, so the header holds the slot too.
+      style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
         <IconButton
