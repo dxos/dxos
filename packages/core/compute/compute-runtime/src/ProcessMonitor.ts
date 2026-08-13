@@ -4,12 +4,14 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Process, type Trace } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import type * as Trace from '@dxos/compute/Trace';
 
 import { ProcessManagerService } from './process-manager-service';
 import * as RemoteProcessManager from './RemoteProcessManager';

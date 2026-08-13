@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
 import { Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -32,18 +32,20 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
   }
 
   return (
-    <Message.Root classNames={['m-1', classNames]} valence='warning'>
-      <Message.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Message.Title>
-      <Message.Content asChild>
-        <ul className='flex flex-col gap-0.5 text-sm'>
-          {errors.map((error) => (
-            <li key={`${error.url}::${error.protocol}`} className='truncate'>
-              <span className='font-mono'>{error.url}</span>
-              {' — '}
-              <span>{error.message}</span>
-            </li>
-          ))}
-        </ul>
+    <Message.Root valence='warning'>
+      <Message.Content classNames={['m-1', classNames]}>
+        <Message.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Message.Title>
+        <Message.Body asChild>
+          <ul className='flex flex-col gap-0.5 text-sm'>
+            {errors.map((error) => (
+              <li key={`${error.url}::${error.protocol}`} className='truncate'>
+                <span className='font-mono'>{error.url}</span>
+                {' — '}
+                <span>{error.message}</span>
+              </li>
+            ))}
+          </ul>
+        </Message.Body>
       </Message.Content>
     </Message.Root>
   );

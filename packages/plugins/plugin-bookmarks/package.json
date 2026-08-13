@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-bookmarks",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Bookmarks for clipped web pages.",
   "homepage": "https://dxos.org",
@@ -40,9 +40,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/BookmarksPlugin.tsx",
-      "types": "./dist/types/src/BookmarksPlugin.d.ts",
-      "default": "./dist/lib/BookmarksPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -62,23 +62,47 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./package.json": "./package.json",
+    "./Bookmark": {
+      "source": "./src/types/Bookmark.ts",
+      "types": "./dist/types/src/types/Bookmark.d.ts",
+      "import": "./dist/lib/Bookmark.mjs"
+    },
+    "./BookmarkOperation": {
+      "source": "./src/types/BookmarkOperation.ts",
+      "types": "./dist/types/src/types/BookmarkOperation.d.ts",
+      "import": "./dist/lib/BookmarkOperation.mjs"
+    },
+    "./BookmarksEvents": {
+      "source": "./src/types/BookmarksEvents.ts",
+      "types": "./dist/types/src/types/BookmarksEvents.d.ts",
+      "import": "./dist/lib/BookmarksEvents.mjs"
+    },
+    "./BookmarksPlugin": {
+      "source": "./src/BookmarksPlugin.ts",
+      "types": "./dist/types/src/BookmarksPlugin.d.ts",
+      "import": "./dist/lib/BookmarksPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Bookmark": [
+        "dist/types/src/types/Bookmark.d.ts"
+      ],
+      "BookmarkOperation": [
+        "dist/types/src/types/BookmarkOperation.d.ts"
+      ],
+      "BookmarksEvents": [
+        "dist/types/src/types/BookmarksEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -96,11 +120,9 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-crx": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
@@ -114,8 +136,8 @@
   "devDependencies": {
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { JsonView, Placeholder, Searchbar } from '@dxos/devtools';
 import { Entity, Format, Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';

@@ -2,24 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
+import type * as Node from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck';
-import { type Node } from '@dxos/plugin-graph';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { Path, type TreeModel } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import { type NavTreeItemGraphNode } from '#types';
+import { NavTreeNode } from '#types';
 
 import { filterItems } from '../util';
 import { useNavTreeState } from './useNavTreeState';
 
 // TODO(wittjosiah): Move companion/hidden nodes to their own edge categories so this filter is unnecessary.
 const isVisibleChild = (node: Node.Node): boolean =>
-  node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
+  node.type !== DeckSchema.PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
 
 /** Create an atom family for item display props keyed by path. */
 const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
@@ -101,7 +101,7 @@ const createItemCurrentFamily = (getItemAtom: ReturnType<typeof useNavTreeState>
 /**
  * Creates a TreeModel backed by the app graph and navtree state.
  */
-export const useNavTreeModel = (rootId: string): TreeModel<NavTreeItemGraphNode> => {
+export const useNavTreeModel = (rootId: string): TreeModel<NavTreeNode.NavTreeItemGraphNode> => {
   const { graph } = useAppGraph();
   const { getItemAtom } = useNavTreeState();
 

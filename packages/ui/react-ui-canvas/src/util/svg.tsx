@@ -8,14 +8,11 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type Dimension, type Point } from '../types';
+import { createPath } from './svg-path';
 
 // Refs
 //  - https://airbnb.io/visx/gallery
 //  - https://github.com/tldraw/tldraw/blob/main/packages/editor/src/lib/primitives/Vec.ts
-
-export const createPath = (points: Point[], join = false) => {
-  return ['M', points.map(({ x, y }) => `${x},${y}`).join(' L '), join ? 'Z' : ''].join(' ');
-};
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths

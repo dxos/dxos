@@ -5,7 +5,8 @@
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
@@ -16,24 +17,15 @@ import { Attention } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 
-// Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](dxn)`.
-const HEIGHT_PATTERN = /^(.*)\|(\d+)$/;
+import { parseEmbedLabel } from './parse-embed-label';
 
-export const parseEmbedLabel = (alt: string): { baseLabel: string; height?: number } => {
-  const match = HEIGHT_PATTERN.exec(alt ?? '');
-  if (match) {
-    const height = Number.parseInt(match[2], 10);
-    if (Number.isFinite(height) && height > 0) {
-      return { baseLabel: match[1], height };
-    }
-  }
-  return { baseLabel: alt ?? '' };
-};
+// Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](dxn)`.
 
 const formatEmbedLabel = (baseLabel: string, height?: number): string =>
   height != null ? `${baseLabel}|${height}` : baseLabel;
 
 const MIN_SIZE = 6;
+
 const FALLBACK_SIZE = 320;
 
 /** Scroll the element's top into view (honoring its `scroll-margin`) only if that top is not already visible. */

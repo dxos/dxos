@@ -32,7 +32,7 @@ describe('Pipeline.run', () => {
   });
 
   test('propagates the shared context via the Requirements channel', async ({ expect }) => {
-    class Factor extends Context.Tag('Factor')<Factor, { readonly factor: number }>() {}
+    class Factor extends Context.Service<Factor, { readonly factor: number }>()('Factor') {}
     const { sink, items } = captureSink<number>();
     const program = Stream.fromIterable([1, 2]).pipe(
       Stage.map('scale', (n) => Factor.pipe(Effect.map(({ factor }) => n * factor))),
@@ -72,7 +72,7 @@ describe('Pipeline.run overflow', () => {
   test('suspend (default) delivers every item to a slow sink — no loss', async ({ expect }) => {
     const items: number[] = [];
     // A sink that yields between commits; back pressure must still deliver all items.
-    const sink = (out: number) => Effect.sync(() => items.push(out)).pipe(Effect.zipLeft(Effect.yieldNow()));
+    const sink = (out: number) => Effect.sync(() => items.push(out)).pipe(Effect.tap(Effect.yieldNow));
     await EffectEx.runPromise(
       Stream.fromIterable(Array.from({ length: 50 }, (_unused, index) => index)).pipe(
         Stage.map('id', (n) => Effect.succeed(n)),
@@ -111,7 +111,7 @@ describe('Pipeline.run overflow', () => {
     // the input-side sliding buffer (capacity 1) keeps only the latest, so intermediate items drop.
     const slow = Stage.map(
       'slow',
-      (n: number) => Effect.sync(() => runs.push(n)).pipe(Effect.zipRight(Effect.sleep('40 millis')), Effect.as(n)),
+      (n: number) => Effect.sync(() => runs.push(n)).pipe(Effect.andThen(Effect.sleep('40 millis')), Effect.as(n)),
       { overflow: 'sliding', bufferSize: 1 },
     );
     const { sink } = captureSink<number>();
@@ -125,7 +125,7 @@ describe('Pipeline.run overflow', () => {
     Effect.fnUntraced(function* ({ expect }) {
       const controller = new AbortController();
       const { sink } = captureSink<number>();
-      const pipeline = yield* Effect.fork(
+      const pipeline = yield* Effect.forkChild(
         Stream.fromIterable(Array.from({ length: 100 }, (_, index) => index)).pipe(
           Stage.map('id', (n) => Effect.succeed(n)),
           Stage.map('sleep', (n) => Effect.sleep('10 millis').pipe(Effect.as(n)), {
@@ -145,7 +145,7 @@ describe('Pipeline.run overflow', () => {
         ),
       );
 
-      const aborter = yield* Effect.fork(
+      const aborter = yield* Effect.forkChild(
         Effect.gen(function* () {
           yield* Effect.sleep('500 millis');
           console.log('aborting');
@@ -156,7 +156,7 @@ describe('Pipeline.run overflow', () => {
       yield* Fiber.join(aborter);
       const result = yield* Fiber.join(pipeline);
       invariant(Exit.isFailure(result), 'pipeline should fail');
-      invariant(Cause.isInterrupted(result.cause), 'pipeline should be interrupted');
+      invariant(Cause.hasInterrupts(result.cause), 'pipeline should be interrupted');
     }),
   );
 
@@ -166,7 +166,7 @@ describe('Pipeline.run overflow', () => {
       const controller = new AbortController();
       let cancelled = false;
       const { sink } = captureSink<number>();
-      const pipeline = yield* Effect.fork(
+      const pipeline = yield* Effect.forkChild(
         Stream.fromIterable(Array.from({ length: 100 }, (_, index) => index)).pipe(
           Stage.map('sleep', (n) => Effect.sleep('10 millis').pipe(Effect.as(n)), {
             overflow: 'suspend',

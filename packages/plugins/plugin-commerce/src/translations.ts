@@ -6,8 +6,8 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
-import { meta } from './meta';
-import { Provider, Result, Search } from './types';
+import { meta } from '#meta';
+import { Provider, Result, Search } from '#types';
 
 export const translations = [
   ...formTranslations,

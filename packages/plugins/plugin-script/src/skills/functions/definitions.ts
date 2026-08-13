@@ -5,15 +5,15 @@
 import * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotations({
+const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotate({
   description: 'The ID of the function.',
 });
 
-const FunctionId = Schema.String.annotations({
+const FunctionId = Schema.String.annotate({
   description: 'The ID of the function. Can be passed as the function parameter to other operations.',
 });
 
@@ -32,7 +32,7 @@ const FUNCTION_FORMAT = trim`
       name: 'My Function',
     },
     input: Schema.Struct({
-      city: Schema.String.annotations({ description: 'City name' }),
+      city: Schema.String.annotate({ description: 'City name' }),
     }),
     output: Schema.Any,
   });
@@ -102,13 +102,13 @@ export const Create = Operation.make({
     icon: 'ph--code--regular',
   },
   input: Schema.Struct({
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'Name of the function.',
     }),
-    source: Schema.optional(Schema.String).annotations({
+    source: Schema.optional(Schema.String).annotate({
       description: 'TypeScript source code for the function.',
     }),
-    templateId: Schema.optional(Schema.String).annotations({
+    templateId: Schema.optional(Schema.String).annotate({
       description: 'ID of a template to use as the initial source.',
     }),
   }),
@@ -139,13 +139,13 @@ export const Read = Operation.make({
 // The edit descriptions feed the script skill's LLM tool definition (and its memoized
 // fixtures), so the schema stays local and context-tuned; the apply logic is shared via `Doc.applyEdits`.
 const Edit = Schema.Struct({
-  oldString: Schema.String.annotations({
+  oldString: Schema.String.annotate({
     description: 'The text to find in the source.',
   }),
-  newString: Schema.String.annotations({
+  newString: Schema.String.annotate({
     description: 'The text to replace it with.',
   }),
-  replaceAll: Schema.optional(Schema.Boolean).annotations({
+  replaceAll: Schema.optional(Schema.Boolean).annotate({
     description: 'If true, replaces all occurrences. Defaults to false (first occurrence only).',
   }),
 });
@@ -159,13 +159,13 @@ export const Update = Operation.make({
   },
   input: Schema.Struct({
     function: FunctionRef,
-    name: Schema.optional(Schema.String).annotations({
+    name: Schema.optional(Schema.String).annotate({
       description: 'New name for the function.',
     }),
-    description: Schema.optional(Schema.String).annotations({
+    description: Schema.optional(Schema.String).annotate({
       description: 'New description for the function.',
     }),
-    edits: Schema.optional(Schema.Array(Edit)).annotations({
+    edits: Schema.optional(Schema.Array(Edit)).annotate({
       description: 'Edits to apply to the source. Each edit finds oldString and replaces it with newString.',
     }),
   }),
@@ -201,7 +201,7 @@ export const Deploy = Operation.make({
   }),
   output: Schema.Struct({
     function: FunctionId,
-    functionUrl: Schema.optional(Schema.String).annotations({
+    functionUrl: Schema.optional(Schema.String).annotate({
       description: 'The URL of the deployed function.',
     }),
   }),
@@ -217,12 +217,12 @@ export const Invoke = Operation.make({
   },
   input: Schema.Struct({
     function: FunctionRef,
-    payload: Schema.optional(Schema.Unknown).annotations({
+    payload: Schema.optional(Schema.Unknown).annotate({
       description: 'The input payload to pass to the function.',
     }),
   }),
   output: Schema.Struct({
-    response: Schema.Unknown.annotations({
+    response: Schema.Unknown.annotate({
       description: 'The response from the function.',
     }),
   }),
@@ -230,22 +230,22 @@ export const Invoke = Operation.make({
 });
 
 const InvocationSpanSchema = Schema.Struct({
-  id: Schema.String.annotations({
+  id: Schema.String.annotate({
     description: 'The invocation ID.',
   }),
-  timestamp: Schema.Number.annotations({
+  timestamp: Schema.Number.annotate({
     description: 'Start time of the invocation (epoch ms).',
   }),
-  duration: Schema.Number.annotations({
+  duration: Schema.Number.annotate({
     description: 'Duration in milliseconds.',
   }),
-  outcome: Schema.String.annotations({
+  outcome: Schema.String.annotate({
     description: 'Invocation outcome: success, failure, or pending.',
   }),
-  input: Schema.Object.annotations({
+  input: Schema.ObjectKeyword.annotate({
     description: 'The input payload passed to the function.',
   }),
-  error: Schema.optional(Schema.Object).annotations({
+  error: Schema.optional(Schema.ObjectKeyword).annotate({
     description: 'Error details if the invocation failed.',
   }),
 });
@@ -259,15 +259,15 @@ export const InspectInvocations = Operation.make({
   },
   input: Schema.Struct({
     function: FunctionRef,
-    limit: Schema.optional(Schema.Number).annotations({
+    limit: Schema.optional(Schema.Number).annotate({
       description: 'Maximum number of invocations to return. Defaults to 20.',
     }),
   }),
   output: Schema.Struct({
-    invocations: Schema.Array(InvocationSpanSchema).annotations({
+    invocations: Schema.Array(InvocationSpanSchema).annotate({
       description: 'List of invocation spans, most recent first.',
     }),
-    total: Schema.Number.annotations({
+    total: Schema.Number.annotate({
       description: 'Total number of invocations found.',
     }),
   }),
@@ -275,19 +275,19 @@ export const InspectInvocations = Operation.make({
 });
 
 const DeployedFunctionSchema = Schema.Struct({
-  key: Schema.optional(Schema.String).annotations({
+  key: Schema.optional(Schema.String).annotate({
     description: 'Unique key identifying the function. Pass to InstallFunction to install it.',
   }),
-  name: Schema.String.annotations({
+  name: Schema.String.annotate({
     description: 'Display name of the function.',
   }),
-  version: Schema.String.annotations({
+  version: Schema.String.annotate({
     description: 'Semantic version of the deployed function.',
   }),
-  description: Schema.optional(Schema.String).annotations({
+  description: Schema.optional(Schema.String).annotate({
     description: 'Description of what the function does.',
   }),
-  updated: Schema.optional(Schema.String).annotations({
+  updated: Schema.optional(Schema.String).annotate({
     description: 'ISO timestamp of the last deployment.',
   }),
 });
@@ -301,7 +301,7 @@ export const QueryDeployedFunctions = Operation.make({
   },
   input: Schema.Void,
   output: Schema.Struct({
-    functions: Schema.Array(DeployedFunctionSchema).annotations({
+    functions: Schema.Array(DeployedFunctionSchema).annotate({
       description: 'List of deployed functions.',
     }),
   }),
@@ -317,16 +317,16 @@ export const InstallFunction = Operation.make({
     icon: 'ph--download--regular',
   },
   input: Schema.Struct({
-    key: Schema.String.annotations({
+    key: Schema.String.annotate({
       description: 'The unique key of the deployed function to install (from QueryDeployedFunctions).',
     }),
   }),
   output: Schema.Struct({
     function: FunctionId,
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'Name of the installed function.',
     }),
-    version: Schema.String.annotations({
+    version: Schema.String.annotate({
       description: 'Version of the installed function.',
     }),
   }),

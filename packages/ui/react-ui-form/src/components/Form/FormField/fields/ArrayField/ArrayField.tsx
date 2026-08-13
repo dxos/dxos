@@ -3,12 +3,11 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ReactNode, useCallback, useRef } from 'react';
 
 import { Annotation, Ref } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
@@ -23,6 +22,7 @@ import { useFormValues } from '../../../../../hooks';
 import { getFormProperties } from '../../../../../util';
 import { CompactIconButton, FormField, type FormFieldProps } from '../../FormField';
 import { FormFieldHeader } from '../../FormFieldHeader';
+import { getDefaultValue } from './default-value';
 
 // Synthetic id assigned to each row when rendering an ordered list. Plain form
 // values have no stable identity, so drag-and-drop (which requires a stable key
@@ -97,17 +97,15 @@ export const ArrayField = ({
     const baseNode = SchemaEx.findNode(typeNode, SchemaEx.isDiscriminatedUnion);
     const typeLiteral = baseNode
       ? SchemaEx.getDiscriminatedType(baseNode, {})
-      : SchemaEx.findNode(typeNode, SchemaAST.isTypeLiteral);
+      : SchemaEx.findNode(typeNode, SchemaAST.isObjects);
     if (!typeLiteral) {
       return {};
     }
 
     return Object.fromEntries(
       getFormProperties(typeLiteral).map((prop) => {
-        const defaultValue = SchemaAST.getDefaultAnnotation(prop.type).pipe((annotation) =>
-          Option.getOrUndefined(annotation),
-        );
-        return [prop.name, defaultValue];
+        // v4 annotations are a plain record: the getter returns the value or `undefined` directly.
+        return [prop.name, SchemaAST.getDefaultAnnotation(prop.type)];
       }),
     );
   };
@@ -282,41 +280,3 @@ export const ArrayField = ({
 };
 
 ArrayField.displayName = 'Form.ArrayField';
-
-/**
- * Returns the default empty value for a given AST.
- * Used for initializing new array values etc.
- */
-// TODO(wittjosiah): Factor out?
-export const getDefaultValue = (ast?: SchemaAST.AST): any => {
-  switch (ast?._tag) {
-    case 'StringKeyword': {
-      return '';
-    }
-    case 'NumberKeyword': {
-      return 0;
-    }
-    case 'BooleanKeyword': {
-      return false;
-    }
-    case 'Suspend': {
-      return getDefaultValue(ast.f());
-    }
-    case 'Refinement': {
-      // Use minimum from JSON schema annotation (e.g. Schema.between(1, 31)) as the default
-      // so new array items start within the valid range.
-      const jsonSchema = Option.getOrUndefined(SchemaAST.getJSONSchemaAnnotation(ast));
-      if (jsonSchema != null && 'minimum' in jsonSchema && typeof jsonSchema.minimum === 'number') {
-        return jsonSchema.minimum;
-      }
-      return getDefaultValue(ast.from);
-    }
-    default: {
-      if (ast && SchemaEx.isNestedType(ast)) {
-        return {};
-      } else {
-        throw new Error(`Unsupported type: ${ast?._tag}`);
-      }
-    }
-  }
-};

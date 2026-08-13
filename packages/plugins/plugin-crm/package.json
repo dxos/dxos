@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-crm",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "CRM plugin for Composer. Provides a skill for researching people and organizations and producing structured Profile documents.",
   "homepage": "https://dxos.org",
@@ -14,11 +14,6 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
@@ -35,9 +30,14 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/CrmPlugin.ts",
-      "types": "./dist/types/src/CrmPlugin.d.ts",
-      "default": "./dist/lib/CrmPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#sources": {
       "source": "./src/sources/index.ts",
@@ -58,8 +58,7 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "default": "./dist/lib/types.mjs"
-    },
-    "#util": "./src/util/index.ts"
+    }
   },
   "exports": {
     ".": {
@@ -68,23 +67,47 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./package.json": "./package.json",
+    "./CrmEvents": {
+      "source": "./src/types/CrmEvents.ts",
+      "types": "./dist/types/src/types/CrmEvents.d.ts",
+      "import": "./dist/lib/CrmEvents.mjs"
+    },
+    "./CrmOperation": {
+      "source": "./src/types/CrmOperation.ts",
+      "types": "./dist/types/src/types/CrmOperation.d.ts",
+      "import": "./dist/lib/CrmOperation.mjs"
+    },
+    "./CrmPlugin": {
+      "source": "./src/CrmPlugin.ts",
+      "types": "./dist/types/src/CrmPlugin.d.ts",
+      "import": "./dist/lib/CrmPlugin.mjs"
+    },
+    "./ProfileOf": {
+      "source": "./src/types/ProfileOf.ts",
+      "types": "./dist/types/src/types/ProfileOf.d.ts",
+      "import": "./dist/lib/ProfileOf.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CrmEvents": [
+        "dist/types/src/types/CrmEvents.d.ts"
+      ],
+      "CrmOperation": [
+        "dist/types/src/types/CrmOperation.d.ts"
+      ],
+      "ProfileOf": [
+        "dist/types/src/types/ProfileOf.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -93,30 +116,30 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/extractor": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/pipeline": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:",
     "react": "catalog:"
   },

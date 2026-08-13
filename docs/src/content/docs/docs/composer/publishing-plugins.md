@@ -48,11 +48,11 @@ If your Composer account has a **connected AT Protocol account** (Bluesky), log 
 dx account login
 ```
 
-`login` prompts for a method, mirroring Composer's sign-in: `atproto` (Bluesky), `email`, `device-invitation`, or `recovery-code`. You can also pass them directly, e.g. `dx account login --method atproto alice.bsky.social`.
+`login` prompts for a method, mirroring Composer's sign-in: `atmosphere` (your Atmosphere account, i.e. Bluesky), `email`, `device-invitation`, or `recovery-code`. You can also pass them directly, e.g. `dx account login --method atmosphere alice.bsky.social`.
 
 Once logged in, `dx registry` commands sign your PDS writes through DXOS edge using the AT Protocol account connected to your identity — no app password needed. If you signed up for Composer with Bluesky it's already connected; otherwise connect one with `dx integration add` (or from Composer's settings). Log out with `dx account logout`.
 
-> `dx account login` signs in to an **existing** identity — it doesn't create one. Create your identity in Composer first.
+> `dx account login` signs in to an **existing** identity — it doesn't create one. Create your identity in Composer, or run `dx account signup <access-code>` if you have an access code (it takes the same `--method atmosphere` / `--method email` choice).
 
 ### Option B — App password
 
@@ -220,6 +220,7 @@ You don't need to publish to test your plugin against Composer. Run your plugin'
 
 | Command                         | Purpose                                                                                    |
 | ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `dx account signup <code>`      | Redeem an access code to create an account, via your Atmosphere account or email.          |
 | `dx account login`              | Log in to your DXOS identity; registry writes then use its connected AT Protocol account.  |
 | `dx account logout`             | Log out of the current profile.                                                            |
 | `dx registry publish`           | Build from `dx.config.ts`, host the bundle, and write profile + release records.           |

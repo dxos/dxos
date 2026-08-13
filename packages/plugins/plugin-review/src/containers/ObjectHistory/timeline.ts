@@ -6,7 +6,7 @@ import { type Commit } from '@dxos/react-ui-components';
 import { type Text } from '@dxos/schema';
 import { Branch, type History, Version, diffSpans, diffStats } from '@dxos/versioning';
 
-import { type ReviewCapabilities } from '#types';
+import { ReviewCapabilities } from '#types';
 
 export const MAIN_BRANCH = 'main';
 export const NOW_COMMIT_ID = 'now';

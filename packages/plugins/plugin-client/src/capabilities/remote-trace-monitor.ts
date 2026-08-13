@@ -3,10 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
+import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { RemoteTraceMonitor } from '@dxos/compute-runtime';
 
 import { ClientCapabilities } from '#types';
@@ -42,21 +43,22 @@ export default Capability.makeModule(
                   peerKey:
                     client.halo.device?.deviceKey.toHex() ?? client.halo.identity.get()?.identityKey.toHex() ?? '',
                 };
-                return client.services.rpc.NetworkService.subscribeMessages({ peer, tags }).pipe(
+                return client.services.rpc['NetworkService.subscribeMessages']({ peer, tags }).pipe(
                   // Carry the envelope tags with the payload — the wire payload drops ref meta
                   // (`trigger`), and decode restores it from the tags for cancel addressing.
+                  // v4's `filterMap` signals the drop through a `Result`, not an `Option`.
                   Stream.filterMap((message) =>
                     message.payload?.value
-                      ? Option.some({ payload: message.payload.value, tags: message.tags })
-                      : Option.none(),
+                      ? Result.succeed({ payload: message.payload.value, tags: message.tags })
+                      : Result.failVoid,
                   ),
                   // Never fail the aggregate monitor stream on a transient network error.
-                  Stream.catchAll(() => Stream.empty),
+                  Stream.catch(() => Stream.empty),
                 );
               }),
             ),
     });
 
-    return Capability.contributes(Capabilities.RemoteTraceMonitor, monitor);
+    return Capability.contribute(Capabilities.RemoteTraceMonitor, monitor);
   }),
 );

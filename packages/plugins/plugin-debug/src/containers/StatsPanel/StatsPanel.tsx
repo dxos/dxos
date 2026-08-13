@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { Fragment } from 'react';
 
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ScrollArea } from '@dxos/react-ui';
 
 // Fallback so the atom hook is called unconditionally when no store is contributed (host plugin not
@@ -57,7 +58,7 @@ export const StatsPanel = () => {
             <dl className='grid grid-cols-[auto_minmax(0,1fr)] w-full'>
               {flatten(value).map(([key, cell]) => (
                 <Fragment key={key}>
-                  <dt className='border-be border-separator pbe-1 pbs-1 pie-2 text-description self-start'>{key}</dt>
+                  <dt className='border-be border-separator pbe-1 pbs-1 pe-2 text-description self-start'>{key}</dt>
                   <dd className='border-be border-separator pbe-1 pbs-1 truncate font-mono text-end'>
                     {formatValue(cell)}
                   </dd>

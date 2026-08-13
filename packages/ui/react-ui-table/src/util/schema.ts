@@ -3,7 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 /**
  * Creates a narrowed schema from an original schema that only includes
@@ -14,20 +15,20 @@ import * as SchemaAST from 'effect/SchemaAST';
  * @param paths Array of field paths to extract
  * @returns A narrowed Schema instance containing only the properties at the specified paths
  */
-export const narrowSchema = <S extends Schema.Schema.AnyNoContext>(
+export const narrowSchema = <S extends Schema.Codec<any, any>>(
   schema: S,
   paths: string[],
-): Schema.Schema<unknown, unknown> | undefined => {
+): Schema.Codec<unknown, unknown> | undefined => {
   const ast = (schema as any)?.ast;
 
-  if (SchemaAST.isTypeLiteral(ast)) {
+  if (SchemaAST.isObjects(ast)) {
     // Filter property signatures that match any of the provided paths
     const propertySignatures = ast.propertySignatures.filter((signature) => paths.includes(signature.name.toString()));
 
     // If we found at least one matching property
     if (propertySignatures.length > 0) {
       // Create a new TypeLiteral with only the matching properties
-      const narrowType = new SchemaAST.TypeLiteral(propertySignatures, []);
+      const narrowType = new SchemaAST.Objects(propertySignatures, []);
       return Schema.make(narrowType);
     }
   }

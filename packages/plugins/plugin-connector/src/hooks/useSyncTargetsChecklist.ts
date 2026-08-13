@@ -5,15 +5,15 @@
 import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
 
 import { SYNC_TARGETS_DIALOG } from '../constants';
-import { type Connection } from '../types';
 
 export type UseSyncTargetsChecklistResult = {
   /** True when the connection's connector exposes `getSyncTargets`. Drives "edit" button visibility. */

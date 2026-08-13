@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { type AiContext } from '@dxos/assistant';

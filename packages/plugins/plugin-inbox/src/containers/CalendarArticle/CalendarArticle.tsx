@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -205,7 +205,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
       <div className='grid grid-cols-1 @2xl:grid-cols-[min-content_1fr] h-full'>
-        <Panel.Root className='hidden @2xl:block'>
+        <Panel.Root classNames='hidden @2xl:block'>
           <NaturalCalendar.Root ref={calendarRef}>
             <Panel.Toolbar asChild>
               <NaturalCalendar.Toolbar />
@@ -218,7 +218,9 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
         <Panel.Root>
           <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
             <Panel.Toolbar asChild>
-              <Menu.Toolbar />
+              <Menu.Toolbar>
+                <Menu.Items />
+              </Menu.Toolbar>
             </Panel.Toolbar>
           </Menu.Root>
           <Panel.Content asChild>

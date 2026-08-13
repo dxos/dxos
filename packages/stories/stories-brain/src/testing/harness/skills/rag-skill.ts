@@ -5,7 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation, OperationHandlerSet, Skill, Template } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -26,11 +29,11 @@ export const RetrieveSnippets = Operation.make({
   },
   services: [VectorStore],
   input: Schema.Struct({
-    query: Schema.String.annotations({
+    query: Schema.String.annotate({
       description: 'Natural-language query, e.g. "messages from Nicole Gudmand about invoices".',
     }),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum snippets to return (default 8).',
       }),
     ),

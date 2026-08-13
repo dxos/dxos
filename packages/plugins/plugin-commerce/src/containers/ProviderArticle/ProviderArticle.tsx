@@ -4,9 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import type * as Node from '@dxos/app-graph/Node';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
-import { type Node } from '@dxos/plugin-graph';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import {
@@ -19,8 +19,8 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
-import { Provider } from '../../types';
+import { meta } from '#meta';
+import { Provider } from '#types';
 
 export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provider>;
 
@@ -68,7 +68,9 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
     <Panel.Root role={role}>
       <Panel.Toolbar>
         <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col gap-2 p-3'>

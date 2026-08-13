@@ -66,6 +66,11 @@ export const translations = [
         'sync-mailbox.label': 'Sync',
         'empty-mailbox.message': 'Mailbox empty',
 
+        'process-mailbox.label': 'Process',
+        'stop-process-mailbox.label': 'Stop',
+        'reset-process-cursor.label': 'Reset process cursor',
+        'enrich-mailbox.label': 'Enrich',
+        'stop-enrich-mailbox.label': 'Stop',
         'sync-calendar.label': 'Sync calendar',
         'empty-calendar.message': 'Calendar empty',
 
@@ -143,6 +148,8 @@ export const translations = [
         'subscriptions.label': 'Subscriptions',
         'subscriptions.toolbar.title': 'Subscriptions toolbar',
         'subscriptions.empty.message': 'No bulk-mail subscriptions found.',
+        'subscriptions.filter.placeholder': 'Filter subscriptions…',
+        'subscriptions.no-results.message': 'No matching subscriptions.',
         'subscriptions.count.label': '{{email}} · {{count}} messages',
         'subscriptions.remove.label_zero': 'Remove',
         'subscriptions.remove.label_one': 'Remove ({{count}})',
@@ -161,6 +168,8 @@ export const translations = [
         'send-email-success.title': 'Message sent',
         'send-email-error.title': 'Failed to send email',
         'draft-message.title': 'Draft',
+        'conversation-summary.title': 'Summary',
+        'summary-provenance.label': '{{model}} · {{age}}',
         'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 

@@ -5,15 +5,16 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Account from '@dxos/app-toolkit/Account';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Client } from '@dxos/client';
-import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities, ClientOperation } from '@dxos/plugin-client';
+import { ClientOperation } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { redeemAccountInvitation } from '../credentials';
 import { OnboardingOperation } from '../operations';
 import {
   OAUTH_RECOVERY_REDIRECT_PATH,
@@ -85,12 +86,12 @@ const deleteSnapshot = (accessTokenId: string | undefined): void => {
 };
 
 /**
- * `Effect.tryPromise` wraps a rejected promise in `UnknownException`, whose own `.message` is a
- * generic boilerplate string ("An unknown error occurred in Effect.tryPromise") — the real cause
- * lives in its `.error` property, so unwrap it before logging or it is silently lost.
+ * `Effect.tryPromise` wraps a rejected promise in `UnknownError`, whose own `.message` is a
+ * generic boilerplate string — the real cause lives in its `.cause` property, so unwrap it before
+ * logging or it is silently lost.
  */
 const describeError = (error: unknown): string => {
-  const cause = Cause.isUnknownException(error) ? error.error : error;
+  const cause = Cause.isUnknownError(error) ? error.cause : error;
   return cause instanceof Error ? cause.message : String(cause);
 };
 
@@ -118,12 +119,15 @@ export default Capability.makeModule(
         flow: params.error ? 'error' : params.registrationToken ? 'register' : 'recovery',
         error: params.error,
       });
-      yield* Effect.forkDaemon(
+      yield* Effect.forkDetach(
         Effect.gen(function* () {
           const client = yield* Capability.waitFor(ClientCapabilities.Client);
           const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);
+          // The capability is contributed while the forked initialization is still running;
+          // `halo` reads below need it complete.
+          yield* Effect.promise(() => client.waitUntilInitialized());
           yield* finalizeRedirect(client, invoker, params).pipe(
-            Effect.catchAll((error) =>
+            Effect.catch((error) =>
               Effect.gen(function* () {
                 log.error('oauth recovery finalize failed', { error: describeError(error) });
                 yield* invoker
@@ -142,7 +146,7 @@ export default Capability.makeModule(
         }),
       );
     }
-    return Capability.contributes(Capabilities.Null, null);
+    return [];
   }),
 );
 
@@ -201,7 +205,7 @@ const finalizeRedirect = Effect.fnUntraced(function* (
     }
     invariant(identity, 'identity should exist after create');
 
-    // Route the stashed OAuth refresh token to the personal space + write the IdentityRecovery row.
+    // Route the stashed OAuth refresh token to the default space + write the IdentityRecovery row.
     const completeResult = yield* invoker.invoke(OnboardingOperation.CompleteOAuthRegistration, {
       registrationToken: params.registrationToken,
     });
@@ -212,19 +216,12 @@ const finalizeRedirect = Effect.fnUntraced(function* (
     invariant(email, 'email missing from completeRegistration — kms-service should have rejected no-email flows');
 
     // Redeem the invitation code with the email to mint the hub Account.
-    const identityDid = yield* Effect.tryPromise(() => createDidFromIdentityKey(identity.identityKey));
-    const result = yield* Effect.tryPromise(() =>
-      redeemAccountInvitation({
-        hubUrl: snapshot.hubUrl,
-        email,
-        identityDid,
-        identityKey: identity.identityKey.toHex(),
-        code: snapshot.code.replace(/-/g, '').toUpperCase(),
-      }),
-    );
-    if ('accountId' in result) {
-      log.info('account created', { accountId: result.accountId });
-    }
+    yield* Account.redeemAccessCode({
+      hub: Account.createHubClient(snapshot.hubUrl),
+      identity,
+      email,
+      code: snapshot.code,
+    });
     yield* invoker.schedule(ClientOperation.CreateAgent);
     yield* closeDialog;
     return;

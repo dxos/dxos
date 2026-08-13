@@ -21,7 +21,7 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/ui-theme';
 
-import { cellClassNameForRange, rangeFromIndex } from '#types';
+import { SheetRange, SheetUtil } from '#types';
 
 import { type SheetModel } from '../../model';
 
@@ -58,7 +58,9 @@ const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
 const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCellValue => {
   const address = { col, row };
   const rawValue = model.getValue(address);
-  const ranges = model.sheet.ranges?.filter(({ range }) => inRange(rangeFromIndex(model.sheet, range), address));
+  const ranges = model.sheet.ranges?.filter(({ range }) =>
+    inRange(SheetUtil.rangeFromIndex(model.sheet, range), address),
+  );
   const threadRefs = undefined;
   // TODO(wittjosiah): Update this to get threads via relations.
   // model.sheet.threads
@@ -72,7 +74,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   const description = model.getValueDescription(address);
   const type = description?.type;
   const format = description?.format;
-  const classNames = ranges?.map(cellClassNameForRange).reverse();
+  const classNames = ranges?.map(SheetRange.cellClassNameForRange).reverse();
 
   return {
     value: parseValue({ type, format, value: rawValue }),

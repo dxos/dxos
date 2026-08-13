@@ -4,13 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { ServiceResolver } from '@dxos/compute';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database } from '@dxos/echo';
 
 import { ClientCapabilities } from '#types';
@@ -31,9 +33,16 @@ type MonitorUpdate = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const registry = yield* Capability.get(AppCapabilities.ProgressRegistry);
-    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const client = yield* ClientCapabilities.Client;
+    const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
+
+    // Optional: a host without a progress registry (e.g. a storybook or an embedding app that omits
+    // plugin-progress) loses the meter, not the plugin.
+    const registryOption = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+    if (Option.isNone(registryOption)) {
+      return [];
+    }
+    const registry = registryOption.value;
 
     const monitors = new Map<string, AppCapabilities.ProgressMonitor>();
 
@@ -71,7 +80,7 @@ export default Capability.makeModule(
     const getSpaceName = (space: Space): string | undefined =>
       space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
 
-    const runtime = yield* Effect.runtime<Scope.Scope>();
+    const runtime = yield* Effect.context<Scope.Scope>();
     const subscribeSpace = (space: Space): void =>
       void Effect.gen(function* () {
         const fiber = processManagerRuntime.runFork(
@@ -99,6 +108,8 @@ export default Capability.makeModule(
     for (const space of client.spaces.get()) {
       subscribeSpace(space);
     }
+
+    return [];
   }),
 );
 

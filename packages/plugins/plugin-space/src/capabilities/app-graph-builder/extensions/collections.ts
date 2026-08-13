@@ -5,30 +5,31 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import {
-  AppAnnotation,
-  AppCapabilities,
-  AppNode,
-  AppNodeMatcher,
-  GraphPath,
-  LayoutOperation,
-  UrlResolution,
-} from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Database, Filter, Obj, Type } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EID, SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
+import { resolveCollectionObjectPath } from '../../../util';
 import {
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,
@@ -41,12 +42,24 @@ import {
 //
 
 /** Creates collection-related extensions: collections section, collections, objects, and object actions. */
+
+/**
+ * A collection is always a navigation target; what differs is what navigating to it shows. When a
+ * plugin renders collections as their own article (stack, simple-layout) that article wins, otherwise
+ * the deck opens the collection's contents. Returning `undefined` leaves the ordinary open in place.
+ */
+const collectionDeck = (object: Obj.Unknown, hasCollectionArticle: boolean): DeckSpec.DeckSpec | undefined =>
+  !hasCollectionArticle && Obj.instanceOf(Collection.Collection, object) ? { initial: 'children' } : undefined;
+
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin,
 }: {
   shareableLinkOrigin: string;
 }) {
   const capabilities = yield* Capability.Service;
+  // Hoisted so connector/action bodies read reactively via `get(...)` instead of a sync
+  // `Capability.get`, establishing a dependency that heals once the capability lands.
+  const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
 
   return yield* Effect.all([
     // Content section group — created alongside collections so the group always
@@ -116,7 +129,10 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        if (!ephemeralAtom) {
+          return Effect.succeed([]);
+        }
         const ephemeralState = get(ephemeralAtom);
 
         get(Obj.atom(space.properties));
@@ -144,7 +160,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 get,
                 db: space.db,
                 object,
-                navigable: ephemeralState.navigableCollections,
+                navigable: true,
+                deck: collectionDeck(object, ephemeralState.navigableCollections),
                 canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
                 onRearrange: collectionRef?.target
                   ? AppNode.makeCollectionRearrangeCallback(collectionRef.target)
@@ -162,7 +179,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
       // through a space's collection tree, not just the root collection's direct children. The shape is
       // data-dependent (the object's collection ancestry), so instead of a static `path` it resolves
-      // dynamically: index the space's collections once, then walk that index up to the root collection.
+      // dynamically — see `resolveCollectionObjectPath`.
       url: {
         key: 'object',
         kind: 'item',
@@ -178,25 +195,18 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             if (!space) {
               return null;
             }
-            const rootRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
-              Option.getOrUndefined,
-            );
-            if (!rootRef) {
-              return null;
-            }
-            const rootCollection = yield* Database.load(rootRef).pipe(Effect.orElseSucceed(() => undefined));
-            if (!rootCollection) {
-              return null;
-            }
-            const chain = yield* walkCollectionChainToRoot({ objectId: id, rootId: rootCollection.id }).pipe(
+            const path = yield* resolveCollectionObjectPath({ objectId: id }).pipe(
               Effect.provide(Database.layer(space.db)),
             );
-            return chain ? GraphPath.getCollectionsPath(workspace, ...chain, id) : null;
+            return path ?? null;
           }),
       },
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        if (!ephemeralAtom) {
+          return Effect.succeed([]);
+        }
         const ephemeralState = get(ephemeralAtom);
         const db = Obj.getDatabase(collection);
 
@@ -219,7 +229,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   get,
                   object,
                   db,
-                  navigable: ephemeralState.navigableCollections,
+                  navigable: true,
+                  deck: collectionDeck(object, ephemeralState.navigableCollections),
                   canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
                   onRearrange: AppNode.makeCollectionRearrangeCallback(collection),
                 }),
@@ -244,12 +255,12 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const deletable = !Type.isType(object);
 
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
-        const ephemeralState = get(ephemeralAtom);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
 
-        if (!appGraph) {
+        if (!appGraph || !ephemeralAtom) {
           return Effect.succeed([]);
         }
+        const ephemeralState = get(ephemeralAtom);
 
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
         const parentNode = Option.getOrUndefined(Graph.getNode(appGraph.graph, parentId));
@@ -305,63 +316,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     }),
   ]);
 });
-
-//
-// Helpers
-//
-
-/** Depth cap for the collection-ancestry walk; the composer nav tree is shallow, this only guards bad data. */
-const COLLECTION_WALK_MAX_DEPTH = 32;
-
-/**
- * Walk up a space's collection tree from `objectId` to the root collection. A single query loads the
- * space's collections — each already carries its child refs — so the ancestry is a pure in-memory walk
- * of a child→parent index rather than a query per step. The composer ontology guarantees a tree (an
- * object lives in one collection, no cycles); on bad data the first indexed parent wins, and a
- * visited-set plus depth cap stop a cycle from looping. Returns the intermediate collection ids in
- * root→leaf order (excluding the root collection, whose objects sit directly under
- * `content/collections`), or null if no path to the root exists.
- */
-const walkCollectionChainToRoot = ({
-  objectId,
-  rootId,
-}: {
-  objectId: string;
-  rootId: string;
-}): Effect.Effect<string[] | null, never, Database.Service> =>
-  Effect.gen(function* () {
-    const collections = yield* Database.query(Filter.type(Collection.Collection)).run;
-    const parentOf = new Map<string, string>();
-    for (const collection of collections) {
-      for (const ref of collection.objects ?? []) {
-        const childId = EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined;
-        if (childId && !parentOf.has(childId)) {
-          parentOf.set(childId, collection.id);
-        }
-      }
-    }
-
-    const visited = new Set<string>([objectId]);
-    // Built leaf→root on the way up; the node id wants root→leaf.
-    const chain: string[] = [];
-    let current = objectId;
-    for (let depth = 0; depth < COLLECTION_WALK_MAX_DEPTH; depth++) {
-      const parent = parentOf.get(current);
-      if (!parent) {
-        return null;
-      }
-      if (parent === rootId) {
-        return chain.reverse();
-      }
-      if (visited.has(parent)) {
-        return null;
-      }
-      visited.add(parent);
-      chain.push(parent);
-      current = parent;
-    }
-    return null;
-  });
 
 /** Builds the action list for an ECHO object node. */
 const constructObjectActions = ({

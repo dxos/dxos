@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type ListSpacesResponse, type SpaceActivityEntry } from '@dxos/protocols';
@@ -25,7 +25,7 @@ export const list = Command.make(
       Options.withDescription('Max results per page (capped at 200).'),
       Options.withDefault(50),
     ),
-    cursor: Options.text('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
+    cursor: Options.string('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
     order: Options.choice('order', ['asc', 'desc']).pipe(
       Options.withDescription('Sort order by last activity.'),
       Options.withDefault('desc' as const),
@@ -38,7 +38,7 @@ export const list = Command.make(
     }
 
     const result = yield* adminRequest<ListSpacesResponse>('GET', '/admin/spaces', { query }).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {

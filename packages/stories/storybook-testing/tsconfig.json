@@ -21,9 +21,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {
@@ -76,6 +73,9 @@
     },
     {
       "path": "../../ui/react-ui-debug"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-masonry"

@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { linkEntities } from '@dxos/pipeline-transcription';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
@@ -250,7 +251,7 @@ const TranscriptionDriver = () => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.ReactContext, {
+    return Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }) => (
         <Fragment>

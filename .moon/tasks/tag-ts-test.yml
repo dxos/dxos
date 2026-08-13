@@ -6,7 +6,10 @@ tasks:
     # all opt-in tags (flaky, LLM, sync, e2e) so local + PR CI runs only fast
     # unit tests. CI overrides this via the `VITEST_TAGS_FILTER` env to opt-in
     # specific tags (e.g. `flaky`).
-    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}"'
+    # Trailing `"$@"' --` forwards moon passthrough args (after `--`) to vitest, so
+    # `moon run <pkg>:test -- src/foo.test.ts` filters to one file (needed by the DX_DEBUG_LEAKS
+    # single-suite mode). The `--` is the `$0` placeholder; args land as `$1+` in `"$@"`.
+    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}" "$@"' --
     deps:
       - esbuild-plugins:build
       - node-std:build
@@ -14,9 +17,11 @@ tasks:
       - ^:build
     inputs:
       - '@group(sources)'
+      - /vite.base.config.ts
       - /vitest.base.config.ts
       - /vitest.tags.ts # Ensure cache is invalidated when tag definitions change.
       - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
+      - vite.config.ts # Combined build + test config; most packages use this rather than `vitest.config.ts`.
       - vitest.config.ts
       - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
       - $VITEST_COVERAGE
@@ -24,7 +29,13 @@ tasks:
       - $VITEST_ENV
       - $VITEST_XML_REPORT
       - $VITEST_TAGS_FILTER
-      - $ALLOW_LLM_GENERATION
+      - $DX_RUN_MODEL_FIXTURE_TESTS
+      - $DX_UPDATE_MODEL_FIXTURES
+      # Env-gated CPU-profile / leak-detect instrumentation (vite.base.config.ts); listed so toggling
+      # a var busts the cached test result instead of replaying an un-instrumented run.
+      - $DX_PROFILE_TESTS
+      - $DX_DEBUG_LEAKS
+      - $DX_DEBUG_LEAKS_DIR
     outputs:
       - /coverage/$project/node/**
       - /test-results/$project/node/**

@@ -2,9 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
+
+import { EffectEx } from '@dxos/effect';
 
 import * as Graph from './graph';
 import * as GraphBuilder from './graph-builder';
@@ -145,6 +150,57 @@ describe('Graph', () => {
     expect(result).toEqual(graph);
     const node = registry.get(graph.node(EXAMPLE_ID));
     assert.ok(Option.isNone(node));
+  });
+
+  test('waitFor resolves immediately when the node is already present', async () => {
+    const graph = Graph.make();
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+
+    const node = await EffectEx.runPromise(Graph.waitFor(graph, EXAMPLE_ID));
+    expect(node.id).toEqual(EXAMPLE_ID);
+  });
+
+  test('waitFor resolves when the node arrives later', async () => {
+    const graph = Graph.make();
+    const pending = EffectEx.runPromise(Graph.waitFor(graph, EXAMPLE_ID));
+
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+
+    const node = await pending;
+    expect(node.id).toEqual(EXAMPLE_ID);
+  });
+
+  test('waitFor ignores other nodes', async () => {
+    const graph = Graph.make();
+    const pending = EffectEx.runPromise(Graph.waitFor(graph, EXAMPLE_ID));
+
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+
+    expect((await pending).id).toEqual(EXAMPLE_ID);
+  });
+
+  test('waitFor stays pending while the node is absent', async () => {
+    const graph = Graph.make();
+    const settled = await EffectEx.runPromise(
+      Graph.waitFor(graph, EXAMPLE_ID).pipe(
+        Effect.map(() => 'settled' as const),
+        Effect.timeoutOrElse({ duration: '50 millis', orElse: () => Effect.succeed('pending' as const) }),
+      ),
+    );
+    expect(settled).toEqual('pending');
+  });
+
+  test('waitFor is interruptible and releases its subscription', async () => {
+    const graph = Graph.make();
+    const interrupted = await EffectEx.runPromise(
+      Graph.waitFor(graph, EXAMPLE_ID).pipe(Effect.timeout('20 millis'), Effect.option),
+    );
+    expect(Option.isNone(interrupted)).toBe(true);
+
+    // A later arrival must not reach the released listener (it would throw on a settled resume).
+    Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
+    expect(Option.isSome(Graph.getNode(graph, EXAMPLE_ID))).toBe(true);
   });
 
   test('onNodeChanged', () => {
@@ -729,7 +785,60 @@ describe('Graph', () => {
         },
       }),
     );
-    await graph.pipe(Graph.expand(Node.RootId, 'child'));
+    await graph.pipe(Graph.expandSync(Node.RootId, 'child'));
+    expect(expandCalled).to.be.true;
+  });
+
+  test('expand runs the expansion off the caller frame', async () => {
+    const registry = Registry.make();
+    const builder = GraphBuilder.make({ registry });
+    const graph = builder.graph;
+    let expandCalled = false;
+    GraphBuilder.addExtension(
+      builder,
+      GraphBuilder.createExtensionRaw({
+        id: 'test',
+        connector: () => {
+          expandCalled = true;
+          return Atom.make([]);
+        },
+      }),
+    );
+
+    const effect = Graph.expand(graph, Node.RootId, 'child');
+    // Nothing runs while the effect is only described.
+    expect(expandCalled).to.be.false;
+
+    await EffectEx.runPromise(effect);
+    expect(expandCalled).to.be.true;
+  });
+
+  test('interrupting a delayed expand cancels it', async () => {
+    const registry = Registry.make();
+    const builder = GraphBuilder.make({ registry });
+    const graph = builder.graph;
+    let expandCalled = false;
+    GraphBuilder.addExtension(
+      builder,
+      GraphBuilder.createExtensionRaw({
+        id: 'test',
+        connector: () => {
+          expandCalled = true;
+          return Atom.make([]);
+        },
+      }),
+    );
+
+    // Mirrors the nav-tree's hover prefetch: a settle delay in front of the expansion, superseded by
+    // interrupting the fiber.
+    const fiber = Effect.runFork(
+      Effect.sleep('1 second').pipe(Effect.andThen(Graph.expand(graph, Node.RootId, 'child'))),
+    );
+    await EffectEx.runPromise(Fiber.interrupt(fiber));
+    expect(expandCalled).to.be.false;
+
+    // The graph is untouched, so a later expansion still runs.
+    await EffectEx.runPromise(Graph.expand(graph, Node.RootId, 'child'));
     expect(expandCalled).to.be.true;
   });
 
@@ -743,7 +852,7 @@ describe('Graph', () => {
     const childId = 'child';
     expect(Option.isNone(registry.get(graph.node(childId)))).to.be.true;
 
-    Graph.expand(graph, childId, 'child');
+    Graph.expandSync(graph, childId, 'child');
     expect(expandCalls).to.deep.equal([]);
 
     Graph.addNode(graph, { id: childId, type: EXAMPLE_TYPE });

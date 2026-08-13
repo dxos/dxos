@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useContext, useEffect, useMemo } from 'react';
 
 import { composable, composableProps } from '@dxos/react-ui';
@@ -135,7 +136,9 @@ export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
 
     return (
       <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     );
   },

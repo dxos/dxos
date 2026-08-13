@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, createDecorators, storyParameters } from '../testing';
@@ -14,7 +14,7 @@ const MAILBOX_NAME = 'Work';
 const TEMPLATE_ID = 'org.dxos.project.mailboxFacts';
 
 /** Owns `org.dxos.skill.brain`, the per-space FactStore, and the mailbox toolbar's `Analyze` action. */
-const plugins = [BrainPlugin()];
+const plugins = [BrainPlugin.make()];
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-projects/FactSummaries',

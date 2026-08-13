@@ -26,7 +26,7 @@ import { useThemeContext } from '../../hooks';
 import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Button, IconButton } from '../Button';
-import { Column } from '../Column';
+import { Column, type ColumnRootProps } from '../Column';
 import { Icon } from '../Icon';
 import { Image, type ImageProps } from '../Image';
 import { DropdownMenu } from '../Menu';
@@ -42,9 +42,19 @@ type CardRootProps = {
   'id'?: string;
   'border'?: boolean;
   'fullWidth'?: boolean;
-  /** Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
-   * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`. */
+  /**
+   * Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
+   * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`.
+   */
   'subgrid'?: boolean;
+  /**
+   * Width of the card's leading/trailing gutter tracks. Defaults to `lg` (chrome-sized inset for
+   * headers and rows); a card whose whole body is a form should use `sm` so the fields inset like
+   * a standalone form rather than by the card's chrome.
+   */
+  'gutter'?: ColumnRootProps['gutter'];
+  /** Vertical gap between the card's rows; defaults to `sm` (the card's standard `gap-1`). */
+  'gap'?: ColumnRootProps['gap'];
   'density'?: Density;
   'style'?: CSSProperties;
   'tabIndex'?: number;
@@ -66,15 +76,19 @@ type CardRootProps = {
  * `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
-  ({ children, id, role, border = true, fullWidth, subgrid, density, ...props }, forwardedRef) => {
+  (
+    { children, id, role, border = true, fullWidth, subgrid, gutter = 'lg', gap = 'sm', density, ...props },
+    forwardedRef,
+  ) => {
     const { className, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
     return (
       <Column.Root
         asChild
-        gutter='lg'
+        gutter={gutter}
         subgrid={subgrid}
+        gap={gap}
         classNames={tx('card.root', { border, fullWidth }, className)}
         role={role ?? 'group'}
       >
@@ -442,6 +456,12 @@ type CardHtmlProps = { html?: string; variant?: 'default' | 'description' };
 /**
  * Renders sanitized HTML content inside a card text slot.
  * Uses DOMPurify to prevent XSS from untrusted markup (e.g. RSS feed content).
+ *
+ * Sanitization is all this does: the markup renders in the app's own DOM, so the content's CSS reaches
+ * the app, remote images (tracking pixels) load, and nothing adapts to the theme. Prefer
+ * `@dxos/react-ui-components`' `Html`, which isolates content in a shadow root and blocks remote images
+ * by default — it cannot be used from here (that package depends on this one), so a caller that needs
+ * those guarantees should compose `Html` into the card rather than reach for this.
  */
 function CardHtml({ html = '', variant = 'default', ...props }: CardHtmlProps & ThemedClassName<object>) {
   const { tx } = useThemeContext();
@@ -510,9 +530,16 @@ CardPoster.displayName = CARD_POSTER_NAME;
 
 const CARD_ACTION_NAME = 'Card.Action';
 
-type CardActionProps = { icon?: string; label: string; actionIcon?: string; onClick?: () => void };
+type CardActionProps = {
+  icon?: string;
+  label: string;
+  /** Short trailing text (e.g. an age); kept at full width while the label truncates around it. */
+  annotation?: string;
+  actionIcon?: string;
+  onClick?: () => void;
+};
 
-function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) {
+function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, annotation, onClick }: CardActionProps) {
   const { tx } = useThemeContext();
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
@@ -521,7 +548,10 @@ function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
           <Icon icon={icon} size={4} />
         </CardBlock>
       )}
-      <span className={tx('card.action-label', {})}>{label}</span>
+      <span className={tx('card.action-content', {})}>
+        <span className={tx('card.action-label', {})}>{label}</span>
+        {annotation && <span className={tx('card.action-annotation', {})}>{annotation}</span>}
+      </span>
       {actionIcon && (
         <CardBlock end>
           <Icon icon={actionIcon} size={4} />

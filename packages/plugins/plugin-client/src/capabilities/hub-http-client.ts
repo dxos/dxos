@@ -4,18 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { HubHttpClient } from '@dxos/edge-client';
 
 import { ClientCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const client = yield* ClientCapabilities.Client;
     const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
     if (!hubUrl) {
       return [];
     }
-    return Capability.contributes(ClientCapabilities.HubHttpClient, new HubHttpClient(hubUrl));
+    return Capability.contribute(ClientCapabilities.HubHttpClient, new HubHttpClient(hubUrl));
   }),
 );

@@ -48,7 +48,7 @@ export class ChaseCamera {
   /** Repositions the camera onto `object`'s current pose; call once per frame while the camera is active. */
   update(object: SimObject, heading: number): void {
     const { state, definition } = object;
-    const { up, forward } = objectFrame(state, definition.kind, heading);
+    const { up, forward } = objectFrame(state, heading);
     const center = scale(state.unit, state.radius);
     const position = new Vector3(center[0], center[1], center[2]);
     const objectScale = state.radius * SCALE_FACTOR;

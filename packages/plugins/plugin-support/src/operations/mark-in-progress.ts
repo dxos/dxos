@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { type Support, SupportOperation } from '../types';
+import { Support, SupportOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SupportOperation.MarkInProgress> = SupportOperation.MarkInProgress.pipe(
   Operation.withHandler(

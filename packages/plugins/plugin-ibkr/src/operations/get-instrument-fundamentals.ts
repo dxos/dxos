@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
+
+import { Ibkr, IbkrOperation } from '#types';
 
 import { EdgarFetchError, EdgarTickerNotFoundError, InstrumentMissingSymbolError } from '../errors';
 import { fetchEdgarFundamentals } from '../services';
-import { Ibkr, IbkrOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.GetInstrumentFundamentals> =
   IbkrOperation.GetInstrumentFundamentals.pipe(

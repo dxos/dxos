@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type PathResolution } from '@dxos/app-graph';
-import { UrlPath } from '@dxos/app-toolkit';
+import type * as PathResolution from '@dxos/app-graph/PathResolution';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { log } from '@dxos/log';
 
 /** Reverse-mapped `(key, id?, workspace)` representation of every plank id worth serializing. */
@@ -11,7 +11,7 @@ export type Representations = ReadonlyMap<string, PathResolution.RepresentedNode
 
 /** The open companion, if any, already reverse-mapped. */
 export type CompanionRepresentation = {
-  /** Id of the plank the companion is attached to (the deck's trailing plank). */
+  /** Id of the plank the companion shares a container with (the attended plank). */
   plankId: string;
   node: PathResolution.RepresentedNode;
 };

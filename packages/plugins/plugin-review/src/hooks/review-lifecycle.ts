@@ -4,7 +4,7 @@
 
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { type ReviewCapabilities } from '../types';
+import { ReviewCapabilities } from '#types';
 
 /**
  * Everything the editor-binding decision depends on, flattened to plain data. The hooks gather these

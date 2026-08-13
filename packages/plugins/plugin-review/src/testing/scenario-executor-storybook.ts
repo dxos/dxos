@@ -5,7 +5,7 @@
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
-import { type Markdown } from '@dxos/plugin-markdown/types';
+import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 

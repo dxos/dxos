@@ -2,5 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
-export * from './types';
+export * as VideoPlugin from './VideoPlugin';
+export * from '#meta';
+export * from '#types';

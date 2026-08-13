@@ -4,7 +4,7 @@
 
 import { describe, expect, test, vi } from 'vitest';
 
-import { resolveDrop } from './Root';
+import { resolveDrop } from './resolve-drop';
 import { type DndContainerHandler, type DndTileData } from './types';
 
 const source: DndTileData = { type: 'tile', containerId: 'c1', id: 'a', data: { id: 'a' }, location: 0 };

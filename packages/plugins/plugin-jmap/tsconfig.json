@@ -1,0 +1,84 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "dx.config.ts",
+    "src/**/*.ts",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/compute/extractor"
+    },
+    {
+      "path": "../../core/compute/extractor-lib"
+    },
+    {
+      "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/pipeline"
+    },
+    {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-inbox"
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -28,7 +28,7 @@ describe('Load', () => {
 
         const loaded = yield* Operation.invoke(Load, { refs: [Ref.make(organization), Ref.make(person)] });
 
-        const rows = yield* Schema.decodeUnknown(Schema.Array(Schema.Struct({ id: Schema.String })))(loaded);
+        const rows = yield* Schema.decodeUnknownEffect(Schema.Array(Schema.Struct({ id: Schema.String })))(loaded);
         expect(rows.map((row) => row.id)).toEqual([organization.id, person.id]);
       },
       Effect.provide(OperationTestLayer),

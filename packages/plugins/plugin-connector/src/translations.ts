@@ -3,12 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import { Connection } from './types';
 
 export const translations = [
   {
@@ -32,6 +30,12 @@ export const translations = [
         'connect-connection.label': 'Connect {{connector}}',
         'connect-service.description': 'Link an external service to this space.',
         'get-sync-targets-error.title': 'Failed to load sync targets',
+        'oauth-rejected.title': 'Sign-in could not be completed',
+        'oauth-rejected.description':
+          'The provider replied from an unexpected address, so the response was discarded. This is a service configuration problem, not something you can fix here.',
+        'oauth-undecodable.description':
+          'The provider’s response was not in a form this app understands, so it was discarded. This is a service configuration problem, not something you can fix here.',
+        'oauth-failed.title': 'Sign-in failed',
         'close.label': 'Close',
         'sync-connection.label': 'Sync now',
         'no-connector.message': 'No service plugin is registered for this connection.',

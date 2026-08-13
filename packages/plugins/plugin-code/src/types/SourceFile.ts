@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export class SourceFile extends Type.makeObject<SourceFile>(DXN.make('org.dxos.type.sourceFile', '0.1.0'))(
   Schema.Struct({

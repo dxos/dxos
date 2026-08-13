@@ -101,8 +101,8 @@ describe('Framer', () => {
           });
         }
 
-        await sleep(2); // Must be longer the pipe's flush interval
-        expect(framesReceived.length).to.deep.eq(framesSent.length);
+        // Wait until every sent frame has been delivered rather than guessing the pipe's flush interval.
+        await expect.poll(() => framesReceived.length).toEqual(framesSent.length);
         for (const i in framesSent) {
           expect(framesReceived[i]).to.deep.eq(framesSent[i], `Frame ${i} does not match`);
         }

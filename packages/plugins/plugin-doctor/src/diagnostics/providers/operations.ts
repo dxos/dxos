@@ -4,7 +4,10 @@
 
 import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
-import { Credential, Operation, StorageService, Trace } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as StorageService from '@dxos/compute/StorageService';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Registry } from '@dxos/echo';
 
 import { meta } from '#meta';

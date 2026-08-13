@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -10,6 +9,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Type } from '@dxos/echo';
@@ -29,6 +30,7 @@ import {
   primaryParts,
   qualifyId,
   validateSegmentId,
+  withLabel,
 } from './util';
 
 //
@@ -231,7 +233,7 @@ const stampUrlSegment = (
 
 export type GraphBuilderTraverseOptions = {
   visitor: (node: Node.Node, path: string[]) => MaybePromise<boolean | void>;
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   source?: string;
   relation: Node.RelationInput | Node.RelationInput[];
 };
@@ -300,7 +302,7 @@ class GraphBuilderImpl implements GraphBuilder {
   /** Registered builder extensions keyed by extension ID. */
   readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
     Atom.keepAlive,
-    Atom.withLabel('graph-builder:extensions'),
+    withLabel('graph-builder:extensions'),
   );
   /**
    * Node id -> id of the extension whose connector produced it. Non-reactive: updated directly
@@ -313,7 +315,7 @@ class GraphBuilderImpl implements GraphBuilder {
   /** The URL grammar (see {@link UrlGrammar}); the keys are absent when URLs are not in play. */
   readonly urlGrammar: UrlGrammar;
   /** Shared atom registry for reactive subscriptions. */
-  readonly _registry: Registry.Registry;
+  readonly _registry: Registry.AtomRegistry;
   /** Backing graph with internal accessors for node atoms and construction. */
   readonly _graph: Graph.Graph & {
     _node: (id: string) => Atom.Writable<Option.Option<Node.Node>>;
@@ -465,7 +467,7 @@ class GraphBuilderImpl implements GraphBuilder {
         }
 
         return entries;
-      }).pipe(Atom.withLabel(`graph-builder:connectors:${key}`));
+      }).pipe(withLabel(`graph-builder:connectors:${key}`));
     },
   );
 
@@ -475,7 +477,7 @@ class GraphBuilderImpl implements GraphBuilder {
 
     // TODO(wittjosiah): Remove. This is for backwards compatibility.
     if (relation.kind === 'child' && relation.direction === 'outbound') {
-      Graph.expand(this._graph, id, 'action');
+      Graph.expandSync(this._graph, id, 'action');
     }
   }
 
@@ -583,7 +585,7 @@ export const make = (params?: GraphBuilderProps): GraphBuilder => {
 /**
  * Creates a GraphBuilder from a serialized pickle string.
  */
-export const from = (pickle?: string, registry?: Registry.Registry, urlGrammar?: UrlGrammarProps): GraphBuilder => {
+export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGrammar?: UrlGrammarProps): GraphBuilder => {
   if (!pickle) {
     return make({ registry, urlGrammar });
   }
@@ -824,24 +826,24 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
   const getId = (key: string) => `${id}/${key}`;
 
   const resolver =
-    _resolver && Atom.family((id: string) => _resolver(id).pipe(Atom.withLabel(`graph-builder:_resolver:${id}`)));
+    _resolver && Atom.family((id: string) => _resolver(id).pipe(withLabel(`graph-builder:_resolver:${id}`)));
 
   const connector =
     _connector &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _connector(node).pipe(Atom.withLabel(`graph-builder:_connector:${id}`)),
+      _connector(node).pipe(withLabel(`graph-builder:_connector:${id}`)),
     );
 
   const actionGroups =
     _actionGroups &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actionGroups(node).pipe(Atom.withLabel(`graph-builder:_actionGroups:${id}`)),
+      _actionGroups(node).pipe(withLabel(`graph-builder:_actionGroups:${id}`)),
     );
 
   const actions =
     _actions &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)),
+      _actions(node).pipe(withLabel(`graph-builder:_actions:${id}`)),
     );
 
   const extensions = [
@@ -860,7 +862,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                 log.warn('Error in connector', { id: getId('connector'), node, error });
                 return [];
               }
-            }).pipe(Atom.withLabel(`graph-builder:connector:${id}`)),
+            }).pipe(withLabel(`graph-builder:connector:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -881,7 +883,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                 log.warn('Error in actionGroups', { id: getId('actionGroups'), node, error });
                 return [];
               }
-            }).pipe(Atom.withLabel(`graph-builder:connector:actionGroups:${id}`)),
+            }).pipe(withLabel(`graph-builder:connector:actionGroups:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -898,7 +900,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                 log.warn('Error in actions', { id: getId('actions'), node, error });
                 return [];
               }
-            }).pipe(Atom.withLabel(`graph-builder:connector:actions:${id}`)),
+            }).pipe(withLabel(`graph-builder:connector:actions:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -922,19 +924,19 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   id: string;
-  match: (node: Node.Node, get: Atom.Context) => Option.Option<TMatched>;
+  match: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TMatched>;
   actions?: (
     matched: TMatched,
-    get: Atom.Context,
+    get: Atom.AtomContext,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], never, R>;
   /** Contribute dropdown action groups (each with nested `actions`) to the matched node; the group's
    * `type`/`data` are set automatically, so returning `Node.makeActionGroup(...)` output is fine. */
   actionGroups?: (
     matched: TMatched,
-    get: Atom.Context,
+    get: Atom.AtomContext,
   ) => Effect.Effect<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data'>[], never, R>;
-  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
-  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
+  resolver?: (id: string, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
+  connector?: (matched: TMatched, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
   /** URL binding for the nodes this extension produces (key + resolution); see {@link UrlBinding}. */
@@ -955,7 +957,7 @@ const runEffectSyncWithFallback = <T, R>(
   return Effect.runSync(
     effect.pipe(
       Effect.provide(context),
-      Effect.catchAllDefect((defect) => {
+      Effect.catchDefect((defect) => {
         log.warn('Extension failed', { extension: extensionId, defect });
         return Effect.succeed(fallback);
       }),
@@ -1034,8 +1036,8 @@ export const createExtension = <TMatched = Node.Node, R = never>(
  * The factory's data type is inferred from the matcher's return type.
  */
 export const createConnector = <TData>(
-  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Node.NodeArg<any>[],
+  matcher: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TData>,
+  factory: (data: TData, get: Atom.AtomContext) => Node.NodeArg<any>[],
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
     Atom.make((get) =>
@@ -1055,8 +1057,8 @@ export const createConnector = <TData>(
  */
 const createConnectorWithRuntime = <TData, R>(
   extensionId: string,
-  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>,
+  matcher: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TData>,
+  factory: (data: TData, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any>[], never, R>,
   context: Context.Context<R>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
@@ -1080,13 +1082,13 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   type: T;
   actions?: (
     object: Type.InstanceType<T>,
-    get: Atom.Context,
+    get: Atom.AtomContext,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], never, R>;
   actionGroups?: (
     object: Type.InstanceType<T>,
-    get: Atom.Context,
+    get: Atom.AtomContext,
   ) => Effect.Effect<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data'>[], never, R>;
-  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>;
+  connector?: (object: Type.InstanceType<T>, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any>[], never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };

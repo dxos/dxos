@@ -35,9 +35,10 @@ import {
   type PopoverVirtualTriggerProps,
   ScrollArea,
   type ThemedClassName,
+  composable,
+  composableProps,
   useId,
 } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';
@@ -159,7 +160,7 @@ ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 
 type ComboboxTriggerProps = ButtonProps;
 
-const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
+const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
   ({ children, onClick, ...props }, forwardedRef) => {
     const { modalId, open, onOpenChange, placeholder, value, displayValue } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
     const handleClick = useCallback(
@@ -213,7 +214,7 @@ type ComboboxInputProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'value'> & Pick<PickerInputProps, 'value' | 'onValueChange'>
 >;
 
-const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => {
+const ComboboxInput = composable<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => {
   return <Picker.Input {...props} classNames={styles.comboboxInput({ class: classNames })} ref={forwardedRef} />;
 });
 
@@ -309,7 +310,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
         onSelect={handleSelect}
         ref={forwardedRef}
         classNames={styles.comboboxItem({
-          // `px-3 py-1`, `cursor-pointer`, `select-none` and the `dx-hover` / `dx-selected`
+          // Row height/inset, `cursor-pointer`, `select-none` and the `dx-hover` / `dx-selected`
           // pairing come from `Picker.Item`'s defaults; the slot only adds row-shape (flex /
           // icons + label). Disabled overrides are layered on per-instance.
           class: mx(disabled && 'hover:bg-transparent data-[selected=true]:bg-transparent', classNames),

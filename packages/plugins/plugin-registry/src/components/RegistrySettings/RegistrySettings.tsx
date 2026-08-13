@@ -10,8 +10,7 @@ import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import { RegistrySettingsSchema, type RegistrySettings as RegistrySettingsType } from '../../types';
+import { RegistrySettingsSchema, type RegistrySettings as RegistrySettingsType } from '#types';
 
 export type RegistrySettingsProps = AppSurface.SettingsProps<
   RegistrySettingsType,
@@ -96,7 +95,9 @@ export const RegistrySettings = ({
         <Form.Content>
           <Form.Section title={t('dev-plugin.section.title')}>
             <Message.Root valence='neutral'>
-              <Message.Content>{t('dev-plugin.description')}</Message.Content>
+              <Message.Content>
+                <Message.Body>{t('dev-plugin.description')}</Message.Body>
+              </Message.Content>
             </Message.Root>
             <Form.Row label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
               <Input.Root>
@@ -120,7 +121,9 @@ export const RegistrySettings = ({
             </Form.Row>
             {enabled && !loadedDevId && !busy && (
               <Message.Root valence='warning'>
-                <Message.Content>{t('dev-plugin.not-loaded.message')}</Message.Content>
+                <Message.Content>
+                  <Message.Body>{t('dev-plugin.not-loaded.message')}</Message.Body>
+                </Message.Content>
               </Message.Root>
             )}
           </Form.Section>

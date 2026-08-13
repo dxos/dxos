@@ -4,14 +4,14 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
 import * as SettingsModule from './Settings';
 
-export const Settings = Capability.make<Atom.Writable<SettingsModule.Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );

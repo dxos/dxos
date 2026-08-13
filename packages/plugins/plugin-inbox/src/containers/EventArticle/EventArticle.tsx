@@ -2,17 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Graph } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
@@ -91,7 +93,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     // trigger automatic action expansion (unlike resolver-created nodes in primary mode).
     // Explicitly expand here so extensions — e.g. plugin-meeting's "Create meeting" — attach
     // to this node's toolbar for the one event whose companion is currently open.
-    void Graph.expand(graph, nodeId, 'action');
+    void Graph.expandSync(graph, nodeId, 'action');
   }, [graph, isEventNode, nodeId]);
 
   // Promote the event from a companion to the main view (mirrors MessageArticle).

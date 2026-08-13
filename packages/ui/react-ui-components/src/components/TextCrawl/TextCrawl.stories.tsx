@@ -9,7 +9,8 @@ import { random } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { TextCrawl, sizes } from './TextCrawl';
+import { sizes } from './sizes';
+import { TextCrawl } from './TextCrawl';
 
 random.seed(1234);
 

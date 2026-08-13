@@ -7,17 +7,17 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Client } from '@dxos/client';
 import { DXN, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection } from '@dxos/plugin-connector';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
@@ -96,14 +96,14 @@ const decorators = (options: SeedOptions) => [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
     capabilities: [
-      Capability.contributes(AppCapabilities.Translations, translations),
+      Capability.contribute(AppCapabilities.Translations, translations),
       // Mock repo — no network; publish/unpublish mutate the in-memory store.
-      Capability.contributes(AtprotoCapabilities.RepoLayer, () => AtprotoRepo.layerMock()),
+      Capability.contribute(AtprotoCapabilities.RepoLayer, () => AtprotoRepo.layerMock()),
     ],
     plugins: [
       ...corePlugins(),
-      StorybookPlugin({}),
-      ClientPlugin({
+      StorybookPlugin.make({}),
+      ClientPlugin.make({
         types: [Connection.Connection, AccessToken.AccessToken, AtprotoPublication.AtprotoPublication, DemoNote],
         onClientInitialized: makeSeed(options),
       }),

@@ -5,40 +5,40 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 
-import { Connection, Connector, type ConnectorEntry } from '#types';
+import { ConnectorSpec } from '#types';
 
 import { CUSTOM_PROVIDER_ID } from '../constants';
 
 /** Default form for manually entered access tokens (custom connector). */
 const CustomTokenForm = Schema.Struct({
-  source: Format.Hostname.annotations({
+  source: Format.Hostname.annotate({
     title: 'Source',
     description: 'The domain name of the service that issued the token.',
     examples: ['example.com'],
   }),
-  account: Schema.String.annotations({
+  account: Schema.String.annotate({
     title: 'Account',
     description: 'Optional account label associated with the token.',
   }).pipe(Schema.optional),
-  token: Schema.String.annotations({
+  token: Schema.String.annotate({
     title: 'Token',
     description: 'The access token value.',
   }),
 });
 
 /**
- * Built-in {@link Connector} entries: just the manual-token connector.
+ * Built-in {@link ConnectorSpec.Connector} entries: just the manual-token connector.
  * Service-specific connectors (atproto/Atmosphere in `@dxos/plugin-atproto`, Bluesky, Trello,
- * GitHub, …) live in their own plugins and contribute on `SetupConnectors`.
+ * GitHub, …) live in their own plugins and contribute from their own dependency-mode modules.
  */
-export default Capability.makeModule<ConnectorEntry[]>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: CUSTOM_PROVIDER_ID,
         // The user enters the source in the dialog; we don't know it ahead of time.
@@ -64,8 +64,8 @@ export default Capability.makeModule<ConnectorEntry[]>(
         },
       },
       // Atmosphere (atproto), Bluesky, GitHub, Linear, and Slack are implemented as dedicated plugins
-      // (`@dxos/plugin-atproto`, `@dxos/plugin-bluesky`, `@dxos/plugin-github`, …) and contribute on
-      // `SetupConnectors`.
+      // (`@dxos/plugin-atproto`, `@dxos/plugin-bluesky`, `@dxos/plugin-github`, …) that contribute
+      // from their own dependency-mode modules.
     ]);
   }),
 );

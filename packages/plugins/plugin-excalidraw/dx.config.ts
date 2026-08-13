@@ -22,6 +22,6 @@ export default Config2.make({
     dependsOn: ['org.dxos.plugin.illustrator'],
     icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
     tags: ['labs'],
-    screenshots: [{ dark: 'https://dxos.network/plugin-details-excalidraw-dark.png' }],
+    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-excalidraw-dark.png' }],
   },
 });

@@ -25,9 +25,10 @@ export interface CrossDeviceSpaceSynchronizer extends CredentialProcessor, Lifec
 /**
  * Effect service tag for {@link CrossDeviceSpaceSynchronizer}.
  */
-export class CrossDeviceSpaceSynchronizerService extends EffectContext.Tag(
-  '@dxos/client-services/CrossDeviceSpaceSynchronizer',
-)<CrossDeviceSpaceSynchronizerService, CrossDeviceSpaceSynchronizer>() {}
+export class CrossDeviceSpaceSynchronizerService extends EffectContext.Service<
+  CrossDeviceSpaceSynchronizerService,
+  CrossDeviceSpaceSynchronizer
+>()('@dxos/client-services/CrossDeviceSpaceSynchronizer') {}
 
 class CrossDeviceSpaceSynchronizerImpl extends Resource implements CrossDeviceSpaceSynchronizer {
   private _identity?: Identity;

@@ -7,10 +7,9 @@ import { useCallback, useState } from 'react';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Entity, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { type SearchResult } from '@dxos/react-ui-search';
 import { getIconAnnotation } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
-
-import { type SearchResult } from '#types';
 
 import { search } from '../search';
 import { getStringProperty } from './sync';

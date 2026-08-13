@@ -8,34 +8,50 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
 
 ## Start of session
 
-- **MANDATORY FIRST ACTION — check the branch before any file op. The branch, not
-  the directory, decides whether editing is safe.** The harness assigns this
-  session a branch and a worktree, but ~10% of the time it mis-instantiates them:
-  the assigned `claude/…` branch gets checked out at the _primary checkout_ while
-  the worktree path is left an empty `.claude`/`.moon` stub. Editing at the primary
-  checkout is still safe **as long as HEAD is your assigned branch** — your commits
-  land there, not on `main`. The bare-root path does NOT by itself mean `main`.
-  Before reading, editing, or running anything, run:
+- On the Claude harness, a global `SessionStart` hook injects a `SESSION CONTEXT`
+  block (cwd, toplevel, branch, verdict) — trust it and follow its directive. If
+  no such block is present (other harnesses), run this before any file op:
   ```
   git rev-parse --show-toplevel && git branch --show-current
   ```
-  - **On a `claude/…` (or any non-`main`) branch → proceed.** Edits are data-safe
-    even if `--show-toplevel` is the primary checkout instead of
-    `.../.claude/worktrees/<name>`. If the path is not the assigned worktree, say
-    so once: that only affects whether the Desktop UI tracks the session
-    (recoverable), not data safety. Do NOT run `git worktree add <path> <branch>`
-    to "fix" it — the branch is already checked out, so that command fails (and the
-    `git worktree add` guard denies it anyway). If UI pairing matters, ask the user
-    to work-in-place or restart the session; do not halt the task over it.
-  - **On `main` → STOP, write nothing, tell the user.** Only here do edits pollute
-    the shared branch irreversibly. Do not create a worktree or branch to escape
-    (the harness owns those) — ask the user how to proceed.
-- Confirm you understand these instructions and list the guidance files you are
-  aware of (this file, `.claude/CLAUDE.md`, relevant `.agents/skills/*`).
-- State the branch and the `--show-toplevel` path you are operating on.
-- When asking a question, make it yes/no or give numbered options — never an
-  unnumbered a-or-b.
+- **The branch, not the directory, decides whether editing is safe:**
+  - Non-`main` branch (normally `claude/…`) → proceed — even if the toplevel is
+    the primary checkout instead of the assigned worktree (a known harness
+    mis-instantiation; say so once — it affects only Desktop UI pairing, never
+    data safety). Never run `git worktree add` to "fix" it.
+  - `main` → STOP, write nothing, tell the user. Never create a worktree or
+    branch to escape — the harness owns those.
+- **Cloud sandbox sessions differ.** If `CLAUDE_CODE_REMOTE` is set you are in the Claude Code
+  cloud sandbox, where `.claude/settings.json` hooks do NOT run: `/mode` and `/project` are
+  inert, and the branch/worktree guards enforce nothing — you are the only thing upholding the
+  Non-negotiables. `moon`, `gh`, and `oxfmt` are not on `PATH` (use `pnpm exec moon`
+  and the `mcp__github__*` tools), dependencies are installed but not built, and the container
+  is ephemeral, so push before you stop. Full details, including how to reach HTTPS from
+  Chromium → `cloud-sandbox` skill.
+- First reply: confirm these instructions and follow the reporting rule below.
 - If unsure how to implement something, ask rather than guess.
+
+## Responding to the user
+
+These govern the **shape of every reply**, not the work. They are canonical
+here, and on the Claude harness `.claude/hooks/mode.sh` re-injects them on every
+prompt — a rule stated only in an always-loaded file is diluted to nothing once
+a large skill loads mid-session (see `.claude/README.md` §A).
+
+- **Open the session with the worktree and the files you read.** One line naming
+  the worktree directory you are in and the instruction/skill files in play.
+  **First reply only** — repeating it every turn is noise, and the `SessionStart`
+  hook already delivers the branch and toplevel deterministically.
+- **Number every question and every set of options.** Never an unnumbered
+  a-or-b, never a bare open question.
+- **Lead with the answer.** No preamble, no restatement of the request, no
+  narration of what you are about to do.
+- **Verbosity is a mode.** `terse` caps a reply at 8 lines with minimal markdown;
+  `normal` (the default) sets no budget but keeps length proportionate — length
+  is earned by content, never by restating. Set it with `/mode terse` /
+  `/mode normal`.
+- These govern form only. They never override correctness, required safety
+  steps, showing test/command output, or reporting a failure honestly.
 
 ## Working with the user
 
@@ -115,15 +131,22 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Test all: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`
 - Lint & fix: `moon run :lint -- --fix`
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
+- Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
 - Storybook: `moon run storybook-react:serve` (port 9009)
 
-Ignore the `Auth token DEPOT_TOKEN does not exist` warning (remote-cache auth).
+A remote-cache warning from moon is harmless — builds work, they just don't share the team's
+cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
+once per machine, for every worktree.
 
 ## Code style
 
 Universal rules. Deeper conventions live in skills — see the pointers below.
 
 - TypeScript, single quotes. Prefer functional style and arrow functions.
+- **Prefer Effect over async/Promise.** Raw Promises belong only at platform boundaries —
+  dynamic `import()` and browser callback APIs (wrap the latter with `Effect.async`). Use
+  `Effect.sleep`/`Effect.gen` instead of `setTimeout`/`async` orchestration. (Exception:
+  tests that need real macrotask turns across runtimes — TestClock virtualizes `Effect.sleep`.)
 - Import order, blank line between groups:
   builtin → external → @dxos → internal → parent → sibling.
 - Prefer named exports; avoid default exports. Use barrel imports.
@@ -169,6 +192,8 @@ Deeper conventions:
 
 ## Where things live
 
+- **Cloud sandbox / Claude Code on the web** — hooks that don't run, missing tooling, and the
+  HTTPS egress proxy → `cloud-sandbox` skill (`.agents/skills/cloud-sandbox/SKILL.md`).
 - **`.agents/` vs `agents/`** — `.agents/` (dot) holds agent **control state**
   (skills, the project registry); `agents/` (no dot) holds **user-visible
   artifacts** (instructions, prompts, superpowers specs/plans/handoffs).
@@ -184,6 +209,11 @@ Deeper conventions:
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **SQLite schema changes** — adding a migration, creating a new SQLite-backed
+  store, or anything under `src/migrations/` →
+  [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).
+  Read it before reaching for Prisma: there is no driver adapter for the
+  browser client, which is why the schema is hand-written SQL.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.

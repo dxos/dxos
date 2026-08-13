@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
@@ -20,7 +20,7 @@ import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -55,7 +55,7 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
 
   /** Effect runtime used by client components to run service-rpc effects. Defaults to the default runtime. */
-  runtime?: Runtime.Runtime<never>;
+  runtime?: EffectContext.Context<never>;
 
   /** ECHO schema. */
   types?: Type.AnyEntity[];
@@ -88,7 +88,7 @@ export class Client {
   private readonly _options: ClientOptions;
 
   /** Effect runtime threaded to client components for running service-rpc effects. */
-  private readonly _effectRuntime: Runtime.Runtime<never>;
+  private readonly _effectRuntime: EffectContext.Context<never>;
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -103,6 +103,9 @@ export class Client {
   private _services?: ClientServicesProvider;
 
   private _initialized = false;
+
+  /** Resolves when `initialize()` completes, so consumers can suspend on a forked init. */
+  private readonly _initializedTrigger = new Trigger();
 
   private _resetting = false;
 
@@ -135,7 +138,7 @@ export class Client {
     }
 
     this._options = options;
-    this._effectRuntime = options.runtime ?? Runtime.defaultRuntime;
+    this._effectRuntime = options.runtime ?? EffectContext.empty();
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = options.config?.get('runtime.client.log.filter');
@@ -192,6 +195,18 @@ export class Client {
    */
   get initialized() {
     return this._initialized;
+  }
+
+  /**
+   * Resolves once `initialize()` has completed. Waits indefinitely unless `timeout` is given, in
+   * which case it rejects with `TimeoutError` — opt-in because most consumers only want the
+   * completion signal, and bounding the session is the caller's job (see the app entry point).
+   *
+   * This is the completion signal, not the error channel: a failing `initialize()` rejects at its
+   * own call site, and this promise stays pending.
+   */
+  waitUntilInitialized({ timeout }: { timeout?: number } = {}): Promise<void> {
+    return this._initializedTrigger.wait({ timeout });
   }
 
   /**
@@ -289,8 +304,6 @@ export class Client {
    * Test and repair database.
    */
   async repair(): Promise<any> {
-    const { createLevel } = await import('@dxos/client-services');
-
     // TODO(burdon): Factor out.
     const repairSummary: any = {};
 
@@ -332,24 +345,8 @@ export class Client {
     }
 
     {
-      repairSummary.levelDBRemovedEntries = 0;
-      // Cleanup old index-data from level db.
-      const level = await createLevel(this._config?.values.runtime?.client?.storage ?? {});
-      const sublevelsToCleanup = [
-        level.sublevel('index-store'),
-        level.sublevel('index-metadata').sublevel('clean'),
-        level.sublevel('index-metadata').sublevel('dirty'),
-      ];
-
-      for (const sublevel of sublevelsToCleanup) {
-        repairSummary.levelDBRemovedEntries += (await sublevel.keys().all()).length;
-        await sublevel.clear();
-      }
-    }
-
-    {
       invariant(this._services, 'Client not initialized.');
-      await runServiceCall(this._effectRuntime, this._services.rpc.QueryService.reindex(undefined), {
+      await runServiceCall(this._effectRuntime, this._services.rpc['QueryService.reindex'](undefined), {
         timeout: 30_000,
         label: 'QueryService.reindex',
       });
@@ -373,6 +370,7 @@ export class Client {
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
     const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
+    performance.mark('client.initialize:imports-loaded');
     log('client.initialize: imports loaded');
 
     this._ctx = new Context();
@@ -413,6 +411,7 @@ export class Client {
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
+    performance.mark('client.initialize:services-created');
     log('client.initialize: services provider created');
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
@@ -420,6 +419,7 @@ export class Client {
     this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
     log('client.initialize: opening client');
     await this._open(this._ctx);
+    performance.mark('client.initialize:opened');
     log('client.initialize: client opened');
     invariant(this._runtime, 'Client runtime initialization failed.');
 
@@ -432,6 +432,7 @@ export class Client {
     }
 
     this._initialized = true;
+    this._initializedTrigger.wake();
     performance.mark('client.initialize:completed');
     performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
@@ -545,7 +546,7 @@ export class Client {
     log('client._open: subscribing to system status...');
     this._statusStreamCleanup = subscribeStream(
       this._effectRuntime,
-      this._services.rpc.SystemService.queryStatus({ interval: 3_000 }),
+      this._services.rpc['SystemService.queryStatus']({ interval: 3_000 }),
       {
         onData: ({ status }) => {
           log('client._open: status received', { status });
@@ -633,6 +634,10 @@ export class Client {
     await this._ctx.dispose();
 
     this._initialized = false;
+    // Back to WAITING alongside `_initialized`: leaving the trigger resolved makes
+    // `waitUntilInitialized()` resolve for a client that is not initialized, which spins
+    // `useClient` — it throws an already-settled promise, React retries, and it suspends again.
+    this._initializedTrigger.reset();
   }
 
   async [Symbol.asyncDispose]() {
@@ -667,7 +672,7 @@ export class Client {
   async resumeHostServices(): Promise<void> {
     await runServiceCall(
       this._effectRuntime,
-      this.services.rpc.SystemService.updateStatus({ status: SystemStatus.ACTIVE }),
+      this.services.rpc['SystemService.updateStatus']({ status: SystemStatus.ACTIVE }),
       {
         label: 'SystemService.updateStatus',
       },
@@ -688,7 +693,7 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services, 'Client not initialized.');
-    await runServiceCall(this._effectRuntime, this._services.rpc.SystemService.reset(undefined), {
+    await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
       label: 'SystemService.reset',
     });
     await this._close();

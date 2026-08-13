@@ -4,8 +4,9 @@
 
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { random } from '@dxos/random';
@@ -16,8 +17,8 @@ import { withRegistry } from '@dxos/storybook-utils';
 import { Path } from '../../util';
 import { type TestItem, createTree, updateState } from './testing';
 import { Tree } from './Tree';
+import { type TreeData } from './tree-data';
 import { type TreeModel } from './TreeContext';
-import { type TreeData } from './TreeItem';
 
 random.seed(1234);
 

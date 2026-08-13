@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Artifact } from '#types';
+import { Artifact } from '#types';
 
 import { useArtifactCoverSource } from '../../hooks';
 import { GalleryImage } from '../GalleryImage';

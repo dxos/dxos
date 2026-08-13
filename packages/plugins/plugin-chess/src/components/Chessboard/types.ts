@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { ChessModel } from '@dxos/react-ui-gameboard';
 
-import { type Chess } from '#types';
+import { Chess } from '#types';
 
 export class ExtendedChessModel extends ChessModel {
   constructor(
-    registry: Registry.Registry,
+    registry: Registry.AtomRegistry,
     readonly object: Chess.State,
   ) {
     super(registry);

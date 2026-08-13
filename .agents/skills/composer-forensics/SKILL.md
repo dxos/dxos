@@ -14,6 +14,10 @@ Extract Composer client data from a **live Chrome profile on disk**, validate, a
 
 **Live doctor workflow (user has browser):** [DOCTOR.md](DOCTOR.md) — user opens debug port; agent explores; report in `/tmp`; **confirm before any data change**.
 
+**App boots but misbehaves?** Use [`composer-debug`](../composer-debug/SKILL.md) instead — same
+port and protocol, but scoped to the running app (live client, plugins, operations) rather than
+safe-mode storage.
+
 **Full command reference:** [COMMANDS.md](COMMANDS.md) — locate, extract, validate, probe, automerge, SQL, recovery debug port.
 
 **Report template:** [reports/REPORT-TEMPLATE.md](reports/REPORT-TEMPLATE.md)

@@ -145,7 +145,7 @@ export class ObjectCore {
    * Memoized rebuilt Effect Schema for persisted `Type.Type` entities.
    * Lazily populated; invalidated when the entity's `jsonSchema` changes.
    */
-  public cachedStaticSlot?: Schema.Schema.AnyNoContext = undefined;
+  public cachedStaticSlot?: Schema.Codec<any, any> = undefined;
 
   /**
    * The single root proxy for this core. Replaces the `DatabaseImpl._rootProxies`

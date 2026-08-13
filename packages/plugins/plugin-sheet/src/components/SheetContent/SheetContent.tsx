@@ -36,8 +36,7 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { meta } from '#meta';
-import { SheetOperation } from '#types';
-import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '#types';
+import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus } from '../../integrations';
@@ -346,8 +345,8 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
         initialCells={initialCells}
-        limitColumns={DEFAULT_COLS}
-        limitRows={DEFAULT_ROWS}
+        limitColumns={SheetUtil.DEFAULT_COLS}
+        limitRows={SheetUtil.DEFAULT_ROWS}
         columns={columns}
         rows={rows}
         columnDefault={sheetColDefault}

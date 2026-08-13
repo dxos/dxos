@@ -31,9 +31,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -52,9 +49,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/halo/halo"
-    },
-    {
       "path": "../../core/halo/halo-react"
     },
     {
@@ -62,6 +56,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -95,9 +92,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"

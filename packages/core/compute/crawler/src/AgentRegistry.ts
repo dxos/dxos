@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+
+import { type SqlTransaction } from '@dxos/sql-sqlite';
 
 import { StateError } from './errors';
 import { makeSql, migrate } from './internal/agent-registry-sql';
@@ -60,20 +62,21 @@ export interface AgentRegistryApi {
   readonly setRef: (id: string, ref: string) => Effect.Effect<void, StateError>;
 }
 
-export class AgentRegistry extends Context.Tag('@dxos/crawler/AgentRegistry')<AgentRegistry, AgentRegistryApi>() {
+export class AgentRegistry extends Context.Service<AgentRegistry, AgentRegistryApi>()('@dxos/crawler/AgentRegistry') {
   /** In-memory registry (tests, demos). Browser path will back this with ECHO Person objects. */
   static layerMemory: Layer.Layer<AgentRegistry> = Layer.sync(AgentRegistry, () => makeMemory());
 
   /** SQLite-backed registry over a shared SqlClient. */
-  static layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient> = Layer.scoped(
-    AgentRegistry,
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
-      yield* migrate(sql).pipe(Effect.orDie);
-      return makeSql(sql);
-    }),
-  );
+  static layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+    Layer.effect(
+      AgentRegistry,
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
+        yield* migrate().pipe(Effect.orDie);
+        return makeSql(sql);
+      }),
+    );
 }
 
 /**

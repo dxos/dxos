@@ -46,12 +46,12 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
       <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
         {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
-          <div className='p-form-chrome'>
-            <Message.Root valence='error'>
+          <Message.Root valence='error'>
+            <Message.Content classNames='m-form-padding'>
               {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
-              <Message.Content>{error instanceof Error ? error.message : String(error)}</Message.Content>
-            </Message.Root>
-          </div>
+              <Message.Body>{error instanceof Error ? error.message : String(error)}</Message.Body>
+            </Message.Content>
+          </Message.Root>
         )}
         {state === 'empty' && <Empty label={t('no-result.message')} />}
         {state === 'result' &&

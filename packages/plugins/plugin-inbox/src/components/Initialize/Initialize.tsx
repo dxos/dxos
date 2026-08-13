@@ -37,7 +37,9 @@ export const Initialize = composable<HTMLDivElement, InitializeProps<any>>(
       <InitializeEmpty {...props} ref={forwardedRef}>
         {message && (
           <Message.Root valence='warning'>
-            <Message.Title>{message}</Message.Title>
+            <Message.Content>
+              <Message.Title>{message}</Message.Title>
+            </Message.Content>
           </Message.Root>
         )}
       </InitializeEmpty>

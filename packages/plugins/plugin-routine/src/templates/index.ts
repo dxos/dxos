@@ -5,8 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
-import { Instructions, Skill, Trigger } from '@dxos/compute';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref, Type } from '@dxos/echo';
 
 import { RoutineCapabilities } from '#types';

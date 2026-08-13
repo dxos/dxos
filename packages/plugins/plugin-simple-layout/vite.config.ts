@@ -15,6 +15,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
+    SimpleLayoutCapabilities: 'src/types/SimpleLayoutCapabilities.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

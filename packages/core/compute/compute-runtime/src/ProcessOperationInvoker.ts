@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
+import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -16,8 +16,10 @@ import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
-import { Process, Trace } from '@dxos/compute';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -52,10 +54,10 @@ export interface ProcessOperationInvoker {
   attachFiber: <T>(pid: Process.ID) => Effect.Effect<OperationFiber<T>, ProcessNotFoundError>;
 }
 
-export class Service extends Context.Tag('@dxos/functions/ProcessOperationInvoker')<
+export class Service extends Context.Service<
   Service,
   Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker
->() {}
+>()('@dxos/functions/ProcessOperationInvoker') {}
 
 const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
@@ -65,7 +67,7 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
     // scope closed.
     const outputFiber = yield* handle.subscribeOutputs().pipe(
       Stream.runCollect,
-      Effect.map(Chunk.head),
+      Effect.map(Array.head),
       Effect.flatMap(
         Option.match({
           onSome: Effect.succeed,
@@ -75,7 +77,7 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
                 case Process.State.FAILED: {
                   return yield* Effect.failCause(
                     handle.status.exit.pipe(
-                      Option.flatMap(Exit.causeOption),
+                      Option.flatMap(Exit.getCause),
                       Option.getOrElse(() => Cause.die('Operation failed with unknown error')),
                     ),
                   );
@@ -88,13 +90,13 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
             }),
         }),
       ),
-      Effect.forkDaemon,
+      Effect.forkDetach,
     );
     log('lifecycle: subscribed to outputs', { handle });
     return {
       pid: handle.pid,
-      await: outputFiber.await,
-      poll: outputFiber.poll,
+      await: Fiber.await(outputFiber),
+      poll: Effect.sync(() => Option.fromNullishOr(outputFiber.pollUnsafe())),
     };
   });
 
@@ -116,7 +118,7 @@ export const make = (opts: {
 }): Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker => {
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
-  const pendingFibers = new Set<Fiber.RuntimeFiber<any>>();
+  const pendingFibers = new Set<Fiber.Fiber<any>>();
   const fiberCache = new Map<Process.ID, OperationFiber<any>>();
 
   // Dispatches an operation to the remote (EDGE) runtime, keyed by its deployment id. Used when an
@@ -239,9 +241,9 @@ export const make = (opts: {
 
       return output;
     }).pipe(
-      Effect.tapErrorCause((cause) =>
+      Effect.tapCause((cause) =>
         Effect.sync(() => {
-          if (Cause.isInterruptedOnly(cause)) {
+          if (Cause.hasInterruptsOnly(cause)) {
             return;
           }
           log.error('operation invocation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
@@ -266,7 +268,7 @@ export const make = (opts: {
         const fiber = yield* invokeRemote<I, O>(op, input).pipe(
           Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
           Effect.ignore,
-          Effect.forkDaemon,
+          Effect.forkDetach,
         );
         pendingFibers.add(fiber);
         fiber.addObserver(() => {
@@ -295,9 +297,9 @@ export const make = (opts: {
         },
       }).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
-        Effect.tapErrorCause((cause) =>
+        Effect.tapCause((cause) =>
           Effect.sync(() => {
-            if (Cause.isInterruptedOnly(cause)) {
+            if (Cause.hasInterruptsOnly(cause)) {
               log.warn('scheduled operation interrupted', { opKey: op.meta.key });
             } else {
               log.error('scheduled operation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
@@ -305,7 +307,7 @@ export const make = (opts: {
           }),
         ),
         Effect.ignore,
-        Effect.forkDaemon,
+        Effect.forkDetach,
       );
       pendingFibers.add(fiber);
       fiber.addObserver(() => {
@@ -341,7 +343,7 @@ export const make = (opts: {
     invoke(op, input, options) as any;
 
   const awaitFollowups: Effect.Effect<void> = Effect.suspend(() =>
-    Fiber.awaitAll(Array.from(pendingFibers)).pipe(Effect.asVoid),
+    Fiber.awaitAll(globalThis.Array.from(pendingFibers)).pipe(Effect.asVoid),
   );
 
   return {
@@ -361,7 +363,7 @@ export const layer: Layer.Layer<
   Operation.Service | Service,
   never,
   ProcessManagerService | OperationHandlerSet.OperationHandlerProvider
-> = Layer.unwrapEffect(
+> = Layer.unwrap(
   Effect.gen(function* () {
     const manager = yield* ProcessManagerService;
     const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;

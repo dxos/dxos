@@ -1,7 +1,7 @@
 /**
  * Selected / Current / Highlighted state utilities.
  *
- * See `./selected.md` for the ARIA pairing grammar — every class below
+ * See `./state.md` for the ARIA pairing grammar — every class below
  * fires off a specific attribute and silently does nothing without it.
  */
 
@@ -22,13 +22,6 @@
       hover:bg-hover-surface-subtle! hover:text-hover-fg!
       hover:aria-selected:bg-selected-surface-hover hover:aria-selected:text-selected-fg
       hover:aria-[current=true]:bg-current-surface-hover hover:aria-[current=true]:text-current-fg;
-  }
-  .dx-hover-row {
-    @apply group-hover/row:bg-hover-surface-subtle! group-hover/row:text-hover-fg!
-      group-hover/row:group-aria-selected/row:bg-selected-surface-hover!
-      group-hover/row:group-aria-selected/row:text-selected-fg!
-      group-hover/row:group-aria-[current=true]/row:bg-current-surface-hover!
-      group-hover/row:group-aria-[current=true]/row:text-current-fg!;
   }
 
   /*
@@ -60,9 +53,6 @@
     @apply dx-ring-pseudo
       aria-[current=true]:bg-current-surface! aria-[current=true]:text-current-fg!
       aria-[current=true]:after:ring-focus-ring-subtle!;
-  }
-  .dx-current-row {
-    @apply group-aria-[current=true]/row:bg-current-surface! group-aria-[current=true]/row:text-current-fg!;
   }
 
   /*

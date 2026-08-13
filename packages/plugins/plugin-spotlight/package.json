@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-spotlight",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Spotlight search plugin for the Tauri popover window.",
   "homepage": "https://dxos.org",
@@ -35,9 +35,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/SpotlightPlugin.ts",
-      "types": "./dist/types/src/SpotlightPlugin.d.ts",
-      "default": "./dist/lib/SpotlightPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -57,18 +57,31 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./SpotlightCapabilities": {
+      "source": "./src/types/SpotlightCapabilities.ts",
+      "types": "./dist/types/src/types/SpotlightCapabilities.d.ts",
+      "import": "./dist/lib/SpotlightCapabilities.mjs"
+    },
+    "./SpotlightPlugin": {
+      "source": "./src/SpotlightPlugin.ts",
+      "types": "./dist/types/src/SpotlightPlugin.d.ts",
+      "import": "./dist/lib/SpotlightPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SpotlightCapabilities": [
+        "dist/types/src/types/SpotlightCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -77,15 +90,13 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {

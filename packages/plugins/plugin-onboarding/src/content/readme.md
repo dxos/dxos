@@ -1,4 +1,4 @@
-![img](https://dxos.network/dxos-logotype-blue.png)
+![img](https://media.dxos.network/dxos-logotype-blue.png)
 
 # Welcome to Composer
 

@@ -26,7 +26,7 @@ export const StatusOptions = [
  */
 const OrganizationSchema = Schema.Struct({
   name: Schema.String.pipe(
-    Schema.annotations({ title: 'Name' }),
+    Schema.annotate({ title: 'Name' }),
     GeneratorAnnotation.set({
       generator: 'company.name',
       probability: 1,
@@ -34,7 +34,7 @@ const OrganizationSchema = Schema.Struct({
     Schema.optional,
   ),
   description: Schema.String.pipe(
-    Schema.annotations({ title: 'Description' }),
+    Schema.annotate({ title: 'Description' }),
     GeneratorAnnotation.set({
       generator: 'lorem.paragraphs',
       args: [{ min: 1, max: 3 }],
@@ -42,13 +42,13 @@ const OrganizationSchema = Schema.Struct({
     Schema.optional,
   ),
   // TODO(wittjosiah): Remove (change to relation).
-  status: Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject').pipe(
+  status: Schema.Literals(['prospect', 'qualified', 'active', 'commit', 'reject']).pipe(
     FormatAnnotation.set(Format.TypeFormat.SingleSelect),
     GeneratorAnnotation.set({
       generator: 'helpers.arrayElement',
       args: [['prospect', 'qualified', 'active', 'commit', 'reject']],
     }),
-    Schema.annotations({
+    Schema.annotate({
       title: 'Status',
       [PropertyMetaAnnotationId]: {
         singleSelect: {
@@ -59,25 +59,19 @@ const OrganizationSchema = Schema.Struct({
     Schema.optional,
   ),
   // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
-  image: Schema.String.pipe(
-    Schema.annotations({ title: 'Image' }),
-    GeneratorAnnotation.set('image.url'),
-    Schema.optional,
-  ),
+  image: Schema.String.pipe(Schema.annotate({ title: 'Image' }), GeneratorAnnotation.set('image.url'), Schema.optional),
   website: Format.URL.pipe(
-    Schema.annotations({ title: 'Website' }),
+    Schema.annotate({ title: 'Website' }),
     GeneratorAnnotation.set('internet.url'),
     Schema.optional,
   ),
 });
 
 const _OrganizationSchema = OrganizationSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
-    }),
-  ),
-  Schema.annotations({ title: 'Organization', description: 'An organization.' }),
+  Schema.fieldsAssign({
+    location: Format.GeoPoint.pipe(Schema.annotate({ title: 'Location' }), Schema.optional),
+  }),
+  Schema.annotate({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
   CardAnnotation.set(true),
@@ -90,7 +84,7 @@ export class Organization extends Type.makeObject<Organization>(DXN.make('org.dx
 export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);
 
 const _LegacyOrganizationSchema = OrganizationSchema.pipe(
-  Schema.annotations({ title: 'Organization', description: 'An organization.' }),
+  Schema.annotate({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
 );

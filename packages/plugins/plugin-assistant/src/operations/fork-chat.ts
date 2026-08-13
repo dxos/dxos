@@ -4,15 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext, SessionLink } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';

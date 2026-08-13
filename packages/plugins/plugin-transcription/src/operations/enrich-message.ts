@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { enrichTranscriptMessage } from '@dxos/assistant/extraction';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { TranscriptOperation } from '../types';
+import { TranscriptOperation } from '#types';
 
 /**
  * Extracts proper nouns from a transcript message and links them to objects in the space via

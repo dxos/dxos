@@ -3,17 +3,17 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 import { HaloServicesLayer } from '@dxos/plugin-client';
 
 import { meta } from '#meta';
+import { SpaceOperation } from '#types';
 
 import { JOIN_DIALOG } from '../constants';
 import type { JoinDialogProps } from '../containers/JoinDialog';
 import { NoIdentityError } from '../errors';
-import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperation.Join.pipe(
   Operation.withHandler(

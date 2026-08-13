@@ -2,31 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Harness } from '@dxos/assistant';
-import {
-  AgentService,
-  Credential,
-  Instructions,
-  Operation,
-  OperationHandlerSet,
-  Process,
-  ServiceNotAvailableError,
-  ServiceResolver,
-  Skill,
-  Trace,
-  Trigger,
-} from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute';
 import {
   FeedTraceSink,
   ProcessManager,
@@ -38,6 +26,16 @@ import {
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
+import * as AgentService from '@dxos/compute/AgentService';
+import * as Credential from '@dxos/compute/Credential';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 import { type TestContextService } from '@dxos/effect/testing';
@@ -169,12 +167,12 @@ export const AssistantTestLayer = (
 
 /** Late-bound reference to the {@link ProcessManager.Service}, filled once the manager is built. */
 interface ProcessManagerHolder {
-  current?: Context.Tag.Service<ProcessManager.Service>;
+  current?: Context.Service.Shape<typeof ProcessManager.Service>;
 }
 
 /** Late-bound reference to the {@link AgentService.AgentService}, filled once the service is built. */
 interface AgentServiceHolder {
-  current?: Context.Tag.Service<AgentService.AgentService>;
+  current?: Context.Service.Shape<typeof AgentService.AgentService>;
 }
 
 /** Fills the {@link AgentServiceHolder}, letting the resolver serve operations that relay into agent sessions. */
@@ -201,7 +199,7 @@ export const AssistantTestServiceResolverLayer = (
   processManagerHolder: ProcessManagerHolder,
   agentServiceHolder: AgentServiceHolder = {},
 ) =>
-  Layer.scoped(
+  Layer.effect(
     ServiceResolver.ServiceResolver,
     Effect.gen(function* () {
       const services = yield* Effect.context<Database.Service>().pipe(
@@ -209,7 +207,8 @@ export const AssistantTestServiceResolverLayer = (
         Effect.map(Layer.succeedContext),
       );
 
-      const extraServicesRt = yield* Layer.toRuntime(extraServices);
+      // v4 dropped `Layer.toRuntime`; a built layer is its service context.
+      const extraServicesContext = yield* Layer.build(extraServices);
 
       return ServiceResolver.compose(
         ServiceResolver.succeed(Harness.HarnessService, (context) =>
@@ -223,7 +222,7 @@ export const AssistantTestServiceResolverLayer = (
             if (!processManager) {
               return yield* Effect.fail(new ServiceNotAvailableError(ProcessManager.Service.key));
             }
-            const runtime = yield* Effect.runtime<Database.Service>();
+            const runtime = yield* Effect.context<Database.Service>();
             return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
           }).pipe(Effect.provide(services)),
         ),
@@ -245,7 +244,7 @@ export const AssistantTestServiceResolverLayer = (
           Registry.Service,
           Credential.CredentialsService,
         ),
-        ServiceResolver.fromContext(extraServicesRt.context),
+        ServiceResolver.fromContext(extraServicesContext),
       );
     }),
   );

@@ -6,9 +6,10 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { CollaborationOperation } from '@dxos/app-toolkit';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
+import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
@@ -17,10 +18,8 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
-import { WithProperties } from '#testing';
-
-import { Markdown, MarkdownOperation } from '../types';
-import { MarkdownOperationHandlerSet } from './index';
+import { MarkdownOperationHandlerSet } from '#operations';
+import { Markdown, MarkdownOperation } from '#types';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',

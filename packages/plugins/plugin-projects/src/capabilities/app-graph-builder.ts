@@ -5,14 +5,21 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Operation, Project } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { Mailbox } from '@dxos/plugin-inbox';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
@@ -30,7 +37,7 @@ import { inboxResearch } from '../templates';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const sectionExtensions = yield* TypeSection.createTypeSectionExtension(Project.Project, {
-      urlKey: 'topic',
+      urlKey: 'project',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
       createObject: (space) =>
@@ -48,7 +55,7 @@ export default Capability.makeModule(
     const actionExtensions = yield* createProjectActionExtension();
     const chatExtensions = yield* createProjectChatsExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
       ...actionExtensions,
       ...chatExtensions,

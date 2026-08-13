@@ -48,7 +48,7 @@ export const scanIdioms = async (options: ScanIdiomsOptions): Promise<Idiom[]> =
 
 const JSDOC_BLOCK_RE = /\/\*\*([\s\S]*?)\*\//g;
 // Slug must be an NSID — validated via @dxos/util.isWellFormedId.
-const IDIOM_TAG_RE = /@idiom\s+([a-zA-Z][a-zA-Z0-9.\-]+)\s*\n([\s\S]*)/;
+const IDIOM_TAG_RE = /@idiom\s+([a-zA-Z][a-zA-Z0-9.-]+)\s*\n([\s\S]*)/;
 
 const parseFile = (content: string, absPath: string, rootPath: string): Idiom[] => {
   const out: Idiom[] = [];
@@ -58,7 +58,7 @@ const parseFile = (content: string, absPath: string, rootPath: string): Idiom[] 
       continue;
     }
 
-    const slugMatch = block.match(/@idiom\s+([a-zA-Z][a-zA-Z0-9.\-]*[a-zA-Z0-9])/);
+    const slugMatch = block.match(/@idiom\s+([a-zA-Z][a-zA-Z0-9.-]*[a-zA-Z0-9])/);
     if (!slugMatch) {
       continue;
     }

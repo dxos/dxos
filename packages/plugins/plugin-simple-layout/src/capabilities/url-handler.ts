@@ -2,13 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { PathResolution } from '@dxos/app-graph';
-import { AppCapabilities, GraphPath, LayoutOperation, NotFound, UrlPath } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as PathResolution from '@dxos/app-graph/PathResolution';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
+import * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
@@ -30,30 +36,43 @@ const bareWorkspace = (qualifiedWorkspace: string): string => {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
-    const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const stateAtom = yield* Capability.get(SimpleLayoutCapabilities.State);
+    const operationService = yield* Capabilities.OperationInvoker;
+    const navigationHandlers = yield* AppCapabilities.NavigationHandler;
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = yield* SimpleLayoutCapabilities.State;
+    // The graph builder is contributed once by plugin-graph and is stable for the app's lifetime,
+    // so both the inbound (URL -> state) resolution and the outbound sync below share this handle.
+    const builder = yield* AppCapabilities.AppGraph;
 
-    const provideServices = <A, E>(effect: Effect.Effect<A, E, Capability.Service | Operation.Service>) =>
-      effect.pipe(
-        Effect.provideService(Capability.Service, capabilities),
-        Effect.provideService(Operation.Service, operationService),
-      );
+    const provideServices = <A, E>(effect: Effect.Effect<A, E, Operation.Service>) =>
+      effect.pipe(Effect.provideService(Operation.Service, operationService));
 
     const getState = () => registry.get(stateAtom);
 
-    /** Dispatch all NavigationHandler contributions with a given URL. */
-    const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
-      const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-      yield* Effect.all(
-        handlers.map((handler) => handler(url)),
+    /**
+     * Dispatch all NavigationHandler contributions with a given URL.
+     *
+     * `catchAllCause`, not `catchAll`: a handler that invokes an operation fails as a DEFECT
+     * (`Process.fromOperation` uses `Effect.orDie`), which the Fail channel does not carry. On the
+     * `?token&type=login` boot the redeem races the forked client init, so the defect is the COMMON
+     * path — and left to escape it fails this module's activation, taking URL handling down for the
+     * whole session.
+     */
+    const dispatchNavigationHandlers = (url: URL) =>
+      Effect.all(
+        navigationHandlers
+          .get()
+          .map((handler) =>
+            handler(url).pipe(
+              Effect.catchCause((cause) =>
+                Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
+              ),
+            ),
+          ),
         { concurrency: 'unbounded' },
       );
-    });
 
     const handleNavigation = Effect.fn(function* (url?: URL) {
-      const builder = yield* Capability.get(AppCapabilities.AppGraph);
       const resolvedUrl = url ?? new URL(window.location.href);
       yield* dispatchNavigationHandlers(resolvedUrl);
 
@@ -126,13 +145,11 @@ export default Capability.makeModule(
           }),
         );
       }).pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.sync(() => log.warn('[UrlHandler] Failed to initialize deep link listener', { error })),
         ),
       );
     }
-
-    const builder = yield* Capability.get(AppCapabilities.AppGraph);
 
     // Sync URL with layout state changes.
     const syncUrl = (method: 'push' | 'replace' = 'push') => {
@@ -167,20 +184,21 @@ export default Capability.makeModule(
     // Correct a bare/stale URL against the already-persisted state on load.
     syncUrl('replace');
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
         unsubscribe();
         unlistenDeepLink?.();
       }),
     );
+    return [];
   }),
 );
 
 /** Check if a path is a redirect path handled elsewhere (e.g., OAuth). */
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
-/** GraphPath with file extensions are not graph node paths. */
+/** Paths with file extensions are not graph node paths. */
 const isFilePath = (pathname: string): boolean => /\.[a-z]+$/i.test(pathname);
 
 /** Handle a deep link URL string. Merges query params into window.location and navigates. */

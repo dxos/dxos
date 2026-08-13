@@ -4,7 +4,7 @@
 
 import { Ref } from '@dxos/echo';
 
-import { Provider, Result, Search } from './types';
+import { Provider, Result, Search } from '#types';
 
 //
 // Factories — return FRESH objects on each call. Stories that add objects to a space MUST use

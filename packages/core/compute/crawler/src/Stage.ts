@@ -22,7 +22,7 @@ export const tapStage = <E, R>(
 ): Stage.Stage<Type.Event, Type.Event, StateError, R | StateStore> =>
   Stage.map(name, (event: Type.Event) =>
     (tags.includes(event._tag) ? fn(event) : Effect.void).pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.flatMap(StateStore, (store) =>
           store.setStatus(
             event.target.id,

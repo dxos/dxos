@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 
-import { RegistryCapabilities } from '../types';
+import { RegistryCapabilities } from '#types';
 
 /**
  * Startup module that auto-loads a locally-served dev plugin when the user has
@@ -17,9 +18,9 @@ import { RegistryCapabilities } from '../types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const manager = yield* Capability.get(Capabilities.PluginManager);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const settingsAtom = yield* Capability.get(RegistryCapabilities.Settings);
+    const manager = yield* Capabilities.PluginManager;
+    const registry = yield* Capabilities.AtomRegistry;
+    const settingsAtom = yield* RegistryCapabilities.Settings;
 
     const settings = registry.get(settingsAtom);
     const url = settings.devPluginUrl?.trim();

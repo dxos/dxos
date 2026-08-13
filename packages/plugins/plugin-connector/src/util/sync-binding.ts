@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, type Key, Ref } from '@dxos/echo';
 import { type Cursor } from '@dxos/link';
 
+import { ConnectorSpec } from '#types';
+
 import { ConnectionSyncError } from '../errors';
-import { type ConnectorEntry } from '../types';
 import { ensureSyncTrigger } from './sync-routine';
 import { fireSyncTrigger, syncTriggerMonitorLayer } from './sync-trigger';
 
@@ -28,7 +29,7 @@ export const syncBinding = ({
   cursor,
   spaceId,
 }: {
-  connector: ConnectorEntry;
+  connector: ConnectorSpec.ConnectorEntry;
   cursor: Cursor.ExternalCursor;
   spaceId: Key.SpaceId;
 }): Effect.Effect<void, ConnectionSyncError, Database.Service | Operation.Service | Capability.Service> =>

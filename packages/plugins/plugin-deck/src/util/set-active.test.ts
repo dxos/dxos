@@ -4,12 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { type DeckState, defaultDeck } from '#types';
+import { DeckSchema } from '#types';
 
 import { computeActiveUpdates } from './set-active';
 
-const makeDeck = (overrides: Partial<DeckState> = {}): DeckState => ({
-  ...defaultDeck,
+const makeDeck = (overrides: Partial<DeckSchema.DeckState> = {}): DeckSchema.DeckState => ({
+  ...DeckSchema.defaultDeck,
   ...overrides,
 });
 
@@ -54,6 +54,22 @@ describe('computeActiveUpdates', () => {
       const { deckUpdates } = computeActiveUpdates({ next: ['new'], deck });
       const oldCount = deckUpdates.inactive.filter((id) => id === 'old').length;
       expect(oldCount).toBe(1);
+    });
+  });
+
+  describe('companionPlanks', () => {
+    // Entries survived every close, so a long-lived deck accreted one per plank ever opened — a live
+    // profile measured fourteen, with duplicates.
+    test('prunes companion state for planks no longer open, and dedupes', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: ['a', 'a', 'b', 'ghost'] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['a'], deck });
+      expect(deckUpdates.companionPlanks).toEqual(['a']);
+    });
+
+    test('keeps companion state for planks that remain open', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: ['b'] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['a', 'b'], deck });
+      expect(deckUpdates.companionPlanks).toEqual(['b']);
     });
   });
 

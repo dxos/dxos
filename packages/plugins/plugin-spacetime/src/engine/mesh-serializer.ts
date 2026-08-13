@@ -4,7 +4,7 @@
 
 import type { Manifold } from 'manifold-3d';
 
-import { Model } from '../types';
+import { Model } from '#types';
 
 /** Serialize a Manifold solid to ECHO-compatible mesh data. */
 export const serializeManifold = (solid: Manifold): Model.Mesh => {

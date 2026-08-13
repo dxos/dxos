@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
@@ -27,6 +27,8 @@ export const translations = [
         'projects.label': 'Projects',
         'instructions.label': 'Instructions',
         'context.label': 'Context',
+        'goals.label': 'Goals',
+        'tasks.label': 'Tasks',
         'routines.label': 'Routines',
         'artifacts.label': 'Artifacts',
         'create-panel.name.placeholder': 'Project name (optional)',

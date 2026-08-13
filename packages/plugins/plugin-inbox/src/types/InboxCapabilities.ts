@@ -4,15 +4,15 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
 // Inline import to avoid `Settings` namespace alias colliding with the
 // `Settings` capability export below.
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -20,7 +20,7 @@ export const Settings = Capability.make<Atom.Writable<import('./Settings').Setti
  * Plugins contribute object extractors via this capability.
  * Multiple plugins may register; the ExtractMessage operation selects one based on match() confidence.
  */
-export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectExtractor>(
+export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectExtractor>()(
   `${meta.profile.key}.capability.objectExtractor`,
 );
 
@@ -48,5 +48,32 @@ export type MailboxAction = {
   };
 };
 
+// Multi: `useCapabilities`/`getAll` readers render one menu item per contributed action, and more
+// than one plugin may contribute (currently plugin-brain).
 /** Plugins contribute mailbox toolbar-menu actions via this capability (see {@link MailboxAction}). */
-export const MailboxAction = Capability.make<MailboxAction>(`${meta.profile.key}.capability.mailboxAction`);
+export const MailboxAction = Capability.make<MailboxAction>()(`${meta.profile.key}.capability.mailboxAction`);
+
+/**
+ * The send operation a mail provider handles outbound drafts with. Each provider plugin contributes one
+ * entry keyed by its `Connector.id`, so the composer routes a draft by its mailbox binding's
+ * `Connection.connectorId` without naming any provider.
+ */
+export type MailSendOperation = {
+  /** The contributing provider's `Connector.id` (matched against `Connection.connectorId`). */
+  connectorId: string;
+  /**
+   * Returns the send operation, typed against the shared `MailSend` contract so a provider cannot
+   * contribute an operation the composer can't call. A closure rather than a value property for the
+   * same reason as {@link MailboxAction}: holding an `Operation.Definition` on the capability value
+   * makes the capability atom read recurse.
+   */
+  getOperation: () => import('@dxos/compute').Operation.Definition<
+    import('./MailSend').Input,
+    import('./MailSend').Output
+  >;
+};
+
+/** Mail providers contribute their send operation via this capability (see {@link MailSendOperation}). */
+export const MailSendOperation = Capability.make<MailSendOperation>()(
+  `${meta.profile.key}.capability.mailSendOperation`,
+);

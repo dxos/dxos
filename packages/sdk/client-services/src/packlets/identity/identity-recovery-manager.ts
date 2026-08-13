@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
+import { synchronized } from '@dxos/async';
 import { type Context } from '@dxos/context';
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
+import { generateSeedPhrase, getCredentialAssertion, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -25,7 +26,9 @@ import {
   type CreateRecoveryCredentialRequest,
   type RecoverIdentityRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type Credential, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
+import { ComplexSet } from '@dxos/util';
 
 import { type Identity } from './identity';
 import { IdentityManagerService, type JoinIdentityProps } from './identity-manager';
@@ -33,9 +36,10 @@ import { IdentityManagerService, type JoinIdentityProps } from './identity-manag
 /**
  * Effect service tag for {@link EdgeIdentityRecoveryManager}.
  */
-export class EdgeIdentityRecoveryManagerService extends EffectContext.Tag(
-  '@dxos/client-services/EdgeIdentityRecoveryManager',
-)<EdgeIdentityRecoveryManagerService, EdgeIdentityRecoveryManager>() {}
+export class EdgeIdentityRecoveryManagerService extends EffectContext.Service<
+  EdgeIdentityRecoveryManagerService,
+  EdgeIdentityRecoveryManager
+>()('@dxos/client-services/EdgeIdentityRecoveryManager') {}
 
 export type AcceptRecoveredIdentity = (params: JoinIdentityProps) => Promise<Identity>;
 
@@ -65,16 +69,23 @@ export class EdgeIdentityRecoveryManager {
     let lookupKey: PublicKey;
     let algorithm: string;
     let recoveryCode: string | undefined;
+    let kind: IdentityRecovery.Kind;
+    let label: string | undefined;
     if (data) {
       recoveryKey = data.recoveryKey;
       lookupKey = data.lookupKey;
       algorithm = data.algorithm;
+      kind = data.kind ?? IdentityRecovery.Kind.UNKNOWN;
+      label = data.label;
     } else {
-      recoveryCode = generateSeedPhrase();
-      const keypair = keyPairFromSeedPhrase(recoveryCode);
+      // The seed phrase is generated here rather than by the caller, so the label is too.
+      recoveryCode = await generateSeedPhrase();
+      const keypair = await keyPairFromSeedPhrase(recoveryCode);
       recoveryKey = PublicKey.from(keypair.publicKey);
       lookupKey = PublicKey.from(keypair.publicKey);
       algorithm = 'ED25519';
+      kind = IdentityRecovery.Kind.RECOVERY_CODE;
+      label = 'Recovery code';
     }
 
     const identityKey = identity.identityKey;
@@ -86,6 +97,8 @@ export class EdgeIdentityRecoveryManager {
         identityKey,
         algorithm,
         lookupKey,
+        label,
+        kind,
       },
     });
 
@@ -93,6 +106,75 @@ export class EdgeIdentityRecoveryManager {
     await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
 
     return { recoveryCode };
+  }
+
+  /**
+   * Revoke a recovery credential by writing an `IdentityRecoveryRevoked` assertion to the identity's
+   * control feed, mirroring how `SpaceDeleted` tombstones a space: the feed is append-only, so the
+   * original credential stays and this marks it spent. The assertion replicates to the user's other
+   * devices and to their agent, which is what drives the server-side refusal.
+   *
+   * Refuses the last un-revoked credential. Doing so would leave the holder unable to recover their
+   * identity with no self-service way back — the replacement has to be added first.
+   *
+   * `@synchronized` so two revocations on this device cannot both observe two active credentials and
+   * each cancel a different one. It cannot serialize across devices: the control feed is append-only
+   * with no consensus, so two devices revoking at once can still drive the count to zero. The agents
+   * service is the authority there — it re-checks the active count before flipping a row to REVOKED.
+   */
+  @synchronized
+  public async revokeRecoveryCredential({ lookupKey }: { lookupKey: PublicKey }): Promise<void> {
+    const identity = this._identityProvider();
+    invariant(identity);
+
+    const active = this.listActiveRecoveryCredentials();
+    if (!active.some(({ assertion }) => assertion.lookupKey?.equals(lookupKey))) {
+      throw new Error('Recovery credential is not registered, or is already revoked.');
+    }
+    if (active.length <= 1) {
+      throw new Error('Cannot revoke the only remaining recovery credential; add another one first.');
+    }
+
+    const identityKey = identity.identityKey;
+    const credential = await identity.getIdentityCredentialSigner().createCredential({
+      subject: identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.IdentityRecoveryRevoked',
+        identityKey,
+        lookupKey,
+        'revokedAt': new Date(),
+      },
+    });
+
+    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
+    await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+  }
+
+  /**
+   * Recovery credentials in the identity's HALO that no `IdentityRecoveryRevoked` assertion cancels.
+   *
+   * Credentials written before `lookupKey` existed cannot be matched by a revocation, so they are
+   * always active — and still count towards the last-credential check, since they remain usable.
+   */
+  public listActiveRecoveryCredentials(): { credential: Credential; assertion: IdentityRecovery }[] {
+    const identity = this._identityProvider();
+    invariant(identity);
+
+    const revoked = new ComplexSet<PublicKey>(PublicKey.hash);
+    const registered: { credential: Credential; assertion: IdentityRecovery }[] = [];
+    for (const credential of identity.space.spaceState.credentials) {
+      const assertion = getCredentialAssertion(credential);
+      switch (assertion['@type']) {
+        case 'dxos.halo.credentials.IdentityRecovery':
+          registered.push({ credential, assertion });
+          break;
+        case 'dxos.halo.credentials.IdentityRecoveryRevoked':
+          revoked.add(assertion.lookupKey);
+          break;
+      }
+    }
+
+    return registered.filter(({ assertion }) => !(assertion.lookupKey && revoked.has(assertion.lookupKey)));
   }
 
   public async requestRecoveryChallenge(ctx: Context) {
@@ -195,7 +277,7 @@ export class EdgeIdentityRecoveryManager {
   public async recoverIdentity(ctx: Context, { recoveryCode }: { recoveryCode: string }): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
-    const recoveryKeypair = keyPairFromSeedPhrase(recoveryCode);
+    const recoveryKeypair = await keyPairFromSeedPhrase(recoveryCode);
     const recoveryKey = PublicKey.from(recoveryKeypair.publicKey);
     const deviceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();

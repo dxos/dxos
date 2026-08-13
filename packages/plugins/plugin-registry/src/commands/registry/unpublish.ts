@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 
@@ -25,12 +25,12 @@ const rkeyOf = (uri: string): string => uri.split('/').pop() ?? '';
 export const unpublish = Command.make(
   'unpublish',
   {
-    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.text('app-password').pipe(
+    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.string('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    key: Options.text('key').pipe(
+    key: Options.string('key').pipe(
       Options.withDescription('Plugin key (the profile rkey). Removes its profile and all releases.'),
     ),
   },

@@ -11,8 +11,9 @@ import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
-import { Provider, Search, SearchOperation } from '../../types';
+import { meta } from '#meta';
+import { Provider, Search, SearchOperation } from '#types';
+
 import { buildUnionFormSchema } from '../../util';
 
 export type SearchPropertiesProps = {

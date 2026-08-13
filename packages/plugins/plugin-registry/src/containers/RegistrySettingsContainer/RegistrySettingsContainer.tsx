@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppCapabilities } from '@dxos/app-toolkit';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { EffectEx } from '@dxos/effect';
 
-import { RegistrySettings } from '../../components';
-import { type RegistrySettings as RegistrySettingsType } from '../../types';
+import { RegistrySettings } from '#components';
+import { type RegistrySettings as RegistrySettingsType } from '#types';
 
 export type RegistrySettingsContainerProps = {
   subject: AppCapabilities.Settings;

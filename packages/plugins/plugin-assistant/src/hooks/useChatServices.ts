@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/ui';
-import { AppSpace } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import { useActivationSignal, useCapability } from '@dxos/app-framework/ui';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Key } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
+
+import { AssistantEvents } from '#types';
 
 export type UseChatServicesProps = {
   id?: Key.SpaceId;
@@ -21,8 +23,12 @@ export type UseChatServicesProps = {
  */
 export const useChatServices = ({ id }: UseChatServicesProps) => {
   const client = useClient();
-  id ??= AppSpace.getPersonalSpace(client)?.id;
+  id ??= AppSpace.getDefaultSpace(client)?.id;
 
+  // Every chat entry point resolves its services here, so this is the assistant-in-use demand
+  // signal: start-gated assistant modules (skills included) load now and register via the
+  // reactive RegistrySync.
+  useActivationSignal(AssistantEvents.Start);
   const runtime = useCapability(Capabilities.ProcessManagerRuntime);
   return id ? runtime : undefined;
 };

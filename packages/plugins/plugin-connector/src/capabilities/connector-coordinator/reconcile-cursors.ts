@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 
-import { Connection, type ConnectorEntry } from '#types';
+import { ConnectorSpec } from '#types';
 
 import { ensureSyncTrigger, isCursorForConnection } from '../../util';
 
@@ -22,7 +22,7 @@ export type ReconcileCursorsInput = {
   /** Live database the cursors are reconciled in. */
   db: Database.Database;
   connection: Connection.Connection;
-  connector: ConnectorEntry;
+  connector: ConnectorSpec.ConnectorEntry;
   selected: ReadonlyArray<SyncTargetSelection>;
   /** Bind this pre-existing object as the first newly-selected target instead of materializing one. */
   existingTarget?: Ref.Ref<Obj.Unknown>;

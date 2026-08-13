@@ -5,12 +5,13 @@
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 
 import { fetchStandardSite, listStandardSitePublications, parseStandardSiteActor } from './standard-site';
 
 // The Standard.site fetchers are Effects (they provide their own HTTP layer); run them for assertions.
 // `fetchStandardSite` now takes the publication site reference (`at://` or `https://`) as `url`.
-const runFetchStandardSite = (url: string) => EffectEx.runPromise(fetchStandardSite(url));
+const runFetchStandardSite = (url: string) => EffectEx.runPromise(TestHelpers.withStubbedFetch(fetchStandardSite(url)));
 
 // RSS/Atom coverage lives in rss.test.ts.
 
@@ -131,7 +132,9 @@ describe('FeedFetcher', () => {
     test('lists the distinct publications a handle publishes under', async ({ expect }) => {
       globalThis.fetch = routedFetch();
 
-      const publications = await EffectEx.runPromise(listStandardSitePublications('alice.example.com'));
+      const publications = await EffectEx.runPromise(
+        TestHelpers.withStubbedFetch(listStandardSitePublications('alice.example.com')),
+      );
 
       // One `at://` publication (resolved via getRecord) and one bare `https://` site.
       expect(publications).toHaveLength(2);

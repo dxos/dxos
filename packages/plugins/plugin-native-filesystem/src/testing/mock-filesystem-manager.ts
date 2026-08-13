@@ -2,20 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Text } from '@dxos/schema';
 
 import type { FilesystemManager } from '#capabilities';
-import type { FilesystemEntry, FilesystemWorkspace, NativeFilesystemState } from '#types';
+import { NativeFilesystemCapabilities } from '#types';
 
 /** In-memory mock of FilesystemManager for tests that need graph builder integration. */
 export class MockFilesystemManager implements FilesystemManager.FilesystemManager {
   private readonly _documents = new Map<string, Text.Text>();
   private readonly _markdownBindingGeneration = Atom.family((fileId: string) => Atom.make(0).pipe(Atom.keepAlive));
 
-  constructor(state: NativeFilesystemState) {
+  constructor(state: NativeFilesystemCapabilities.NativeFilesystemState) {
     for (const workspace of state.workspaces) {
       this._seedMarkdownFiles(workspace.children);
     }
@@ -33,15 +33,15 @@ export class MockFilesystemManager implements FilesystemManager.FilesystemManage
     return undefined;
   }
 
-  activateWorkspace(_workspace: FilesystemWorkspace): Effect.Effect<void> {
+  activateWorkspace(_workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
     return Effect.void;
   }
 
-  deactivateWorkspace(_workspace: FilesystemWorkspace): Effect.Effect<void> {
+  deactivateWorkspace(_workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
     return Effect.void;
   }
 
-  refreshWorkspaceContent(_workspace: FilesystemWorkspace): Effect.Effect<void> {
+  refreshWorkspaceContent(_workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
     return Effect.void;
   }
 
@@ -49,7 +49,7 @@ export class MockFilesystemManager implements FilesystemManager.FilesystemManage
     return Effect.void;
   }
 
-  private _seedMarkdownFiles(entries: FilesystemEntry[]): void {
+  private _seedMarkdownFiles(entries: NativeFilesystemCapabilities.FilesystemEntry[]): void {
     for (const entry of entries) {
       if ('children' in entry) {
         this._seedMarkdownFiles(entry.children);

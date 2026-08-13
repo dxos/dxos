@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
@@ -52,7 +52,7 @@ export class HaloProxy implements Halo {
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime,
+    private readonly _runtime: EffectContext.Context<never> = EffectContext.empty(),
   ) {}
 
   [inspect.custom](): string {
@@ -158,7 +158,7 @@ export class HaloProxy implements Halo {
     this._credentialsChanged.emit([]);
     const cleanup = subscribeStream(
       this._runtime,
-      this._serviceProvider.rpc.SpacesService.queryCredentials({ spaceKey: identity.spaceKey! }),
+      this._serviceProvider.rpc['SpacesService.queryCredentials']({ spaceKey: identity.spaceKey! }),
       {
         onData: (data) => this._credentialsChanged.emit([...this._credentials.get(), data]),
       },
@@ -182,7 +182,7 @@ export class HaloProxy implements Halo {
     }
 
     this._streamSubscriptions.add(
-      subscribeStream(this._runtime, this._serviceProvider.rpc.IdentityService.queryIdentity(undefined), {
+      subscribeStream(this._runtime, this._serviceProvider.rpc['IdentityService.queryIdentity'](undefined), {
         onData: (data) => {
           // Set tracing identity. For early stage debugging.
           data.identity &&
@@ -196,13 +196,13 @@ export class HaloProxy implements Halo {
     );
 
     this._streamSubscriptions.add(
-      subscribeStream(this._runtime, this._serviceProvider.rpc.ContactsService.queryContacts(undefined), {
+      subscribeStream(this._runtime, this._serviceProvider.rpc['ContactsService.queryContacts'](undefined), {
         onData: (data) => this._contactsChanged.emit(data.contacts ?? []),
       }),
     );
 
     this._streamSubscriptions.add(
-      subscribeStream(this._runtime, this._serviceProvider.rpc.DevicesService.queryDevices(undefined), {
+      subscribeStream(this._runtime, this._serviceProvider.rpc['DevicesService.queryDevices'](undefined), {
         onData: (data) => {
           if (data.devices) {
             this._devicesChanged.emit(data.devices);
@@ -264,7 +264,7 @@ export class HaloProxy implements Halo {
     };
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc.IdentityService.createIdentity({
+      this._serviceProvider.rpc['IdentityService.createIdentity']({
         profile,
         deviceProfile: deviceProfileWithDefaults,
       }),
@@ -279,7 +279,7 @@ export class HaloProxy implements Halo {
   ): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc.IdentityService.recoverIdentity(args),
+      this._serviceProvider.rpc['IdentityService.recoverIdentity'](args),
       {
         timeout: RPC_TIMEOUT,
         label: 'IdentityService.recoverIdentity',
@@ -297,7 +297,7 @@ export class HaloProxy implements Halo {
   private async _updateProfileInternal(ctx: Context, profile: ProfileDocument): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc.IdentityService.updateProfile(profile),
+      this._serviceProvider.rpc['IdentityService.updateProfile'](profile),
       {
         timeout: RPC_TIMEOUT,
         label: 'IdentityService.updateProfile',
@@ -364,7 +364,7 @@ export class HaloProxy implements Halo {
 
     await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc.SpacesService.writeCredentials({
+      this._serviceProvider.rpc['SpacesService.writeCredentials']({
         spaceKey: identity.spaceKey!,
         credentials,
       }),
@@ -393,7 +393,7 @@ export class HaloProxy implements Halo {
     );
     return runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc.IdentityService.signPresentation({
+      this._serviceProvider.rpc['IdentityService.signPresentation']({
         presentation: {
           credentials,
         },

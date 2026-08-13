@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-discord",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "DXOS plugin that integrates Discord as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
@@ -30,9 +30,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/DiscordPlugin.ts",
-      "types": "./dist/types/src/DiscordPlugin.d.ts",
-      "default": "./dist/lib/DiscordPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -52,18 +52,47 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./DiscordEvents": {
+      "source": "./src/types/DiscordEvents.ts",
+      "types": "./dist/types/src/types/DiscordEvents.d.ts",
+      "import": "./dist/lib/DiscordEvents.mjs"
+    },
+    "./DiscordOperation": {
+      "source": "./src/types/DiscordOperation.ts",
+      "types": "./dist/types/src/types/DiscordOperation.d.ts",
+      "import": "./dist/lib/DiscordOperation.mjs"
+    },
+    "./DiscordPlugin": {
+      "source": "./src/DiscordPlugin.ts",
+      "types": "./dist/types/src/DiscordPlugin.d.ts",
+      "import": "./dist/lib/DiscordPlugin.mjs"
+    },
+    "./DiscordTargetOptions": {
+      "source": "./src/types/DiscordTargetOptions.ts",
+      "types": "./dist/types/src/types/DiscordTargetOptions.d.ts",
+      "import": "./dist/lib/DiscordTargetOptions.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "DiscordEvents": [
+        "dist/types/src/types/DiscordEvents.d.ts"
+      ],
+      "DiscordOperation": [
+        "dist/types/src/types/DiscordOperation.d.ts"
+      ],
+      "DiscordTargetOptions": [
+        "dist/types/src/types/DiscordTargetOptions.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -93,7 +122,6 @@
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "dfx": "catalog:",
     "effect": "catalog:"
   },

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './useCidResolver';
 export * from './useDebouncedValue';
 export * from './useEmailComposerExtensions';
 export * from './useExtractedObjects';

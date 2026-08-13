@@ -6,14 +6,14 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
-  - memoized-llm
+  - model-fixture
 tasks:
   check-module-structure:
     # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must
     # remain UI-free under workerd so it can load in non-DOM environments.
     command: >-
       pnpm exec dx-trace-imports
-      --export ./plugin
+      --export ./AssistantPlugin
       --to "@dxos/react-ui"
       --conditions workerd,worker,node
       --fail-on present

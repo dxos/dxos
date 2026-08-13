@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import type {
   GuildChannelResponse,
@@ -16,20 +15,24 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { Credential, Operation, Trace } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { FetchMessages, TimeRange } from './definitions';
 
-const DiscordConfigFromCredential = Layer.unwrapEffect(
+const DiscordConfigFromCredential = Layer.unwrap(
   Effect.gen(function* () {
     return DiscordConfig.layer({
       token: yield* Credential.CredentialsService.getApiKey({ service: 'discord.com' }),
       rest: {
-        baseUrl: 'https://api-proxy.dxos.workers.dev/discord.com/api/v10',
+        // Routed through the DXOS CORS proxy (cors-proxy worker), which forwards `Authorization` verbatim.
+        baseUrl: 'https://cors.dxos.network/discord.com/api/v10',
       },
     });
   }),
@@ -110,13 +113,14 @@ export default FetchMessages.pipe(
               });
               const messages = yield* rest.listMessages(channel.id, options).pipe(
                 Effect.map(Array.map(makeMessage)),
-                Effect.map(Array.reverse),
-                Effect.catchTag('ErrorResponse', (err) =>
-                  err.cause.code === 50001 ? Effect.succeed([]) : Effect.fail(err),
-                ),
+                Effect.map((collected: ReadonlyArray<ReturnType<typeof makeMessage>>) => Array.reverse(collected)),
+                // `dfx` is pinned to Effect 3, so its tagged errors do not type against a v4 error
+                // channel; Discord's "Missing Access" code is matched structurally instead. See the
+                // dfx note in the effect-smol project — the skill needs a v4-capable client.
+                Effect.catch((error) => (isMissingAccess(error) ? Effect.succeed([]) : Effect.fail(error))),
               );
               if (messages.length > 0) {
-                lastMessage = Option.fromNullable(messages.at(-1));
+                lastMessage = Option.fromNullishOr(messages.at(-1));
                 allMessages.push(...messages);
               } else {
                 break;
@@ -162,6 +166,18 @@ const generateSnowflake = (unixTimestamp: number): bigint => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)
   return (BigInt(unixTimestamp * 1000) - discordEpoch) << 22n;
 };
+
+/** Discord's "Missing Access" error code, reported on a channel the bot cannot read. */
+const MISSING_ACCESS_CODE = 50001;
+
+const isMissingAccess = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  'cause' in error &&
+  typeof error.cause === 'object' &&
+  error.cause !== null &&
+  'code' in error.cause &&
+  error.cause.code === MISSING_ACCESS_CODE;
 
 const parseSnowflake = (snowflake: string): Date => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)

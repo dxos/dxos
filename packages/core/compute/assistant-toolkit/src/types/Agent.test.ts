@@ -6,20 +6,22 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Instructions, Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
+import { Outline } from '@dxos/types';
 
-import { Agent, Chat, Plan } from '../types';
+import { Agent, Chat } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   types: [
     Agent.Agent,
-    Plan.Plan,
+    Outline.Outline,
     Chat.Chat,
     Chat.CompanionTo,
     Skill.Skill,
@@ -31,7 +33,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('Agent (0.2.0)', () => {
-  it.scoped(
+  it.effect(
     'makeInitialized creates the identity/preset shape',
     Effect.fnUntraced(
       function* ({ expect }) {

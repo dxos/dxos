@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-error-boundary",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Shared headless ErrorBoundary component for DXOS React applications.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,9 +30,7 @@
   },
   "devDependencies": {
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:"
+    "react": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:",

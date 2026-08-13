@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Client } from '@dxos/client';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection } from '@dxos/plugin-connector';
-import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
@@ -85,19 +85,19 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
-        Capability.contributes(AppCapabilities.Translations, translations),
+        Capability.contribute(AppCapabilities.Translations, translations),
         // The browser reads via ReadRepoLayer (by handle). The seeded `alice.test` account resolves to the
         // in-memory mock (deterministic, with a mapped collection to preview/import); any other handle hits
         // the real public repo so entering your own handle actually browses that PDS.
-        Capability.contributes(AtprotoCapabilities.ReadRepoLayer, (handle: string) =>
+        Capability.contribute(AtprotoCapabilities.ReadRepoLayer, (handle: string) =>
           handle === MOCK_HANDLE ? AtprotoRepo.layerMock(mock) : AtprotoRepo.layerPublic(handle),
         ),
       ],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [Connection.Connection, AccessToken.AccessToken, AtprotoPublication.AtprotoPublication, DemoNote],
           onClientInitialized: seed,
         }),

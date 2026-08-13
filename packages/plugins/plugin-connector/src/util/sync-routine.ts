@@ -4,24 +4,25 @@
 
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
-import * as FiberId from 'effect/FiberId';
 
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
 
-import { type ConnectorEntry, type SyncInput, type SyncOutput } from '../types';
+import { ConnectorSpec } from '#types';
+
 import { findSyncTriggerForBinding } from './sync-trigger';
 
 /**
- * Creates the sync Routine for `cursor`: a Routine wrapping a local (`remote` unset) trigger built
- * from the connector's declared `sync.trigger` spec, wired to the connector's sync operation with
- * `binding` bound to `cursor`. `input` carries only `binding`, matching the sync operation's input
- * schema — the routine is related to `target` by query ({@link connectedRoutinesQuery}, surfaced in the
- * routines companion), which reaches it through `binding` → the cursor → the cursor's `spec.target`,
- * so no target ref is smuggled into the operation input. Returns the existing trigger instead when a
- * sync routine is already connected to `target`.
+ * Creates the sync Routine for `cursor`: a Routine wrapping a trigger built from the connector's
+ * declared `sync.trigger` spec — running on EDGE when the connector declares `sync.remote`, otherwise
+ * locally — wired to the connector's sync operation with `binding` bound to `cursor`. `input` carries
+ * only `binding`, matching the sync operation's input schema — the routine is related to `target` by
+ * query ({@link connectedRoutinesQuery}, surfaced in the routines companion), which reaches it through
+ * `binding` → the cursor → the cursor's `spec.target`, so no target ref is smuggled into the operation
+ * input. Returns the existing trigger instead when a sync routine is already connected to `target`.
  */
 /**
  * Creation in flight, keyed by binding. The existence check below is an index query, so it cannot see
@@ -36,11 +37,13 @@ export const createSyncRoutine = ({
   cursor,
   operation,
   spec,
+  remote,
 }: {
   target: Obj.Unknown;
   cursor: Cursor.ExternalCursor;
-  operation: Operation.Definition<SyncInput, SyncOutput>;
+  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
   spec: Trigger.Spec;
+  remote?: boolean;
 }): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
   // Claimed synchronously, before the first yield point, so no caller can interleave between the
   // lookup and the claim.
@@ -50,9 +53,9 @@ export const createSyncRoutine = ({
       return Deferred.await(inFlight);
     }
 
-    const deferred = Deferred.unsafeMake<Trigger.Trigger>(FiberId.none);
+    const deferred = Deferred.makeUnsafe<Trigger.Trigger>();
     creating.set(cursor.id, deferred);
-    return createRoutine({ target, cursor, operation, spec }).pipe(
+    return createRoutine({ target, cursor, operation, spec, remote }).pipe(
       // Waiters see the same outcome, including a defect, rather than hanging on the deferred.
       Effect.onExit((exit) => Deferred.done(deferred, exit)),
       Effect.ensuring(Effect.sync(() => creating.delete(cursor.id))),
@@ -64,11 +67,13 @@ const createRoutine = ({
   cursor,
   operation,
   spec,
+  remote,
 }: {
   target: Obj.Unknown;
   cursor: Cursor.ExternalCursor;
-  operation: Operation.Definition<SyncInput, SyncOutput>;
+  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
   spec: Trigger.Spec;
+  remote?: boolean;
 }): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
   Effect.gen(function* () {
     const connected = yield* Database.query(connectedRoutinesQuery(target)).run;
@@ -79,7 +84,14 @@ const createRoutine = ({
       }
     }
 
-    const trigger = Trigger.make({ enabled: true, spec, input: { binding: Ref.make(cursor) } });
+    // `remote` is left unset for a local connector rather than written as `false`, so the trigger
+    // editor shows the schema default instead of a stored choice the connector never made.
+    const trigger = Trigger.make({
+      enabled: true,
+      ...(remote ? { remote: true } : {}),
+      spec,
+      input: { binding: Ref.make(cursor) },
+    });
 
     const routine = makeRoutine({
       name: 'Sync',
@@ -102,7 +114,7 @@ export const ensureSyncTrigger = ({
   connector,
   cursor,
 }: {
-  connector: ConnectorEntry;
+  connector: ConnectorSpec.ConnectorEntry;
   cursor: Cursor.ExternalCursor;
 }): Effect.Effect<Trigger.Trigger | undefined, never, Database.Service> =>
   Effect.gen(function* () {
@@ -117,5 +129,11 @@ export const ensureSyncTrigger = ({
     // A binding whose target ref no longer resolves is broken beyond what routine setup can fix, and
     // a scheduled connector has no direct-sync path to fall back to.
     const target = yield* Database.load(cursor.spec.target).pipe(Effect.orDie);
-    return yield* createSyncRoutine({ target, cursor, operation: sync.operation, spec: sync.trigger });
+    return yield* createSyncRoutine({
+      target,
+      cursor,
+      operation: sync.operation,
+      spec: sync.trigger,
+      remote: sync.remote,
+    });
   });

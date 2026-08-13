@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { Trace } from '@dxos/compute';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
+import * as Trace from '@dxos/compute/Trace';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { ContentBlock, type Message } from '@dxos/types';
@@ -25,9 +25,9 @@ const { text, toolCall, scriptedLanguageModelLayer } = ScriptedLanguageModel;
 const TestToolkit = Toolkit.make(
   Tool.make('Echo', {
     description: 'Returns its input value verbatim.',
-    parameters: {
-      value: Schema.String.annotations({ description: 'The value to echo.' }),
-    },
+    parameters: Schema.Struct({
+      value: Schema.String.annotate({ description: 'The value to echo.' }),
+    }),
     success: Schema.Struct({ value: Schema.String }),
     failure: Schema.Never,
   }),

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
 import {
   type CellAddress,
@@ -10,7 +10,6 @@ import {
   type CompleteCellRange,
   type ComputeGraph,
 } from '@dxos/compute-hyperformula';
-import { raise } from '@dxos/debug';
 import {
   Grid,
   type GridContentProps,
@@ -19,9 +18,10 @@ import {
   useGridContext,
 } from '@dxos/react-ui-grid';
 
-import { type Sheet } from '#types';
+import { Sheet } from '#types';
 
 import { type SheetModel, useSheetModel } from '../../model';
+import { SheetContext } from './SheetContext';
 
 export type SheetContextValue = {
   id: string;
@@ -50,13 +50,6 @@ export type SheetContextValue = {
   // Events.
   // TODO(burdon): Generalize.
   onInfo?: () => void;
-};
-
-// TODO(burdon): Use radix context.
-const SheetContext = createContext<SheetContextValue | undefined>(undefined);
-
-export const useSheetContext = (): SheetContextValue => {
-  return useContext(SheetContext) ?? raise(new Error('Missing SheetContext'));
 };
 
 export type SheetRootProps = {

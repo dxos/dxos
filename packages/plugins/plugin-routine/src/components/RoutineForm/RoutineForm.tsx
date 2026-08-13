@@ -5,9 +5,13 @@
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { Instructions, Operation, Routine, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { SchemaAST } from '@dxos/effect';
 import { ToggleGroup, ToggleGroupItem, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, RefField } from '@dxos/react-ui-form';
 
@@ -22,8 +26,10 @@ import { TriggerEditor } from '../TriggerEditor';
 //
 
 // Pick the editable general fields from the Routine schema rather than redeclaring them.
-const GeneralForm = Type.getSchema(Routine.Routine).pipe(Schema.pick('name', 'description'));
-type GeneralForm = Schema.Schema.Type<typeof GeneralForm>;
+type GeneralForm = Pick<Routine.Routine, 'name' | 'description'>;
+const GeneralForm = Schema.make<Schema.Codec<GeneralForm, any>>(
+  SchemaAST.pick(Type.getSchema(Routine.Routine).ast, ['name', 'description']),
+);
 
 export type RoutineFormProps = {
   db: Database.Database;
@@ -211,7 +217,7 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
 };
 
 const OperationActionForm = Schema.Struct({
-  operation: Ref.Ref(Operation.PersistentOperation).pipe(Schema.annotations({ title: 'Operation' }), Schema.optional),
+  operation: Ref.Ref(Operation.PersistentOperation).pipe(Schema.annotate({ title: 'Operation' }), Schema.optional),
 });
 type OperationActionValues = Schema.Schema.Type<typeof OperationActionForm>;
 

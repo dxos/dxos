@@ -1,98 +1,80 @@
 //
 // Copyright 2024 DXOS.org
 //
+// v3 -> v4 AST mapping applied throughout:
+//   TypeLiteral -> Objects            TupleType -> Arrays
+//   *Keyword    -> bare node tags     Refinement -> `checks` on the node
+//   PropertySignature carries only {name, type}; optionality/mutability/key
+//   annotations live on `type.context`.
+//
 
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { invariant } from '@dxos/invariant';
-import { isNonNullable } from '@dxos/util';
-
 import { type JsonPath, type JsonProp } from './json-path';
+import * as Compat from './schema-ast';
+
+/** Annotation keys are strings in v4 (they were symbols in v3). */
+export type AnnotationKey = string;
+
+export const annotateAst = Compat.annotate;
+export const isMutable = Compat.isMutable;
+export const resolveAnnotations = Compat.resolveAnnotations;
 
 //
-// Refs
-// https://effect.website/docs/schema/introduction
-// https://www.npmjs.com/package/@effect/schema
-// https://effect-ts.github.io/effect/schema/SchemaAST.ts.html
+// Property signatures.
 //
 
-/**
- * Unwraps and collects refinement filters.
- */
-const reduceRefinements = (
-  type: SchemaAST.AST,
-  refinements: SchemaAST.Refinement['filter'][] = [],
-): { type: SchemaAST.AST; refinements: SchemaAST.Refinement['filter'][] } => {
-  if (SchemaAST.isRefinement(type)) {
-    const filter = type.filter;
-    const nextType = {
-      ...type.from,
-      annotations: { ...type.from.annotations, ...type.annotations },
-    } as SchemaAST.AST;
-    return reduceRefinements(nextType, [...refinements, filter]);
-  }
-
-  return { type, refinements };
-};
+export const getPropertySignatures = Compat.getPropertySignatures;
+export const getIndexSignatures = Compat.getIndexSignatures;
+export const getChecks = Compat.getChecks;
 
 /**
- * Get the base type of a property.
- *
- * Unwraps refinements and optional unions.
+ * Get the base type of a property: strips the encoding chain and the optional union.
  */
 export const getBaseType = (
-  prop: SchemaAST.PropertySignature | SchemaProperty,
-): { type: SchemaAST.AST; refinements: SchemaAST.Refinement['filter'][] } => {
-  const encoded = SchemaAST.encodedBoundAST(prop.type);
-  // Extract property ast from optional union.
-  const unwrapped = prop.isOptional && encoded._tag === 'Union' ? encoded.types[0] : encoded;
-  return reduceRefinements(unwrapped);
+  type: SchemaAST.AST,
+): { type: SchemaAST.AST; checks: ReadonlyArray<SchemaAST.Check<any>> } => {
+  const unwrapped = unwrapOptional(SchemaAST.toEncoded(type));
+  return { type: unwrapped, checks: getChecks(unwrapped) };
 };
 
-export type SchemaProperty = Pick<SchemaAST.PropertySignature, 'name' | 'type' | 'isOptional' | 'isReadonly'> & {
-  /** Can be used to validate the property to the spec of the initial AST. */
-  refinements: SchemaAST.Refinement['filter'][];
+export type SchemaProperty = {
+  readonly name: PropertyKey;
+  readonly type: SchemaAST.AST;
+  readonly isOptional: boolean;
+  readonly isReadonly: boolean;
+  readonly checks: ReadonlyArray<SchemaAST.Check<any>>;
 };
 
 /**
  * Get the property types of an AST.
  */
-export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
-  const properties = SchemaAST.getPropertySignatures(ast);
-  return properties.map((prop) => {
-    const { type, refinements } = getBaseType(prop);
-    // Merge PropertySignature-level annotations (e.g., title, description set via .annotations())
-    // onto the unwrapped base type so downstream consumers see them.
+export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] =>
+  getPropertySignatures(ast).map((prop) => {
+    const { type, checks } = getBaseType(prop.type);
+    // Key annotations (v3's PropertySignature.annotations) now hang off the type's context.
+    const keyAnnotations = prop.type.context?.annotations;
     const mergedType =
-      prop.annotations && Reflect.ownKeys(prop.annotations).length > 0
-        ? ({ ...type, annotations: { ...type.annotations, ...prop.annotations } } as SchemaAST.AST)
+      keyAnnotations && Object.keys(keyAnnotations).length > 0
+        ? annotateAst(type, keyAnnotations as Schema.Annotations.Annotations)
         : type;
     return {
-      type: mergedType,
-      refinements,
       name: prop.name,
-      isOptional: prop.isOptional,
-      isReadonly: prop.isReadonly,
+      type: mergedType,
+      checks,
+      isOptional: SchemaAST.isOptional(prop.type),
+      isReadonly: !isMutable(prop.type),
     };
   });
-};
 
 //
-// Branded types
+// Traversal.
 //
 
 export enum VisitResult {
   CONTINUE = 0,
-  /**
-   * Skip visiting children.
-   */
   SKIP = 1,
-  /**
-   * Stop traversing immediately.
-   */
   EXIT = 2,
 }
 
@@ -102,12 +84,6 @@ export type TestFn = (node: SchemaAST.AST, path: Path, depth: number) => VisitRe
 
 export type VisitorFn = (node: SchemaAST.AST, path: Path, depth: number) => void;
 
-/**
- * Visit leaf nodes.
- * Refs:
- * - https://github.com/syntax-tree/unist-util-visit?tab=readme-ov-file#visitor
- * - https://github.com/syntax-tree/unist-util-is?tab=readme-ov-file#test
- */
 export const visit = (node: SchemaAST.AST, testOrVisitor: TestFn | VisitorFn, visitor: VisitorFn): void => {
   visitNode(node, testOrVisitor as TestFn, visitor);
 };
@@ -136,400 +112,323 @@ const visitNode = (
     visitor(node, path, depth);
   }
 
-  // Object.
-  if (SchemaAST.isTypeLiteral(node)) {
-    for (const prop of SchemaAST.getPropertySignatures(node)) {
-      const currentPath = [...path, prop.name.toString()];
-      const result = visitNode(prop.type, test, visitor, currentPath, depth + 1);
-      if (result === VisitResult.EXIT) {
-        return result;
+  if (node._tag === 'Objects') {
+    for (const prop of node.propertySignatures) {
+      const child = visitNode(prop.type, test, visitor, [...path, prop.name.toString()], depth + 1);
+      if (child === VisitResult.EXIT) {
+        return child;
       }
     }
-  }
-
-  // Array.
-  else if (SchemaAST.isTupleType(node)) {
-    for (const [i, element] of node.elements.entries()) {
-      const currentPath = [...path, i];
-      const result = visitNode(element.type, test, visitor, currentPath, depth);
-      if (result === VisitResult.EXIT) {
-        return result;
+  } else if (node._tag === 'Arrays') {
+    for (const [index, element] of node.elements.entries()) {
+      const child = visitNode(element, test, visitor, [...path, index], depth);
+      if (child === VisitResult.EXIT) {
+        return child;
       }
     }
-  }
-
-  // Branching union (e.g., optional, discriminated unions).
-  else if (SchemaAST.isUnion(node)) {
+    for (const rest of node.rest) {
+      const child = visitNode(rest, test, visitor, path, depth);
+      if (child === VisitResult.EXIT) {
+        return child;
+      }
+    }
+  } else if (node._tag === 'Union') {
     for (const type of node.types) {
-      const result = visitNode(type, test, visitor, path, depth);
-      if (result === VisitResult.EXIT) {
-        return result;
+      const child = visitNode(type, test, visitor, path, depth);
+      if (child === VisitResult.EXIT) {
+        return child;
       }
     }
   }
-
-  // Refinement.
-  else if (SchemaAST.isRefinement(node)) {
-    const result = visitNode(node.from, test, visitor, path, depth);
-    if (result === VisitResult.EXIT) {
-      return result;
-    }
-  }
-
-  // TODO(burdon): Transforms?
 };
 
 /**
- * Recursively descend into AST to find first node that passes the test.
+ * Recursively descend into AST to find the first node that passes the test.
  */
-// TODO(burdon): Rewrite using visitNode?
 export const findNode = (node: SchemaAST.AST, test: (node: SchemaAST.AST) => boolean): SchemaAST.AST | undefined => {
   if (test(node)) {
     return node;
   }
 
-  // Object.
-  else if (SchemaAST.isTypeLiteral(node)) {
-    for (const prop of SchemaAST.getPropertySignatures(node)) {
+  if (node._tag === 'Objects') {
+    for (const prop of node.propertySignatures) {
       const child = findNode(prop.type, test);
       if (child) {
         return child;
       }
     }
-    for (const prop of getIndexSignatures(node)) {
-      const child = findNode(prop.type, test);
+    for (const index of node.indexSignatures) {
+      const child = findNode(index.type, test);
       if (child) {
         return child;
       }
     }
-  }
-
-  // Tuple.
-  else if (SchemaAST.isTupleType(node)) {
-    for (const [_, element] of node.elements.entries()) {
-      const child = findNode(element.type, test);
+  } else if (node._tag === 'Arrays') {
+    for (const element of node.elements) {
+      const child = findNode(element, test);
       if (child) {
         return child;
       }
     }
-  }
-
-  // Branching union (e.g., optional, discriminated unions).
-  else if (SchemaAST.isUnion(node)) {
+    for (const rest of node.rest) {
+      const child = findNode(rest, test);
+      if (child) {
+        return child;
+      }
+    }
+  } else if (node._tag === 'Union') {
     if (isLiteralUnion(node)) {
       return undefined;
     }
-
     for (const type of node.types) {
       const child = findNode(type, test);
       if (child) {
         return child;
       }
     }
-  }
-
-  // Refinement.
-  else if (SchemaAST.isRefinement(node)) {
-    return findNode(node.from, test);
+  } else if (node._tag === 'Suspend') {
+    return findNode(node.thunk(), test);
   }
 };
 
 /**
  * Get the AST node for the given property (dot-path).
  */
-export const findProperty = (
-  schema: Schema.Schema.AnyNoContext,
-  path: JsonPath | JsonProp,
-): SchemaAST.AST | undefined => {
-  const getProp = (node: SchemaAST.AST, path: JsonProp[]): SchemaAST.AST | undefined => {
-    const [name, ...rest] = path;
-    const typeNode = findNode(node, SchemaAST.isTypeLiteral);
-    invariant(typeNode);
-    for (const prop of SchemaAST.getPropertySignatures(typeNode)) {
+export const findProperty = (schema: Schema.Top, path: JsonPath | JsonProp): SchemaAST.AST | undefined => {
+  const getProp = (node: SchemaAST.AST, segments: string[]): SchemaAST.AST | undefined => {
+    const [name, ...rest] = segments;
+    const typeNode = findNode(node, (candidate) => candidate._tag === 'Objects');
+    if (!typeNode) {
+      return undefined;
+    }
+    for (const prop of getPropertySignatures(typeNode)) {
       if (prop.name === name) {
-        if (rest.length) {
-          return getProp(prop.type, rest);
-        } else {
-          return prop.type;
-        }
+        return rest.length ? getProp(prop.type, rest) : prop.type;
       }
     }
   };
 
-  return getProp(schema.ast, path.split('.') as JsonProp[]);
+  return getProp(schema.ast, (path as string).split('.'));
 };
 
 //
-// Annotations
+// Annotations.
 //
-
-const defaultAnnotations: Record<string, SchemaAST.Annotated> = {
-  ObjectKeyword: SchemaAST.objectKeyword,
-  StringKeyword: SchemaAST.stringKeyword,
-  NumberKeyword: SchemaAST.numberKeyword,
-  BooleanKeyword: SchemaAST.booleanKeyword,
-};
 
 /**
- * Get annotation or return undefined.
- * @param annotationId
- * @param noDefault If true, then return undefined for effect library defined values.
+ * v4 annotations are a plain string-keyed record, so the v3 dance of stripping
+ * library defaults collapses to a lookup plus an identifier guard.
  */
 export const getAnnotation =
-  <T>(annotationId: symbol, noDefault = true) =>
+  <T>(key: AnnotationKey, noDefault = true) =>
   (node: SchemaAST.AST): T | undefined => {
-    // Title fallback seems to be the identifier.
-    const id = Function.pipe(SchemaAST.getIdentifierAnnotation(node), Option.getOrUndefined);
-    const value = Function.pipe(SchemaAST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
-    if (noDefault && (value === defaultAnnotations[node._tag]?.annotations[annotationId] || value === id)) {
+    const annotations = resolveAnnotations(node);
+    const value = annotations?.[key] as T | undefined;
+    if (noDefault && value !== undefined && value === annotations?.identifier) {
       return undefined;
     }
-
     return value;
   };
 
 /**
- * Recursively descend into AST to find first matching annotations.
- * Optionally skips default annotations for basic types (e.g., 'a string').
+ * Recursively descend into AST to find the first matching annotation.
  */
-// TODO(burdon): Convert to effect pattern (i.e., return operator like getAnnotation).
-export const findAnnotation = <T>(node: SchemaAST.AST, annotationId: symbol, noDefault = true): T | undefined => {
-  const getAnnotationById = getAnnotation(annotationId, noDefault);
-
-  const getBaseAnnotation = (node: SchemaAST.AST): T | undefined => {
-    const value = getAnnotationById(node);
-    if (value !== undefined) {
-      return value as T;
-    }
-
-    if (SchemaAST.isUnion(node)) {
-      if (isOption(node)) {
-        return getAnnotationById(node.types[0]) as T;
-      }
-    }
-  };
-
-  return getBaseAnnotation(node);
-};
-
-//
-// Unions
-//
-
-/**
- * Effect Schema.optional creates a union type with undefined as the second type.
- */
-export const isOption = (node: SchemaAST.AST): boolean => {
-  return SchemaAST.isUnion(node) && node.types.length === 2 && SchemaAST.isUndefinedKeyword(node.types[1]);
-};
-
-/**
- * Determines if the node is a union of literal types.
- */
-export const isLiteralUnion = (node: SchemaAST.AST): node is SchemaAST.Union<SchemaAST.Literal> => {
-  return SchemaAST.isUnion(node) && node.types.every(SchemaAST.isLiteral);
-};
-
-/**
- * Extracts the literal values from a schema that is a union of literals
- * (e.g. `Schema.Literal('a', 'b')` or `Schema.Union(Schema.Literal('a'), Schema.Literal('b'))`).
- * Returns an empty array if the schema is not a literal union.
- */
-export const getLiteralValues = <S extends Schema.Schema<any, any, any>>(
-  schema: S,
-): ReadonlyArray<Schema.Schema.Type<S>> => {
-  if (!isLiteralUnion(schema.ast)) {
-    return [];
+export const findAnnotation = <T>(node: SchemaAST.AST, key: AnnotationKey, noDefault = true): T | undefined => {
+  const get = getAnnotation<T>(key, noDefault);
+  const value = get(node);
+  if (value !== undefined) {
+    return value;
   }
-  return schema.ast.types.map((node) => node.literal as Schema.Schema.Type<S>);
-};
-
-/**
- * Determines if the node is an array type.
- */
-export const isArrayType = (node: SchemaAST.AST): node is SchemaAST.TupleType => {
-  return SchemaAST.isTupleType(node) && node.elements.length === 0 && node.rest.length === 1;
-};
-
-/**
- * Get the type of the array elements.
- */
-export const getArrayElementType = (node: SchemaAST.AST): SchemaAST.AST | undefined => {
-  return isArrayType(node) ? node.rest.at(0)?.type : undefined;
-};
-
-/**
- * Determines if the node is a tuple type.
- */
-export const isTupleType = (node: SchemaAST.AST): boolean => {
-  return SchemaAST.isTupleType(node) && node.elements.length > 0;
-};
-
-/**
- * Determines if the node is a discriminated union.
- */
-export const isDiscriminatedUnion = (node: SchemaAST.AST): boolean => {
-  return SchemaAST.isUnion(node) && !!getDiscriminatingProps(node)?.length;
-};
-
-/**
- * Get the discriminating properties for the given union type.
- */
-export const getDiscriminatingProps = (node: SchemaAST.AST): string[] | undefined => {
-  invariant(SchemaAST.isUnion(node));
   if (isOption(node)) {
-    return;
+    return get((node as SchemaAST.Union).types[0]);
+  }
+};
+
+//
+// Unions.
+//
+
+/** `Schema.optional` still produces a `T | undefined` union in v4. */
+export const isOption = (node: SchemaAST.AST): boolean =>
+  SchemaAST.isUnion(node) && node.types.length === 2 && SchemaAST.isUndefined(node.types[1]);
+
+export const isLiteralUnion = (node: SchemaAST.AST): node is SchemaAST.Union<SchemaAST.Literal> =>
+  SchemaAST.isUnion(node) && node.types.length > 0 && node.types.every(SchemaAST.isLiteral);
+
+/**
+ * The literal values of a union of literals, or `[]` for any other schema.
+ *
+ * Narrowed to the schema's own type so `Schema.Union([Schema.Literal('a'), …])` yields `('a' | …)[]`
+ * rather than all of `LiteralValue` — callers key React lists by these. The AST erases the literal
+ * type, so re-attaching it here is the one place the two can be reconnected.
+ */
+export const getLiteralValues = <S extends Schema.Top>(
+  schema: S,
+): ReadonlyArray<S['Type'] & SchemaAST.LiteralValue> => {
+  const ast = schema.ast;
+  return isLiteralUnion(ast) ? ast.types.map((node) => node.literal as S['Type'] & SchemaAST.LiteralValue) : [];
+};
+
+//
+// Arrays / tuples.
+//
+
+/** An unbounded array: no fixed elements, exactly one rest type. */
+export const isArrayType = (node: SchemaAST.AST): node is SchemaAST.Arrays =>
+  SchemaAST.isArrays(node) && node.elements.length === 0 && node.rest.length === 1;
+
+export const getArrayElementType = (node: SchemaAST.AST): SchemaAST.AST | undefined =>
+  isArrayType(node) ? node.rest[0] : undefined;
+
+export const isArrays = (node: SchemaAST.AST): boolean => SchemaAST.isArrays(node) && node.elements.length > 0;
+
+//
+// Discriminated unions.
+//
+
+export const isDiscriminatedUnion = (node: SchemaAST.AST): boolean =>
+  SchemaAST.isUnion(node) && !!getDiscriminatingProps(node)?.length;
+
+export const getDiscriminatingProps = (node: SchemaAST.AST): string[] | undefined => {
+  if (!SchemaAST.isUnion(node) || isOption(node)) {
+    return undefined;
   }
 
-  // Get common literals across all types.
   return node.types.reduce<string[]>((shared, type) => {
-    const props = SchemaAST.getPropertySignatures(type)
-      // TODO(burdon): Should check each literal is unique.
-      .filter((p) => SchemaAST.isLiteral(p.type))
-      .map((p) => p.name.toString());
-
-    // Return common literals.
+    const props = getPropertySignatures(type)
+      .filter((prop) => SchemaAST.isLiteral(prop.type))
+      .map((prop) => prop.name.toString());
     return shared.length === 0 ? props : shared.filter((prop) => props.includes(prop));
   }, []);
 };
 
-/**
- * Get the discriminated type for the given value.
- */
 export const getDiscriminatedType = (
   node: SchemaAST.AST,
   value: Record<string, any> = {},
 ): SchemaAST.AST | undefined => {
-  invariant(SchemaAST.isUnion(node));
-  invariant(value);
   const props = getDiscriminatingProps(node);
-  if (!props?.length) {
-    return;
+  if (!props?.length || !SchemaAST.isUnion(node)) {
+    return undefined;
   }
 
-  // Match provided values.
   for (const type of node.types) {
-    const match = SchemaAST.getPropertySignatures(type)
-      .filter((prop) => props?.includes(prop.name.toString()))
-      .every((prop) => {
-        invariant(SchemaAST.isLiteral(prop.type));
-        return prop.type.literal === value[prop.name.toString()];
-      });
-
+    const match = getPropertySignatures(type)
+      .filter((prop) => props.includes(prop.name.toString()))
+      .every((prop) => SchemaAST.isLiteral(prop.type) && prop.type.literal === value[prop.name.toString()]);
     if (match) {
       return type;
     }
   }
 
-  // Create union of discriminating properties.
-  // NOTE: This may not work with non-overlapping variants.
-  // TODO(burdon): Iterate through props and knock-out variants that don't match.
   const fields = Object.fromEntries(
     props
       .map((prop) => {
         const literals = node.types
           .map((type) => {
-            const literal = SchemaAST.getPropertySignatures(type).find((p) => p.name.toString() === prop)!;
-            invariant(SchemaAST.isLiteral(literal.type));
-            return literal.type.literal;
+            const found = getPropertySignatures(type).find((candidate) => candidate.name.toString() === prop);
+            return found && SchemaAST.isLiteral(found.type) ? found.type.literal : undefined;
           })
-          .filter(isNonNullable);
-
-        return literals.length ? [prop, Schema.Literal(...literals)] : undefined;
+          .filter((literal) => literal !== undefined);
+        return literals.length ? ([prop, Schema.Literals(literals)] as const) : undefined;
       })
-      .filter(isNonNullable),
+      .filter((entry) => entry !== undefined),
   );
 
-  const schema = Schema.Struct(fields);
-  return schema.ast;
+  return Schema.Struct(fields).ast;
 };
 
 /**
- * If a property signature is optional (T | undefined), returns the inner non-undefined AST node.
- * Otherwise returns the property signature unchanged, preserving its annotations.
+ * If a property type is optional (T | undefined), return the inner non-undefined node.
+ *
+ * Applied until the type is no longer optional: v4's `Schema.optional` is not idempotent (it nests
+ * as `(T | undefined) | undefined`), which v3's `Schema.partial` over an already-optional field was.
  */
-export const unwrapOptional = (property: SchemaAST.PropertySignature): SchemaAST.PropertySignature | SchemaAST.AST => {
-  if (!property.isOptional || !SchemaAST.isUnion(property.type) || !isOption(property.type)) {
-    return property;
+export const unwrapOptional = (type: SchemaAST.AST): SchemaAST.AST => {
+  let node = type;
+  while (isOption(node)) {
+    node = (node as SchemaAST.Union).types[0];
   }
-
-  return property.type.types[0];
+  return node;
 };
 
-/**
- * Determines if the node is a nested object type.
- */
-export const isNestedType = (node: SchemaAST.AST): boolean => {
-  return (
-    SchemaAST.isDeclaration(node) ||
-    SchemaAST.isObjectKeyword(node) ||
-    SchemaAST.isTypeLiteral(node) ||
-    // TODO(wittjosiah): Tuples are actually arrays.
-    isTupleType(node) ||
-    isDiscriminatedUnion(node)
-  );
-};
+export const isNestedType = (node: SchemaAST.AST): boolean =>
+  SchemaAST.isDeclaration(node) ||
+  SchemaAST.isObjectKeyword(node) ||
+  node._tag === 'Objects' ||
+  isArrays(node) ||
+  isDiscriminatedUnion(node);
+
+//
+// Mapping.
+//
 
 /**
- * Maps AST nodes.
- * The user is responsible for recursively calling {@link mapAst} on the SchemaAST.
+ * Maps AST nodes. The caller is responsible for recursing.
  * NOTE: Will evaluate suspended ASTs.
  */
 export const mapAst = (
   ast: SchemaAST.AST,
-  f: (ast: SchemaAST.AST, key: keyof any | undefined) => SchemaAST.AST,
+  f: (ast: SchemaAST.AST, key: PropertyKey | undefined) => SchemaAST.AST,
 ): SchemaAST.AST => {
   switch (ast._tag) {
-    case 'TypeLiteral': {
-      return new SchemaAST.TypeLiteral(
+    case 'Objects': {
+      return new SchemaAST.Objects(
         ast.propertySignatures.map(
-          (prop) =>
-            new SchemaAST.PropertySignature(
-              prop.name,
-              f(prop.type, prop.name),
-              prop.isOptional,
-              prop.isReadonly,
-              prop.annotations,
-            ),
+          (prop) => new SchemaAST.PropertySignature(prop.name, retainContext(prop.type, f(prop.type, prop.name))),
         ),
         ast.indexSignatures,
         ast.annotations,
+        ast.checks,
+        ast.encoding,
+        ast.context,
       );
     }
     case 'Union': {
-      return SchemaAST.Union.make(ast.types.map(f), ast.annotations);
-    }
-    case 'TupleType': {
-      return new SchemaAST.TupleType(
-        ast.elements.map((t, index) => new SchemaAST.OptionalType(f(t.type, index), t.isOptional, t.annotations)),
-        ast.rest.map((t) => new SchemaAST.Type(f(t.type, undefined), t.annotations)),
-        ast.isReadonly,
+      return new SchemaAST.Union(
+        ast.types.map((type) => f(type, undefined)),
+        ast.mode,
         ast.annotations,
+        ast.checks,
+        ast.encoding,
+        ast.context,
+      );
+    }
+    case 'Arrays': {
+      return new SchemaAST.Arrays(
+        ast.isMutable,
+        ast.elements.map((element, index) => f(element, index)),
+        ast.rest.map((rest) => f(rest, undefined)),
+        ast.annotations,
+        ast.checks,
+        ast.encoding,
+        ast.context,
       );
     }
     case 'Suspend': {
-      const newAst = f(ast.f(), undefined);
-      return new SchemaAST.Suspend(() => newAst, ast.annotations);
+      const next = f(ast.thunk(), undefined);
+      return new SchemaAST.Suspend(() => next, ast.annotations, undefined, ast.encoding, ast.context);
     }
     default: {
-      // TODO(dmaretskyi): Support more nodes.
       return ast;
     }
   }
 };
 
-const getIndexSignatures = (ast: SchemaAST.AST): Array<SchemaAST.IndexSignature> => {
-  const annotation = SchemaAST.getSurrogateAnnotation(ast);
-  if (Option.isSome(annotation)) {
-    return getIndexSignatures(annotation.value);
+/**
+ * Optionality and mutability ride on `context` in v4, so a mapper that rebuilds a
+ * property type must carry the original context across or the key silently becomes required.
+ * `SchemaAST.replaceContext` is internal, so this rebuilds through the public key combinators.
+ */
+export const retainContext = (original: SchemaAST.AST, mapped: SchemaAST.AST): SchemaAST.AST => {
+  if (!original.context || mapped.context) {
+    return mapped;
   }
-  switch (ast._tag) {
-    case 'TypeLiteral':
-      return ast.indexSignatures.slice();
-    case 'Suspend':
-      return getIndexSignatures(ast.f());
-    case 'Refinement':
-      return getIndexSignatures(ast.from);
+  let schema: Schema.Top = Schema.make<Schema.Top>(mapped);
+  if (original.context.isOptional) {
+    schema = Schema.optionalKey(schema);
   }
-  return [];
+  if (original.context.isMutable) {
+    schema = Schema.mutableKey(schema);
+  }
+  return schema.ast;
 };

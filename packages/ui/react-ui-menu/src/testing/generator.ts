@@ -2,10 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
-import { Graph, Node } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import { random } from '@dxos/random';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';
@@ -73,7 +76,7 @@ export const createNestedActions = Atom.make(buildNestedActions()).pipe(Atom.kee
 export const createNestedActionsResolver = (props?: {
   groupParams?: CreateActionsProps;
   params?: CreateActionsProps;
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
 }) => {
   const { groupParams, params, registry } = props ?? {};
   const graph = Graph.make({ ...(registry && { registry }) });
@@ -86,7 +89,7 @@ export const createNestedActionsResolver = (props?: {
         { source: 'root', target: group.id, relation: 'child' },
         ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
       ]),
-      Graph.expand(group.id, 'child'),
+      Graph.expandSync(group.id, 'child'),
     );
   });
   const items: MenuItemsAccessor = (group?: MenuItemGroup) =>

@@ -3,4 +3,3 @@
 //
 
 export * as SimpleLayoutCapabilities from './SimpleLayoutCapabilities';
-export * as SimpleLayoutEvents from './SimpleLayoutEvents';

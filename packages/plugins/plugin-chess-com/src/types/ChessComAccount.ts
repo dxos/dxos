@@ -24,7 +24,7 @@ export const normalizeUsername = (username: string): string => username.trim().t
  */
 export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.chessCom.account', '0.1.0'))(
   Schema.Struct({
-    username: Schema.String.annotations({
+    username: Schema.String.annotate({
       title: 'Username',
       description: 'Chess.com username.',
     }),
@@ -91,7 +91,7 @@ export const applyProfile = (account: Account, profile: AccountProfile): void =>
 };
 
 export const CreateAccountSchema = Schema.Struct({
-  username: Schema.String.annotations({
+  username: Schema.String.annotate({
     title: 'Username',
     description: 'Your Chess.com username.',
   }),

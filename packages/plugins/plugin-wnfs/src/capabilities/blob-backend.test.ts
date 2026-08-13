@@ -16,7 +16,8 @@ vi.mock('../helpers', () => ({
   getBlobUrl: vi.fn(),
 }));
 
-import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '../helpers';
+import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '#helpers';
+
 import { createWnfsBlobBackend } from './blob-backend';
 
 describe('createWnfsBlobBackend', () => {

@@ -4,17 +4,18 @@
 
 // @import-as-namespace
 
-import type { Atom } from '@effect-atom/atom';
-import * as Rpc from '@effect/rpc/Rpc';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { Annotation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
@@ -219,7 +220,7 @@ export interface Process<
    */
   readonly name?: string;
 
-  readonly services: readonly Context.Tag<any, any>[];
+  readonly services: readonly Context.Key<any, any>[];
 
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
   // argument (and `Callbacks.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
@@ -261,9 +262,9 @@ export interface MakeProcessOpts {
    */
   readonly key: string;
 
-  readonly input: Schema.Schema.AnyNoContext;
-  readonly output: Schema.Schema.AnyNoContext;
-  readonly services: readonly Context.Tag<any, any>[];
+  readonly input: Schema.Codec<any, any>;
+  readonly output: Schema.Codec<any, any>;
+  readonly services: readonly Context.Key<any, any>[];
   readonly rpcs?: RpcGroup.RpcGroup<any>;
 }
 
@@ -276,17 +277,17 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
       Callbacks<
         Schema.Schema.Type<Opts['input']>,
         Schema.Schema.Type<Opts['output']>,
-        Context.Tag.Identifier<NonNullable<Opts['services']>[number]>,
+        Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
         RpcGroup.Rpcs<Opts['rpcs']>
       >
     >,
     never,
-    Context.Tag.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
+    Context.Service.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
   >,
 ): Process<
   Schema.Schema.Type<Opts['input']>,
   Schema.Schema.Type<Opts['output']>,
-  Context.Tag.Identifier<NonNullable<Opts['services']>[number]>,
+  Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
   RpcGroup.Rpcs<Opts['rpcs']>
 > => {
   assertArgument(/^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key), 'key', 'Invalid key');
@@ -334,7 +335,7 @@ const sanitizeRpcs = <Rpcs extends Rpc.Any>(
  * re-delivered input can tell that the previous attempt was in-flight. Cleared automatically
  * when the process reaches a terminal state (the runtime clears the process's storage).
  */
-const OperationStartedCell = StorageService.cell(Schema.parseJson(Schema.Boolean), 'operation/started').pipe(
+const OperationStartedCell = StorageService.cell(Schema.fromJsonString(Schema.Boolean), 'operation/started').pipe(
   StorageService.withDefault(() => false),
 );
 
@@ -351,7 +352,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
     },
     (ctx) =>
       Effect.gen(function* () {
-        const semaphore = yield* Effect.makeSemaphore(1);
+        const semaphore = yield* Semaphore.make(1);
         // The process runtime assumes handlers are idempotent and always re-delivers an input
         // whose handler was interrupted. Non-idempotent operations opt out of that retry here:
         // a re-delivery that observes the durable "started" marker fails instead of repeating
@@ -413,16 +414,20 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                 outcome: 'success',
               });
             }).pipe(
-              Effect.catchAllDefect((defect) =>
+              Effect.catchDefect((defect) =>
                 Effect.gen(function* () {
-                  // Emit operation end event with failure.
+                  // Emit operation end event with failure. Carry the error's stable name as `errorCode`
+                  // so consumers can match on the failure kind (e.g. a run-again yield) without parsing
+                  // the message.
                   const errorMessage = defect instanceof Error ? defect.message : String(defect);
+                  const errorCode = defect instanceof Error ? defect.name : undefined;
                   yield* Trace.write(Trace.OperationEnd, {
                     key: op.meta.key,
                     name: op.meta.name,
                     icon: op.meta.icon,
                     outcome: 'failure',
                     error: errorMessage,
+                    ...(errorCode ? { errorCode } : {}),
                   });
                   return yield* Effect.die(defect);
                 }),
@@ -481,10 +486,9 @@ export interface Monitor {
   subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message>;
 }
 
-export class ProcessMonitorService extends Context.Tag('@dxos/functions/ProcessMonitorService')<
-  ProcessMonitorService,
-  Monitor
->() {}
+export class ProcessMonitorService extends Context.Service<ProcessMonitorService, Monitor>()(
+  '@dxos/functions/ProcessMonitorService',
+) {}
 
 export interface Info {
   readonly pid: ID;
@@ -554,7 +558,7 @@ export const SpawnedEvent = Trace.EventType('process.spawned', {
  */
 export const ExitedEvent = Trace.EventType('process.exited', {
   schema: Schema.Struct({
-    outcome: Schema.Literal('succeeded', 'failed', 'terminated'),
+    outcome: Schema.Literals(['succeeded', 'failed', 'terminated']),
   }),
   isEphemeral: false,
 });

@@ -5,8 +5,9 @@
 import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -19,9 +20,9 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    // Surface "Suggesting" as an editor view-mode option (the review feature is owned by plugin-comments,
+    // Surface "Suggesting" as an editor view-mode option (the review feature is owned by plugin-review,
     // so it appears only when this plugin is present); selecting it puts the document in suggesting mode.
-    const suggestingViewMode = Capability.contributes(MarkdownCapabilities.ViewModeExtension, {
+    const suggestingViewMode = Capability.contribute(MarkdownCapabilities.ViewModeExtension, {
       id: 'suggesting',
       icon: 'ph--note-pencil--regular',
       label: ['view-mode.suggesting.label', { ns: meta.profile.key }],
@@ -29,7 +30,7 @@ export default Capability.makeModule(
       order: 3,
     });
 
-    const extensions = Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
+    const extensions = Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc, reviewBranch, branchText, suggestionBranch, showComments }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);

@@ -2,4 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
+export * as ProjectsPlugin from './ProjectsPlugin';
+export * from '#meta';
+export * from '#types';

@@ -7,12 +7,10 @@
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContextScope } from '@radix-ui/react-context';
-import type { Scope } from '@radix-ui/react-context';
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer';
 import { useId } from '@radix-ui/react-id';
 import * as PopperPrimitive from '@radix-ui/react-popper';
-import { type PopperAnchorProps, createPopperScope } from '@radix-ui/react-popper';
+import { type PopperAnchorProps } from '@radix-ui/react-popper';
 import { Portal as PortalPrimitive } from '@radix-ui/react-portal';
 import { Presence } from '@radix-ui/react-presence';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -36,35 +34,19 @@ import React, {
 } from 'react';
 
 import { useElevationContext, useThemeContext } from '../../hooks';
-
-type TooltipScopedProps<P = {}> = P & { __scopeTooltip?: Scope };
-const [createTooltipContext, createTooltipScope] = createContextScope('Tooltip', [createPopperScope]);
-const usePopperScope = createPopperScope();
-
-//
-// Tooltip
-//
-
-const DEFAULT_DELAY_DURATION = 700;
-const TOOLTIP_OPEN = 'tooltip.open';
-const TOOLTIP_NAME = 'Tooltip';
-
-type TooltipContextValue = {
-  contentId: string;
-  open: boolean;
-  stateAttribute: 'closed' | 'delayed-open' | 'instant-open';
-  trigger: TooltipTriggerElement | null;
-  onTriggerChange(trigger: TooltipTriggerElement | null, content?: ReactNode, side?: TooltipSide): void;
-  onTriggerEnter(): void;
-  onTriggerLeave(): void;
-  onOpen(): void;
-  onClose(): void;
-  onPointerInTransitChange(inTransit: boolean): void;
-  isPointerInTransitRef: RefObject<boolean>;
-  disableHoverableContent: boolean;
-};
-
-const [TooltipContextProvider, useTooltipContext] = createTooltipContext<TooltipContextValue>(TOOLTIP_NAME);
+import {
+  DEFAULT_DELAY_DURATION,
+  TOOLTIP_NAME,
+  TOOLTIP_OPEN,
+  TooltipContextProvider,
+  type TooltipScopedProps,
+  type TooltipStateAttribute,
+  TooltipVolatileContextProvider,
+  createTooltipContext,
+  usePopperScope,
+  useTooltipContext,
+  useTooltipVolatileContext,
+} from './TooltipContext';
 
 type TooltipProviderProps = {
   children?: ReactNode;
@@ -147,7 +129,7 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
     defaultProp: defaultOpen,
     onChange: handleOpenChange,
   });
-  const stateAttribute = useMemo(() => {
+  const stateAttribute = useMemo((): TooltipStateAttribute => {
     return open ? (wasOpenDelayedRef.current ? 'delayed-open' : 'instant-open') : 'closed';
   }, [open]);
 
@@ -182,6 +164,35 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
     };
   }, []);
 
+  const isOpenRef = useRef(open);
+  isOpenRef.current = open;
+
+  // Applied to the element rather than rendered by `Tooltip.Trigger`, which reads only the stable context:
+  // these describe the one open tooltip, so only the active trigger may carry them.
+  useEffect(() => {
+    if (!trigger) {
+      return;
+    }
+
+    // A trigger may already be described by something of its own, so merge rather than replace.
+    const describedBy = trigger.getAttribute('aria-describedby');
+    trigger.setAttribute('data-state', stateAttribute);
+    if (open) {
+      const ids = new Set(describedBy?.split(/\s+/).filter(Boolean));
+      ids.add(contentId);
+      trigger.setAttribute('aria-describedby', [...ids].join(' '));
+    }
+
+    return () => {
+      trigger.setAttribute('data-state', 'closed');
+      if (describedBy === null) {
+        trigger.removeAttribute('aria-describedby');
+      } else {
+        trigger.setAttribute('aria-describedby', describedBy);
+      }
+    };
+  }, [trigger, open, stateAttribute, contentId]);
+
   const { tx } = useThemeContext();
   const elevation = useElevationContext();
 
@@ -190,9 +201,7 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
       <TooltipContextProvider
         scope={__scopeTooltip}
         contentId={contentId}
-        open={open}
-        stateAttribute={stateAttribute}
-        trigger={trigger}
+        isOpenRef={isOpenRef}
         onTriggerChange={handleTriggerChange}
         onTriggerEnter={useCallback(() => {
           if (isOpenDelayedRef.current) {
@@ -218,11 +227,18 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
           isPointerInTransitRef.current = inTransit;
         }, [])}
       >
-        <TooltipContent side={side} className={tx('tooltip.content', { elevation })}>
-          {content}
-          <TooltipArrow className={tx('tooltip.arrow')} />
-        </TooltipContent>
-        <TooltipVirtualTrigger virtualRef={triggerRef as RefObject<HTMLButtonElement>} />
+        <TooltipVolatileContextProvider
+          scope={__scopeTooltip}
+          open={open}
+          stateAttribute={stateAttribute}
+          trigger={trigger}
+        >
+          <TooltipContent side={side} className={tx('tooltip.content', { elevation })}>
+            {content}
+            <TooltipArrow className={tx('tooltip.arrow')} />
+          </TooltipContent>
+          <TooltipVirtualTrigger virtualRef={triggerRef as RefObject<HTMLButtonElement>} />
+        </TooltipVolatileContextProvider>
         {children}
       </TooltipContextProvider>
     </PopperPrimitive.Root>
@@ -284,8 +300,10 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
       <Primitive.button
         // We purposefully avoid adding `type=button` here because tooltip triggers are also
         // commonly anchors and the anchor `type` attribute signifies MIME type.
-        aria-describedby={context.open ? context.contentId : undefined}
-        data-state={context.stateAttribute}
+        // NOTE: The provider sets `data-state` and `aria-describedby` on whichever trigger is active, since
+        //   rendering them from state here would describe every trigger with the one open tooltip. The
+        //   constant below never registers as changed, so React cannot overwrite what the provider set.
+        data-state='closed'
         {...triggerProps}
         ref={composedRefs}
         onPointerMove={composeEventHandlers(props.onPointerMove, (event) => {
@@ -307,7 +325,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
           hasPointerMoveOpenedRef.current = false;
         })}
         onPointerDown={composeEventHandlers(props.onPointerDown, () => {
-          if (context.open) {
+          if (context.isOpenRef.current) {
             context.onClose();
           }
           isPointerDownRef.current = true;
@@ -350,10 +368,10 @@ type TooltipPortalProps = {
 
 const TooltipPortal: FC<TooltipPortalProps> = (props: TooltipScopedProps<TooltipPortalProps>) => {
   const { __scopeTooltip, forceMount, children, container } = props;
-  const context = useTooltipContext(PORTAL_NAME, __scopeTooltip);
+  const volatileContext = useTooltipVolatileContext(PORTAL_NAME, __scopeTooltip);
   return (
     <PortalProvider scope={__scopeTooltip} forceMount={forceMount}>
-      <Presence present={forceMount || context.open}>
+      <Presence present={forceMount || volatileContext.open}>
         <PortalPrimitive asChild container={container}>
           {children}
         </PortalPrimitive>
@@ -384,9 +402,10 @@ const TooltipContent = forwardRef<TooltipContentElement, TooltipContentProps>(
     const portalContext = usePortalContext(CONTENT_NAME, props.__scopeTooltip);
     const { forceMount = portalContext.forceMount, side = 'top', ...contentProps } = props;
     const context = useTooltipContext(CONTENT_NAME, props.__scopeTooltip);
+    const volatileContext = useTooltipVolatileContext(CONTENT_NAME, props.__scopeTooltip);
 
     return (
-      <Presence present={forceMount || context.open}>
+      <Presence present={forceMount || volatileContext.open}>
         {context.disableHoverableContent ? (
           <TooltipContentImpl side={side} {...contentProps} ref={forwardedRef} />
         ) : (
@@ -406,11 +425,12 @@ type TooltipContentHoverableProps = TooltipContentImplProps;
 const TooltipContentHoverable = forwardRef<TooltipContentHoverableElement, TooltipContentHoverableProps>(
   (props: TooltipScopedProps<TooltipContentHoverableProps>, forwardedRef) => {
     const context = useTooltipContext(CONTENT_NAME, props.__scopeTooltip);
+    const { trigger } = useTooltipVolatileContext(CONTENT_NAME, props.__scopeTooltip);
     const ref = useRef<TooltipContentHoverableElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
     const [pointerGraceArea, setPointerGraceArea] = useState<Polygon | null>(null);
 
-    const { trigger, onClose } = context;
+    const { onClose } = context;
     const content = ref.current;
 
     const { onPointerInTransitChange } = context;
@@ -512,6 +532,7 @@ const TooltipContentImpl = forwardRef<TooltipContentImplElement, TooltipContentI
       ...contentProps
     } = props;
     const context = useTooltipContext(CONTENT_NAME, __scopeTooltip);
+    const { stateAttribute, trigger } = useTooltipVolatileContext(CONTENT_NAME, __scopeTooltip);
     const popperScope = usePopperScope(__scopeTooltip);
     const { onClose } = context;
 
@@ -523,17 +544,17 @@ const TooltipContentImpl = forwardRef<TooltipContentImplElement, TooltipContentI
 
     // Close the tooltip if the trigger is scrolled
     useEffect(() => {
-      if (context.trigger) {
+      if (trigger) {
         const handleScroll = (event: Event) => {
           const target = event.target as HTMLElement;
-          if (target?.contains(context.trigger)) {
+          if (target?.contains(trigger)) {
             onClose();
           }
         };
         window.addEventListener('scroll', handleScroll, { capture: true });
         return () => window.removeEventListener('scroll', handleScroll, { capture: true });
       }
-    }, [context.trigger, onClose]);
+    }, [trigger, onClose]);
 
     return (
       <DismissableLayer
@@ -545,7 +566,7 @@ const TooltipContentImpl = forwardRef<TooltipContentImplElement, TooltipContentI
         onDismiss={onClose}
       >
         <PopperPrimitive.Content
-          data-state={context.stateAttribute}
+          data-state={stateAttribute}
           {...popperScope}
           {...contentProps}
           ref={forwardedRef}
@@ -763,6 +784,4 @@ export const Tooltip = {
   Trigger: TooltipTrigger,
 };
 
-export { createTooltipScope, useTooltipContext };
-
-export type { TooltipProviderProps, TooltipScopedProps, TooltipSide, TooltipTriggerProps };
+export type { TooltipProviderProps, TooltipSide, TooltipTriggerElement, TooltipTriggerProps };

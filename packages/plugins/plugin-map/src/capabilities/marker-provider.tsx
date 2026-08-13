@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import { useMemo } from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
@@ -56,7 +56,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
 
           return { id: row.id, location: { lat, lng } };
         })
-        .filter(Predicate.isNotNullable),
+        .filter(Predicate.isNotNullish),
     [objects, view?.projection.pivotFieldId, view?.projection.fields],
   );
 
@@ -71,5 +71,5 @@ export const viewMarkerProvider: MapCapabilities.MarkerProvider = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(MapCapabilities.MarkerProvider, viewMarkerProvider)),
+  Effect.succeed(Capability.contribute(MapCapabilities.MarkerProvider, viewMarkerProvider)),
 );

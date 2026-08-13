@@ -4,13 +4,14 @@
 
 import { useMemo } from 'react';
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Obj, Ref } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { log } from '@dxos/log';
 
+import { InboxOperation, Mailbox } from '#types';
+
 import { isAiServiceUnavailable } from '../operations/extractor/ai-gate';
-import { InboxOperation, type Mailbox } from '../types';
 
 export type MailboxExtractorMenuItem = {
   id: string;

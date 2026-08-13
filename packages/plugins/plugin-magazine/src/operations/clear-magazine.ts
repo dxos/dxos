@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { FeedOperation, Subscription } from '../types';
+import { FeedOperation, Subscription } from '#types';
 
 /**
  * Clears a Magazine's curated posts, preserving any that are starred. With no `starred` tag in the
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.ClearMagazine> = FeedO
       }
       const starredUri = yield* Effect.promise(() => Subscription.findSystemTagUri(db, 'starred'));
 
-      const next = yield* Option.fromNullable(starredUri).pipe(
+      const next = yield* Option.fromNullishOr(starredUri).pipe(
         Option.match({
           onNone: () => Effect.succeed<Ref.Ref<Subscription.Post>[]>([]),
           onSome: (uri) =>

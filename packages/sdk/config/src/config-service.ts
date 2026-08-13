@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FileSystem from '@effect/platform/FileSystem';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import { dirname } from 'node:path';
-import * as Yaml from 'yaml';
 
 import { DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
@@ -43,16 +42,13 @@ export const defaultConfig = new Config({
     },
     services: {
       edge: {
-        url: 'wss://edge-production.dxos.workers.dev/',
+        url: 'wss://dxos.network/',
       },
       iceProviders: [
         {
-          urls: 'https://edge-production.dxos.workers.dev/ice',
+          urls: 'https://dxos.network/ice',
         },
       ],
-      ai: {
-        server: 'https://ai-service.dxos.workers.dev',
-      },
       ipfs: {
         server: 'https://api.ipfs.dxos.network/api/v0',
         gateway: 'https://gateway.ipfs.dxos.network/ipfs',
@@ -61,7 +57,7 @@ export const defaultConfig = new Config({
   },
 });
 
-export class ConfigService extends Context.Tag('ConfigService')<ConfigService, Config>() {
+export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
 
   static fromConfig = (config: Config) => Layer.succeed(ConfigService, config);
@@ -70,21 +66,28 @@ export class ConfigService extends Context.Tag('ConfigService')<ConfigService, C
     const defaultConfigPath = getProfileConfigPath(DX_CONFIG, args.profile);
     return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
+      // Loaded on demand: this node-side profile loader is exported from the browser barrel,
+      // and the yaml parser must not ride the app's static boot graph.
+      const Yaml = yield* Effect.promise(() => import('yaml'));
       const configPath = Option.getOrElse(args.config, () => defaultConfigPath);
       const configContent = yield* fs.readFileString(configPath);
       const configValues = Yaml.parse(configContent);
       return ConfigService.of(new Config(configValues, profileBuiltinDefaults(args.profile).values));
     }).pipe(
-      // If the config file doesn't exist, create it.
-      Effect.catchTag('SystemError', () =>
-        Effect.gen(function* () {
-          const configValues = defaultConfig.values;
-          const fs = yield* FileSystem.FileSystem;
-          const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
-          yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
-          yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
-          return ConfigService.of(new Config(configValues));
-        }),
+      // If the config file doesn't exist, create it. v4 folds v3's `SystemError` and `BadArgument`
+      // into one `PlatformError` tag; only the former was ever recovered here.
+      Effect.catchTag('PlatformError', (error) =>
+        error.reason._tag === 'BadArgument'
+          ? Effect.fail(error)
+          : Effect.gen(function* () {
+              const Yaml = yield* Effect.promise(() => import('yaml'));
+              const configValues = defaultConfig.values;
+              const fs = yield* FileSystem.FileSystem;
+              const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
+              yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
+              yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
+              return ConfigService.of(new Config(configValues));
+            }),
       ),
     );
   };

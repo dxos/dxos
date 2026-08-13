@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Variant } from '#types';
+import { Variant } from '#types';
 
 import { useVariantSource } from './useVariantSource';
 

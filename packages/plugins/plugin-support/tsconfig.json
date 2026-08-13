@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -37,12 +34,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -50,9 +41,6 @@
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -65,9 +53,6 @@
     },
     {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/config"
@@ -97,16 +82,7 @@
       "path": "../../ui/react-ui-markdown"
     },
     {
-      "path": "../../ui/react-ui-masonry"
-    },
-    {
-      "path": "../../ui/react-ui-menu"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-assistant"
     },
     {
       "path": "../plugin-client"

@@ -4,9 +4,10 @@
 
 /* eslint-disable no-console */
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';

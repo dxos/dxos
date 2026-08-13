@@ -2,17 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import React from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Feed, Filter, Ref } from '@dxos/echo';
@@ -20,7 +19,8 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
@@ -28,7 +28,7 @@ import { Message } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../AssistantPlugin';
+import { AssistantPlugin } from '../../plugin';
 import { ChatArticle } from './ChatArticle';
 
 /**
@@ -98,10 +98,9 @@ const meta = {
     withTheme(),
     withPluginManager<StoryProps>(({ args: { messages = [] } }) => {
       return {
-        setupEvents: [AppActivationEvents.SetupSettings],
         plugins: [
           ...corePlugins(),
-          ClientPlugin({
+          ClientPlugin.make({
             types: [Chat.Chat, Feed.Feed, Message.Message],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
@@ -122,8 +121,8 @@ const meta = {
             aiServiceMiddleware:
               messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
           }),
-          PreviewPlugin(),
-          StorybookPlugin({}),
+          PreviewPlugin.make(),
+          StorybookPlugin.make({}),
         ],
         capabilities,
       };

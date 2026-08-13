@@ -4,15 +4,16 @@
 
 // @import-as-namespace
 
-import type * as AiError from '@effect/ai/AiError';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Result from 'effect/Result';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
+import type * as AiError from 'effect/unstable/ai/AiError';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import {
   AiParser,
@@ -24,9 +25,12 @@ import {
   type ToolExecutionService,
   type ToolResolverService,
   callTool,
-  withoutToolCallParising,
+  withoutToolCallParsing,
 } from '@dxos/ai';
-import { type Instructions, Operation, type Skill, Trace } from '@dxos/compute';
+import type * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Skill from '@dxos/compute/Skill';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
@@ -118,7 +122,7 @@ export type TurnResult = {
  */
 export class Request {
   /** Prevents concurrent execution of session. */
-  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
+  private readonly _semaphore = Effect.runSync(Semaphore.make(1));
 
   private readonly _observer: GenerationObserver;
   private readonly _onOutput: (message: Message.Message) => Effect.Effect<void, never, never>;
@@ -152,7 +156,7 @@ export class Request {
   }
 
   private _submitMessage = (message: Message.Message): Effect.Effect<Message.Message, never, Trace.TraceService> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       this._pending.push(message);
       yield* this._observer.onMessage(message);
       if (this._options.persist === false) {
@@ -196,7 +200,7 @@ export class Request {
     objects = [],
     instructions = [],
   }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       this._started = Date.now();
       this._history = [...history];
       this._pending = [];
@@ -226,7 +230,7 @@ export class Request {
     system,
     toolkit: opaqueToolkit,
   }: TurnProps<R>): Effect.Effect<TurnResult, RunError, RunRequirements | R> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       log('request', {
         system: { snippet: createSnippet(system), length: system.length },
         pending: this._pending.length,
@@ -244,12 +248,14 @@ export class Request {
       let currentMessageId: Obj.ID | null = null;
       let finishReason: ContentBlock.FinishReason | undefined;
 
-      const messages = yield* LanguageModel.streamText({
-        prompt,
-        toolkit,
-        disableToolCallResolution: true,
-      }).pipe(
-        withoutToolCallParising,
+      // v4 overloads `streamText` on the presence of `toolkit`, so the two cases branch explicitly
+      // rather than passing a possibly-undefined key.
+      const stream = toolkit
+        ? LanguageModel.streamText({ prompt, toolkit, disableToolCallResolution: true })
+        : LanguageModel.streamText({ prompt, disableToolCallResolution: true });
+
+      const messages = yield* stream.pipe(
+        withoutToolCallParsing,
         AiParser.parseResponse({
           emitPartial: true,
           onBegin: () => observer.onBegin(),
@@ -260,7 +266,7 @@ export class Request {
         Stream.map((block) => enrichToolCallBlock(block, toolkit)),
         Stream.mapEffect(
           (block) =>
-            Effect.gen(this, function* () {
+            Effect.gen({ self: this }, function* () {
               if (block._tag === 'stats' && block.finishReason !== undefined) {
                 finishReason = block.finishReason;
               }
@@ -289,9 +295,8 @@ export class Request {
             }),
           { concurrency: 1, unordered: false },
         ),
-        Stream.filterMap((_) => _),
+        Stream.filterMap((value) => (Option.isSome(value) ? Result.succeed(value.value) : Result.failVoid)),
         Stream.runCollect,
-        Effect.map(Chunk.toArray),
       );
       log('messages', { messages });
 
@@ -319,7 +324,7 @@ export class Request {
   }: {
     toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
   }): Effect.Effect<void, RunError, RunRequirements | R> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
       const toolCalls = this.getToolCalls();
       const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
@@ -352,7 +357,7 @@ export class Request {
     instructions = [],
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* this.begin({ prompt, system: systemTemplate, history, objects, skills, instructions });
 
       const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects, instructions }).pipe(

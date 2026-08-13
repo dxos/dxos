@@ -6,8 +6,9 @@ import type * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
 
 import type { Space } from '@dxos/client/echo';
-import { Credential, Trace } from '@dxos/compute';
 import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Trace from '@dxos/compute/Trace';
 import { Database } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { assertArgument } from '@dxos/invariant';
@@ -39,7 +40,7 @@ export type TestServiceOptions = {
     /**
      * Custom credentials service.
      */
-    service?: Context.Tag.Service<Credential.CredentialsService>;
+    service?: Context.Service.Shape<typeof Credential.CredentialsService>;
   }>;
 
   /**
@@ -58,7 +59,7 @@ export type TestServiceOptions = {
    */
   logging?: {
     enabled?: boolean;
-    trace?: Context.Tag.Service<Trace.TraceService>;
+    trace?: Context.Service.Shape<typeof Trace.TraceService>;
   };
 };
 
@@ -90,7 +91,7 @@ export const createTestServices = ({ credentials, db, logging, space }: TestServ
 
 const createCredentialsService = (
   credentials: TestServiceOptions['credentials'] | undefined,
-): Context.Tag.Service<Credential.CredentialsService> | undefined => {
+): Context.Service.Shape<typeof Credential.CredentialsService> | undefined => {
   if (credentials?.services) {
     return new ConfiguredCredentialsService(credentials.services);
   }

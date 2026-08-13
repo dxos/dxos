@@ -7,15 +7,16 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { DXN, Obj, Query, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -50,14 +51,14 @@ const HistoryProviderPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'history-provider',
-    activatesOn: AppActivationEvents.SetupSchema,
+    provides: [ReviewCapabilities.HistoryProvider],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(ReviewCapabilities.HistoryProvider, {
+      Effect.succeed([
+        Capability.contribute(ReviewCapabilities.HistoryProvider, {
           id: Type.getTypename(TestDoc),
           getTarget: (object) => (Obj.instanceOf(TestDoc, object) ? object.content.target : undefined),
         }),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -80,15 +81,15 @@ const meta = {
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [TestDoc, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
+              const { defaultSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
               const text = Text.make({ content: 'alpha\n' });
-              const doc = personalSpace.db.add(Obj.make(TestDoc, { name: 'Story', content: Ref.make(text) }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              const doc = defaultSpace.db.add(Obj.make(TestDoc, { name: 'Story', content: Ref.make(text) }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               // Real checkpoints (valid heads) between edits, so each lands on a distinct revision;
               // the branch is a static record — enough for the timeline graph, no live registry.
@@ -107,7 +108,7 @@ const meta = {
                 root.content = 'alpha\nbravo\ncharlie\n';
               });
               Version.create(doc, { name: 'Branch revision', target: root, branch: BRANCH_KEY });
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         SpacePlugin({}),

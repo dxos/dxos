@@ -190,12 +190,30 @@ export const comments = (options: CommentsOptions): Extension => {
     //
     // Track selection/proximity.
     //
-    EditorView.updateListener.of(({ view, state }) => {
+    EditorView.updateListener.of(({ view, state, transactions }) => {
       let min = Infinity;
-      const {
-        selection: { current, closest },
-        comments,
-      } = state.field(commentsState);
+      const { selection: applied, comments } = state.field(commentsState);
+      const { current, closest } = applied;
+
+      const notify = (selection: SelectionState) =>
+        handleSelect({
+          selection,
+          id: state.facet(documentId),
+          comments: comments.map(({ comment, range }) => ({
+            comment,
+            range,
+            location: view.coordsAtPos(range.from),
+          })),
+        });
+
+      // An explicit `setSelection` is authoritative: selecting a thread in the comments companion sets
+      // `current` and moves the caret in one transaction, and the caret does not always land inside the
+      // tracked range — proximity would then clear the very selection that transaction just made. Report
+      // the applied selection so the app still learns which thread is current, but leave it as set.
+      if (transactions.some((tr) => tr.effects.some((effect) => effect.is(setSelection)))) {
+        notify(applied);
+        return;
+      }
 
       const { head } = state.selection.main;
       const selection: SelectionState = {};
@@ -216,17 +234,7 @@ export const comments = (options: CommentsOptions): Extension => {
 
       if (selection.current !== current || selection.closest !== closest) {
         view.dispatch({ effects: setSelection.of(selection) });
-
-        // Update callback.
-        handleSelect({
-          selection,
-          id: state.facet(documentId),
-          comments: comments.map(({ comment, range }) => ({
-            comment,
-            range,
-            location: view.coordsAtPos(range.from),
-          })),
-        });
+        notify(selection);
       }
     }),
 
@@ -650,7 +658,9 @@ export const scrollCommentIntoView = (
   }
 
   const { from, to } = view.state.selection.main;
-  const needsSelectionUpdate = from !== range.from || to !== range.from;
+  // Never collapse a live selection: an attention change in the comments companion can land while the
+  // user is selecting text, and moving the caret would silently retarget the comment they create next.
+  const needsSelectionUpdate = from === to && from !== range.from;
   view.dispatch({
     selection: needsSelectionUpdate ? { anchor: range.from } : undefined,
     effects: [

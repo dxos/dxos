@@ -21,13 +21,14 @@ export interface OperationRegistry {
   resolve(key: string): Effect.Effect<Option.Option<Operation.Definition.Any>>;
 }
 
-export class Service extends Context.Tag('@dxos/operation/OperationRegistry')<Service, OperationRegistry>() {}
+export class Service extends Context.Service<Service, OperationRegistry>()('@dxos/operation/OperationRegistry') {}
 
 /**
  * Resolve an operation by key.
  */
-export const resolve: (key: string) => Effect.Effect<Option.Option<Operation.Definition.Any>, never, Service> =
-  Effect.serviceFunctionEffect(Service, (service) => service.resolve);
+export const resolve: (key: string) => Effect.Effect<Option.Option<Operation.Definition.Any>, never, Service> = (
+  ...args: Parameters<Context.Service.Shape<typeof Service>['resolve']>
+) => Service.use((service) => service.resolve(...args));
 
 export const layer: Layer.Layer<Service, never, Database.Service | OperationHandlerSet.OperationHandlerProvider> =
   Layer.effect(
@@ -39,9 +40,9 @@ export const layer: Layer.Layer<Service, never, Database.Service | OperationHand
         resolve: (key: string) =>
           Database.query(Query.select(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))))
             .first.pipe(
-              Effect.flatten,
+              Effect.flatMap((result) => Effect.fromOption(result)),
               Effect.map(Operation.deserialize),
-              Effect.catchTag('NoSuchElementException', () => OperationHandlerSet.getHandlerByKey(handlerSet, key)),
+              Effect.catchTag('NoSuchElementError', () => OperationHandlerSet.getHandlerByKey(handlerSet, key)),
               Effect.option,
             )
             .pipe(Effect.provideService(Database.Service, database)),

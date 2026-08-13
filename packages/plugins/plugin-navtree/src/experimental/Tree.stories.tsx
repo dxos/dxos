@@ -10,7 +10,8 @@ import { Icon, IconButton, Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
+import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitor } from './Tree';
+import { visitNodes } from './visit-nodes';
 
 random.seed(1234);
 
@@ -147,7 +148,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
   return (
     <Panel.Root>
       <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical' thin>
+        <ScrollArea.Root orientation='vertical' centered padding thin>
           <ScrollArea.Viewport>
             <Tree
               className='p-0.5 gap-1'

@@ -7,7 +7,9 @@ import type * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
-import type { Credential, Operation, Trace } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import type { Database, Registry } from '@dxos/echo';
 import { mapValues } from '@dxos/util';
 
@@ -127,7 +129,7 @@ export type ComputeFunction<Input extends ValueRecord, Output extends ValueRecor
  * @internal
  */
 // TODO(burdon): Reconcile with @effect/ai/Tool and handler.
-export type NodeDef<Input extends Schema.Schema.AnyNoContext, Ouput extends Schema.Schema.AnyNoContext> = {
+export type NodeDef<Input extends Schema.Codec<any, any>, Ouput extends Schema.Codec<any, any>> = {
   input: Input;
   output: Ouput;
   exec?: ComputeFunction<Schema.Schema.Type<Input>, Schema.Schema.Type<Ouput>>;
@@ -137,21 +139,18 @@ export type NodeDef<Input extends Schema.Schema.AnyNoContext, Ouput extends Sche
  * Executable node.
  */
 // TODO(burdon): Handler.
-export type Executable<
-  Input extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
-  Output extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
-> = {
+export type Executable<Input extends Schema.Top = Schema.Top, Output extends Schema.Top = Schema.Top> = {
   meta: ComputeNodeMeta;
 
   /** Undefined for meta nodes like input/output. */
-  exec?: ComputeFunction<Schema.Schema.Type<Input>, Schema.Schema.Type<Output>>;
+  exec?: ComputeFunction<Schema.Schema.Type<Input> & ValueRecord, Schema.Schema.Type<Output> & ValueRecord>;
 };
 
 /**
  * Type-safe constructor for function definition.
  */
 // TODO(burdon): make
-export const defineComputeNode = <Input extends Schema.Schema.AnyNoContext, Output extends Schema.Schema.AnyNoContext>({
+export const defineComputeNode = <Input extends Schema.Codec<any, any>, Output extends Schema.Codec<any, any>>({
   input,
   output,
   exec,

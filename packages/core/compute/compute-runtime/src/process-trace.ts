@@ -4,7 +4,8 @@
 
 import * as Context from 'effect/Context';
 
-import { Process, Trace } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -46,7 +47,7 @@ export interface ProcessTraceServiceOptions {
  */
 export const createProcessTraceService = (
   opts: ProcessTraceServiceOptions,
-): Context.Tag.Service<typeof Trace.TraceService> => ({
+): Context.Service.Shape<typeof Trace.TraceService> => ({
   write: (event, data) => {
     try {
       // TODO(dmaretskyi): Batching.

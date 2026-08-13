@@ -9,7 +9,15 @@
    * element paddings from density utilities (`px-*`/`py-0`) still win over the defaults here.
    */
   .dx-input {
-    @apply transition-colors bg-input-surface border border-input-separator rounded-xs p-1 px-2;
+    @apply transition-colors border border-input-separator rounded-xs p-1 px-2;
+
+    /*
+     * A zone, not a bare fill: the input publishes its own surface so what sits on it — the
+     * placeholder above all — derives from the input's colour rather than from the host behind it.
+     * `@apply` cannot take a zone class, hence the two lines rather than `dx-input-surface`.
+     */
+    --surface-bg: var(--color-input-surface);
+    background-color: var(--surface-bg);
 
     &:focus {
       @apply outline-hidden;

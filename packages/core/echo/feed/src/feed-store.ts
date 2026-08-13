@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Event } from '@dxos/async';
 import { assertArgument } from '@dxos/invariant';
@@ -13,7 +14,9 @@ import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { type Cypher, CypherError } from './cypher';
 import { PositionConflictError } from './errors';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
@@ -37,12 +40,18 @@ export interface FeedStoreOptions {
    * Only a single peer (usually the server) can assign positions.
    */
   assignPositions: boolean;
+
+  /**
+   * Seals block payloads at rest. When absent, blocks are stored as plaintext (no encryption by
+   * default); the cypher decides per feed whether to encrypt at all.
+   */
+  cypher?: Cypher;
 }
 
 /**
  * Effect service tag for {@link FeedStore}.
  */
-export class FeedStoreService extends EffectContext.Tag('@dxos/feed/FeedStore')<FeedStoreService, FeedStore>() {}
+export class FeedStoreService extends EffectContext.Service<FeedStoreService, FeedStore>()('@dxos/feed/FeedStore') {}
 
 /**
  * Persistent storage for feed metadata, blocks, subscriptions, and sync state.
@@ -61,58 +70,25 @@ export class FeedStore {
   readonly onNewBlocks = new Event<void>();
 
   /**
-   * Creates required feed store tables and indexes if they do not exist.
+   * Applies any migrations this database has not recorded yet.
+   *
+   * A database created before migration tracking existed already holds migration 1's tables, and
+   * needs no special handling: every statement in it is `IF NOT EXISTS`, so it applies as a no-op
+   * and is recorded like any other.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd, where this runs inside
+   * a Durable Object.
    */
   migrate = Effect.fn('FeedStore.migrate')(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-
-      // Feeds Table
-      yield* sql`CREATE TABLE IF NOT EXISTS feeds (
-        feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
-        spaceId TEXT NOT NULL,
-        feedId TEXT NOT NULL,
-        feedNamespace TEXT
-      )`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
-
-      // Blocks Table
-      yield* sql`CREATE TABLE IF NOT EXISTS blocks (
-        insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
-        feedPrivateId INTEGER NOT NULL,
-        position INTEGER,
-        sequence INTEGER NOT NULL,
-        actorId TEXT NOT NULL,
-        prevSequence INTEGER,
-        prevActorId TEXT,
-        timestamp INTEGER NOT NULL,
-        data BLOB NOT NULL,
-        FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
-      )`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId ON blocks(feedPrivateId, sequence, actorId)`;
-
-      // Subscriptions Table
-      yield* sql`CREATE TABLE IF NOT EXISTS subscriptions (
-          subscriptionId TEXT PRIMARY KEY,
-          expiresAt INTEGER NOT NULL,
-          feedPrivateIds TEXT NOT NULL -- JSON array
-      )`;
-
-      // Cursor Tokens Table
-      yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
-          spaceId TEXT PRIMARY KEY,
-          token TEXT NOT NULL
-      )`;
-
-      // Sync State Table.
-      yield* sql`CREATE TABLE IF NOT EXISTS sync_state (
-          spaceId TEXT NOT NULL,
-          feedNamespace TEXT NOT NULL,
-          lastPulledPosition INTEGER NOT NULL DEFAULT -1,
-          PRIMARY KEY (spaceId, feedNamespace)
-      )`;
-    }).pipe(Effect.withSpan('FeedStore.migrate')),
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A MigrationError means the bundled manifest is malformed — a defect, not something a caller
+      // can recover from — so it dies rather than widening this signature beyond SqlError.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+      Effect.withSpan('FeedStore.migrate'),
+    ),
   );
 
   /**
@@ -124,7 +100,7 @@ export class FeedStore {
       feedId: string,
       namespace?: string,
     ): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
         const rows = yield* sql<{ feedPrivateId: number }>`
@@ -146,7 +122,7 @@ export class FeedStore {
    */
   #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
     (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql<{ token: string }>`SELECT token FROM cursor_tokens WHERE spaceId = ${spaceId}`;
         if (rows.length > 0) {
@@ -160,11 +136,76 @@ export class FeedStore {
   );
 
   /**
+   * Seals block payloads for a batch, returning storage columns aligned by input index. A block
+   * whose feed the cypher declines — or any block when no cypher is configured — passes through as
+   * plaintext with no envelope.
+   */
+  #sealBlocks = (
+    spaceId: string,
+    feedNamespace: string,
+    blocks: readonly Block[],
+  ): Effect.Effect<{ data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null }[], CypherError> => {
+    const cypher = this.#options.cypher;
+    return Effect.forEach(
+      blocks,
+      (block) =>
+        Effect.gen({ self: this }, function* () {
+          const feed = { spaceId, feedId: block.feedId!, feedNamespace };
+          if (!cypher || !cypher.shouldEncrypt(feed)) {
+            return { data: block.data, encryptionKeyId: null, iv: null };
+          }
+          const blockId = blockNaturalKey(block.feedId!, block.actorId, block.sequence);
+          const payload = yield* Effect.tryPromise({
+            try: () => cypher.encrypt(block.data, { feed, blockId }),
+            catch: (error) => new CypherError({ operation: 'encrypt', blockId, cause: error }),
+          });
+          return { data: payload.ciphertext, encryptionKeyId: payload.encryptionKeyId, iv: payload.iv };
+        }),
+      { concurrency: 'unbounded' },
+    );
+  };
+
+  /**
+   * Opens a stored block for callers, decrypting when it carries an envelope and a cypher is
+   * configured. Returns a plaintext block with the envelope columns cleared.
+   */
+  #openBlock = (row: Block, spaceId: string, feedNamespace: string): Effect.Effect<Block, CypherError> =>
+    Effect.gen({ self: this }, function* () {
+      const data = new Uint8Array(row.data);
+      const blockId = blockNaturalKey(row.feedId!, row.actorId, row.sequence);
+      // Both envelope fields move together; exactly one present is a corrupt row, never plaintext —
+      // fail closed rather than hand ciphertext to a caller as if it were cleartext.
+      if ((row.encryptionKeyId == null) !== (row.iv == null)) {
+        return yield* Effect.fail(
+          new CypherError({ operation: 'decrypt', blockId, cause: new Error('Partial encryption envelope.') }),
+        );
+      }
+      const cypher = this.#options.cypher;
+      if (!cypher || row.encryptionKeyId == null || row.iv == null) {
+        return {
+          ...row,
+          data,
+          encryptionKeyId: row.encryptionKeyId ?? undefined,
+          iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
+        };
+      }
+      const plaintext = yield* Effect.tryPromise({
+        try: () =>
+          cypher.decrypt(
+            { encryptionKeyId: row.encryptionKeyId!, iv: new Uint8Array(row.iv!), ciphertext: data },
+            { feed: { spaceId, feedId: row.feedId!, feedNamespace }, blockId },
+          ),
+        catch: (error) => new CypherError({ operation: 'decrypt', blockId, cause: error }),
+      });
+      return { ...row, data: plaintext, encryptionKeyId: undefined, iv: undefined };
+    });
+
+  /**
    * Queries feed blocks by feed IDs or subscription with cursor/position pagination.
    */
   query = Effect.fn('Feed.query')(
-    (request: QueryRequest): Effect.Effect<QueryResponse, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+    (request: QueryRequest): Effect.Effect<QueryResponse, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
         let feedIds: string[] | undefined = [];
         let cursorInsertionId = -1;
@@ -277,11 +318,20 @@ export class FeedStore {
 
         const hasMore = requestLimit != null && rows.length > requestLimit;
         const slice = hasMore ? rows.slice(0, requestLimit) : rows;
-        const blocks = slice.map((row) => ({
-          ...row,
-          // Have to clone buffer otherwise we get empty Uint8Array.
-          data: new Uint8Array(row.data),
-        }));
+        // Without a cypher, take the original synchronous path — decryption adds no async turns to
+        // the hot query path when encryption is off. Cloning the buffer avoids an empty Uint8Array.
+        const blocks = this.#options.cypher
+          ? yield* Effect.forEach(slice, (row) => this.#openBlock(row, request.spaceId, request.feedNamespace), {
+              concurrency: 'unbounded',
+            })
+          : // Normalise the SQLite NULL envelope columns to undefined — the Block schema types them
+            // `string | undefined`, not nullable, so a raw null trips schema encode on the sync path.
+            slice.map((row) => ({
+              ...row,
+              data: new Uint8Array(row.data),
+              encryptionKeyId: row.encryptionKeyId ?? undefined,
+              iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
+            }));
 
         let nextCursor: FeedCursor = request.cursor ?? encodeCursor(validCursorToken, -1);
         if (blocks.length > 0 && request.spaceId) {
@@ -300,7 +350,7 @@ export class FeedStore {
    */
   subscribe = Effect.fn('Feed.subscribe')(
     (request: SubscribeRequest): Effect.Effect<SubscribeResponse, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
         const ttl = 60 * 60 * 1000;
         const subscriptionId = crypto.randomUUID();
@@ -338,7 +388,7 @@ export class FeedStore {
     spaceId: SpaceId;
     feedNamespace: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ lastPulledPosition: number }>`
         SELECT lastPulledPosition FROM sync_state
@@ -355,7 +405,7 @@ export class FeedStore {
     feedNamespace: string;
     lastPulledPosition: number;
   }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       yield* sql`
         INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition)
@@ -371,7 +421,7 @@ export class FeedStore {
     spaceId: SpaceId;
     feedNamespace: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ count: number }>`
         SELECT COUNT(*) AS count
@@ -391,7 +441,7 @@ export class FeedStore {
     spaceId: SpaceId;
     feedNamespace: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ count: number }>`
         SELECT COUNT(*) AS count
@@ -413,7 +463,7 @@ export class FeedStore {
     feedNamespace: string;
     feedId: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ count: number }>`
         SELECT COUNT(*) AS count
@@ -440,7 +490,7 @@ export class FeedStore {
     feedId: string;
     count: number;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       if (opts.count <= 0) {
         return 0;
@@ -469,8 +519,12 @@ export class FeedStore {
    */
   append = (
     request: AppendRequest,
-  ): Effect.Effect<AppendResponse, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
-    Effect.gen(this, function* () {
+  ): Effect.Effect<
+    AppendResponse,
+    SqlError.SqlError | CypherError,
+    SqlClient.SqlClient | SqlTransaction.SqlTransaction
+  > =>
+    Effect.gen({ self: this }, function* () {
       if (!request.spaceId) {
         return yield* Effect.die(new Error('spaceId required for append'));
       }
@@ -486,10 +540,17 @@ export class FeedStore {
         assertArgument(block.feedId, 'block.feedId', 'feedId is required');
       }
 
+      // Seal payloads before the transaction so the WebCrypto round-trips do not hold it open.
+      // Without a cypher, stay fully synchronous here so append adds no async turns when encryption
+      // is off (an extra turn can reorder concurrent appends racing for the same position).
+      const sealed = this.#options.cypher
+        ? yield* this.#sealBlocks(request.spaceId, request.feedNamespace, request.blocks)
+        : request.blocks.map((block) => ({ data: block.data, encryptionKeyId: null, iv: null }));
+
       // Wrap in transaction to ensure atomicity when assigning positions.
       const sqlTransaction = yield* SqlTransaction.SqlTransaction;
       const positions = yield* sqlTransaction.withTransaction(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           const sql = yield* SqlClient.SqlClient;
 
           // 1. Collect unique feed IDs and batch #ensureFeed calls.
@@ -505,7 +566,7 @@ export class FeedStore {
           yield* Effect.forEach(
             [...feedKeys.entries()],
             ([key, { feedId }]) =>
-              Effect.gen(this, function* () {
+              Effect.gen({ self: this }, function* () {
                 const id = yield* this.#ensureFeed(request.spaceId!, feedId, request.feedNamespace);
                 feedPrivateIds.set(key, id);
               }),
@@ -532,9 +593,10 @@ export class FeedStore {
           // sync clients will try to UPDATE local rows to, tripping the
           // (feedPrivateId, position) UNIQUE constraint and stalling sync indefinitely.
           const positions: number[] = [];
-          for (const block of request.blocks) {
+          for (const [blockIndex, block] of request.blocks.entries()) {
             const key = block.feedId!;
             const feedPrivateId = feedPrivateIds.get(key)!;
+            const { data, encryptionKeyId, iv } = sealed[blockIndex];
 
             let positionToInsert: number | null = null;
             if (this.#options.assignPositions) {
@@ -546,10 +608,10 @@ export class FeedStore {
             const inserted = yield* sql<{ position: number | null }>`
               INSERT INTO blocks (
                 feedPrivateId, position, sequence, actorId,
-                prevSequence, prevActorId, timestamp, data
+                prevSequence, prevActorId, timestamp, data, encryptionKeyId, iv
               ) VALUES (
                 ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
-                ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${block.data}
+                ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${encryptionKeyId}, ${iv}
               )
               ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING
               RETURNING position
@@ -611,8 +673,8 @@ export class FeedStore {
   appendLocal = Effect.fn('Feed.appendLocal')(
     (
       messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
-    ): Effect.Effect<Block[], SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
-      Effect.gen(this, function* () {
+    ): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
         // 1. Collect unique feeds and ensure they exist.
@@ -630,7 +692,7 @@ export class FeedStore {
         yield* Effect.forEach(
           [...feedKeys.entries()],
           ([key, { spaceId, feedId, feedNamespace }]) =>
-            Effect.gen(this, function* () {
+            Effect.gen({ self: this }, function* () {
               const id = yield* this.#ensureFeed(spaceId, feedId, feedNamespace);
               feedPrivateIds.set(key, id);
             }),
@@ -734,7 +796,7 @@ export class FeedStore {
     spaceId: string;
     blocks: (Pick<Block, 'feedId' | 'actorId' | 'sequence' | 'position'> & { feedNamespace: string })[];
   }): Effect.Effect<void, SqlError.SqlError | PositionConflictError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       for (const block of request.blocks) {
         // Fold the conflict check into the UPDATE itself: only write when the row is
@@ -792,7 +854,7 @@ export class FeedStore {
     SqlError.SqlError,
     SqlClient.SqlClient
   > =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
 
       const feeds = yield* sql<{ feedId: string; feedNamespace: string }>`
@@ -815,9 +877,13 @@ export class FeedStore {
         result.push({
           feedId: feed.feedId,
           feedNamespace: feed.feedNamespace,
+          // Byte-faithful export: sealed payloads keep their ciphertext and envelope so a re-import
+          // reconstitutes the exact stored rows, and no plaintext leaks into an archive.
           blocks: blocks.map((row) => ({
             ...row,
             data: new Uint8Array(row.data),
+            encryptionKeyId: row.encryptionKeyId ?? undefined,
+            iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
           })),
         });
       }
@@ -825,6 +891,9 @@ export class FeedStore {
       return result;
     }).pipe(Effect.withSpan('FeedStore.getAllFeedsForSpace'));
 }
+
+/** Immutable natural key of a block, bound as AAD so sealed bytes cannot be relocated. */
+const blockNaturalKey = (feedId: string, actorId: string, sequence: number) => `${feedId}:${actorId}:${sequence}`;
 
 const encodeCursor = (token: string, insertionId: number) => FeedCursor.make(`${token}|${insertionId}`);
 const decodeCursor = (cursor: FeedCursor) => {

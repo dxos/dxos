@@ -5,10 +5,11 @@
 import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, type Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { type Space } from '@dxos/react-client/echo';
+import { isSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 
@@ -33,8 +34,9 @@ const ArtifactTile = ({ data }: { data?: TileData }) => {
 
 export type ArtifactsArticleProps = {
   role?: string;
-  space: Space;
   attendableId?: string;
+  /** The virtual node's properties bag, which carries the space this hub browses. */
+  properties?: Record<string, unknown>;
 };
 
 /**
@@ -42,9 +44,11 @@ export type ArtifactsArticleProps = {
  * toolbar's Create button opens a menu to pick the kind (image/video); selecting one creates that
  * Artifact and opens it. Clicking a card opens that Artifact's ArtifactArticle.
  */
-export const ArtifactsArticle = ({ role, space }: ArtifactsArticleProps) => {
+export const ArtifactsArticle = ({ role, properties }: ArtifactsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
+  // The hub is bound by a data sentinel rather than an object, so its space arrives via the node.
+  const space = isSpace(properties?.space) ? properties.space : undefined;
   const artifacts = useQuery(space?.db, Filter.type(Artifact.Artifact));
   const items = useMemo<TileData[]>(() => artifacts.map((artifact) => ({ artifact })), [artifacts]);
 

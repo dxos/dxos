@@ -7,9 +7,9 @@ import { format } from 'date-fns';
 import { Database } from '@dxos/echo';
 import { type Event } from '@dxos/types';
 
+import { Segment, Trip } from '#types';
+
 import { type Place } from '../types/Place';
-import * as Segment from '../types/Segment';
-import * as Trip from '../types/Trip';
 
 /**
  * Maps a calendar Event's postal address onto the generic {@link Place} shape used by Segments.

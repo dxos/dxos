@@ -3,13 +3,15 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, UrlResolution } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
@@ -30,15 +32,7 @@ import {
   type MarkdownEditorProviderProps,
 } from '#components';
 import { useLinkQuery } from '#hooks';
-import {
-  type EditorBinding,
-  Markdown,
-  MarkdownCapabilities,
-  type MarkdownPluginState,
-  type ReviewMode,
-  type UseEditorBinding,
-  type ViewModeSelection,
-} from '#types';
+import { Markdown, MarkdownCapabilities } from '#types';
 
 import { mergeConflicts } from '../../extensions';
 
@@ -47,13 +41,13 @@ import { mergeConflicts } from '../../extensions';
  * object directly, no review affordances. The review mode is kept locally so contributed view-mode
  * entries (e.g. Suggesting) still toggle without a versioning host.
  */
-const useDefaultEditorBinding: UseEditorBinding = ({ object, viewMode, onViewModeChange }) => {
+const useDefaultEditorBinding: MarkdownCapabilities.UseEditorBinding = ({ object, viewMode, onViewModeChange }) => {
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
   // Contributed review modes have no host here; remember the active one so its entry still checks.
-  const [activeReviewMode, setActiveReviewMode] = useState<ReviewMode | undefined>(undefined);
+  const [activeReviewMode, setActiveReviewMode] = useState<MarkdownCapabilities.ReviewMode | undefined>(undefined);
   const selectViewMode = useCallback(
-    (selection: ViewModeSelection) => {
+    (selection: MarkdownCapabilities.ViewModeSelection) => {
       if (selection.kind === 'builtin') {
         setActiveReviewMode(undefined);
         onViewModeChange?.(selection.viewMode);
@@ -90,16 +84,16 @@ const BindingBoundary = ({
   props,
   children,
 }: {
-  useBinding: UseEditorBinding;
-  props: Parameters<UseEditorBinding>[0];
-  children: (binding: EditorBinding) => React.ReactNode;
+  useBinding: MarkdownCapabilities.UseEditorBinding;
+  props: Parameters<MarkdownCapabilities.UseEditorBinding>[0];
+  children: (binding: MarkdownCapabilities.EditorBinding) => React.ReactNode;
 }) => <>{children(useBinding(props))}</>;
 
 // Mints a stable boundary key per hook identity: a REPLACED contribution (not just added/removed)
 // must also remount the boundary, or the new hook would run against the old hook's state order.
-const bindingKeys = new WeakMap<UseEditorBinding, number>();
+const bindingKeys = new WeakMap<MarkdownCapabilities.UseEditorBinding, number>();
 let nextBindingKey = 0;
-const bindingKeyOf = (hook: UseEditorBinding): string => {
+const bindingKeyOf = (hook: MarkdownCapabilities.UseEditorBinding): string => {
   let key = bindingKeys.get(hook);
   if (key === undefined) {
     key = ++nextBindingKey;
@@ -118,7 +112,7 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
       /** Overrides the default navigation when an internal link resolves to a node. */
       onSelectObject?: (objectId: string) => void;
     },
-    Pick<MarkdownPluginState, 'extensionProviders'>,
+    Pick<MarkdownCapabilities.MarkdownPluginState, 'extensionProviders'>,
     Pick<MarkdownEditorProviderProps, 'viewMode' | 'onViewModeChange'>,
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
   >
@@ -150,7 +144,10 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
 
 MarkdownArticle.displayName = 'MarkdownArticle';
 
-const MarkdownArticleImpl = forwardRef<HTMLDivElement, MarkdownArticleProps & { binding: EditorBinding }>(
+const MarkdownArticleImpl = forwardRef<
+  HTMLDivElement,
+  MarkdownArticleProps & { binding: MarkdownCapabilities.EditorBinding }
+>(
   (
     {
       role,
@@ -393,6 +390,12 @@ const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: s
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
   const view = controller?.view;
   useEffect(() => {
+    // Boot-waterfall milestone (once per page): the first editor can accept input from here —
+    // the "time to first meaningful action" anchor for the returning-user entry path. Marked on
+    // the view alone: the EditorViews registry is an optional capability and must not gate it.
+    if (view && performance.getEntriesByName('milestone:first-editor-interactive').length === 0) {
+      performance.mark('milestone:first-editor-interactive');
+    }
     if (view && editorViews) {
       editorViews.register(attendableId ?? id, view, id);
       return () => editorViews.unregister(attendableId ?? id);

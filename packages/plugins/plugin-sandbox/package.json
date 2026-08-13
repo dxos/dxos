@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sandbox",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "DXOS Sandbox plugin for running isolated shell environments",
   "homepage": "https://dxos.org",
@@ -14,11 +14,6 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
@@ -30,9 +25,14 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/SandboxPlugin.ts",
-      "types": "./dist/types/src/SandboxPlugin.d.ts",
-      "default": "./dist/lib/SandboxPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
@@ -47,18 +47,34 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./package.json": "./package.json",
+    "./Sandbox": {
+      "source": "./src/types/Sandbox.ts",
+      "types": "./dist/types/src/types/Sandbox.d.ts",
+      "import": "./dist/lib/Sandbox.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./SandboxEvents": {
+      "source": "./src/types/SandboxEvents.ts",
+      "types": "./dist/types/src/types/SandboxEvents.d.ts",
+      "import": "./dist/lib/SandboxEvents.mjs"
+    },
+    "./SandboxPlugin": {
+      "source": "./src/SandboxPlugin.ts",
+      "types": "./dist/types/src/SandboxPlugin.d.ts",
+      "import": "./dist/lib/SandboxPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Sandbox": [
+        "dist/types/src/types/Sandbox.d.ts"
+      ],
+      "SandboxEvents": [
+        "dist/types/src/types/SandboxEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -71,11 +87,8 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

@@ -6,9 +6,6 @@
   ],
   "references": [
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -30,10 +27,13 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
@@ -56,7 +56,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         invariant(query, 'query is required');
         const { spaceId, feedIds } = query;
         return RuntimeProvider.runPromise(this.#runtime)(
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             const result = yield* this.#feedStore.query({
               requestId: crypto.randomUUID(),
               feedNamespace: request.query.feedNamespace || FeedProtocol.WellKnownNamespaces.data,
@@ -93,7 +93,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
           'expected a well-known feed namespace',
         );
         await RuntimeProvider.runPromise(this.#runtime)(
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             const messages = (objects ?? []).map((encoded) => ({
               spaceId: spaceId,
               feedId: feedId!,
@@ -120,7 +120,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
           'expected a well-known feed namespace',
         );
         await RuntimeProvider.runPromise(this.#runtime)(
-          Effect.gen(this, function* () {
+          Effect.gen({ self: this }, function* () {
             const messages = objectIds!.map((id) => ({
               spaceId: spaceId,
               feedId: feedId!,
@@ -165,11 +165,11 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         : Object.values(FeedProtocol.WellKnownNamespaces);
 
     return RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const namespaceStates = yield* Effect.forEach(
           namespaces,
           (feedNamespace) =>
-            Effect.gen(this, function* () {
+            Effect.gen({ self: this }, function* () {
               const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
                 spaceId,
                 feedNamespace,

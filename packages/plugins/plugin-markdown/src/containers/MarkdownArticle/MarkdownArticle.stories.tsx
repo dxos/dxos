@@ -6,25 +6,27 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { Drawing } from '@dxos/plugin-illustrator';
-import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TldrawModel } from '@dxos/plugin-tldraw';
-import { Tldraw } from '@dxos/plugin-tldraw';
-import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
+import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
+import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -35,9 +37,9 @@ import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
+import { Markdown, MarkdownCapabilities } from '#types';
 
-import { MarkdownPlugin } from '../../MarkdownPlugin';
+import { MarkdownPlugin } from '../../plugin';
 
 random.seed(1);
 
@@ -57,8 +59,8 @@ const MarkdownExtensionsPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'extensions',
-    activatesOn: MarkdownEvents.SetupExtensions,
-    activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.ExtensionProvider, [])),
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activate: () => Effect.succeed([Capability.contribute(MarkdownCapabilities.ExtensionProvider, [])]),
   }),
   Plugin.make,
 );
@@ -96,15 +98,13 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { title = 'Testing', content = '', objects: showObjects = false } }) => ({
-      // TldrawPlugin's section surface reads its Settings atom, contributed on SetupSettings.
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         MarkdownExtensionsPlugin(),
-        IllustratorPlugin(),
-        TldrawPlugin(),
-        ClientPlugin({
+        IllustratorPlugin.make(),
+        TldrawPlugin.make(),
+        ClientPlugin.make({
           types: [
             Markdown.Document,
             Text.Text,
@@ -115,11 +115,11 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
               let objects: Obj.Any[] = [];
               if (showObjects) {
-                const createObjects = createObjectFactory(personalSpace.db, generator);
+                const createObjects = createObjectFactory(defaultSpace.db, generator);
                 objects = yield* Effect.promise(() =>
                   createObjects([
                     {
@@ -140,11 +140,11 @@ const meta = {
                   }),
                 );
 
-                objects.forEach((object) => personalSpace.db.add(object));
-                yield* Effect.promise(() => personalSpace.db.flush());
+                objects.forEach((object) => defaultSpace.db.add(object));
+                yield* Effect.promise(() => defaultSpace.db.flush());
               }
 
-              personalSpace.db.add(
+              defaultSpace.db.add(
                 Markdown.make({
                   name: title,
                   content: [
@@ -162,14 +162,14 @@ const meta = {
                 }),
               );
 
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
 
         // Contributes the versioning-state atom consumed by useVersioning.
         SpacePlugin({}),
         MarkdownPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

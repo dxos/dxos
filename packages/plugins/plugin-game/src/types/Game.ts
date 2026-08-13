@@ -17,16 +17,16 @@ import { CardAnnotation } from '@dxos/schema';
  * `name` is an optional display label (useful for AI/guest players).
  */
 export const Player = Schema.Struct({
-  role: Schema.String.annotations({
+  role: Schema.String.annotate({
     description: 'Variant-defined player role (e.g. "white", "x").',
   }),
   identity: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       description: 'DID of the player; absent for AI or empty seats.',
     }),
   ),
   name: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       description: 'Optional display name for the player.',
     }),
   ),
@@ -43,10 +43,10 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
   Schema.Struct({
     name: Schema.optional(Schema.String),
     players: Schema.mutable(Schema.Array(Player))
-      .annotations({ description: 'Players in the game.' })
+      .annotate({ description: 'Players in the game.' })
       .pipe(FormInputAnnotation.set(false), Schema.optional),
     variant: Ref.Ref(Obj.Unknown)
-      .annotations({ description: 'Reference to variant-specific state object.' })
+      .annotate({ description: 'Reference to variant-specific state object.' })
       .pipe(FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
@@ -62,7 +62,7 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
  * Variant-narrowed reference to a Game.
  *
  * Encodes — at the type level — that the variant ref points to a specific state type.
- * Runtime narrowing is performed by `loadGame(ref, variantType)` which validates and
+ * Runtime narrowing is performed by `GameUtil.loadGame(ref, variantType)` which validates and
  * returns the resolved Game together with its typed variant state.
  *
  * @example
@@ -71,14 +71,14 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
  *   game: GameRef(Chess.State),
  * }),
  * // handler:
- * const { game, variant } = yield* loadGame(input.game, Chess.State);
+ * const { game, variant } = yield* GameUtil.loadGame(input.game, Chess.State);
  * // `variant` is typed as Chess.State.
  * ```
  */
 export type GameRef<_V> = Ref.Ref<Game>;
 
 export const GameRef = <S extends Type.AnyObj>(_variantType: S) =>
-  Ref.Ref(Game) as Schema.Schema<GameRef<Type.InstanceType<S>>, any, never>;
+  Ref.Ref(Game) as unknown as Schema.Codec<GameRef<Type.InstanceType<S>>, any>;
 
 /**
  * Build a base `Game` object referencing the given variant-state ECHO object.

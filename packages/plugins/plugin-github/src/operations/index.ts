@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const GitHubOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./get-repositories'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-);
+import { GitHubOperation } from '#types';
+
+export const GitHubOperationHandlerSet = OperationHandlerSet.lazy([
+  GitHubOperation.GetGitHubRepositories.pipe(Operation.lazyHandler(() => import('./get-repositories'))),
+  GitHubOperation.MaterializeGitHubTarget.pipe(Operation.lazyHandler(() => import('./materialize-target'))),
+  GitHubOperation.SyncGitHubRepositories.pipe(Operation.lazyHandler(() => import('./sync'))),
+]);

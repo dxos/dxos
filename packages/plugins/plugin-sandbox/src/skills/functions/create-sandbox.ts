@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
+import { Sandbox } from '#types';
+
 import { createSandboxClient } from '../../services/sandbox-url';
-import * as Sandbox from '../../types/Sandbox';
 import { CreateSandbox } from './definitions';
 
 export default CreateSandbox.pipe(

@@ -23,10 +23,10 @@
       "path": "../../common/display-name"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/effect"
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/invariant"
     },
     {
       "path": "../../common/random"
@@ -41,9 +41,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
-    },
-    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -56,13 +53,10 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/react-client"
@@ -93,9 +87,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"

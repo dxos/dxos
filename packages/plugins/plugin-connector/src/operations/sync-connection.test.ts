@@ -2,25 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Capabilities, Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation, Routine, ServiceResolver, Trigger } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
-import { Connection, Connector, type ConnectorEntry, ConnectorOperation } from '#types';
+import { ConnectorOperation, ConnectorSpec } from '#types';
 
 import { autoSyncConnection } from '../capabilities/connector-coordinator/auto-sync';
 import SyncConnectionHandler from './sync-connection';
@@ -145,7 +151,13 @@ describe('SyncConnection', () => {
    * A connector that keeps its bindings in sync on a schedule (`scheduled`) syncs by force-running
    * the Routine's trigger; one without a spec is invoked directly, which is the distinction under test.
    */
-  const makeConnector = ({ scheduled, auto }: { scheduled: boolean; auto?: boolean }): ConnectorEntry => ({
+  const makeConnector = ({
+    scheduled,
+    auto,
+  }: {
+    scheduled: boolean;
+    auto?: boolean;
+  }): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
     sync: {
@@ -162,7 +174,11 @@ describe('SyncConnection', () => {
    */
   const makeCapabilities = ({ scheduled, withMonitor }: { scheduled: boolean; withMonitor: boolean }) => {
     const manager = CapabilityManager.make({ registry: Registry.make() });
-    manager.contribute({ module: 'test', interface: Connector, implementation: [makeConnector({ scheduled })] });
+    manager.contribute({
+      module: 'test',
+      interface: ConnectorSpec.Connector,
+      implementation: [makeConnector({ scheduled })],
+    });
     if (withMonitor) {
       manager.contribute({
         module: 'test',

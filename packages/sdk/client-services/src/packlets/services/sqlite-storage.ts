@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
@@ -14,6 +15,8 @@ import { FeedStorageDirectoryService } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Directory, type File, type Storage, StorageType, wrapFile } from '@dxos/random-access-storage';
 import { SqlTransaction } from '@dxos/sql-sqlite';
+
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/hypercore';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -40,10 +43,9 @@ export type SqliteStorageOptions = {
 /**
  * Effect service tag for {@link SqliteStorage}.
  */
-export class SqliteStorageService extends EffectContext.Tag('@dxos/client-services/SqliteStorage')<
-  SqliteStorageService,
-  SqliteStorage
->() {}
+export class SqliteStorageService extends EffectContext.Service<SqliteStorageService, SqliteStorage>()(
+  '@dxos/client-services/SqliteStorage',
+) {}
 
 /** Minimal cross-platform EventEmitter needed by the RandomAccessStorage contract. */
 class BaseEventEmitter {
@@ -359,18 +361,20 @@ export class SqliteStorage implements Storage {
     this.path = path;
   }
 
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
-    'SqliteStorage.migrate',
-  )(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`CREATE TABLE IF NOT EXISTS hypercore_files (
-          path TEXT PRIMARY KEY,
-          data BLOB NOT NULL DEFAULT x''
-        )`;
-      log('hypercore_files table ready');
-    }).pipe(Effect.withSpan('SqliteStorage.migrate')),
-  )();
+  /**
+   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
+   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
+   * `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
+    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
+  ).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('SqliteStorage.migrate'),
+  );
 
   get size(): number {
     return this.#files.size;

@@ -2,16 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META } from '@dxos/echo/internal';
 import { EID } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { EscapedPropPath } from '../utils';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref';
+import { EscapedPropPath, chunkArray } from '../utils';
 import type { Index, IndexerObject } from './interface';
 
 /**
@@ -71,18 +74,20 @@ export interface ReverseRefQuery {
  * Only indexes references, not relations.
  */
 export class ReverseRefIndex implements Index {
-  migrate = Effect.fn('ReverseRefIndex.migrate')(function* () {
-    const sql = yield* SqlClient.SqlClient;
-
-    yield* sql`CREATE TABLE IF NOT EXISTS reverseRef (
-      recordId INTEGER NOT NULL,
-      targetDXN TEXT NOT NULL,
-      propPath TEXT NOT NULL,
-      PRIMARY KEY (recordId, targetDXN, propPath)
-    )`;
-
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_reverse_ref_target ON reverseRef(targetDXN)`;
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  migrate = Effect.fn('ReverseRefIndex.migrate')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+    ),
+  );
 
   /**
    * Query all references pointing to a target DXN.
@@ -97,6 +102,17 @@ export class ReverseRefIndex implements Index {
         // TODO(mykola): Join objectMeta table here.
         const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDXN = ${normalized}`;
         return rows as ReverseRef[];
+      }),
+  );
+
+  /** Delete reverse-reference rows by record id. Used by garbage collection. */
+  deleteByRecordIds = Effect.fn('ReverseRefIndex.deleteByRecordIds')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(recordIds)) {
+          yield* sql`DELETE FROM reverseRef WHERE ${sql.in('recordId', chunk)}`;
+        }
       }),
   );
 

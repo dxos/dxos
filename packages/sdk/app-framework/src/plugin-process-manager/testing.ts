@@ -9,7 +9,7 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { OperationInvoker } from '@dxos/operation';
 
@@ -36,7 +36,7 @@ export const ToString = Operation.make({
 });
 
 export const Add = Operation.make({
-  input: Schema.Tuple(Schema.Number, Schema.Number),
+  input: Schema.Tuple([Schema.Number, Schema.Number]),
   output: Schema.Number,
   meta: { key: DXN.make('org.dxos.test.add') },
 });
@@ -109,7 +109,7 @@ export const createEventCollector = (invoker: OperationInvoker.OperationInvoker)
     });
 
     // Fork a fiber to consume the invocation stream.
-    const fiber = yield* Effect.fork(
+    const fiber = yield* Effect.forkChild(
       Effect.gen(function* () {
         // Signal that subscription is about to start.
         yield* Deferred.succeed(subscriptionReady, undefined);
@@ -127,7 +127,7 @@ export const createEventCollector = (invoker: OperationInvoker.OperationInvoker)
     // Wait for the subscription to be established.
     yield* Deferred.await(subscriptionReady);
     // Additional yield to ensure PubSub subscription is fully registered.
-    yield* Effect.yieldNow();
+    yield* Effect.yieldNow;
 
     const waitForEvents = (count: number): Effect.Effect<void> =>
       Effect.gen(function* () {

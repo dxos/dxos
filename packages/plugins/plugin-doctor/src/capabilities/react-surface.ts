@@ -1,0 +1,29 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+
+import { DiagnosticsPanel } from '#containers';
+
+import { DIAGNOSTICS_DECK_COMPANION_ID } from './app-graph-builder';
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contribute(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'doctorDiagnostics',
+        filter: AppSurface.literal(
+          AppSurface.deckCompanion(DIAGNOSTICS_DECK_COMPANION_ID),
+          DIAGNOSTICS_DECK_COMPANION_ID,
+        ),
+        component: DiagnosticsPanel,
+      }),
+    ]),
+  ),
+);

@@ -2,18 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Response from '@effect/ai/Response';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as PubSub from 'effect/PubSub';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
+import * as Response from 'effect/unstable/ai/Response';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, Model, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Operation, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -23,7 +24,7 @@ import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } f
 import { StreamSchema } from '../../util';
 
 export const GptMessage = Schema.Struct({
-  role: Schema.Union(Schema.Literal('system'), Schema.Literal('user')),
+  role: Schema.Union([Schema.Literal('system'), Schema.Literal('user')]),
   message: Schema.String,
 });
 

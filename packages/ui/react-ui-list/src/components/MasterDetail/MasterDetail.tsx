@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Column, Icon, IconBlock, IconButton, Panel, ScrollArea, type ThemedClassName, Tooltip } from '@dxos/react-ui';
@@ -35,17 +36,17 @@ export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
    * Build the row's label reactively. Run inside an atom so it can subscribe to the item's state via `get`
    * (e.g. the object's name) and update live when it changes.
    */
-  getLabel: (get: Atom.Context, item: T) => string;
+  getLabel: (get: Atom.AtomContext, item: T) => string;
   /** Build the row's leading icon reactively (colour by state, etc.); `undefined` for none. */
-  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
+  getIcon?: (get: Atom.AtomContext, item: T) => MasterDetailIcon | undefined;
   /** Build the row's trailing adornment reactively (e.g. a status badge); `undefined` for none. */
-  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
+  getAdornment?: (get: Atom.AtomContext, item: T) => MasterDetailAdornment | undefined;
   /**
    * Build the row's overflow (three-dots) menu. Run inside each row's `useMenuBuilder`, so it should
    * subscribe to that item's reactive state via `get` (e.g. an `enabled` flag) — the menu then updates
    * live without re-rendering the whole list.
    */
-  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
+  getMenu?: (get: Atom.AtomContext, item: T) => ActionGraphProps;
   /** Message shown when there are no items. */
   emptyLabel?: string;
   /**
@@ -100,9 +101,9 @@ export const MasterDetail = <T extends MasterDetailRecord>({
     // nested `MasterDetail`, or content that scrolls itself) — so nesting does not stack scroll regions.
     // `overflow-hidden` is required: a flex item only shrinks below its content's height (letting the
     // inner scroll areas engage) when its overflow is not `visible`. The caller makes this row fill its
-    // parent (`flex-1 min-bs-0`).
+    // parent (`flex-1 min-h-0`).
     return (
-      <div role='none' className={mx('flex gap-2 min-bs-0 overflow-hidden', classNames)}>
+      <div role='none' className={mx('flex gap-2 min-h-0 overflow-hidden', classNames)}>
         <Panel.Root classNames='shrink-0 w-max max-w-xs'>
           <Panel.Content asChild>
             <ScrollArea.Root orientation='vertical'>
@@ -111,7 +112,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
           </Panel.Content>
         </Panel.Root>
         <Panel.Root classNames='flex-1 min-w-0'>
-          <Panel.Content classNames='flex flex-col min-bs-0'>{detail}</Panel.Content>
+          <Panel.Content classNames='flex flex-col min-h-0'>{detail}</Panel.Content>
         </Panel.Root>
       </div>
     );
@@ -130,10 +131,10 @@ export const MasterDetail = <T extends MasterDetailRecord>({
 type MasterDetailRowProps<T extends MasterDetailRecord> = {
   item: T;
   selected: boolean;
-  getLabel: (get: Atom.Context, item: T) => string;
-  getIcon?: (get: Atom.Context, item: T) => MasterDetailIcon | undefined;
-  getAdornment?: (get: Atom.Context, item: T) => MasterDetailAdornment | undefined;
-  getMenu?: (get: Atom.Context, item: T) => ActionGraphProps;
+  getLabel: (get: Atom.AtomContext, item: T) => string;
+  getIcon?: (get: Atom.AtomContext, item: T) => MasterDetailIcon | undefined;
+  getAdornment?: (get: Atom.AtomContext, item: T) => MasterDetailAdornment | undefined;
+  getMenu?: (get: Atom.AtomContext, item: T) => ActionGraphProps;
   onSelect?: (id: string | undefined) => void;
 };
 

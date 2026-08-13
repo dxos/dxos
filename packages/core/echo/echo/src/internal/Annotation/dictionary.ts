@@ -18,7 +18,7 @@ export type Key = Schema.Schema.Type<typeof Key>;
 /**
  * Set of annotation values stored on entity meta or nested in schemas.
  */
-export const Dictionary = Schema.Record({ key: Key, value: Schema.Unknown });
+export const Dictionary = Schema.Record(Key, Schema.Unknown);
 export interface Dictionary extends Schema.Schema.Type<typeof Dictionary> {}
 
 /**

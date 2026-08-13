@@ -3,9 +3,9 @@
 //
 
 import { type Heads } from '@automerge/automerge';
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
+import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
@@ -180,7 +180,7 @@ export type EchoDatabaseProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
@@ -213,6 +213,17 @@ const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToP
  * Poll interval for feed block backlog, which has no change stream.
  */
 const FEED_SYNC_POLL_INTERVAL = 2_000;
+
+/**
+ * Ceiling for the no-change backoff below: the poll delay doubles after each tick that reports the
+ * same backlog, and resets to {@link FEED_SYNC_POLL_INTERVAL} the moment it changes.
+ */
+const MAX_FEED_SYNC_POLL_INTERVAL = 15_000;
+
+const feedSyncStateChanged = (before: SpaceFeedSyncState, after: SpaceFeedSyncState): boolean =>
+  before.blocksToPull !== after.blocksToPull ||
+  before.blocksToPush !== after.blocksToPush ||
+  before.totalBlocks !== after.totalBlocks;
 
 /**
  * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
@@ -272,7 +283,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   #feedService: FeedService.Client | undefined;
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
-  readonly #runtime: Runtime.Runtime<never>;
+  readonly #runtime: EffectContext.Context<never>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -300,6 +311,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+
+    // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
+    // that recurses through the whole entity graph and throws on the first strict-mode function it
+    // reaches. Identity is the only sensible equality here, and it is what `Atom.family(db)` wants.
+    Equal.byReferenceUnsafe(this);
   }
 
   [inspect.custom]() {
@@ -432,12 +448,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext | Type.AnyEntity): Type.AnyEntity {
-    let schema: Schema.Schema.AnyNoContext;
+  private _addPersistentSchema(schemaInput: Schema.Codec<any, any> | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Codec<any, any>;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
-      schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
+      schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
       meta =
         getTypeAnnotation(schema) ??
         ({
@@ -458,10 +474,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // Update jsonSchema with the full annotated schema.
     // TypeSchema.jsonSchema is readonly in the type but writable via change context.
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
-      schema.annotations({
+      schema.annotate({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,
-        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        ...makeTypeJsonSchemaAnnotation({
           identifier: typeId,
           kind: meta.kind,
           typename: meta.typename,
@@ -800,8 +816,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    // Feed blocks have no change stream, so poll the backend.
+    // Feed blocks have no change stream, so poll the backend. No-change backoff widens the delay
+    // while the backlog stays put (an idle space otherwise polls forever at a fixed 2 s cadence)
+    // and snaps back to FEED_SYNC_POLL_INTERVAL the moment the backlog actually moves.
     let pollInFlight = false;
+    let pollDelay = FEED_SYNC_POLL_INTERVAL;
+    let pollTimer: ReturnType<typeof setTimeout> | undefined;
     const pollFeeds = async () => {
       // Skip overlapping ticks so a slow RPC can't emit stale state after a newer poll.
       if (pollInFlight) {
@@ -811,23 +831,33 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       try {
         const next = await this.#getSpaceFeedSyncState();
         if (!cancelled) {
+          pollDelay = feedSyncStateChanged(feeds, next)
+            ? FEED_SYNC_POLL_INTERVAL
+            : Math.min(pollDelay * 2, MAX_FEED_SYNC_POLL_INTERVAL);
           feeds = next;
           emit();
         }
       } catch (error) {
         // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
+        // Reset the delay too: a failed read can't tell us the backlog is quiet, so retry promptly
+        // rather than waiting out whatever delay a prior run of no-change ticks had grown to.
+        pollDelay = FEED_SYNC_POLL_INTERVAL;
         if (!cancelled) {
           log.warn('failed to poll feed sync state', { error });
         }
       } finally {
         pollInFlight = false;
+        if (!cancelled) {
+          pollTimer = setTimeout(() => void pollFeeds(), pollDelay);
+        }
       }
     };
     void pollFeeds();
-    const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
     ctx.onDispose(() => {
       cancelled = true;
-      clearInterval(timer);
+      if (pollTimer) {
+        clearTimeout(pollTimer);
+      }
     });
 
     return () => {
@@ -844,7 +874,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
     const response = await runServiceCall(
       this.#runtime,
-      this.#feedService.FeedService.getSyncState({ spaceId: this.spaceId, namespaces: [] }),
+      this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
     );
     let blocksToPull = 0n;
     let blocksToPush = 0n;
@@ -995,6 +1025,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
     await this._entityManager.updateIndexes();
+  }
+
+  async stats(): Promise<Database.DatabaseStats> {
+    return this._entityManager.stats();
+  }
+
+  async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
+    return this._entityManager.runGarbageCollection(options);
+  }
+
+  retainObjects(keep: Iterable<string>): string[] {
+    return this._entityManager.retainObjects(keep);
   }
 
   /**

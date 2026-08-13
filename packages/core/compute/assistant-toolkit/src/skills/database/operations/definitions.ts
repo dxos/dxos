@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -63,7 +63,7 @@ export const Query = Operation.make({
   },
   input: Schema.Struct({
     in: Schema.optional(
-      Schema.Array(Ref.Ref(Obj.Unknown)).annotations({
+      Schema.Array(Ref.Ref(Obj.Unknown)).annotate({
         description:
           'Scope the query to children of specific objects (transitively). ' +
           'Use this to query items within containers such as feeds or folders. ' +
@@ -71,31 +71,31 @@ export const Query = Operation.make({
       }),
     ),
     typename: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'The typename of the objects to list.',
         example: 'org.dxos.type.task',
       }),
     ),
     text: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Full text search query.',
         example: 'email cyberdyne bob',
       }),
     ),
     includeContent: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         description: 'Include the full object data in the response.',
         default: false,
       }),
     ),
     limit: Schema.optional(
-      Schema.Number.annotations({
+      Schema.Number.annotate({
         description: 'The maximum number of results to return.',
         default: 10,
       }),
     ),
     includeQueues: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         description: 'Search in queues as well as spaces. Only use this if searching for emails.',
         default: false,
       }),
@@ -141,11 +141,17 @@ export const ObjectCreate = Operation.make({
     `,
   },
   input: Schema.Struct({
-    typename: Schema.String.annotations({
+    typename: Schema.String.annotate({
       description: 'The typename of the object to create.',
       examples: ['dxn:org.dxos.type.person'],
     }),
-    properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    properties: Schema.Record(Schema.String, Schema.Any),
+    attach: Schema.optional(Schema.Boolean).annotate({
+      description: trim`
+        Attach the object to the space root collection so it appears in the navigation tree.
+        Set for top-level objects; leave unset for subordinate objects referenced by others.
+      `,
+    }),
   }),
   output: Schema.Unknown,
   services: [Database.Service],
@@ -164,7 +170,7 @@ export const ObjectUpdate = Operation.make({
   },
   input: Schema.Struct({
     obj: Ref.Ref(Obj.Unknown),
-    properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    properties: Schema.Record(Schema.String, Schema.Any),
   }),
   output: Schema.Unknown,
   services: [Database.Service],
@@ -198,13 +204,13 @@ export const SchemaAdd = Operation.make({
   },
   input: Schema.Struct({
     name: Schema.String,
-    typename: Schema.String.annotations({
+    typename: Schema.String.annotate({
       description: 'The typename of the schema in the format of "com.example.type.type".',
     }),
     // Typed as a record so the tool parameter advertises `type: object` to the LLM, forcing it to
     // emit the JSON Schema as an object rather than a JSON-encoded string (which an unconstrained
     // `Schema.Any` parameter would allow, breaking `makeObjectFromJsonSchema`).
-    jsonSchema: Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+    jsonSchema: Schema.Record(Schema.String, Schema.Any).annotate({
       description: 'The JSON Schema (draft-07) object describing the fields of the new type.',
     }),
   }),
@@ -239,7 +245,7 @@ export const ContextAdd = Operation.make({
     `,
   },
   input: Schema.Struct({
-    obj: Ref.Ref(Obj.Unknown).annotations({
+    obj: Ref.Ref(Obj.Unknown).annotate({
       description: 'Object to add to the chat context.',
     }),
   }),
@@ -258,7 +264,7 @@ export const ContextRemove = Operation.make({
     `,
   },
   input: Schema.Struct({
-    obj: Ref.Ref(Obj.Unknown).annotations({
+    obj: Ref.Ref(Obj.Unknown).annotate({
       description: 'Object to remove from the chat context.',
     }),
   }),
@@ -280,7 +286,7 @@ export const RelationCreate = Operation.make({
     typename: Schema.String,
     source: Ref.Ref(Obj.Unknown),
     target: Ref.Ref(Obj.Unknown),
-    properties: Schema.Any.annotations({
+    properties: Schema.Any.annotate({
       description: 'The data to be stored in the relation.',
     }),
   }),

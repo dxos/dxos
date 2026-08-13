@@ -36,7 +36,7 @@ export const DiagramNode = ({ data, selected }: DiagramNodeProps) => {
     <>
       <div
         className={mx(
-          'flex flex-col w-full h-full overflow-hidden rounded-sm border bg-baseSurface',
+          'flex flex-col w-full h-full overflow-hidden rounded-sm border bg-base-surface',
           selected ? 'border-primary-500 ring-1 ring-primary-500' : 'border-separator',
         )}
       >

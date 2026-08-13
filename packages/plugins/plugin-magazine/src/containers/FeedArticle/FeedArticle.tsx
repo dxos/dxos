@@ -12,8 +12,7 @@ import { Panel } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';
-import { FeedOperation } from '#types';
-import { Subscription } from '#types';
+import { FeedOperation, Subscription } from '#types';
 
 import { FeedToolbar } from './FeedToolbar';
 
@@ -53,7 +52,7 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
   }, [subject, invokePromise]);
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <FeedToolbar attendableId={attendableId} onSync={handleSync} />
       <Panel.Content asChild>
         <PostStack

@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { VideoOperation } from '../types';
+import { VideoOperation } from '#types';
+
 import { fetchPage, parseYouTubeDescription } from '../util';
 
 const handler: Operation.WithHandler<typeof VideoOperation.FetchDescription> = VideoOperation.FetchDescription.pipe(

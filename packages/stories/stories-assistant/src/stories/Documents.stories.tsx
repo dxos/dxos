@@ -6,11 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
-import { Script, Skill, Template } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantSkill } from '@dxos/plugin-assistant';
-import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
+import { MarkdownSkill } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { CommentSkill } from '@dxos/plugin-review/skills';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
@@ -18,6 +21,7 @@ import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
+
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',
   render: ModuleContainer,
@@ -79,13 +83,13 @@ export const WithMarkdown: Story = {
       // SpacePlugin contributes the `versioning-state` capability that the Comments article surface
       // (and the versioning UI) reads; without it the story throws "No capability found".
       // ReviewPlugin contributes the `history` companion surface the HistoryModule renders into.
-      const [{ MarkdownPlugin }, { ReviewPlugin }, { SpacePlugin }] = await Promise.all([
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-review/plugin'),
-        import('@dxos/plugin-space/plugin'),
+      const [MarkdownPlugin, ReviewPlugin, SpacePlugin] = await Promise.all([
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-review/ReviewPlugin'),
+        import('@dxos/plugin-space/SpacePlugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), ReviewPlugin(), SpacePlugin({})],
+        plugins: [MarkdownPlugin.make(), ReviewPlugin.make(), SpacePlugin.make({})],
       };
     },
     onInit: async ({ space }) => {
@@ -143,13 +147,13 @@ const submitPrompt = async (canvasElement: HTMLElement, prompt: string) => {
 export const WithSkills: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-table/plugin'),
+      const [InboxPlugin, MarkdownPlugin, TablePlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-table/TablePlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
+        plugins: [InboxPlugin.make(), MarkdownPlugin.make(), TablePlugin.make()],
       };
     },
     onInit: async ({ space }) => {
@@ -174,12 +178,12 @@ export const WithSkills: Story = {
 export const WithScript: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ MarkdownPlugin }, { ScriptPlugin }] = await Promise.all([
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-script/plugin'),
+      const [MarkdownPlugin, ScriptPlugin] = await Promise.all([
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-script/ScriptPlugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), ScriptPlugin()],
+        plugins: [MarkdownPlugin.make(), ScriptPlugin.make()],
       };
     },
     types: [Script.Script, Text.Text],

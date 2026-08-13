@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -30,12 +30,12 @@ export const Read = Operation.make({
     `,
   },
   input: Schema.Struct({
-    score: Ref.Ref(Score.Score).annotations({
+    score: Ref.Ref(Score.Score).annotate({
       description: 'The Score to read.',
     }),
   }),
   output: Schema.Struct({
-    text: Schema.String.annotations({
+    text: Schema.String.annotate({
       description: 'Lead-sheet text representation of the Score.',
     }),
   }),
@@ -61,18 +61,18 @@ export const Write = Operation.make({
     `,
   },
   input: Schema.Struct({
-    score: Ref.Ref(Score.Score).annotations({
+    score: Ref.Ref(Score.Score).annotate({
       description: 'The Score to write to.',
     }),
-    text: Schema.String.annotations({
+    text: Schema.String.annotate({
       description: 'Lead-sheet text to apply. Same format produced by Read.',
     }),
   }),
   output: Schema.Struct({
-    tracks: Schema.Number.annotations({
+    tracks: Schema.Number.annotate({
       description: 'Number of tracks in the resulting Score.',
     }),
-    notes: Schema.Number.annotations({
+    notes: Schema.Number.annotate({
       description: 'Total number of notes across all sequences.',
     }),
   }),

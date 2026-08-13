@@ -46,6 +46,18 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/extractor"
+    },
+    {
+      "path": "../../core/compute/extractor-lib"
+    },
+    {
+      "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/pipeline"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -56,6 +68,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -76,19 +91,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-list"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-inbox"

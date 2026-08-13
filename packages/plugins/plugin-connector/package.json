@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-connector",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Composer plugin for managing external service integrations (access tokens + sync targets).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -49,14 +49,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ConnectorPlugin.workerd.ts",
-        "node": "./src/ConnectorPlugin.node.ts",
-        "default": "./src/ConnectorPlugin.ts"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
       },
-      "types": "./dist/types/src/ConnectorPlugin.d.ts",
-      "workerd": "./dist/lib/ConnectorPlugin.workerd.mjs",
-      "node": "./dist/lib/ConnectorPlugin.node.mjs",
-      "default": "./dist/lib/ConnectorPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -81,23 +81,74 @@
       "types": "./dist/types/src/components/index.d.ts",
       "import": "./dist/lib/components.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./ConnectorAnnotations": {
+      "source": "./src/types/ConnectorAnnotations.ts",
+      "types": "./dist/types/src/types/ConnectorAnnotations.d.ts",
+      "import": "./dist/lib/ConnectorAnnotations.mjs"
+    },
+    "./ConnectorCoordination": {
+      "source": "./src/types/ConnectorCoordination.ts",
+      "types": "./dist/types/src/types/ConnectorCoordination.d.ts",
+      "import": "./dist/lib/ConnectorCoordination.mjs"
+    },
+    "./ConnectorEvents": {
+      "source": "./src/types/ConnectorEvents.ts",
+      "types": "./dist/types/src/types/ConnectorEvents.d.ts",
+      "import": "./dist/lib/ConnectorEvents.mjs"
+    },
+    "./ConnectorForm": {
+      "source": "./src/types/ConnectorForm.ts",
+      "types": "./dist/types/src/types/ConnectorForm.d.ts",
+      "import": "./dist/lib/ConnectorForm.mjs"
+    },
+    "./ConnectorOperation": {
+      "source": "./src/types/ConnectorOperation.ts",
+      "types": "./dist/types/src/types/ConnectorOperation.d.ts",
+      "import": "./dist/lib/ConnectorOperation.mjs"
+    },
+    "./ConnectorPlugin": {
+      "source": "./src/ConnectorPlugin.ts",
+      "types": "./dist/types/src/ConnectorPlugin.d.ts",
+      "import": "./dist/lib/ConnectorPlugin.mjs"
+    },
+    "./ConnectorSpec": {
+      "source": "./src/types/ConnectorSpec.ts",
+      "types": "./dist/types/src/types/ConnectorSpec.d.ts",
+      "import": "./dist/lib/ConnectorSpec.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Connection": [
+        "dist/types/src/types/Connection.d.ts"
+      ],
+      "ConnectorAnnotations": [
+        "dist/types/src/types/ConnectorAnnotations.d.ts"
+      ],
+      "ConnectorCoordination": [
+        "dist/types/src/types/ConnectorCoordination.d.ts"
+      ],
+      "ConnectorEvents": [
+        "dist/types/src/types/ConnectorEvents.d.ts"
+      ],
+      "ConnectorForm": [
+        "dist/types/src/types/ConnectorForm.d.ts"
+      ],
+      "ConnectorOperation": [
+        "dist/types/src/types/ConnectorOperation.d.ts"
+      ],
+      "ConnectorSpec": [
+        "dist/types/src/types/ConnectorSpec.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -106,11 +157,11 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
@@ -123,39 +174,25 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/pipeline": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/cli": "catalog:",
-    "@effect/platform-bun": "catalog:",
-    "@tauri-apps/api": "catalog:",
-    "@tauri-apps/plugin-opener": "catalog:",
-    "@tauri-apps/plugin-os": "catalog:",
-    "get-port-please": "catalog:",
-    "tauri-plugin-web-auth-api": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
-    "@dxos/echo-generator": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -166,8 +203,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

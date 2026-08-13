@@ -3,9 +3,9 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 'react';
+import React, { type KeyboardEvent, useCallback, useState } from 'react';
 
-import { Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Popover, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 
@@ -18,7 +18,7 @@ export type ObjectPickerContentProps = ThemedClassName<
   CreateOptions & {
     options: RefOption[];
     selectedIds?: string[];
-    createSchema?: Schema.Schema.AnyNoContext;
+    createSchema?: Schema.Codec<any, any>;
     /**
      * Persist a newly-created object given the form values. May be async (e.g.
      * to write to a database). The Promise is awaited before the inline create
@@ -31,7 +31,7 @@ export type ObjectPickerContentProps = ThemedClassName<
   }
 >;
 
-const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>(
+const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>(
   (
     {
       options,

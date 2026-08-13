@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { type Database, Ref } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { type Connection, type ConnectorEntry, ConnectorOperation } from '#types';
+import { ConnectorOperation, ConnectorSpec } from '#types';
 
 /**
  * Run the first sync for a connection whose initial sync targets were just bound, so a new
@@ -23,7 +24,7 @@ import { type Connection, type ConnectorEntry, ConnectorOperation } from '#types
 export const autoSyncConnection = (
   invoker: Operation.OperationService,
   db: Database.Database,
-  connector: ConnectorEntry,
+  connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
 ): Effect.Effect<void, never> => {
   if (!connector.sync?.auto) {
@@ -33,11 +34,11 @@ export const autoSyncConnection = (
   return invoker
     .invoke(ConnectorOperation.SyncConnection, { connection: Ref.make(connection) }, { spaceId: db.spaceId })
     .pipe(
-      Effect.catchAll((error) => Effect.sync(() => log.warn('auto sync failed', { connectorId: connector.id, error }))),
-      Effect.catchAllDefect((defect) =>
+      Effect.catch((error) => Effect.sync(() => log.warn('auto sync failed', { connectorId: connector.id, error }))),
+      Effect.catchDefect((defect) =>
         Effect.sync(() => log.warn('auto sync defect', { connectorId: connector.id, defect })),
       ),
-      Effect.forkDaemon,
+      Effect.forkDetach,
       Effect.asVoid,
     );
 };

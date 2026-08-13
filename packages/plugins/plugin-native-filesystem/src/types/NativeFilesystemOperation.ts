@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -22,7 +22,7 @@ export const OpenDirectory = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Void,
-  output: Schema.Union(Schema.Void, Schema.Struct({ id: Schema.String, subject: Schema.Array(Schema.String) })),
+  output: Schema.Union([Schema.Void, Schema.Struct({ id: Schema.String, subject: Schema.Array(Schema.String) })]),
 });
 
 export const CloseDirectory = Operation.make({

@@ -6,11 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { DXN } from '@dxos/keys';
 import { ExtractedQuestionStore, MessageStore, QuestionStore } from '@dxos/pipeline-discord';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 /**
  * The crawler-only stores the Discord pipeline needs beyond `FactStore` — which `BrainPlugin` owns
@@ -27,7 +29,11 @@ const crawlerStoresLayer = (): Layer.Layer<CrawlerStoreServices> =>
     MessageStore.layerSql,
     QuestionStore.layerSql,
     ExtractedQuestionStore.layerSql,
-  ).pipe(Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)));
+  ).pipe(
+    // Store migrations run inside the SqlTransaction service; derive it from the same client.
+    Layer.provide(SqlTransaction.layer),
+    Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)),
+  );
 
 /**
  * A long-lived runtime over the crawler stores. Modules run a crawl program through it after
@@ -38,12 +44,12 @@ const crawlerStoresLayer = (): Layer.Layer<CrawlerStoreServices> =>
 export type CrawlerStoresRuntime = ManagedRuntime.ManagedRuntime<CrawlerStoreServices, never>;
 
 /** Capability exposing the shared crawler-stores runtime to Facts-story modules. */
-export const CrawlerStores = Capability.make<CrawlerStoresRuntime>('org.dxos.stories.brain.crawlerStores');
+export const CrawlerStores = Capability.makeSingleton<CrawlerStoresRuntime>()('org.dxos.stories.brain.crawlerStores');
 
 const CrawlerStoresModule = Capability.makeModule(
   Effect.fnUntraced(function* () {
     const runtime = ManagedRuntime.make(crawlerStoresLayer());
-    return [Capability.contributes(CrawlerStores, runtime)];
+    return Capability.contribute(CrawlerStores, runtime);
   }),
 );
 
@@ -53,7 +59,7 @@ export const CrawlerStoresPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'crawler-stores',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    provides: [CrawlerStores],
     activate: CrawlerStoresModule,
   }),
   Plugin.make,

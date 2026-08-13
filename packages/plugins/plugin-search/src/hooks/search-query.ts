@@ -3,9 +3,8 @@
 //
 
 import { Entity, Filter, Obj, Query } from '@dxos/echo';
+import { type SearchResult } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
-
-import { type SearchResult } from '#types';
 
 import { getIcon, mapObjectToTextFields } from './sync';
 

@@ -12,9 +12,9 @@ import { test } from 'vitest';
 
 import { runAndForwardErrors } from './internal/errors';
 
-class ClientConfig extends Context.Tag('ClientConfig')<ClientConfig, { endpoint: string }>() {}
+class ClientConfig extends Context.Service<ClientConfig, { endpoint: string }>()('ClientConfig') {}
 
-class Client extends Context.Tag('Client')<Client, { call: () => Effect.Effect<void> }>() {
+class Client extends Context.Service<Client, { call: () => Effect.Effect<void> }>()('Client') {
   static layer = Layer.effect(
     Client,
     Effect.gen(function* () {
@@ -29,7 +29,7 @@ class Client extends Context.Tag('Client')<Client, { call: () => Effect.Effect<v
   );
 }
 
-const ServerLive = Layer.scoped(
+const ServerLive = Layer.effect(
   ClientConfig,
   Effect.gen(function* () {
     console.log('start server');
@@ -64,7 +64,7 @@ class ServerPlugin {
   #runtime = ManagedRuntime.make(ServerLive);
 
   readonly clientConfigLayer = Layer.effectContext(
-    this.#runtime.runtimeEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(ClientConfig)))),
+    this.#runtime.contextEffect.pipe(Effect.map((context) => Context.pick(ClientConfig)(context))),
   );
 
   async dispose() {

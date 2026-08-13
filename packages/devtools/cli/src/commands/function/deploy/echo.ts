@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import path from 'node:path';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { CommandConfig } from '@dxos/cli-util';
 import { type Space } from '@dxos/client/echo';
-import { Operation, Script } from '@dxos/compute';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { Annotation, Collection, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { incrementSemverPatch } from '@dxos/edge-compute';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';

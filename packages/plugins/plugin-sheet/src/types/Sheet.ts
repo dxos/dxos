@@ -6,13 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
-import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula/types';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation } from '@dxos/schema';
 
-import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
+import { addressToIndex, initialize, mapFormulaRefsToIndices } from './SheetUtil';
 
 export const SKILL_KEY = 'org.dxos.skill.sheet';
 
@@ -51,7 +51,7 @@ export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet'
     name: Schema.optional(Schema.String),
 
     // Sparse map of cells referenced by index.
-    cells: Schema.Record({ key: Schema.String, value: CellValue }).pipe(FormInputAnnotation.set(false)),
+    cells: Schema.Record(Schema.String, CellValue).pipe(FormInputAnnotation.set(false)),
 
     // Ordered row indices.
     rows: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
@@ -60,10 +60,10 @@ export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet'
     columns: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
 
     // Row metadata referenced by index.
-    rowMeta: Schema.Record({ key: Schema.String, value: RowColumnMeta }).pipe(FormInputAnnotation.set(false)),
+    rowMeta: Schema.Record(Schema.String, RowColumnMeta).pipe(FormInputAnnotation.set(false)),
 
     // Column metadata referenced by index.
-    columnMeta: Schema.Record({ key: Schema.String, value: RowColumnMeta }).pipe(FormInputAnnotation.set(false)),
+    columnMeta: Schema.Record(Schema.String, RowColumnMeta).pipe(FormInputAnnotation.set(false)),
 
     // Cell formatting referenced by indexed range.
     ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),

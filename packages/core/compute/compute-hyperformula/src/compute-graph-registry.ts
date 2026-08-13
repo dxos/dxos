@@ -6,7 +6,7 @@ import type * as Effect from 'effect/Effect';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type Space } from '@dxos/client/echo';
-import type { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';

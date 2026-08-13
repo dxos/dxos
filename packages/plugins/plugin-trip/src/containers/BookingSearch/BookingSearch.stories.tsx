@@ -6,23 +6,24 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { Booking, type BookingSearch as BookingSearchType, Segment, Trip, TripCapabilities } from '#types';
+import { Booking, BookingSearch, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
-import { BookingSearch } from './BookingSearch';
+import { BookingSearch as BookingSearchComponent } from './BookingSearch';
 
-const STUB_OFFER: BookingSearchType.FlightOffer = {
+const STUB_OFFER: BookingSearch.FlightOffer = {
   _tag: 'flight' as const,
   id: 'off_stub',
   provider: 'stub',
@@ -33,7 +34,7 @@ const STUB_OFFER: BookingSearchType.FlightOffer = {
   slices: [{ origin: { code: 'JFK', name: 'New York' }, destination: { code: 'LHR', name: 'London' }, number: 'SA1' }],
 };
 
-const STUB_SERVICE: BookingSearchType.BookingService = {
+const STUB_SERVICE: BookingSearch.BookingService = {
   id: 'stub',
   label: 'Stub Air',
   kinds: ['flight'],
@@ -49,8 +50,8 @@ const StubBookingPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'stub-booking-service',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(TripCapabilities.BookingService, STUB_SERVICE)),
+    provides: [TripCapabilities.BookingService],
+    activate: () => Effect.succeed([Capability.contribute(TripCapabilities.BookingService, STUB_SERVICE)]),
   }),
   Plugin.make,
 );
@@ -64,7 +65,7 @@ const DefaultStory = () => {
     return <Loading data={{ space: !!space, db: !!space?.db, segment: !!segment }} />;
   }
 
-  return <BookingSearch segment={segment} />;
+  return <BookingSearchComponent segment={segment} />;
 };
 
 const meta = {
@@ -74,19 +75,18 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Trip.Trip, Segment.Segment, Booking.Booking],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(Segment.makeDefault('flight'));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              defaultSpace.db.add(Segment.makeDefault('flight'));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         TripPlugin(),
         StubBookingPlugin(),
       ],

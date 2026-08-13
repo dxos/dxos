@@ -18,7 +18,8 @@ import {
   nextIndex,
 } from '@dxos/plugin-illustrator/model';
 
-import { Excalidraw } from '../types';
+import { Excalidraw } from '#types';
+
 import { readScene } from './read';
 import { rebind, renderObject } from './render';
 

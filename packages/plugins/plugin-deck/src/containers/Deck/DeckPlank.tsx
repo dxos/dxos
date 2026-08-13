@@ -6,14 +6,14 @@ import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
-import { type ResolvedPart } from '#types';
+import { DeckSchema } from '#types';
 
 import { CompanionPlank } from './CompanionPlank';
 import { PlankControls } from './PlankControls';
@@ -24,7 +24,7 @@ const PLANK_LOADING = <PlankLoading />;
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;
-  part: ResolvedPart;
+  part: DeckSchema.ResolvedPart;
   /** Whether this plank is displayed fullscreen (headless, no chrome). */
   fullscreen?: boolean;
   /** The real active planks (excludes the derived companion plank), for ordering/close semantics. */
@@ -54,8 +54,17 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   const { findFirstFocusable } = useFocusFinders();
   const { invokePromise } = useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
-  const { node, capabilities, sigilActions, popoverAnchorId, scrollIntoView, onAction, onAdjust, onScrollIntoView } =
-    useDeckPlank({ id, part, active });
+  const {
+    node,
+    capabilities,
+    sigilActions,
+    popoverAnchorId,
+    scrollIntoView,
+    expanded,
+    onAction,
+    onAdjust,
+    onScrollIntoView,
+  } = useDeckPlank({ id, part, active });
 
   // In flat mode only the current (last) plank renders; its predecessors in the stack become
   // breadcrumbs in the heading. Clicking one drops the planks after it (go back), reusing Close.
@@ -114,6 +123,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     <PlankControls
       capabilities={capabilities}
       fullscreen={fullscreen}
+      expanded={expanded}
       close={part === 'complementary' ? 'minify-end' : true}
       onClick={onAdjust}
     />

@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
-import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as Statement from 'effect/unstable/sql/Statement';
 
 import {
   ATTR_DELETED,
@@ -17,7 +18,10 @@ import {
   ATTR_TYPE,
 } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta';
+import { SQL_CHUNK_SIZE, chunkArray } from '../utils';
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
 
@@ -125,55 +129,20 @@ const buildSourceCondition = (
 const QUERY_CHUNK_SIZE = 500;
 
 export class EntityMetaIndex implements Index {
-  migrate = Effect.fn('EntityMetaIndex.runMigrations')(function* () {
-    const sql = yield* SqlClient.SqlClient;
-
-    // Rows indexed by a build before `naturalKey` hold NULL where a key may exist in the
-    // document, and re-indexing is per-object — an unchanged object would never repopulate, so
-    // duplicate detection would silently miss it forever. The backfill is driven by index-name
-    // versioning: the driving cursor names were bumped (`fts5` -> `fts6`, `reverseRef` ->
-    // `reverseRef2`, see `DEPRECATED_INDEX_NAMES` in `index-tracker.ts`), so upgraded databases
-    // re-present every document to the new names and the ALTER below only has to add the column.
-    yield* sql`CREATE TABLE IF NOT EXISTS objectMeta (
-      recordId INTEGER PRIMARY KEY AUTOINCREMENT,
-      objectId TEXT NOT NULL,
-      queueId TEXT NOT NULL DEFAULT '',
-      queueNamespace TEXT NOT NULL DEFAULT '',
-      spaceId TEXT NOT NULL,
-      documentId TEXT NOT NULL DEFAULT '',
-      entityKind TEXT NOT NULL,
-      typeDXN TEXT NOT NULL,
-      deleted INTEGER NOT NULL,
-      source TEXT,
-      target TEXT,
-      parent TEXT,
-      naturalKey TEXT,
-      version INTEGER NOT NULL,
-      createdAt INTEGER,
-      updatedAt INTEGER
-    )`;
-
-    // Add `parent` column for tables created before it was introduced.
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
-    // Add `naturalKey` column for tables created before it was introduced.
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN naturalKey TEXT`, () => Effect.void);
-    // Add timestamp columns for tables created before they were introduced.
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
-    // Add queueNamespace column for tables created before it was introduced.
-    yield* Effect.catchAll(
-      sql`ALTER TABLE objectMeta ADD COLUMN queueNamespace TEXT NOT NULL DEFAULT ''`,
-      () => Effect.void,
-    );
-
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDXN ON objectMeta(spaceId, typeDXN)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_naturalKey ON objectMeta(spaceId, naturalKey)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_createdAt ON objectMeta(createdAt)`;
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  migrate = Effect.fn('EntityMetaIndex.runMigrations')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+    ),
+  );
 
   /**
    * Document-backed object rows carrying any of the given natural keys in one space.
@@ -527,6 +496,53 @@ export class EntityMetaIndex implements Index {
           ...row,
           deleted: !!row.deleted,
         }));
+      }),
+  );
+
+  /**
+   * Record ids of rows belonging to whole documents or specific objects — the set garbage
+   * collection reclaims across the dependent indexes.
+   */
+  selectRecordIdsForRemoval = Effect.fn('EntityMetaIndex.selectRecordIdsForRemoval')(
+    (query: {
+      spaceId: SpaceId;
+      documentIds: readonly string[];
+      objects: readonly { documentId: string; objectId: string }[];
+    }): Effect.Effect<number[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const recordIds = new Set<number>();
+
+        for (const chunk of chunkArray(query.documentIds)) {
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND ${sql.in('documentId', chunk)}`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
+
+        // Two bound variables per object; keep chunks under the SQLite limit.
+        for (const chunk of chunkArray(query.objects, Math.floor(SQL_CHUNK_SIZE / 2))) {
+          const conditions = chunk.map(
+            (object) => sql`(documentId = ${object.documentId} AND objectId = ${object.objectId})`,
+          );
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${sql.or(conditions)})`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
+
+        return [...recordIds];
+      }),
+  );
+
+  /** Delete metadata rows by record id. */
+  deleteByRecordIds = Effect.fn('EntityMetaIndex.deleteByRecordIds')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(recordIds)) {
+          yield* sql`DELETE FROM objectMeta WHERE ${sql.in('recordId', chunk)}`;
+        }
       }),
   );
 

@@ -4,13 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
-import { Graph, Node } from '@dxos/plugin-graph';
 
-import { DeckCapabilities, defaultDeck } from '../types';
+import { DeckCapabilities, DeckSchema } from '#types';
+
+import { openableChildren } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
@@ -26,7 +30,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
           const newDecks = state.decks[input.subject]
             ? state.decks
-            : { ...state.decks, [input.subject]: { ...defaultDeck } };
+            : { ...state.decks, [input.subject]: { ...DeckSchema.defaultDeck } };
           return {
             ...state,
             previousDeck: shouldUpdatePrevious ? state.activeDeck : state.previousDeck,
@@ -51,9 +55,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         if (first) {
           yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
         } else {
-          const [item] = Graph.getConnections(graph, input.subject, 'child').filter(
-            (node) => !Node.isActionLike(node) && !node.properties.disposition,
-          );
+          const [item] = openableChildren(graph, input.subject);
           if (item) {
             // Use `invoke` (synchronous) rather than `schedule` (fire-and-forget) so
             // that the implicit "open first child" finishes BEFORE this handler
@@ -61,7 +63,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
             // own `Open` (e.g. WelcomePlugin DefaultContent) has its `active`
             // clobbered by this scheduled Open when it later races behind the
             // caller's state writes.
-            yield* Operation.invoke(LayoutOperation.Open, { subject: [item.id] });
+            yield* Operation.invoke(LayoutOperation.Open, { subject: [item] });
           }
         }
       }

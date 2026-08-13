@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-presenter",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Braneframe presenter plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,14 +40,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/PresenterPlugin.workerd.ts",
-        "node": "./src/PresenterPlugin.node.ts",
-        "default": "./src/PresenterPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/PresenterPlugin.d.ts",
-      "workerd": "./dist/lib/PresenterPlugin.workerd.mjs",
-      "node": "./dist/lib/PresenterPlugin.node.mjs",
-      "default": "./dist/lib/PresenterPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": "./src/testing.ts",
     "#translations": {
@@ -68,18 +68,63 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./Presenter": {
+      "source": "./src/types/Presenter.ts",
+      "types": "./dist/types/src/types/Presenter.d.ts",
+      "import": "./dist/lib/Presenter.mjs"
+    },
+    "./PresenterCapabilities": {
+      "source": "./src/types/PresenterCapabilities.ts",
+      "types": "./dist/types/src/types/PresenterCapabilities.d.ts",
+      "import": "./dist/lib/PresenterCapabilities.mjs"
+    },
+    "./PresenterEvents": {
+      "source": "./src/types/PresenterEvents.ts",
+      "types": "./dist/types/src/types/PresenterEvents.d.ts",
+      "import": "./dist/lib/PresenterEvents.mjs"
+    },
+    "./PresenterOperation": {
+      "source": "./src/types/PresenterOperation.ts",
+      "types": "./dist/types/src/types/PresenterOperation.d.ts",
+      "import": "./dist/lib/PresenterOperation.mjs"
+    },
+    "./PresenterPlugin": {
+      "source": "./src/PresenterPlugin.ts",
+      "types": "./dist/types/src/PresenterPlugin.d.ts",
+      "import": "./dist/lib/PresenterPlugin.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Presenter": [
+        "dist/types/src/types/Presenter.d.ts"
+      ],
+      "PresenterCapabilities": [
+        "dist/types/src/types/PresenterCapabilities.d.ts"
+      ],
+      "PresenterEvents": [
+        "dist/types/src/types/PresenterEvents.d.ts"
+      ],
+      "PresenterOperation": [
+        "dist/types/src/types/PresenterOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -89,21 +134,17 @@
   "dependencies": {
     "@codemirror/state": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "hastscript": "catalog:",
     "highlight.js": "catalog:",
     "marked": "catalog:",
@@ -117,12 +158,10 @@
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/reveal.js": "catalog:",
@@ -134,8 +173,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

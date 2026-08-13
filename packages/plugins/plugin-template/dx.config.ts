@@ -16,5 +16,6 @@ export default Config2.make({
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-template',
     icon: { key: 'ph--asterisk--regular', hue: 'sky' },
+    tags: ['labs'],
   },
 });

@@ -4,17 +4,18 @@
 
 // @import-as-namespace
 
-import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as Context from 'effect/Context';
 import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import type * as Runtime from 'effect/Runtime';
 import type * as Scope from 'effect/Scope';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
-import { LayerSpec, Process, ServiceNotAvailableError } from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Process from '@dxos/compute/Process';
 import { Annotation, Database, EID, Feed, Filter, Obj, type URI } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
@@ -42,7 +43,7 @@ export interface Service {
  *
  * Replaces AiContextService and AiSessionService.
  */
-export class HarnessService extends Context.Tag('@dxos/assistant/HarnessService')<HarnessService, Service>() {}
+export class HarnessService extends Context.Service<HarnessService, Service>()('@dxos/assistant/HarnessService') {}
 
 /**
  * Acess current context binder.
@@ -119,7 +120,7 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
     provides: [HarnessService],
   },
   (context) =>
-    Layer.scoped(
+    Layer.effect(
       HarnessService,
       Effect.gen(function* () {
         if (!context.conversation) {
@@ -134,7 +135,7 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
         }
         const conversation = context.conversation;
         const processManager = yield* ProcessManager.Service;
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         return yield* make({ conversation, processManager, runtime });
       }),
     ),
@@ -142,8 +143,8 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
 
 interface MakeOptions {
   conversation: URI.URI;
-  processManager: Context.Tag.Service<ProcessManager.Service>;
-  runtime: Runtime.Runtime<Database.Service>;
+  processManager: Context.Service.Shape<typeof ProcessManager.Service>;
+  runtime: Context.Context<Database.Service>;
 }
 
 /**
@@ -173,7 +174,7 @@ export const make = ({
 
 interface FromBinderOptions {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Database.Service>;
+  runtime: Context.Context<Database.Service>;
   binder: AiContext.Binder;
 }
 
@@ -187,7 +188,7 @@ export const fromBinder = ({ feed, runtime, binder }: FromBinderOptions): Servic
 
 interface MakeServiceOptions {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Database.Service>;
+  runtime: Context.Context<Database.Service>;
   binder: AiContext.Binder;
   owningHost: Effect.Effect<RpcClient.RpcClient<HarnessControlRpcs>, NotSupportedError>;
 }
@@ -213,7 +214,7 @@ const makeService = ({ feed, runtime, binder, owningHost }: MakeServiceOptions):
  * switch — is never captured stale) and exposes its `HarnessControl` RPC client.
  */
 const lookupOwningHost = (
-  processManager: Context.Tag.Service<ProcessManager.Service>,
+  processManager: Context.Service.Shape<typeof ProcessManager.Service>,
   conversation: URI.URI,
 ): Effect.Effect<RpcClient.RpcClient<HarnessControlRpcs>, NotSupportedError> =>
   Effect.gen(function* () {

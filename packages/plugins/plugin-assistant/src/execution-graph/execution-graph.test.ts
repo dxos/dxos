@@ -7,7 +7,9 @@ import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, Trace } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { EntityId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
@@ -903,6 +905,85 @@ describe('buildExecutionGraph scenarios', () => {
       ●  [function] Lost - Error
       "
     `);
+  });
+
+  /**
+   * A `RunAgainError` (Operation.runAgain) is recorded as a `failure` tagged with the run-again error
+   * code. The UI detects this and presents it as a warn-level ` - Incomplete` state, never as an error.
+   */
+  test('run-again failure renders as a warn-level incomplete commit, not an error', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'sync', name: 'Sync Google Mail' });
+          yield* Trace.write(Trace.OperationEnd, {
+            key: 'sync',
+            name: 'Sync Google Mail',
+            outcome: 'failure',
+            error: 'Run again',
+            errorCode: RUN_AGAIN_ERROR_CODE,
+          });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    const endCommit = commits.find((commit) => commit.id.endsWith('sync:end'));
+    expect(endCommit?.message).toBe('Sync Google Mail - Incomplete');
+    expect(endCommit?.level).toBe(LogLevel.WARN);
+  });
+
+  /**
+   * Legacy events persisted before `errorCode` existed carry only the run-again message. They must
+   * still render as incomplete via the message fallback.
+   */
+  test('legacy run-again failure (message only, no errorCode) renders as incomplete', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'sync', name: 'Sync Google Mail' });
+          yield* Trace.write(Trace.OperationEnd, {
+            key: 'sync',
+            name: 'Sync Google Mail',
+            outcome: 'failure',
+            error: RUN_AGAIN_MESSAGE,
+          });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    const endCommit = commits.find((commit) => commit.id.endsWith('sync:end'));
+    expect(endCommit?.message).toBe('Sync Google Mail - Incomplete');
+    expect(endCommit?.level).toBe(LogLevel.WARN);
+  });
+
+  /**
+   * A genuine operation failure (any error code other than the run-again one) still renders as an error.
+   */
+  test('non-run-again failure still renders as an error commit', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'sync', name: 'Sync Google Mail' });
+          yield* Trace.write(Trace.OperationEnd, {
+            key: 'sync',
+            name: 'Sync Google Mail',
+            outcome: 'failure',
+            error: 'Network unavailable',
+            errorCode: 'NetworkError',
+          });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    const endCommit = commits.find((commit) => commit.id.endsWith('sync:end'));
+    expect(endCommit?.message).toBe('Sync Google Mail - Error');
+    expect(endCommit?.level).toBe(LogLevel.ERROR);
   });
 });
 

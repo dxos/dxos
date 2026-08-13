@@ -2,5 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { PaymentsPlugin } from './plugin';
-export { meta } from './meta';
+export * as PaymentsPlugin from './PaymentsPlugin';
+export * from '#types';
+export { meta } from '#meta';

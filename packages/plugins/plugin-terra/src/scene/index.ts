@@ -3,6 +3,7 @@
 //
 
 export * from './chase-camera';
+export * from './explosion-layer';
 export * from './gizmo-layer';
 export * from './object-forms';
 export * from './object-layer';

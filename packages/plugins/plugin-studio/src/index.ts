@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
-export * from './operations';
-export * from './types';
+export * as StudioPlugin from './StudioPlugin';
+export * from '#meta';
+export * from '#operations';
+export * from '#types';

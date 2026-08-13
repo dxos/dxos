@@ -6,14 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref, Type } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 
 import { meta } from '#meta';
-
-import * as Connection from './Connection';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -52,10 +50,10 @@ export const CreateConnection = Operation.make({
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
-    accessToken: Ref.Ref(AccessToken.AccessToken).annotations({
+    accessToken: Ref.Ref(AccessToken.AccessToken).annotate({
       description: 'The access token this Connection uses to authenticate to its service.',
     }),
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'Optional user-friendly label.',
     }).pipe(Schema.optional),
   }),

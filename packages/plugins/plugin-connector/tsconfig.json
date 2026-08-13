@@ -40,19 +40,10 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/compute/edge-compute"
@@ -64,16 +55,10 @@
       "path": "../../core/compute/operation"
     },
     {
-      "path": "../../core/compute/pipeline"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
-    },
-    {
-      "path": "../../core/echo/echo-generator"
     },
     {
       "path": "../../core/echo/echo-react"
@@ -91,6 +76,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -106,25 +94,16 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-list"
     },
     {
-      "path": "../../ui/react-ui-menu"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-routine"

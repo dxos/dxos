@@ -34,7 +34,7 @@ import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { stubParse } from '@dxos/nlp/testing';
@@ -48,15 +48,16 @@ import {
   TranscriptionPipeline,
   makeDatabaseLookup,
 } from '@dxos/pipeline-transcription';
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
-import { BrainCapabilities } from '@dxos/plugin-brain/types';
+import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -457,7 +458,7 @@ const MessageList = ({
       return (
         <div
           key={message.id}
-          className='flex flex-col bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+          className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
         >
           <span className='font-medium truncate'>{String(message.properties?.subject ?? '')}</span>
           <span className='text-sm text-description truncate'>{message.sender.email}</span>
@@ -473,7 +474,7 @@ const ThreadList = ({ result }: { result: { threads: readonly Thread[] } }) => (
     {result.threads.map((thread) => (
       <div
         key={thread.id}
-        className='flex flex-col bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+        className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
       >
         <span className='font-medium truncate'>{thread.subject}</span>
         <span className='text-sm text-description'>
@@ -509,14 +510,13 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Thread],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
               // Seed a couple of entities so the transcription pipeline has something to link against
               // and the Objects tab is populated before the email pipeline runs.
               // TODO(burdon): From const.
@@ -526,12 +526,12 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        MarkdownPlugin(),
-        TranscriptionPlugin(),
-        BrainPlugin(),
-        ProgressPlugin(),
+        MarkdownPlugin.make(),
+        TranscriptionPlugin.make(),
+        BrainPlugin.make(),
+        ProgressPlugin.make(),
         StoryModulesPlugin(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

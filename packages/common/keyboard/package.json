@@ -1,6 +1,6 @@
 {
   "name": "@dxos/keyboard",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Keyboard bindings",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -31,8 +31,8 @@
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

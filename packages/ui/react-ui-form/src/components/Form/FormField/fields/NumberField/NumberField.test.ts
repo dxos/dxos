@@ -5,16 +5,19 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { getNumericConstraints } from './NumberField';
+import { getNumericConstraints } from './numeric-constraints';
 
 describe('getNumericConstraints', () => {
   test('reads min/max from Schema.between (bounds live on separate nested refinements)', ({ expect }) => {
-    const { ast } = Schema.Number.pipe(Schema.between(0, 23));
+    const { ast } = Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 23 })));
     expect(getNumericConstraints(ast)).toEqual({ min: 0, max: 23, integer: false });
   });
 
   test('detects integer from Schema.int', ({ expect }) => {
-    const { ast } = Schema.Number.pipe(Schema.int(), Schema.between(0, 23));
+    const { ast } = Schema.Number.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isBetween({ minimum: 0, maximum: 23 })),
+    );
     expect(getNumericConstraints(ast)).toEqual({ min: 0, max: 23, integer: true });
   });
 
@@ -23,7 +26,10 @@ describe('getNumericConstraints', () => {
   });
 
   test('aggregates stacked bounds to the strictest (intersection semantics)', ({ expect }) => {
-    const { ast } = Schema.Number.pipe(Schema.greaterThanOrEqualTo(5), Schema.greaterThanOrEqualTo(10));
+    const { ast } = Schema.Number.pipe(
+      Schema.check(Schema.isGreaterThanOrEqualTo(5)),
+      Schema.check(Schema.isGreaterThanOrEqualTo(10)),
+    );
     expect(getNumericConstraints(ast)).toEqual({ min: 10, max: undefined, integer: false });
   });
 });

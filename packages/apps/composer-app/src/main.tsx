@@ -11,14 +11,18 @@ import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
-import React, { StrictMode, useCallback } from 'react';
+import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
+import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 import { bootLoader, useApp } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+// Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
+// boot path uses.
+import { EdgeHttpClient } from '@dxos/edge-client/http';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
@@ -30,7 +34,6 @@ import { defaultTx } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-import { ResetDialog } from './components';
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
 import {
   APP_KEY,
@@ -51,6 +54,10 @@ import {
   startupProfiler,
   translations,
 } from './util';
+
+// Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
+// (react-ui-form, editor, pickers) which must stay out of the static boot graph.
+const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
@@ -151,7 +158,11 @@ const main = async () => {
   // The startup profiler is on by default in dev so every devloop produces
   // a BENCHMARKS row without remembering `?profiler=1`. Production explicitly
   // opts in (or out) via the URL parameter.
-  const profilerEnabled = isTrue(url.searchParams.get(PARAM_PROFILER), Boolean(import.meta.env?.DEV));
+  // `isTrue`'s second argument is a strictness flag, not a default, so the absent-parameter
+  // case has to be handled here — passing the default through it silently disabled the dev
+  // profiler (strict mode requires the parameter, which is exactly what is missing).
+  const profilerParam = url.searchParams.get(PARAM_PROFILER);
+  const profilerEnabled = profilerParam === null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
@@ -173,7 +184,7 @@ const main = async () => {
 
   // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
   // local-disk the parser can interleave parses.
-  const [{ Config, defs, SaveConfig }, { createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
+  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
     await Promise.all([
       import('@dxos/config'),
       import('@dxos/react-client'),
@@ -402,15 +413,30 @@ const main = async () => {
   profiler?.mark('services:end');
   profiler?.measure('services', 'services:start', 'services:end');
 
+  // Started here so the handshake and storage open overlap plugin loading, which plugin-client's
+  // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
+  // has to not reject unhandled.
+  performance.mark('milestone:client-initialize:start');
+  const client = new Client({ config, services });
+  void client.initialize().catch((err) => log.catch(err));
+
   profiler?.mark('plugins:start');
 
   const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
+  // The forked `client.initialize()` runs outside the render tree: a failure or a stalled worker
+  // handshake reaches no error boundary, leaving suspended consumers spinning. Plugins raise it
+  // here, and `Main` swaps the app for the same fatal dialog the app boundary would have shown.
+  let raiseFatalError: (error: unknown) => void = (error) =>
+    log.error('client initialization failed before render', { error: String(error) });
+
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
     services,
+    client,
     observability,
     logStore,
+    onFatalError: (error) => raiseFatalError(error),
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
@@ -457,7 +483,6 @@ const main = async () => {
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
   const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
   const defaults = getDefaults(conf);
-  const setupEvents = [AppActivationEvents.SetupSettings];
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
   const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
@@ -494,14 +519,18 @@ const main = async () => {
       >
         <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
           <Tooltip.Provider>
-            <ResetDialog
-              error={error}
-              logStore={logStore}
-              observability={observability}
-              needRefresh={needRefresh}
-              onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-              onReset={import.meta.env.DEV ? handleReset : undefined}
-            />
+            {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
+                fatal-dialog boundary above, which shows the original error via ErrorFallback. */}
+            <Suspense fallback={null}>
+              <ResetDialog
+                error={error}
+                logStore={logStore}
+                observability={observability}
+                needRefresh={needRefresh}
+                onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+                onReset={import.meta.env.DEV ? handleReset : undefined}
+              />
+            </Suspense>
           </Tooltip.Provider>
         </ThemeProvider>
       </ErrorBoundary>
@@ -509,6 +538,11 @@ const main = async () => {
   };
 
   const Main = () => {
+    const [fatalError, setFatalError] = useState<Error>();
+    useEffect(() => {
+      raiseFatalError = (error) => setFatalError(error instanceof Error ? error : new Error(String(error)));
+    }, []);
+
     const App = useApp({
       fallback: Fallback,
       // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
@@ -519,7 +553,6 @@ const main = async () => {
       pluginRegistryProvider,
       plugins,
       defaults,
-      setupEvents,
       cacheEnabled: true,
       safeMode,
       // The useLoading state machine ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done),
@@ -528,7 +561,9 @@ const main = async () => {
       debounce: 200,
     });
 
-    return <App />;
+    // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a
+    // throw here would escape React entirely and blank the page.
+    return fatalError ? <Fallback error={fatalError} /> : <App />;
   };
 
   const root = document.getElementById('root')!;

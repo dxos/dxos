@@ -12,7 +12,7 @@ import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { type Domain } from '../sim';
 
 /** The kinds of movable object the simulation supports. */
-export const Kind = Schema.Literal('boat', 'plane', 'satellite', 'tank', 'rocket');
+export const Kind = Schema.Literals(['boat', 'plane', 'satellite', 'tank', 'rocket']);
 export type Kind = Schema.Schema.Type<typeof Kind>;
 
 /** A position on the planet; degrees, with `height` a fraction of radius above sea level. */
@@ -47,7 +47,7 @@ export class TerraObject extends Type.makeObject<TerraObject>(DXN.make('org.dxos
     LabelAnnotation.set(['name']),
     // Kind-neutral: `IconAnnotation` is a static schema-level value, so one icon covers boats,
     // tanks, satellites and rockets alike — a plane icon would mislabel four kinds out of five.
-    Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'cyan' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'green' }),
   ),
 ) {}
 

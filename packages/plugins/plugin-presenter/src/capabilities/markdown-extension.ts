@@ -5,8 +5,9 @@
 import { Prec } from '@codemirror/state';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { keymap } from '@dxos/ui-editor';
 
 import { PresenterOperation } from '#types';
@@ -19,7 +20,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
+    return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document }) => {
         if (!document) {
           return undefined;

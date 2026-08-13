@@ -10,12 +10,13 @@ tasks:
   build:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/LibraryPlugin.tsx'
+      - '--entryPoint=src/plugin.tsx'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'
       - '--entryPoint=src/meta.ts'
-      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/LibraryPlugin.ts'
       - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
+      - '--entryPoint=src/types/Book.ts'
+      - '--entryPoint=src/types/LibraryEvents.ts'
       - '--platform=neutral'

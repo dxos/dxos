@@ -6,15 +6,17 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Blob, Collection, Database, Feed, Ref } from '@dxos/echo';
 import { TestContextService } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { File } from '@dxos/types';
 
+import { Sandbox } from '#types';
+
 import { CreateSandbox, DownloadFile, Exec, SandboxHandlers, UploadFile } from '../skills/functions';
 import SandboxSkill from '../skills/sandbox-skill';
-import * as Sandbox from '../types/Sandbox';
 
 EntityId.dangerouslyDisableRandomness();
 

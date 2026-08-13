@@ -37,7 +37,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
@@ -59,17 +59,19 @@ import {
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { Drawing } from '@dxos/plugin-illustrator';
-import { Calendar, Mailbox, SystemTags } from '@dxos/plugin-inbox';
-import { Kanban } from '@dxos/plugin-kanban';
-import { Map as MapView } from '@dxos/plugin-map';
-import { Markdown } from '@dxos/plugin-markdown';
-import { Sheet } from '@dxos/plugin-sheet';
-import { Tldraw } from '@dxos/plugin-tldraw';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
+import * as MapView from '@dxos/plugin-map/Map';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Table } from '@dxos/react-ui-table/types';
 import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
-import { Actor, ContentBlock, Event, ExternalProject, Message, Organization, Person, Task } from '@dxos/types';
+import { Actor, ContentBlock, Event, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -90,21 +92,21 @@ const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 //
 const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
   S.Struct({
-    title: S.String.pipe(S.annotations({ title: 'Batch' })),
-    date: S.optional(S.String.pipe(S.annotations({ title: 'Date' }))),
-    origin: S.optional(S.String.pipe(S.annotations({ title: 'Origin / Lot' }))),
-    machine: S.optional(S.String.pipe(S.annotations({ title: 'Machine' }))),
-    roaster: S.optional(Ref.Ref(Person.Person).annotations({ title: 'Roaster' })),
-    greenWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Green (kg)' }))),
-    roastWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Roast (kg)' }))),
-    chargeTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Charge (°C)' }))),
-    firstCrackTime: S.optional(S.String.pipe(S.annotations({ title: 'First Crack' }))),
-    developmentTime: S.optional(S.String.pipe(S.annotations({ title: 'Dev Time' }))),
-    dropTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Drop (°C)' }))),
-    roastLevel: S.optional(S.String.pipe(S.annotations({ title: 'Roast Level' }))),
-    status: S.Literal('planned', 'roasted', 'cupped', 'approved').pipe(
+    title: S.String.pipe(S.annotate({ title: 'Batch' })),
+    date: S.optional(S.String.pipe(S.annotate({ title: 'Date' }))),
+    origin: S.optional(S.String.pipe(S.annotate({ title: 'Origin / Lot' }))),
+    machine: S.optional(S.String.pipe(S.annotate({ title: 'Machine' }))),
+    roaster: S.optional(Ref.Ref(Person.Person).annotate({ title: 'Roaster' })),
+    greenWeightKg: S.optional(S.Number.pipe(S.annotate({ title: 'Green (kg)' }))),
+    roastWeightKg: S.optional(S.Number.pipe(S.annotate({ title: 'Roast (kg)' }))),
+    chargeTemp: S.optional(S.Number.pipe(S.annotate({ title: 'Charge (°C)' }))),
+    firstCrackTime: S.optional(S.String.pipe(S.annotate({ title: 'First Crack' }))),
+    developmentTime: S.optional(S.String.pipe(S.annotate({ title: 'Dev Time' }))),
+    dropTemp: S.optional(S.Number.pipe(S.annotate({ title: 'Drop (°C)' }))),
+    roastLevel: S.optional(S.String.pipe(S.annotate({ title: 'Roast Level' }))),
+    status: S.Literals(['planned', 'roasted', 'cupped', 'approved']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      S.annotations({
+      S.annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -118,7 +120,7 @@ const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
         },
       }),
     ),
-    notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
+    notes: S.optional(S.String.pipe(S.annotate({ title: 'Notes' }))),
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
@@ -136,7 +138,7 @@ const SCHEMAS: Type.AnyEntity[] = [
   Organization.Organization,
   Message.Message,
   Event.Event,
-  ExternalProject.ExternalProject,
+  TaskSet.TaskSet,
   Task.Task,
   Mailbox.Mailbox,
   Calendar.Calendar,
@@ -222,14 +224,17 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   const { calendar, events } = makeCalendar(people, organizations);
   space.db.add(calendar);
 
-  // Spring Blend Launch project — Project/Task aren't collection-item types,
+  // Spring Blend Launch task set — TaskSet/Task aren't collection-item types,
   // so they live directly in the space DB, same as contacts.
-  const { project, tasks } = makeProject(people);
-  space.db.add(project);
-  tasks.forEach((task) => space.db.add(task));
+  const { taskSet, tasks } = makeTaskSet(people);
+  space.db.add(taskSet);
+  tasks.forEach((task) => {
+    space.db.add(task);
+    Obj.setParent(task, taskSet);
+  });
 
-  // Notes, sketches & sheets — notes reference people/orgs/project via DXN links/embeds.
-  const notes = makeNotes(people, organizations, project);
+  // Notes, sketches & sheets — notes reference people/orgs/task set via DXN links/embeds.
+  const notes = makeNotes(people, organizations, taskSet);
   Object.values(notes).forEach((note) => space.db.add(note));
   const sketches = makeSketches();
   Object.values(sketches).forEach((sketch) => space.db.add(sketch));
@@ -960,70 +965,60 @@ const makeCalendar = (
 };
 
 //
-// Project + tasks
+// Task set + tasks
 //
 
-const makeProject = (
-  people: Record<PersonKey, Person.Person>,
-): { project: ExternalProject.ExternalProject; tasks: Task.Task[] } => {
-  const project = ExternalProject.make({
+const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskSet.TaskSet; tasks: Task.Task[] } => {
+  const taskSet = TaskSet.make({
     name: 'Spring Blend Launch',
     description: 'New seasonal espresso blend targeting wholesale espresso bars. Going live in 6 weeks.',
   });
-
-  const projectRef = Ref.make(project);
 
   const tasks: Task.Task[] = [
     Task.make({
       title: 'Source green coffee — Esperanza + Guatemalan parcel',
       status: 'done',
       priority: 'high',
-      assigned: Ref.make(people.diego),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.diego) },
       description: 'Lock contracts with Carmen and the importer for the Guatemalan parcel.',
     }),
     Task.make({
       title: 'Finalize roast curve (v3)',
       status: 'in-progress',
       priority: 'high',
-      assigned: Ref.make(people.kai),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.kai) },
       description: 'Currently on v2 with adjusted development time. One more iteration before sign-off.',
     }),
     Task.make({
       title: 'Send v2 samples to wholesalers',
       status: 'in-progress',
       priority: 'medium',
-      assigned: Ref.make(people.sam),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.sam) },
       description: 'North Star, Hatch, Olive & Vine. 2 lb each.',
     }),
     Task.make({
       title: 'Design label — Letterform Press',
       status: 'in-progress',
       priority: 'medium',
-      assigned: Ref.make(people.riley),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.riley) },
       description: 'Final draft due to the printer in 10 days.',
     }),
     Task.make({
       title: 'Schedule launch cuppings (Oakland + remote)',
       status: 'todo',
       priority: 'medium',
-      assigned: Ref.make(people.sam),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.sam) },
     }),
     Task.make({
       title: 'Publish product page + open preorders',
       status: 'todo',
       priority: 'low',
-      assigned: Ref.make(people.riley),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.riley) },
       description: 'Webshop + email blast to subscribers.',
     }),
   ];
 
-  return { project, tasks };
+  return { taskSet, tasks };
 };
 
 //
@@ -1039,7 +1034,7 @@ type NotesBundle = {
 const makeNotes = (
   people: Record<PersonKey, Person.Person>,
   organizations: Record<OrgKey, Organization.Organization>,
-  project: ExternalProject.ExternalProject,
+  taskSet: TaskSet.TaskSet,
 ): NotesBundle => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
   // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
@@ -1116,7 +1111,7 @@ const makeNotes = (
     content: [
       '# Spring blend — tasting protocol',
       '',
-      `Project: ${emb('Spring Blend Launch', project)}`,
+      `Project: ${emb('Spring Blend Launch', taskSet)}`,
       '',
       '## Setup',
       '',

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-crx",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Composer plugin for coordinating with the composer-crx browser extension.",
   "homepage": "https://dxos.org",
@@ -35,9 +35,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/CrxPlugin.tsx",
-      "types": "./dist/types/src/CrxPlugin.d.ts",
-      "default": "./dist/lib/CrxPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -57,23 +57,63 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./package.json": "./package.json",
+    "./CrxCapabilities": {
+      "source": "./src/types/CrxCapabilities.ts",
+      "types": "./dist/types/src/types/CrxCapabilities.d.ts",
+      "import": "./dist/lib/CrxCapabilities.mjs"
+    },
+    "./CrxEvents": {
+      "source": "./src/types/CrxEvents.ts",
+      "types": "./dist/types/src/types/CrxEvents.d.ts",
+      "import": "./dist/lib/CrxEvents.mjs"
+    },
+    "./CrxOperation": {
+      "source": "./src/types/CrxOperation.ts",
+      "types": "./dist/types/src/types/CrxOperation.d.ts",
+      "import": "./dist/lib/CrxOperation.mjs"
+    },
+    "./CrxPlugin": {
+      "source": "./src/CrxPlugin.ts",
+      "types": "./dist/types/src/CrxPlugin.d.ts",
+      "import": "./dist/lib/CrxPlugin.mjs"
+    },
+    "./PageAction": {
+      "source": "./src/types/PageAction.ts",
+      "types": "./dist/types/src/types/PageAction.d.ts",
+      "import": "./dist/lib/PageAction.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CrxCapabilities": [
+        "dist/types/src/types/CrxCapabilities.d.ts"
+      ],
+      "CrxEvents": [
+        "dist/types/src/types/CrxEvents.d.ts"
+      ],
+      "CrxOperation": [
+        "dist/types/src/types/CrxOperation.d.ts"
+      ],
+      "PageAction": [
+        "dist/types/src/types/PageAction.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -96,11 +136,12 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "vite": "catalog:",

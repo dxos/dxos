@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-progress",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Progress monitor plugin",
   "homepage": "https://dxos.org",
@@ -30,9 +30,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/ProgressPlugin.ts",
-      "types": "./dist/types/src/ProgressPlugin.d.ts",
-      "default": "./dist/lib/ProgressPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -46,15 +46,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./ProgressPlugin": {
+      "source": "./src/ProgressPlugin.ts",
+      "types": "./dist/types/src/ProgressPlugin.d.ts",
+      "import": "./dist/lib/ProgressPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -70,23 +70,21 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
-    "@dxos/progress": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "catalog:",
-    "vitest": "catalog:"
+    "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:"
   },

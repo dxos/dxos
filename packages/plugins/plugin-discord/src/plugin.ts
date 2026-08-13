@@ -2,10 +2,29 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { meta } from './meta';
+import { Connector, OperationHandler } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
-export const DiscordPlugin = Plugin.lazy(meta, () => import('#plugin'));
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
-export { DiscordOperationHandlerSet } from './operations';
+export const DiscordPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Connector),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
+  Plugin.make,
+);
+
+export default DiscordPlugin;

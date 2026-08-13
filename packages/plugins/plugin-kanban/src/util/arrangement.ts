@@ -4,13 +4,7 @@
 
 import { type SelectOption } from '@dxos/echo/Format';
 
-import {
-  type ArrangedCards,
-  type BaseKanbanItem,
-  type ColumnStructure,
-  type Kanban,
-  UNCATEGORIZED_VALUE,
-} from '#types';
+import { Kanban, KanbanConstants, KanbanLayout } from '#types';
 
 /**
  * Column order from a raw arrangement object (e.g. when working with arrangement only).
@@ -65,20 +59,20 @@ export const getOrderByColumnFromArrangement = (
  * @param effectiveOrder - Column order from arrangement (or previous merge).
  * @param effectiveByColumn - Per-column card id order + hidden flag from arrangement.
  * @param selectOptions - Defines valid column ids; any missing from order are appended.
- * @returns ColumnStructure array in display order.
+ * @returns KanbanLayout.ColumnStructure array in display order.
  */
 export const computeColumnStructure = (
   effectiveOrder: string[],
   effectiveByColumn: Record<string, { ids: string[]; hidden?: boolean }>,
   selectOptions: SelectOption[],
-): ColumnStructure[] => {
+): KanbanLayout.ColumnStructure[] => {
   const order = [...effectiveOrder];
-  if (!order.includes(UNCATEGORIZED_VALUE)) {
-    order.unshift(UNCATEGORIZED_VALUE);
+  if (!order.includes(KanbanConstants.UNCATEGORIZED_VALUE)) {
+    order.unshift(KanbanConstants.UNCATEGORIZED_VALUE);
   }
 
   for (const opt of selectOptions) {
-    if (opt.id !== UNCATEGORIZED_VALUE && !order.includes(opt.id)) {
+    if (opt.id !== KanbanConstants.UNCATEGORIZED_VALUE && !order.includes(opt.id)) {
       order.push(opt.id);
     }
   }
@@ -97,12 +91,12 @@ export const computeColumnStructure = (
  *
  * @param items - All items to filter.
  * @param ids - Saved id order for this column.
- * @param columnValue - Column id (e.g. UNCATEGORIZED_VALUE or option id).
+ * @param columnValue - Column id (e.g. KanbanConstants.UNCATEGORIZED_VALUE or option id).
  * @param pivotPath - Item property key for column value (undefined = no pivot).
  * @param validColumnValues - Set of valid option ids.
  * @returns Items belonging to this column in display order.
  */
-export const orderItemsInColumn = <T extends BaseKanbanItem>(
+export const orderItemsInColumn = <T extends KanbanLayout.BaseKanbanItem>(
   items: T[],
   ids: string[],
   columnValue: string,
@@ -116,7 +110,8 @@ export const orderItemsInColumn = <T extends BaseKanbanItem>(
   for (const item of items) {
     const itemColumn = pivotPath !== undefined ? (item[pivotPath as keyof T] as string | undefined) : undefined;
     const isValidColumn = itemColumn != null && validColumnValues.has(itemColumn);
-    const belongsInColumn = columnValue === UNCATEGORIZED_VALUE ? !isValidColumn : itemColumn === columnValue;
+    const belongsInColumn =
+      columnValue === KanbanConstants.UNCATEGORIZED_VALUE ? !isValidColumn : itemColumn === columnValue;
 
     if (belongsInColumn) {
       (orderMap.has(item.id) ? cardsWithExistingOrder : newCards).push(item);
@@ -145,7 +140,7 @@ export const orderItemsInColumn = <T extends BaseKanbanItem>(
  * @param selectOptions - Defines valid column ids and their display order.
  * @returns Array of { columnValue, cards } in column order, with cards ordered as above.
  */
-export const computeItemArrangement = <T extends BaseKanbanItem = BaseKanbanItem>({
+export const computeItemArrangement = <T extends KanbanLayout.BaseKanbanItem = KanbanLayout.BaseKanbanItem>({
   object,
   items,
   pivotPath,
@@ -155,7 +150,7 @@ export const computeItemArrangement = <T extends BaseKanbanItem = BaseKanbanItem
   items: T[];
   pivotPath?: string;
   selectOptions: SelectOption[];
-}): ArrangedCards<T> => {
+}): KanbanLayout.ArrangedCards<T> => {
   const validColumnValues = new Set(selectOptions.map((opt) => opt.id));
   const byColumn = getOrderByColumnFromArrangement(object?.arrangement);
 
@@ -164,9 +159,9 @@ export const computeItemArrangement = <T extends BaseKanbanItem = BaseKanbanItem
   // `hidden: true` are dropped — same generic hide-by-column flag used
   // by `computeColumnStructure`.
   const columnEntries = [
-    { columnValue: UNCATEGORIZED_VALUE, ids: byColumn[UNCATEGORIZED_VALUE]?.ids ?? [] },
+    { columnValue: KanbanConstants.UNCATEGORIZED_VALUE, ids: byColumn[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? [] },
     ...selectOptions
-      .filter((opt) => opt.id !== UNCATEGORIZED_VALUE)
+      .filter((opt) => opt.id !== KanbanConstants.UNCATEGORIZED_VALUE)
       .map((opt) => ({ columnValue: opt.id, ids: byColumn[opt.id]?.ids ?? [] })),
   ].filter((entry) => byColumn[entry.columnValue]?.hidden !== true);
 

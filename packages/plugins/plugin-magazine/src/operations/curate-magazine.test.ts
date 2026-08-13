@@ -9,16 +9,17 @@ import { afterEach, beforeEach, expect, test } from 'vitest';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
 
-import { MagazineSkill } from '../skills';
-import { FeedOperation, Magazine, Subscription } from '../types';
+import { MagazineOperationHandlerSet } from '#operations';
+import { MagazineSkill } from '#skills';
+import { FeedOperation, Magazine, Subscription } from '#types';
+
 import { applyKeep, resolveSelected } from './curate-magazine';
-import { MagazineOperationHandlerSet } from './index';
 
 /**
  * Whether the model picks the right articles is a judgement question, graded out-of-band; scripting

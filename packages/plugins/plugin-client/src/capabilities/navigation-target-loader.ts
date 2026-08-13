@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, NotFound } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { Context } from '@dxos/context';
 import { Database, EID } from '@dxos/echo';
 import { EntityId, SpaceId } from '@dxos/keys';
@@ -24,7 +25,7 @@ const EDGE_EXISTENCE_TIMEOUT = '3 seconds';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const client = yield* ClientCapabilities.Client;
 
     // Remote existence check (does not materialize a local node); reuses the shared edge checker.
     const checkRemote = NotFound.createEdgeExistenceChecker((spaceId, body) =>
@@ -38,6 +39,10 @@ export default Capability.makeModule(
           if (!SpaceId.isValid(spaceId) || !EntityId.isValid(entityId)) {
             return false;
           }
+          // A URL restore can call this while the forked client initialization is still
+          // running; `spaces` is unreadable until it completes, and failing here would
+          // fail-fast the plank to not-found.
+          yield* Effect.promise(() => client.waitUntilInitialized());
           const eid = EID.make({ spaceId, entityId });
 
           // Local first: loading the object populates the collection/type-section refs that address
@@ -48,7 +53,7 @@ export default Capability.makeModule(
             const loaded = yield* Effect.promise(() => space.waitUntilReady()).pipe(
               Effect.flatMap(() => Database.load(space.db.makeRef(eid))),
               Effect.as(true),
-              Effect.catchAll(() => Effect.succeed(false)),
+              Effect.catch(() => Effect.succeed(false)),
             );
             if (loaded) {
               return true;
@@ -60,11 +65,11 @@ export default Capability.makeModule(
           // unreachable edge cannot hang navigation.
           return yield* checkRemote(eid).pipe(
             Effect.timeout(EDGE_EXISTENCE_TIMEOUT),
-            Effect.catchAll(() => Effect.succeed(false)),
+            Effect.catch(() => Effect.succeed(false)),
           );
         }),
     };
 
-    return Capability.contributes(AppCapabilities.NavigationTargetLoader, loader);
+    return Capability.contribute(AppCapabilities.NavigationTargetLoader, loader);
   }),
 );

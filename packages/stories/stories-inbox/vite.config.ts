@@ -6,5 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   jsx: 'react',
-  test: { node: { environment: 'jsdom' }, storybook: true },
+  // The first story in a file pays the whole lazy module-load bill — tens of seconds, against a
+  // couple for each story after it — which the 15s browser-mode default cannot cover.
+  test: { node: { environment: 'jsdom' }, storybook: { timeout: 60_000 } },
 });

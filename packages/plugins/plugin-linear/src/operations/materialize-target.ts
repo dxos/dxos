@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { ExternalProject } from '@dxos/types';
+import { TaskSet } from '@dxos/types';
+
+import { LinearOperation } from '#types';
 
 import { LINEAR_SOURCE } from '../constants';
-import { LinearOperation } from '../types';
 
 const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
 
@@ -25,7 +26,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.MaterializeLinearTar
     Operation.withHandler(
       Effect.fnUntraced(function* ({ connection, remoteTarget }) {
         if (!remoteTarget) {
-          return yield* Effect.dieMessage('Linear is a multi-target connector; remoteTarget is required.');
+          return yield* Effect.die(new Error('Linear is a multi-target connector; remoteTarget is required.'));
         }
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
         //   have it provided by the OperationInvoker — composer's invoker is wired
@@ -33,20 +34,19 @@ const handler: Operation.WithHandler<typeof LinearOperation.MaterializeLinearTar
         //   target and provide `Database.layer(db)` ourselves.
         const db = connection.target ? Obj.getDatabase(connection.target) : undefined;
         if (!db) {
-          return yield* Effect.dieMessage('No database for connection ref.');
+          return yield* Effect.die(new Error('No database for connection ref.'));
         }
         const teamId = remoteTarget.id;
 
         return yield* Effect.gen(function* () {
-          const existing = yield* Database.query(
-            Query.select(Filter.foreignKeys(ExternalProject.ExternalProject, [fkFor(teamId)])),
-          ).run;
+          const existing = yield* Database.query(Query.select(Filter.foreignKeys(TaskSet.TaskSet, [fkFor(teamId)])))
+            .run;
           if (existing.length > 0) {
             return { target: Ref.make(existing[0]) };
           }
 
           const created = yield* Database.add(
-            Obj.make(ExternalProject.ExternalProject, {
+            Obj.make(TaskSet.TaskSet, {
               [Obj.Meta]: { keys: [fkFor(teamId)] },
               name: remoteTarget.name,
             }),

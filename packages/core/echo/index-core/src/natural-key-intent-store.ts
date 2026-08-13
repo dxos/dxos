@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type SpaceId } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
+
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/natural-key-intents';
 
 /**
  * Durable write-ahead intents for natural-key merging.
@@ -18,18 +22,20 @@ import { type SpaceId } from '@dxos/keys';
  * forever, since that keyed write is never re-presented to the indexing loop.
  */
 export class NaturalKeyIntentStore {
-  migrate = Effect.fn('NaturalKeyIntentStore.migrate')(function* () {
-    const sql = yield* SqlClient.SqlClient;
-
-    // Rows are inserted in the same transaction that commits index rows and cursors, and deleted
-    // only after the merge pass services the key — so a crash or a faulted pass can never leave
-    // a detected duplicate unserviced.
-    yield* sql`CREATE TABLE IF NOT EXISTS naturalKeyIntents (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      spaceId TEXT NOT NULL,
-      naturalKey TEXT NOT NULL
-    )`;
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  migrate = Effect.fn('NaturalKeyIntentStore.migrate')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+    ),
+  );
 
   /**
    * Durably queue natural keys for duplicate detection. Runs inside the same transaction that

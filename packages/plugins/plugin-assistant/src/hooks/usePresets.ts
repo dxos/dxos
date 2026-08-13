@@ -2,20 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 
-import { type Assistant, AssistantCapabilities, type ChatPresetProps, Ollama } from '#types';
+import { Assistant, AssistantCapabilities, AssistantPreset, Ollama } from '#types';
 
 import { type AiServicePreset, defaultsKeyForProvider, presetsForProvider, resolveProvider } from '../processor';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
-} & Pick<ChatPresetProps, 'presets' | 'onPresetChange'>;
+} & Pick<AssistantPreset.ChatPresetProps, 'presets' | 'onPresetChange'>;
 
 /**
  * Resolves the chat model presets for the provider selected in settings ({@link Assistant.Settings.modelProvider}),
@@ -74,7 +74,7 @@ export const usePresets = (settings: Assistant.Settings): UsePresets => {
     setPreset(configured ?? presets[0]);
   }, [presets, defaultModel]);
 
-  const handlePresetChange = useCallback<NonNullable<ChatPresetProps['onPresetChange']>>(
+  const handlePresetChange = useCallback<NonNullable<AssistantPreset.ChatPresetProps['onPresetChange']>>(
     (id) => {
       const preset = presets.find((preset) => preset.id === id);
       if (preset) {

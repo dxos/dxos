@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-doctor",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Self-introspection skill: query the browser tab's own logs.",
   "homepage": "https://dxos.org",
@@ -14,11 +14,6 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
@@ -45,9 +40,14 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/DoctorPlugin.tsx",
-      "types": "./dist/types/src/DoctorPlugin.d.ts",
-      "default": "./dist/lib/DoctorPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -72,18 +72,47 @@
       "types": "./dist/types/src/diagnostics/index.d.ts",
       "import": "./dist/lib/diagnostics.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./DoctorCapabilities": {
+      "source": "./src/types/DoctorCapabilities.ts",
+      "types": "./dist/types/src/types/DoctorCapabilities.d.ts",
+      "import": "./dist/lib/DoctorCapabilities.mjs"
+    },
+    "./DoctorEvents": {
+      "source": "./src/types/DoctorEvents.ts",
+      "types": "./dist/types/src/types/DoctorEvents.d.ts",
+      "import": "./dist/lib/DoctorEvents.mjs"
+    },
+    "./DoctorOperation": {
+      "source": "./src/types/DoctorOperation.ts",
+      "types": "./dist/types/src/types/DoctorOperation.d.ts",
+      "import": "./dist/lib/DoctorOperation.mjs"
+    },
+    "./DoctorPlugin": {
+      "source": "./src/DoctorPlugin.ts",
+      "types": "./dist/types/src/DoctorPlugin.d.ts",
+      "import": "./dist/lib/DoctorPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "DoctorCapabilities": [
+        "dist/types/src/types/DoctorCapabilities.d.ts"
+      ],
+      "DoctorEvents": [
+        "dist/types/src/types/DoctorEvents.d.ts"
+      ],
+      "DoctorOperation": [
+        "dist/types/src/types/DoctorOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -93,15 +122,13 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
