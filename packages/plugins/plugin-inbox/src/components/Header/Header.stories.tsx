@@ -6,15 +6,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { buildContactFromActor } from '@dxos/extractor-lib';
+import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
+import { Card, Icon, Popover } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
+import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Actor, Person } from '@dxos/types';
+import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
@@ -29,7 +32,7 @@ const KNOWN_SENDER: StoryActor = {
 };
 
 /** Second actor, used by the variant that needs an address the space has no Person for. */
-const STRANGER: StoryActor = {
+const UNKNOWN_SENDER: StoryActor = {
   name: 'Bob Bell',
   email: 'bob@example.com',
 };
@@ -62,6 +65,40 @@ const useContactCreate = (space?: Space) =>
   );
 
 /**
+ * Renders the popover the avatar's hover asks for. In Composer this is PreviewPlugin's job (it
+ * listens on `window` and dispatches a layout operation); a story stands in for it with
+ * `EditorPreviewProvider` plus this content, or hovering would fire an event nothing answers.
+ */
+const ContactPreviewCard = () => {
+  const { target } = useEditorPreview('ContactPreviewCard');
+  const contact: Person.Person | undefined = target?.object;
+  if (!target) {
+    return null;
+  }
+
+  return (
+    <Popover.Portal>
+      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Popover.Viewport classNames='dx-card-popover-width'>
+          <Card.Root border={false} data-testid='contact-preview'>
+            <Card.Header>
+              <Card.Block>
+                <Icon icon='ph--user--regular' />
+              </Card.Block>
+              <Card.Title>{contact?.fullName ?? target.label}</Card.Title>
+            </Card.Header>
+            <Card.Row>
+              <Card.Text variant='description'>{contact?.emails?.[0]?.value}</Card.Text>
+            </Card.Row>
+          </Card.Root>
+        </Popover.Viewport>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Portal>
+  );
+};
+
+/**
  * Header.Root chrome composing shared Row.* primitives — the structure both article headers use.
  *
  * Live rather than static: the star owns its state, and each avatar resolves its actor's contact, so
@@ -73,28 +110,42 @@ const DefaultStory = ({ actors = [KNOWN_SENDER] }: StoryArgs) => {
   const [starred, setStarred] = useState(true);
   const handleContactCreate = useContactCreate(space);
 
+  // Resolves the hovered avatar's DXN back to its Person, so the card shows the real contact.
+  const handlePreviewLookup = useCallback(
+    async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+      const eid = EID.tryParse(dxn);
+      const id = eid && EID.getEntityId(eid);
+      const object = id && space ? (await space.db.query(Filter.id(id)).run())[0] : undefined;
+      return { label, object };
+    },
+    [space],
+  );
+
   return (
-    <Header.Root>
-      <Card.Row>
-        <Card.Block>
-          <Row.Star starred={starred} onToggle={() => setStarred((value) => !value)} />
-        </Card.Block>
-        <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
-      </Card.Row>
-      {actors.map((actor, index) => (
-        // `avatar` + `db` is the interactive variant: it resolves the contact, so it can hover.
-        <Row.Person
-          key={actor.email}
-          avatar
-          actor={actor}
-          role={index === 0 ? 'from' : 'to'}
-          db={space?.db}
-          onContactCreate={handleContactCreate}
-        />
-      ))}
-      <Row.Date start={new Date('2025-11-19T12:00:00')} end={new Date('2025-11-19T13:00:00')} />
-      <Row.Tags tags={[{ id: 'a', label: 'planning', hue: 'cyan' }]} />
-    </Header.Root>
+    <EditorPreviewProvider onLookup={handlePreviewLookup}>
+      <ContactPreviewCard />
+      <Header.Root>
+        <Card.Row>
+          <Card.Block>
+            <Row.Star starred={starred} onToggle={() => setStarred((value) => !value)} />
+          </Card.Block>
+          <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
+        </Card.Row>
+        {actors.map((actor, index) => (
+          // `avatar` + `db` is the interactive variant: it resolves the contact, so it can hover.
+          <Row.Person
+            key={actor.email}
+            avatar
+            actor={actor}
+            role={index === 0 ? 'from' : 'to'}
+            db={space?.db}
+            onContactCreate={handleContactCreate}
+          />
+        ))}
+        <Row.Date start={new Date('2025-11-19T12:00:00')} end={new Date('2025-11-19T13:00:00')} />
+        <Row.Tags tags={[{ id: 'a', label: 'planning', hue: 'cyan' }]} />
+      </Header.Root>
+    </EditorPreviewProvider>
   );
 };
 
@@ -137,10 +188,11 @@ export const Default: Story = {
   },
 };
 
+/** No seeded contact, so hovering the avatar offers to create the Person. */
 export const UnknownSender: Story = {
   args: {
-    actors: [STRANGER],
-    contacts: [STRANGER.email],
+    actors: [UNKNOWN_SENDER],
+    contacts: [],
   },
 };
 
@@ -150,7 +202,7 @@ export const UnknownSender: Story = {
  */
 export const Spec: Story = {
   args: {
-    actors: [KNOWN_SENDER, STRANGER],
+    actors: [KNOWN_SENDER, UNKNOWN_SENDER],
     contacts: [KNOWN_SENDER.email],
   },
   play: async ({ canvasElement }) => {
@@ -168,15 +220,22 @@ export const Spec: Story = {
       return avatar;
     };
 
-    // The actor WITH a Person: hovering the avatar asks the card surface to open that contact's card.
-    // Captured on `window`, which is where PreviewPlugin listens: the event does not bubble, so only
-    // the capture phase sees it from an element this deep. No preview surface is mounted here, so the
-    // request itself is what this asserts.
-    const activations: string[] = [];
-    window.addEventListener('dx-anchor-activate', () => activations.push('activated'), true);
+    // The actor WITH a Person: hovering the avatar opens that contact's card. The popover renders in a
+    // portal outside the canvas, so it is queried from the document rather than `canvas`.
     await userEvent.hover(avatarFor('Alice Avery'));
-    await waitFor(() => expect(activations).toHaveLength(1), { timeout: 5_000 });
-    await userEvent.unhover(avatarFor('Alice Avery'));
+    const card = await waitFor(
+      () => {
+        const found = document.body.querySelector('[data-testid="contact-preview"]');
+        if (!found) {
+          throw new Error('Contact preview card did not open.');
+        }
+        return found;
+      },
+      { timeout: 5_000 },
+    );
+    await expect(card).toHaveTextContent('Alice Avery');
+    await expect(card).toHaveTextContent('alice@example.com');
+    await userEvent.keyboard('{Escape}');
 
     // The actor WITHOUT one: no create button until hovered, then a click creates the Person and the
     // row goes back to showing an avatar (now card-backed).

@@ -314,7 +314,7 @@ const PersonAvatarHoverRow = ({
               variant='ghost'
               iconOnly
               icon='ph--user-circle-plus--regular'
-              size={6}
+              size={5}
               label={t('create-contact.label')}
               onClick={handleContactCreate}
             />
