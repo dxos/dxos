@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Feed, Obj, Tag } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
@@ -14,7 +14,14 @@ import { Message } from '@dxos/types';
 
 import { Mailbox } from '#types';
 
-import { CLASSIFY_CURSOR_KEY_ID, FEED_CURSOR_KEY_SOURCE, findFeedCursor, findOrCreateFeedCursor } from './cursor';
+import {
+  ANALYZE_CURSOR_KEY_ID,
+  CLASSIFY_CURSOR_KEY_ID,
+  FEED_CURSOR_KEY_SOURCE,
+  findFeedCursor,
+  findOrCreateAnalyzeCursor,
+  findOrCreateFeedCursor,
+} from './cursor';
 
 /**
  * The feed-cursor helpers outlived `ProcessMailbox` (deleted 2026-08-13) because `ClassifyMailbox`
@@ -84,5 +91,58 @@ describe('feed cursors', () => {
 
     const found = await run(db, findFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID));
     expect(found?.id).toBe(classify.id);
+  });
+
+  describe('analysis cursor', () => {
+    /** A cursor as `AnalyzeMailbox` used to create them: on the feed, carrying no foreign key. */
+    const addLegacyCursor = (db: any, mailbox: Mailbox.Mailbox) =>
+      db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
+
+    test('tags the cursor it creates', async ({ expect }) => {
+      const { db, mailbox } = await setup();
+
+      const cursor = await run(db, findOrCreateAnalyzeCursor(mailbox));
+      expect(Obj.getKeys(cursor, FEED_CURSOR_KEY_SOURCE).some((key) => key.id === ANALYZE_CURSOR_KEY_ID)).toBe(true);
+    });
+
+    test('adopts a legacy untagged cursor in place, preserving its position', async ({ expect }) => {
+      const { db, mailbox } = await setup();
+
+      // Creating a fresh cursor instead would re-analyze the whole feed at one LLM call per message,
+      // so adoption — not just correct tagging — is what makes the change safe to ship.
+      const legacy = addLegacyCursor(db, mailbox);
+      Cursor.advance(legacy, Cursor.formatKey(Date.parse('2026-07-01T00:00:00.000Z')));
+      await db.flush();
+
+      const adopted = await run(db, findOrCreateAnalyzeCursor(mailbox));
+      expect(adopted.id).toBe(legacy.id);
+      expect(adopted.max).toBe(legacy.max);
+      expect(Obj.getKeys(adopted, FEED_CURSOR_KEY_SOURCE).some((key) => key.id === ANALYZE_CURSOR_KEY_ID)).toBe(true);
+    });
+
+    test('adopts the legacy cursor only once', async ({ expect }) => {
+      const { db, mailbox } = await setup();
+
+      const legacy = addLegacyCursor(db, mailbox);
+      await db.flush();
+
+      const first = await run(db, findOrCreateAnalyzeCursor(mailbox));
+      const second = await run(db, findOrCreateAnalyzeCursor(mailbox));
+      expect(first.id).toBe(legacy.id);
+      expect(second.id).toBe(legacy.id);
+      expect(Obj.getKeys(second, FEED_CURSOR_KEY_SOURCE).length).toBe(1);
+    });
+
+    test('never adopts another consumer’s cursor', async ({ expect }) => {
+      const { db, mailbox } = await setup();
+
+      // The bug the tag exists to prevent, stated as a test: before tagging, analysis claimed
+      // whichever cursor happened to be untagged, so a consumer that forgot to tag its own was
+      // silently adopted and analysis resumed from that consumer's watermark.
+      const classify = await run(db, findOrCreateFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID));
+
+      const analyze = await run(db, findOrCreateAnalyzeCursor(mailbox));
+      expect(analyze.id).not.toBe(classify.id);
+    });
   });
 });

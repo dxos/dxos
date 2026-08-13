@@ -60,11 +60,12 @@ Per-message one-shots (`ExtractMessage`, `CreateProjectFromMessage`, `Unsubscrib
 Tagged cursor (2), untagged cursor (1), no cursor (7). The mechanism to do this uniformly already
 exists — `findOrCreateFeedCursor(mailbox, id)` in `operations/cursor.ts` — with exactly one adopter.
 
-`AnalyzeMailbox` is the fragile case: it finds its cursor by looking for the one with **zero meta
-keys** (`analyze-mailbox.ts:36`), because a foreign-key tag marks another consumer's cursor. "Untagged"
-is not an identity, it is the absence of one — so any future consumer that forgets to tag its cursor
-gets silently adopted, and analysis resumes from that consumer's watermark, skipping everything below
-it. Silent under-analysis, no error.
+`AnalyzeMailbox` used to be the fragile case: it found its cursor by looking for the one with **zero
+meta keys**, because a foreign-key tag marks another consumer's cursor. "Untagged" is not an identity,
+it is the absence of one — so any future consumer that forgot to tag its cursor got silently adopted,
+and analysis resumed from that consumer's watermark, skipping everything below it. FIXED: it now
+carries `ANALYZE_CURSOR_KEY_ID`, and a legacy untagged cursor is adopted in place so existing
+mailboxes keep their position. Six consumers still keep no cursor at all.
 
 ## Decisions
 
@@ -158,9 +159,10 @@ test comment. Write the failing test first.
 
 ## Sequencing
 
-1. Failing test for the missing-`FactStore` classification; then the uniform gate.
-2. Tag `AnalyzeMailbox`'s cursor with an explicit id (plus a one-time migration for existing untagged
-   cursors), removing the "untagged means mine" inference.
+1. ~~Failing test for the missing-`FactStore` classification; then the uniform gate.~~ DONE —
+   `unmetPrecondition` in `operations/precondition.ts`.
+2. ~~Tag `AnalyzeMailbox`'s cursor with an explicit id (plus a one-time migration for existing
+   untagged cursors), removing the "untagged means mine" inference.~~ DONE.
 3. `MailboxProcessor` capability + topology resolution in the harness; port the five built-ins.
 4. Move `AnalyzeMailbox` to plugin-brain and `ProcessMailbox` to a contributed processor; drop
    `@dxos/pipeline-rdf` from plugin-inbox.

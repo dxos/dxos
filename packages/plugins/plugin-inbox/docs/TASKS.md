@@ -417,10 +417,15 @@ generalize now with mailbox as instance #1.
       `ai-gate.ts` was already written that way. 7 tests; the workaround at `scan-mailbox.test.ts:166`
       is gone and that test now exercises BOTH precondition flavours in one run, each tier naming its
       own reason instead of inheriting the first one's.
-- [ ] **Tag `AnalyzeMailbox`'s cursor with an explicit id** (+ one-time migration for existing
-      untagged cursors). Today it identifies its cursor by having **zero** meta keys, so any future
-      consumer that forgets to tag its own gets silently adopted and analysis resumes from that
-      consumer's watermark — silent under-analysis, no error.
+- [x] **Tag `AnalyzeMailbox`'s cursor with an explicit id** — `ANALYZE_CURSOR_KEY_ID`, via a new
+      `findOrCreateAnalyzeCursor` in `operations/cursor.ts`; the ad-hoc finder inside
+      `analyze-mailbox.ts` is gone, so all cursor identity now lives in one module. The **adoption**
+      is the part that makes it shippable: a legacy untagged cursor is tagged IN PLACE rather than
+      replaced, since creating a fresh one would re-analyze the whole feed at one LLM call per
+      message. 4 tests, and the adoption branch was mutation-checked — stubbing it out fails exactly
+      the two tests that cover it, so neither is vacuous. `analyze-mailbox.test.ts` seeds untagged
+      cursors and still passes, which exercises the migration path in situ. Delete the adoption branch
+      once no untagged cursors remain in the wild.
 - [ ] **`MailboxProcessor` capability + topology resolution** in the harness; port the five built-ins
       off the hardcoded `plan: Record<MailboxTier, () => Stage[]>`.
 - [ ] **Move `AnalyzeMailbox` to plugin-brain**; make `CrmOperation.ProcessMailbox` a contributed
