@@ -65,9 +65,8 @@ export class ManagerState {
   /** Whether `start()` has run — gates incremental activation on later enables. */
   readonly started = Effect.runSync(Ref.make(false));
   /**
-   * Completed when the Startup wave has finished. Events dispatched while startup is in flight
-   * await it, so a module activating on one of them can rely on every startup capability being
-   * present. Reset by {@link clearEventsFired} so a restarted manager gates again.
+   * Completed when the Startup wave has finished; events dispatched mid-startup await it so their
+   * modules can rely on every startup capability. Reset by {@link clearEventsFired}.
    */
   startupComplete = Effect.runSync(Deferred.make<void>());
   /** Set for the duration of `shutdown()` — new starts/activations are skipped meanwhile. */

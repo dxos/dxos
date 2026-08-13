@@ -207,11 +207,9 @@ export class ActivationScheduler {
         return false;
       }
 
-      // Held until the Startup wave completes. Startup is what makes the baseline capabilities
-      // available, so a module activating on an event dispatched mid-startup could otherwise find
-      // a require unsatisfied purely because of when its event happened to land. Waiting also
-      // keeps the wave out of startup's own settle check, which counts every in-flight load and
-      // would otherwise hold `ready` behind work that has nothing to do with first paint.
+      // Startup provides the baseline capabilities, so a module activating on an event dispatched
+      // mid-startup could otherwise find a require unsatisfied purely by timing. Waiting also keeps
+      // the wave out of startup's settle check, which would hold `ready` behind unrelated work.
       if ((yield* Ref.get(this.#state.started)) && !this.#state.eventFired(startupKey)) {
         log('deferring activation until startup completes', { key, ...params });
         yield* Deferred.await(this.#state.startupComplete);

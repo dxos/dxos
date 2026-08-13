@@ -9,14 +9,9 @@ import { type Client, type ClientOptions } from '@dxos/client';
 
 export type ClientPluginOptions = ClientOptions & {
   /**
-   * A client for this plugin to adopt instead of constructing one from the options above.
-   *
-   * The plugin's own module is lazily imported, so a client built here does not exist until the
-   * activation pass reaches it — seconds into boot, with the worker handshake and storage open
-   * still ahead of it. A host that already holds the config and services can construct the client
-   * at entry and call `initialize()` immediately, overlapping that cost with plugin loading;
-   * `initialize()` is `@synchronized`, so the plugin's own call joins the in-flight one rather
-   * than racing it. Lifecycle still belongs to the plugin, which destroys the client on teardown.
+   * A client to adopt instead of constructing one, so a host can start `initialize()` at entry
+   * rather than when activation reaches this lazily-imported module. `@synchronized`, so the
+   * plugin's own call joins it; lifecycle stays with the plugin, which destroys it on teardown.
    */
   client?: Client;
 

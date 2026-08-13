@@ -39,8 +39,7 @@ export default Capability.makeModule(
     log(hostClient ? 'adopting host client' : 'creating client');
     const client = hostClient ?? new Client(options);
     if (!hostClient) {
-      // Only when the client is ours: a host that supplied one marked this where it began
-      // initializing, which is what the span is measuring.
+      // A host-supplied client marked this where it began initializing, which is the span.
       performance.mark('milestone:client-initialize:start');
     }
     log('initializing client (forked)...');

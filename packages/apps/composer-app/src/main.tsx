@@ -413,10 +413,9 @@ const main = async () => {
   profiler?.mark('services:end');
   profiler?.measure('services', 'services:start', 'services:end');
 
-  // Started here so the handshake and storage open run alongside plugin loading rather than behind
-  // it: plugin-client's module is lazily imported, and this needs nothing but the services above.
-  // The plugin's own call is what surfaces a failure (via `onClientInitializationError`); this one
-  // only has to not reject unhandled.
+  // Started here so the handshake and storage open overlap plugin loading, which plugin-client's
+  // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
+  // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   const client = new Client({ config, services });
   void client.initialize().catch((err) => log.catch(err));

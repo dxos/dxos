@@ -31,9 +31,9 @@ import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
 const RENDER_DELAY = '1s';
 
 /**
- * Width held for the item-end slot (`org.dxos.role.navtreeItemEnd`), whose surface resolves after the
- * tree has painted: a bare `min-content` track starts collapsed and re-truncates every label in the
- * panel when it lands. Sized to what fills it, an `AttentionGlyph` (`w-3`) inset by `mx-1`.
+ * Width held for the item-end slot, whose surface resolves after the tree has painted: a
+ * `min-content` track would start collapsed and re-truncate every label when it lands. Sized to
+ * what fills it, an `AttentionGlyph` (`w-3`) inset by `mx-1`.
  */
 const ITEM_END_SIZE = '1.25rem';
 
@@ -45,10 +45,9 @@ export type L1PanelProps = {
   /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
   item?: Node.Node;
   /**
-   * Identity of the set of space workspaces in the graph, which the unavailable message is a claim
-   * about: it stays hidden while the set is empty, and every change restarts {@link RENDER_DELAY}
-   * so the claim waits for spaces to stop arriving. Empty means not-loaded-yet rather than
-   * nothing-to-show, since every identity ends up with at least a settings space.
+   * Identity of the set of space workspaces, which the unavailable message is a claim about. Empty
+   * means not-loaded-yet rather than nothing-to-show, since every identity ends up with at least a
+   * settings space.
    */
   spaces?: string;
   isCurrent: boolean;
@@ -65,9 +64,8 @@ const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1Pan
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
-  // The unavailable message is a claim about the space list, so it needs one to have been
-  // published; the sentinel deck means no workspace has been resolved yet, so none is being asked
-  // for and there is nothing to report as missing.
+  // Needs a published space list to make the claim against, and a workspace actually being asked
+  // for — the sentinel deck means none has resolved yet.
   const reportUnavailable = !!spaces && id !== DeckSchema.DEFAULT_DECK_ID;
 
   return (
@@ -96,8 +94,7 @@ const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1Pan
         ) : (
           reportUnavailable && (
             <Empty
-              // Spaces publish one at a time as each opens; remounting restarts the delay, so a set
-              // that is still filling in keeps pushing the message back.
+              // Spaces publish one at a time, so remounting restarts the delay until they stop.
               key={spaces}
               label={t('workspace-unavailable.description')}
               // Second grid row, so the message clears the rail exactly as the tree does, and
