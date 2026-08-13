@@ -176,7 +176,8 @@ export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise
     try {
       const body = await response.clone().json();
       const advertised = body?.data?.expiresInMs;
-      expiresInMs = typeof advertised === 'number' && advertised > 0 ? advertised : undefined;
+      // Finite-positive only: `1e400` parses to `Infinity`, which would schedule a refresh at never.
+      expiresInMs = Number.isFinite(advertised) && advertised > 0 ? advertised : undefined;
     } catch {
       // Header-shaped challenge (the 401 fallback) — no JSON body to read a TTL from.
     }

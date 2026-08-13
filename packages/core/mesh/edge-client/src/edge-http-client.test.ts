@@ -108,6 +108,40 @@ describe('EdgeHttpClient auth refresh', () => {
     expect(authCalls(fetchMock)).toBe(2);
   });
 
+  test('an identity swap mid-prefetch discards the stale header', async ({ expect }) => {
+    let releaseAuth = () => {};
+    const gate = new Promise<void>((resolve) => {
+      releaseAuth = resolve;
+    });
+    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : (input.url ?? input));
+      if (url.endsWith('/auth')) {
+        await gate;
+        return new Response(JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(null, { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity(identity);
+    const inFlight = client.putBlob(Context.default(), 'one', new Uint8Array([1]), {
+      contentType: 'application/octet-stream',
+    });
+    // Let the prefetch reach the gated /auth round trip, then swap identities under it.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    client.setIdentity({ ...identity, identityDid: 'did:halo:other' });
+    releaseAuth();
+    await inFlight;
+
+    // The stale presentation was discarded: the request went out without it.
+    const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/api/file/one'));
+    expect((putCall![1]?.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
+  });
+
   test('no advertised TTL means no proactive refresh', async ({ expect }) => {
     vi.useFakeTimers();
     const fetchMock = makeFetchMock({ challenge: 'Y2hhbGxlbmdl' });

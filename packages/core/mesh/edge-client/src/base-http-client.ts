@@ -97,6 +97,9 @@ export abstract class BaseHttpClient {
       this._edgeIdentity = identity;
       this._authHeader = undefined;
       this._authRefreshAt = undefined;
+      // Drop any in-flight prefetch: it authenticates the previous identity, and awaiting it
+      // would commit that identity's header for requests now belonging to the new one.
+      this._authPrefetch = undefined;
     }
   }
 
@@ -264,12 +267,15 @@ export abstract class BaseHttpClient {
   }
 
   private async _prefetchAuthHeaderOnce(): Promise<void> {
-    if (!this._edgeIdentity) {
+    const identity = this._edgeIdentity;
+    if (!identity) {
       log.verbose('auth prefetch skipped: no identity set');
       return;
     }
-    const authentication = await authenticateViaChallengeEndpoint(this._baseUrl, this._edgeIdentity);
-    if (authentication) {
+    const authentication = await authenticateViaChallengeEndpoint(this._baseUrl, identity);
+    // `setIdentity` may have swapped identities while the challenge round trip was in flight;
+    // committing then would send the new identity's requests signed as the old one.
+    if (authentication && this._edgeIdentity === identity) {
       this._authHeader = encodeAuthHeader(authentication.presentation);
       this._recordAuthExpiry(authentication.expiresInMs);
     }

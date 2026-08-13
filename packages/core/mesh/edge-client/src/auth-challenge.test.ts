@@ -190,6 +190,12 @@ describe('fetchAuthChallengeInfo', () => {
       jsonResponse({ success: true, data: { challenge: CHALLENGE, expiresInMs: -5 } }),
     );
     expect((await fetchAuthChallengeInfo('https://edge.example.com'))?.expiresInMs).toBeUndefined();
+
+    // `1e400` parses to Infinity; accepting it would schedule the proactive refresh at never.
+    vi.stubGlobal('fetch', async () =>
+      jsonResponse({ success: true, data: { challenge: CHALLENGE, expiresInMs: 1e400 } }),
+    );
+    expect((await fetchAuthChallengeInfo('https://edge.example.com'))?.expiresInMs).toBeUndefined();
   });
 
   test('a 401-shaped challenge carries no TTL', async ({ expect }) => {
