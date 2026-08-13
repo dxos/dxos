@@ -158,9 +158,15 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       map onto `SystemTags` (`plugin-google/…/sync/system-tags.ts:14`, `plugin-jmap/…/sync/system-tags.ts:13`)
       and un-archiving is simply re-adding the tag. This is why "Inbox = non-archived" needs no
       negation — modelling an `archived` tag _and_ a complement would be a second, divergent model of
-      the same fact. Surface: `translations.ts` already carries an orphan `'action-archive.menu':
-'Archive'` referenced by nothing, so an archive affordance was started and abandoned — wire the
-      menu item to it. Fold into the conversation-menu item below.
+      the same fact. SURFACE (requested 2026-08-13): **Archive / Unarchive message menu items.** One
+      operation with the tag toggle behind it, surfaced as two labels chosen from the message's
+      current `inbox` membership — the same `useMessageActions` menu in `ConversationStack` that the
+      conversation-menu item below extends, so build them together. `translations.ts` already carries
+      an orphan `'action-archive.menu': 'Archive'` referenced by nothing (an archive affordance was
+      started and abandoned) — wire that key rather than adding a second, and add the unarchive
+      counterpart beside it. Membership is readable per-message via the existing
+      `SystemTags.tagAtom` family, which is what `Row.Star` already uses for starred, so the label
+      flips reactively without a query per row.
 - [ ] **ConversationStack avatar has no contact affordance** (reported 2026-08-13) — the message tile
       renders a bare `Avatar`, so the popover/create mechanism the `Row.Person` surfaces got is absent
       in `MessageArticle`. Swap it for the exported `ContactAvatar` and host `ContactPreview` in the
