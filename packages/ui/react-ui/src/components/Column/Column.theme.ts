@@ -11,9 +11,9 @@ export type ColumnGap = 'sm' | 'md' | 'lg';
 
 /** Row gap between the grid's rows; `sm` matches the Card default (gap-1). */
 export const columnGapClasses: Record<ColumnGap, string> = {
-  sm: 'gap-y-1',
-  md: 'gap-y-2',
-  lg: 'gap-y-3',
+  sm: '', // 'gap-y-1',
+  md: '', // 'gap-y-2',
+  lg: '', // 'gap-y-3',
 };
 
 export type ColumnStyleProps = {

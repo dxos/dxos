@@ -1,10 +1,16 @@
 # stories-brain research tasks
 
-_Resume: PR #12546 MERGED 2026-08-12 (squash `12b6618058`); since then, on this branch: the
-conversation summary is its own tile at the foot of the ConversationStack (`5a50523dca`) and carries
-its provenance (`54ddecd421`). Next action: whole-conversation summarization — thread-scoped input to
-`SummarizeMailbox`, then `dx-anchor` DXN links to referenced entities, then task extraction rendered
-as a markdown task list. Uncommitted: none._
+_Resume: PR #12553 MERGED 2026-08-13 (squash `9c86066e45`) — progress meters, contact affordances and
+whole-conversation summaries. Work since then is on `claude/suspicious-wilson-a54e74`, rebased onto the
+squash so it carries only its own commits, and is NOT yet pushed or in a PR: Inbox + Starred navtree
+folders (`325ce3a76d`), archive/restore from the conversation menu (`3714d50f53`), and the recipients
+row with an icon and bare addresses (`9e814ba263`). DECIDED: archive is the `inbox` tag coming OFF, not
+an `archived` tag — Gmail's INBOX is a label and JMAP's inbox is a role, so `SystemTags.toggleTag`
+covers both directions and no filter-complement operator is needed anywhere. Next action: archive on
+the mailbox message TILE menu (`InboxStack.tsx:396`, beside `Ignore sender`), then avatar/name
+alignment in the mailbox message card, then the `useContactLookup` defect. NOT VERIFIED IN THE APP —
+the navtree folders typecheck and test but have never been seen rendering; Composer boots only after a
+`pnpm install` fixes a Vite dep-scan failure on `@dxos/vendor-hyperformula`. Uncommitted: none._
 
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
@@ -185,6 +191,43 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       Organization). (a) reuses `ProjectOperation.CreateTrackingProject` (the operation exists; PLAN.md
       deliverable 3's form is still unbuilt); (b) is the same research + `EnrichImages` path as the
       hover-enrichment item below. Menu is built in `ConversationStack`'s `useMessageActions`.
+- [ ] **Hide the Enrich button when no connections are configured** (requested 2026-08-13) — the
+      mailbox toolbar's `enrich` action is contributed unconditionally in `app-graph-builder.ts` (the
+      pipeline action with `disposition: ['toolbar', …]`, made the SINGLE pipeline trigger in
+      `31b1192d89`). With no connection there is nothing to enrich against, so it is a dead primary
+      affordance on a fresh mailbox. Gate the CONTRIBUTION rather than rendering it disabled — a
+      disabled primary button still reads as the main call to action. `translations.ts` already carries
+      `'no-connections.label': 'No connections configured'`, so an empty state for this condition
+      exists; check whether the same predicate can drive both. Settle the scope: Enrich only, or every
+      connection-dependent pipeline action. Verify with a mailbox that has no connection — that state
+      is also what catches a regression.
+- [ ] **Filter box: caret lands BEFORE an existing chip** (reported 2026-08-13) — with a chip present
+      (e.g. the `#sent` / `#starred` system-tag filter), placing the cursor and typing inserts ahead of
+      the chip; it should land after. Same uncontrolled CodeMirror `QueryEditor` as the "Toolbar Clear"
+      item above — fix them in one pass, both being the editor's state not matching what is displayed.
+      HYPOTHESIS (unverified): the chip is a widget decoration and the caret resolves to its left,
+      governed by the decoration's `side` (and by `atomicRanges` if the chip is atomic). But default
+      focus placing the caret at offset 0 produces the SAME symptom with a different fix, so separate
+      click-to-place from focus-with-no-selection before changing anything. Cover both entry paths with
+      a play test asserting where inserted text lands.
+- [ ] **Sync tags back to Gmail** (requested 2026-08-13) — tag changes are currently one-way: the
+      providers map their vocabulary onto `SystemTags` on the way IN
+      (`plugin-google/…/sync/system-tags.ts`, `plugin-jmap/…/sync/system-tags.ts`), but a locally
+      toggled star/archive never reaches the provider. Needs the inverse mapping plus a write path on
+      the Gmail connector (label add/remove), and a decision on conflict handling when both sides moved
+      since the last sync. Directly gates the archive work above: archiving locally without pushing the
+      `inbox` label removal means the message returns on the next sync.
+- [ ] **plugin-crm story driving `CrmOperation.EnrichImages`** (requested 2026-08-13) — a story
+      proximate to the operation showing a Person and an Organization and driving enrichment. plugin-crm
+      has NO stories today, so this is the package's first storybook setup (config, deps, moon target).
+      Seed a Person and an Organization with no `image`, render their cards, and a button invoking the
+      operation and showing the result. The image service must be reachable from the storybook —
+      establish that empirically and report it rather than faking a result.
+- [ ] **Delete `ProcessMailbox`** (decided 2026-08-13) — remove the operation, `ResetProcessCursor`,
+      its routine template, the cursor helpers, tests and translations. It is context-menu-only today
+      (`disposition: ['list-item']`). NOTE: the "Mailbox pipeline routine (2026-08-10)" phase at the top
+      of this file is a full ledger of BUILDING it — that phase has to be rewritten as removed, not left
+      standing as completed work, or the ledger will claim shipped features that no longer exist.
 - [ ] **ConversationStack story: popovers + unknown actors** (requested 2026-08-12) — the
       `ConversationStack` `Default` story should (a) host `ContactPreview` so DXN links in message
       content open popovers, (b) give the message avatar the same hover/create mechanism as
