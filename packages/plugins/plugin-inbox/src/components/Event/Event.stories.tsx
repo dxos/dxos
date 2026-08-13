@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Event as EventType, Person } from '@dxos/types';
 
-import { ContactPreview } from '#testing';
+import { ContactPreview, useContactCreate } from '#testing';
 import { translations } from '#translations';
 
 import { Event } from './Event';
@@ -65,16 +65,26 @@ const PeopleGrid = ({ db }: { db?: Database.Database }) => {
 };
 
 /**
- * A seeded attendee who IS a Person in the space, so the attendee rows show BOTH contact states:
- * hovering this one opens their card, hovering a generated (unknown) address offers to create it.
+ * Two fixed attendees pinning both contact states, rather than leaving it to whatever the generator
+ * happened to produce: the known one is seeded as a Person (hovering opens their card), the unknown
+ * one deliberately is not (hovering offers to create it).
  */
-const KNOWN_ATTENDEE = { name: 'Alice Avery', email: 'alice@example.com' };
+const KNOWN_ATTENDEE = {
+  name: 'Alice Avery',
+  email: 'alice@example.com',
+};
+
+const UNKNOWN_ATTENDEE = {
+  name: 'Bob Bell',
+  email: 'bob@example.com',
+};
 
 // `createObject` yields a live, reactive ECHO object so the editable inputs (useObject) and the
 // markdown body editor (Doc.createAccessor) work in the story; the client space provides the
 // Person registry backing the attendee typeahead.
 const DefaultStory = ({ editable }: { editable?: boolean }) => {
   const { space } = useClientStory();
+  const handleContactCreate = useContactCreate(space?.db);
   const event = useMemo(
     () =>
       createObject(
@@ -86,10 +96,8 @@ const DefaultStory = ({ editable }: { editable?: boolean }) => {
           endDate: new Date('2025-11-19T13:00:00').toISOString(),
           attendees: [
             KNOWN_ATTENDEE,
-            ...Array.from({ length: 2 }, () => ({
-              name: random.person.fullName(),
-              email: random.internet.email(),
-            })),
+            UNKNOWN_ATTENDEE,
+            { name: random.person.fullName(), email: random.internet.email() },
           ],
         }),
       ),
@@ -105,7 +113,7 @@ const DefaultStory = ({ editable }: { editable?: boolean }) => {
           onSave={editable ? () => {} : undefined}
           onDelete={editable ? () => {} : undefined}
         />
-        <Event.Header db={space?.db} editable={editable} />
+        <Event.Header db={space?.db} editable={editable} onContactCreate={handleContactCreate} />
         <Event.Viewport>
           <Event.Body editable={editable} />
         </Event.Viewport>
@@ -154,6 +162,7 @@ export const Editable: Story = {
 /** The attendee rows' two contact states, which every `Row.Person` surface shares. */
 export const Spec: Story = {
   play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
     // Scoped to the header's rows: the story also lists every seeded person in its reference grid,
     // so the name alone is ambiguous.
     const attendeeRow = () =>
@@ -162,13 +171,13 @@ export const Spec: Story = {
       );
     await waitFor(() => expect(attendeeRow()).toBeTruthy(), { timeout: 12_000 });
 
-    // The known attendee's row resolves to a Person, so hovering its contact anchor opens the card.
-    // The popover renders in a portal outside the canvas, hence the document-level query.
-    const anchor = attendeeRow()?.querySelector('button');
-    if (!anchor) {
-      throw new Error('Contact anchor not found for the known attendee.');
+    // The known attendee's row resolves to a Person, so hovering its avatar opens the card. The
+    // popover renders in a portal outside the canvas, hence the document-level query.
+    const avatar = attendeeRow()?.querySelector('[data-testid="row.contact-avatar"]');
+    if (!avatar) {
+      throw new Error('Contact avatar not found for the known attendee.');
     }
-    await userEvent.hover(anchor);
+    await userEvent.hover(avatar);
     const card = await waitFor(
       () => {
         const found = document.body.querySelector('[data-testid="contact-preview"]');
@@ -181,5 +190,17 @@ export const Spec: Story = {
     );
     await expect(card).toHaveTextContent(KNOWN_ATTENDEE.name);
     await expect(card).toHaveTextContent(KNOWN_ATTENDEE.email);
+    await userEvent.keyboard('{Escape}');
+
+    // The unknown attendee's row offers to create the Person instead — on hover, never before it.
+    await expect(canvas.queryByRole('button', { name: 'Create contact' })).toBeNull();
+    const unknownAvatar = [...canvasElement.querySelectorAll('.dx-card__row')]
+      .find((row) => row.textContent?.includes(UNKNOWN_ATTENDEE.name))
+      ?.querySelector('[data-testid="row.contact-avatar"]');
+    if (!unknownAvatar) {
+      throw new Error('Contact avatar not found for the unknown attendee.');
+    }
+    await userEvent.hover(unknownAvatar);
+    await canvas.findByRole('button', { name: 'Create contact' }, { timeout: 5_000 });
   },
 };

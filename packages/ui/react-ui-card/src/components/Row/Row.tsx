@@ -18,7 +18,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { type Actor, type Message } from '@dxos/types';
-import { toHue } from '@dxos/ui-theme';
+import { mx, toHue } from '@dxos/ui-theme';
 
 import { useActorContact } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -227,18 +227,18 @@ export type PersonRole = 'from' | 'to' | 'cc' | 'bcc' | 'attendee';
 
 type RowPersonProps = {
   actor: Actor.Actor;
-  /** Recipient/participant kind (icon + aria only; no visible prefix). */
+  /** Recipient/participant kind (aria only; no visible prefix). */
   role?: PersonRole;
   /**
-   * Render a static `DxAvatar` in the gutter (hook-free) instead of the interactive contact anchor.
-   * Used by list tiles where resolving a contact per row (a hook) would be too costly.
+   * Resolving the actor's contact costs a query hook, so passing `db` is what opts a row into the
+   * interactive avatar (hover card / create contact). Omit it in virtualized list tiles, which get the
+   * hook-free static avatar instead.
    */
-  avatar?: boolean;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
   /** Render a trailing remove button (e.g. attendee rows in the editable event header). */
   onRemove?: () => void;
-  /** Click handler for the avatar (e.g. select the message); avatar variant only. */
+  /** Click handler for the avatar (e.g. select the message). */
   onClick?: (event: MouseEvent) => void;
 };
 
@@ -255,20 +255,15 @@ const PersonAvatarRow = ({ actor, onClick }: Pick<RowPersonProps, 'actor' | 'onC
 );
 
 /**
- * Avatar variant that resolves the actor's contact: hovering the avatar opens that Person's card,
- * and when the space has no Person for the address the avatar gives way to a create-contact button
- * (a click, never the hover — hovering must not write to the space).
+ * Interactive variant: the gutter always shows the actor's AVATAR, and resolving their contact decides
+ * what hovering it does — a Person opens that contact's card, no Person swaps the avatar for a
+ * create-contact button (a click, never the hover, since hovering must not write to the space).
  *
- * Separate from {@link PersonAvatarRow} because resolving a contact costs a query hook per row: a
- * virtualized list keeps the static variant, while single-row surfaces (an article header, a preview
- * card) opt in by passing `db`.
+ * Uniform across every surface that shows people, so a sender, a recipient and an attendee all read
+ * the same. Separate from {@link PersonAvatarRow} only because resolving a contact costs a query hook
+ * per row: a virtualized list keeps the static variant.
  */
-const PersonAvatarHoverRow = ({
-  actor,
-  db,
-  onContactCreate,
-  onClick,
-}: Pick<RowPersonProps, 'actor' | 'db' | 'onContactCreate' | 'onClick'>) => {
+const PersonContactRow = ({ actor, role, db, onContactCreate, onRemove, onClick }: RowPersonProps) => {
   const { t } = useTranslation(translationKey);
   const contactDXN = useActorContact(db, actor);
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -280,10 +275,10 @@ const PersonAvatarHoverRow = ({
         trigger: anchorRef.current,
         dxn: contactDXN,
         label: t('show-contact.label'),
-        title: actor.name ?? actor.email,
+        title: role ? `${role}: ${actor.name ?? actor.email}` : (actor.name ?? actor.email),
       });
     }
-  }, [contactDXN, t, actor.name, actor.email]);
+  }, [contactDXN, t, role, actor.name, actor.email]);
   const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!contactDXN);
 
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
@@ -298,7 +293,8 @@ const PersonAvatarHoverRow = ({
             avatar), which knocked the avatar off the gutter's centre. */}
         <div
           ref={anchorRef}
-          className='grid place-items-center'
+          // Pointer only when hovering does something: a resolved contact opens its card.
+          className={mx('grid place-items-center', contactDXN && 'cursor-pointer')}
           data-testid='row.contact-avatar'
           onPointerEnter={() => {
             setHovered(true);
@@ -324,41 +320,6 @@ const PersonAvatarHoverRow = ({
         </div>
       </Card.Block>
       <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
-    </Card.Row>
-  );
-};
-
-/**
- * Interactive variant — resolves the contact to a card-preview anchor, with a create-contact fallback.
- */
-const PersonAnchorRow = ({
-  actor,
-  role,
-  db,
-  onContactCreate,
-  onRemove,
-}: Omit<RowPersonProps, 'avatar' | 'onClick'>) => {
-  const { t } = useTranslation(translationKey);
-  const contactDXN = useActorContact(db, actor);
-
-  const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
-
-  // TODO(burdon): Reconcile with Avatar if space member.
-  return (
-    <Card.Row>
-      <Card.Block>
-        <AnchorIconButton
-          icon='ph--user--regular'
-          fallbackIcon='ph--user-plus--regular'
-          label={t('show-contact.label')}
-          fallbackLabel={t('create-contact.label')}
-          title={role ? `${role}: ${actor.name}` : actor.name}
-          value={contactDXN}
-          hover
-          onClick={onContactCreate ? handleContactCreate : undefined}
-        />
-      </Card.Block>
-      <Card.Text>{actor.name || actor.email}</Card.Text>
       {onRemove && (
         <Card.Block end>
           <IconButton
@@ -375,17 +336,12 @@ const PersonAnchorRow = ({
 };
 
 /** A Card.Row rendering a person (sender, recipient, attendee). */
-const RowPerson = ({ avatar, onClick, ...props }: RowPersonProps) => {
-  if (!avatar) {
-    return <PersonAnchorRow {...props} />;
-  }
-  // `db` is what distinguishes the interactive avatar from the hook-free one (see the two variants).
-  return props.db ? (
-    <PersonAvatarHoverRow {...props} onClick={onClick} />
+const RowPerson = ({ onClick, ...props }: RowPersonProps) =>
+  props.db ? (
+    <PersonContactRow {...props} onClick={onClick} />
   ) : (
     <PersonAvatarRow actor={props.actor} onClick={onClick} />
   );
-};
 
 RowPerson.displayName = 'Row.Person';
 

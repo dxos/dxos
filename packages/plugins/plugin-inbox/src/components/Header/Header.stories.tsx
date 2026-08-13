@@ -3,20 +3,17 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import { buildContactFromActor } from '@dxos/extractor-lib';
-import { type Space } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Card } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Actor, Person } from '@dxos/types';
 
-import { ContactPreview } from '#testing';
+import { ContactPreview, useContactCreate } from '#testing';
 import { translations } from '#translations';
 
 import { Header } from './Header';
@@ -43,26 +40,6 @@ type StoryArgs = {
 };
 
 /**
- * Creates the contact for an actor with the extractor's own `buildContactFromActor` — the same core
- * the app reaches through `InboxOperation.ExtractContact`, so the row flips into its card-on-hover
- * state here exactly as it does in the app.
- */
-const useContactCreate = (space?: Space) =>
-  useCallback(
-    (actor: Actor.Actor) => {
-      if (!space) {
-        return;
-      }
-      void EffectEx.runPromise(buildContactFromActor(actor, space.db)).then((contact) => {
-        if (contact) {
-          space.db.add(contact);
-        }
-      });
-    },
-    [space],
-  );
-
-/**
  * Header.Root chrome composing shared Row.* primitives — the structure both article headers use.
  *
  * Live rather than static: the star owns its state, and each avatar resolves its actor's contact, so
@@ -72,7 +49,7 @@ const useContactCreate = (space?: Space) =>
 const DefaultStory = ({ actors = [KNOWN_SENDER] }: StoryArgs) => {
   const { space } = useClientStory();
   const [starred, setStarred] = useState(true);
-  const handleContactCreate = useContactCreate(space);
+  const handleContactCreate = useContactCreate(space?.db);
 
   return (
     <ContactPreview db={space?.db}>
@@ -84,10 +61,8 @@ const DefaultStory = ({ actors = [KNOWN_SENDER] }: StoryArgs) => {
           <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
         </Card.Row>
         {actors.map((actor, index) => (
-          // `avatar` + `db` is the interactive variant: it resolves the contact, so it can hover.
           <Row.Person
             key={actor.email}
-            avatar
             actor={actor}
             role={index === 0 ? 'from' : 'to'}
             db={space?.db}
@@ -203,6 +178,6 @@ export const Spec: Story = {
     // does not load — so the accessible name is the raw key. Asserting on it still pins the behaviour
     // under test: the star owns its state, and toggling swaps which action the button offers.
     await userEvent.click(canvas.getByRole('button', { name: 'system-button.unstar.label' }));
-    await canvas.findByRole('button', { name: 'system-button.star.label' }, undefined, { timeout: 5_000 });
+    await canvas.findByRole('button', { name: 'system-button.star.label' }, { timeout: 5_000 });
   },
 };

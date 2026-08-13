@@ -26,8 +26,8 @@ const DefaultStory = () => {
     <Card.Root border={false} fullWidth classNames='p-1'>
       <Card.Body>
         <Row.Star starred onToggle={() => {}} />
-        <Row.Person actor={SENDER} role='from' avatar />
-        <Row.Person actor={SENDER} role='from' onContactCreate={() => {}} />
+        {/* Without `db` the row cannot resolve a contact, so it renders the static avatar. */}
+        <Row.Person actor={SENDER} role='from' />
         <Row.Date start={new Date('2025-11-19T12:00:00')} end={new Date('2025-11-19T13:30:00')} />
         <Row.Ref object={object} />
         <Row.Attachments

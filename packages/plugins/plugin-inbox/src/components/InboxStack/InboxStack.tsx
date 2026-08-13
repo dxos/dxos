@@ -368,7 +368,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         }
       />
       <Card.Body>
-        <Row.Person actor={message.sender} avatar role='from' onClick={handleAvatarClick} />
+        <Row.Person actor={message.sender} role='from' onClick={handleAvatarClick} />
 
         {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
