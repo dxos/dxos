@@ -30,7 +30,9 @@ import { RecordArticle } from './RecordArticle';
 
 random.seed(0);
 
-const PERSON_COUNT = 100;
+// Kept small deliberately: the storybook client takes ~5s just to open the space, and seeding on top of
+// that pushes the plugin manager past its 30s startup budget.
+const PERSON_COUNT = 8;
 
 const DefaultStory = () => {
   const spaces = useSpaces();

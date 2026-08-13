@@ -143,6 +143,23 @@ Committed, unpushed. This is the PR to open first.
 
 ---
 
+## BLOCKER: storybook startup times out in this worktree (found 2026-08-13)
+
+Every plugin-manager story on my storybook instance (:9013) dies with
+`Startup timed out after 30000ms` — including `SpaceHomeArticle`, which nothing on this branch touches,
+so it is NOT a regression from this work. Console shows the cause: the ECHO client is slow to come up
+(`slow AM open {duration: 5007ms}` and `Action 'Finding properties for a space' is taking more then
+5,000ms`), and plugin startup on top of that overruns the budget. Reducing a story's seed count from 100
+to 8 objects did NOT help, so seeding is not the bottleneck.
+
+Consequence: **the manual test plan below cannot be executed from my storybook instance.** Everything on
+this branch is verified only by build, lint and unit tests. Same family as the already-tracked "story
+invoker wedge (env)" and the 20s index-query timeouts.
+
+Next steps when someone picks this up: check whether the user's own :9009 instance shows it too (if not,
+it is worktree-local — suspect the vite dep graph or better-sqlite3 under this worktree's node_modules);
+otherwise raise the startup budget in `useApp.tsx:236` only long enough to confirm the app does come up.
+
 ## Manual test plan
 
 Written for functionality already built, to be walked 1x1. Each step names where to look, what to do,
