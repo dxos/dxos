@@ -16,7 +16,16 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Panel, ScrollArea, ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import {
+  Flex,
+  IconButton,
+  Input,
+  Panel,
+  ScrollArea,
+  ThemedClassName,
+  useAsyncEffect,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Organization, Person, Task } from '@dxos/types';
@@ -307,7 +316,7 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
 
   return (
     <div className={mx('flex flex-col gap-1 py-1', classNames)}>
-      <div className='flex items-center gap-2'>
+      <Flex gap='sm' align='center'>
         <span className='grow'>Progress Monitor</span>
         {running ? (
           <IconButton
@@ -318,7 +327,7 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
         ) : (
           <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
         )}
-      </div>
+      </Flex>
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
         <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}

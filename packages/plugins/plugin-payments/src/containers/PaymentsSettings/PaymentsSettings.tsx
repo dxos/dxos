@@ -8,7 +8,7 @@ import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Button, Message, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -76,7 +76,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
             <Form.FieldSet />
-            <div className='flex flex-col gap-2 my-2'>
+            <Flex column gap='sm' classNames='my-2'>
               <Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
                 {pending ? t('pending.label') : t('buy-premium.label')}
               </Button>
@@ -94,7 +94,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
                   </Message.Content>
                 </Message.Root>
               )}
-            </div>
+            </Flex>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

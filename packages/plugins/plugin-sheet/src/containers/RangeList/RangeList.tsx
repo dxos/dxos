@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { Input, Message, useTranslation } from '@dxos/react-ui';
+import { Flex, Input, Message, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -62,13 +62,13 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
                     classNames='flex items-center cursor-pointer'
                     onClick={() => handleSelectRange(range)}
                   >
-                    <div className='flex grow items-center truncate px-2'>
+                    <Flex align='center' classNames='grow truncate px-2'>
                       {t('range.title', {
                         position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
                         key: t(`range-key.${range.key}.label`),
                         value: t(`range-value.${range.value}.label`),
                       })}
-                    </div>
+                    </Flex>
                     <OrderedList.DeleteButton onClick={() => handleDeleteRange(range)} />
                   </OrderedList.Item>
                 );

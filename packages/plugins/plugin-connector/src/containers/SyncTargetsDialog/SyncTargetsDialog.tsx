@@ -11,7 +11,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Button, Dialog, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Flex, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -114,14 +114,14 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <div className='flex gap-2 py-form-gap'>
+          <Flex gap='sm' classNames='py-form-gap'>
             <Button onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
             </Button>
             <Button onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
             </Button>
-          </div>
+          </Flex>
         )}
 
         {availableTargets.length === 0 ? (

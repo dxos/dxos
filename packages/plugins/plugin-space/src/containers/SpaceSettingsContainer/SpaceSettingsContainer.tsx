@@ -16,7 +16,7 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, DropdownMenu, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, DropdownMenu, Flex, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -207,7 +207,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
           <Form.Section title={t('space-controls.title')} description={t('space-controls.description')}>
             <Form.Row label={t('space-id.title')} description={t('space-id.description')}>
-              <div className='flex items-center gap-2'>
+              <Flex gap='sm' align='center'>
                 <Input.Root>
                   <Input.TextInput value={space.id} disabled classNames='flex-1 font-mono text-xs' />
                 </Input.Root>
@@ -219,7 +219,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                     void navigator.clipboard.writeText(space.id);
                   }}
                 />
-              </div>
+              </Flex>
             </Form.Row>
             <Form.Row label={t('backup-space.title')} description={t('backup-space.description')}>
               <DropdownMenu.Root>
@@ -268,7 +268,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                       </Dialog.Header>
                       <Dialog.Body>
                         <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
-                        <div className='flex justify-end gap-2 mbs-4'>
+                        <Flex gap='sm' justify='end' classNames='mbs-4'>
                           <Dialog.Close asChild>
                             <Button>{t('cancel.label')}</Button>
                           </Dialog.Close>
@@ -279,7 +279,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                           >
                             {t('delete-space.label')}
                           </Button>
-                        </div>
+                        </Flex>
                       </Dialog.Body>
                     </Dialog.Content>
                   </Dialog.Overlay>

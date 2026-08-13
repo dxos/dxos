@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
-import { Card, Icon, IconButton, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Flex, Icon, IconButton, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
@@ -59,12 +59,12 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
             </Card.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}
-            <div className='flex flex-col gap-form-gap'>
+            <Flex column gap='form'>
               <Input.Root>
                 <Input.Label>{t('related-actions.label')}</Input.Label>
               </Input.Root>
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
-            </div>
+            </Flex>
 
             {related.length > 0 && (
               <div

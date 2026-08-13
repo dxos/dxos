@@ -6,7 +6,7 @@ import { formatDistance, isValid } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Tooltip, useTranslation } from '@dxos/react-ui';
+import { Flex, Tooltip, useTranslation } from '@dxos/react-ui';
 
 import { StatusBar } from '#components';
 import { meta } from '#meta';
@@ -32,10 +32,10 @@ export const VersionNumber = (_props: VersionNumberProps) => {
       : undefined;
 
   const content = (
-    <div className='flex flex-col items-start gap-0.5'>
+    <Flex column gap='xs' align='start'>
       <span className='font-mono'>{version}</span>
       {released && <span className='text-xs'>{released}</span>}
-    </div>
+    </Flex>
   );
 
   return (

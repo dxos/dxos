@@ -11,7 +11,7 @@ import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, Message, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Message, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Treegrid } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PublishFieldNote } from '@dxos/schema';
@@ -212,7 +212,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <div role='none' className='flex flex-col gap-3 p-3'>
+            <Flex role='none' column gap='md' classNames='p-3'>
               {/* Publish status — the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
               <Message.Root
@@ -253,14 +253,14 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                   <Message.Content>
                     <Message.Body>{t('confirm-publish.message')}</Message.Body>
                     <Message.Body asChild>
-                      <div role='none' className='flex gap-2 pbs-2'>
+                      <Flex role='none' gap='sm' classNames='pbs-2'>
                         <Button variant='primary' disabled={busy} onClick={handlePublish}>
                           {t('confirm-publish.label')}
                         </Button>
                         <Button disabled={busy} onClick={() => setConfirming(false)}>
                           {t('cancel.label')}
                         </Button>
-                      </div>
+                      </Flex>
                     </Message.Body>
                   </Message.Content>
                 </Message.Root>
@@ -269,7 +269,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
-              <div role='none' className='flex flex-col gap-1'>
+              <Flex role='none' column gap='xs'>
                 <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Message.Root valence='warning'>
@@ -332,8 +332,8 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                     );
                   })}
                 </Treegrid.Root>
-              </div>
-            </div>
+              </Flex>
+            </Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>
