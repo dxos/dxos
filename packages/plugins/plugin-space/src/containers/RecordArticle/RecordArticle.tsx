@@ -66,6 +66,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </div>
 
+            {/* TODO(burdon): Fix indentation: left align with top card. */}
             {related.length > 0 && (
               <div
                 className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}

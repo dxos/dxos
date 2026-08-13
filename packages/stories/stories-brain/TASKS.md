@@ -12,6 +12,13 @@ alignment in the mailbox message card, then the `useContactLookup` defect. NOT V
 the navtree folders typecheck and test but have never been seen rendering; Composer boots only after a
 `pnpm install` fixes a Vite dep-scan failure on `@dxos/vendor-hyperformula`. Uncommitted: none._
 
+## MOVED: the inbox surface work now lives in `packages/plugins/plugin-inbox/TASKS.md`
+
+Split 2026-08-13. That ledger (registry project `inbox-surface`) owns the inbox product surface —
+folders, message actions, contact affordances, summarization UI — structured as PHASES THAT MAP ONTO
+PRs, plus a manual test plan. THIS file keeps the model-ladder / FINDINGS / Topics research it was
+created for. Do not add inbox surface work here.
+
 ## Priorities (triaged with the user 2026-08-13)
 
 Work this order. Items not listed are P2 — real, but not this push.
