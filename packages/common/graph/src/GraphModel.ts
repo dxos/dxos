@@ -1011,61 +1011,6 @@ export const make = <Node extends GraphNode.Any = GraphNode.Any, Edge extends Gr
   options?: Options<Node, Edge>,
 ): GraphModel<Node, Edge> => new GraphModel<Node, Edge>(options);
 
-/**
- * Chainable builder wrapper.
- *
- * Superseded by `model.pipe(...)` with the operations above; retained until the remaining
- * chain-style call sites are converted.
- */
-export abstract class AbstractBuilder<
-  Node extends GraphNode.Any,
-  Edge extends GraphEdge.Any,
-  Model extends AbstractGraphModel<Node, Edge, any>,
-> {
-  constructor(protected readonly _model: Model) {}
-
-  get model(): Model {
-    return this._model;
-  }
-
-  call(cb: (builder: this) => void): this {
-    cb(this);
-    return this;
-  }
-
-  getNode(id: string): Node {
-    return this._model.getNode(id);
-  }
-
-  addNode(node: Node): this {
-    this._model.addNode(node);
-    return this;
-  }
-
-  addNodes(nodes: Node[]): this {
-    this._model.addNodes(nodes);
-    return this;
-  }
-
-  addEdge(edge: MakeOptional<Edge, 'id'>): this {
-    this._model.addEdge(edge);
-    return this;
-  }
-
-  addEdges(edges: Edge[]): this {
-    this._model.addEdges(edges);
-    return this;
-  }
-}
-
-/**
- * Basic builder.
- */
-export class Builder<
-  Node extends GraphNode.Any = GraphNode.Any,
-  Edge extends GraphEdge.Any = GraphEdge.Any,
-> extends AbstractBuilder<Node, Edge, GraphModel<Node, Edge>> {}
-
 //
 // Operations
 //

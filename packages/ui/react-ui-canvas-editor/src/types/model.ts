@@ -31,10 +31,6 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
     });
   }
 
-  get builder(): CanvasGraphBuilder<S> {
-    return new CanvasGraphBuilder<S>(this);
-  }
-
   override copy(graph?: Partial<GraphModel.Data<S, Connection>>): CanvasGraphModel<S> {
     return CanvasGraphModel.create<S>(graph);
   }
@@ -63,21 +59,5 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
     } as Connection;
     this.addEdge(edge);
     return edge;
-  }
-}
-
-export class CanvasGraphBuilder<S extends Shape = Shape> extends GraphModel.AbstractBuilder<
-  S,
-  Connection,
-  CanvasGraphModel<S>
-> {
-  createNode(props: MakeOptional<S, 'id'>): this {
-    this.model.createNode(props);
-    return this;
-  }
-
-  createEdge(props: MakeOptional<Connection, 'id'>): this {
-    this.model.createEdge(props);
-    return this;
   }
 }
