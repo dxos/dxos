@@ -117,6 +117,10 @@ export const MailboxArticle = ({
   const starredUri = useSystemTagUri(db, 'starred');
   const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
 
+  // Inbox membership drives the tile menu's archive direction; archiving is this tag coming off.
+  const inboxUri = useSystemTagUri(db, 'inbox');
+  const inboxAtom = useMemo(() => SystemTags.tagAtom(tagIndex, inboxUri), [tagIndex, inboxUri]);
+
   // This view's canonical system tag, resolved by id (`undefined` until sync/first draft creates it).
   const systemTagUri = useSystemTagUri(db, systemTag);
   const systemTagIds = useTaggedIds(tagIndex, systemTagUri);
@@ -284,6 +288,16 @@ export const MailboxArticle = ({
           break;
         }
 
+        case 'archive': {
+          const message = messages.find((message) => message.id === action.messageId);
+          if (message && db) {
+            void Effect.runFork(
+              SystemTags.toggleTag(mailbox, message, 'inbox').pipe(Effect.provide(Database.layer(db))),
+            );
+          }
+          break;
+        }
+
         case 'ignore-sender': {
           const message = messages.find((message) => message.id === action.messageId);
           const email = message?.sender?.email;
@@ -403,8 +417,10 @@ export const MailboxArticle = ({
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
+            inboxAtom={inboxAtom}
             pagination={pagination}
             loading={loading}
+            enableArchive
             enableIgnoreSender
             enableCreateTopic
             searchQuery={searchQuery}
