@@ -27,7 +27,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, Entity, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, QueryResult, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
@@ -263,6 +263,15 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   private _triggers: Trigger.Trigger[] = [];
 
   /**
+   * Live query over `Trigger` objects, subscribed once in {@link start} so the trigger list stays
+   * current reactively. While set, {@link _fetchTriggers} reads {@link QueryResult.results}
+   * directly instead of re-querying the database, so the natural-time poll loop no longer issues a
+   * fresh `Filter.type(Trigger)` query on every tick.
+   */
+  private _triggerQuery: QueryResult.QueryResult<Trigger.Trigger> | undefined;
+  private _triggerQueryUnsubscribe: (() => void) | undefined;
+
+  /**
    * Unified runtime state for every trigger kind: cron schedule, failure cooldown, and pending
    * {@link RunAgainError} retries. Keyed by trigger id.
    */
@@ -374,6 +383,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
+        yield* this._subscribeToTriggers();
         this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
           Effect.tapCause((cause) => {
             const error = EffectEx.causeToError(cause);
@@ -417,6 +427,11 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         yield* Fiber.interrupt(this._timerFiber);
         this._timerFiber = undefined;
       }
+
+      // Stop the reactive trigger query subscription.
+      this._triggerQueryUnsubscribe?.();
+      this._triggerQueryUnsubscribe = undefined;
+      this._triggerQuery = undefined;
 
       // Clear runtime state for all triggers.
       this._runtimeState.clear();
@@ -909,12 +924,43 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
   private _fetchTriggers = () =>
     Effect.gen({ self: this }, function* () {
+      // The local dispatcher only runs triggers that are not explicitly routed to edge.
+      if (this._triggerQuery) {
+        // `_subscribeToTriggers` keeps this query current reactively — reuse its cached results
+        // instead of issuing a fresh database query on every poll tick.
+        return this._triggerQuery.results.filter((t) => !t.remote);
+      }
       const objects = yield* Database.query(
         Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.fetchTriggers'),
       ).run;
-      // The local dispatcher only runs triggers that are not explicitly routed to edge.
       return objects.filter((t) => !t.remote);
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
+
+  /**
+   * Subscribe once to a live `Trigger` query so trigger objects update reactively as they change,
+   * replacing the previous behavior of re-querying the database for the full trigger list on every
+   * natural-time poll tick (~1/s), the dominant contributor to `TriggerDispatcher`'s idle-time SQL
+   * churn. Torn down in {@link stop}.
+   */
+  private _subscribeToTriggers = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      const queryResult = yield* Database.query(
+        Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.watchTriggers'),
+      );
+      this._triggerQuery = queryResult;
+      this._triggerQueryUnsubscribe = queryResult.subscribe(
+        () => {
+          Effect.runFork(
+            this.refreshTriggers().pipe(
+              Effect.tapCause((cause) =>
+                Effect.sync(() => log.error('failed to refresh triggers', { error: EffectEx.causeToError(cause) })),
+              ),
+            ),
+          );
+        },
+        { fire: true },
+      );
+    }).pipe(Effect.provide(this._services));
 
   private _startNaturalTimeProcessing = (): Effect.Effect<void> =>
     Effect.gen({ self: this }, function* () {

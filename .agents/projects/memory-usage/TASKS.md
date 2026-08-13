@@ -1,6 +1,6 @@
 # Composer Memory Usage — Tasks
 
-_Resume: Phase 4 (idle churn) is the largest remaining pool; Phase 3 continues opportunistically. Uncommitted: none._
+_Resume: Phase 4 idle-churn sites S1-S4 fixed/investigated (see below), opened as a separate PR from #12505. Remedies section (R1-R6) and Sequencing still open — verify decommit with `scripts/memory/soak.mjs` once the PR lands. Phase 3 continues opportunistically. Uncommitted: none._
 
 **Target: 300–400 MB resting footprint for an idle tab, 500 MB ceiling.**
 Composition model and measurement rules: DESIGN.md. Industry comparison:
@@ -71,23 +71,65 @@ in heap-used, so measure with `scripts/memory/soak.mjs` rather than a snapshot.
 Four independent loops. Each needs its own decision; they do not have to be
 fixed the same way.
 
-- [ ] **S1. `TriggerDispatcher` fires at 1 Hz with no triggers defined.**
+- [x] **S1. `TriggerDispatcher` fires at 1 Hz with no triggers defined.**
       `compute-runtime/src/triggers/trigger-dispatcher.ts`: `livePollInterval`
       defaults to 1 s (~line 300), `_startNaturalTimeProcessing` repeats
       `invokeScheduledTriggers` on `Schedule.fixed` (~line 921), and each tick
       also runs an ECHO `Filter.type(Trigger)` query. Started by plugin-routine,
-      a core plugin, so every tab pays it.
-- [ ] **S2. Every subscribed feed polls at 1 Hz.**
+      a core plugin, so every tab pays it. **Fixed (R1, reactive query):**
+      `start()` now subscribes once to a live `Filter.type(Trigger)` query
+      (`_subscribeToTriggers`); `refreshTriggers`/`_fetchTriggers` read the
+      subscription's cached `results` instead of re-querying the database, so
+      the 1 Hz tick no longer issues SQL when the trigger set hasn't changed.
+      The tick itself still runs every second (cron due-time checks and
+      feed/subscription trigger kinds are unchanged) — a full "sleep until
+      next due time, no timer while idle" scheduler (closing S1 completely per
+      R1's description) is a larger, riskier change to feed/subscription
+      trigger semantics and is left as a follow-up if further gains are
+      wanted.
+- [x] **S2. Every subscribed feed polls at 1 Hz.**
       `echo-client/src/feed/feed-handle.ts` (`POLLING_INTERVAL`,
       `beginPolling`): one timer and one refresh RPC per feed handle, so cost
-      scales with feeds open (a mailbox is the common case).
-- [ ] **S3. Each open space polls sync state at 2 s.**
+      scales with feeds open (a mailbox is the common case). No server push
+      exists (`FeedService` has no subscribe/watch RPC — confirmed via
+      `packages/core/protocols/src/FeedService.ts`), so R1 doesn't apply; R6
+      (real push) stays deferred to `feed-live-objects`. **Fixed (R2, no-change
+      backoff):** `beginPolling` now doubles the poll delay (capped at 30 s)
+      each tick that finds no object-set change, and resets to
+      `POLLING_INTERVAL` the moment a poll observes one. R4 (visibility
+      gating) was considered but deferred — orthogonal, applies to all four
+      sites, better done as one pass.
+- [x] **S3. Each open space polls sync state at 2 s.**
       `echo-client/src/proxy-db/database.ts` (`FEED_SYNC_POLL_INTERVAL`):
-      aggregates block backlog across namespaces.
-- [ ] **S4. Query re-execution amplifies every tick.** `echo-host`'s
+      aggregates block backlog across namespaces via a real per-namespace
+      `FeedService.getSyncState` RPC (SQLite `COUNT(*)` server-side) — not a
+      local aggregation, so R1 doesn't apply here either; started
+      unconditionally per open space by `plugin-client`'s
+      `space-replication-progress.ts`. **Fixed (R2, no-change backoff):**
+      `subscribeToSyncState`'s `pollFeeds` now self-reschedules with a delay
+      that doubles (capped at 15 s) while `blocksToPull`/`blocksToPush`/
+      `totalBlocks` stay unchanged, and resets to `FEED_SYNC_POLL_INTERVAL` on
+      any observed delta. Noted but not fixed here: `space-replication-progress.ts`
+      re-subscribes per space on every `client.spaces` emission with no
+      de-dupe, which can spawn duplicate pollers per space over a session —
+      worth its own follow-up.
+- [x] **S4. Query re-execution amplifies every tick.** `echo-host`'s
       `QueryService._executeQueries` re-runs each dirty reactive query per
       invalidation hint; the loops above generate hints, which is what turns
-      three timers into the observed SQL fan-out.
+      three timers into the observed SQL fan-out. **Investigated, no code
+      change:** `matchesHint`/`extractScopes` (`query-executor.ts`) already do
+      real per-dimension filtering, not a broad type/space-only match, and are
+      covered by extensive regression tests (DX-966 canonicalization, id-rooted
+      relation traversal) — tightening further is a speculative change to the
+      invalidation core for unclear benefit. More importantly, S1's
+      `_fetchTriggers().run` was a one-shot query (`ActiveQuery.firstResult`),
+      unconditionally dirty regardless of any hint — `matchesHint` was never
+      in the amplification path for it, so R5 targets the wrong layer. With
+      S1-S3 no longer generating spurious ticks/RPCs on an idle tab, S4's
+      observed fan-out should fall away as a consequence rather than needing
+      its own fix. Separately noted (not actioned): `query-service.ts` has a
+      standing TODO that an idle Composer registers ~80 queries with only ~10
+      unique — a dedup opportunity independent of this phase.
 
 ### Remedies — options to evaluate per site
 

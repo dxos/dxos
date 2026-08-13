@@ -38,6 +38,13 @@ const FEED_APPEND_BATCH_SIZE = 15;
 const POLLING_INTERVAL = 1_000;
 
 /**
+ * Ceiling for the no-change backoff in {@link FeedHandle.beginPolling}: the delay doubles after
+ * each poll that finds nothing new, capped here, and resets to {@link POLLING_INTERVAL} the moment
+ * a poll observes a change.
+ */
+const MAX_POLLING_INTERVAL = 30_000;
+
+/**
  * Client-side handle for a single feed, backed by an EDGE queue.
  * Internal to echo-client — feed operations are exposed through {@link DatabaseImpl}.
  */
@@ -107,6 +114,7 @@ export class FeedHandle {
       this._error = err as Error;
     } finally {
       this._isLoading = false;
+      this._lastRefreshChanged = changed;
       if (changed) {
         this.updated.emit();
       }
@@ -143,6 +151,11 @@ export class FeedHandle {
   private _error: Error | null = null;
   private _refreshId = 0;
   private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
+
+  /** Whether the most recent poll found a different object set — drives the backoff in {@link beginPolling}. */
+  private _lastRefreshChanged = true;
+  /** Current delay between polls; grows on no-change ticks, resets to {@link POLLING_INTERVAL} on change. */
+  private _currentPollingDelay = POLLING_INTERVAL;
 
   constructor(
     private readonly _service: FeedService.Client,
@@ -551,10 +564,16 @@ export class FeedHandle {
 
   beginPolling(): () => void {
     if (this._pollingHandlers++ === 0) {
+      this._currentPollingDelay = POLLING_INTERVAL;
       const poll = async () => {
         await this._refreshTask.runBlocking();
         if (this._pollingHandlers > 0 && !this._ctx.disposed) {
-          this._pollingInterval = setTimeout(poll, POLLING_INTERVAL);
+          // No-change backoff: an idle feed widens its own poll interval instead of holding at 1 Hz
+          // forever, and snaps back to POLLING_INTERVAL the moment a poll observes real change.
+          this._currentPollingDelay = this._lastRefreshChanged
+            ? POLLING_INTERVAL
+            : Math.min(this._currentPollingDelay * 2, MAX_POLLING_INTERVAL);
+          this._pollingInterval = setTimeout(poll, this._currentPollingDelay);
         }
       };
       queueMicrotask(poll);
