@@ -59,8 +59,8 @@ last element of each chain is the `Pipeline.run` sink.
 | `ExtractCorrespondents` (inbox)     | `contacts`      | deterministic | none               | none — identity index    | `build-contact` → sink (add Organization / Person)                                                                           |
 | `ExtractSubscriptions` (inbox)      | `subscriptions` | deterministic | none               | none — replaces state    | `extract-unsubscribe` » 50 → sink (aggregate per sender)                                                                     |
 | `ClassifyMailbox` (inbox)           | `classify`      | classify      | cheap LLM, ≤100    | tagged `classifyMailbox` | » page → `classify` → sink (advance cursor per LLM page)                                                                     |
-| `SummarizeMailbox` (inbox)          | `summarize`     | summarize     | 1 call/msg, ≤50    | none — newest thread id  | **none** — plain loop over threads                                                                                           |
 | `AnalyzeMailbox` (inbox\*)          | `analyze`       | analyze       | 1 call/msg, no cap | tagged `analyzeMailbox`  | delegates to `runFactPipeline`: `facts-dedup` → `extract-facts-unit` → `facts-log` » page → sink (`putFacts` + advance)      |
+| `SummarizeMailbox` (inbox)          | `summarize`     | summarize     | 1 call/msg, ≤50    | none — newest thread id  | **none** — plain loop over threads                                                                                           |
 | `CrmOperation.ProcessMailbox` (crm) | —               | —             | LLM (optional)     | tagged                   | **none** — plain paged loop                                                                                                  |
 | `UpdateProjectTasks` (projects)     | —               | —             | none               | none — whole feed        | **none** — filter + regenerate                                                                                               |
 | `UpdateTravelLog` (projects)        | —               | —             | none               | none — whole feed        | **none** — filter + regenerate                                                                                               |
@@ -73,6 +73,54 @@ Everything not marked `—` in **Processor** is invoked by the Scan cascade. The
 `GoogleMailSync`/`JmapSync` run from the Sync toolbar action or a routine; `AnalyzeMailbox` is ALSO
 reachable from brain's `Analyze` menu item and `ProcessMailbox` only from crm's `Process CRM` — the
 duplication D5 removes. The projects trio run from project routines.
+
+The same thing as a tree, with the topology edges the table cannot show:
+
+```
+Mailbox
+└── feed                                     the durable log every pipeline below reads
+    │
+    ├── SYNC (half 1) — WRITES the feed
+    │   └── GoogleMailSync │ JmapSync        one harness, provider layer swapped (sync/mail-sync.ts)
+    │       ├── dedup                        on foreignId/key, against the cursor's seed set
+    │       ├── bound                        cap at maxMessages
+    │       ├── decode                       provider item → insert Change
+    │       ├── ⋈ reconcile                  retag/delete branch, merges in here
+    │       ├── processAttachments
+    │       ├── ✗ onArrivalExtractors        COMMENTED OUT — needs Capability.Service off-host
+    │       ├── extractContacts
+    │       ├── reconcileDrafts
+    │       ├── collect-stats
+    │       ├── toCommitUnit
+    │       └── » commitPageSize ⇒ Cursor.commit
+    │
+    └── SCAN (half 2) — READS the feed, one cursor per processor
+        └── ScanMailbox                      topology from MailboxProcessor contributions
+            ├── contacts       [deterministic]   ExtractCorrespondents · no cursor
+            │   └── build-contact ⇒ add Organization / Person
+            ├── subscriptions  [deterministic]   ExtractSubscriptions · no cursor
+            │   └── extract-unsubscribe » 50 ⇒ aggregate per sender
+            ├── classify       [classify]        ClassifyMailbox · cursor classifyMailbox
+            │   │                                after: contacts
+            │   └── » page → classify ⇒ advance cursor per LLM page
+            ├── summarize      [summarize]       SummarizeMailbox · no cursor
+            │   │                                after: contacts, classify
+            │   └── (no stages — loop over threads)
+            └── analyze        [analyze]         AnalyzeMailbox · cursor analyzeMailbox
+                │                                after: summarize · opt-in, not in the default tiers
+                └── runFactPipeline
+                    ├── facts-dedup
+                    ├── extract-facts-unit
+                    ├── facts-log
+                    └── » pageSize ⇒ putFacts + advance
+
+NOT CONTRIBUTED — same feed, outside the topology
+    ├── CrmOperation.ProcessMailbox   crm       · cursor    · Process CRM menu item   → D5
+    ├── UpdateProjectTasks            projects  · no cursor · project routine
+    ├── UpdateTravelLog               projects  · no cursor · project routine
+    ├── UpdateInvestorLog             projects  · no cursor · project routine
+    └── ExtractMailbox                inbox     · @deprecated, nothing invokes it
+```
 
 Two things the stages column makes visible:
 
