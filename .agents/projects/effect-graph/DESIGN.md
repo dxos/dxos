@@ -173,34 +173,62 @@ historical one:
 | edges | relation-typed (kind+direction), per-node **ordered** adjacency, inverse lists maintained, no payload | edge objects with id + data payload |
 | algorithms | hand-rolled `traverse` (visitor DFS), `getPath` (DFS scan), `waitForPath` (**500ms poll**), `toJSON` | full `effect/Graph` library |
 
-**Decision: Option B + C. Option A (rebasing app-graph storage onto the canonical graph) is
-rejected** — it would need dangling-edge staging, tombstone emulation, and ordered-relation
-encoding, all to force a virtual graph into a complete-data representation, with regression risk
-across all plugin UI.
+**Decision (REVISED, superseding the first-pass verdict): Option A — consolidate app-graph's
+storage onto the canonical core.** The initial rejection over-weighted the storage deltas. The
+key realization (user challenge, then spike-verified): the *virtual* part of app-graph is the
+**builder** (expansion protocol, connectors) — a layer in either design. The core app graph —
+everything expanded so far — is a legitimate complete graph, and the storage deltas unify:
 
-- **B — Effect-Graph projection** (spike-verified end-to-end): keep sharded storage; add one thing
-  to `GraphImpl` — an enumerable `idsAtom` maintained in `addNode`/`removeNode` (no global node
-  list exists today). A derived (non-keepAlive) `snapshotAtom` reads ids + node/edge atoms and
-  builds `{graph, byId}`, skipping tombstones and dangling edges; dangling targets that later
-  materialize join the snapshot automatically. Serves `traverse`→`dfs` walkers, `toJSON`,
-  devtools, and `getPath`→`dijkstra`/`bfs` (an upgrade: shortest path vs first-DFS-found). A
-  `pathAtom(target)` family with path-equality cutoff replaces `waitForPath`'s 500ms poll with a
-  reactive fire-on-arrival (verified: fires when a late node lands).
-- **C — shared view helpers**: extract the granular-atom patterns (family + equality cutoff,
-  keepAlive/immediate-mount footgun ownership) from the new core so both packages sit on the same
-  primitives and vocabulary.
+- **Placeholder = tombstone = `Option.none`.** With node values of `Option<NodeData>`, a dangling
+  edge targets an auto-created placeholder node (`ensure` on `addEdge`, ~5 lines) — exactly
+  app-graph's existing read-time-filtered representation. Soft remove sets `none` (edges survive,
+  resurrection works). Both "blockers" are one concept the current code already has.
+- **Relation + ordering = edge data** `{relation, order}`; `sortEdges` = edge-data updates in one
+  scope. Inverse adjacency lists (a manual-consistency liability today) come free as
+  `predecessors`.
 
-Projection perf (~2100 nodes, app-graph-shaped tree, mounted subscriber):
+Spike-verified on the canonical core (all app-graph read/write semantics): placeholder filtering
+in `connections()`, fire-on-materialize, soft remove + resurrection, equality-cut on unrelated
+writes — with **surgical notifications** (only the touched collection's subscribers fire).
 
-| | |
+Read-path structure matters: a naive `connections()` scanning all edges per atom costs O(E)×K
+(21ms/flush at 200 mounted atoms). The layered design fixes it — one derived **adjacency-index
+atom** (single O(E) pass per flush: `source|relation` → sorted edge list), `connections()` reads
+it at O(deg):
+
+| per 50-write batched flush, 200 mounted connections atoms | |
 |---|---:|
-| rebuild per **batched** flush (app-graph already `Atom.batch`es flushes) | 1 rebuild, ~17ms |
-| same 50 writes unbatched (worst case, must never happen) | 100 rebuilds, 588ms |
-| unmounted (no algorithm subscriber) | fully lazy, 0 cost per write |
+| naive O(E)-per-atom reads | 21ms |
+| layered adjacency index @ ~2k nodes | **3.1ms** |
+| layered adjacency index @ ~7k nodes | **11.2ms** |
+| today's sharded writes (reference) | ~0.3ms |
 
-The snapshot must NOT be `keepAlive` — default auto-dispose makes it free when unused; transient
-consumers (navtree reveal) mount it only while waiting. Batched flushes are already app-graph's
-behavior; the projection makes that an explicit invariant.
+~10× today's write cost, but within frame budget at real scale, and it buys: algorithms run
+directly on the live canonical value (no projection rebuild — the interim Option B paid ~17ms per
+flush *while mounted*), `getPath`→`dijkstra` (shortest path; replaces DFS scan), reactive
+`pathAtom` (kills `waitForPath`'s 500ms poll), free inverse edges, a serializable/cacheable
+expanded graph (`Node.cacheable` finally has a natural target), and one graph model repo-wide.
+
+Consolidated layering:
+
+```
+@dxos/graph core     canonical Effect graph + bimaps + codec (generic over node/edge values)
+├─ reactivity        granular family views + adjacency-index atom + equality cutoffs
+├─ echo adapter      dual-write (Phase 3)
+└─ @dxos/app-graph   expansion layer: builder/connectors/flush/URL (unchanged) over
+                     N = {id, value: Option<NodeData>}, E = {relation, order}
+```
+
+Migration safety: `GraphImpl`'s public API (node/connections/actions/edges atoms, add/remove/
+sort, traverse/getPath/toJSON, `onNodeChanged`) is preserved exactly while swapping internals;
+graph.test.ts (837 lines) + graph-builder.test.ts (1676 lines) are the net. Builder machinery is
+untouched except its two internal reaches (`_node`, `_constructNode`), which the new core exposes
+equivalently. Residual risk to watch: flush cost scales O(V+E) with total expanded size — at 10k+
+nodes ~15-20ms/flush during startup bursts; mitigations are existing flush batching, the
+startup-latency project's tracking, and (worst case) per-workspace graph partitioning.
+
+**C — shared view helpers** stands: family + equality cutoff patterns, keepAlive/immediate-mount
+footgun ownership live in the core; app-graph consumes them.
 
 ## Spike artifacts
 

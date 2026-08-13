@@ -68,15 +68,21 @@ Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-gr
 - [x] **Map the deltas** — virtual/lazily-materialized graph vs complete data; sharded writable
       atoms with no global node list; dangling edges legal; tombstone removal; relation-typed
       ordered adjacency with inverse lists. Delta table in DESIGN.md.
-- [x] **Feasibility call** — share views + algorithms, NOT storage. Option A (canonical-graph
-      storage under app-graph) rejected; Option B (derived Effect-Graph projection) + C (shared
-      granular-atom view helpers) adopted. Projection spike verified: lazy when unmounted, one
-      ~17ms rebuild per batched flush at ~2k nodes, dangling-edge skip + late-materialization,
-      reactive `pathAtom` replacing the `waitForPath` 500ms poll.
-- [ ] **Implement projection in app-graph** — `idsAtom` in `GraphImpl` (`addNode`/`removeNode`),
-      non-keepAlive `snapshotAtom` (`{graph, byId}`), port `traverse`/`getPath`/`toJSON` onto
-      `dfs`/`dijkstra` walkers, replace `waitForPath` poll with `pathAtom` + equality cutoff.
-      Depends on Phase 1 (shared helpers); lands separately — app-graph is load-bearing for all
-      plugin UI.
-- [ ] **Adopt shared view helpers (C)** — once Phase 1 extracts them, swap app-graph's local
-      family/equality patterns onto the shared primitives where they fit.
+- [x] **Feasibility call (REVISED)** — consolidate: app-graph storage moves onto the canonical
+      core (Option A). The virtual part is the *builder*, not the storage; placeholder/tombstone
+      unify as `Option<NodeData>` node values; relation+order live in edge data. Spike-verified:
+      all read/write semantics (placeholder filter, fire-on-materialize, soft remove/resurrect,
+      surgical notifications) + perf 3.1ms per 50-write flush @2k nodes / 11.2ms @7k with 200
+      mounted connections atoms, via the layered adjacency-index atom (naive per-atom O(E) reads
+      cost 21ms — the index layer is mandatory). Supersedes the earlier projection-only verdict.
+- [ ] **Rebuild `GraphImpl` on the core** — same public API (node/connections/actions/edges
+      atoms, add/remove/sort, traverse/getPath/toJSON, `onNodeChanged`); internals: canonical
+      graph + `Option<NodeData>` values + `{relation, order}` edge data + adjacency-index atom.
+      Existing graph.test.ts + graph-builder.test.ts must pass unchanged. Depends on Phase 1;
+      lands separately — app-graph is load-bearing for all plugin UI.
+- [ ] **Algorithm upgrades in app-graph** — `getPath` → `dijkstra`; `waitForPath` poll →
+      reactive `pathAtom` + equality cutoff; `traverse`/`toJSON` → `dfs` walkers.
+- [ ] **Watch flush scaling** — O(V+E) per flush; profile against startup-latency budgets at
+      10k+ expanded nodes; fallback: per-workspace graph partitioning.
+- [ ] **Adopt shared view helpers (C)** — swap app-graph's local family/equality patterns onto
+      the Phase-1 primitives.
