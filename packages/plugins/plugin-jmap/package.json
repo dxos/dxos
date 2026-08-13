@@ -34,9 +34,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/JmapPlugin.ts",
-      "types": "./dist/types/src/JmapPlugin.d.ts",
-      "default": "./dist/lib/JmapPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#services": {
       "source": "./src/services/index.ts",
@@ -55,11 +55,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": {
         "node": "./src/testing/node.ts",
@@ -73,6 +68,16 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
+    "./JmapPlugin": {
+      "source": "./src/JmapPlugin.ts",
+      "types": "./dist/types/src/JmapPlugin.d.ts",
+      "import": "./dist/lib/JmapPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -106,13 +111,11 @@
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
     "effect": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

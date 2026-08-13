@@ -11,7 +11,7 @@ import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 
-import * as BrainCapabilities from '../types/BrainCapabilities';
+import { BrainCapabilities } from '#types';
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,

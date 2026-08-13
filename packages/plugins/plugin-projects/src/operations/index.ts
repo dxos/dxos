@@ -5,8 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as ProjectMcpOperation from '../types/ProjectMcpOperation';
-import * as ProjectOperation from '../types/ProjectOperation';
+import { ProjectMcpOperation, ProjectOperation } from '#types';
 
 export const ProjectOperationHandlerSet = OperationHandlerSet.lazy([
   ProjectOperation.CreateChat.pipe(Operation.lazyHandler(() => import('./create-chat'))),

@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as FeedOperation from '../types/FeedOperation';
+import { FeedOperation } from '#types';
 
 export const MagazineOperationHandlerSet = OperationHandlerSet.lazy([
   FeedOperation.ClearMagazine.pipe(Operation.lazyHandler(() => import('./clear-magazine'))),

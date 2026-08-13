@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Resource } from '@dxos/context';
 
@@ -11,7 +12,7 @@ import { type TableRow } from './table-model';
 export type SelectionMode = 'single' | 'multiple';
 
 export class SelectionModel<T extends TableRow> extends Resource {
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
   private readonly _rows: Atom.Atom<T[]>;
   private readonly _selection: Atom.Writable<Set<string>>;
   private readonly _validSelectedIds: Atom.Atom<Set<string>>;
@@ -21,7 +22,7 @@ export class SelectionModel<T extends TableRow> extends Resource {
   private readonly _onSelectionChanged?: () => void;
 
   constructor(
-    registry: Registry.Registry,
+    registry: Registry.AtomRegistry,
     rows: Atom.Atom<T[]>,
     selectionMode: SelectionMode,
     initialSelection: string[],

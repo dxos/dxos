@@ -15,8 +15,7 @@ import { HaloProvider } from '@dxos/halo-react';
 import { ClientProvider } from '@dxos/react-client';
 
 import { meta } from '#meta';
-
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { ClientCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

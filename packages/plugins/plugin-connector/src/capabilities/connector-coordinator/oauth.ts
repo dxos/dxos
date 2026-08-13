@@ -8,7 +8,7 @@ import { Context as DxContext } from '@dxos/context';
 import { type Key } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
 
 /**
  * Parses `postMessage` payload from the OAuth relay into a narrow result.

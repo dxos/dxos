@@ -12,9 +12,10 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { LinearOperation } from '#types';
+
 import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants';
 import { LinearApi } from '../services';
-import * as LinearOperation from '../types/LinearOperation';
 
 /**
  * Service-specific token-created hook for Linear.

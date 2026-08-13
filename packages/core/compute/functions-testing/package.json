@@ -47,8 +47,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/compute-runtime": "workspace:*",
-    "@effect/platform": "catalog:"
+    "@dxos/compute-runtime": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

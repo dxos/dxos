@@ -153,14 +153,14 @@ export type CreateObject = (
 ) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
-export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
-export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
+export const IconAnnotationId = '@dxos/plugin-space/annotation/Icon';
+export const HueAnnotationId = '@dxos/plugin-space/annotation/Hue';
 
 // TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  icon: Schema.optional(Schema.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
-  hue: Schema.optional(Schema.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
-  private: Schema.optional(Schema.Boolean.annotations({ title: 'Private space' })),
-  edgeReplication: Schema.optional(Schema.Boolean.annotations({ title: 'Enable EDGE Replication' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  icon: Schema.optional(Schema.String.annotate({ title: 'Icon', [IconAnnotationId]: true })),
+  hue: Schema.optional(Schema.String.annotate({ title: 'Color', [HueAnnotationId]: true })),
+  private: Schema.optional(Schema.Boolean.annotate({ title: 'Private space' })),
+  edgeReplication: Schema.optional(Schema.Boolean.annotate({ title: 'Enable EDGE Replication' })),
 });

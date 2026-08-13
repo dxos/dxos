@@ -46,12 +46,12 @@ export type EdgeSuccess<T> = {
 const _SerializedError = Schema.Struct({
   name: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
-  context: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  context: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   stack: Schema.optional(Schema.String),
   cause: Schema.optional(Schema.suspend(() => SerializedError)),
 });
 export interface SerializedError extends Schema.Schema.Type<typeof _SerializedError> {}
-export const SerializedError: Schema.Schema<SerializedError, SerializedError, never> = _SerializedError;
+export const SerializedError: Schema.Codec<SerializedError, SerializedError, never> = _SerializedError;
 
 export type EdgeErrorData = { type: string } & Record<string, any>;
 
@@ -274,7 +274,7 @@ export type UploadFunctionRequest = {
 /**
  * Note: Do not change the values of these enums, this values are stored in the FunctionVersions database.
  */
-export const FunctionRuntimeKind = Schema.Enums({
+export const FunctionRuntimeKind = Schema.Enum({
   // https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
   WORKERS_FOR_PLATFORMS: 'WORKERS_FOR_PLATFORMS',
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
@@ -354,8 +354,8 @@ export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transitio
 export const ATMOSPHERE_SOURCE = 'atproto.local';
 
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
-  provider: Schema.Enums(OAuthProvider),
-  spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
+  provider: Schema.Enum(OAuthProvider),
+  spaceId: Schema.String.pipe(Schema.refine(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
   accessTokenId: Schema.String,
   scopes: Schema.mutable(Schema.Array(Schema.String)),
   // Set to true if we don't want periodic token refreshes in background, for cases like account connect
@@ -370,7 +370,7 @@ export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   // kms-service mints a one-time `recoveryProof` the client forwards to db-service.
   registerRecovery: Schema.optional(Schema.Boolean),
   identityKey: Schema.optional(Schema.String),
-  purpose: Schema.optional(Schema.Literal('register', 'recovery')),
+  purpose: Schema.optional(Schema.Literals(['register', 'recovery'])),
 });
 export type InitiateOAuthFlowRequest = Schema.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
 
@@ -796,7 +796,7 @@ export const DEFAULT_INVITATIONS_PER_ACCOUNT = 5;
 export const INVITATION_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
 export const InvitationCodeSchema = Schema.String.pipe(
-  Schema.pattern(new RegExp(`^[${INVITATION_CODE_ALPHABET}]{${INVITATION_CODE_LENGTH}}$`)),
+  Schema.check(Schema.isPattern(new RegExp(`^[${INVITATION_CODE_ALPHABET}]{${INVITATION_CODE_LENGTH}}$`))),
 );
 
 export const CheckEmailExistsRequestSchema = Schema.Struct({

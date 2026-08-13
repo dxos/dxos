@@ -6,10 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
-import { Role } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Role from '@dxos/app-framework/Role';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -23,7 +23,8 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useClient } from '@dxos/react-client';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -233,7 +234,7 @@ const meta = {
     withPluginManager(() => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: HOST_STORY_TYPES,
           ...HOST_STORY_CLIENT_SERVICES,
           onClientInitialized: ({ client }) =>
@@ -262,7 +263,7 @@ const meta = {
         }),
         SpacePlugin({}),
         InboxPlugin(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         StoryHostPlugin(),
       ],
     })),

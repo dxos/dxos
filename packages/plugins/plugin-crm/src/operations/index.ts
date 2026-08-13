@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 export const CrmOperationHandlerSet = OperationHandlerSet.lazy([
   CrmOperation.AttachImage.pipe(Operation.lazyHandler(() => import('./attach-image'))),

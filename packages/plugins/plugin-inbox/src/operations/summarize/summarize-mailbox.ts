@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
@@ -193,7 +193,7 @@ const summarize = Effect.fnUntraced(function* (
       // run and stranding the summaries already appended. An UNAVAILABLE model is different — it
       // fails identically for every thread, so swallowing it would report a successful run that
       // summarized nothing. Let it through for the caller (the cascade) to report as a skip.
-      Effect.catchAllCause((cause) =>
+      Effect.catchCause((cause) =>
         isAiUnavailableCause(cause)
           ? Effect.failCause(cause)
           : Effect.sync(() => {

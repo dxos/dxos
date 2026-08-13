@@ -19,7 +19,7 @@ export const Fetch = Operation.make({
     `,
   },
   input: Schema.Struct({
-    url: Schema.String.annotations({
+    url: Schema.String.annotate({
       description: 'The URL of the web page to fetch.',
     }),
   }),

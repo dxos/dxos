@@ -31,6 +31,12 @@ export default defineConfig({
     Key: 'src/Key.ts',
     Migration: 'src/Migration.ts',
     Type: 'src/Type.ts',
+    Aggregate: 'src/Aggregate.ts',
+    Collection: 'src/Collection.ts',
+    Dataset: 'src/Dataset.ts',
+    Hypergraph: 'src/Hypergraph.ts',
+    Json: 'src/Json.ts',
+    View: 'src/View.ts',
   },
   test: { node: true },
 });

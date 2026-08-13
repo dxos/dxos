@@ -11,8 +11,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { RootAttentionProvider, ViewStateProvider } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-
-import * as AttentionCapabilities from '../types/AttentionCapabilities';
+import { AttentionCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

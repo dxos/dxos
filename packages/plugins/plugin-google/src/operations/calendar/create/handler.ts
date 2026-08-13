@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import { GoogleCalendar } from '../../../apis';
+import { GoogleCalendar } from '#apis';
+
 import { GoogleCredentials } from '../../../services/google-credentials';
 import { toGoogleEvent } from '../mapper';
 

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Config from 'effect/Config';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { withRetry } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';

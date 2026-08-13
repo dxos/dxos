@@ -10,7 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { ensureSyncTrigger } from '../../util';
 
 /**
@@ -64,6 +65,6 @@ export const createSingleCursor = (
     yield* Database.flush({ indexes: true });
   }).pipe(
     Effect.provide(Database.layer(db)),
-    Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
-    Effect.catchAllDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
+    Effect.catch((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
+    Effect.catchDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
   );

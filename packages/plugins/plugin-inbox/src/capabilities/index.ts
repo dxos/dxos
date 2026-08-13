@@ -14,8 +14,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
-
-import * as InboxCapabilities from '../types/InboxCapabilities';
+import { InboxCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));

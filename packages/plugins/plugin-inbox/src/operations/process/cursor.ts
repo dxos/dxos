@@ -8,8 +8,7 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
 import { meta } from '#meta';
-
-import type * as Mailbox from '../../types/Mailbox';
+import { Mailbox } from '#types';
 
 /** Foreign-key tag isolating this plugin's cursors from other feed consumers (DXN-conformant). */
 export const PROCESS_CURSOR_KEY_SOURCE = meta.profile.key;

@@ -30,10 +30,10 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.GtdTask',
     description: Schema.optional(Schema.String),
     /** Lossy: `false` cannot say whether the task is `todo` or `in-progress`. */
     done: Schema.optional(Schema.Boolean),
-    stage: Schema.optional(Schema.Literal('todo', 'in-progress', 'done')),
+    stage: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done'])),
     urgency: Schema.optional(Schema.Number),
     /** Neither of these exists on `Task` — both are overlay-backed. */
-    context: Schema.optional(Schema.Literal('@home', '@work')),
+    context: Schema.optional(Schema.Literals(['@home', '@work'])),
     waitingOn: Schema.optional(Schema.String),
   }),
 ) {}

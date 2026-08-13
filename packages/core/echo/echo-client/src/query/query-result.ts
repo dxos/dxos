@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -200,8 +200,15 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
     log('recomputeResult', { changed });
 
-    this._resultCache = presented.entries;
-    this._objectCache = presented.objects;
+    // An aggregate query assembles its group records fresh on every recompute, so an unchanged result
+    // still yields a new array — and `useQuery` reads `results` as its `useSyncExternalStore` snapshot
+    // on every render, which would then see a new reference for identical data. Hold the previous
+    // arrays in that case only: on the flat path `changed` compares ids and order alone, so pinning
+    // would serve stale entities and stale per-row match metadata.
+    if (!presented.grouped || changed) {
+      this._resultCache = presented.entries;
+      this._objectCache = presented.objects;
+    }
     return changed;
   }
 

@@ -11,7 +11,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import * as RoutineOperation from '../types/RoutineOperation';
+import { RoutineOperation } from '#types';
 
 // A routine's action is its `runnable`: either an Operation (invoked directly) or the routine's owned
 // Instructions object (run as a background process — the same path triggers use — without creating a new

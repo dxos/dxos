@@ -24,10 +24,11 @@ import {
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { Person } from '@dxos/types';
 
-import { GoogleMail } from '../../../apis';
+import { GoogleMail } from '#apis';
+import { GoogleMailApi, type GoogleMailApiError } from '#services';
+
 import { GMAIL_SOURCE } from '../../../constants';
 import { GoogleApiError } from '../../../errors';
-import { GoogleMailApi, type GoogleMailApiError } from '../../../services';
 import { decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateGmailTag } from '../tags';
 import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
@@ -65,7 +66,7 @@ export const googleMailSyncProvider = (options: {
         prepare: ({ mailbox, binding, token, maxMessages }) =>
           Effect.gen(function* () {
             const labelMap = yield* syncLabels(mailbox, userId).pipe(
-              Effect.catchAll((error) => {
+              Effect.catch((error) => {
                 log.catch(error);
                 return Effect.succeed(new Map<string, string>());
               }),

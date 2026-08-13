@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryContext, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Feed, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
@@ -18,8 +18,8 @@ import { DraftMessage, Message, Person } from '@dxos/types';
 import { type MessageOptions } from '#components';
 import { initializeMailbox } from '#testing';
 import { translations } from '#translations';
+import { Mailbox } from '#types';
 
-import * as Mailbox from '../../types/Mailbox';
 import { createDraftMessage } from '../../util';
 import { ConversationStack } from './ConversationStack';
 

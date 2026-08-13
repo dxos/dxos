@@ -4,8 +4,6 @@
 
 // @import-as-namespace
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 // SSEClientTransport is marked @deprecated in the SDK in favor of StreamableHTTP, but the
 // SDK itself notes that clients should keep supporting both while servers migrate.
@@ -16,6 +14,8 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
@@ -28,7 +28,7 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
   'McpConnectionError',
   {
     url: Schema.String,
-    protocol: Schema.Literal('sse', 'http'),
+    protocol: Schema.Literals(['sse', 'http']),
     message: Schema.String,
   },
 ) {}
@@ -68,9 +68,9 @@ export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.Op
       const parameters: any = {};
       for (const [key, value] of Object.entries(mcpTool.inputSchema.properties ?? {})) {
         if (mcpTool.inputSchema.required?.includes(key)) {
-          parameters[key] = Schema.Unknown.pipe(Schema.annotations({ jsonSchema: value }));
+          parameters[key] = Schema.Unknown.pipe(Schema.annotate({ jsonSchema: value }));
         } else {
-          parameters[key] = Schema.Unknown.pipe(Schema.annotations({ jsonSchema: value })).pipe(Schema.optional);
+          parameters[key] = Schema.Unknown.pipe(Schema.annotate({ jsonSchema: value })).pipe(Schema.optional);
         }
       }
 
@@ -109,11 +109,13 @@ export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.Op
 
 /**
  * Returns true when the error (or its wrapped cause) contains a 405 status code.
- * `Effect.tryPromise` wraps thrown errors in `UnknownException`, so we unwrap first.
+ *
+ * `Effect.tryPromise` wraps thrown errors in `Cause.UnknownError`, which in v4 carries the original
+ * on `cause` (it was `error` in v3) and leaves its own `message` unset — so it must be unwrapped.
  */
 export const is405 = (error: unknown): boolean => {
-  const cause = error != null && typeof error === 'object' && 'error' in error ? (error as any).error : error;
-  return cause instanceof Error && cause.message.includes('405');
+  const cause = Cause.isUnknownError(error) ? error.cause : error;
+  return cause instanceof Error && typeof cause.message === 'string' && cause.message.includes('405');
 };
 
 /**
@@ -129,20 +131,20 @@ const connectWithFallback = (
 ): Effect.Effect<{ client: Client; protocol: McpToolkitOptions['protocol'] }, McpConnectionError> =>
   Effect.gen(function* () {
     const fallbackProtocol = options.protocol === 'sse' ? 'http' : 'sse';
-    const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.either);
-    if (primary._tag === 'Right') {
-      return { client: primary.right, protocol: options.protocol };
+    const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.result);
+    if (primary._tag === 'Success') {
+      return { client: primary.success, protocol: options.protocol };
     }
-    if (is405(primary.left)) {
-      const fallback = yield* connectClient(options.url, fallbackProtocol, options.apiKey).pipe(Effect.either);
-      if (fallback._tag === 'Right') {
-        return { client: fallback.right, protocol: fallbackProtocol };
+    if (is405(primary.failure)) {
+      const fallback = yield* connectClient(options.url, fallbackProtocol, options.apiKey).pipe(Effect.result);
+      if (fallback._tag === 'Success') {
+        return { client: fallback.success, protocol: fallbackProtocol };
       }
       return yield* Effect.fail(
         new McpConnectionError({
           url: options.url,
           protocol: fallbackProtocol,
-          message: `Failed to connect via ${fallbackProtocol} after 405 fallback: ${formatCause(fallback.left)}`,
+          message: `Failed to connect via ${fallbackProtocol} after 405 fallback: ${formatCause(fallback.failure)}`,
         }),
       );
     }
@@ -150,7 +152,7 @@ const connectWithFallback = (
       new McpConnectionError({
         url: options.url,
         protocol: options.protocol,
-        message: `Failed to connect via ${options.protocol}: ${formatCause(primary.left)}`,
+        message: `Failed to connect via ${options.protocol}: ${formatCause(primary.failure)}`,
       }),
     );
   });

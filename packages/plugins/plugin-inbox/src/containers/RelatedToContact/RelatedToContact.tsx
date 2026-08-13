@@ -4,6 +4,7 @@
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
+import * as Result from 'effect/Result';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -16,10 +17,9 @@ import { Card } from '@dxos/react-ui';
 import { Event, Message, type Person } from '@dxos/types';
 
 import { RelatedEvents, RelatedMessages } from '#components';
+import { Calendar, Mailbox } from '#types';
 
 import { getCalendarEventPath, getMailboxMessagePath } from '../../paths';
-import * as Calendar from '../../types/Calendar';
-import * as Mailbox from '../../types/Mailbox';
 
 export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>;
 
@@ -66,7 +66,10 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
         event.attendees?.some((attendee) => contact.emails?.some((email) => email.value === attendee.email)) ||
         event.attendees?.some((attendee) => attendee.contact?.target === contact),
     ),
-    Array.partition((event) => new Date(event.startDate).getTime() > now),
+    // v4's `partition` takes a `Result`-returning filter; `[excluded, satisfying]` is unchanged.
+    Array.partition((event) =>
+      new Date(event.startDate).getTime() > now ? Result.succeed(event) : Result.fail(event),
+    ),
   );
   const sortedRecentEvents = recentEvents
     .toSorted((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
@@ -18,8 +17,9 @@ import { captureSink } from '@dxos/pipeline/testing';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 
+import { Mailbox } from '#types';
+
 import { seedMailboxBinding } from '../testing/sync-fixture';
-import type * as Mailbox from '../types/Mailbox';
 
 const TEST_SOURCE = 'test.mail';
 
@@ -211,7 +211,7 @@ describe('sync pipeline harness', () => {
 
     const stats: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([makeUnit(RAWS[0]), makeUnit(RAWS[1])])).pipe(
+      Cursor.commit([makeUnit(RAWS[0]), makeUnit(RAWS[1])]).pipe(
         Effect.provide(Cursor.layer({ cursor: binding, feed, foreignKeySource: TEST_SOURCE, maxKey: 0, stats })),
         Effect.provide(Database.layer(db)),
       ),

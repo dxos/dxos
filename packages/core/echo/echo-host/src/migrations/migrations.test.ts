@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Migrator from '@effect/sql/Migrator';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
 import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 

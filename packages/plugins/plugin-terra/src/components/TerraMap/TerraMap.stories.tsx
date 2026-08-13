@@ -11,12 +11,11 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Terra, TerraObject } from '#types';
 
 import { seaRadius } from '../../engine';
 import { SimEngine, type SimObject, buildNavGrid, pickReachableTarget, toGeo } from '../../sim';
 import { STORY_ATTENDABLE_ID, withAttention } from '../../testing';
-import * as Terra from '../../types/Terra';
-import * as TerraObject from '../../types/TerraObject';
 import { TelemetryPanel, type TelemetryRow } from '../TelemetryPanel';
 import { TerraMap } from './TerraMap';
 

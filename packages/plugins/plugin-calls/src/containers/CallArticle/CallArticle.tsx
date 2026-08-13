@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 
-import { Call, Lobby } from '../../components';
-import * as CallsCapabilities from '../../types/CallsCapabilities';
+import { Call, Lobby } from '#components';
+import { CallsCapabilities } from '#types';
 
 export type CallArticleProps = {
   role?: string;

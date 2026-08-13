@@ -2,14 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Text } from '@dxos/schema';
 
 import type { FilesystemManager } from '#capabilities';
-
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
+import { NativeFilesystemCapabilities } from '#types';
 
 /** In-memory mock of FilesystemManager for tests that need graph builder integration. */
 export class MockFilesystemManager implements FilesystemManager.FilesystemManager {

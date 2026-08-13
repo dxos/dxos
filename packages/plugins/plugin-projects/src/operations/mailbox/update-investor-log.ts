@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
@@ -14,7 +14,8 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as ProjectOperation from '../../types/ProjectOperation';
+import { ProjectOperation } from '#types';
+
 import {
   findOrCreateDocumentArtifact,
   groupByThread,
@@ -98,7 +99,7 @@ const handler = ProjectOperation.UpdateInvestorLog.pipe(
               Effect.map((response) => response.text.trim()),
               Effect.provide(AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
               // Summaries are advisory: a failed generation degrades to the digest, never the run.
-              Effect.orElse(() => Effect.succeed(threadDigest(thread))),
+              Effect.orElseSucceed(() => threadDigest(thread)),
             )
           : threadDigest(thread);
         sections.push(`## ${subject}\n\n${summary}`);

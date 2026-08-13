@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -63,7 +63,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
       yield* Console.log('Credential added successfully.');
     }
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.gen(function* () {
         if (json) {
           yield* Console.log(
@@ -88,10 +88,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
 export const add = Command.make(
   'add',
   {
-    credential: Args.text({ name: 'credential' }).pipe(
-      Args.withDescription('Credential as hex string.'),
-      Args.optional,
-    ),
+    credential: Args.string('credential').pipe(Args.withDescription('Credential as hex string.'), Args.optional),
   },
   handler,
 ).pipe(Command.withDescription('Import credential into HALO.'));

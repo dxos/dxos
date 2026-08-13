@@ -162,7 +162,7 @@ const handler = InboxOperation.EnrichMailbox.pipe(
         const exit = yield* Effect.exit(stage.run);
         if (Exit.isSuccess(exit)) {
           results.push({ tier: stage.tier, operation: stage.operation, status: 'completed', output: exit.value });
-        } else if (Cause.isInterruptedOnly(exit.cause)) {
+        } else if (Cause.hasInterruptsOnly(exit.cause)) {
           // Cancellation is not a stage failure — stop without marking the pipeline broken.
           results.push({ tier: stage.tier, operation: stage.operation, status: 'cancelled' });
           break;

@@ -71,10 +71,9 @@ export interface Service {
   completeAllTasks: () => Effect.Effect<void>;
 }
 
-export class ResearchService extends Context.Tag('@dxos/functions-runtime/testing/ResearchService')<
-  ResearchService,
-  Service
->() {}
+export class ResearchService extends Context.Service<ResearchService, Service>()(
+  '@dxos/functions-runtime/testing/ResearchService',
+) {}
 
 export const layer = Layer.effect(
   ResearchService,

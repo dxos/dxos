@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormBuilder } from '@dxos/cli-util';
+import { Doc, FormBuilder } from '@dxos/cli-util';
 
 export type FormattedPlugin = {
   id: string;
@@ -14,7 +14,7 @@ export type FormattedPlugin = {
 /**
  * Pretty prints a plugin with ANSI colors.
  */
-export const printPlugin = (plugin: FormattedPlugin) => {
+export const printPlugin = (plugin: FormattedPlugin): Doc.Doc<any> => {
   const status = plugin.core ? 'core' : plugin.enabled ? 'enabled' : 'disabled';
   return FormBuilder.make({ title: plugin.name }).pipe(
     FormBuilder.set('id', plugin.id),

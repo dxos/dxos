@@ -24,9 +24,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/MermaidPlugin.tsx",
-      "types": "./dist/types/src/MermaidPlugin.d.ts",
-      "default": "./dist/lib/MermaidPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     }
   },
   "exports": {
@@ -36,10 +36,10 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./MermaidPlugin": {
+      "source": "./src/MermaidPlugin.ts",
+      "types": "./dist/types/src/MermaidPlugin.d.ts",
+      "import": "./dist/lib/MermaidPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -13,7 +13,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { SAMPLE_MESSAGES, corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { type SearchResult, buildSnippet } from '@dxos/react-ui-search';
@@ -88,8 +89,8 @@ const meta = {
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

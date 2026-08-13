@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -87,7 +87,7 @@ export class SyncServer {
           });
           yield* self.#sendMessage(ctx, withPeerIds({ _tag: 'QueryResponse', ...response }));
         }).pipe(
-          Effect.catchAll((err: unknown) => {
+          Effect.catch((err: unknown) => {
             log('feed sync server query failed', {
               peerId: self.#peerId,
               recipientPeerId,
@@ -121,7 +121,7 @@ export class SyncServer {
           });
           yield* self.#sendMessage(ctx, withPeerIds({ _tag: 'AppendResponse', ...response }));
         }).pipe(
-          Effect.catchAll((err: unknown) => {
+          Effect.catch((err: unknown) => {
             log('feed sync server append failed', {
               peerId: self.#peerId,
               recipientPeerId,

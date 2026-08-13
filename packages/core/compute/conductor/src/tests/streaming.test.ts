@@ -40,7 +40,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe('Streaming pipelines', () => {
-  it.scoped(
+  it.effect(
     'synchronous stream sum pipeline',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -59,7 +59,7 @@ describe('Streaming pipelines', () => {
     ),
   );
 
-  it.scopedLive(
+  it.live(
     'asynchronous stream sum pipeline',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -93,7 +93,12 @@ const sumAggregator = defineComputeNode({
   output: Schema.Struct({ result: Schema.Number }),
   exec: synchronizedComputeFunction(({ stream }) =>
     Effect.gen(function* () {
-      const result = yield* stream.pipe(Stream.runFold(0, (acc, x) => acc + x));
+      const result = yield* stream.pipe(
+        Stream.runFold(
+          () => 0,
+          (acc: number, x: number) => acc + x,
+        ),
+      );
       return { result };
     }),
   ),

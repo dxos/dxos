@@ -30,7 +30,9 @@ export interface KeyringApi extends Signer {
 /**
  * Effect service tag for {@link KeyringApi}.
  */
-export class KeyringApiService extends EffectContext.Tag('@dxos/keyring/KeyringApi')<KeyringApiService, KeyringApi>() {}
+export class KeyringApiService extends EffectContext.Service<KeyringApiService, KeyringApi>()(
+  '@dxos/keyring/KeyringApi',
+) {}
 
 /**
  * Manages keys.

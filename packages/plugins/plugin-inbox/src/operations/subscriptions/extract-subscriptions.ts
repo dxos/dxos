@@ -3,7 +3,6 @@
 //
 
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
@@ -16,8 +15,7 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
+import { InboxOperation, Mailbox } from '#types';
 
 /**
  * Extracts unsubscribe affordances from every feed message — the `List-Unsubscribe` header the sync
@@ -67,9 +65,10 @@ const handler = InboxOperation.ExtractSubscriptions.pipe(
         ),
         Stream.grouped(50),
         Pipeline.run({
-          sink: (page: Chunk.Chunk<Message.Message | undefined>) =>
+          // v4's `Stream.grouped` emits a non-empty array, not a `Chunk`.
+          sink: (page: readonly (Message.Message | undefined)[]) =>
             Effect.sync(() => {
-              for (const message of Chunk.toReadonlyArray(page)) {
+              for (const message of page) {
                 if (message) {
                   carrying.push(message);
                 }
@@ -88,7 +87,7 @@ const handler = InboxOperation.ExtractSubscriptions.pipe(
       yield* pipeline.pipe(
         Effect.onError((cause) =>
           Effect.sync(() => {
-            if (!Cause.isInterruptedOnly(cause)) {
+            if (!Cause.hasInterruptsOnly(cause)) {
               reportStatus({ message: PROGRESS_STATUS_FAILED });
             }
           }),

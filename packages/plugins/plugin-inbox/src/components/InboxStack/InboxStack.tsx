@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Atom from '@effect-atom/atom/Atom';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { type Database, Filter, Obj } from '@dxos/echo';

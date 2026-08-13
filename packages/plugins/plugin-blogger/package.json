@@ -40,14 +40,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/BloggerPlugin.tsx",
-      "types": "./dist/types/src/BloggerPlugin.d.ts",
-      "default": "./dist/lib/BloggerPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -56,16 +61,12 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Blog": {
       "source": "./src/types/Blog.ts",
       "types": "./dist/types/src/types/Blog.d.ts",
@@ -81,12 +82,16 @@
       "types": "./dist/types/src/types/BloggerEvents.d.ts",
       "import": "./dist/lib/BloggerEvents.mjs"
     },
+    "./BloggerPlugin": {
+      "source": "./src/BloggerPlugin.ts",
+      "types": "./dist/types/src/BloggerPlugin.d.ts",
+      "import": "./dist/lib/BloggerPlugin.mjs"
+    },
     "./Publisher": {
       "source": "./src/types/Publisher.ts",
       "types": "./dist/types/src/types/Publisher.d.ts",
       "import": "./dist/lib/Publisher.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -112,6 +117,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",

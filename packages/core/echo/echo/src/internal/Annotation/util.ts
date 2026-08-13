@@ -4,8 +4,8 @@
 
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
@@ -15,12 +15,12 @@ export interface AnnotationHelper<T> {
   /**
    * Get the annotation value from an Effect schema.
    *
-   * Only accepts `Schema.Schema.Any` — to read an annotation off a `Type.Type`
+   * Only accepts `Schema.Top` — to read an annotation off a `Type.Type`
    * entity, unwrap it first with `Type.getSchema(entity)`. This keeps the
    * annotation pipeline single-shaped and forces annotations to live on the
    * source schema, not on the post-construction Type entity.
    */
-  get: (schema: Schema.Schema.Any) => Option.Option<T>;
+  get: (schema: Schema.Top) => Option.Option<T>;
   /**
    * Get the annotation value from the AST.
    */
@@ -28,11 +28,11 @@ export interface AnnotationHelper<T> {
   /**
    * Set the annotation on an Effect schema.
    *
-   * Only accepts `Schema.Schema.Any` — annotations must be applied to the
+   * Only accepts `Schema.Top` — annotations must be applied to the
    * source schema BEFORE wrapping it with `Type.makeObject` / `Type.makeRelation`.
    * In a pipe, place every `Annotation.X.set(...)` before the `Type.make...` step.
    */
-  set: (value: T) => <S extends Schema.Schema.Any>(schema: S) => S;
+  set: (value: T) => <S extends Schema.Top>(schema: S) => S;
 }
 
 /**
@@ -40,14 +40,16 @@ export interface AnnotationHelper<T> {
  */
 // TODO(dmaretskyi): Rename to createSystemAnnotationHelper.
 // TODO(dmaretskyi): REconcile with Annotation.make.
-export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
+export const createAnnotationHelper = <T>(id: string): AnnotationHelper<T> => {
   return {
-    get: (schema) => SchemaAST.getAnnotation(schema.ast, id),
-    getFromAst: (ast) => SchemaAST.getAnnotation(ast, id),
+    // Effect 4's own accessor returns `T | undefined`; this helper stays `Option`-shaped because
+    // that is DXOS's API and `Option` is unchanged in v4 -- only the boundary needed adapting.
+    get: (schema) => Option.fromNullishOr(SchemaAST.getAnnotation<T>(schema.ast, id)),
+    getFromAst: (ast) => Option.fromNullishOr(SchemaAST.getAnnotation<T>(ast, id)),
     set:
       (value) =>
-      <S extends Schema.Schema.Any>(schema: S): S =>
-        schema.annotations({ [id]: value }) as S,
+      <S extends Schema.Top>(schema: S): S =>
+        schema.annotate({ [id]: value }) as S,
   };
 };
 
@@ -56,7 +58,7 @@ export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
  */
 // TODO(wittjosiah): Is there a way to do this as a generic?
 export const unwrapOptional = (property: SchemaAST.PropertySignature) => {
-  if (!property.isOptional || !SchemaAST.isUnion(property.type)) {
+  if (!SchemaAST.isOptional(property.type) || !SchemaAST.isUnion(property.type)) {
     return property;
   }
 

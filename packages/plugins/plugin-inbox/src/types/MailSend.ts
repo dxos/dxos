@@ -18,7 +18,7 @@ import { Message } from '@dxos/types';
  */
 export const Input = Schema.Struct({
   message: Type.getSchema(Message.Message),
-  connection: Ref.Ref(Connection.Connection).annotations({
+  connection: Ref.Ref(Connection.Connection).annotate({
     description: 'Connection to source provider credentials from.',
   }),
 });

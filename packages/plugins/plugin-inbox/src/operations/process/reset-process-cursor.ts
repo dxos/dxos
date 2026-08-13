@@ -8,7 +8,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import * as InboxOperation from '../../types/InboxOperation';
+import { InboxOperation } from '#types';
+
 import { findFeedCursor } from './cursor';
 
 /** Clears a pipeline cursor (the process pipeline's by default) so the next run re-processes the feed. */

@@ -10,7 +10,8 @@ import { Message } from '@dxos/types';
 import { type GroupPolicy, type SuggestionSource } from '@dxos/ui-editor';
 import { stringToFallback } from '@dxos/util';
 
-import { type SuggestionGroup, suggestionGroupKey, suggestionGroups, suggestionHue } from '../../hooks';
+import { type SuggestionGroup, suggestionGroupKey, suggestionGroups, suggestionHue } from '#hooks';
+
 import { getMessageMetadata } from '../../util';
 
 export type SuggestionThreadProps = {

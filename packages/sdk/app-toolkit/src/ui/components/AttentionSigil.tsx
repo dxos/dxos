@@ -4,7 +4,7 @@
 
 import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { keySymbols } from '@dxos/keyboard';
 import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';

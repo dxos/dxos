@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -21,10 +20,11 @@ import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
 import { Person } from '@dxos/types';
 
-import { Jmap, JmapMail } from '../../../apis';
+import { Jmap, JmapMail } from '#apis';
+import { JmapMailApi } from '#services';
+
 import { JMAP_DOMAIN } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
-import { JmapMailApi } from '../../../services';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateJmapTag } from '../tags';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
@@ -328,7 +328,7 @@ const fetchAttachments = (
               contentId: attachment.contentId,
             }),
           ),
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error, { blobId: attachment.blobId, name: attachment.name });
             return Effect.succeed(undefined);
           }),
@@ -395,7 +395,7 @@ const jmapIds = (
         conditions: conditions.length,
       });
 
-      return Stream.paginateChunkEffect(0, (position: number) =>
+      return Stream.paginate(0, (position: number) =>
         Effect.gen(function* () {
           const { ids } = yield* api.emailQuery(target, {
             filter,
@@ -408,7 +408,7 @@ const jmapIds = (
           options.onEnumerated?.(ids.length);
           const next =
             ids.length < JMAP_SYNC_CONFIG.listPageSize ? Option.none<number>() : Option.some(position + ids.length);
-          return [Chunk.fromIterable(ids), next];
+          return [ids, next] as const;
         }),
       );
     }),
@@ -439,7 +439,7 @@ const jmapEmailsForIds = (
             options.onRetrieved?.();
             return list[0];
           }),
-        ).pipe(Stream.filter(Predicate.isNotNullable)),
+        ).pipe(Stream.filter(Predicate.isNotNullish)),
       { concurrency: JMAP_SYNC_CONFIG.fetchConcurrency, bufferSize: 10 },
     ),
   );

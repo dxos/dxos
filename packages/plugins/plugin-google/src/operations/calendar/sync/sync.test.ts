@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { credentialsLayerConfig } from '@dxos/compute-runtime';
 import * as InboxResolver from '@dxos/extractor-lib';
 
-import { GoogleCalendar } from '../../../apis';
-import { GoogleCredentials } from '../../../services';
+import { GoogleCalendar } from '#apis';
+import { GoogleCredentials } from '#services';
+
 import { mapEvent } from '../mapper';
 
 const TestLayer = Layer.mergeAll(

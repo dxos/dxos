@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { log } from '@dxos/log';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
 /**
  * Superset of the current on-disk deck shape that additionally tolerates fields absent from the current
@@ -19,30 +20,32 @@ import * as DeckSchema from '../types/DeckSchema';
 const LegacyDeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  plankSizing: Schema.mutable(DeckSchema.PlankSizing),
+  plankSizing: Schema.mutableKey(DeckSchema.PlankSizing),
   companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   companionOpen: Schema.optional(Schema.Boolean),
   tilingSizing: Schema.optional(Schema.Number),
-  companionFrameSizing: Schema.optional(Schema.mutable(DeckSchema.PlankSizing)),
+  companionFrameSizing: Schema.optional(Schema.mutableKey(DeckSchema.PlankSizing)),
   solo: Schema.optional(Schema.String),
   initialized: Schema.optional(Schema.Boolean),
   fullscreen: Schema.optional(Schema.Boolean),
-  companionOrientation: Schema.optional(Schema.Literal('horizontal', 'vertical')),
-}).pipe(Schema.mutable);
+  companionOrientation: Schema.optional(Schema.Literals(['horizontal', 'vertical'])),
+}).mapFields(Struct.map(Schema.mutableKey));
 type LegacyDeckState = Schema.Schema.Type<typeof LegacyDeckState>;
 
 const LegacyStoredDeckState = Schema.Struct({
-  sidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
-  complementarySidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
+  sidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
+  complementarySidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(LegacyDeckState) })),
-  previousMode: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
-}).pipe(Schema.mutable);
+  decks: Schema.mutableKey(
+    Schema.Record(Schema.String, Schema.mutableKey(LegacyDeckState.mapFields(Struct.map(Schema.mutableKey)))),
+  ),
+  previousMode: Schema.optional(Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Schema.Any)))),
+}).mapFields(Struct.map(Schema.mutableKey));
 type LegacyStoredDeckState = Schema.Schema.Type<typeof LegacyStoredDeckState>;
 
-const decodeLegacyState = Schema.decodeUnknownEither(LegacyStoredDeckState);
+const decodeLegacyState = Schema.decodeUnknownResult(LegacyStoredDeckState);
 
 /** Whether any field absent from the current deck schema is still present. */
 const hasLegacyFields = (state: LegacyStoredDeckState): boolean =>
@@ -103,13 +106,13 @@ export const migratePersistedState = (
   }
 
   const decoded = decodeLegacyState(parsed);
-  if (Either.isLeft(decoded)) {
-    log.warn('failed to decode persisted deck state; removing', { key, error: decoded.left.message });
+  if (Result.isFailure(decoded)) {
+    log.warn('failed to decode persisted deck state; removing', { key, error: decoded.failure.message });
     storage.removeItem(key);
     return;
   }
 
-  const state = decoded.right;
+  const state = decoded.success;
   if (!hasLegacyFields(state)) {
     return;
   }

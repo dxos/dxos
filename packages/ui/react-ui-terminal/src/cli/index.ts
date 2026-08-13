@@ -4,6 +4,7 @@
 
 export * as XtermConsole from './console';
 export * as XtermContext from './context';
+export * as XtermStdio from './stdio';
 export * as XtermTerminal from './terminal';
 
 export * from './bridge';

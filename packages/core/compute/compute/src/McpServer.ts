@@ -14,11 +14,11 @@ import * as Schema from 'effect/Schema';
  * and adds instance-level fields (`name`, `enabled`) and ECHO annotations.
  */
 export const McpServer = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional).annotations({
+  name: Schema.String.pipe(Schema.optional).annotate({
     description: 'Human-readable name of the MCP server',
   }),
 
-  url: Schema.String.annotations({
+  url: Schema.String.annotate({
     description: 'URL of the MCP server',
   }),
 
@@ -27,7 +27,7 @@ export const McpServer = Schema.Struct({
    * kept for compatibility with servers that haven't migrated and is deprecated per
    * the MCP SDK. Clients support both during the migration period.
    */
-  protocol: Schema.Union(Schema.Literal('http'), Schema.Literal('sse')).annotations({
+  protocol: Schema.Union([Schema.Literal('http'), Schema.Literal('sse')]).annotate({
     description: 'Transport protocol of the MCP server (prefer "http"; "sse" deprecated)',
   }),
 
@@ -36,7 +36,7 @@ export const McpServer = Schema.Struct({
    * Persisted in plaintext when stored on a space-replicated ECHO object — see the
    * `@dxos/assistant-toolkit` `McpServer` type for security implications.
    */
-  apiKey: Schema.optional(Schema.String).annotations({
+  apiKey: Schema.optional(Schema.String).annotate({
     description: 'Optional API key sent with requests',
   }),
 });

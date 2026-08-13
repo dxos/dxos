@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { withAuthorization } from '@dxos/compute-runtime';
@@ -14,7 +14,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import { GoogleCalendar } from '../../../apis';
+import { GoogleCalendar } from '#apis';
+
 import { AccessTokenNotPopulatedError } from '../../../errors';
 
 const CALENDAR_LIST_URL =
@@ -27,7 +28,9 @@ const CALENDAR_LIST_URL =
 const listGoogleCalendars = (token: string) =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
-    const client = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const client = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
     const body = yield* HttpClientRequest.get(CALENDAR_LIST_URL).pipe(
       client.execute,
       Effect.flatMap(HttpClientResponse.schemaBodyJson(GoogleCalendar.CalendarListResponse)),

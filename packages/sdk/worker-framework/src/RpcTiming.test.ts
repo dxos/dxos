@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as EffectRpc from '@effect/rpc/Rpc';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
+import * as EffectRpc from 'effect/unstable/rpc/Rpc';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -49,7 +49,7 @@ describe('rpc timing middleware', () => {
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
 
     const client = (await EffectEx.runPromise(
-      Rpc.makeClient(channel.port2, TimingRpcs, { timing: true }).pipe(Scope.extend(scope)),
+      Rpc.makeClient(channel.port2, TimingRpcs, { timing: true }).pipe(Scope.provide(scope)),
     )) as {
       reportTiming: (payload: Record<string, never>) => Effect.Effect<{ queueWaitMs: number }>;
     };

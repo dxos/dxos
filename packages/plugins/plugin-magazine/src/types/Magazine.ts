@@ -101,7 +101,7 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
      * Defaults to {@link Subscription.DEFAULT_KEEP} when unset.
      */
     keep: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         title: 'Keep',
         description: 'Number of items to keep.',
       }),
@@ -171,15 +171,15 @@ export const composeInstructions = (topic?: string): string => {
 /** Schema for the create-magazine dialog form. */
 export const CreateMagazineSchema = Schema.Struct({
   name: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Name',
     }),
   ),
-  feeds: Schema.Array(Ref.Ref(Subscription.Subscription)).annotations({
+  feeds: Schema.Array(Ref.Ref(Subscription.Subscription)).annotate({
     title: 'Feeds',
   }),
   instructions: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Topic',
       description: 'Describe what content to curate.',
     }),

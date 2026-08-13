@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -42,7 +42,7 @@ describe('NetworkService', () => {
   test('subscribeToNetworkStatus returns current network status', async () => {
     const stream = networkService['NetworkService.queryStatus']();
     let result = new Trigger<ConnectionState | undefined>();
-    const cleanup = subscribeStream(Runtime.defaultRuntime, stream, {
+    const cleanup = subscribeStream(EffectContext.empty(), stream, {
       onData: ({ swarm }) => result.wake(swarm),
     });
     onTestFinished(cleanup);

@@ -8,5 +8,5 @@
 // same split, for the same reason, as `@dxos/plugin-inbox`'s `testing/node.ts`. Node consumers get the
 // deterministic fixtures plus the API contracts needed to build a faithful HTTP mock.
 export * from './jmap-fixtures';
-export type { JmapDataset } from '../services';
-export type { Jmap } from '../apis';
+export type { JmapDataset } from '#services';
+export type { Jmap } from '#apis';

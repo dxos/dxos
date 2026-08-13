@@ -106,7 +106,7 @@ describe('Projection', () => {
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(
         Schema.Struct({
-          title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+          title: Schema.optional(Schema.String).annotate({ title: 'Title' }),
         }),
       ),
     });
@@ -117,8 +117,8 @@ describe('Projection', () => {
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(
         Schema.Struct({
-          title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-          priority: Schema.optional(Schema.Number).annotations({ title: 'Priority' }),
+          title: Schema.optional(Schema.String).annotate({ title: 'Title' }),
+          priority: Schema.optional(Schema.Number).annotate({ title: 'Priority' }),
         }),
       ),
     });
@@ -148,8 +148,8 @@ describe('Projection', () => {
     const typename = 'com.example.type.dbtask';
     const staticSchema = Type.makeObject(DXN.make(typename, '0.1.0'))(
       Schema.Struct({
-        title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-        status: Schema.optional(Schema.String).annotations({ title: 'Status' }),
+        title: Schema.optional(Schema.String).annotate({ title: 'Title' }),
+        status: Schema.optional(Schema.String).annotate({ title: 'Status' }),
       }),
     );
 
@@ -170,7 +170,7 @@ describe('Projection', () => {
     const typename = 'com.example.type.dburi';
     const staticSchema = Type.makeObject(DXN.make(typename, '0.1.0'))(
       Schema.Struct({
-        title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+        title: Schema.optional(Schema.String).annotate({ title: 'Title' }),
       }),
     );
 
@@ -192,8 +192,8 @@ describe('Projection', () => {
     const typename = 'com.example.type.dbjsontask';
     const jsonSchemaInput = JsonSchema.toJsonSchema(
       Schema.Struct({
-        title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-        priority: Schema.optional(Schema.Number).annotations({ title: 'Priority' }),
+        title: Schema.optional(Schema.String).annotate({ title: 'Title' }),
+        priority: Schema.optional(Schema.Number).annotate({ title: 'Priority' }),
       }),
     );
     const typeEntity = Type.makeObjectFromJsonSchema({
@@ -238,7 +238,7 @@ describe('Projection', () => {
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(
         Schema.Struct({
-          name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
+          name: Schema.optional(Schema.String).annotate({ title: 'Name' }),
           email: Schema.optional(Format.Email),
           salary: Schema.optional(Format.Currency({ code: 'usd', decimals: 2 })),
         }),

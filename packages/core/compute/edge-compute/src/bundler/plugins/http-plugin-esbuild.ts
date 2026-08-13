@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Schedule from 'effect/Schedule';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 import { type Loader, type Plugin } from 'esbuild';
 
 import { EffectEx } from '@dxos/effect';
@@ -63,11 +62,10 @@ export const httpPlugin: Plugin = {
         return { contents, loader };
       }).pipe(
         Effect.retry(
-          Function.pipe(
-            Schedule.exponential(Duration.millis(INITIAL_DELAY)),
-            Schedule.jittered,
-            Schedule.intersect(Schedule.recurs(MAX_RETRIES - 1)),
-          ),
+          Schedule.max([
+            Schedule.exponential(Duration.millis(INITIAL_DELAY)).pipe(Schedule.jittered),
+            Schedule.recurs(MAX_RETRIES - 1),
+          ]),
         ),
         Effect.provide(FetchHttpClient.layer),
         EffectEx.runAndForwardErrors,

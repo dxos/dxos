@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService } from '@dxos/ai';
 import { ServiceNotAvailableError } from '@dxos/compute';
@@ -120,8 +120,8 @@ const TestHanlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fn(function* () {
         const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
-          Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () => Database.add(Obj.make(RetryCounter, { count: 0 }))),
+          Effect.flatMap((result) => Effect.fromOption(result)),
+          Effect.catchTag('NoSuchElementError', () => Database.add(Obj.make(RetryCounter, { count: 0 }))),
         );
         if (counter.count >= 3) {
           return;
@@ -1148,7 +1148,9 @@ describe('TriggerDispatcher', () => {
         yield* dispatcher.invokeTrigger({ trigger, event: {} });
 
         yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
-        const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(Effect.flatten);
+        const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
+          Effect.flatMap((result) => Effect.fromOption(result)),
+        );
         expect(counter.count).toBe(3);
       }, Effect.provide(TestLayer())),
     );

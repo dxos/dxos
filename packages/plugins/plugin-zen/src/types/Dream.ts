@@ -13,7 +13,7 @@ export class Dream extends Type.makeObject<Dream>(DXN.make('dxos.org.type.Dream'
   Schema.Struct({
     name: Schema.optional(Schema.String),
     duration: Schema.optional(
-      Schema.Number.annotations({
+      Schema.Number.annotate({
         description: 'Playback duration in seconds.',
         default: 300,
       }),

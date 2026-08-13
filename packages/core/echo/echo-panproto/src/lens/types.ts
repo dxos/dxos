@@ -137,7 +137,7 @@ export type Plan = {
 export type Lens<S = any, T = any> = {
   readonly id: string;
   readonly source: Type.AnyObj;
-  readonly target: Type.AnyObj | Schema.Schema.Any;
+  readonly target: Type.AnyObj | Schema.Top;
   /** Compiled mapping; `undefined` for a coded lens, whose transform is opaque. */
   readonly plan?: Plan;
   /** Project the base object into the target shape. */

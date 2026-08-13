@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { useControls } from 'leva';
 import React, { useContext, useMemo } from 'react';

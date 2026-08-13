@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -27,9 +27,9 @@ import { isNonNullable } from '@dxos/util';
 
 import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '#components';
 import { meta } from '#meta';
+import { Notebook } from '#types';
 
 import { ComputeGraph } from '../../notebook';
-import type * as Notebook from '../../types/Notebook';
 
 const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', 'org.dxos.skill.markdown'];
 

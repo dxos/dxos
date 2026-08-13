@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtom, useAtomSet } from '@effect-atom/atom-react';
+import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { type FormEvent, useCallback, useState } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -13,10 +13,10 @@ import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslatio
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { ClientCapabilities } from '#types';
 
 import { RESET_DIALOG } from '../../constants';
 import { useAccountUrl, useHubHttpClient } from '../../hooks';
-import * as ClientCapabilities from '../../types/ClientCapabilities';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 

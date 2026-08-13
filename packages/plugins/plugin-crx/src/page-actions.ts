@@ -2,19 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
-import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as CrxCapabilities from './types/CrxCapabilities';
-import * as PageAction from './types/PageAction';
-import * as Settings from './types/Settings';
+import { CrxCapabilities, PageAction, Settings } from '#types';
 
 /**
  * Dependencies for the invoke handler, injected so the handler can be
@@ -36,17 +34,17 @@ export type InvokeDeps = {
  * serializable descriptors.
  */
 export const handleListEvent = (detail: unknown, getActions: () => PageAction.PageAction[]): PageAction.ListAck => {
-  const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)(detail);
-  if (Either.isLeft(decoded)) {
+  const decoded = Schema.decodeUnknownResult(PageAction.ListRequest)(detail);
+  if (Result.isFailure(decoded)) {
     log.info('rejected invalid page-actions list request');
     // Best-effort id echo so the extension can correlate the failure ack.
-    const envelope = Schema.decodeUnknownEither(PageAction.Envelope)(detail);
-    const id = Either.isRight(envelope) ? (envelope.right.id ?? '') : '';
+    const envelope = Schema.decodeUnknownResult(PageAction.Envelope)(detail);
+    const id = Result.isSuccess(envelope) ? (envelope.success.id ?? '') : '';
     return { version: 1, id, ok: false, error: 'invalidPayload' };
   }
   return {
     version: 1,
-    id: decoded.right.id,
+    id: decoded.success.id,
     ok: true,
     actions: getActions().map(PageAction.toDescriptor),
   };
@@ -58,13 +56,13 @@ export const handleListEvent = (detail: unknown, getActions: () => PageAction.Pa
  * the generic `invalidPayload`.
  */
 export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Promise<PageAction.InvokeAck> => {
-  const envelope = Schema.decodeUnknownEither(PageAction.Envelope)(detail);
-  if (Either.isLeft(envelope)) {
+  const envelope = Schema.decodeUnknownResult(PageAction.Envelope)(detail);
+  if (Result.isFailure(envelope)) {
     log.info('rejected invalid page-action envelope');
     return { version: 1, id: '', ok: false, error: 'invalidPayload' };
   }
   // Best-effort id echo so the extension can correlate failure acks.
-  const envelopeId = envelope.right.id ?? '';
+  const envelopeId = envelope.success.id ?? '';
 
   // Master toggle: when off, the bridge acks (so the extension does not time
   // out) but ignores all extension-initiated actions.
@@ -73,17 +71,17 @@ export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Prom
     return { version: 1, id: envelopeId, ok: false, error: 'disabled' };
   }
 
-  if (envelope.right.version !== 1) {
-    log.info('rejected unsupported page-action version', { version: envelope.right.version });
+  if (envelope.success.version !== 1) {
+    log.info('rejected unsupported page-action version', { version: envelope.success.version });
     return { version: 1, id: envelopeId, ok: false, error: 'unsupportedVersion' };
   }
 
-  const decoded = Schema.decodeUnknownEither(PageAction.InvokeRequest)(detail);
-  if (Either.isLeft(decoded)) {
+  const decoded = Schema.decodeUnknownResult(PageAction.InvokeRequest)(detail);
+  if (Result.isFailure(decoded)) {
     log.info('rejected invalid page-action payload');
     return { version: 1, id: envelopeId, ok: false, error: 'invalidPayload' };
   }
-  const request = decoded.right;
+  const request = decoded.success;
 
   const action = deps.getActions().find((candidate) => candidate.id === request.actionId);
   if (!action) {

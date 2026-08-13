@@ -10,9 +10,8 @@ import { log } from '@dxos/log';
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { SpaceOperation } from '../../operations';
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import { type UseDuplicatesResult, buildMergePreview } from './useDuplicates';
 
 export type UseDuplicatesGroupOptions = {

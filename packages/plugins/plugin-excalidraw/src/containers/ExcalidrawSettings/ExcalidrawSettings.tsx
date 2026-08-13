@@ -9,8 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import * as Settings from '../../types/Settings';
+import { Settings } from '#types';
 
 export type ExcalidrawSettingsProps = AppSurface.SettingsData;
 

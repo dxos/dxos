@@ -2,19 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+// @import-as-namespace
 
-import { ProgressRegistry, ReactSurface, TraceProgressSink } from '#capabilities';
-import { meta } from '#meta';
-import { translations } from '#translations';
+import { ProgressPlugin } from '#plugin';
 
-export const ProgressPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(ProgressRegistry),
-  Plugin.addModule(TraceProgressSink),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.make,
-);
+export { meta } from '#meta';
 
-export default ProgressPlugin;
+/** Constructs the plugin; the body is loaded eagerly. */
+export const make = ProgressPlugin;

@@ -17,7 +17,8 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
+
 import RemoveAllObjectsHandler from './remove-all-objects';
 
 class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(

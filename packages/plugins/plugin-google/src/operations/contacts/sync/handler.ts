@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
@@ -19,9 +18,10 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { Person } from '@dxos/types';
 
-import { GoogleContacts } from '../../../apis';
+import { GoogleContacts } from '#apis';
+import { GoogleCredentials } from '#services';
+
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { GoogleCredentials } from '../../../services';
 import { mapGooglePerson } from '../mapper';
 
 const COMMIT_PAGE_SIZE = 10;
@@ -48,16 +48,12 @@ const fetchGroupMembers = Effect.fn(function* (groupResourceName: string) {
 
 /** Streams all contacts via paginated `people.connections.list` (one page at a time). */
 const connectionsSource = () =>
-  Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
+  // v4's `paginate` emits an array per step; its `Option.none` next-state is the terminator, so the
+  // explicit `done` flag is gone.
+  Stream.paginate(undefined as string | undefined, (pageToken: string | undefined) =>
     Effect.gen(function* () {
-      if (state.done) {
-        return Option.none();
-      }
-      const response = yield* GoogleContacts.listConnections({ pageToken: Option.getOrUndefined(state.pageToken) });
-      return Option.some([
-        Chunk.fromIterable(response.connections ?? []),
-        { pageToken: Option.fromNullable(response.nextPageToken), done: !response.nextPageToken },
-      ] as const);
+      const response = yield* GoogleContacts.listConnections({ pageToken });
+      return [response.connections ?? [], Option.fromNullishOr(response.nextPageToken)] as const;
     }),
   );
 

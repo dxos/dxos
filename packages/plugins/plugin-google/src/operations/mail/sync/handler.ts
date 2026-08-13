@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
@@ -14,7 +14,8 @@ import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { runMailSync } from '@dxos/plugin-inbox/sync';
 
-import { GoogleCredentials, GoogleMailApi } from '../../../services';
+import { GoogleCredentials, GoogleMailApi } from '#services';
+
 import { googleMailSyncProvider } from './sync-provider';
 
 const handler = InboxOperation.GoogleMailSync.pipe(

@@ -17,10 +17,8 @@ import { Panel } from '@dxos/react-ui';
 
 import { NotebookArticle, ScriptArticle, ScriptSettings } from '#containers';
 import { useCompiler } from '#hooks';
+import { Notebook, ScriptCapabilities, Settings } from '#types';
 
-import * as Notebook from '../types/Notebook';
-import * as ScriptCapabilities from '../types/ScriptCapabilities';
-import * as Settings from '../types/Settings';
 import { getAccessCredential } from '../util';
 
 export type ScriptSettingsSurfaceProps = {

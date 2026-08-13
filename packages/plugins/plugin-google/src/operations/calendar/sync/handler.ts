@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
@@ -12,7 +12,8 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import { GoogleCalendarApi, GoogleCredentials } from '../../../services';
+import { GoogleCalendarApi, GoogleCredentials } from '#services';
+
 import { type SyncCalendarProps, syncCalendar } from './sync';
 
 const handler = InboxOperation.GoogleCalendarSync.pipe(

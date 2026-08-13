@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
 import { useCapability, useOptionalCapability } from '@dxos/app-framework/ui';
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { useDebugMode } from '#hooks';
+import { CallsCapabilities } from '#types';
 
 import { type CallManager } from '../../calls';
-import * as CallsCapabilities from '../../types/CallsCapabilities';
 import { AudioStream } from '../Media';
 import { ParticipantGrid } from '../Participant';
 import { Toolbar, type ToolbarProps } from './Toolbar';

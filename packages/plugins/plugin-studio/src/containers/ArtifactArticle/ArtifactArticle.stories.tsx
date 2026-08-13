@@ -14,24 +14,22 @@ import { DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 
+import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
+import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
 
-import { StudioPlugin } from '../../StudioPlugin';
-import * as Artifact from '../../types/Artifact';
-import type * as GenerationService from '../../types/GenerationService';
-import * as StudioCapabilities from '../../types/StudioCapabilities';
-import * as Variant from '../../types/Variant';
 import { ArtifactArticle } from './ArtifactArticle';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */
 const MockRequestSchema = Schema.Struct({
-  prompt: Schema.optional(Schema.String.annotations({ title: 'Prompt' })),
-  style: Schema.optional(Schema.String.annotations({ title: 'Style' })),
-  aspectRatio: Schema.optional(Schema.String.annotations({ title: 'Aspect ratio' })),
+  prompt: Schema.optional(Schema.String.annotate({ title: 'Prompt' })),
+  style: Schema.optional(Schema.String.annotate({ title: 'Style' })),
+  aspectRatio: Schema.optional(Schema.String.annotate({ title: 'Aspect ratio' })),
 });
 
 /** A keyless mock provider (kind 'image') returning placeholder images. */
@@ -94,7 +92,7 @@ const meta_ = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Artifact.Artifact, Variant.Variant],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -124,8 +122,8 @@ const meta_ = {
         }),
         StudioPlugin(),
         MockProviderPlugin(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
       ],
     }),
   ],

@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import * as CommentCapabilities from '../types/CommentCapabilities';
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
+import { CommentCapabilities, ReviewCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -19,7 +19,7 @@ import { getUri as getUriFromEntity } from './api';
  * `Obj.make(typeEntity, ...)` stamps on `system.type`: a static declaration resolves to its
  * typename DXN, a persisted entity to its local `echo:/<objectId>`.
  */
-export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | URI.URI): URI.URI => {
+export const getTypeURIFromSpecifier = (input: Schema.Top | AnyEntity | URI.URI): URI.URI => {
   if (Schema.isSchema(input)) {
     return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
   }
@@ -59,9 +59,9 @@ export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | U
  */
 // TODO(burdon): Can we use `Schema.is`?
 export const isInstanceOf = <S>(
-  schemaOrType: S extends Schema.Schema.AnyNoContext ? S : Schema.Schema.AnyNoContext | AnyEntity,
+  schemaOrType: S extends Schema.Codec<any, any> ? S : Schema.Codec<any, any> | AnyEntity,
   object: any,
-): object is S extends Schema.Schema.AnyNoContext
+): object is S extends Schema.Codec<any, any>
   ? Schema.Schema.Type<S>
   : S extends { readonly [InstancePhantomId]?: infer A }
     ? A

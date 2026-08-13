@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 
-import { GoogleMail } from '../../../apis';
+import { GoogleMail } from '#apis';
+
 import { GmailSendMessageInvalidError } from '../../../errors';
 import { GoogleCredentials } from '../../../services/google-credentials';
 

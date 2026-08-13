@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Chat from '@effect/ai/Chat';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Chat from 'effect/unstable/ai/Chat';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -27,10 +28,10 @@ import * as LanguageModelFixture from './LanguageModelFixture';
 // causing a schema decode failure. This local definition uses the correct schema.
 const AnthropicWebSearch = Tool.providerDefined({
   id: 'anthropic.web_search_20250305' as `${string}.${string}`,
-  toolkitName: 'AnthropicWebSearch',
+  customName: 'AnthropicWebSearch',
   providerName: 'web_search',
-  args: {},
-  parameters: { query: Schema.optional(Schema.String) },
+  args: Schema.Struct({}),
+  parameters: Schema.Struct({ query: Schema.optional(Schema.String) }),
   success: Schema.Unknown,
 })({});
 
@@ -56,9 +57,12 @@ const TestLayer = Layer.mergeAll(
 class TestObjectReadToolkit extends Toolkit.make(
   Tool.make('read-object', {
     description: 'Read an object',
-    parameters: {
+    parameters: Schema.Struct({
       objectId: EntityId,
-    },
+    }),
+    // Declared because `Tool.make` defaults `success` to `Schema.Void`, which discards the handler's
+    // return value — and the echoed id IS the dynamic value this suite canonicalizes.
+    success: Schema.String,
   }),
 ) {
   static layer = TestObjectReadToolkit.toLayer({
@@ -115,7 +119,7 @@ describe('memoization', () => {
             }),
           );
 
-          const lastMessage = (yield* chat.history).content.at(-1);
+          const lastMessage = (yield* Ref.get(chat.history)).content.at(-1);
           if (lastMessage?.role === 'tool') {
             continue;
           } else {

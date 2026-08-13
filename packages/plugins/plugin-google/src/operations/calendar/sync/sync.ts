@@ -14,9 +14,10 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 
-import { GoogleCalendar } from '../../../apis';
+import { GoogleCalendar } from '#apis';
+import { type GoogleCalendarApi, type GoogleCalendarApiError } from '#services';
+
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { type GoogleCalendarApi, type GoogleCalendarApiError } from '../../../services';
 import { mapEvent } from '../mapper';
 import { fetchEvents } from './fetch';
 

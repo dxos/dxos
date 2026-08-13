@@ -2,25 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import type * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Obj } from '@dxos/echo';
-import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { meta } from '#meta';
-
-import * as PresenterCapabilities from '../types/PresenterCapabilities';
-import * as PresenterOperation from '../types/PresenterOperation';
+import { PresenterCapabilities, PresenterOperation } from '#types';
 
 /** Match nodes that can be presented (Collection or Document). */
-const whenPresentable = (node: Node.Node, get: Atom.Context) =>
+const whenPresentable = (node: Node.Node, get: Atom.AtomContext) =>
   Option.orElse(NodeMatcher.whenEchoType(Collection.Collection)(node, get), () =>
     NodeMatcher.whenEchoType(Markdown.Document)(node, get),
   );
@@ -31,7 +31,7 @@ export default Capability.makeModule(
     // capability lands (dependency modules contribute individually, not batched per wave).
     const settingsCapabilityAtom = yield* Capability.atom(PresenterCapabilities.Settings);
 
-    const isPresentable = (object: Obj.Any, get: Atom.Context) => {
+    const isPresentable = (object: Obj.Any, get: Atom.AtomContext) => {
       const [settingsAtom] = get(settingsCapabilityAtom);
       const settings = settingsAtom ? get(settingsAtom) : undefined;
       return settings?.presentCollections

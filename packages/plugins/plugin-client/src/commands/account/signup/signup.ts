@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -50,10 +50,10 @@ const INPUT_PROMPT: Record<SignupMethod, string> = {
 export const signup = Command.make(
   'signup',
   {
-    code: Args.text({ name: 'code' }).pipe(
+    code: Args.string('code').pipe(
       Args.withDescription('Access code (8-character invitation code) to redeem. Validated before signing up.'),
     ),
-    input: Args.text({ name: 'input' }).pipe(
+    input: Args.string('input').pipe(
       Args.withDescription('Method input: email address / Atmosphere handle. Prompted if omitted.'),
       Args.optional,
     ),
@@ -102,7 +102,7 @@ export const signup = Command.make(
     // already redeemed and the Account minted, so a provisioning failure must not fail the command
     // (a retry could not redeem again). Composer re-provisions the agent on every boot.
     yield* invoke(ClientOperation.CreateAgent).pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Console.log(
           `Warning: account created, but the EDGE agent could not be provisioned (${String(error)}). ` +
             'Opening Composer will retry automatically.',
@@ -219,7 +219,7 @@ const signUpWithAtmosphere = Effect.fn(function* ({
   // Non-fatal: the Account is already minted; the credential syncs on the next client run anyway.
   yield* flushAndSync({ indexes: true }).pipe(
     Effect.provide(spaceLayer(Option.none(), true)),
-    Effect.catchAll((error) => Console.log(`Warning: could not flush the credential to EDGE (${String(error)}).`)),
+    Effect.catch((error) => Console.log(`Warning: could not flush the credential to EDGE (${String(error)}).`)),
   );
   return result;
 });

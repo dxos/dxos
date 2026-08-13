@@ -10,48 +10,43 @@ import { BaseError } from '@dxos/errors';
 /**
  * Discord returned a non-2xx response. dfx surfaces these as
  * `DiscordRestError<'ErrorResponse', ErrorResponse>` (4xx other than 429) or
- * `DiscordRestError<'RatelimitedResponse', RatelimitedResponse>` (429).
- * `cause` carries the parsed Discord body `{ code, message }` and `response`
- * exposes the HTTP status. We pattern-match on `_tag` rather than reaching
- * for `instanceof` because dfx's tag is the stable identity surfaced through
- * `Effect.catchTag`.
+ * `DiscordRestError<'RatelimitedResponse', RatelimitedResponse>` (429), matched on `_tag` rather
+ * than `instanceof` because the tag is the identity `Effect.catchTag` surfaces.
  */
 type DfxErrorResponseShape = {
   readonly _tag: 'ErrorResponse';
-  readonly cause: { readonly code?: number; readonly message?: string };
+  readonly data: { readonly code?: number; readonly message?: string };
   readonly response: { readonly status: number };
 };
 
 type DfxRatelimitedResponseShape = {
   readonly _tag: 'RatelimitedResponse';
-  readonly cause: { readonly code?: number; readonly message?: string; readonly retry_after?: number };
+  readonly data: { readonly code?: number; readonly message?: string; readonly retry_after?: number };
   readonly response: { readonly status: number };
 };
 
 /**
- * dfx errors always carry `cause` (the parsed Discord body) and `response`
- * (the HttpClient response). Validate both before claiming the shape so an
- * incomplete `{ _tag: 'ErrorResponse' }` falls through to the generic
- * formatter branch instead of crashing on a missing `error.cause`.
+ * The decoded Discord body sits on `data`; both it and `response` are validated before claiming the
+ * shape so an incomplete error falls through to the generic formatter rather than throwing.
  */
 const hasDiscordErrorFields = (
   error: Record<string, unknown>,
-): error is { cause: { code?: number; message?: string }; response: { status: number } } =>
-  Predicate.isRecord(error.cause) &&
-  Predicate.isRecord(error.response) &&
+): error is { data: { code?: number; message?: string }; response: { status: number } } =>
+  Predicate.isObject(error.data) &&
+  Predicate.isObject(error.response) &&
   typeof (error.response as { status?: unknown }).status === 'number';
 
 export const isDiscordErrorResponse = (error: unknown): error is DfxErrorResponseShape =>
-  Predicate.isRecord(error) && error._tag === 'ErrorResponse' && hasDiscordErrorFields(error);
+  Predicate.isObject(error) && error._tag === 'ErrorResponse' && hasDiscordErrorFields(error);
 
 export const isDiscordRatelimited = (error: unknown): error is DfxRatelimitedResponseShape =>
-  Predicate.isRecord(error) && error._tag === 'RatelimitedResponse' && hasDiscordErrorFields(error);
+  Predicate.isObject(error) && error._tag === 'RatelimitedResponse' && hasDiscordErrorFields(error);
 
 /** Read the HTTP status from a dfx Discord error if present. */
 export const discordErrorStatus = (error: unknown): number | undefined => {
   if (
-    Predicate.isRecord(error) &&
-    Predicate.isRecord((error as { response?: unknown }).response) &&
+    Predicate.isObject(error) &&
+    Predicate.isObject((error as { response?: unknown }).response) &&
     typeof (error as { response: { status?: unknown } }).response.status === 'number'
   ) {
     return (error as { response: { status: number } }).response.status;
@@ -64,7 +59,7 @@ export const discordErrorStatus = (error: unknown): number | undefined => {
  */
 export const formatDiscordSyncFailure = (error: unknown): string => {
   if (isDiscordErrorResponse(error) || isDiscordRatelimited(error)) {
-    const { code, message } = error.cause;
+    const { code, message } = error.data;
     if (typeof message === 'string' && message.length > 0) {
       return typeof code === 'number' ? `Discord API error ${code}: ${message}` : `Discord API error: ${message}`;
     }
@@ -77,8 +72,8 @@ export const formatDiscordSyncFailure = (error: unknown): string => {
     const keys = Object.keys(error.context);
     return keys.length > 0 ? `${error.name}: ${JSON.stringify(error.context)}` : error.name;
   }
-  if (Predicate.isRecord(error) && typeof error._tag === 'string') {
-    if (error._tag === 'ResponseError' && Predicate.isRecord(error.response) && 'status' in error.response) {
+  if (Predicate.isObject(error) && typeof error._tag === 'string') {
+    if (error._tag === 'ResponseError' && Predicate.isObject(error.response) && 'status' in error.response) {
       return `HTTP ${error.response.status}`;
     }
     return error._tag;

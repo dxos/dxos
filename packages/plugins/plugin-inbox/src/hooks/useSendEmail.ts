@@ -19,10 +19,7 @@ import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
 import { meta } from '#meta';
-
-import type * as InboxCapabilities from '../types/InboxCapabilities';
-import * as Mailbox from '../types/Mailbox';
-import * as SystemTags from '../types/SystemTags';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 /**
  * The send callback for the composer: routes the draft to its mailbox's provider, records the provider

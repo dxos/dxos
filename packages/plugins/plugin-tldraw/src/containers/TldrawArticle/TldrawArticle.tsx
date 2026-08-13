@@ -17,8 +17,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
 import { CanvasComponent } from '#components';
-
-import * as TldrawCapabilities from '../../types/TldrawCapabilities';
+import { TldrawCapabilities } from '#types';
 
 export type TldrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 

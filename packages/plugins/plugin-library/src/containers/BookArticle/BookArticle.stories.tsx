@@ -7,7 +7,8 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import * as Book from '../../types/Book';
+import { Book } from '#types';
+
 import { BookArticle } from './BookArticle';
 
 const meta = {

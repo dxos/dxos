@@ -16,7 +16,8 @@ import { EffectEx } from '@dxos/effect';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
+
 import { crmPipeline } from './crm-pipeline';
 
 describe('crm pipeline project template', () => {

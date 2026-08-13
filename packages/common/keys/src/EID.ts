@@ -153,17 +153,15 @@ export const equals = (a: EID, b: EID): boolean => parse(a) === parse(b);
 /**
  * Effect Schema for EID validation.
  */
-// Identity-encoded schema (`Schema<EID, EID>`) so consumers can refine generic
-// schemas without the encode/decode types diverging. `Schema.filter` produces a refinement
-// with `Encoded = string`; we narrow the encoded form too with `as unknown as` since the
-// runtime representation is identical (a branded string).
-const Schema_: Schema.Schema<EID, EID> = Schema.String.pipe(
-  Schema.filter((value): value is EID => isEID(value), {
-    message: () => 'Invalid EID: must start with echo:',
+// Identity-encoded (`Schema<EID, EID>`) so consumers can refine without the encode/decode types
+// diverging; `refine` leaves `Encoded = string`, and the runtime form is the same branded string.
+const Schema_: Schema.Codec<EID, EID> = Schema.String.pipe(
+  Schema.refine((value): value is EID => isEID(value), {
+    message: 'Invalid EID: must start with echo:',
   }),
-  Schema.annotations({
+  Schema.annotate({
     title: 'EID',
     description: 'ECHO object/space URI: echo://<spaceId>[/<objectId>] or echo:///<objectId>',
   }),
-) as unknown as Schema.Schema<EID, EID>;
+) as unknown as Schema.Codec<EID, EID>;
 export { Schema_ as Schema };

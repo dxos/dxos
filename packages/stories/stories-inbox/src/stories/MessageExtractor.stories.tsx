@@ -8,11 +8,11 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
-import { Role } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Role from '@dxos/app-framework/Role';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -35,7 +35,8 @@ import { translations as inboxTranslations } from '@dxos/plugin-inbox/translatio
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
@@ -268,7 +269,7 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Feed.Feed,
             // Tags are created as Tag objects (Mailbox.applyTag → Tag.findOrCreate), so the schema
@@ -297,11 +298,11 @@ const meta = {
               });
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         TripPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
         MockDeckOperationsPlugin(),
         ImportantExtractorPlugin(),
         MockAiServicePlugin(),

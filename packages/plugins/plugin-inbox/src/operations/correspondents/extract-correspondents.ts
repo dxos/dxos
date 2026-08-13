@@ -16,7 +16,8 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
+import { InboxOperation } from '#types';
+
 import { deriveCorrespondents } from './correspondence';
 
 /**
@@ -103,7 +104,7 @@ const handler = InboxOperation.ExtractCorrespondents.pipe(
       yield* pipeline.pipe(
         Effect.onError((cause) =>
           Effect.sync(() => {
-            if (!Cause.isInterruptedOnly(cause)) {
+            if (!Cause.hasInterruptsOnly(cause)) {
               reportStatus({ message: PROGRESS_STATUS_FAILED });
             }
           }),

@@ -23,7 +23,7 @@ import {
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import * as Spec from '../../types/Spec';
+import { Spec } from '#types';
 
 export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 'subject'> & {
   /** ECHO Spec to live-edit; omit to render a static `content` string (e.g. a bundled plugin spec). */

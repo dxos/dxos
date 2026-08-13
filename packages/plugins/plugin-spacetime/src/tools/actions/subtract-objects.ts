@@ -7,8 +7,9 @@ import type { Manifold } from 'manifold-3d';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
+import { Model } from '#types';
+
 import { serializeManifold, subtractSolids } from '../../engine';
-import * as Model from '../../types/Model';
 import { type ActionHandler, disposeSceneObject } from '../action';
 import { type ToolContext, getSelectedObjectIds } from '../tool-context';
 

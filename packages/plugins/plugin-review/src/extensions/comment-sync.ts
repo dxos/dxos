@@ -4,7 +4,8 @@
 
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { type Atom, type Registry } from '@effect-atom/atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { getTextInRange } from '@dxos/echo-client';
@@ -15,8 +16,7 @@ import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments } from '@dxos/ui-editor';
 
-import * as CommentOperation from '../types/CommentOperation';
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
+import { CommentOperation, ReviewCapabilities } from '#types';
 
 // Resolve the anchor snippet against the document the editor produced the cursor from: the branch
 // content Text in Branch view, else main. Resolving a branch-doc cursor against main throws (the
@@ -35,7 +35,7 @@ const getName = (text: Text.Text | undefined, anchor: string): string | undefine
 };
 
 export type CommentSyncStore = {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   stateAtom: Atom.Writable<ReviewCapabilities.CommentState>;
 };
 

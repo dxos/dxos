@@ -4,7 +4,6 @@
 
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
-import * as FiberId from 'effect/FiberId';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -12,7 +11,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
 
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { findSyncTriggerForBinding } from './sync-trigger';
 
 /**
@@ -53,7 +53,7 @@ export const createSyncRoutine = ({
       return Deferred.await(inFlight);
     }
 
-    const deferred = Deferred.unsafeMake<Trigger.Trigger>(FiberId.none);
+    const deferred = Deferred.makeUnsafe<Trigger.Trigger>();
     creating.set(cursor.id, deferred);
     return createRoutine({ target, cursor, operation, spec, remote }).pipe(
       // Waiters see the same outcome, including a defect, rather than hanging on the deferred.

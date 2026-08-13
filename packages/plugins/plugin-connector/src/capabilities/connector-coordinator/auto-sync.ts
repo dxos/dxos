@@ -9,8 +9,7 @@ import { type Database, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import * as ConnectorOperation from '../../types/ConnectorOperation';
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorOperation, ConnectorSpec } from '#types';
 
 /**
  * Run the first sync for a connection whose initial sync targets were just bound, so a new
@@ -35,11 +34,11 @@ export const autoSyncConnection = (
   return invoker
     .invoke(ConnectorOperation.SyncConnection, { connection: Ref.make(connection) }, { spaceId: db.spaceId })
     .pipe(
-      Effect.catchAll((error) => Effect.sync(() => log.warn('auto sync failed', { connectorId: connector.id, error }))),
-      Effect.catchAllDefect((defect) =>
+      Effect.catch((error) => Effect.sync(() => log.warn('auto sync failed', { connectorId: connector.id, error }))),
+      Effect.catchDefect((defect) =>
         Effect.sync(() => log.warn('auto sync defect', { connectorId: connector.id, defect })),
       ),
-      Effect.forkDaemon,
+      Effect.forkDetach,
       Effect.asVoid,
     );
 };

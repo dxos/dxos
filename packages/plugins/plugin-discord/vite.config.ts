@@ -16,6 +16,7 @@ export default defineConfig({
     DiscordTargetOptions: 'src/types/DiscordTargetOptions.ts',
     DiscordEvents: 'src/types/DiscordEvents.ts',
     DiscordOperation: 'src/types/DiscordOperation.ts',
+    types: 'src/types/index.ts',
   },
   test: { node: true },
 });

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -35,7 +35,7 @@ describe('DevicesService', () => {
       const stream = devicesService['DevicesService.queryDevices']();
       const device = await EffectEx.runPromise(devicesService['DevicesService.updateDevice']({ label: 'test-device' }));
       const result = new Trigger<Device[] | undefined>();
-      const cleanup = subscribeStream(Runtime.defaultRuntime, stream, {
+      const cleanup = subscribeStream(EffectContext.empty(), stream, {
         onData: ({ devices }) => result.wake(devices),
       });
       onTestFinished(cleanup);
@@ -47,7 +47,7 @@ describe('DevicesService', () => {
     test('returns empty list if no identity is available', async () => {
       const stream = devicesService['DevicesService.queryDevices']();
       const result = new Trigger<Device[] | undefined>();
-      const cleanup = subscribeStream(Runtime.defaultRuntime, stream, {
+      const cleanup = subscribeStream(EffectContext.empty(), stream, {
         onData: ({ devices }) => result.wake(devices),
         onError: (err) => log.catch(err),
       });
@@ -58,7 +58,7 @@ describe('DevicesService', () => {
     test('updates when identity is created', async () => {
       const stream = devicesService['DevicesService.queryDevices']();
       let result = new Trigger<Device[] | undefined>();
-      const cleanup = subscribeStream(Runtime.defaultRuntime, stream, {
+      const cleanup = subscribeStream(EffectContext.empty(), stream, {
         onData: ({ devices }) => result.wake(devices),
       });
       onTestFinished(cleanup);

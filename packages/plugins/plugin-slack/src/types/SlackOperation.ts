@@ -21,7 +21,7 @@ const RemoteTarget = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   description: Schema.String.pipe(Schema.optional),
-  metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(Schema.optional),
+  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 });
 
 /**

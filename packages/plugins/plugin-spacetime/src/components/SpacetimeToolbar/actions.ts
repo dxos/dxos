@@ -5,8 +5,7 @@
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-
-import type * as Model from '../../types/Model';
+import { Model } from '#types';
 
 export type TemplateType = 'primitive' | 'preset';
 

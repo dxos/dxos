@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Ref, Tag } from '@dxos/echo';
@@ -17,7 +17,7 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
-import * as Mailbox from '../types/Mailbox';
+import { Mailbox } from '#types';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded with
 // a mailbox binding, plus the ambient services a provider's sync entry point requires. Published as

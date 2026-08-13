@@ -14,6 +14,8 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { DiscordOperation, DiscordTargetOptions } from '#types';
+
 import {
   DISCORD_BOT_LABEL,
   DISCORD_PROVIDER_ID,
@@ -23,8 +25,6 @@ import {
 } from '../constants';
 import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
 import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
-import * as DiscordOperation from '../types/DiscordOperation';
-import * as DiscordTargetOptions from '../types/DiscordTargetOptions';
 
 /**
  * Manual-credential form for the Discord Bot connector.
@@ -35,7 +35,7 @@ import * as DiscordTargetOptions from '../types/DiscordTargetOptions';
  * in `constants.ts` surfaces the invite link.
  */
 const DiscordTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'Bot Token',
     description:
       'Bot token from your application\'s "Bot" page in the Discord developer portal. ' +

@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+
+import { Artifact, Lightbox } from '#types';
 
 import { getArtifactsPath } from '../paths';
-import * as Artifact from '../types/Artifact';
-import * as Lightbox from '../types/Lightbox';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

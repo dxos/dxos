@@ -33,14 +33,14 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     /**
      * Human-readable name of the skill.
      */
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'Human-readable name of the skill',
     }),
 
     /**
      * Description of the skill's purpose and functionality.
      */
-    description: Schema.optional(Schema.String).annotations({
+    description: Schema.optional(Schema.String).annotate({
       description: "Description of the skill's purpose and functionality",
     }),
 
@@ -48,21 +48,21 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
      * Instructions that guide the AI assistant's behavior and responses.
      * These are system prompts or guidelines that the AI should follow.
      */
-    instructions: Template.Template.annotations({
+    instructions: Template.Template.annotate({
       description: "Instructions that guide the AI assistant's behavior and responses",
     }),
 
     /**
      * Array of tools that the AI assistant can use when this skill is active.
      */
-    tools: Schema.Array(ToolId).annotations({
+    tools: Schema.Array(ToolId).annotate({
       description: 'Array of tools that the AI assistant can use when this skill is active',
     }),
 
     /**
      * Whether an agent is allowed to auto-enable this skill in a conversation.
      */
-    agentCanEnable: Schema.optional(Schema.Boolean).annotations({
+    agentCanEnable: Schema.optional(Schema.Boolean).annotate({
       description: 'Whether an agent is allowed to auto-enable this skill in a conversation.',
     }),
 
@@ -84,7 +84,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
 /**
  * Controls when the hook is triggered.
  */
-export const HookSpec = Schema.Union(
+export const HookSpec = Schema.Union([
   /**
    * Triggered when the agent is about to start a request.
    * A request is a series of agent/tool turns that the model drives.
@@ -95,7 +95,7 @@ export const HookSpec = Schema.Union(
    * A request is a series of agent/tool turns that the model drives.
    */
   Schema.TaggedStruct('end-request', {}),
-);
+]);
 
 /**
  * Allows hooking into the agent's lifecycle.
@@ -107,7 +107,7 @@ export const Hook = Schema.Struct({
    *
    * Can be a Ref to a PersistentOperation.
    */
-  function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+  function: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ title: 'Function' })),
 
   /**
    * Controls when the hook is triggered.

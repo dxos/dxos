@@ -13,7 +13,8 @@ import { invariant } from '@dxos/invariant';
 import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { getHostPlatform } from '@dxos/util';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { ClientCapabilities } from '#types';
+
 import { CreatePasskey } from './definitions';
 
 /**

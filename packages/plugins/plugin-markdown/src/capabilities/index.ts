@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
+import { MarkdownCapabilities } from '#types';
 
 // Ordering-only: registers the anchor text resolver once the app graph exists (mirrors the
 // AppGraphReady ordering the event-mode module used previously); the body reads nothing.

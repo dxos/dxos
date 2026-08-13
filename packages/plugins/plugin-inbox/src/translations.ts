@@ -9,9 +9,7 @@ import { translations as componentsTranslations } from '@dxos/react-ui-component
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import * as Calendar from './types/Calendar';
-import * as Mailbox from './types/Mailbox';
+import { Calendar, Mailbox } from '#types';
 
 export const translations = [
   {

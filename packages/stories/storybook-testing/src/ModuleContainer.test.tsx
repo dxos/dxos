@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 
 import { normalizeCell } from './ModuleContainer';
 

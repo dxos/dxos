@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import type * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import { Key } from '@dxos/echo';
-import { type GraphBuilder } from '@dxos/plugin-graph';
 
 import { findTypeSectionPath } from './type-section-path';
 

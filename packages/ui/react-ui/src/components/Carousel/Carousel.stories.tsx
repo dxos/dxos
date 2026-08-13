@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { translations } from '#translations';
+
 import { withLayout, withTheme } from '../../testing';
-import { translations } from '../../translations';
 import { Carousel, type CarouselTransition } from './Carousel';
 
 // Stable placeholder images so the story renders without network fixtures.

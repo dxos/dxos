@@ -4,7 +4,7 @@
 
 // Surface components that cannot be expressed as a `props` mapper, because they call hooks or compose.
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
@@ -17,16 +17,15 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Logger } from '@dxos/react-ui-debug';
 
 import { DebugObjectPanel, DebugSettings, DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
-
-import * as Settings from '../types/Settings';
+import { Settings } from '#types';
 
 /** Returns `onOpen` and `canOpen` for the ObjectsTree "Open" action. */
 const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoker>['invokePromise']) => {

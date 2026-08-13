@@ -30,14 +30,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/MapPlugin.workerd.ts",
-        "node": "./src/MapPlugin.node.ts",
-        "default": "./src/MapPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/MapPlugin.d.ts",
-      "workerd": "./dist/lib/neutral/MapPlugin.workerd.mjs",
-      "node": "./dist/lib/neutral/MapPlugin.node.mjs",
-      "default": "./dist/lib/neutral/MapPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/neutral/plugin.workerd.mjs",
+      "node": "./dist/lib/neutral/plugin.node.mjs",
+      "default": "./dist/lib/neutral/plugin.mjs"
     }
   },
   "exports": {
@@ -47,10 +47,10 @@
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+    "./MapPlugin": {
+      "source": "./src/MapPlugin.ts",
+      "types": "./dist/types/src/MapPlugin.d.ts",
+      "default": "./dist/lib/neutral/MapPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

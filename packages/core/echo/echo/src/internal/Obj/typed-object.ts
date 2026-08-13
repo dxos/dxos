@@ -16,7 +16,7 @@ import { type AnyEntity } from '../common/types';
  *
  * @deprecated Use `Type.AnyObj` from `@dxos/echo` instead.
  */
-export interface TypedObject<A = any, I = any> extends TypeMeta, Schema.Schema<A, I> {}
+export interface TypedObject<A = any, I = any> extends TypeMeta, Schema.Codec<A, I> {}
 
 /**
  * Typed object that could be used as a prototype in class definitions.

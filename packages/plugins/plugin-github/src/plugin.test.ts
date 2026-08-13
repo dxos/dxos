@@ -1,0 +1,27 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
+import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+
+import { meta } from '#meta';
+import { GitHubPlugin } from '#plugin';
+
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+
+describe('GitHubPlugin', () => {
+  test('modules activate on the expected events', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin()],
+    });
+
+    // The harness fires every plugin's start event after startup, so both start-gated modules are active.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('GitHubConnector'), moduleId('OperationHandler')]),
+    );
+  }, 30_000);
+});

@@ -21,7 +21,7 @@ import * as Schema from 'effect/Schema';
 const Path = Schema.Array(Schema.String);
 
 /** A parsed atproto lexicon document (opaque JSON; embedded so the lens is self-contained). */
-const Lexicon = Schema.Record({ key: Schema.String, value: Schema.Unknown });
+const Lexicon = Schema.Record(Schema.String, Schema.Unknown);
 
 /**
  * A ref-typed ECHO field carried on the wire as a plain string. `format` names a registered text
@@ -48,7 +48,7 @@ const RefText = Schema.Struct({
  * - `derive` — synthesize a wire-only value from an ECHO path via a `${'{0}'}`-style template
  *   (e.g. `hiveBookUri`); dropped on decode.
  */
-export const Adapter: Schema.Schema<Adapter> = Schema.Union(
+export const Adapter: Schema.Codec<Adapter> = Schema.Union([
   Schema.Struct({ kind: Schema.Literal('scalar'), wire: Schema.String, echo: Path }),
   Schema.Struct({ kind: Schema.Literal('array'), wire: Schema.String, echo: Path, separator: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('ref'), wire: Schema.String, echo: Path, ref: RefText }),
@@ -67,7 +67,7 @@ export const Adapter: Schema.Schema<Adapter> = Schema.Union(
     fields: Schema.Array(Schema.suspend(() => Adapter)),
   }),
   Schema.Struct({ kind: Schema.Literal('derive'), wire: Schema.String, from: Path, template: Schema.String }),
-);
+]);
 
 export type Adapter =
   | { readonly kind: 'scalar'; readonly wire: string; readonly echo: readonly string[] }

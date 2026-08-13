@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -13,10 +13,7 @@ import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { useProjectionModel } from '#hooks';
-
-import type * as Kanban from '../../types/Kanban';
-import * as KanbanConstants from '../../types/KanbanConstants';
-import * as KanbanSchema from '../../types/KanbanSchema';
+import { Kanban, KanbanConstants, KanbanSchema } from '#types';
 
 export type KanbanPropertiesProps = AppSurface.ObjectPropertiesProps<Kanban.Kanban>;
 

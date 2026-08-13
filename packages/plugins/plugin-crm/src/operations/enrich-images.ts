@@ -11,7 +11,8 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { Organization, Person } from '@dxos/types';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
+
 import { attachImageToSubject } from './attach-image';
 import { organizationImageCandidates, personImageCandidates } from './image-candidates';
 
@@ -54,7 +55,7 @@ const handler = CrmOperation.EnrichImages.pipe(
               const attached = yield* attachImageToSubject({ subject, url, imageServiceUrl }).pipe(
                 Effect.map(() => true),
                 // A miss (404 avatar, unknown logo, oversize, wrong type) tries the next candidate.
-                Effect.catchAll((error) => {
+                Effect.catch((error) => {
                   log.info('enrich-images: candidate failed', { url, error: error.message });
                   return Effect.succeed(false);
                 }),

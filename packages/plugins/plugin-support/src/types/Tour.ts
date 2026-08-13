@@ -7,7 +7,7 @@
 import { type Context as ReactContext, createContext } from 'react';
 import { type Step as BaseStep } from 'react-joyride';
 
-import { type CapabilityManager } from '@dxos/app-framework';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 
 /** A {@link react-joyride} Step plus an optional `before` hook fired right before the step renders. */
 export type Step = BaseStep & {

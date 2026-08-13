@@ -14,10 +14,9 @@ import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
+import { InboxOperationHandlerSet } from '#operations';
+import { InboxOperation, Mailbox } from '#types';
 
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
-import { InboxOperationHandlerSet } from '../index';
 import { PROCESS_CURSOR_KEY_ID, PROCESS_CURSOR_KEY_SOURCE } from './cursor';
 
 const TestLayer = AssistantTestLayer({

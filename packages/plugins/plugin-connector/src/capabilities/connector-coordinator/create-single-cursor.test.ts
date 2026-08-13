@@ -17,7 +17,8 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { createSingleCursor } from './create-single-cursor';
 
 describe('createSingleCursor', () => {

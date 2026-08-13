@@ -20,8 +20,9 @@ import {
 import { type Actor, type Message } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
 
+import { translationKey } from '#translations';
+
 import { useActorContact } from '../../hooks';
-import { translationKey } from '../../translations';
 import { Avatar, type AvatarProps, avatarName } from '../Avatar';
 
 /**

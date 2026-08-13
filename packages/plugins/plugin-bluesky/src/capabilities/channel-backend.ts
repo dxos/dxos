@@ -2,18 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { Message } from '@dxos/types';
 
+import { BlueskyChannel, makeBlueskyChannel } from '#types';
+
 import { ATPROTO_BACKEND_KIND, ATPROTO_POLL_INTERVAL } from '../constants';
 import { BlueskyApi } from '../services';
-import { BlueskyChannel, makeBlueskyChannel } from '../types';
 
 /** Maps an ATProto feed-view post to a transient (non-persisted) chat message. */
 const toMessage = (item: BlueskyApi.FeedViewPost): Message.Message =>
@@ -33,7 +34,7 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
   label: 'Bluesky',
   icon: 'ph--butterfly--regular',
   createFields: Schema.Struct({
-    handle: Schema.String.annotations({ title: 'Handle', description: 'Public Bluesky handle (e.g., bsky.app.)' }),
+    handle: Schema.String.annotate({ title: 'Handle', description: 'Public Bluesky handle (e.g., bsky.app.)' }),
   }),
   makeConfig: (options) => makeBlueskyChannel(String(options.handle ?? '')),
   subscribe: (channel, onMessages) => {

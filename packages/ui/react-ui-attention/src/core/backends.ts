@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { ViewState } from '../types';
 
@@ -49,14 +50,14 @@ const safeLocalStorage = (): Storage | undefined => {
 };
 
 export interface LocalBackendOptions {
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
   /** Injectable for tests; defaults to `window.localStorage`. */
   readonly storage?: Storage;
 }
 
 /** localStorage-backed backend: seeds atoms from storage, persists on set, syncs across tabs. */
 export class LocalBackend implements ViewState.Backend {
-  readonly #registry: Registry.Registry;
+  readonly #registry: Registry.AtomRegistry;
   // Absent in non-browser contexts (SSR/tests without injection); the backend then degrades to
   // ephemeral, in-memory behaviour rather than crashing on a missing `localStorage`.
   readonly #storage: Storage | undefined;
@@ -145,7 +146,7 @@ export class LocalBackend implements ViewState.Backend {
 }
 
 export const createDefaultBackends = (
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
 ): Record<ViewState.BackendName, ViewState.Backend> => ({
   memory: new MemoryBackend(),
   local: new LocalBackend({ registry }),

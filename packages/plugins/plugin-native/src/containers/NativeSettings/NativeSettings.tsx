@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
@@ -14,10 +14,7 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import * as NativeCapabilities from '../../types/NativeCapabilities';
-import type * as Settings from '../../types/Settings';
-import type * as Update from '../../types/Update';
+import { NativeCapabilities, Settings, Update } from '#types';
 
 export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 

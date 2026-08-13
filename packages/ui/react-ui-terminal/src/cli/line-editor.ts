@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Terminal from '@effect/platform/Terminal';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Terminal from 'effect/Terminal';
 
 import type { TerminalBridge } from './bridge';
 
@@ -33,7 +33,7 @@ export type ReadLineOptions = {
  * abandon the current line without exiting.
  */
 export const readLineResult = (bridge: TerminalBridge, options: ReadLineOptions = {}): Effect.Effect<LineResult> =>
-  Effect.async<LineResult>((resume) => {
+  Effect.callback<LineResult>((resume) => {
     const { prompt = '', history = [] } = options;
 
     let buffer = '';
@@ -195,11 +195,11 @@ export const readLineResult = (bridge: TerminalBridge, options: ReadLineOptions 
   });
 
 /**
- * The `Terminal` service contract: a line, or a `QuitException` for either interrupt.
+ * The `Terminal` service contract: a line, or a `QuitError` for either interrupt.
  */
 export const readLine = (bridge: TerminalBridge, options: ReadLineOptions = {}) =>
   readLineResult(bridge, options).pipe(
     Effect.flatMap((result) =>
-      result.type === 'line' ? Effect.succeed(result.value) : Effect.fail(new Terminal.QuitException()),
+      result.type === 'line' ? Effect.succeed(result.value) : Effect.fail(new Terminal.QuitError()),
     ),
   );

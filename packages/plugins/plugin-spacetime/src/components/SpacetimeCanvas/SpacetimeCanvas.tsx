@@ -3,10 +3,14 @@
 //
 
 import { Color3, Color4, HighlightLayer, Mesh, StandardMaterial, Vector3 } from '@babylonjs/core';
-import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type RefObject, useContext, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/react-ui';
+
+import { Model, Scene } from '#types';
 
 import {
   SceneManager,
@@ -25,8 +29,6 @@ import {
   createToolManager,
   getSelectedObjectIds,
 } from '../../tools';
-import * as Model from '../../types/Model';
-import type * as Scene from '../../types/Scene';
 import { type DebugInfo, DebugPanel } from './DebugPanel';
 import { extractSolidDebugInfo } from './solid-debug-info';
 

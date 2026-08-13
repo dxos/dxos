@@ -11,7 +11,7 @@ import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.spec', '0.1.0'))(
   Schema.Struct({

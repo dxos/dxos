@@ -25,12 +25,12 @@ import { ConnectionView } from './ConnectionView';
 
 // Sample per-binding options schema (real connectors contribute their own via `connector.optionsSchema`).
 const OptionsSchema = Schema.Struct({
-  includeArchived: Schema.Boolean.annotations({
+  includeArchived: Schema.Boolean.annotate({
     title: 'Include archived',
     description: 'Sync items that have been archived remotely.',
   }),
   label: Schema.optional(
-    Schema.String.annotations({ title: 'Label', description: 'Optional label applied to synced items.' }),
+    Schema.String.annotate({ title: 'Label', description: 'Optional label applied to synced items.' }),
   ),
 });
 
@@ -40,7 +40,7 @@ const DefaultStory = ({
   testError,
   canReauthenticate = true,
 }: {
-  optionsSchema?: Schema.Schema<any, any>;
+  optionsSchema?: Schema.Codec<any, any>;
   testStatus?: TestConnectionStatus;
   testError?: string;
   canReauthenticate?: boolean;
@@ -99,7 +99,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

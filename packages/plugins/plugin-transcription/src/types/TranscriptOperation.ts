@@ -10,6 +10,7 @@ import { AiService } from '@dxos/ai';
 import { SpaceSchema } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 // Message and Person are used via Type.getSchema(Message.Message); they also appear in emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Message, type Person, Transcript } from '@dxos/types';
@@ -29,13 +30,17 @@ export const Create = Operation.make({
   }),
 });
 
-export const MessageWithRangeId = Schema.extend(
-  Type.getSchema(Message.Message),
-  Schema.Struct({
-    rangeId: Schema.optional(Schema.Array(Schema.String)).annotations({
-      description: 'The IDs of the messages that contain the sentences.',
-    }),
-  }),
+// `SchemaAST.assignFields`, not `mapFields`: `Type.getSchema` returns a `Codec`, which carries no
+// field literals for a struct operation.
+export const MessageWithRangeId = Schema.make<Schema.Codec<any, any>>(
+  SchemaAST.assignFields(
+    Type.getSchema(Message.Message).ast,
+    Schema.Struct({
+      rangeId: Schema.optional(Schema.Array(Schema.String)).annotate({
+        description: 'The IDs of the messages that contain the sentences.',
+      }),
+    }).ast,
+  ),
 );
 
 export type MessageWithRangeIdType = Schema.Schema.Type<typeof MessageWithRangeId>;
@@ -48,7 +53,7 @@ export const Open = Operation.make({
     icon: 'ph--folder-open--regular',
   },
   input: Schema.Struct({
-    transcript: Ref.Ref(Transcript.Transcript).annotations({
+    transcript: Ref.Ref(Transcript.Transcript).annotate({
       description: 'The ID of the transcription object.',
     }),
   }),
@@ -66,15 +71,15 @@ export const Summarize = Operation.make({
     icon: 'ph--text-align-left--regular',
   },
   input: Schema.Struct({
-    transcript: Schema.String.annotations({
+    transcript: Schema.String.annotate({
       description: 'The transcript of the meeting.',
     }),
-    notes: Schema.optional(Schema.String).annotations({
+    notes: Schema.optional(Schema.String).annotate({
       description: 'Additional notes from the participants.',
     }),
   }),
   output: Schema.Struct({
-    summary: Schema.String.annotations({
+    summary: Schema.String.annotate({
       description: 'The summary of the transcript.',
     }),
   }),
@@ -98,7 +103,7 @@ export const EnrichMessage = Operation.make({
 });
 
 export const SentenceNormalizationInput = Schema.Struct({
-  messages: Schema.Array(MessageWithRangeId).annotations({
+  messages: Schema.Array(MessageWithRangeId).annotate({
     description: 'Messages to normalize into sentences.',
   }),
 });
@@ -106,7 +111,7 @@ export const SentenceNormalizationInput = Schema.Struct({
 export type SentenceNormalizationInputType = Schema.Schema.Type<typeof SentenceNormalizationInput>;
 
 export const SentenceNormalizationOutput = Schema.Struct({
-  sentences: Schema.Array(MessageWithRangeId.pipe(Schema.mutable)).pipe(Schema.mutable).annotations({
+  sentences: Schema.Array(MessageWithRangeId).pipe(Schema.mutable).annotate({
     description: 'The sentences of the transcript.',
   }),
 });

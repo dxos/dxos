@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
@@ -11,6 +11,7 @@ import React, { useContext, useMemo } from 'react';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
@@ -18,7 +19,6 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { connectorAuthActions } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
-import { Graph } from '@dxos/plugin-graph';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -34,7 +34,7 @@ import { ConnectorAuthMenu } from './ConnectorAuthMenu';
  * none, so it renders as a "Connect" entry — together they exercise both item kinds and the
  * separator between them. `Default` renders the `ConnectorAuthMenu` component. `Toolbar` feeds the
  * same `connectorAuthActions` atom into an object toolbar the way studio/ibkr/inbox do. */
-const CredentialSchema = Schema.Struct({ apiKey: Schema.String.annotations({ title: 'API key' }) });
+const CredentialSchema = Schema.Struct({ apiKey: Schema.String.annotate({ title: 'API key' }) });
 
 const makeCredentialForm = (connectorId: string) => ({
   schema: CredentialSchema,
@@ -137,7 +137,7 @@ const meta = {
       capabilities: [Capability.contribute(ConnectorSpec.Connector, testConnectors)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

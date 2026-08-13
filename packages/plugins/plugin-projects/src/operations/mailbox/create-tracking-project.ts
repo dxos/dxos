@@ -14,8 +14,9 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
+import { ProjectOperation } from '#types';
+
 import { scaffoldProject } from '../../templates';
-import * as ProjectOperation from '../../types/ProjectOperation';
 import { syncProjectTasks } from './update-project-tasks';
 
 const INSTRUCTIONS = (label: string, senders: readonly string[]) => trim`
@@ -76,7 +77,7 @@ const handler = ProjectOperation.CreateTrackingProject.pipe(
 
       const email = normalizeEmail(message.sender?.email);
       if (!email) {
-        return yield* Effect.dieMessage('Message has no sender email.');
+        return yield* Effect.die(new Error('Message has no sender email.'));
       }
       // The domain the project follows, or undefined to track the individual. A free-mail domain
       // identifies no organization, so it can never widen the scope to a "team" — it degrades to the

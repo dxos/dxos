@@ -20,8 +20,7 @@ import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
-
-import * as ClientOptions from '../../types/ClientOptions';
+import { ClientOptions } from '#types';
 
 export type DevicesContainerProps = Pick<ClientOptions.ClientPluginOptions, 'identityTestActions'> & {
   createInvitationUrl?: (invitationCode: string) => string;

@@ -16,13 +16,11 @@ import { Tabs } from '@dxos/react-ui-tabs';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
+import { Terra, TerraCapabilities, TerraObject } from '#types';
 
 import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine';
 import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
 import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim';
-import * as Terra from '../../types/Terra';
-import * as TerraCapabilities from '../../types/TerraCapabilities';
-import * as TerraObject from '../../types/TerraObject';
 
 /** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
 type SimClock = { pausedTotalMs: number; pausedAtMs: number | null };

@@ -4,9 +4,10 @@
 
 import React, { useMemo } from 'react';
 
+import { TerraObject } from '#types';
+
 import { type TerraConfigValues } from '../../engine';
 import { type SimObject, toUnit } from '../../sim';
-import * as TerraObject from '../../types/TerraObject';
 import { MAP_HEIGHT, MAP_WIDTH, project, projectPath } from './projection';
 import { renderTerrain } from './terrain';
 import { useEasedHeadings } from './useEasedHeadings';

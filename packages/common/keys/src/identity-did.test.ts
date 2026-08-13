@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as JSONSchema from 'effect/JSONSchema';
 import * as Schema from 'effect/Schema';
+import * as SchemaRepresentation from 'effect/SchemaRepresentation';
 import { test } from 'vitest';
 
 import { IdentityDid } from './identity-did';
@@ -30,5 +30,8 @@ test('identity-did schema', ({ expect }) => {
   expect(IdentityDid.isValid(`did:halo:B${'1'.repeat(32)}`)).toBe(false);
 
   // Serializes to JSON Schema (a plain string type), unlike Schema.instanceOf.
-  expect(() => JSONSchema.make(IdentityDid)).not.toThrow();
+  // v4 routes JSON Schema generation through the representation document.
+  expect(() =>
+    SchemaRepresentation.toJsonSchemaDocument(SchemaRepresentation.toRepresentation(IdentityDid.ast)),
+  ).not.toThrow();
 });

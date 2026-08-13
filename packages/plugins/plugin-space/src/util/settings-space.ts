@@ -22,7 +22,7 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 export const resolveSettingsSpace = Effect.fnUntraced(function* (client: Client) {
   // The space list replays on subscribe, so the current state is checked with no gap in which an
   // arriving settings space could be missed.
-  const existing = yield* Effect.async<Space | undefined>((resume) => {
+  const existing = yield* Effect.callback<Space | undefined>((resume) => {
     const sub = client.spaces.subscribe(() => {
       const settingsSpace = AppSpace.getSettingsSpace(client);
       if (settingsSpace) {

@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -15,8 +16,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { RoutineForm } from '#components';
 import { meta } from '#meta';
-
-import * as RoutineOperation from '../../types/RoutineOperation';
+import { RoutineOperation } from '#types';
 
 export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>;
 

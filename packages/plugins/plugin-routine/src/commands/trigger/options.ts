@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Options from '@effect/cli/Options';
+import * as Options from 'effect/unstable/cli/Flag';
 
-export const TriggerId = Options.text('id').pipe(Options.withDescription('The id of the trigger.'));
+export const TriggerId = Options.string('id').pipe(Options.withDescription('The id of the trigger.'));
 
-export const Enabled = Options.boolean('enabled', { ifPresent: true }).pipe(
-  Options.withDescription('Whether the trigger is enabled.'),
-);
+export const Enabled = Options.boolean('enabled').pipe(Options.withDescription('Whether the trigger is enabled.'));
 
-export const Input = Options.keyValueMap('input').pipe(
+export const Input = Options.keyValuePair('input').pipe(
   Options.withDescription("Input data to pass to the function. Must match the function's input schema."),
 );
 
@@ -18,11 +16,11 @@ export const Input = Options.keyValueMap('input').pipe(
 // Subscription
 //
 
-export const Typename = Options.text('typename').pipe(
+export const Typename = Options.string('typename').pipe(
   Options.withDescription('The type name to query for the subscription trigger.'),
 );
 
-export const Deep = Options.boolean('deep', { ifPresent: true }).pipe(
+export const Deep = Options.boolean('deep').pipe(
   Options.withDescription('Watch changes to nested properties (not just creation).'),
 );
 
@@ -34,7 +32,7 @@ export const Delay = Options.integer('delay').pipe(
 // Timer
 //
 
-export const Cron = Options.text('cron').pipe(
+export const Cron = Options.string('cron').pipe(
   Options.withDescription('The cron expression to use for the timer trigger.'),
 );
 
@@ -42,6 +40,6 @@ export const Cron = Options.text('cron').pipe(
 // Feed
 //
 
-export const Feed = Options.text('feed').pipe(
+export const Feed = Options.string('feed').pipe(
   Options.withDescription('The EID of the feed for the feed trigger (echo://<spaceId>/<objectId>).'),
 );

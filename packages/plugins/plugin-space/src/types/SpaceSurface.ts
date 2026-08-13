@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 import { type Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 

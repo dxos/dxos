@@ -10,8 +10,7 @@ import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 
 import { useConnector } from '#hooks';
-
-import * as ConnectorCoordination from '../types/ConnectorCoordination';
+import { ConnectorCoordination } from '#types';
 
 export type UseReauthenticateResult = {
   /** True when the connection's connector exposes an OAuth flow (drives button visibility). */

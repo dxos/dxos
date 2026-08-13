@@ -24,9 +24,10 @@ import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -34,11 +35,10 @@ import { Text } from '@dxos/schema';
 
 import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
+import { Magazine, Subscription } from '#types';
 
 import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle';
-import { MagazinePlugin } from '../MagazinePlugin';
-import * as Magazine from '../types/Magazine';
-import * as Subscription from '../types/Subscription';
+import { MagazinePlugin } from '../plugin';
 
 // Curation runs the agent (CurateMagazine → RunInstructions). The process-manager runtime therefore needs
 // the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
@@ -156,13 +156,13 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Text.Text],
           onClientInitialized: seedRegisterMagazine,
         }),
         SpacePlugin({}),
-        StorybookPlugin({}),
-        RoutinePlugin(),
+        StorybookPlugin.make({}),
+        RoutinePlugin.make(),
         MagazinePlugin(),
         AgentRuntimePlugin(),
       ],

@@ -2,22 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, Node } from '@dxos/plugin-graph';
 import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 
 import { type AppBarProps } from '#components';
 import { meta } from '#meta';
-
-import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
+import { SimpleLayoutCapabilities } from '#types';
 
 /**
  * Hook that computes all AppBar props from the app graph.

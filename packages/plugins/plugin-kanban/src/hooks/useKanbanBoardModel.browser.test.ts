@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { beforeEach, describe, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
@@ -13,16 +14,17 @@ import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { EntityId } from '@dxos/keys';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
-import * as Kanban from '../types/Kanban';
+import { Kanban } from '#types';
+
 import { useKanbanBoardModel } from './useKanbanBoardModel';
 
 // TODO(wittjosiah): Consider adding single-select to TestSchema.Task and using that instead.
 const KanbanTaskSchema = Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0'))(
   Schema.Struct({
     title: Schema.optional(Schema.String),
-    status: Schema.Literal('__uncategorized__', 'a', 'b').pipe(
+    status: Schema.Literals(['__uncategorized__', 'a', 'b']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      Schema.annotations({
+      Schema.annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -42,7 +44,7 @@ const KanbanTaskSchema = Type.makeObject(DXN.make('com.example.type.kanbanTask',
 type KanbanTask = Type.InstanceType<typeof KanbanTaskSchema>;
 
 describe('useKanbanBoardModel', () => {
-  let registry: Registry.Registry;
+  let registry: Registry.AtomRegistry;
   let view: View.View;
   let kanban: Kanban.Kanban;
   let projection: ProjectionModel;

@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Graph, Node } from '@dxos/plugin-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import { isNonNullable } from '@dxos/util';
 
-import * as NavTreeNode from './types/NavTreeNode';
+import { NavTreeNode } from '#types';
 
 export const getParent = (
   graph: Graph.ReadableGraph,

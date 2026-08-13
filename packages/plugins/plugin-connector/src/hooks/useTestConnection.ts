@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { useCallback, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
@@ -111,7 +111,7 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
       } else {
         setStatus('invalid');
         // A defect (unexpected throw) leaves no typed failure — fall back to a generic message.
-        setError(Option.getOrUndefined(Cause.failureOption(exit.cause))?.message ?? 'Connection test failed.');
+        setError(Option.getOrUndefined(Cause.findErrorOption(exit.cause))?.message ?? 'Connection test failed.');
       }
     },
     [connection, connector, testConnection, accessToken, accessTokenSnapshot?.token, db?.spaceId, runTest, nonce],

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
@@ -10,8 +10,9 @@ import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 
+import { CallsCapabilities } from '#types';
+
 import { Call } from '../../components/Call';
-import * as CallsCapabilities from '../../types/CallsCapabilities';
 
 export const CallSidebar = () => {
   const call = useCapability(CallsCapabilities.Manager);

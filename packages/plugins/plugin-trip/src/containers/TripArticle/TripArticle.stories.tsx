@@ -15,24 +15,20 @@ import { useQuery } from '@dxos/echo-react';
 import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MapRole from '@dxos/plugin-map/MapRole';
-import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
 import { translations } from '#translations';
+import { Booking, Place, Routing, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
-import * as Booking from '../../types/Booking';
-import type * as Place from '../../types/Place';
-import * as Routing from '../../types/Routing';
-import * as Segment from '../../types/Segment';
-import * as Trip from '../../types/Trip';
-import * as TripCapabilities from '../../types/TripCapabilities';
 import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
 import { TripArticle } from './TripArticle';
 
@@ -190,7 +186,7 @@ const baseDecorators = (
   withPluginManager(() => ({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [Trip.Trip, Segment.Segment, Booking.Booking],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -199,11 +195,11 @@ const baseDecorators = (
             yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
           }),
       }),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       TripPlugin(),
-      MapPlugin(),
+      MapPlugin.make(),
       RoutingStoryPlugin(routingService),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
     ],
   })),
 ];

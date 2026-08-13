@@ -27,8 +27,9 @@ import {
 } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
+import { ReviewCapabilities } from '#types';
+
 import { versionDiff } from '../extensions';
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
 import { authorHue, hueColour } from '../util';
 import { type VersionedEditor } from './useVersionedEditor';
 import { type useVersioning } from './useVersioning';

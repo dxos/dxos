@@ -76,6 +76,11 @@
       "types": "./dist/types/src/types/ConnectorSync.d.ts",
       "import": "./dist/lib/types/ConnectorSync.mjs"
     },
+    "./DeckSpec": {
+      "source": "./src/app-graph/DeckSpec.ts",
+      "types": "./dist/types/src/app-graph/DeckSpec.d.ts",
+      "import": "./dist/lib/app-graph/DeckSpec.mjs"
+    },
     "./GraphPath": {
       "source": "./src/app/GraphPath.ts",
       "types": "./dist/types/src/app/GraphPath.d.ts",
@@ -200,14 +205,13 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
@@ -215,7 +219,7 @@
     "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:"
   },

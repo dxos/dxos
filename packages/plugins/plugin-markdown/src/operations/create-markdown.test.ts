@@ -5,18 +5,16 @@
 import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { MarkdownPlugin } from '#plugin';
-
-import * as Markdown from '../types/Markdown';
-import * as MarkdownOperation from '../types/MarkdownOperation';
+import { Markdown, MarkdownOperation } from '#types';
 
 describe('CreateMarkdown', () => {
   test('returns an unpersisted document with the given name and content', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), MarkdownPlugin()],
+      plugins: [ClientPlugin.make({}), MarkdownPlugin()],
     });
 
     const { object } = await harness.invoke(MarkdownOperation.CreateMarkdown, {
@@ -30,7 +28,7 @@ describe('CreateMarkdown', () => {
 
   test('name and content are both optional', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), MarkdownPlugin()],
+      plugins: [ClientPlugin.make({}), MarkdownPlugin()],
     });
 
     const { object } = await harness.invoke(MarkdownOperation.CreateMarkdown, {});

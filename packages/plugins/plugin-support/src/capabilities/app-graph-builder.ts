@@ -7,7 +7,10 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -21,12 +24,10 @@ import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
+import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG } from '../constants';
-import * as HelpCapabilities from '../types/HelpCapabilities';
-import * as HelpOperation from '../types/HelpOperation';
-import * as SupportCapabilities from '../types/SupportCapabilities';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple

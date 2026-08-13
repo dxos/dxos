@@ -18,10 +18,10 @@ export const SKILL_KEY = 'org.dxos.skill.chess';
  */
 export class State extends Type.makeObject<State>(DXN.make('org.dxos.type.chess.state', '0.1.0'))(
   Schema.Struct({
-    pgn: Schema.String.annotations({
+    pgn: Schema.String.annotate({
       description: 'Portable Game Notation.',
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
-    fen: Schema.String.annotations({
+    fen: Schema.String.annotate({
       description: 'Forsyth-Edwards Notation.',
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(

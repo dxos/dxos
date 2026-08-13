@@ -10,8 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import * as CommentCapabilities from '../types/CommentCapabilities';
-import * as CommentOperation from '../types/CommentOperation';
+import { CommentCapabilities, CommentOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CommentOperation.RespondToThread> = CommentOperation.RespondToThread.pipe(
   Operation.withHandler(
@@ -24,7 +23,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.RespondToThread> = 
         // Runner errors are caught here so the user's message remains in the
         // thread (no assistant message is appended) and an observability event
         // is emitted for diagnostics.
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.gen(function* () {
             log.warn('comment-thread agent failed', { threadId: thread.id, error });
             const db = Obj.getDatabase(thread);

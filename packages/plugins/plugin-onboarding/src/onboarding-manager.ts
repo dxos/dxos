@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
 import * as Account from '@dxos/plugin-client/Account';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
@@ -273,7 +273,7 @@ export class OnboardingManager {
     invariant(this._hubUrl, 'hubUrl required for redemption');
 
     const { _email: email, _accountInvitationCode: code } = this;
-    const ensureIdentity = Effect.gen(this, function* () {
+    const ensureIdentity = Effect.gen({ self: this }, function* () {
       yield* Effect.tryPromise(() => this._createIdentity());
       invariant(this._identity, 'identity should exist after create');
       return this._identity;
@@ -287,7 +287,7 @@ export class OnboardingManager {
         Effect.map(() => 'redeemed' as const),
         Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('probe-unavailable' as const)),
         Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('email-registered' as const)),
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.sync(() => {
             log.warn('signup failed; leaving signup params for retry', {
               error: HubAccount.accountErrorType(error) ?? String(error),
@@ -330,7 +330,7 @@ export class OnboardingManager {
         email: this._email,
         code: this._accountInvitationCode,
       }).pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           Effect.sync(() => {
             log.info('skipped binding existing identity', {
               error: HubAccount.accountErrorType(err) ?? err.message,

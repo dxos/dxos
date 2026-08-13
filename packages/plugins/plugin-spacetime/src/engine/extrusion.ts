@@ -4,7 +4,8 @@
 
 import type { Manifold, ManifoldToplevel, Vec2 } from 'manifold-3d';
 
-import * as Model from '../types/Model';
+import { Model } from '#types';
+
 import { getFaceNormal } from './mesh-converter';
 
 /** Minimum object dimension on any axis (matches grid step). */

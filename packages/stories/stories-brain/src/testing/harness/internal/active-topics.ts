@@ -33,7 +33,7 @@ export type ClusterSignals = {
 
 // No-reply / role local parts that mark an automated sender (no human on the other end).
 const AUTOMATED_LOCALPART_RE =
-  /^(no-?reply|do-?not-?reply|donotreply|noreply|notifications?|notify|alerts?|updates?|news(letter)?|digest|mailer(-daemon)?|postmaster|bounce|receipts?|billing|invoices?|payments?|accounts?|support|help(desk)?|hello|info|team|sales|marketing|promo(tions)?|security|system|automated|admin)([._+\-]|$)/i;
+  /^(no-?reply|do-?not-?reply|donotreply|noreply|notifications?|notify|alerts?|updates?|news(letter)?|digest|mailer(-daemon)?|postmaster|bounce|receipts?|billing|invoices?|payments?|accounts?|support|help(desk)?|hello|info|team|sales|marketing|promo(tions)?|security|system|automated|admin)([._+-]|$)/i;
 
 /** Whether an email address looks automated (no-reply / role local part). */
 export const isAutomatedAddress = (email: string): boolean => {

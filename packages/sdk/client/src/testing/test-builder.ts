@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -102,7 +102,7 @@ export class TestBuilder {
     const services = new ClientServicesHost({
       config: this.config,
       runtimeProps,
-      runtime: runtime.runtimeEffect,
+      runtime: runtime.contextEffect,
       ...this.networking,
     });
 

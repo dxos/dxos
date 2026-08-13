@@ -6,7 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as InboxOperation from '../types/InboxOperation';
+import { InboxOperation } from '#types';
 
 const SKILL_KEY = 'org.dxos.skill.inboxSend';
 

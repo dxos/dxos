@@ -12,8 +12,9 @@ import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
+import { SpaceSchema } from '#types';
+
 import { migrateToSettingsSpace } from '../migrations/settings-space';
-import * as SpaceSchema from '../types/SpaceSchema';
 import { resolveSettingsSpace } from './settings-space';
 
 describe('resolveSettingsSpace', () => {
@@ -26,7 +27,7 @@ describe('resolveSettingsSpace', () => {
 
       // The app forks the resolver the moment the first space lands, mid-genesis; forking before
       // genesis reproduces that window (default space published, settings space still pending).
-      const resolver = yield* Effect.fork(resolveSettingsSpace(client));
+      const resolver = yield* Effect.forkChild(resolveSettingsSpace(client));
       const { settingsSpace, defaultSpace } = yield* AppSpace.setupIdentitySpaces(client);
       const resolved = yield* Fiber.join(resolver);
 
