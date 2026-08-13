@@ -89,6 +89,8 @@ type ConversationMessageActions = {
   onOpen?: (message: MessageType.Message) => void;
   /** Creates a tracking Project from the message (container-invoked; the component holds no invoker). */
   onCreateProject?: (message: MessageType.Message) => void;
+  /** Opens one of the message's attachments (by index) in its own plank. */
+  onOpenAttachment?: (message: Mailbox.MessageLike, index: number) => void;
   /**
    * Fired after a message is archived (never on restore). The tag toggle itself is tile-local so
    * archiving works in every consumer; this is the container's hook for the layout consequence —
@@ -174,6 +176,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'onOpen'
     | 'onArchived'
     | 'onCreateProject'
+    | 'onOpenAttachment'
   >
 >;
 
@@ -206,6 +209,7 @@ const ConversationStackRoot = ({
   onOpen,
   onArchived,
   onCreateProject,
+  onOpenAttachment,
 }: ConversationStackRootProps) => (
   <ConversationStackProvider
     attendableId={attendableId}
@@ -222,6 +226,7 @@ const ConversationStackRoot = ({
     onOpen={onOpen}
     onArchived={onArchived}
     onCreateProject={onCreateProject}
+    onOpenAttachment={onOpenAttachment}
     companion={companion}
     graph={graph}
     getExtractActions={getExtractActions}
@@ -706,6 +711,12 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
     [message.properties?.to],
   );
 
+  const { onOpenAttachment } = useConversationStackContext(MESSAGE_DETAILS_NAME);
+  const handleOpenAttachment = useCallback(
+    (index: number) => onOpenAttachment?.(message, index),
+    [onOpenAttachment, message],
+  );
+
   // `subgrid` so the card adopts the tile's columns: row icons land in the avatar column and row
   // content aligns with the sender/subject/body, rather than the card defining its own gutters.
   return (
@@ -735,7 +746,10 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
         ))}
 
         {/* Attachments row. */}
-        <Row.Attachments attachments={message.attachments} />
+        <Row.Attachments
+          attachments={message.attachments}
+          onAttachmentClick={onOpenAttachment && handleOpenAttachment}
+        />
 
         {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
         <Row.Tags tags={messageTags} />

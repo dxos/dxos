@@ -497,13 +497,15 @@ RowStar.displayName = 'Row.Star';
 type RowAttachmentsProps = {
   /** Optional — callers may pass an undefined/empty list (e.g. a message with no attachments). */
   attachments?: readonly Message.Attachment[];
+  /**
+   * Opens an attachment, by its index in `attachments`. The index rather than the attachment itself
+   * because an attachment has no identity of its own — it is an entry on the message.
+   */
+  onAttachmentClick?: (index: number) => void;
 };
 
-/**
- * A Card.Row listing a message's attachments by name with a generic file icon. Not yet clickable —
- * resolving the attachment's ref to open/preview it is a follow-up.
- */
-const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
+/** A Card.Row listing a message's attachments by name; each chip opens its attachment when clickable. */
+const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps) => {
   if (!attachments?.length) {
     return null;
   }
@@ -514,8 +516,21 @@ const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
         <Icon icon='ph--paperclip--regular' />
       </Card.Block>
       <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='message-attachments'>
-        {attachments.map((attachment) => (
-          <Tag key={attachment.ref.uri} hue='neutral' classNames='inline-flex items-center gap-1'>
+        {attachments.map((attachment, index) => (
+          <Tag
+            key={attachment.ref.uri}
+            hue='neutral'
+            classNames={mx('inline-flex items-center gap-1', onAttachmentClick && 'cursor-pointer')}
+            onClick={
+              onAttachmentClick &&
+              ((event) => {
+                // The row sits inside a tile that also handles clicks; opening an attachment must not
+                // also select the message behind it.
+                event.stopPropagation();
+                onAttachmentClick(index);
+              })
+            }
+          >
             <Icon icon='ph--file--regular' size={3} />
             {attachment.name ?? attachment.ref.uri}
           </Tag>

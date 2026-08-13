@@ -45,6 +45,8 @@ export type MessageArticleProps = AppSurface.ArticleProps<
   {
     mailbox?: Mailbox.Mailbox;
     testId?: string;
+    /** Opens one of the message's attachments in its own plank; the deck supplies this in the app. */
+    onOpenAttachment?: (message: Mailbox.MessageLike, index: number) => void;
   }
 >;
 
@@ -62,6 +64,7 @@ export const MessageArticle = ({
   companionTo,
   mailbox: mailboxProp,
   testId,
+  onOpenAttachment,
 }: MessageArticleProps) => {
   const toolbarAttendableId =
     attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
@@ -311,6 +314,7 @@ export const MessageArticle = ({
       onOpen={mailbox ? handleOpen : undefined}
       onArchived={mailbox ? handleArchived : undefined}
       onCreateProject={mailbox ? handleCreateProject : undefined}
+      onOpenAttachment={onOpenAttachment}
     >
       <Panel.Root role={role} data-testid={testId}>
         <Panel.Toolbar asChild>
