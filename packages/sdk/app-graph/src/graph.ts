@@ -848,8 +848,12 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   const edges = internal._registry.get(internal._edges(id));
   const relationId = relationKey(relation);
   const current = edges[relationId] ?? [];
-  const unsorted = current.filter((id) => !order.includes(id));
-  const sorted = order.filter((id) => current.includes(id));
+  // Set membership, not `includes`: both filters run over the whole relation, and a connector
+  // sorting its output makes an array scan here quadratic in the number of siblings.
+  const ordered = new Set(order);
+  const existing = new Set(current);
+  const unsorted = current.filter((id) => !ordered.has(id));
+  const sorted = order.filter((id) => existing.has(id));
   const newOrder = [...sorted, ...unsorted];
   if (newOrder.length === current.length && newOrder.every((id, i) => id === current[i])) {
     return graph;
@@ -1165,18 +1169,12 @@ export function addEdges<T extends WritableGraph>(
  * Implementation helper for addEdge.
  */
 const addEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge): T => {
-  const relation = normalizeRelation(edgeArg.relation);
-  const relationId = relationKey(relation);
-  const inverse = inverseRelation(relation);
-  const inverseId = relationKey(inverse);
+  const relationId = relationKey(normalizeRelation(edgeArg.relation));
   const internal = getInternal(graph);
-
-  const sourceList = internal._registry.get(internal._edges(edgeArg.source))[relationId] ?? [];
-  if (!sourceList.includes(edgeArg.target)) {
-    log('add edge', { source: edgeArg.source, target: edgeArg.target, relation: relationId });
-    internal._setEdge(edgeArg.source, edgeArg.target, relationId);
-  }
-
+  // Deduping is `_setEdge`'s job and it does it by edge id in O(1); the membership check that used
+  // to guard this built the source's whole edge record per edge, which is quadratic on a wide fan-out.
+  // No log line here — it runs per edge of every flush, and building the entry costs more than the write.
+  internal._setEdge(edgeArg.source, edgeArg.target, relationId);
   return graph;
 };
 

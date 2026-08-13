@@ -301,13 +301,17 @@ export class GraphBuilder<
   _applyConnectorUpdate(key: string, nodes: Arg[], previous: string[]): void {
     const { id, relation } = relationFromConnectorKey(key);
     const ids = nodes.map((node) => node.id);
-    const removed = previous.filter((previousId) => !ids.includes(previousId));
+    // Set membership throughout: a connector returning n nodes makes every `includes` here a scan
+    // over n, and this runs on each of its updates.
+    const current = new Set(ids);
+    const removed = previous.filter((previousId) => !current.has(previousId));
     this._connectorPrevious.set(key, ids);
     this._connectorPreviousArgs.set(key, nodes);
 
     const currentInlineIds = nodes.flatMap((node) => this._allInline(node).map((child) => child.id));
+    const currentInline = new Set(currentInlineIds);
     const previousInlineIds = this._connectorPreviousInlineIds.get(key) ?? [];
-    const staleInlineIds = previousInlineIds.filter((previousId) => !currentInlineIds.includes(previousId));
+    const staleInlineIds = previousInlineIds.filter((previousId) => !currentInline.has(previousId));
     this._connectorPreviousInlineIds.set(key, currentInlineIds);
 
     this._store.removeNodes(staleInlineIds, true);

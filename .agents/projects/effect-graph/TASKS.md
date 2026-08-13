@@ -149,9 +149,22 @@ Gate before Phase 9. Requested 2026-08-13.
       `4ed7683d`. Found and fixed a **48× removal regression** (830 ms → 21.5 ms for 1000 nodes):
       the orphan check read `_edges`, whose adjacency read rebuilds an O(E) index per version bump.
       Fixed by an endpoint→edge index in the model plus `hasEdges(id)`.
-- [ ] **Chase the mounted-update gap** — `50 updates @ 200 mounted atoms` is ~1.3× slower than
-      pre-refactor (1098 ms → 1457 ms), consistent across runs. Suspect the same adjacency rebuild,
-      once per flush. Lever: incremental adjacency maintenance (`#incident` is most of it).
+- [x] **Beat the pre-refactor bar** — paired before/after rounds on an idle box (the earlier table
+      was taken while a test sweep saturated the box and is not trustworthy). Expansion is 1.5×
+      faster, updates/reads/traverse/`getPath` are at parity, removal is 1.28× slower. Four
+      quadratics/allocations removed, all found by CPU profile: the adjacency index rebuilt off the
+      schema encoder; `addEdgeImpl` building the source's whole edge record per edge; `includes`
+      scans inside filters in `sortEdgesImpl` and `_applyConnectorUpdate` (both predate the
+      refactor); a per-edge `log`. See DESIGN §Before/after benchmarks.
+- [ ] **Close the removal gap** — 17.2 ms → 22.0 ms for 1000 nodes. Profile points at
+      `Atom.withLabel`, which calls `new Error().stack` per invocation inside `Atom.family`
+      factories (15% of the path, plus 9% in `defaultPrepareStackTrace`). Both trees pay it, so it
+      is not a regression — but gating labels behind a debug flag would likely close the gap. Needs
+      a home for the helper: `@dxos/util` has no `effect` dependency, so it would be a new tiny
+      module in `@dxos/graph` that `@dxos/app-graph` also imports.
+- [ ] **Revisit flush-level batching** — one `model.batch` per flush measured slower AND is unsafe
+      today (`sortEdgesImpl` reads the version-keyed `_edges` view mid-flush, so a deferred bump
+      feeds it stale state). Would need the flush-internal reads off the version-keyed views first.
 
 ## Phase 9: node atom release / eviction
 

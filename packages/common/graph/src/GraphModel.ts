@@ -13,7 +13,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { type MakeOptional, type Specialize, isNonNullable } from '@dxos/util';
+import { type MakeOptional, type Specialize } from '@dxos/util';
 
 import * as GraphEdge from './GraphEdge';
 import * as GraphNode from './GraphNode';
@@ -91,16 +91,19 @@ export abstract class AbstractGraphModel<
   readonly #version: Atom.Writable<number>;
   readonly #nodeIndex = new Map<string, EffectGraph.NodeIndex>();
   readonly #edgeIndex = new Map<string, EffectGraph.EdgeIndex>();
-  // Edge ids by endpoint, maintained with the edge index. Removing a node needs its incident edges,
-  // and scanning every edge to find them makes a bulk removal quadratic.
-  readonly #incident = new Map<string, Set<string>>();
+  // Adjacency by endpoint, maintained incrementally with the edge index rather than rebuilt per
+  // version: a rebuild is O(E) and, worse, ran off the encoded snapshot, so every mutation
+  // re-materialized the whole graph as arrays just to walk its edges.
+  // Keyed by edge id rather than held in arrays: a Map preserves insertion order (which carries the
+  // sort) while making removal O(1), and a bulk removal splices the same array once per edge.
+  readonly #outgoing = new Map<string, Map<string, Edge>>();
+  readonly #incoming = new Map<string, Map<string, Edge>>();
   readonly #change?: GraphChangeFunction;
   readonly #mirror?: Partial<Data<Node, Edge>>;
   readonly #id?: string;
 
   #graph: EffectGraph.MutableDirectedGraph<Slot<Node>, Edge>;
   #snapshot?: { version: number; graph: Data<Node, Edge> };
-  #adjacencyCache?: { version: number; outgoing: Map<string, Edge[]>; incoming: Map<string, Edge[]> };
   #depth = 0;
   #dirty = false;
 
@@ -588,20 +591,18 @@ export abstract class AbstractGraphModel<
    * even mid-mutation — unlike reading the adjacency index, which rebuilds on every version bump.
    */
   hasEdges(id: string): boolean {
-    return (this.#incident.get(id)?.size ?? 0) > 0;
+    return (this.#outgoing.get(id)?.size ?? 0) > 0 || (this.#incoming.get(id)?.size ?? 0) > 0;
   }
 
   outgoing(id: string, type?: string): Edge[] {
-    const edges = this.#adjacency().outgoing.get(id) ?? [];
-    return type ? edges.filter((edge) => edge.type === type) : edges;
+    return collectEdges(this.#outgoing.get(id), type);
   }
 
   /**
    * Edges entering the node, in insertion order.
    */
   incoming(id: string, type?: string): Edge[] {
-    const edges = this.#adjacency().incoming.get(id) ?? [];
-    return type ? edges.filter((edge) => edge.type === type) : edges;
+    return collectEdges(this.#incoming.get(id), type);
   }
 
   addEdge(edge: MakeOptional<Edge, 'id'>): Edge {
@@ -855,26 +856,6 @@ export abstract class AbstractGraphModel<
    * Endpoint-keyed edge index, rebuilt once per version — per-edge scans of the whole graph
    * dominate otherwise, once many views are mounted.
    */
-  #adjacency(): { outgoing: Map<string, Edge[]>; incoming: Map<string, Edge[]> } {
-    const version = this.#registry.get(this.#version);
-    if (this.#adjacencyCache?.version !== version) {
-      const outgoing = new Map<string, Edge[]>();
-      const incoming = new Map<string, Edge[]>();
-      for (const edge of this.edges) {
-        const from = outgoing.get(edge.source) ?? [];
-        from.push(edge);
-        outgoing.set(edge.source, from);
-        const to = incoming.get(edge.target) ?? [];
-        to.push(edge);
-        incoming.set(edge.target, to);
-      }
-
-      this.#adjacencyCache = { version, outgoing, incoming };
-    }
-
-    return this.#adjacencyCache;
-  }
-
   #encode(): Data<Node, Edge> {
     const nodes: Node[] = [];
     for (const [, slot] of EffectGraph.entries(EffectGraph.nodes(this.#graph))) {
@@ -919,26 +900,22 @@ export abstract class AbstractGraphModel<
    * Edges incident to the node, read from the working graph so removal avoids a snapshot rebuild.
    */
   #incidentEdges(id: string): Edge[] {
-    // Copied, since the caller detaches the edges it is handed, which mutates the set.
-    const ids = this.#incident.get(id);
-    return ids ? [...ids].map((edgeId) => this.findEdge(edgeId)).filter(isNonNullable) : [];
+    // Copied, since the caller detaches the edges it is handed, which mutates these maps.
+    return [...collectEdges(this.#outgoing.get(id)), ...collectEdges(this.#incoming.get(id))];
   }
 
   #trackIncident(edge: Edge): void {
-    for (const endpoint of [edge.source, edge.target]) {
-      const ids = this.#incident.get(endpoint) ?? new Set<string>();
-      ids.add(edge.id);
-      this.#incident.set(endpoint, ids);
-    }
+    const from = this.#outgoing.get(edge.source) ?? new Map<string, Edge>();
+    from.set(edge.id, edge);
+    this.#outgoing.set(edge.source, from);
+    const to = this.#incoming.get(edge.target) ?? new Map<string, Edge>();
+    to.set(edge.id, edge);
+    this.#incoming.set(edge.target, to);
   }
 
   #untrackIncident(edge: Edge): void {
-    for (const endpoint of [edge.source, edge.target]) {
-      const ids = this.#incident.get(endpoint);
-      if (ids?.delete(edge.id) && ids.size === 0) {
-        this.#incident.delete(endpoint);
-      }
-    }
+    this.#outgoing.get(edge.source)?.delete(edge.id);
+    this.#incoming.get(edge.target)?.delete(edge.id);
   }
 
   /**
@@ -974,7 +951,8 @@ export abstract class AbstractGraphModel<
     this.#graph = EffectGraph.beginMutation(EffectGraph.directed<Slot<Node>, Edge>());
     this.#nodeIndex.clear();
     this.#edgeIndex.clear();
-    this.#incident.clear();
+    this.#outgoing.clear();
+    this.#incoming.clear();
     this.#touch();
   }
 
@@ -1004,6 +982,22 @@ const parseNeighborKey = (key: string): { id: string; type?: string; direction: 
 
 const sameNodes = (a: readonly GraphNode.Any[], b: readonly GraphNode.Any[]): boolean =>
   a.length === b.length && a.every((node, index) => node === b[index]);
+
+/** The endpoint's edges in insertion order, optionally narrowed to a type. */
+const collectEdges = <Edge extends GraphEdge.Any>(edges: Map<string, Edge> | undefined, type?: string): Edge[] => {
+  if (!edges) {
+    return [];
+  }
+
+  const result: Edge[] = [];
+  for (const edge of edges.values()) {
+    if (type === undefined || edge.type === type) {
+      result.push(edge);
+    }
+  }
+
+  return result;
+};
 
 const removeInPlace = <T>(list: T[] | undefined, predicate: (value: T) => boolean): void => {
   if (!list) {

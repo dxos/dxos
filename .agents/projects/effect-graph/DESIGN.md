@@ -373,21 +373,46 @@ was taken by extracting `graph.ts`/`graph-builder.ts`/`node.ts`/`util.ts`/`node-
 `4ed7683d` (the last commit before this work) into a scratch directory inside the package, so the
 same benchmark file ran against both trees with only its import block rewritten.
 
-Best-of-3, node 22, cloud sandbox — a noisy box, so read ratios, not absolutes. Anything inside
-±30% is run-to-run variance; the two entries that mattered were far outside it.
+Best-of-3, node 22, cloud sandbox.
 
-| operation                         |      before | after (a973a66f) |   after fix |
-| --------------------------------- | ----------: | ---------------: | ----------: |
-| expand 1000 nodes                 |      618 ms |           682 ms |      572 ms |
-| 50 connector updates @ 1000 nodes |     1202 ms |          1385 ms |     1354 ms |
-| 50 updates @ 200 mounted atoms    |     1098 ms |          1701 ms |     1457 ms |
-| expand 100x10 tree                |      833 ms |          1025 ms |      936 ms |
-| read `connections()` x1000        |     0.87 ms |          1.22 ms |     1.29 ms |
-| read `node()` x1000               |     0.60 ms |          1.22 ms |     0.43 ms |
-| `getNode()` x1000                 |     0.66 ms |          0.50 ms |     0.46 ms |
-| traverse 1000 nodes               |     2.05 ms |          7.91 ms |     2.50 ms |
-| `getPath` root → leaf             |     3.53 ms |          6.76 ms |     2.81 ms |
-| **remove 1000 nodes**             | **17.3 ms** |       **830 ms** | **21.5 ms** |
+**The first table below was taken on a loaded box** (a 56-package test sweep was running), which
+inflated every absolute number and produced spurious gaps. It is kept only because it is what caught
+the removal regression. The table after it is the one to read: paired before/after rounds, run
+back-to-back on an idle box.
+
+| operation (loaded box, indicative only) |      before | after split | after removal fix |
+| --------------------------------------- | ----------: | ----------: | ----------------: |
+| expand 1000 nodes                       |      618 ms |      682 ms |            572 ms |
+| 50 connector updates @ 1000 nodes       |     1202 ms |     1385 ms |           1354 ms |
+| 50 updates @ 200 mounted atoms          |     1098 ms |     1701 ms |           1457 ms |
+| traverse 1000 nodes                     |     2.05 ms |     7.91 ms |           2.50 ms |
+| **remove 1000 nodes**                   | **17.3 ms** |  **830 ms** |       **21.5 ms** |
+
+### Paired result on an idle box (the number that counts)
+
+Two alternating before/after rounds, best of each, after the optimization pass below.
+
+| operation                         |  before |      after |              |
+| --------------------------------- | ------: | ---------: | ------------ |
+| expand 1000 nodes                 |  512 ms | **341 ms** | 1.50× faster |
+| expand 100x10 tree                |  675 ms | **458 ms** | 1.47× faster |
+| 50 updates @ 200 mounted atoms    |  945 ms |     906 ms | parity       |
+| 50 connector updates @ 1000 nodes |  909 ms |     914 ms | parity       |
+| read `connections()` x1000        | 1.07 ms |    0.99 ms | parity       |
+| read `node()` x1000               | 0.37 ms |    0.40 ms | parity       |
+| `getNode()` x1000                 | 0.37 ms |    0.42 ms | parity       |
+| traverse 1000 nodes               | 3.47 ms |    3.24 ms | parity       |
+| `getPath` root → leaf             | 2.75 ms |    2.64 ms | parity       |
+| remove 1000 nodes                 | 17.2 ms |    22.0 ms | 1.28× slower |
+
+### Reconciling this with the Phase-6 spike
+
+The spike measured **storage in isolation** — 50 node/edge writes against a replica of the sharded
+`GraphImpl` vs the new model — and 1.83 ms vs 3.76 ms still holds for that. It is not the number a
+consumer feels. End-to-end, a flush also runs the connector, qualifies 1000 ids, decorates, records
+provenance, diffs against the previous args, and drives the app-graph edge encoding; storage is a
+small share of it. The storage win was real and never in question — it was simply not sufficient on
+its own, which is what the end-to-end benchmark exposed.
 
 ### The removal regression (found, diagnosed, fixed)
 
@@ -412,10 +437,32 @@ Two changes, both in the model rather than the call site:
 Note the first fix was the one I expected to work and did not. The measurement, not the reasoning,
 identified the adjacency rebuild.
 
+### The optimization pass (CPU profiles, not reasoning)
+
+Four findings, each from a `--cpu-prof` of the mounted-update path rather than from reading code:
+
+1. **The adjacency index was rebuilt off the encoded snapshot** (`#encode`, 7.6% + much of the GC).
+   `#adjacency()` iterated `this.edges`, which goes through the memoized schema encoder — so every
+   version bump re-materialized the whole graph as node _and_ edge arrays just to walk its edges.
+   Replaced the version-keyed cache with adjacency maintained incrementally in `addEdge`/
+   `#detachEdge`/`#load`, keyed by edge id in insertion-ordered `Map`s (order carries the sort;
+   `Map` keeps removal O(1), where arrays made a bulk removal quadratic again).
+2. **`addEdgeImpl` built the source's entire edge record per edge** to test membership — quadratic on
+   a wide fan-out. The check was redundant: `_setEdge` already dedupes by edge id in O(1).
+3. **Two `includes` scans inside filters** — `sortEdgesImpl` and the builder's `_applyConnectorUpdate`
+   — both quadratic in the sibling count. Now `Set` membership. These predate the refactor; the old
+   implementation paid them too.
+4. **A per-edge `log` call** on the new `addEdgeImpl` path: building the entry cost more than the
+   write it described.
+
+One change was tried and reverted: routing a whole flush through a single `model.batch` so it bumps
+the version once. It measured slower, and worse, it is unsafe — `sortEdgesImpl` reads the
+version-keyed `_edges` view _inside_ the flush, so deferring the bump feeds it stale state.
+
 ### Still open
 
-`50 updates @ 200 mounted atoms` sits ~1.3× slower than before (1098 ms → ~1457 ms), consistently
-across runs and outside the noise on that row. Not diagnosed; the suspicion is the same adjacency
-rebuild, once per flush rather than once per edge, now that a mounted `connections` atom reads
-through the model. Tracked in TASKS.md — the lever is incremental adjacency maintenance, for which
-`#incident` is now most of the machinery.
+Removal is ~1.28× slower than pre-refactor (17.2 ms → 22.0 ms for 1000 nodes; ~5 ms absolute).
+Profiling it points at `Atom.withLabel`, which calls `new Error().stack` on every invocation and is
+applied inside `Atom.family` factories — 15% of that path, plus the 9% `defaultPrepareStackTrace`
+under it. Both trees pay it (14 call sites before, 13 after), so it is not a regression, but gating
+labels behind a debug flag would likely close the gap outright. Tracked in TASKS.md.
