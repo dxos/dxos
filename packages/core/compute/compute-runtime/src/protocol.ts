@@ -6,31 +6,26 @@ import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import {
-  type Credential,
-  FunctionError,
-  Header,
-  InvalidOperationInputError,
-  InvalidOperationOutputError,
-  Operation,
-  Trace,
-} from '@dxos/compute';
+import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Header from '@dxos/compute/Header';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SchemaAST } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
+import { accessTokenResolverFromService, configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
@@ -91,17 +86,6 @@ export const wrapFunctionHandler = (
 
       // eslint-disable-next-line no-useless-catch
       try {
-        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
-          try {
-            Schema.validateSync(func.input, { onExcessProperty: 'error' })(data);
-          } catch (error: any) {
-            throw new InvalidOperationInputError({
-              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
-              cause: error,
-            });
-          }
-        }
-
         await using funcContext = await new FunctionContext(context, opts).open();
 
         const types = [...(opts.types ?? []), ...(func.types ?? [])];
@@ -114,6 +98,19 @@ export const wrapFunctionHandler = (
           funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
             ? decodeRefsFromSchema(func.input.ast, data, funcContext.db)
             : data;
+
+        // Validated after ref hydration: the type side of a `Ref` field admits only a `Ref`
+        // instance, and callers send the encoded `{'/': dxn}` form.
+        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
+          try {
+            Schema.decodeUnknownSync(Schema.toType(func.input), { onExcessProperty: 'error' })(dataWithDecodedRefs);
+          } catch (error: any) {
+            throw new InvalidOperationInputError({
+              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
+              cause: error,
+            });
+          }
+        }
 
         let result: any = await func.handler(dataWithDecodedRefs);
 
@@ -140,7 +137,7 @@ export const wrapFunctionHandler = (
 
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
           try {
-            Schema.validateSync(func.output, { onExcessProperty: 'error' })(result);
+            Schema.decodeUnknownSync(Schema.toType(func.output), { onExcessProperty: 'error' })(result);
           } catch (error: any) {
             throw new InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
@@ -205,8 +202,13 @@ class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
+    // A function context has no identity to sign a presentation with, so managed tokens resolve
+    // through the space-bound EDGE binding rather than the HTTP endpoint the client uses.
+    const accessTokenResolver = this.context.services.accessTokenService
+      ? accessTokenResolverFromService(this.context.services.accessTokenService)
+      : Credential.AccessTokenResolver.notAvailable;
     const credentials = dbLayer
-      ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
+      ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer), Layer.provide(accessTokenResolver))
       : configuredCredentialsLayer([]);
 
     const aiLayer = this.context.services.functionsAiService
@@ -284,8 +286,10 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
  * Backs `Operation.Service` with the EDGE-provided `FunctionsService` so that operation
  * handlers can invoke other deployed operations remotely. The `deployedId` on the operation
  * definition is used as the routing key.
+ *
+ * @internal Exported for testing.
  */
-const makeOperationServiceLayer = (
+export const makeOperationServiceLayer = (
   functionsService: EdgeFunctionEnv.FunctionsService,
 ): Layer.Layer<Operation.Service> => {
   const invokeRemote = async (
@@ -316,7 +320,16 @@ const makeOperationServiceLayer = (
       )) as Operation.OperationService['invoke'],
     schedule: ((op: Operation.Definition.Any, input: unknown, _options?: Operation.InvokeOptions) =>
       Effect.sync(() => {
-        invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot schedule remotely.`);
+        // Dropped rather than asserted: `schedule` is typed `Effect<void, never>`, so failing an
+        // unroutable followup would take its caller down with it — a handler that imported a
+        // definition directly (no `deployedId`, e.g. `observability.sendEvent` scheduled by
+        // `space.addObject`) must not fail the operation that emitted it.
+        if (!op.meta.deployedId) {
+          log.warn('scheduled operation dropped: no deployedId, cannot schedule remotely', {
+            key: String(op.meta.key),
+          });
+          return;
+        }
         // Fire and forget — schedule is intentionally non-awaiting.
         void functionsService.invoke(op.meta.deployedId, input).catch(() => {
           // Swallow errors — schedule is observability-only.
@@ -331,7 +344,13 @@ const makeOperationServiceLayer = (
 
 const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
   invoke: () => Effect.die('Operation.Service is not available: missing functionsService in EDGE context.'),
-  schedule: () => Effect.die('Operation.Service is not available: missing functionsService in EDGE context.'),
+  // Warn rather than die, for the same reason the routable variant drops unroutable followups.
+  schedule: (op: Operation.Definition.Any) =>
+    Effect.sync(() => {
+      log.warn('scheduled operation dropped: missing functionsService in EDGE context', {
+        key: String(op.meta.key),
+      });
+    }),
   invokePromise: async () => ({
     error: new Error('Operation.Service is not available: missing functionsService in EDGE context.'),
   }),
@@ -357,7 +376,7 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
   }
 
   switch (encoded._tag) {
-    case 'TypeLiteral': {
+    case 'Objects': {
       if (typeof value !== 'object' || value === null || Array.isArray(value)) {
         return value;
       }
@@ -371,14 +390,14 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       return result;
     }
 
-    case 'TupleType': {
+    case 'Arrays': {
       if (!Array.isArray(value)) {
         return value;
       }
 
-      // For arrays, effect uses TupleType with empty elements and a single rest element.
+      // For arrays, effect uses an `Arrays` node with empty elements and a single rest element.
       if (encoded.elements.length === 0 && encoded.rest.length === 1) {
-        const elementType = encoded.rest[0].type;
+        const elementType = encoded.rest[0];
         return (value as unknown[]).map((item) => decodeRefsFromSchema(elementType, item, db));
       }
 
@@ -397,12 +416,11 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
     }
 
     case 'Suspend': {
-      return decodeRefsFromSchema(encoded.f(), value, db);
+      return decodeRefsFromSchema(encoded.thunk(), value, db);
     }
 
-    case 'Refinement': {
-      return decodeRefsFromSchema(encoded.from, value, db);
-    }
+    // v4 has no `Refinement` node: a refined node IS its base node with checks attached, so the
+    // cases above already match it.
 
     default: {
       return value;

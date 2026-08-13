@@ -1,0 +1,22 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { defineConfig } from '../../../vite.base.config.ts';
+
+export default defineConfig({
+  entry: {
+    'index': 'src/index.ts',
+    'JmapPlugin': 'src/JmapPlugin.ts',
+    'apis': 'src/apis/index.ts',
+    'capabilities': 'src/capabilities/index.ts',
+    'meta': 'src/meta.ts',
+    'operations': 'src/operations/index.ts',
+    'plugin': 'src/plugin.ts',
+    'services': 'src/services/index.ts',
+    'testing': 'src/testing/index.ts',
+    'testing/node': 'src/testing/node.ts',
+    'translations': 'src/translations.ts',
+  },
+  test: { node: true },
+});

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -13,7 +14,7 @@ import type { ProjectionModel } from '@dxos/schema';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
 import { meta } from '#meta';
-import { type Kanban, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
+import { Kanban, KanbanConstants } from '#types';
 
 import {
   KanbanBoardContext,
@@ -77,8 +78,8 @@ export const KanbanBoardRoot = ({
 
   const getPivotAttributes = useCallback<KanbanBoardContextValue['getPivotAttributes']>(
     (columnValue) => {
-      if (columnValue === UNCATEGORIZED_VALUE) {
-        return UNCATEGORIZED_ATTRIBUTES;
+      if (columnValue === KanbanConstants.UNCATEGORIZED_VALUE) {
+        return KanbanConstants.UNCATEGORIZED_ATTRIBUTES;
       }
 
       const options = projection?.tryGetFieldProjection(pivotFieldId ?? '')?.props.options ?? [];
@@ -157,7 +158,5 @@ export const KanbanBoard = {
   Column: KanbanColumn,
   Card: KanbanCard,
 };
-
-export { useKanbanBoard };
 
 export type { KanbanBoardRootProps as KanbanBoardProps, KanbanCardProps, KanbanColumnProps };

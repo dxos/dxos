@@ -19,6 +19,7 @@ import { Domino } from '@dxos/ui';
 import {
   AnchorWidget,
   Cursor,
+  EditorState,
   type EditorStateStore,
   EditorView,
   type Extension,
@@ -42,11 +43,8 @@ import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
-import {
-  PreviewComponent,
-  type PreviewComponentProps,
-  parseEmbedLabel,
-} from '../components/PreviewComponent/PreviewComponent';
+import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label';
+import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -135,6 +133,9 @@ export const useExtensions = ({
     ],
   );
 
+  // The content ref exists but its target has not loaded: the editor has no persistence binding yet.
+  const contentPending = !!contentRef && !target;
+
   return useMemo<Extension[]>(
     () =>
       [
@@ -148,6 +149,12 @@ export const useExtensions = ({
             identity,
           }),
 
+        // Never editable before the binding: input typed into an unbound editor lives only in
+        // CodeMirror state, which the automerge extension's attach-reconcile then replaces wholesale
+        // with the loaded value. `editable(false)` as well as the advisory `readOnly`, so the DOM is
+        // not contenteditable and a caller's editability wait holds.
+        contentPending && [EditorState.readOnly.of(true), EditorView.editable.of(false)],
+
         // TODO(burdon): Reconcile with effect in parent.
         Obj.instanceOf(Markdown.Document, object) &&
           listener({
@@ -159,7 +166,7 @@ export const useExtensions = ({
         baseExtensions,
         selectionState(editorStateStore),
       ].filter(isTruthy),
-    [identity, space, id, object, target, baseExtensions],
+    [identity, space, id, object, target, contentPending, baseExtensions],
   );
 };
 
@@ -300,7 +307,9 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
-      .classNames('dx-link flex items-center gap-2')
+      // Not `dx-link`: the tooltip sits on the inverse surface, where the accent link color has no
+      // contrast — inherit the tooltip's own `text-inverse-fg` instead.
+      .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
       .text(safeUrl(url)?.toString() ?? url)
       .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );

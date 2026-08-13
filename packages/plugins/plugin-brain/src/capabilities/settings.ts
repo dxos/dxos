@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
@@ -25,8 +25,8 @@ export const settingsAtom = createKvsStore({
 /** Owns the fact-analysis settings and registers them in the settings UI. */
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contributes(BrainCapabilities.Settings, settingsAtom),
-    Capability.contributes(AppCapabilities.Settings, {
+    Capability.contribute(BrainCapabilities.Settings, settingsAtom),
+    Capability.contribute(AppCapabilities.Settings, {
       prefix: meta.profile.key,
       schema: BrainSettings.Settings,
       atom: settingsAtom,

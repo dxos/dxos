@@ -9,8 +9,8 @@ import { type DID } from 'iso-did/types';
 
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { Operation } from '@dxos/compute';
 import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -107,9 +107,9 @@ export const getDeployedFunctions = async (
     return Function$.pipe(
       functions,
       Array.filter((_) => Obj.getMeta(_).key !== undefined),
-      Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => _.updated ?? ''))),
+      Array.sort(Order.flip(Order.mapInput(Order.String, (_: Operation.PersistentOperation) => _.updated ?? ''))),
       Array.dedupeWith((self, that) => Obj.getMeta(self).key === Obj.getMeta(that).key),
-      Array.sort(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => Obj.getMeta(_).key ?? '')),
+      Array.sort(Order.mapInput(Order.String, (_: Operation.PersistentOperation) => Obj.getMeta(_).key ?? '')),
     );
   } else {
     return functions;

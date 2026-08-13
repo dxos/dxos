@@ -2,20 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { CommandConfig, Common, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
 import { FUNCTIONS_META_KEY } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
@@ -28,10 +28,10 @@ import { parseOptions } from './options';
 export const deploy = Command.make(
   'deploy',
   {
-    entryPoint: Args.file({ name: 'entryPoint' }).pipe(Args.withDescription('The file to deploy.')),
+    entryPoint: Args.file('entryPoint').pipe(Args.withDescription('The file to deploy.')),
     // TODO(burdon): Human readable name?
-    name: Options.text('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
-    version: Options.text('version').pipe(
+    name: Options.string('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
+    version: Options.string('version').pipe(
       Options.withDescription('The version of the function to deploy.'),
       Options.optional,
     ),
@@ -39,7 +39,7 @@ export const deploy = Command.make(
       Options.withDescription('Loads the script into composer.'),
       Options.withDefault(false),
     ),
-    functionId: Options.text('function-id').pipe(
+    functionId: Options.string('function-id').pipe(
       Options.withDescription('Existing UserFunction ID to update.'),
       Options.optional,
     ),

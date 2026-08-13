@@ -2,30 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SHARED } from '@dxos/plugin-space';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Expando, Text } from '@dxos/schema';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { NativeFilesystemOperation } from '#types';
-import {
-  type FilesystemEntry,
-  type FilesystemFile,
-  type FilesystemWorkspace,
-  NativeFilesystemCapabilities,
-  type NativeFilesystemState,
-  isFilesystemDirectory,
-  isFilesystemWorkspace,
-} from '#types';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '#types';
 
 import { findDirectoryById } from '../util';
 import type { FilesystemManager } from './state';
@@ -35,14 +33,21 @@ const GENERAL_TYPE = `${meta.profile.key}.general`;
 const DIRECTORY_TYPE = `${meta.profile.key}.directory`;
 const MARKDOWN_PENDING_TYPE = `${meta.profile.key}.markdown-pending`;
 
-const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
+const workspaceRearrangeCache = new Map<
+  string,
+  (nextOrder: (NativeFilesystemCapabilities.FilesystemWorkspace | unknown)[]) => void
+>();
 
 /**
  * Depth-first walk of a workspace tree from its top-level entries to `targetId`, accumulating the
  * ancestor directory-id chain (root→leaf, excluding the entry). Returns null if not found. Entry ids are
  * lossy and the tree has no parent pointers, so the path can only be rebuilt by walking down.
  */
-const findEntryAncestorChain = (entries: FilesystemEntry[], targetId: string, chain: string[]): string[] | null => {
+const findEntryAncestorChain = (
+  entries: NativeFilesystemCapabilities.FilesystemEntry[],
+  targetId: string,
+  chain: string[],
+): string[] | null => {
   for (const entry of entries) {
     if (entry.id === targetId) {
       return chain;
@@ -58,9 +63,9 @@ const findEntryAncestorChain = (entries: FilesystemEntry[], targetId: string, ch
 };
 
 export const createFilesystemEntryExtensions = (
-  stateCapabilitiesAtom: Atom.Atom<Atom.Writable<NativeFilesystemState>[]>,
+  stateCapabilitiesAtom: Atom.Atom<Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>[]>,
   filesystemManagerCapabilitiesAtom: Atom.Atom<FilesystemManager.FilesystemManager[]>,
-  readState: () => NativeFilesystemState,
+  readState: () => NativeFilesystemCapabilities.NativeFilesystemState,
 ) => {
   // Files/directories sit at a variable-depth, data-dependent path (`root/<workspace>/<dir>/…/<id>`), so
   // forward URL resolution walks the current workspace tree to rebuild the node path from the entry id.
@@ -86,8 +91,8 @@ export const createFilesystemEntryExtensions = (
           return Effect.succeed([]);
         }
 
-        const workspaceId = (node.data as FilesystemWorkspace).id;
-        const state: NativeFilesystemState = get(stateAtom);
+        const workspaceId = (node.data as NativeFilesystemCapabilities.FilesystemWorkspace).id;
+        const state: NativeFilesystemCapabilities.NativeFilesystemState = get(stateAtom);
         const workspace = state.workspaces.find((item) => item.id === workspaceId);
         return Effect.succeed(
           workspace
@@ -111,7 +116,7 @@ export const createFilesystemEntryExtensions = (
         }
 
         const directoryId = (node.data as { id: string }).id;
-        const state: NativeFilesystemState = get(stateAtom);
+        const state: NativeFilesystemCapabilities.NativeFilesystemState = get(stateAtom);
         const result = findDirectoryById(state.workspaces, directoryId);
         return Effect.succeed(
           result
@@ -127,14 +132,14 @@ export const createFilesystemEntryExtensions = (
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
     const stateCapabilitiesAtom = yield* Capability.atom(NativeFilesystemCapabilities.State);
     const filesystemManagerCapabilitiesAtom = yield* Capability.atom(NativeFilesystemCapabilities.FilesystemManager);
-    const appGraphCapabilitiesAtom = capabilities.atom(AppCapabilities.AppGraph);
+    const appGraphCapabilitiesAtom = yield* Capability.atom(AppCapabilities.AppGraph);
+    const clientCapabilitiesAtom = yield* Capability.atom(ClientCapabilities.Client);
     // Read the current filesystem tree synchronously at URL-resolve time (the `file` resolver runs long
     // after activation), the same registry+atom pattern as markdown-extension.
-    const registry = capabilities.get(Capabilities.AtomRegistry);
-    const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = yield* NativeFilesystemCapabilities.State;
     const filesystemEntryExtensions = yield* createFilesystemEntryExtensions(
       stateCapabilitiesAtom,
       filesystemManagerCapabilitiesAtom,
@@ -175,17 +180,20 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const state: NativeFilesystemState = get(stateAtom);
-          const client = capabilities.get(ClientCapabilities.Client);
-          const personalSpace = AppSpace.getPersonalSpace(client);
+          const state: NativeFilesystemCapabilities.NativeFilesystemState = get(stateAtom);
+          const [client] = get(clientCapabilitiesAtom);
+          // The space list fills incrementally, so subscribe to it rather than reading once: the
+          // settings space holding the ordering can land after the client capability does.
+          const spaces = client && get(CreateAtom.fromObservable(client.spaces));
+          const settingsSpace = spaces && AppSpace.getSettingsSpace(client);
 
-          if (!state.workspaces.length || !personalSpace) {
+          if (!state.workspaces.length || !settingsSpace) {
             return Effect.succeed([]);
           }
 
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
-          const [order] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
+          const [order] = get(settingsSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom);
           if (order) {
             const snapshot = get(Obj.atom(order)) as { order?: string[] } | undefined;
             const orderArray: string[] = snapshot?.order ?? [];
@@ -200,7 +208,7 @@ export default Capability.makeModule(
           const graph = appGraph.graph;
 
           return Effect.succeed(
-            state.workspaces.map((workspace: FilesystemWorkspace) => {
+            state.workspaces.map((workspace: NativeFilesystemCapabilities.FilesystemWorkspace) => {
               let onRearrange = workspaceRearrangeCache.get(workspace.id);
               if (!onRearrange && graph && spacesOrder) {
                 onRearrange = (nextOrder) => {
@@ -209,7 +217,7 @@ export default Capability.makeModule(
                     Node.RootId,
                     'outbound',
                     nextOrder.map((item) => {
-                      if (isFilesystemWorkspace(item)) {
+                      if (NativeFilesystemCapabilities.isFilesystemWorkspace(item)) {
                         return item.id;
                       }
                       return (item as { id: string }).id;
@@ -218,7 +226,7 @@ export default Capability.makeModule(
 
                   Obj.update(spacesOrder, (spacesOrder: Record<string, unknown>) => {
                     spacesOrder.order = nextOrder.map((item) => {
-                      if (isFilesystemWorkspace(item)) {
+                      if (NativeFilesystemCapabilities.isFilesystemWorkspace(item)) {
                         return item.id;
                       }
                       return (item as { id: string }).id;
@@ -266,10 +274,7 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [
-      ...extensions.flat(),
-      ...filesystemEntryExtensions,
-    ]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [...extensions.flat(), ...filesystemEntryExtensions]);
   }),
 );
 
@@ -277,12 +282,12 @@ export default Capability.makeModule(
 type MarkdownResolver = Pick<FilesystemManager.FilesystemManager, 'markdownBindingAtom' | 'getByFileId'>;
 
 const constructEntryNode = (
-  entry: FilesystemEntry,
+  entry: NativeFilesystemCapabilities.FilesystemEntry,
   filesystemManager: MarkdownResolver,
   workspaceId: string,
-  get: Atom.Context,
+  get: Atom.AtomContext,
 ): Node.NodeArg<any> | null => {
-  if (isFilesystemDirectory(entry)) {
+  if (NativeFilesystemCapabilities.isFilesystemDirectory(entry)) {
     return Node.make({
       id: entry.id,
       type: DIRECTORY_TYPE,
@@ -295,7 +300,7 @@ const constructEntryNode = (
     });
   }
 
-  const file = entry as FilesystemFile;
+  const file = entry as NativeFilesystemCapabilities.FilesystemFile;
   if (file.type === 'markdown') {
     void get(filesystemManager.markdownBindingAtom(file.id));
     const text = filesystemManager.getByFileId(file.id);

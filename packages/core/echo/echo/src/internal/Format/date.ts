@@ -3,7 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as Struct from 'effect/Struct';
+
+import { SchemaAST } from '@dxos/effect';
 
 import { FormatAnnotation, TypeFormat } from './types';
 
@@ -28,9 +30,9 @@ import { FormatAnnotation, TypeFormat } from './types';
  * Simple date compatible with HF.
  */
 export const SimpleDate = Schema.Struct({
-  year: Schema.Number.pipe(Schema.between(1900, 9999)),
-  month: Schema.Number.pipe(Schema.between(1, 12)),
-  day: Schema.Number.pipe(Schema.between(1, 31)),
+  year: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 1900, maximum: 9999 }))),
+  month: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 1, maximum: 12 }))),
+  day: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 1, maximum: 31 }))),
 });
 
 export type SimpleDate = Schema.Schema.Type<typeof SimpleDate>;
@@ -45,9 +47,9 @@ export const toSimpleDate = (date: Date): SimpleDate => ({
  * Simple time compatible with HF.
  */
 export const SimpleTime = Schema.Struct({
-  hours: Schema.Number.pipe(Schema.between(0, 23)),
-  minutes: Schema.Number.pipe(Schema.between(0, 59)),
-  seconds: Schema.Number.pipe(Schema.between(0, 59)),
+  hours: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 23 }))),
+  minutes: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 59 }))),
+  seconds: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 59 }))),
 });
 
 export type SimpleTime = Schema.Schema.Type<typeof SimpleTime>;
@@ -61,7 +63,7 @@ export const toSimpleTime = (date: Date): SimpleTime => ({
 /**
  * Simple date-time compatible with HF.
  */
-export const SimpleDateTime = Schema.extend(SimpleDate, SimpleTime);
+export const SimpleDateTime = SimpleDate.mapFields(Struct.assign(SimpleTime.fields));
 
 export type SimpleDateTime = Schema.Schema.Type<typeof SimpleDateTime>;
 
@@ -103,7 +105,7 @@ export const DateOnly = /* Schema.transformOrFail(Schema.String, SimpleDate, {
   },
 }) */ Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Date),
-  Schema.annotations({
+  Schema.annotate({
     description: 'Valid date in ISO format',
   }),
 );
@@ -132,7 +134,7 @@ export const TimeOnly = /* Schema.transformOrFail(Schema.String, SimpleTime, {
   },
 }) */ Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Time),
-  Schema.annotations({
+  Schema.annotate({
     description: 'Valid time in ISO format',
   }),
 );
@@ -176,7 +178,7 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
   },
 }) */ Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.DateTime),
-  Schema.annotations({
+  Schema.annotate({
     description: 'Valid date and time in ISO format',
   }),
 );
@@ -187,7 +189,7 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
 // TODO(burdon): Define duration type.
 export const Duration = Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Duration),
-  Schema.annotations({
+  Schema.annotate({
     description: 'Duration in ISO 8601 format',
     [SchemaAST.ExamplesAnnotationId]: ['1h', '3D'],
   }),

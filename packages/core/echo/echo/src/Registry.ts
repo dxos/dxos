@@ -139,7 +139,7 @@ export type Options = {
  * Effect Context tag for {@link Registry}.
  * Use this to inject a registry into Effect-based code.
  */
-export class Service extends Context.Tag('@dxos/echo/Registry/Service')<Service, Registry>() {}
+export class Service extends Context.Service<Service, Registry>()('@dxos/echo/Registry/Service') {}
 
 /**
  * Executes a query against the registry and returns the results.

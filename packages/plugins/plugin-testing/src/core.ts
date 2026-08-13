@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 // `/testing` entrypoints re-export the plugin eagerly (without `Plugin.lazy`).
 // The default `.` and `/plugin` exports wrap each plugin in a lazy stub
 // (`() => import('./XPlugin')`), which webkit cannot reliably resolve under
@@ -28,9 +29,9 @@ import { defaultTx } from '@dxos/react-ui';
  * Import SpacePlugin directly in your stories if needed.
  */
 export const corePlugins = (): Plugin.Plugin[] => [
-  AttentionPlugin(),
-  GraphPlugin(),
+  AttentionPlugin.make(),
+  GraphPlugin.make(),
   ProcessManagerPlugin(),
-  SettingsPlugin(),
-  ThemePlugin({ tx: defaultTx }),
+  SettingsPlugin.make(),
+  ThemePlugin.make({ tx: defaultTx }),
 ];

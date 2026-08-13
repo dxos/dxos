@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
+import { TrelloOperation } from '#types';
+
 import { TrelloApi } from '../services';
-import { TrelloOperation } from '../types';
 
 /**
  * Discovery only — list Trello boards reachable from the connection's token

@@ -3,10 +3,10 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import { Atom } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { memo, useMemo } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
@@ -61,7 +61,9 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
   return (
     <ElevationProvider elevation={role === SECTION_ROLE ? 'positioned' : 'base'}>
       <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
-        <Menu.Toolbar classNames={classNames} />
+        <Menu.Toolbar classNames={classNames}>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     </ElevationProvider>
   );

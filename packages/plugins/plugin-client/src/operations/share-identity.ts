@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { Account } from '../types';
+import { Account } from '#types';
+
 import { ShareIdentity } from './definitions';
 
 const handler: Operation.WithHandler<typeof ShareIdentity> = ShareIdentity.pipe(

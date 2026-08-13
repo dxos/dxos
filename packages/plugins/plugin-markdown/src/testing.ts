@@ -2,46 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
-import * as Effect from 'effect/Effect';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AppAnnotation } from '@dxos/app-toolkit';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Skill } from '@dxos/compute';
-import { Annotation, Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import { Collection, Feed } from '@dxos/echo';
 import { HasSubject } from '@dxos/types';
 
 import { MarkdownOperationHandlerSet } from '#operations';
 import { Markdown } from '#types';
 
-// Eager re-export of `MarkdownPlugin`. See `@dxos/plugin-testing/src/core.ts`
-// for the rationale. Uses the `#plugin` subpath so the node-only build is
-// re-exported in test environments, avoiding the browser-only `MarkdownPlugin.tsx`
-// which references React-surface capabilities that are intentionally omitted
-// from `capabilities/node.ts`.
-export * from '#plugin';
-
-// TODO(wittjosiah): Factor out.
-export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>
-  Effect.zipRight(
-    Effect.gen(function* () {
-      const collection = Collection.make({ objects: [] });
-      const properties = Obj.make(SpaceProperties, {});
-      yield* Database.add(collection);
-      yield* Database.add(properties);
-      // Both entities are in the DB before setting the annotation so Database.load
-      // works in CollectionModel.add (which uses the Effect DB context, not Ref.load).
-      Obj.update(properties, (properties) => {
-        const meta = Obj.getMeta(properties);
-        if (!meta.annotations) {
-          meta.annotations = {};
-        }
-        Annotation.setDictionary(meta.annotations, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
-      });
-    }),
-    effect,
-  );
+export * as MarkdownPlugin from './MarkdownPlugin.testing';
 
 export const testToolkit = Toolkit.empty as Toolkit.Toolkit<any>;
 

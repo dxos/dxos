@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type DndContainerHandler, type GetId } from '@dxos/react-ui-dnd';
-import { arrayMove } from '@dxos/util';
 
 export type UseEventHandlerProps<TItem = any, TObject extends Obj.Unknown = Obj.Unknown> = Pick<
   DndContainerHandler<TItem>,
@@ -77,22 +77,39 @@ export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown 
         log.info('onDrop', { source, target });
 
         const mutate = (items: TItem[]) => {
-          const to =
-            target?.type === 'tile' || target?.type === 'placeholder'
-              ? target.location
-              : target?.type === 'container'
-                ? items.length
-                : -1;
           const from = items.findIndex((item) => getId(item) === source.id);
-          const insertIndex = typeof to === 'number' && to >= 0 ? Math.floor(to) : -1;
-          if (insertIndex !== -1) {
-            if (from !== -1) {
-              arrayMove(items, from, insertIndex);
-            } else {
-              // TODO(burdon): This should be the responsibility of the source container.
-              items.splice(insertIndex, 0, make(get(source.data)));
+
+          // `none` when the drop resolves to no position. A tile target's index comes from its id
+          // against the CURRENT list, never from its `location`: that number is captured at the last
+          // dragover, so a release beating the post-drag-start re-render still holds the pre-reflow
+          // position, one too high. Placeholders keep `location`, which names the gap itself.
+          const resolveInsertIndex = (): Option.Option<number> => {
+            if (target?.type === 'tile') {
+              const withoutSource = from === -1 ? items : items.filter((item) => getId(item) !== source.id);
+              const tileIndex = withoutSource.findIndex((item) => getId(item) === target.id);
+              return tileIndex === -1 ? Option.none() : Option.some(tileIndex + 1);
             }
-          }
+
+            const to =
+              target?.type === 'placeholder' ? target.location : target?.type === 'container' ? items.length : -1;
+            return typeof to === 'number' && to >= 0 ? Option.some(Math.floor(to)) : Option.none();
+          };
+
+          Option.match(resolveInsertIndex(), {
+            onNone: () => {},
+            // Clamped against the length read AFTER the removal: the index is measured against the list
+            // including the dragged item, so one past the end makes an ECHO array throw rather than
+            // append, and the removal has already committed, destroying the item.
+            onSome: (insertIndex) => {
+              if (from !== -1) {
+                const [item] = items.splice(from, 1);
+                items.splice(Math.min(insertIndex, items.length), 0, item);
+              } else {
+                // TODO(burdon): This should be the responsibility of the source container.
+                items.splice(Math.min(insertIndex, items.length), 0, make(get(source.data)));
+              }
+            },
+          });
         };
 
         if (onChange) {

@@ -2,13 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
+
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { StoreError } from '../errors';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/question';
 
 export type QuestionStatus = 'open' | 'answered';
 
@@ -42,17 +47,20 @@ const fail = (message: string) => (cause: unknown) => new StoreError({ message, 
 
 const now = Clock.currentTimeMillis.pipe(Effect.map((millis) => new Date(millis).toISOString()));
 
-const migrate = (sql: SqlClient.SqlClient) =>
-  sql`CREATE TABLE IF NOT EXISTS question (
-    id TEXT PRIMARY KEY,
-    text TEXT NOT NULL,
-    status TEXT NOT NULL,
-    answer TEXT,
-    supporting_ids TEXT NOT NULL DEFAULT '[]',
-    attempts INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-  )`;
+/**
+ * Applies any migrations this database has not recorded yet.
+ *
+ * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+ * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+ */
+const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+  Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('discord.questionStore.migrate'),
+  );
 
 type Row = {
   readonly id: string;
@@ -85,59 +93,59 @@ const toQuestion = (row: Row): Question => ({
   updatedAt: row.updated_at,
 });
 
-export class QuestionStore extends Context.Tag('@dxos/pipeline-discord/QuestionStore')<
-  QuestionStore,
-  QuestionStoreApi
->() {
-  static layerSql: Layer.Layer<QuestionStore, never, SqlClient.SqlClient> = Layer.scoped(
-    QuestionStore,
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* migrate(sql).pipe(Effect.orDie);
-      return {
-        add: (text, id) =>
-          Effect.gen(function* () {
-            const timestamp = yield* now;
-            const question: Question = {
-              id: id ?? crypto.randomUUID(),
-              text,
-              status: 'open',
-              supportingIds: [],
-              attempts: 0,
-              createdAt: timestamp,
-              updatedAt: timestamp,
-            };
-            yield* sql`INSERT INTO question (id, text, status, supporting_ids, attempts, created_at, updated_at)
+export class QuestionStore extends Context.Service<QuestionStore, QuestionStoreApi>()(
+  '@dxos/pipeline-discord/QuestionStore',
+) {
+  static layerSql: Layer.Layer<QuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+    Layer.effect(
+      QuestionStore,
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* migrate().pipe(Effect.orDie);
+        return {
+          add: (text, id) =>
+            Effect.gen(function* () {
+              const timestamp = yield* now;
+              const question: Question = {
+                id: id ?? crypto.randomUUID(),
+                text,
+                status: 'open',
+                supportingIds: [],
+                attempts: 0,
+                createdAt: timestamp,
+                updatedAt: timestamp,
+              };
+              yield* sql`INSERT INTO question (id, text, status, supporting_ids, attempts, created_at, updated_at)
               VALUES (${question.id}, ${question.text}, 'open', '[]', 0, ${timestamp}, ${timestamp})`;
-            return question;
-          }).pipe(Effect.mapError(fail('Failed to add question'))),
-        get: (id) =>
-          sql<Row>`SELECT * FROM question WHERE id = ${id}`.pipe(
-            Effect.map((rows) => (rows[0] ? toQuestion(rows[0]) : undefined)),
-            Effect.mapError(fail('Failed to read question')),
-          ),
-        list: (status) =>
-          (status !== undefined
-            ? sql<Row>`SELECT * FROM question WHERE status = ${status} ORDER BY created_at ASC, id ASC`
-            : sql<Row>`SELECT * FROM question ORDER BY created_at ASC, id ASC`
-          ).pipe(
-            Effect.map((rows) => rows.map(toQuestion)),
-            Effect.mapError(fail('Failed to list questions')),
-          ),
-        answer: (id, answer, supportingIds) =>
-          Effect.gen(function* () {
-            const timestamp = yield* now;
-            yield* sql`UPDATE question SET status = 'answered', answer = ${answer},
+              return question;
+            }).pipe(Effect.mapError(fail('Failed to add question'))),
+          get: (id) =>
+            sql<Row>`SELECT * FROM question WHERE id = ${id}`.pipe(
+              Effect.map((rows) => (rows[0] ? toQuestion(rows[0]) : undefined)),
+              Effect.mapError(fail('Failed to read question')),
+            ),
+          list: (status) =>
+            (status !== undefined
+              ? sql<Row>`SELECT * FROM question WHERE status = ${status} ORDER BY created_at ASC, id ASC`
+              : sql<Row>`SELECT * FROM question ORDER BY created_at ASC, id ASC`
+            ).pipe(
+              Effect.map((rows) => rows.map(toQuestion)),
+              Effect.mapError(fail('Failed to list questions')),
+            ),
+          answer: (id, answer, supportingIds) =>
+            Effect.gen(function* () {
+              const timestamp = yield* now;
+              yield* sql`UPDATE question SET status = 'answered', answer = ${answer},
               supporting_ids = ${JSON.stringify(supportingIds)}, updated_at = ${timestamp} WHERE id = ${id}`;
-          }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to answer question'))),
-        recordAttempt: (id) =>
-          Effect.gen(function* () {
-            const timestamp = yield* now;
-            yield* sql`UPDATE question SET attempts = attempts + 1, updated_at = ${timestamp} WHERE id = ${id}`;
-          }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to record question attempt'))),
-      };
-    }),
-  );
+            }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to answer question'))),
+          recordAttempt: (id) =>
+            Effect.gen(function* () {
+              const timestamp = yield* now;
+              yield* sql`UPDATE question SET attempts = attempts + 1, updated_at = ${timestamp} WHERE id = ${id}`;
+            }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to record question attempt'))),
+        };
+      }),
+    );
 
   static layerMemory: Layer.Layer<QuestionStore> = Layer.sync(QuestionStore, () => {
     const byId = new Map<string, Question>();

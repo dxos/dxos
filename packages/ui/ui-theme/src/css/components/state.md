@@ -1,6 +1,6 @@
 # `dx-*` selection / navigation grammar
 
-Companion to `selected.css`. The four selection-state utilities below are
+Companion to `state.css`. The four selection-state utilities below are
 each bound to a specific ARIA attribute (or `data-*`) selector. **The
 class only fires when the matching ARIA attribute is set on the same
 element.** Mismatches (e.g. `dx-current` paired with `aria-selected`)

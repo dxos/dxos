@@ -43,6 +43,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-magazine',
     icon: { key: 'ph--book-open-text--regular', hue: 'orange' },
     spec: 'PLUGIN.mdl',
-    tags: ['labs'],
+    tags: ['alpha'],
   },
 });

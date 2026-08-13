@@ -2,31 +2,33 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as PlatformCommand from '@effect/platform/Command';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
+import * as Config from 'effect/Config';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
 import * as Schema from 'effect/Schema';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as PlatformCommand from 'effect/unstable/process/ChildProcess';
+import * as ChildProcessSpawner from 'effect/unstable/process/ChildProcessSpawner';
 
 import { findDxConfigFile, loadDxConfig } from '@dxos/app-framework/vite-plugin';
 import { type Client, ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { Config2 } from '@dxos/protocols';
+import { Config2, EdgeCallFailedError } from '@dxos/protocols';
 
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 
 /** Manifest emitted by the build (subset consumed here). Extends `Config2.Plugin` with build-time fields. */
 const ManifestSchema = Schema.Struct({
   ...Config2.Plugin.fields,
-  version: Schema.String.pipe(Schema.nonEmptyString()),
-  dependencies: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
+  version: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+  dependencies: Schema.optional(Schema.Record(Schema.String, Schema.String)),
 });
 type Manifest = Schema.Schema.Type<typeof ManifestSchema>;
 
@@ -51,23 +53,23 @@ const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
 export const publish = Command.make(
   'publish',
   {
-    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.text('app-password').pipe(
+    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.string('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    dir: Options.text('dir').pipe(
+    dir: Options.string('dir').pipe(
       Options.withDescription('Project directory containing dx.config.ts. Defaults to the current directory.'),
       Options.withDefault('.'),
     ),
     noBuild: Options.boolean('no-build').pipe(
       Options.withDescription('Skip running the build command (publish a pre-built dist).'),
     ),
-    assetBaseUrl: Options.text('asset-base-url').pipe(
+    assetBaseUrl: Options.string('asset-base-url').pipe(
       Options.withDescription('Skip upload and point the release at an already-hosted bundle directory.'),
       Options.optional,
     ),
-    edgeUrl: Options.text('edge-url').pipe(
+    edgeUrl: Options.string('edge-url').pipe(
       Options.withDescription(
         'Edge base URL for bundle upload (e.g. http://localhost:8787). Bypasses profile config; auth is skipped (requires WORKER_ENV=dev on the server).',
       ),
@@ -97,15 +99,15 @@ export const publish = Command.make(
         if (!options.noBuild && buildCommand) {
           yield* Console.log(`Building: ${buildCommand}`);
           const binDir = path.join(dir, 'node_modules', '.bin');
-          const exitCode = yield* PlatformCommand.make(
-            'sh',
-            '-c',
-            `export PATH="${binDir}:$PATH"; ${buildCommand}`,
-          ).pipe(
-            PlatformCommand.workingDirectory(dir),
-            PlatformCommand.stdout('inherit'),
-            PlatformCommand.stderr('inherit'),
-            PlatformCommand.exitCode,
+          // v4 folds the process options into `make` and runs a command through the spawner
+          // service rather than through combinators on the command itself.
+          const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+          const exitCode = yield* spawner.exitCode(
+            PlatformCommand.make('sh', ['-c', `export PATH="${binDir}:$PATH"; ${buildCommand}`], {
+              cwd: dir,
+              stdout: 'inherit',
+              stderr: 'inherit',
+            }),
           );
           if (exitCode !== 0) {
             return yield* Effect.fail(new Error(`Build failed (exit ${exitCode}): ${buildCommand}`));
@@ -119,10 +121,20 @@ export const publish = Command.make(
           return yield* Effect.fail(new Error(`manifest.json not found in ${outdir}. Did the build run?`));
         }
         const manifestRaw = yield* fs.readFileString(manifestPath);
-        const manifest: Manifest = yield* Schema.decodeUnknown(ManifestSchema)(JSON.parse(manifestRaw));
+        const manifest: Manifest = yield* Schema.decodeUnknownEffect(ManifestSchema)(JSON.parse(manifestRaw));
         const key = manifest.key;
         const version = manifest.version;
         const manifestHash = `sha256-${yield* Effect.promise(() => sha256Base64(new TextEncoder().encode(manifestRaw)))}`;
+
+        // Authenticate for the record writes BEFORE uploading: hosted bundles are immutable once
+        // uploaded, so a publish whose PDS session cannot authenticate must fail before it burns
+        // the version with an orphaned upload.
+        const client = yield* ClientService;
+        const session = yield* resolveSession({
+          handle: Option.getOrUndefined(options.handle),
+          appPassword: Option.getOrUndefined(options.appPassword),
+          client,
+        });
 
         // Resolve hosting → moduleUrl.
         const assetBaseUrl = Option.getOrUndefined(options.assetBaseUrl) ?? config.publish?.assetBaseUrl;
@@ -135,24 +147,22 @@ export const publish = Command.make(
           // When --edge-url is provided we bypass the profile's edge config and post directly
           // with auth: false — relies on WORKER_ENV=dev skipAuth on the server (local dev only).
           const explicitEdgeUrl = Option.getOrUndefined(options.edgeUrl);
+          const apiKey = Option.getOrUndefined(yield* Config.option(Config.string('DX_HUB_API_KEY')));
           if (explicitEdgeUrl) {
             const http = new EdgeHttpClient(explicitEdgeUrl);
             moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
+          } else if (apiKey) {
+            // Headless callers (CI) hold no HALO identity, so the VP flow cannot run; the admin
+            // API key authenticates the upload instead.
+            const http = new EdgeHttpClient(client.edge.http.baseUrl, { apiKey });
+            moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
           } else {
-            const client = yield* ClientService;
             const hasIdentity = !!client.halo.identity.get();
             moduleUrl = yield* uploadBundle({ client, key, version, outdir, auth: hasIdentity });
           }
           yield* Console.log(`Uploaded:  ${moduleUrl}`);
         }
 
-        // Authenticate and write records.
-        const client = yield* ClientService;
-        const session = yield* resolveSession({
-          handle: Option.getOrUndefined(options.handle),
-          appPassword: Option.getOrUndefined(options.appPassword),
-          client,
-        });
         const createdAt = new Date().toISOString();
 
         const profile: Record<string, unknown> = { key, name: manifest.name, createdAt };
@@ -271,8 +281,20 @@ const uploadBundleDirect = ({
       files.push({ path: entry.split(path.sep).join('/'), content: Buffer.from(bytes).toString('base64') });
     }
 
-    const { moduleUrl } = yield* Effect.tryPromise(() =>
-      http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth: false }),
+    const { moduleUrl } = yield* Effect.tryPromise({
+      try: () => http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth: false }),
+      // Keep EdgeCallFailedError intact for the conflict recovery below; type everything else.
+      catch: (error) => (error instanceof EdgeCallFailedError ? error : new Error(`Bundle upload failed: ${error}`)),
+    }).pipe(
+      // Hosted versions are immutable, so a re-run of an already-uploaded version answers 409 —
+      // the existing bundle is the publish's outcome, keeping registry publishes re-runnable.
+      Effect.catchIf(
+        (error) => error instanceof EdgeCallFailedError && error.data?.type === 'conflict',
+        () => {
+          const existingUrl = new URL(`/registry/modules/${key}/${version}/manifest.json`, http.baseUrl).toString();
+          return Console.log(`Version already in registry: ${existingUrl}`).pipe(Effect.as({ moduleUrl: existingUrl }));
+        },
+      ),
     );
     return moduleUrl;
   });

@@ -4,14 +4,15 @@
 
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Operation, Trace } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
@@ -48,7 +49,7 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe('Graph as a fiber runtime', () => {
-  it.scoped(
+  it.effect(
     'simple adder node',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -69,7 +70,7 @@ describe('Graph as a fiber runtime', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'composition',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -89,7 +90,7 @@ describe('Graph as a fiber runtime', () => {
   );
 
   // TODO(burdon): Is the DXN part of the runtime registration of the graph or persistent?
-  it.scoped.skip(
+  it.effect.skip(
     'composition (with shortcut)',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -109,7 +110,7 @@ describe('Graph as a fiber runtime', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'runFromInput',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -130,7 +131,7 @@ describe('Graph as a fiber runtime', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'if-else',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -138,8 +139,8 @@ describe('Graph as a fiber runtime', () => {
 
         const result = yield* runtime.runGraph(URI.make('dxn:test:g4'), ValueBag.make({ condition: true, value: 1 }));
 
-        expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));
-        expect(yield* Effect.either(result.values.false)).toEqual(Either.left(NotExecuted));
+        expect(yield* Effect.result(result.values.true)).toEqual(Result.succeed(1));
+        expect(yield* Effect.result(result.values.false)).toEqual(Result.fail(NotExecuted));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

@@ -14,9 +14,11 @@ tasks:
       - '@group(sources)'
       - /tools/storybook-react/.storybook/main.ts
       - /tools/storybook-react/.storybook/vitest.setup.ts
+      - /vite.base.config.ts
       - /vitest.base.config.ts
       - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
       - .storybook/*
+      - vite.config.ts # Combined build + test config; most packages use this rather than `vitest.config.ts`.
       - vitest.config.ts
       - $VITEST_COVERAGE
       - $VITEST_DEBUG

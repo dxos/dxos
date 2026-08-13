@@ -2,14 +2,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Obj } from '@dxos/echo';
 
+import { SpaceCapabilities, SpaceOperation } from '#types';
+
 import { CREATE_OBJECT_DIALOG } from '../constants';
-import { SpaceCapabilities } from '../types';
-import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.OpenCreateObject> = SpaceOperation.OpenCreateObject.pipe(
   Operation.withHandler(

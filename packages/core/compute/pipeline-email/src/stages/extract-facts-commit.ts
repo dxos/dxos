@@ -41,7 +41,7 @@ export const extractFactsUnitStage = (
     (message) =>
       Effect.tryPromise(() => extract(message)).pipe(
         Effect.tapError((error) => Effect.logWarning('extract-facts-unit failed; degrading to no facts', error)),
-        Effect.orElse(() => Effect.succeed<RDF.Fact[]>([])),
+        Effect.catch(() => Effect.succeed<RDF.Fact[]>([])),
         Effect.map((facts): FactUnit => ({ facts, foreignId: messageSource(message), key: keyOf(message) })),
       ),
     { concurrency },

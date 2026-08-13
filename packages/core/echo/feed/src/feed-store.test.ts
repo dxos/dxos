@@ -5,7 +5,9 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -13,6 +15,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { FeedStore } from './feed-store';
+import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher';
 
 const Block = FeedProtocol.Block;
 type Block = FeedProtocol.Block;
@@ -305,20 +308,9 @@ describe('Feed V2', () => {
         .pipe(Effect.exit);
 
       expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const cause: any = result.cause;
-
-        // Handling Effect Cause structure which might be diff in this version
-        // Ideally we use Cause.isDie(cause) -> error
-        // But for quick check:
-        let error = cause.value || cause.defect || cause;
-        if (cause._tag === 'Die') {
-          error = cause.value || cause.defect;
-        }
-
-        expect(error).toBeDefined();
-        expect(error.message).toBe('Cursor token mismatch');
-      }
+      const defect = Exit.findDefect(result);
+      expect(Result.isSuccess(defect)).toBe(true);
+      expect(Result.isSuccess(defect) && (defect.success as Error).message).toBe('Cursor token mismatch');
 
       // Test Query with VALID cursor
       // Use the cursor from the first block of feed-1 to get the second block
@@ -768,6 +760,122 @@ describe('Feed V2', () => {
       expect(queryRes.blocks[0].actorId).toBe(actorId);
       expect(queryRes.blocks[0].sequence).toBe(sequence);
       expect(queryRes.blocks[0].data).toEqual(new Uint8Array([1]));
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('FeedStore encryption', () => {
+  const PLAINTEXT = new Uint8Array([9, 8, 7, 6, 5]);
+  const makeCypher = () => createInMemoryKeyProvider().then((keyProvider) => createWebCryptoCypher({ keyProvider }));
+
+  it.effect('round-trips plaintext through append and query when a cypher is configured', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const cypher = yield* Effect.promise(makeCypher);
+
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true, cypher });
+      yield* feed.migrate();
+
+      yield* feed.appendLocal([{ spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: PLAINTEXT }]);
+
+      const queryRes = yield* feed.query({
+        requestId: 'q',
+        query: { feedIds: [feedId] },
+        position: -1,
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      });
+      expect(queryRes.blocks.length).toBe(1);
+      // Callers see plaintext with the envelope cleared.
+      expect(queryRes.blocks[0].data).toEqual(PLAINTEXT);
+      expect(queryRes.blocks[0].encryptionKeyId).toBeUndefined();
+      expect(queryRes.blocks[0].iv).toBeUndefined();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('stores ciphertext and the envelope on disk, not plaintext', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const keyProvider = yield* Effect.promise(() => createInMemoryKeyProvider());
+      const cypher = createWebCryptoCypher({ keyProvider });
+
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true, cypher });
+      yield* feed.migrate();
+      yield* feed.appendLocal([{ spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: PLAINTEXT }]);
+
+      const sql = yield* SqliteClient.SqliteClient;
+      const rows = yield* sql<{ data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null }>`
+        SELECT data, encryptionKeyId, iv FROM blocks
+      `;
+      expect(rows.length).toBe(1);
+      expect(new Uint8Array(rows[0].data)).not.toEqual(PLAINTEXT);
+      expect(rows[0].encryptionKeyId).toBe(yield* Effect.promise(() => keyProvider.currentKeyId()));
+      expect(rows[0].iv).not.toBeNull();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('stores plaintext with no envelope when no cypher is configured', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      yield* feed.appendLocal([{ spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: PLAINTEXT }]);
+
+      const sql = yield* SqliteClient.SqliteClient;
+      const rows = yield* sql<{ data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null }>`
+        SELECT data, encryptionKeyId, iv FROM blocks
+      `;
+      expect(rows.length).toBe(1);
+      expect(new Uint8Array(rows[0].data)).toEqual(PLAINTEXT);
+      expect(rows[0].encryptionKeyId).toBeNull();
+      expect(rows[0].iv).toBeNull();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('encrypts only the feeds the cypher selects', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const encryptedFeed = EntityId.random();
+      const plaintextFeed = EntityId.random();
+      const keyProvider = yield* Effect.promise(() => createInMemoryKeyProvider());
+      const cypher = createWebCryptoCypher({
+        keyProvider,
+        shouldEncrypt: (feed) => feed.feedId === encryptedFeed,
+      });
+
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true, cypher });
+      yield* feed.migrate();
+      yield* feed.appendLocal([
+        { spaceId, feedId: encryptedFeed, feedNamespace: WellKnownNamespaces.data, data: PLAINTEXT },
+        { spaceId, feedId: plaintextFeed, feedNamespace: WellKnownNamespaces.data, data: PLAINTEXT },
+      ]);
+
+      const queryRes = yield* feed.query({
+        requestId: 'q',
+        query: { feedIds: [encryptedFeed, plaintextFeed] },
+        position: -1,
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+      });
+      for (const block of queryRes.blocks) {
+        expect(block.data).toEqual(PLAINTEXT);
+      }
+
+      const sql = yield* SqliteClient.SqliteClient;
+      const encrypted = yield* sql<{ encryptionKeyId: string | null }>`
+        SELECT blocks.encryptionKeyId FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.feedId = ${encryptedFeed}
+      `;
+      expect(encrypted[0].encryptionKeyId).toBe(yield* Effect.promise(() => keyProvider.currentKeyId()));
+      const plain = yield* sql<{ encryptionKeyId: string | null }>`
+        SELECT blocks.encryptionKeyId FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.feedId = ${plaintextFeed}
+      `;
+      expect(plain[0].encryptionKeyId).toBeNull();
     }).pipe(Effect.provide(TestLayer)),
   );
 });

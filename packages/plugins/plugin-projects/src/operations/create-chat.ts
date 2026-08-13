@@ -4,13 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import { ProjectSkill } from '@dxos/assistant-toolkit';
-import { Operation, Project, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
-import { AssistantOperation } from '@dxos/plugin-assistant';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 
 import { ProjectOperation } from '#types';
 
@@ -45,7 +49,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = Proje
       const { skills, objects } = Project.contextBindings(project);
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const feed = yield* Database.load(chat.feed);
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime, registry });
       yield* Effect.promise(() =>
         binder.use((binder: AiContext.Binder) =>

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-game",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Game plugin for DXOS Composer (unifies game variants like chess, tic-tac-toe).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,14 +35,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/GamePlugin.workerd.tsx",
-        "node": "./src/GamePlugin.node.tsx",
-        "default": "./src/GamePlugin.tsx"
+        "workerd": "./src/plugin.workerd.tsx",
+        "node": "./src/plugin.node.tsx",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/GamePlugin.d.ts",
-      "workerd": "./dist/lib/GamePlugin.workerd.mjs",
-      "node": "./dist/lib/GamePlugin.node.mjs",
-      "default": "./dist/lib/GamePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -63,23 +63,55 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./Game": {
+      "source": "./src/types/Game.ts",
+      "types": "./dist/types/src/types/Game.d.ts",
+      "import": "./dist/lib/Game.mjs"
+    },
+    "./GameCapabilities": {
+      "source": "./src/types/GameCapabilities.ts",
+      "types": "./dist/types/src/types/GameCapabilities.d.ts",
+      "import": "./dist/lib/GameCapabilities.mjs"
+    },
+    "./GameEvents": {
+      "source": "./src/types/GameEvents.ts",
+      "types": "./dist/types/src/types/GameEvents.d.ts",
+      "import": "./dist/lib/GameEvents.mjs"
+    },
+    "./GamePlugin": {
+      "source": "./src/GamePlugin.ts",
+      "types": "./dist/types/src/GamePlugin.d.ts",
+      "import": "./dist/lib/GamePlugin.mjs"
+    },
+    "./GameUtil": {
+      "source": "./src/util/load-game.ts",
+      "types": "./dist/types/src/util/load-game.d.ts",
+      "import": "./dist/lib/GameUtil.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Game": [
+        "dist/types/src/types/Game.d.ts"
+      ],
+      "GameCapabilities": [
+        "dist/types/src/types/GameCapabilities.d.ts"
+      ],
+      "GameEvents": [
+        "dist/types/src/types/GameEvents.d.ts"
+      ],
+      "GameUtil": [
+        "dist/types/src/util/load-game.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -93,8 +125,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
@@ -104,9 +134,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/plugin-testing": "workspace:*",
-    "@dxos/plugin-theme": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

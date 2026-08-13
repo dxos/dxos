@@ -4,12 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import { SheetOperation } from '#types';
-import { Sheet } from '#types';
+import { Sheet, SheetOperation } from '#types';
 
 const activate = Effect.fnUntraced(function* () {
   const config: AppCapabilities.CommentConfig = {
@@ -17,7 +16,7 @@ const activate = Effect.fnUntraced(function* () {
     comments: 'anchored',
     scrollToAnchor: SheetOperation.ScrollToAnchor,
   };
-  return Capability.contributes(AppCapabilities.CommentConfig, config);
+  return [Capability.contribute(AppCapabilities.CommentConfig, config)];
 });
 
 export default activate;

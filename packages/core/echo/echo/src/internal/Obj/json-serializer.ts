@@ -13,7 +13,7 @@ import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Arra
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
-import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
+import { defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
   type AnyEntity,
   ATTR_PARENT,
@@ -43,9 +43,6 @@ import {
   assertObjectModel,
 } from '../Entity';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref';
-
-// Re-export for backward compatibility.
-export { attachTypedJsonSerializer };
 
 type DeepReplaceRef<T> =
   T extends Ref<any>
@@ -101,7 +98,7 @@ export const objectFromJSON = async (
 
   let obj: any;
   if (schema != null) {
-    obj = await schema.pipe(Schema.decodeUnknownPromise)(decodedInput);
+    obj = await Schema.decodeUnknownPromise(schema)(decodedInput);
     if (refResolver) {
       setRefResolverOnData(obj, refResolver);
     }
@@ -149,7 +146,7 @@ export const objectFromJSON = async (
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
-    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(normalizeMeta(jsonData[ATTR_META]));
+    const meta = await Schema.decodeUnknownPromise(EntityMetaSchema)(normalizeMeta(jsonData[ATTR_META]));
     invariant(Array.isArray(meta.keys));
     defineHiddenProperty(obj, MetaId, meta);
   } else {
@@ -226,7 +223,7 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
 
 /**
  * Recursively replaces encoded `Uint8Array` JSON markers with actual `Uint8Array` instances.
- * Runs before schema decoding so `Schema.Uint8ArrayFromSelf` sees real bytes.
+ * Runs before schema decoding so `Schema.Uint8Array` sees real bytes.
  */
 const restoreUint8Arrays = (data: unknown): any =>
   deepMapValues(data, (value, recurse) => {

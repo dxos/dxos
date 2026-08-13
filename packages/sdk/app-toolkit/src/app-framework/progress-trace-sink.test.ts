@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 

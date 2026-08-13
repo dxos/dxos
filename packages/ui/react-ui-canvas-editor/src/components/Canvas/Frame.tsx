@@ -6,7 +6,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, {
   type FC,
   type MouseEventHandler,
@@ -30,7 +30,8 @@ import { type Anchor, createAnchorMap, resizeAnchors } from '../anchors';
 import { styles } from '../styles';
 import { type TextBoxProps } from '../TextBox';
 import { AnchorComponent } from './Anchor';
-import { type ShapeComponentProps, shapeAttrs } from './Shape';
+import { type ShapeComponentProps } from './Shape';
+import { shapeAttrs } from './shape-defs';
 
 // Border around frame for preview snapshot.
 const previewBorder = 8;

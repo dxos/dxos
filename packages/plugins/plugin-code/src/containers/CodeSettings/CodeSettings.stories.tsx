@@ -3,20 +3,31 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import React, { useMemo } from 'react';
 
 import { AccessToken } from '@dxos/link';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import { type Settings } from '#types';
+import { Settings } from '#types';
 
 import { CodeSettings } from './CodeSettings';
 
+// The container reads and writes the contributed settings entry, so the story owns one per render.
 const DefaultStory = () => {
-  const [settings, setSettings] = useState<Settings.Settings>({});
-  return <CodeSettings settings={settings} onSettingsChange={setSettings} />;
+  const subject = useMemo(
+    () => ({
+      prefix: pluginMeta.profile.key,
+      schema: Settings.Settings,
+      atom: Atom.make<Settings.Settings>({}).pipe(Atom.keepAlive),
+    }),
+    [],
+  );
+
+  return <CodeSettings subject={subject} />;
 };
 
 const meta = {

@@ -105,10 +105,14 @@ const countBySenderStage =
   <E = never>(): Stage.Stage<ParquetRow, SenderCount, E> =>
   (input) =>
     input.pipe(
-      Stream.mapAccum(new Map<string, number>(), (counts, row) => {
-        const sender = String(row.from ?? '');
-        const count = (counts.get(sender) ?? 0) + 1;
-        counts.set(sender, count);
-        return [counts, { sender, count }];
-      }),
+      Stream.mapAccum(
+        () => new Map<string, number>(),
+        (counts, row) => {
+          const sender = String(row.from ?? '');
+          const count = (counts.get(sender) ?? 0) + 1;
+          counts.set(sender, count);
+          // v4 emits zero or more values per input, so the mapped value is an array.
+          return [counts, [{ sender, count }]] as const;
+        },
+      ),
     );

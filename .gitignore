@@ -5,6 +5,8 @@
 .claude/scheduled_tasks.lock
 
 # Response-verbosity toggle state — per-user runtime, not repo policy.
+.claude/.mode
+# Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
 
 # Logs
@@ -15,12 +17,15 @@ yarn-error.log*
 debug-storybook.log
 .log*
 debug-storybook.log
-# vite-plugin-log dev file sink (default filename is `app.log`).
+# vite-plugin-log dev file sink (default filename is `app.log`), plus rotated captures.
 app.log
-# vite-plugin-log Vitest NDJSON sink (per-package `test.log`).
+app.log.*
+# vite-plugin-log Vitest NDJSON sink (per-package `test.log`), plus rotated captures.
 test.log
-# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`).
+test.log.*
+# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`), plus rotated captures.
 test-browser.log
+test-browser.log.*
 
 # Vitest
 vitest-results.json
@@ -97,6 +102,9 @@ oclif.manifest.json
 dist
 out
 lib
+# Keep agent skill source trees named `lib/` (not TS emit).
+!.agents/**/lib/
+!.agents/**/lib/**
 build
 out
 tmp
@@ -139,6 +147,12 @@ packages/sdk/observability/src/cli-observability-secrets.json
 # Benchmark
 .benchmark
 *.cpuprofile
+
+# DX_PROFILE_TESTS / DX_DEBUG_LEAKS test-instrumentation output (see .agents/projects/test-profiling-leaks).
+# `*.cpuprofile` is already ignored above; these cover custom DX_DEBUG_LEAKS_DIR locations too.
+*.heapsnapshot
+heap-samples.ndjson
+profiles/
 
 # Debug logging for require hooks
 .trace-compiled
@@ -212,3 +226,17 @@ node_modules
 .dxos-introspect/
 
 .superpowers/
+
+# Development fixtures: real, PII-bearing corpora pulled by `moon run fixtures:pull`, plus any
+# encrypted archive staged for upload (see tools/fixtures). Never commit.
+/testing/fixtures/
+*.age
+
+# moon remote-cache mTLS material — never committed (tools/moon-cache/README.md).
+.moon/certs/
+
+# Remote-cache benchmark output (tools/moon-cache/bench).
+.moon-bench/
+
+# Agentic-review: finalize keeps only REVIEW.md + RESOLUTION.md per run
+# (STAGING.md / groups.json / groups/ are deleted on finalize).

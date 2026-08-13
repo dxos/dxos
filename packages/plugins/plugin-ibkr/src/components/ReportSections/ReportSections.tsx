@@ -8,8 +8,9 @@ import { Format } from '@dxos/echo/Format';
 import { Select, useTranslation } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
+import { Ibkr } from '#types';
+
 import { meta } from '../../meta';
-import { type Ibkr } from '../../types';
 
 export type ReportSectionsProps = {
   positions: readonly Ibkr.Position[];

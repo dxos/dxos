@@ -12,6 +12,7 @@ import { meta } from '#meta';
 import {
   createDraftMessage,
   dedupeSupersededDrafts,
+  formatAge,
   getMessageBodyText,
   getMessageLabel,
   getMessageProps,
@@ -386,3 +387,29 @@ const makeDraft = (created: string, parent?: Message.Message) =>
     blocks: [{ _tag: 'text' as const, text: '' }],
     properties: { subject: 'Re: Topic', mailbox: DRAFT_MAILBOX },
   });
+
+describe('formatAge', () => {
+  const now = new Date('2026-07-31T12:00:00Z');
+  const ago = (ms: number) => new Date(now.getTime() - ms);
+  const MINUTE = 60_000;
+  const HOUR = 60 * MINUTE;
+  const DAY = 24 * HOUR;
+
+  test('picks the largest unit that still reads unambiguously', ({ expect }) => {
+    expect(formatAge(ago(30_000), now)).toBe('now');
+    expect(formatAge(ago(12 * MINUTE), now)).toBe('12m');
+    expect(formatAge(ago(59 * MINUTE), now)).toBe('59m');
+    expect(formatAge(ago(4 * HOUR), now)).toBe('4h');
+    expect(formatAge(ago(23 * HOUR), now)).toBe('23h');
+    expect(formatAge(ago(3 * DAY), now)).toBe('3d');
+    expect(formatAge(ago(6 * DAY), now)).toBe('6d');
+    expect(formatAge(ago(14 * DAY), now)).toBe('2w');
+    expect(formatAge(ago(120 * DAY), now)).toBe('3mo');
+    expect(formatAge(ago(400 * DAY), now)).toBe('1y');
+  });
+
+  test('a message just over a month old reads in months, never `0mo`', ({ expect }) => {
+    // 35d is 5 weeks — past the week cutoff, but `differenceInMonths` rounds down to 1.
+    expect(formatAge(ago(35 * DAY), now)).toBe('1mo');
+  });
+});

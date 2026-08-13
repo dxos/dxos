@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RoutineCapabilities } from '@dxos/plugin-routine';
+import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 import { makeScheduledRoutine } from './scaffold';
 

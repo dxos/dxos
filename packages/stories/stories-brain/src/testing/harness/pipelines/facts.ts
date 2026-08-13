@@ -10,7 +10,7 @@ import { Database, type Feed, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
@@ -47,7 +47,7 @@ export const extractDocFactsForMessages = (
           strict: variant.strict,
         }).pipe(
           Effect.timeout('120 seconds'),
-          Effect.orElse(() => Effect.succeed(noFacts)),
+          Effect.catch(() => Effect.succeed(noFacts)),
         );
         facts += extracted.length;
         onMessage?.();
@@ -93,7 +93,7 @@ export const extractFactsForVariant = (
           }).pipe(
             Effect.provideService(AiService.AiService, aiService),
             Effect.timeout('120 seconds'),
-            Effect.orElse(() => Effect.succeed(noFacts)),
+            Effect.catch(() => Effect.succeed(noFacts)),
             Effect.tap(() => Effect.sync(() => onMessage?.())),
           ),
         );
@@ -108,7 +108,7 @@ export const extractFactsForVariant = (
       return { processed, facts } satisfies FactsRunResult;
     }).pipe(
       Effect.provide(Database.layer(db)),
-      Effect.provide(FactStore.layerMemory),
+      Effect.provide(FactStoreLive.layerMemory),
       Effect.provide(AiServiceTestingPreset(variant.preset)),
     ),
   );

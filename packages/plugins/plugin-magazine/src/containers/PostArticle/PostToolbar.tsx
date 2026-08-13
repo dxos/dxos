@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React from 'react';
 
 import { Panel } from '@dxos/react-ui';
@@ -10,7 +10,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { postReadAtom, postTagsAtom } from '#atoms';
 import { meta } from '#meta';
-import { type Subscription } from '#types';
+import { Subscription } from '#types';
 
 export type PostToolbarProps = {
   post: Subscription.Post;
@@ -111,7 +111,9 @@ export const PostToolbar = ({
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Toolbar asChild>
-        <Menu.Toolbar />
+        <Menu.Toolbar>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Panel.Toolbar>
     </Menu.Root>
   );

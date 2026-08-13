@@ -16,6 +16,13 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
 jobs:
   build:
     # Skip forks (per project policy) — not required for safety (no secrets are
@@ -43,7 +50,7 @@ jobs:
         env:
           NODE_ENV: production
           LOG_FILTER: error
-          DX_EDGE_BASE_URL: https://edge-main.dxos.workers.dev
+          DX_EDGE_BASE_URL: https://main.dxos.network
 
       - name: Write deploy metadata
         run: |

@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Operation from '@dxos/compute/Operation';
 
-import { MapCapabilities, MapOperation } from '../types';
+import { MapCapabilities, MapOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MapOperation.Toggle> = MapOperation.Toggle.pipe(
   Operation.withHandler(

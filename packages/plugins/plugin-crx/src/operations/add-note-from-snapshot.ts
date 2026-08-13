@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as Operation from '@dxos/compute/Operation';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CrxOperation } from '#types';
 

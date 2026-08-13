@@ -30,7 +30,7 @@ const meta = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin.make({})],
     }),
   ],
   parameters: {

@@ -4,12 +4,13 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 
 /**
  * Cancel target for a remote (EDGE) run — the {@link Manager.cancel} argument. Addressed by `trigger`
@@ -40,7 +41,7 @@ export interface Manager {
   readonly cancel?: (target: CancelTarget) => Effect.Effect<void>;
 }
 
-export class Service extends Context.Tag('@dxos/compute-runtime/RemoteProcessManager')<Service, Manager>() {}
+export class Service extends Context.Service<Service, Manager>()('@dxos/compute-runtime/RemoteProcessManager') {}
 
 /**
  * Empty remote manager for local-only deployments.

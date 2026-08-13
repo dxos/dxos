@@ -5,9 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
-import { AppCapabilities, UrlPath } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -16,7 +20,10 @@ import { AppCapabilities, UrlPath } from '@dxos/app-toolkit';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
+
+    // Live view: extensions contributed by dependency-mode modules (including those enabled
+    // later in the session) reach this subscription reactively.
     const extensionsByModuleAtom = yield* Capability.atomByModule(AppCapabilities.AppGraphBuilder);
 
     // The grammar's fixed tiers, configured here rather than declared by an extension: no connector
@@ -54,12 +61,13 @@ export default Capability.makeModule(
 
     setupDevtools(builder.graph);
 
-    return Capability.contributes(AppCapabilities.AppGraph, builder, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         // clearInterval(interval);
         unsubscribe();
       }),
     );
+    return Capability.contribute(AppCapabilities.AppGraph, builder);
   }),
 );
 

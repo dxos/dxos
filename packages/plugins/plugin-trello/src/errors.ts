@@ -30,8 +30,8 @@ export const formatTrelloSyncFailure = (error: unknown): string => {
     const keys = Object.keys(error.context);
     return keys.length > 0 ? `${error.name}: ${JSON.stringify(error.context)}` : error.name;
   }
-  if (Predicate.isRecord(error) && typeof error._tag === 'string') {
-    if (error._tag === 'ResponseError' && Predicate.isRecord(error.response) && 'status' in error.response) {
+  if (Predicate.isObject(error) && typeof error._tag === 'string') {
+    if (error._tag === 'ResponseError' && Predicate.isObject(error.response) && 'status' in error.response) {
       return `HTTP ${error.response.status}`;
     }
     return error._tag;

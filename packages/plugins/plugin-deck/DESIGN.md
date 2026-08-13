@@ -1,231 +1,460 @@
-# Deck: deprecating the `Plank` container
+# Deck
 
-Status: complete. Documents the migration of `@dxos/plugin-deck` off the legacy
-`containers/Plank/*` composite (which depended on `@dxos/react-ui-stack`) onto the
-presentational components in `src/components/*` (`Pane` / `Plank` / `Companion` / `Splitter`), and is
-kept as a reference for the resulting `Deck`/`Plank` component architecture — including the
-single-mode presentation and URL-sync flow (both in section 3) that landed afterwards.
-
-`containers/Plank/*` and the `@dxos/react-ui-stack` dependency have been deleted;
-`containers/Deck/DeckViewport.tsx` builds all plank chrome, sizing and companion layout from the
-components in `src/components/*`, while the deck container retains the capability/operation wiring.
+The deck is the app's main region: a horizontal run of **planks**, each rendering one graph node's
+article surface. This document is the current design record. For the navigation model (dispositions,
+what a click does) see `PLUGIN.mdl`; for the URL grammar see
+`.agents/projects/url-deck-redesign/DESIGN.md`.
 
 ---
 
-## 1. Old `Plank` container (`src/containers/Plank/`)
+## 1. Composition
 
-A stateful composite that bundles chrome, layout, sizing, focus, scroll and capability wiring. Public
-surface is the `Plank.*` namespace (`PlankRoot`, `PlankComponent`, `PlankContent`) plus `PlankError`
-and `PlankLoading`.
+The split is deliberate: `components/` are dumb and reusable, `containers/` own every capability and
+operation.
 
-### `Plank.Root` — `PlankRoot.tsx`
+| Layer                  | Holds                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `components/Pane`      | The 48px toolbar chrome — sigil, title, tabs, content. No node, no capabilities.     |
+| `components/Plank`     | Node → `Pane` + Article `Surface`; declares the node's attendable region.            |
+| `components/Companion` | Companion tabs plus every panel mounted (inactive ones hidden, never unmounted).     |
+| `components/FoldSpine` | The sliver a folded plank shows in a pile; owns `SPINE_PX`.                          |
+| `containers/Deck`      | `DeckRoot` → `DeckContent` → `DeckViewport`; graph, attention, operations, geometry. |
 
-Headless Radix context provider (`usePlankContext`). Carries everything the subtree needs:
+`DeckViewport.tsx` is where the geometry lives. Everything renders through one pipeline —
+`Mosaic.Container > ScrollArea > Mosaic.Stack` — with `DeckPlankTile` per plank. There is no second
+render path: presentations and the exposé are styling variations on that one mounted stack, so a plank
+never remounts when the deck's shape changes. This is load-bearing; see §7.
+
+---
+
+## 2. Presentation
+
+Derived from plank count and breakpoint, never stored (`hooks/useDeckPresentation.ts`):
+
+- **`fullbleed`** — a single plank at `md`+. Absolute inset, no resize handle, no horizontal scroll.
+- **`sliding`** — two or more planks, and always below `md` (full-viewport-width planks with
+  scroll-snap).
+
+Counted in **planks, not panes**: a companion shares its plank's container rather than taking one of
+its own, so opening it never changes the presentation.
+
+The `flatten` setting collapses the deck to one plank at a time with the rest as breadcrumbs
+(`getRenderedPlanks` in `util/companion-anchor.ts` narrows the rendered list; `deck.active` is
+untouched, so the real deck is still there underneath).
+
+---
+
+## 3. Stacking geometry
+
+The sliding deck follows the stacked-notes pattern (notes.andymatuschak.org). Each tile is
+`position: sticky` on **both** edges:
 
 ```ts
-type PlankContextValue = {
-  graph: Graph.ExpandableGraph;
-  part: ResolvedPart; // 'solo' | 'multi' | 'complementary' | 'solo-primary' | 'solo-companion'
-  layoutMode: LayoutMode; // 'multi' | 'solo' | 'solo--fullscreen'
-  settings?: Settings.Settings;
-  popoverAnchorId?: string;
-  scrollIntoView?: string; // id of plank to scroll into view
-  plankSizing?: Record<string, number>; // persisted widths (rem) keyed by plank id
-  onAdjust?: (id: string, type: DeckOperation.PartAdjustment) => void;
-  onResize?: (id: string, size: number) => void;
-  onScrollIntoView?: (id?: string) => void;
-  onUpdateCompanion?: (companion: string | null) => void;
-};
+insetInlineStart: `${index * SPINE_PX}px`,
+insetInlineEnd:   `${(rendered.length - index) * SPINE_PX - tileWidthPx}px`,
+zIndex:           index + 1,
 ```
 
-### `Plank.Component` — `PlankComponent.tsx`
+A positive per-index start inset builds the **left pile**; a _negative_ end inset lets a plank slide
+fully off the right edge and pin only once a spine's worth remains, building the **right pile**. Both
+are native CSS, so the spines never lag or flicker during a scroll — no per-frame JS repin. z-order
+stacks later planks above earlier ones so right-hand spines read on top.
 
-Renders a single plank. Two paths:
+**Folding** is presentation only. `useFoldedPlanks` reads the already-pinned rects and stamps
+`data-folded` when a plank's visible sliver drops below `FOLD_THRESHOLD_PX` (a spine plus the gap);
+the tile's content crossfades out over 200ms while `FoldSpine` crossfades in. A folded plank keeps its
+width and stays mounted.
 
-- **solo** (`part` startsWith `solo`) → wraps in the new `Pane.Root` (already migrated).
-- **multi** → wraps in `StackItem.Root` (react‑ui‑stack) with `size`/`onSizeChange`/`StackItem.ResizeHandle`.
+**Width cap.** `useMaxPlankWidth` caps a plank to _exactly_ the gap the two piles leave it: the
+viewport, less one spine per other plank, less the single inter-plank gap, less the stack's leading
+padding. The exactness matters — reserving any more leaves the _next_ plank short of its own pin
+position, and since sticky pins but never pushes, it wedges a part-drawn header over the current plank
+instead of folding.
 
-Responsibilities (the important ones to preserve):
+**Attention hysteresis.** Attention must always point at a plank the user can see, so when the
+attended plank folds (or leaves the viewport on mobile) `useFoldedPlanks` moves focus to the unfolded
+plank nearest the viewport centre. Attention is focus-driven, so it moves focus rather than setting
+attention directly. `scrollIntentRef` holds that focus on a plank a navigation is still travelling to,
+so the hysteresis does not hand it straight back on the first scroll frame.
 
-- **Attention**: `attentionId = isCompanion ? (primary?.id ?? id) : id`; `useAttentionAttributes` applied when attendable.
-- **Sizing**: multi planks are `StackItemSize` (`DEFAULT_SIZE = 48`, `DEFAULT_COMPANION_SIZE = 35` rem), resize debounced 200ms → `onResize`.
-- **Scroll‑into‑view**: JS smooth scroll via `requestAnimationFrame` driven by the `scrollIntoView` state.
-- **Focus / keyboard**: Escape → focus main, Enter → first focusable.
-- **Content**: `Surface.Surface` with `AppSurface.Article` data.
+**The deck scrolls only when asked.** There are exactly two animated writers of scroll position, and
+both are explicit:
 
-### `PlankHeading.tsx` (internal)
+- `useScrollIntoView`, for navigation from outside the deck (`LayoutOperation.ScrollIntoView`). It also
+  focuses the plank, which is why an in-deck click does not reuse it — that would take the caret away
+  from a click landing in a document.
+- A delegated `pointerdown` on the stack: clicking a plank asks for it. Delegated because `Mosaic.Tile`
+  forwards no pointer handlers, and captured so it settles before the click reaches an editor.
 
-48px heading rail: `AttentionSigil` (graph actions via `Graph.getActions()`, `Graph.expand(graph, id, 'child')` on mount), title, `PlankControls`, and — for companions — a companion tab strip. Dispatches `DeckOperation.PartAdjustment` (via `onAdjust`) and `LayoutOperation.UpdateCompanion` (via `onUpdateCompanion`). `attendableId = primaryId ?? id`; `related = part === 'complementary'`.
+Three defenses keep those writers honest, each earned by a measured failure:
 
-### `PlankContent` — `PlankContent.tsx`
+- **The click yields to navigation.** A click on a plank is often a click on a _launcher_ — a mailbox
+  row opens a message — and both the click and the navigation it triggers would command the deck
+  (measured: two writers per click). The click defers briefly and drops itself when a navigation
+  intent appears or the deck changes under it.
+- **Arrival watchdog.** A smooth scroll is a request, not a guarantee: a reflow mid-glide makes the
+  browser abort it, stranding the deck (measured: command issued, deck never moved). A deck that sits
+  still without arriving gets the command again; sitting at the destination — including the clamped
+  one — is success.
+- **Scroll anchoring is off** (`overflow-anchor: none`). A tile growing — a companion opening — made
+  the browser silently shift the deck by exactly the width delta, with zero scroll commands; the
+  instrumentation that exonerated every writer is how this was found. The `LauncherManual` story is
+  the regression net for all three.
 
-Solo: absolute grid (`railGridHorizontal`) with optional `6fr_4fr` companion split. Multi: pass‑through. Applies `settings.encapsulatedPlanks` (border/rounded/overflow).
+The deck deliberately does **not** scroll in response to attention. This was tried and removed. A hook
+watched `attendedPlankId` and `companionId` and inferred "the user chose this plank", but attention also
+moves for reasons that are not a choice — a companion resolving a commit later, the fold hysteresis
+handing focus on, an exposé closing, a width cap recomputing. Each false positive earned a guard, and
+the hook ended up with six of them plus a scroll-command dedupe, while still moving the deck under the
+user when a companion opened. Intent is stated now, not deduced.
 
-### `PlankControls.tsx` (internal)
-
-Capability‑driven `ButtonGroup`: solo/fullscreen, increment‑start/end, close, open‑companion. `PlankCompanionControls` = single close button → `LayoutOperation.UpdateCompanion({ subject: null })`.
-
-### `PlankError` / `PlankLoading`
-
-`PlankError`: heading + 5s loading placeholder then `PlankErrorFallback`. `PlankLoading`: empty grid placeholder (skeleton TODO #8259).
-
-### react‑ui‑stack dependencies to remove
-
-`StackItem` (`.Root`/`.ResizeHandle`), `StackItemSize`, `railGridHorizontal`, `Stack` (used by `DeckMultiMode`), `DEFAULT_HORIZONTAL_SIZE`.
+The corollary matters when adding features: a layout change must never scroll. A companion widens its
+own tile, so the attended plank's edge does not move — nothing needs correcting, and correcting it is
+what caused the jump.
 
 ---
 
-## 2. `DeckViewport` consumption (`src/containers/Deck/DeckViewport.tsx`)
+## 4. Companion
 
-- **`DeckViewport`** — sets CSS vars (`--main-spacing`, sidebar widths); `Main.Content`.
-- **`DeckContentEmpty`** — first‑run surface.
-- **`DeckPlanks`** — single-mode replacement for the old `DeckSoloMode`/`DeckMultiMode` split. Renders `deck.active` through one `Mosaic.Container > ScrollArea > Mosaic.Stack` pipeline; each `DeckPlankTile` is styled by the presentation derived from plank count and breakpoint (`useDeckPresentation`) — fullbleed for a singleton deck, a flush tiling split for exactly two, resizable sliding tiles for three or more, always sliding with full-width scroll-snap planks below `md`. Planks stay mounted across 1↔2 transitions. Fullscreen is a transient overlay keyed off `EphemeralDeckState.fullscreen` (a plank id): when set, it renders only that plank headless in place of the whole stack; Escape and the exit button both toggle it via `DeckOperation.Adjust({ type: 'fullscreen' })`. Saves/restores `scrollLeft` across fullbleed↔sliding transitions.
-- **`DeckPlankTile`** — the `Mosaic.Stack` tile wrapping `DeckPlank`; for sliding tiles wires `size`/`onSizeChange` to `plankSizing`/`DeckOperation.UpdatePlankSize`.
-- **`DeckPlank`** (`useDeckPlank` hook) — the bridge, replacing the legacy `PlankContainer`/`PlankComponent`/`PlankHeading` tree. Resolves graph/node/companions (`useAppGraph`, `useNode`, `useCompanions`, `useSelectedCompanion`), reads deck state, gets `useOperationInvoker`, and builds a `Splitter.Root > Plank (+ companion Companion)` tree. Maps callbacks to operations:
-  - `onAdjust`: close → `LayoutOperation.Close`/`UpdateComplementary`; fullscreen → `DeckOperation.Adjust({ type: 'fullscreen' })`; increment‑start/end → `DeckOperation.Adjust`; companion → `LayoutOperation.UpdateCompanion`.
-  - `onResize` → `DeckOperation.UpdatePlankSize`.
-  - `onScrollIntoView` → `LayoutOperation.ScrollIntoView`.
-  - `onUpdateCompanion` → `LayoutOperation.UpdateCompanion`.
+A companion renders **beside the plank it belongs to**, sharing that plank's container across a single
+`Splitter` seam — the same seam whether the deck is fullbleed or sliding, so opening a second plank
+never moves it.
+
+- **Which plank** — `resolveCompanionAnchor` picks the attended plank, else the last. Nested ids
+  (`<mailbox>/<message>`) resolve by **longest** prefix match, or a message's companion would attach
+  to its mailbox.
+- **Per plank, not per deck** — `DeckState.companionPlanks` lists the planks showing their companion,
+  so moving between planks restores what each was left in.
+- **Sizing** — the tile is the plank's own width _plus_ the companion beside it, and the companion's
+  width is held deck-wide under `COMPANION_SIZE_KEY` (not a valid node id, so it cannot collide).
+  Opening or closing the companion therefore never resizes the plank. Dragging the seam commits both
+  widths in one `UpdatePlankSizes`, because two sequential writes render an inconsistent intermediate
+  frame and the size visibly flickers on release.
 
 ---
 
-## 3. Deck state & operations (`src/capabilities`, `schema.ts`)
+## 5. Named planks
 
-There is a single deck mode: presentation is derived from plank count and breakpoint rather than
-stored (fullbleed for 1, tiling for 2, sliding for 3+; always sliding below `md`).
+A plank may carry a **name**, which makes it behave like a browser tab: opening under a name that is
+already taken replaces its occupant in place rather than growing the deck. `DeckState.plankNames` maps
+name → plank id and is pruned as planks close. The mailbox passes `<mailbox>/message`, so reading down
+a mailbox reuses one plank instead of adding one per message.
+
+Only the _first_ subject of an open may take the name — that is the one the name is bound to. If it is
+already open elsewhere it keeps its position and takes the name with it, and the plank that held the
+name stays open as an ordinary plank.
+
+---
+
+## 6. State
 
 ```ts
 type DeckState = {
   active: string[]; // presentation derives from length + breakpoint
   inactive: string[];
-  plankSizing: Record<string, number>; // rem widths keyed by plank id; sliding presentation only
-  tilingSizing?: number; // tiling: start pane width in rem; the end pane fills the remainder
-  companionOpen: boolean;
+  plankSizing: Record<string, number>; // rem widths by plank id, plus the companion's own key
+  companionPlanks: string[]; // planks showing their companion
+  plankNames: Record<string, string>; // name → plank id
 };
 
 type EphemeralDeckState = {
-  fullscreen?: string; // plank id shown headless as a transient overlay; never persisted, never in the URL
-  // ...dialog/popover/toast fields
+  fullscreen?: string; // plank rendered headless over the deck
+  expanded?: string; // plank filling the space between the two piles
+  expose?: boolean; // every plank at once, shrunk to fit
+  scrollIntoView?: string;
+  // ...dialog / popover / toast fields
 };
 ```
 
-The selected companion variant lives in `react-ui-attention` view state (global, localStorage), not on
-`DeckState` — see `util/companion-view-state.ts`.
+Persisted state is versioned through `util/migrate-persisted-state.ts`. The policy for unshipped
+fields is **drop, don't migrate**: `Atom.kvs` falls back to `defaultValue` when a blob fails to decode,
+so a removed field costs a fresh local deck and nothing more. The selected companion _variant_ lives in
+`react-ui-attention` view state, not here (`util/companion-view-state.ts`).
 
-Operations relevant to layout:
+---
 
-- `DeckOperation.Adjust({ id, type: 'close'|'companion'|'fullscreen'|'increment-start'|'increment-end' })` —
-  `'fullscreen'` toggles `EphemeralDeckState.fullscreen` rather than mutating `active`.
-- `DeckOperation.UpdatePlankSize({ id, size })` → `plankSizing[id] = size`.
-- `LayoutOperation.ScrollIntoView({ subject? })` → `ephemeral.scrollIntoView`.
-- `LayoutOperation.UpdateCompanion({ subject })` → toggles `companionOpen`; the selected variant is read
-  from view state, not stored on `DeckState`.
-- `LayoutOperation.Open({ subject, disposition? })` — `disposition` (`'solo' | 'add' | 'auto'`):
-  `'solo'` (the default) navigates — the deck becomes just the subjects, unless already open; `'add'`
-  inserts new planks after `pivotId` or at the end (`addSubjectsToActiveDeck` in `layout.ts`); `'auto'`
-  follows the deck — adds beside the origin (`pivotId` ?? attended plank) when sliding, else navigates
-  solo. Nav-tree plain click passes `'solo'` (shift → `'add'`); in-plank links/cards pass `'auto'`
-  (shift → `'add'`). See `PLUGIN.mdl` F-7 for the navigation model.
-- Companion nodes resolved via graph children of type `PLANK_COMPANION_TYPE`.
+## 7. Exposé
+
+`meta+;` shows every plank at once as shrunk-to-fit tiles; Escape, a background click, or picking a
+tile returns. Clicking a tile also brings that plank to the front.
+
+**It is the same mounted deck, scaled.** `Mosaic.Stack` is transformed in place — no second copy of the
+planks, so no plank remounts and no editor is instantiated twice. Only `style`/`classNames` change.
+Four things this needs, each of which was a real defect first:
+
+- **Scroll.** A transform does not change layout, so the scrollable width is untouched and the deck
+  stays scrolled where it was — the shrunken row would sit off the leading edge with most planks out of
+  view. `useExposeScroll` parks the scroll at zero on the way in and restores it on the way out. The
+  scrollbar is hidden inline (a class would lose to the viewport's own `overflow-x-scroll`) and held
+  hidden through the morph, since a transformed tile still counts towards scrollable overflow.
+- **Sticky.** Tiles take `relative` while exposed. Sticky resolves against the scrollport in the scaled
+  coordinate space and would re-pile the tiles the exposé means to lay out flat.
+- **Folds.** Crossing the boundary refolds the whole deck at once, and the fold is a 200ms crossfade —
+  long enough to paint the planks over the spines replacing them. `data-fold-instant` drops the
+  transition for that frame, stamped in the same task as `data-folded` so the browser resolves both
+  together.
+- **Attention.** `useExposeScroll` must run **before** `useFoldedPlanks` (hooks run in declaration
+  order), and neither the hysteresis nor the collapse may fire across the crossing: at the zeroed scroll
+  every trailing plank reads as off-screen, which is enough to walk attention onto whatever sits near
+  the start. The exposé round trip is attention-neutral by design.
+
+**The transition is FLIP** (`useExposeFlip`), not a transition on the stack's transform. The two
+layouts — sticky/folded/scrolled versus flat/unfolded/scaled — have no CSS interpolation between them,
+so animating the transform alone leaves the rearrangement to snap on the first frame: the deck jumps
+and _then_ grows. Instead every layout change lands at once, each tile is transformed back to where it
+just was, and releasing that transform is what the eye follows. Two constraints hold it up:
+
+- `capture()` runs in the **toggle handler**, never an effect. React has already committed the new
+  layout by the time an effect runs, so that is the last moment the previous geometry exists.
+- The scale is written onto the host element **imperatively**, not held in React state. As state it
+  arrived a commit later, so the FLIP measured the deck at full size and the zoom in did not animate.
+  For the same reason the natural width is summed from tile `offsetWidth` and never
+  `stack.scrollWidth`, which counts transformed overflow and mid-FLIP reports a far wider stack.
+
+---
+
+## 8. Operations
+
+- `LayoutOperation.Open({ subject, disposition?, name?, pivotId? })` — `'solo'` (default) navigates,
+  `'add'` inserts after `pivotId` or at the end, `'auto'` follows the deck. `name` gives browser-tab
+  reuse (§5).
+- `LayoutOperation.Close` / `UpdateComplementary` / `UpdateCompanion` / `ScrollIntoView`.
+- `DeckOperation.Adjust({ id, type })` — `close`, `companion`, `fullscreen`, `expand`,
+  `increment-start`, `increment-end`. `fullscreen` and `expand` toggle ephemeral state rather than
+  mutating `active`.
+- `DeckOperation.UpdatePlankSize` / `UpdatePlankSizes` — the plural form applies several widths in one
+  update so a seam whose panes trade width never renders a half-resized frame.
+- `DeckOperation.ToggleExpose({ expose? })`.
+
+`ScrollIntoView` is the single "bring this plank to the front" path, shared by navigation, a folded
+spine's click, an exposé tile, and the arrow keys. It scrolls **and** attends, because the plank
+focuses itself off the same one-shot flag.
 
 ### URL sync
 
-`capabilities/url-handler.ts` parses the pathname's pair chain (`/w/<workspace>/<key>/<id>/...`) via
-`UrlPath.parse` and `PathResolution.resolveUrl`, dispatches `LayoutOperation.Set` with the resolved plank
-ids, and reverse-serializes `deck.active` (plus the open companion, which attaches to the deck's trailing
-plank) back into the same grammar via `serializeDeckToUrl` (`util/serialize-deck-url.ts`) on every
-deck-state or companion-variant change. Attention is never serialized, and never triggers a sync — on
-load it defaults to the last plank in the chain. See `.agents/projects/url-deck-redesign/DESIGN.md` for
-the full URL grammar.
+`capabilities/url-handler.ts` parses the pathname's pair chain (`/w/<workspace>/<key>/<id>/...`) and
+reverse-serializes `deck.active` plus the open companion back into it on every change
+(`util/serialize-deck-url.ts`). Attention is never serialized and never triggers a sync; on load it
+defaults to the last plank in the chain.
 
 ---
 
-## 4. New presentational components (`src/components/`)
+## 9. Keyboard
 
-| Component                                      | Props (current)                                                                                                               | Role                                                                                 |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `Pane.{Root,Toolbar,Sigil,Title,Tabs,Content}` | radix slots; `Title`/`Tabs` take `attendableId`/`related`; `Tabs` take `tabs: PaneTab[]`, `value`, `onValueChange`, `maxTabs` | dumb 48px‑toolbar chrome; attention‑aware sigil/title/tabs; no node, no capabilities |
-| `Plank`                                        | `{ node, attendableId?, actions?: AttentionSigilAction[][], onAction?, controls?, classNames? }`                              | node → `Pane` + Article `Surface`; sets the node's attendable region                 |
-| `Companion`                                    | `{ companions: Node[], value?, onValueChange?, attendableId?, controls?, classNames? }`                                       | companion tabs in toolbar + all panels mounted (inactive hidden)                     |
-| `Splitter`                                     | `{ main, companion?, open?, orientation?, size?, defaultSize?, onSizeChange?, minSize?, maxSize?, classNames? }`              | resizable main + companion (rem, min/max both panes); `open` hides‑not‑unmounts      |
+- `meta+;` — toggle the exposé; `Escape` leaves it.
+- `←` / `→` — step to the previous/next plank and attend it, without wrapping. Gated on
+  `isPlankLevelFocus()`: the focused element must be the attendable container itself, so a caret in an
+  editor, a list or a toolbar keeps its own arrows. Reaching that level is tabster's groupper ladder —
+  Escape leaves the editor, Escape again lands on the plank. In the exposé the gate is dropped, since
+  the miniatures are inert, and attention moves by focusing the target plank with `preventScroll` so
+  the row stays parked and the exposé stays open.
 
-`Mosaic.Tile` (from `@dxos/react-ui-mosaic`, PR #11932) gains `size`/`onSizeChange`/`minSize`/`maxSize` + `Mosaic.ResizeHandle` — the intended substrate for multi‑mode plank widths.
+  The step is computed from the _focused_ plank read out of the DOM, not from `attendedPlankId`:
+  attention arrives with a render, so held-down key repeat outruns it and every event in a burst would
+  step from the same stale plank — measured as eight rapid presses moving one plank.
 
----
+- `Escape` — exits fullscreen.
 
-## 5. Gap analysis — old functionality vs new components
-
-| #   | Old functionality                                                                                                       | New coverage                                               | Gap / where it must live in the rewrite                                                                                                                                  |
-| --- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Plank chrome (sigil + title + content)                                                                                  | ✅ `Plank`                                                 | none                                                                                                                                                                     |
-| 2   | Companion tab strip + mounted panels                                                                                    | ✅ `Companion`                                             | none                                                                                                                                                                     |
-| 3   | Solo `6fr_4fr` companion split                                                                                          | ✅ `Splitter` (resizable, replaces fixed ratio)            | behaviour change: ratio → resizable rem; acceptable improvement                                                                                                          |
-| 4   | **Control buttons** (solo/fullscreen, increment‑start/end, close, open‑companion; capability‑gated visibility)          | ⚠️ only a `controls` slot                                  | **MISSING** — rebuild a deck‑local `PlankControls` (capability/operation‑aware) and pass via `controls`. Keep it in `containers/`, not `components/`.                    |
-| 5   | Sigil **graph actions** (`Graph.getActions`, `Graph.expand(child)`, `onAction`)                                         | ⚠️ `Plank` takes `actions`/`onAction` but resolves nothing | **MISSING wiring** — container resolves actions + expands graph, passes to `Plank`.                                                                                      |
-| 6   | **Multi‑mode plank widths / resize** (`StackItem` size + `ResizeHandle` + `plankSizing` + `UpdatePlankSize`, debounced) | ⚠️ `Mosaic.Tile` resize exists; `Plank` has no `size`      | **MISSING integration** — wrap each multi plank in `Mosaic.Tile` with `size`/`onSizeChange`→`UpdatePlankSize`, `minSize`/`maxSize`; replace `Stack` with `Mosaic.Stack`. |
-| 7   | **Scroll‑into‑view** (smooth JS scroll on `scrollIntoView` state)                                                       | ❌ none                                                    | **MISSING** — re‑implement against the Mosaic stack scroll container (Mosaic exposes `scrollTo`).                                                                        |
-| 8   | **Focus / keyboard** (Esc → main, Enter → first focusable)                                                              | ⚠️ `Pane.Root` focusable only                              | **MISSING** — re‑add via a hook or container handler.                                                                                                                    |
-| 9   | **Error / Loading** (`PlankError` 5s→fallback, `PlankLoading`)                                                          | ❌ none                                                    | **MISSING** — error boundary + loading around the Article `Surface` (container or `Plank` opt‑in).                                                                       |
-| 10  | **Encapsulated planks** styling (`settings.encapsulatedPlanks`, `--main-spacing`)                                       | ❌ none                                                    | **MISSING** — apply at the stack/tile level in the rewrite.                                                                                                              |
-| 11  | `popoverAnchorId` threaded to sigil/heading                                                                             | ❌ not on `Plank`                                          | **MISSING** — add prop or feed through `controls`/sigil.                                                                                                                 |
-| 12  | `related` attention for `complementary` part                                                                            | ✅ `Pane.Title`/`Tabs`; ⚠️ not exposed on `Plank`          | minor — expose `related?` on `Plank` if complementary planks need it.                                                                                                    |
-| 13  | `pending` / `debug` flags                                                                                               | ❌ none                                                    | low priority; drop unless needed.                                                                                                                                        |
-| 14  | Multi‑mode separators + order/itemsCount accounting                                                                     | n/a (Stack‑specific)                                       | **replace** with `Mosaic.Stack` gap/spacing; companion‑on‑last‑plank logic stays in the container.                                                                       |
-
-**Net:** the presentational pieces (1–3) are done. The rewrite must re‑home the capability/operation
-concerns (4,5,7,9,11) into the deck container, and integrate Mosaic for sizing/scroll (6,7,14).
-Items 8,10 are layout polish; 12,13 are minor.
+The arrow stepping is deliberately _not_ tabster's Mover yet: that is the principled version
+(`Focus.Group` in `react-ui` already wraps `useArrowNavigationGroup` + `useFocusableGroup`), but
+`MosaicStackProps` is a narrow `ThemedClassName<… & Pick<…>>` and forwards no arbitrary DOM props, so
+`data-tabster` cannot be attached to the stack without changing `react-ui-mosaic`.
 
 ---
 
-## 6. Rewrite plan for `DeckViewport`
+## 10. Layout experiments
 
-1. **Deck‑local `PlankControls`** (`containers/Deck/`): port the capability‑gated `ButtonGroup`
-   (solo/fullscreen, increment‑start/end, close, open‑companion) as a plain component that takes a
-   `capabilities` object + an `onAction(type)` callback. No react‑ui‑stack.
-2. **`useDeckPlank(id, part)` hook**: resolve node, companions, selected companion, graph actions,
-   attention, and the capability flags + operation dispatchers (`Adjust`/`UpdatePlankSize`/
-   `ScrollIntoView`/`UpdateCompanion`). This replaces the `PlankContainer` bridge logic.
-3. **`PlankContainer` rewrite**: render `<Plank node controls={<PlankControls…/>} actions onAction/>`;
-   when a companion is open, wrap `main` + `<Companion …/>` in `<Splitter open orientation>`.
-4. **Solo mode**: `DeckSoloMode` → single `PlankContainer part='solo'` (Splitter handles the companion).
-5. **Multi mode**: replace `Stack` with `Mosaic.Stack`; each plank a `Mosaic.Tile` with
-   `size = plankSizing[id]`, `onSizeChange → UpdatePlankSize`, `minSize`/`maxSize`; companion still
-   only on the last plank (now via the last tile's `Splitter`). Encapsulation spacing on the stack.
-6. **Scroll‑into‑view**: drive the Mosaic stack's `scrollTo` from the `scrollIntoView` state.
-7. **Error/Loading**: wrap the Article `Surface` with an error boundary + loading fallback (port
-   `PlankError`/`PlankLoading`).
-8. **Delete** `containers/Plank/*` and remove `@dxos/react-ui-stack` from `package.json`; update all
-   imports; run build + lint + the deck storybook.
+Behind `Settings`, each off by default and independent, so a shape can be tried without committing to
+it. Drop the flag once one settles rather than leaving it a permanent preference.
 
-### 6a. Plank-capability gaps found while reading the old container
+- **`overscroll`** — trailing runway so the last plank can be brought fully forward like any other,
+  sized to exactly that resting position. Suppressed while exposed, or it would count towards the
+  width the scale has to fit.
 
-The old `PlankHeading`/`PlankComponent` carry more than the new `Plank` currently exposes; the rewrite
-must feed these through. The chosen approach is to **keep using the higher-level `Plank` and pass the
-deck/framework pieces in via slots + a surface-data override** (consistent with the locked
-"deck-container `PlankControls`" decision — the container composes, `Plank` stays slot-driven):
-
-- **NavbarEnd surface** (`AppSurface.NavbarEnd`) — extra toolbar content → new `navbarEnd?: ReactNode` slot on `Plank`.
-- **Sigil menu footer** (`AppSurface.MenuFooter`) — sigil-menu children → new `sigilFooter?: ReactNode` slot.
-- **Surface-data extras** (`companionTo`, `variant`, `path`, `popoverAnchorId`) → new `articleData?: Partial<AppSurface.ArticleData>` merged into the computed `data`.
-- **`popoverAnchorId` `Popover.Anchor`** wrapping the sigil when `popoverAnchorId === \`${meta.key}:${node.id}\``→ handled inside`Plank`from the`popoverAnchorId`.
-- **Error fallback + loading placeholder** → `fallback?`/`placeholder?` passthrough to the Article `Surface` (port `PlankError`/`PlankLoading`).
-- **`related?`** (complementary) and **`pending?`** → `Plank` props (forwarded to `Pane.Title`).
-- **Sigil actions** are resolved in `useDeckPlank` (combine passed `actions` + `Graph.getActions(node.id)` filtered by disposition) and passed to `Plank`'s `actions`/`onAction`.
-
-These are additive to `Plank` (defaults preserve current behaviour for the Matrix/Pane stories).
-
-Sequencing keeps the build green: 1–2 (additive), 3–4 (solo first, verify), 5 (multi), 6–7 (polish),
-8 (delete + dependency removal last).
+Shipped without a flag because they are additive and reversible: `expand` (a toolbar toggle filling the
+space between the two piles) and the exposé.
 
 ---
 
-## 7. Open questions (resolved)
+## 11. Testing
 
-1. **Sliding-presentation resize substrate**: resolved as `Mosaic.Tile` per plank (`DeckPlankTile` in
-   `DeckViewport.tsx`), each wired to `plankSizing`/`DeckOperation.UpdatePlankSize`.
-2. **`PlankControls` location**: resolved — it lives in `containers/Deck/PlankControls.tsx`,
-   capability-aware, composed by `DeckPlank`.
-3. **Solo companion ratio**: resolved — the companion is a plank, so a solo plank plus its companion
-   is the tiling presentation: a resizable `Splitter.Root` whose start-pane width persists per deck as
-   `tilingSizing`.
+- `util/*.test.ts` — pure geometry and state helpers (`companion-anchor`, `layout`, `set-active`,
+  `serialize-deck-url`, `migrate-persisted-state`).
+- `Deck.stories.tsx` — one `DefaultStory` plus args; play-tested variants are tagged `test`, and
+  numbered manual scripts hang off play-free `*Manual` variants.
+
+A green build is not a tested deck: the geometry lives in layout effects reading real rects, so
+anything touching §3 or §7 wants a browser. Frame-level assertions (sampling `getComputedStyle` and
+rects across `requestAnimationFrame`) are what caught the exposé's scroll clamping, the fold crossfade
+and the FLIP ordering — none of which typecheck differently when broken.
+
+---
+
+## 12. Plugin-declared decks
+
+**Status: partially shipped.** P1–P3 are implemented and in this document's terms: the `DeckSpec` /
+`AppAnnotation.DeckAnnotation` contract, Collections as navigation targets seeding their children, and
+mailbox levels with below-pruning. Still open (phasing in [TASKS.md](./TASKS.md)): sizing intent (P4),
+container hooks (P5), and the decided-but-unbuilt items (Collections row, `mode` enum). The analysis
+below is kept because its corrections — notably `activeDeck` being the workspace identity — constrain
+the remaining work.
+
+### The problem
+
+A deck is currently one global thing. `DeckState.active` is a flat list of plank ids, its presentation
+derives only from that list's length, and every plugin opens into the same deck through the same
+`LayoutOperation.Open`. Three consequences:
+
+1. Selecting a Collection in the navtree does not give you the collection — attention stays on whatever
+   document was current, because nothing maps "this node was selected" to "the deck is now _this_".
+2. A plugin cannot say what shape its own deck should take. The mailbox wants
+   `mailbox → message → attachment`: opening a message replaces the message plank, and opening an
+   attachment stacks a third. Today `plugin-inbox` gets the middle level only by hand-passing
+   `name: '<mailbox>/message'` to `Open` (§5) — the mechanism exists but the _shape_ is hard-coded at
+   the call site, and nothing prunes a stale attachment plank.
+3. A plugin cannot influence initial sizing. A new message plank takes `DEFAULT_PLANK_SIZE` (50rem)
+   regardless; the mailbox wants its first two planks to fill the viewport.
+
+### The key observation — and its limit
+
+`StoredDeckState` is already a _map_ of decks:
+
+```ts
+{
+  activeDeck: string;
+  previousDeck: string;
+  decks: Record<string, DeckState>;
+}
+```
+
+`LayoutOperation.SwitchWorkspace` already lazily creates `decks[id]` and switches to it, and every
+mutation routes through `updateActiveDeck`. It is tempting to conclude that a deck per collection is
+free — just let something other than a workspace key a deck.
+
+**That is wrong, and it was the first thing implementation disproved.** `activeDeck` does double duty
+as the _workspace identity_:
+
+- `url-handler` serializes it into the URL's workspace slot (`bareWorkspace(state.activeDeck)`).
+- `url-handler` compares the parsed workspace against it and calls `SwitchWorkspace` when they differ,
+  so a non-workspace value would be fought back on every URL parse.
+- The `Layout` capability publishes it app-wide as `workspace`.
+
+Re-keying `decks[]` by a collection id therefore breaks URL round-tripping immediately. Giving a deck
+its own identity needs a key separate from the workspace, and agreement on where it belongs in the
+pair-chain grammar — which is why adoption below _seeds_ the active deck instead.
+
+### The model
+
+A graph node may declare a **deck spec**. When that node becomes the deck root, the deck adopts it.
+Declared on the node, because the app-graph is already how a plugin says what a node _is_ (`label`,
+`icon`, actions) and is already plugin-owned — which is the control point asked for.
+
+```ts
+type DeckSpec = {
+  /**
+   * Ordered levels. A plank opened at level `i` reuses that level's plank (via the existing plank
+   * name, §5) and closes every level deeper than `i`.
+   */
+  levels?: DeckLevel[];
+  /** What to open when the deck is adopted. `'children'` = the node's graph children. */
+  initial?: 'children' | 'none';
+};
+
+type DeckLevel = {
+  /** Level key; becomes the plank name as `<rootId>/<key>`, so §5 does the reuse. */
+  key: string;
+  /** Initial width only. A user drag writes `plankSizing` and wins from then on. */
+  size?: number | 'fill';
+};
+```
+
+Worked examples:
+
+```ts
+// Collection — its documents, side by side.
+{ initial: 'children' }
+
+// Mailbox — three levels, the first two sharing the viewport.
+{
+  levels: [
+    { key: 'mailbox', size: 'fill' },
+    { key: 'message', size: 'fill' },
+    { key: 'attachment' },
+  ],
+}
+```
+
+### Adoption
+
+Navigating to a node whose type declares `initial: 'children'` **seeds** the active deck with that
+node's openable graph children, in place of a plank showing the node itself. No new deck is created and
+`activeDeck` is untouched, so nothing about the URL or the workspace changes.
+
+Seeding applies only to a navigation, never an add: an `add`, a shift-forced add, or an `auto` that
+grew a sliding deck are all requests to put _this_ node beside what is already open, and replacing the
+deck there would discard the planks the user was working in.
+
+This is what fixes (1): selecting a Collection currently leaves attention alone because the selection
+does not change the deck at all. Seeding makes the collection's documents the deck, and attention
+follows the first.
+
+Two consequences of seeding rather than re-keying, both deliberate:
+
+- **No per-collection persistence.** Plank sets and widths are not remembered per collection; that
+  wants the deck-identity work above.
+- **A cap.** Every plank mounts an article surface, so `MAX_SEEDED_PLANKS` bounds how many a single
+  click opens. An arbitrary constant, and the first thing to revisit once the deck can virtualize
+  planks it is not showing.
+
+### Levels
+
+Levels are the generalization of the named planks that already ship. Opening at level `key` is:
+
+```ts
+Open({ subject, name: `${rootId}/${key}` });
+```
+
+which is exactly what `plugin-inbox` does by hand today — so the mailbox's existing behaviour becomes
+the degenerate case rather than a special case. Two additions are needed:
+
+- **Pruning.** Opening at level `i` must close planks at levels `> i`, or switching messages leaves the
+  previous message's attachment open. `layout.ts` owns this next to `addSubjectsToActiveDeck`.
+- **Level → plank mapping.** `DeckState` needs to know which plank sits at which level. A
+  `plankLevels: Record<string, string>` (plank id → level key) mirrors `plankNames`, or is derived
+  from it by parsing the name — deriving is cheaper and has one source of truth.
+
+### Sizing
+
+`size` is an _intent_, consumed only when a plank has no stored width:
+
+```ts
+const stored = plankSizing[id] ?? resolveInitialSize(level, viewportWidthPx);
+```
+
+`'fill'` means "share the space the two piles leave", which `useMaxPlankWidth` already computes
+(§3) — divided among the `'fill'` levels currently open. Because it only applies in the absence of a
+stored value, the first drag pins the width and the intent never fights the user afterwards.
+
+### Container hooks
+
+Containers should not hand-build plank names. A hook resolves the current deck's spec and does it:
+
+```ts
+const deck = useDeckLevels();
+deck.open(message, { level: 'message' }); // reuses the message plank, prunes deeper
+deck.close({ level: 'attachment' });
+```
+
+It belongs in `app-toolkit` rather than `plugin-deck`, so a plugin can push onto the deck without
+depending on the deck plugin — the same reason `LayoutOperation` lives there.
+
+### What this does not settle
+
+- **Companion vs level — settled: orthogonal.** A level is a position in the chain; a companion is a
+  per-plank affordance. Every plank in `mailbox → message → attachment` can independently show its own
+  companion, so the two compose rather than compete and §4 stands unchanged.
+- **Per-collection memory belongs in view state.** The plank set and widths a collection was left in
+  should live in `react-ui-attention` view state — the aspect the companion variant already uses
+  (§6) — rather than in a deck keyed by collection. View state is per-attendable, global and absent
+  from the URL, so `activeDeck` never needs separating from the workspace identity and the pair-chain
+  grammar is untouched. A later phase; nothing in §12 above depends on it.

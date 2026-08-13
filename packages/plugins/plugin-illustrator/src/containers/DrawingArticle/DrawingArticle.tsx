@@ -10,7 +10,7 @@ import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type Drawing, IllustratorCapabilities } from '#types';
+import { Drawing, IllustratorCapabilities } from '#types';
 import { findVariant } from '#util';
 
 export type DrawingArticleProps = AppSurface.ObjectArticleProps<Drawing.Drawing> & {

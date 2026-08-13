@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Node } from '@dxos/plugin-graph';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 
 import { SpotlightCapabilities } from '#types';
@@ -36,8 +36,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(SpotlightCapabilities.State, stateAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(SpotlightCapabilities.State, stateAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

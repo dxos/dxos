@@ -5,15 +5,15 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import { WithProperties } from '@dxos/app-toolkit/testing';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
-import { OperationTestLayer, WithProperties } from '#testing';
-
-import { MarkdownOperation } from '../types';
+import { OperationTestLayer } from '#testing';
+import { MarkdownOperation } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 

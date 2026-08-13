@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { type PageAction } from '@dxos/plugin-crx/types';
+import type * as PageAction from '@dxos/plugin-crx/PageAction';
 import { Text } from '@dxos/schema';
 
 const EXCERPT_LENGTH = 280;
@@ -16,13 +16,13 @@ const EXCERPT_LENGTH = 280;
 /** A saved web page. */
 export class Bookmark extends Type.makeObject<Bookmark>(DXN.make('org.dxos.type.bookmark', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.pipe(Schema.annotations({ title: 'Title' })),
-    url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
+    title: Schema.String.pipe(Schema.annotate({ title: 'Title' })),
+    url: Schema.String.pipe(Schema.annotate({ title: 'URL' })),
     favicon: Schema.optional(Schema.String),
     image: Schema.optional(Schema.String),
     excerpt: Schema.optional(Schema.String),
     summary: Ref.Ref(Text.Text).pipe(
-      Schema.annotations({ description: 'Generated summary.' }),
+      Schema.annotate({ description: 'Generated summary.' }),
       FormInputAnnotation.set(false),
       Schema.optional,
     ),

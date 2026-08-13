@@ -7,8 +7,11 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { SqlTransaction } from '@dxos/sql-sqlite';
+
 import { type Fact } from '../types';
 import { FactStore } from './fact-store';
+import * as FactStoreLive from './fact-store-live';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
@@ -20,7 +23,10 @@ const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   ...over,
 });
 
-const TestLayer = FactStore.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
+const TestLayer = FactStoreLive.layer.pipe(
+  Layer.provideMerge(SqlTransaction.layer),
+  Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
+);
 
 describe('FactStore', () => {
   it.effect(

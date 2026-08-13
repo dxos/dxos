@@ -3,10 +3,10 @@
 //
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useLayout } from '@dxos/app-toolkit/ui';
 
-import { type FilesystemWorkspace, NativeFilesystemCapabilities } from '#types';
+import { NativeFilesystemCapabilities } from '#types';
 
 /** Extracts the raw workspace id from a qualified graph path (e.g. `root/fs:dir` → `fs:dir`). */
 const getWorkspaceId = (qualifiedPath: string): string => {
@@ -16,7 +16,7 @@ const getWorkspaceId = (qualifiedPath: string): string => {
 };
 
 /** Returns the filesystem workspace matching the current layout workspace, if any. */
-export const useActiveFilesystemWorkspace = (): FilesystemWorkspace | undefined => {
+export const useActiveFilesystemWorkspace = (): NativeFilesystemCapabilities.FilesystemWorkspace | undefined => {
   const layout = useLayout();
   const [state] = useAtomCapabilityState(NativeFilesystemCapabilities.State);
   const workspaceId = getWorkspaceId(layout.workspace);

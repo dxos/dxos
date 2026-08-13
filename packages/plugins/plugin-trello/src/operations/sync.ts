@@ -2,26 +2,29 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { ConnectorSync, LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 const { mergeDeep, mergeField, snapshotField } = ConnectorSync;
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
+import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
+import { TrelloOperation } from '#types';
 
 import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
 import { formatTrelloSyncFailure } from '../errors';
 import { TrelloApi } from '../services';
-import { TrelloOperation } from '../types';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;
@@ -283,11 +286,15 @@ export const reconcileBoardCards: (
         const merged = columnsMerge.value as Record<string, { ids: string[]; hidden?: boolean }>;
         // Remote columns are only Trello lists — never include UNCATEGORIZED. mergeDeep(remote-wins)
         // would drop the initial `{ hidden: true }` bucket from findOrCreateKanbanForBoard.
-        const uncategorizedIds = merged[UNCATEGORIZED_VALUE]?.ids ?? prev[UNCATEGORIZED_VALUE]?.ids ?? [];
-        const uncategorizedHidden = merged[UNCATEGORIZED_VALUE]?.hidden ?? prev[UNCATEGORIZED_VALUE]?.hidden ?? true;
+        const uncategorizedIds =
+          merged[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? prev[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? [];
+        const uncategorizedHidden =
+          merged[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden ??
+          prev[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden ??
+          true;
         kanban.arrangement.columns = {
           ...merged,
-          [UNCATEGORIZED_VALUE]: { ids: uncategorizedIds, hidden: uncategorizedHidden },
+          [KanbanConstants.UNCATEGORIZED_VALUE]: { ids: uncategorizedIds, hidden: uncategorizedHidden },
         };
       });
     } else if (columnsMerge.source === 'local') {
@@ -479,7 +486,7 @@ export const makeEmptyKanbanForBoard = (boardId: string, name: string): Kanban.K
     name,
     arrangement: {
       order: [],
-      columns: { [UNCATEGORIZED_VALUE]: { ids: [], hidden: true } },
+      columns: { [KanbanConstants.UNCATEGORIZED_VALUE]: { ids: [], hidden: true } },
     },
     spec: { kind: 'items' as const, pivotField: TRELLO_PIVOT_FIELD, items: [] },
   });
@@ -522,11 +529,11 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
         return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
       }
 
-      // Wrap the body in `Effect.either` so we can emit a toast on either path
+      // Wrap the body in `Effect.result` so we can emit a toast on either path
       // before returning. The toast distinguishes "the sync ran" from "the sync
       // crashed" (e.g. credential parse, fetch boards, no db); the persisted
       // `lastError` on the binding carries the diagnostic detail.
-      const outcome = yield* Effect.either(
+      const outcome = yield* Effect.result(
         Effect.gen(function* () {
           const kanban = yield* Database.load(bound.spec.target);
 
@@ -593,7 +600,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
       // Toasting is UX-only and the layout/capability service isn't always
       // present (tests, server-side invocations). `Effect.ignore` swallows
       // missing-service errors so they don't fail the sync.
-      if (outcome._tag === 'Right') {
+      if (outcome._tag === 'Success') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
@@ -601,9 +608,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
             title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
-        return outcome.right;
+        return outcome.success;
       } else {
-        const message = formatTrelloSyncFailure(outcome.left);
+        const message = formatTrelloSyncFailure(outcome.failure);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
@@ -612,7 +619,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
             description: message,
           }),
         );
-        return yield* Effect.fail(outcome.left);
+        return yield* Effect.fail(outcome.failure);
       }
     }, Effect.provide(FetchHttpClient.layer)),
   ),

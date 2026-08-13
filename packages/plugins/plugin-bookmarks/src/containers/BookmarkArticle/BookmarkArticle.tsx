@@ -13,7 +13,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Summary } from '#components';
 import { meta } from '#meta';
-import { type Bookmark, BookmarkOperation } from '#types';
+import { Bookmark, BookmarkOperation } from '#types';
 
 import { useImageLoads } from '../useImageLoads';
 
@@ -83,7 +83,9 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content classNames='dx-container flex flex-col'>
           <div className='flex justify-center'>

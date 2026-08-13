@@ -6,7 +6,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
-import { type Provider } from '../types';
+import { Provider } from '#types';
+
 import { extractResults } from '../util';
 
 // Cleaned (script/style-stripped) capture of a real AutoTrader UK results page. The raw multi-MB

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactElement, type ReactNode, forwardRef } from 'react';
+import React, { type ReactElement, type ReactNode } from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { Icon, composable, composableProps } from '@dxos/react-ui';
+import { type ComposableProps } from '@dxos/ui-types';
 
 import { listTheme } from '../List.theme';
 
@@ -18,7 +18,7 @@ import { listTheme } from '../List.theme';
  * (e.g. an `Accordion.ItemBody`) can reuse `grid-cols-[var(--dx-rail-item)_1fr]` to line its
  * content up under the same content column.
  */
-export type ListItemContentProps = ThemedClassName<{
+export type ListItemContentProps = ComposableProps<{
   /**
    * Leading icon: an icon name (rendered as a neutral size-5 `Icon`) or a custom `Icon` element
    * carrying its own size/colour (e.g. `<Icon icon='…' classNames='text-success-text' />`).
@@ -30,13 +30,13 @@ export type ListItemContentProps = ThemedClassName<{
   description?: ReactNode;
 }>;
 
-export const ListItemContent = forwardRef<HTMLDivElement, ListItemContentProps>(
-  ({ classNames, icon, title, description }, forwardedRef) => {
+export const ListItemContent = composable<HTMLDivElement, ListItemContentProps>(
+  ({ icon, title, description, ...props }, forwardedRef) => {
     // Drop the leading icon track when no icon is set, so the content isn't indented past empty space.
     const hasIcon = icon != null;
     const styles = listTheme.styles({ hasIcon });
     return (
-      <div className={styles.itemContentRoot({ class: mx(classNames) })} ref={forwardedRef}>
+      <div {...composableProps<HTMLDivElement>(props, { classNames: styles.itemContentRoot() })} ref={forwardedRef}>
         {hasIcon && (
           <div className={styles.itemContentIcon()}>
             {typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon}

@@ -3,10 +3,10 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 import { type FC, type FocusEvent, type ReactElement } from 'react';
 
 import { type Database, type Entity, type Format, type Obj, type Type } from '@dxos/echo';
+import type { SchemaAST } from '@dxos/effect';
 import { type URI } from '@dxos/keys';
 import { type Palette } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
@@ -75,7 +75,7 @@ export type FormFieldMap = Record<string, FormFieldRenderer>;
 
 export type FormFieldProvider = (props: {
   prop: string;
-  schema: Schema.Schema<any>;
+  schema: Schema.Codec<any, any>;
   fieldProps: FormFieldRendererProps;
 }) => ReactElement | null | undefined;
 
@@ -88,7 +88,7 @@ export type FormFieldProvider = (props: {
  * The type parameter S links the form schema's decoded type to the createObject values argument,
  * ensuring the schema and the handler agree on the shape of the form data.
  */
-export type CreateEntryOverride<S extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext> = {
+export type CreateEntryOverride<S extends Schema.Codec<any, any> = Schema.Codec<any, any>> = {
   /** Replaces the raw ECHO type schema for the inline create form. */
   inputSchema?: S;
   /** Runs instead of the default onCreate(schema, values) path; values are typed from inputSchema. */

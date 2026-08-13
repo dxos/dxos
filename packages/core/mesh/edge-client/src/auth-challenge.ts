@@ -36,16 +36,85 @@ const VP_SCHEME = 'VerifiablePresentation';
  * emits exactly that when its server keypair is unconfigured, and there is nothing a caller can
  * sign — treating it as present would route the request through the auth path only to fail on the
  * missing challenge, masking the original response.
+ *
+ * Only the VP challenge's own parameters are read. Two things would otherwise be mistaken for it:
+ * a `Bearer realm="VerifiablePresentation challenge=…"`, which declares Bearer alone, and a
+ * `challenge` belonging to a later scheme when the VP challenge carries none. Signing either would
+ * retry an unrelated 401, running a non-idempotent request twice.
  */
 export const parseChallengeHeader = (header: string | null | undefined): string | undefined => {
   if (!header) {
     return undefined;
   }
-  const match = new RegExp(`${VP_SCHEME}\\s+challenge=(?:"([^"]*)"|([^\\s,]*))`, 'i').exec(header);
-  if (!match) {
+
+  // Segment, rather than regex over the whole header: an auth-param value may contain a comma
+  // inside quotes, so no single delimiter separates challenges.
+  const segments = splitOutsideQuotes(header);
+  let parameters: string[] | undefined;
+  for (let index = 0; index < segments.length && parameters === undefined; index++) {
+    const afterScheme = stripVpScheme(segments[index]);
+    if (afterScheme !== undefined) {
+      parameters = [afterScheme, ...segments.slice(index + 1)];
+    }
+  }
+  if (parameters === undefined) {
     return undefined;
   }
-  return (match[1] ?? match[2]) || undefined;
+
+  for (const parameter of parameters) {
+    const match = /^\s*challenge\s*=\s*(?:"([^"]*)"|([^\s,]*))/i.exec(parameter);
+    if (match) {
+      return (match[1] ?? match[2]) || undefined;
+    }
+    // A segment that is not an auth-param starts the next challenge, whose params are not ours.
+    if (parameter.trim().length > 0 && !/^\s*[!#$%&'*+\-.^_`|~\w]+\s*=/.test(parameter)) {
+      return undefined;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * The segment's text after the VP auth-scheme token, or undefined if it does not start with it.
+ * The scheme must be a whole token, so a longer scheme merely beginning with it does not match.
+ */
+const stripVpScheme = (segment: string): string | undefined => {
+  const trimmed = segment.trimStart();
+  if (!trimmed.toLowerCase().startsWith(VP_SCHEME.toLowerCase())) {
+    return undefined;
+  }
+  const remainder = trimmed.slice(VP_SCHEME.length);
+  return remainder === '' || remainder.startsWith(' ') || remainder.startsWith('\t') ? remainder : undefined;
+};
+
+/** Split on commas that are not inside a quoted string. */
+const splitOutsideQuotes = (header: string): string[] => {
+  const segments: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let index = 0; index < header.length; index++) {
+    const character = header[index];
+    if (inQuotes) {
+      current += character;
+      if (character === '\\' && index + 1 < header.length) {
+        current += header[++index];
+      } else if (character === '"') {
+        inQuotes = false;
+      }
+      continue;
+    }
+    if (character === '"') {
+      inQuotes = true;
+      current += character;
+    } else if (character === ',') {
+      segments.push(current);
+      current = '';
+    } else {
+      current += character;
+    }
+  }
+  segments.push(current);
+  return segments;
 };
 
 /**

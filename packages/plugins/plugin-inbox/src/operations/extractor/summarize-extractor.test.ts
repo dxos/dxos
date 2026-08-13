@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { SUMMARIZE_ID, SummarizeMessageExtractor, summarizeMessage } from './summarize-extractor';
@@ -84,7 +84,7 @@ const LONG_BODY =
 // resolves to a deterministic value without hitting any real provider.
 const mockAiServiceLayer = Layer.succeed(AiService.AiService, {
   model: () =>
-    Layer.scoped(
+    Layer.effect(
       LanguageModel.LanguageModel,
       LanguageModel.make({
         generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,

@@ -4,8 +4,8 @@
 
 import { useEffect } from 'react';
 
+import * as Graph from '@dxos/app-graph/Graph';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 
 /**

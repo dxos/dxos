@@ -40,7 +40,7 @@ const ITEMS: Record<string, Row[]> = {
 // flex column that a horizontal `MasterDetail` fills via `flex-1`. Fixing scroll here fixes it there.
 const PageFrame = ({ children }: { children: React.ReactNode }) => (
   <Panel.Root>
-    <Panel.Content classNames='flex flex-col min-bs-0 p-2'>{children}</Panel.Content>
+    <Panel.Content classNames='flex flex-col min-h-0 p-2'>{children}</Panel.Content>
   </Panel.Root>
 );
 
@@ -53,7 +53,7 @@ const HorizontalStory = () => {
     <PageFrame>
       <MasterDetail<Row>
         orientation='horizontal'
-        classNames='flex-1 min-bs-0'
+        classNames='flex-1 min-h-0'
         items={MANY}
         selectedId={selectedId}
         onSelect={setSelectedId}
@@ -77,7 +77,7 @@ const NestedStory = () => {
     <PageFrame>
       <MasterDetail<Row>
         orientation='horizontal'
-        classNames='flex-1 min-bs-0'
+        classNames='flex-1 min-h-0'
         items={CATEGORIES}
         selectedId={category}
         onSelect={(id) => {
@@ -91,7 +91,7 @@ const NestedStory = () => {
           category ? (
             <MasterDetail<Row>
               orientation='horizontal'
-              classNames='flex-1 min-bs-0'
+              classNames='flex-1 min-h-0'
               items={items}
               selectedId={item}
               onSelect={setItem}
@@ -112,7 +112,7 @@ const BasicStory = () => {
   const selected = CATEGORIES.find((row) => row.id === selectedId);
   return (
     <Panel.Root>
-      <Panel.Content asChild className='pt-trim-md'>
+      <Panel.Content asChild classNames='pt-trim-md'>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <MasterDetail<Row>

@@ -1,7 +1,8 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
   "changelog": "@changesets/changelog-git",
   "commit": false,
+  "format": "oxfmt",
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
@@ -78,6 +79,7 @@
       "@dxos/extractor-lib",
       "@dxos/feed",
       "@dxos/feed-store",
+      "@dxos/fixtures",
       "@dxos/functions-runtime-cloudflare",
       "@dxos/functions-simulator-cloudflare",
       "@dxos/functions-testing",
@@ -96,7 +98,6 @@
       "@dxos/keyboard",
       "@dxos/keyring",
       "@dxos/keys",
-      "@dxos/kv-store",
       "@dxos/link",
       "@dxos/lit-grid",
       "@dxos/lit-ui",
@@ -169,6 +170,8 @@
       "@dxos/react-ui-syntax-highlighter",
       "@dxos/react-ui-table",
       "@dxos/react-ui-tabs",
+      "@dxos/react-ui-task",
+      "@dxos/react-ui-terminal",
       "@dxos/react-ui-thread",
       "@dxos/react-ui-transcription",
       "@dxos/rpc",
@@ -182,6 +185,7 @@
       "@dxos/stories-assistant",
       "@dxos/stories-brain",
       "@dxos/stories-inbox",
+      "@dxos/stories-lens",
       "@dxos/stories-projects",
       "@dxos/storybook-addon-logger",
       "@dxos/storybook-testing",
@@ -253,6 +257,7 @@
       "@dxos/plugin-freeq",
       "@dxos/plugin-game",
       "@dxos/plugin-github",
+      "@dxos/plugin-google",
       "@dxos/plugin-graph",
       "@dxos/plugin-heygen",
       "@dxos/plugin-ibkr",
@@ -260,6 +265,7 @@
       "@dxos/plugin-illustrator",
       "@dxos/plugin-inbox",
       "@dxos/plugin-iroh-beacon",
+      "@dxos/plugin-jmap",
       "@dxos/plugin-kanban",
       "@dxos/plugin-library",
       "@dxos/plugin-linear",
@@ -275,7 +281,6 @@
       "@dxos/plugin-observability",
       "@dxos/plugin-onboarding",
       "@dxos/plugin-osrm",
-      "@dxos/plugin-outliner",
       "@dxos/plugin-payments",
       "@dxos/plugin-pipeline",
       "@dxos/plugin-presenter",
@@ -304,12 +309,12 @@
       "@dxos/plugin-studio",
       "@dxos/plugin-support",
       "@dxos/plugin-table",
+      "@dxos/plugin-tasks",
       "@dxos/plugin-template",
       "@dxos/plugin-terra",
       "@dxos/plugin-testing",
       "@dxos/plugin-theme",
       "@dxos/plugin-thread",
-      "@dxos/plugin-tictactoe",
       "@dxos/plugin-tldraw",
       "@dxos/plugin-transcription",
       "@dxos/plugin-transformer",
@@ -326,7 +331,6 @@
   "ignore": [
     "@dxos/composer-app",
     "@dxos/composer-crx",
-    "@dxos/composer-dxos-org",
     "@dxos/docs",
     "@dxos/todomvc",
     "tasks",
@@ -342,8 +346,5 @@
   "snapshot": {
     "useCalculatedVersion": true,
     "prereleaseTemplate": "{tag}-{commit}"
-  },
-  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
-    "onlyUpdatePeerDependentsWhenOutOfRange": true
   }
 }

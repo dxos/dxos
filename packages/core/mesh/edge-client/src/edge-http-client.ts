@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { type Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
@@ -27,6 +27,8 @@ import {
   type ExportBundleRequest,
   type ExportBundleResponse,
   type FeedProtocol,
+  type GetAccessTokenRequest,
+  type GetAccessTokenResponseBody,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type GetPluginsResponseBody,
@@ -124,10 +126,9 @@ export type GetSpaceTriggersResponse = {
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
-export class EdgeHttpClientService extends EffectContext.Tag('@dxos/edge-client/EdgeHttpClient')<
-  EdgeHttpClientService,
-  EdgeHttpClient
->() {}
+export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientService, EdgeHttpClient>()(
+  '@dxos/edge-client/EdgeHttpClient',
+) {}
 
 /**
  * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).
@@ -236,6 +237,18 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<CompleteOAuthRegistrationResponse> {
     return this._call(ctx, new URL('/oauth/registration/complete', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  /**
+   * Resolves the live access token behind a `MANAGED_ACCESS_TOKEN` placeholder. Authorized by the
+   * caller's presentation: EDGE serves it only to members of the owning space.
+   */
+  public async getAccessToken(
+    ctx: Context,
+    body: GetAccessTokenRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<GetAccessTokenResponseBody> {
+    return this._call(ctx, new URL('/oauth/token', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //

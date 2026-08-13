@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation, type Script } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Script from '@dxos/compute/Script';
 import { Database, Obj } from '@dxos/echo';
 import { Doc, applyEdits } from '@dxos/echo-doc';
 

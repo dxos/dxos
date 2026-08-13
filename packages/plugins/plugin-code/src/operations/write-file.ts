@@ -4,12 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { SourceFile } from '#types';
-
-import { CodeOperation } from '../types';
+import { CodeOperation, SourceFile } from '#types';
 
 const handler: Operation.WithHandler<typeof CodeOperation.WriteFile> = CodeOperation.WriteFile.pipe(
   Operation.withHandler(

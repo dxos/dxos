@@ -15,15 +15,15 @@ import { LabelAnnotation } from '@dxos/echo/Annotation';
  */
 export class Task extends Type.makeObject<Task>(DXN.make('com.example.type.Task', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.annotations({
+    title: Schema.String.annotate({
       description: 'Short summary of the task.',
     }),
     description: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Longer free-form notes about the task.',
       }),
     ),
-    done: Schema.Boolean.annotations({
+    done: Schema.Boolean.annotate({
       description: 'Whether the task has been completed.',
     }),
   }).pipe(LabelAnnotation.set(['title'])),

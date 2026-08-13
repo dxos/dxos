@@ -2,20 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { expect } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
 import { QuestionStore } from '../stores';
 import { answerOpenQuestions } from './answer-questions';
 
-const TestLayer = (answer?: string) => Layer.mergeAll(QuestionStore.layerMemory, FactStore.layerMemory, fakeAi(answer));
+const TestLayer = (answer?: string) =>
+  Layer.mergeAll(QuestionStore.layerMemory, FactStoreLive.layerMemory, fakeAi(answer));
 
 describe('answerOpenQuestions', () => {
   it.effect(

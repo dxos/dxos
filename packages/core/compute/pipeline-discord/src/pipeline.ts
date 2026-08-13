@@ -91,7 +91,7 @@ export const DiscordPipeline = {
         );
         // Final pass over any questions still open once the whole run has drained.
         yield* answerOpenQuestions().pipe(
-          Effect.catchAll((error) => Effect.logWarning(`final answer pass failed: ${error}`).pipe(Effect.as(0))),
+          Effect.catch((error) => Effect.logWarning(`final answer pass failed: ${error}`).pipe(Effect.as(0))),
         );
         const { done, errored } = yield* Crawler.summarize();
         yield* store.setRunStatus(done ? 'done' : 'paused');

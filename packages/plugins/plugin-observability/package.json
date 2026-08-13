@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-observability",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,14 +35,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ObservabilityPlugin.workerd.ts",
-        "node": "./src/ObservabilityPlugin.node.ts",
-        "default": "./src/ObservabilityPlugin.ts"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
       },
-      "types": "./dist/types/src/ObservabilityPlugin.d.ts",
-      "workerd": "./dist/lib/ObservabilityPlugin.workerd.mjs",
-      "node": "./dist/lib/ObservabilityPlugin.node.mjs",
-      "default": "./dist/lib/ObservabilityPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -61,18 +61,63 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./ObservabilityCapabilities": {
+      "source": "./src/types/ObservabilityCapabilities.ts",
+      "types": "./dist/types/src/types/ObservabilityCapabilities.d.ts",
+      "import": "./dist/lib/ObservabilityCapabilities.mjs"
+    },
+    "./ObservabilityEvents": {
+      "source": "./src/types/ObservabilityEvents.ts",
+      "types": "./dist/types/src/types/ObservabilityEvents.d.ts",
+      "import": "./dist/lib/ObservabilityEvents.mjs"
+    },
+    "./ObservabilityOperation": {
+      "source": "./src/types/ObservabilityOperation.ts",
+      "types": "./dist/types/src/types/ObservabilityOperation.d.ts",
+      "import": "./dist/lib/ObservabilityOperation.mjs"
+    },
+    "./ObservabilityOptions": {
+      "source": "./src/types/ObservabilityOptions.ts",
+      "types": "./dist/types/src/types/ObservabilityOptions.d.ts",
+      "import": "./dist/lib/ObservabilityOptions.mjs"
+    },
+    "./ObservabilityPlugin": {
+      "source": "./src/ObservabilityPlugin.ts",
+      "types": "./dist/types/src/ObservabilityPlugin.d.ts",
+      "import": "./dist/lib/ObservabilityPlugin.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ObservabilityCapabilities": [
+        "dist/types/src/types/ObservabilityCapabilities.d.ts"
+      ],
+      "ObservabilityEvents": [
+        "dist/types/src/types/ObservabilityEvents.d.ts"
+      ],
+      "ObservabilityOperation": [
+        "dist/types/src/types/ObservabilityOperation.d.ts"
+      ],
+      "ObservabilityOptions": [
+        "dist/types/src/types/ObservabilityOptions.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -84,22 +129,19 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "vite": "catalog:"
@@ -107,8 +149,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

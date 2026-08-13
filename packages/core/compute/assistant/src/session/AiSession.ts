@@ -4,20 +4,25 @@
 
 // @import-as-namespace
 
-import { type Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
-import * as Runtime from 'effect/Runtime';
+import type * as Tool from 'effect/unstable/ai/Tool';
+import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Instructions, McpServer, Operation, type Skill, Trace } from '@dxos/compute';
+import type * as Instructions from '@dxos/compute/Instructions';
+import * as McpServer from '@dxos/compute/McpServer';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Skill from '@dxos/compute/Skill';
+import * as Trace from '@dxos/compute/Trace';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -54,9 +59,9 @@ export type RunProps<R = never> = {
 
 export type Options = {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Database.Service>;
-  /** @effect-atom/atom-react Registry for reactive state. */
-  registry?: AtomRegistry.Registry;
+  runtime: Context.Context<Database.Service>;
+  /** @effect/atom-react Registry for reactive state. */
+  registry?: AtomRegistry.AtomRegistry;
   /**
    * Instructions steering the conversation (typically the owning `Chat`'s), rendered into the system
    * prompt on every turn. The session is feed-centric and cannot reach its chat, so these are passed in.
@@ -76,7 +81,7 @@ const SUMMARY_THRESHOLD = 80_000;
  */
 export class Session extends Resource {
   private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Database.Service>;
+  private readonly _runtime: Context.Context<Database.Service>;
   readonly #instructions: readonly Instructions.Instructions[];
 
   /**
@@ -118,7 +123,9 @@ export class Session extends Resource {
    */
   public async getHistory(): Promise<Message.Message[]> {
     const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
-    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, reachable));
+    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      this._sessionLoader.reifyHistory(this._feed, reachable),
+    );
   }
 
   /**
@@ -126,17 +133,15 @@ export class Session extends Resource {
    * positionally rather than by `created`, a wall clock peers do not agree on.
    */
   async #messagesInAppendOrder(): Promise<Message.Message[]> {
-    const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
+    const queryResult = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      Feed.query(this._feed, Filter.type(Message.Message)),
+    );
     const items = await queryResult.run();
     return Array.sort(items.filter(Obj.instanceOf(Message.Message)), byFeedPosition);
   }
 
-  getTools(): Effect.Effect<
-    Record<string, import('@effect/ai/Tool').Any>,
-    never,
-    ToolExecutionService | ToolResolverService
-  > {
-    return Effect.gen(this, function* () {
+  getTools(): Effect.Effect<Record<string, Tool.Any>, never, ToolExecutionService | ToolResolverService> {
+    return Effect.gen({ self: this }, function* () {
       const toolkit = yield* createToolkit({ skills: this.context.getSkills() });
       return toolkit.toolkit.tools;
     }).pipe(Effect.orDie);
@@ -169,8 +174,8 @@ export class Session extends Resource {
     const rewindFrom = this._feed.rewindFrom;
     const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
 
-    return Runtime.runPromise(this._runtime)(
-      Effect.gen(this, function* () {
+    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      Effect.gen({ self: this }, function* () {
         yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
         if (rewindFrom !== undefined) {
           Obj.update(this._feed, (feed) => {
@@ -194,7 +199,7 @@ export class Session extends Resource {
   public createRequest<R = never>(
     params: RunProps<R>,
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
@@ -307,8 +312,10 @@ const connectMcpServers = (
     Effect.forEach((options) =>
       McpToolkit.make(options).pipe(
         // NOTE: Type-inference fails here without explicit void return.
-        Effect.tap((toolkit): void =>
-          log.info('Connected to MCP server', { url: options.url, tools: Object.keys(toolkit.toolkit.tools).length }),
+        Effect.tap((toolkit) =>
+          Effect.sync(() =>
+            log.info('Connected to MCP server', { url: options.url, tools: Object.keys(toolkit.toolkit.tools).length }),
+          ),
         ),
         // Surface typed connection failures via ephemeral trace + warn log, then drop the server.
         Effect.tapError((error) =>
@@ -327,7 +334,7 @@ const connectMcpServers = (
         ),
         // Catch unexpected defects too (e.g. malformed tool schemas) so a single broken
         // server can never abort the whole turn — surface them through the same channel.
-        Effect.catchAllDefect((defect) =>
+        Effect.catchDefect((defect) =>
           Effect.gen(function* () {
             const message = defect instanceof Error ? defect.message : String(defect);
             log.warn('Unexpected MCP defect', { url: options.url, message });
@@ -345,10 +352,10 @@ const connectMcpServers = (
             );
           }),
         ),
-        Effect.either,
+        Effect.result,
       ),
     ),
-    Effect.map(Array.filterMap((_) => Either.getRight(_))),
+    Effect.map((results) => Array.filterMap(results, (result) => result)),
   );
 };
 

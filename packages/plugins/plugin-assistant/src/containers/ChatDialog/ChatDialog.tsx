@@ -16,7 +16,7 @@ import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 import { Chat, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
-import { type Assistant, AssistantCapabilities } from '#types';
+import { Assistant, AssistantCapabilities } from '#types';
 
 export type ChatDialogProps = {
   chat?: ChatTypes.Chat;

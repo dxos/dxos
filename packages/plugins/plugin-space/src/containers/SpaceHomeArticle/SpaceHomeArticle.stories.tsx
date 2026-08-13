@@ -7,21 +7,23 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SpaceHomeDashboard, SpaceHomeRecent } from '#containers';
 import { translations } from '#translations';
-import { SpaceHomeContent } from '#types';
+import { SpaceSurface } from '#types';
 
 import { SpaceHomeArticle } from './SpaceHomeArticle';
 
@@ -57,15 +59,15 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
-        Capability.contributes(AppCapabilities.Translations, translations),
+        Capability.contribute(AppCapabilities.Translations, translations),
         // Registered types feed SpaceHomeRecent's type filter (normally via addSchemaModule).
-        Capability.contributes(AppCapabilities.Schema, [Task, Note]),
+        Capability.contribute(AppCapabilities.Schema, [Task, Note]),
         // Home-content contributors normally wired by the plugin's react-surface capability,
         // including the per-section visibility gate + close affordance.
-        Capability.contributes(Capabilities.ReactSurface, [
+        Capability.contribute(Capabilities.ReactSurface, [
           Surface.create({
             id: 'story.spaceHomeRecent',
-            filter: Surface.makeFilter(SpaceHomeContent),
+            filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
             component: ({ data }) => {
               const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeRecent');
               return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
@@ -73,7 +75,7 @@ const meta = {
           }),
           Surface.create({
             id: 'story.spaceHomeDashboard',
-            filter: Surface.makeFilter(SpaceHomeContent),
+            filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
             component: ({ data }) => {
               const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeDashboard');
               return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;
@@ -83,8 +85,8 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [Task, Note],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

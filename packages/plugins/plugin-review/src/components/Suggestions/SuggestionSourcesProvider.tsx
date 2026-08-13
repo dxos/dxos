@@ -4,10 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { type Markdown } from '@dxos/plugin-markdown/types';
+import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type SuggestionSource } from '@dxos/ui-editor';
 
-import { buildSuggestionSources } from '../../hooks';
+import { buildSuggestionSources } from '#hooks';
+
 import { SuggestionSources } from './SuggestionSources';
 
 export type SuggestionSourcesProviderProps = {

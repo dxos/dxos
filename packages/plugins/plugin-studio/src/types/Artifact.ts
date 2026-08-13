@@ -6,10 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type CapabilityManager } from '@dxos/app-framework';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
+import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 
 import * as StudioCapabilities from './StudioCapabilities';
 import * as Variant from './Variant';
@@ -57,10 +57,10 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
     derived: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--paint-brush--regular', hue: 'purple' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--paint-brush--regular', hue: 'indigo' }),
     // Offer "Connect" when the artifact's provider needs a credential. The connectorId is resolved
     // per-instance from the artifact's `kind` via the registered `GenerationService` providers.
-    ConnectorAuthAnnotation.set({ connectorIds: resolveArtifactConnectorIds }),
+    ConnectorAnnotations.ConnectorAuthAnnotation.set({ connectorIds: resolveArtifactConnectorIds }),
   ),
 ) {}
 

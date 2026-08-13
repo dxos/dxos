@@ -1,6 +1,6 @@
 {
   "name": "@dxos/index-core",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Indexing core.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,9 +30,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
-    "@effect/experimental": "catalog:",
-    "@effect/platform": "catalog:",
-    "@effect/sql": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

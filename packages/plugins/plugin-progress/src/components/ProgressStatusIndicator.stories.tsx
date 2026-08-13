@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { ProgressPlugin } from '#plugin';

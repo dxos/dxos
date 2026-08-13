@@ -4,18 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { Credential, Operation, Trace } from '@dxos/compute';
 import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -196,7 +197,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
     return (
       <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
         {history.map((message, i) => (
-          <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
+          <div key={i} className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
             <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
             <div className='overflow-auto'>
               <MessageItem message={message} />

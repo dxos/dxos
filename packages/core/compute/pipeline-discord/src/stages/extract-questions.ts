@@ -63,7 +63,7 @@ const upsertAsker = (db: Database.Database, author: Type.User): Effect.Effect<vo
     const agent = yield* registry.resolve(identifiersForUser(author), labelForUser(author));
     yield* registry.setRef(agent.id, Obj.getURI(person).toString());
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       error instanceof StoreError
         ? Effect.fail(error)
         : Effect.fail(new StoreError({ message: 'Failed to upsert asker', cause: error })),

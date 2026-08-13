@@ -4,21 +4,20 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    running: Schema.Boolean,
-    showHints: Schema.Boolean,
-    showWelcome: Schema.Boolean,
-  }),
-);
+export const StateSchema = Schema.Struct({
+  running: Schema.Boolean,
+  showHints: Schema.Boolean,
+  showWelcome: Schema.Boolean,
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type State = Schema.Schema.Type<typeof StateSchema>;
 
-export const State = Capability.make<Atom.Writable<State>>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<State>>()(`${meta.profile.key}.capability.state`);

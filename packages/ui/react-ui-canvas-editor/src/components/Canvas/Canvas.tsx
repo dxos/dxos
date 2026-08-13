@@ -3,7 +3,7 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -31,7 +31,7 @@ import { rectContains } from '../../layout';
 import { type TestId } from '../defs';
 import { eventsNone, styles } from '../styles';
 import { Frame } from './Frame';
-import { getShapeBounds } from './Shape';
+import { getShapeBounds } from './shape-defs';
 import { Shapes } from './Shapes';
 
 /**

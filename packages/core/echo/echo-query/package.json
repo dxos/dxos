@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-query",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "ECHO queries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -45,8 +45,6 @@
     "@lezer/lr": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-generator": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@lezer/generator": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"

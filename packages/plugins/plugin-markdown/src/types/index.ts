@@ -1,8 +1,6 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
-
-export * from './types';
 
 export * as Markdown from './Markdown';
 export * as MarkdownCapabilities from './MarkdownCapabilities';

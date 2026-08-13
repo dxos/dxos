@@ -6,7 +6,7 @@
 
 import * as Option from 'effect/Option';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { type Space, isSpace } from '@dxos/client/echo';
 
 /**

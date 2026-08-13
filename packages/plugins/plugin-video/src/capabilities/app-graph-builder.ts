@@ -5,19 +5,19 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
-import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-
 // Import only the (lightweight) Video type directly — NOT via the `#types` barrel. The barrel also
 // evaluates `VideoOperation`, which pulls the `@dxos/ai` stack; importing that here would drag the
-// whole AI stack into early boot (this module activates on SetupAppGraph). The operations are
-// lazy-imported in the action handlers below, so `@dxos/ai` only loads when a menu item is invoked.
-import * as Video from '../types/Video';
+// whole AI stack into early boot (this module contributes `AppCapabilities.AppGraphBuilder`). The
+// operations are lazy-imported in the action handlers below, so `@dxos/ai` only loads when a menu
+// item is invoked.
+import { Video } from '#types';
 
 /**
  * Contributes the video operations to a Video object's app-graph node, so they appear in the
@@ -79,6 +79,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension]);
   }),
 );

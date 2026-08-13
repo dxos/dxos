@@ -7,8 +7,9 @@ import React, { type ReactNode, useState } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
+import { translations } from '#translations';
+
 import { withTheme } from '../../testing';
-import { translations } from '../../translations';
 import { Tooltip } from '../Tooltip';
 import { Button } from './Button';
 import { IconButton, type IconButtonProps } from './IconButton';
@@ -26,18 +27,17 @@ const DefaultStory = (props: IconButtonProps) => {
   );
 };
 
-const densities: Density[] = ['lg', 'md', 'sm', 'xs'];
+const densities: Density[] = ['lg', 'md', 'sm'];
 const densityIconSize: Record<Density, IconButtonProps['size']> = {
   lg: 5,
   md: 4,
   sm: 4,
-  xs: 4,
 };
 
 const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
   return (
     <Tooltip.Provider>
-      <div className='grid grid-cols-[auto_1fr_1fr_1fr] gap-4 items-center'>
+      <div className='grid grid-cols-[auto_1fr_1fr] gap-4 items-center'>
         <div />
         <div className='text-xs text-subdued uppercase'>iconOnly</div>
         <div className='text-xs text-subdued uppercase'>label + icon</div>

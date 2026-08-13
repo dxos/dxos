@@ -22,9 +22,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -47,9 +44,6 @@
     },
     {
       "path": "../plugin-assistant"
-    },
-    {
-      "path": "../plugin-testing"
     }
   ]
 }

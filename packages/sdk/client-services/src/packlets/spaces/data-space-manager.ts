@@ -96,10 +96,10 @@ export type SigningContextProvider = () => SigningContext;
 /**
  * Effect service tag for {@link SigningContextProvider}.
  */
-export class SigningContextProviderService extends EffectContext.Tag('@dxos/client-services/SigningContextProvider')<
+export class SigningContextProviderService extends EffectContext.Service<
   SigningContextProviderService,
   SigningContextProvider
->() {}
+>()('@dxos/client-services/SigningContextProvider') {}
 
 /**
  * Builds a {@link SigningContextProvider} from an identity resolver.
@@ -828,10 +828,9 @@ export class DataSpaceManager extends Resource {
   }
 }
 
-export class DataSpaceManagerService extends EffectContext.Tag('@dxos/client-services/DataSpaceManager')<
-  DataSpaceManagerService,
-  DataSpaceManager
->() {}
+export class DataSpaceManagerService extends EffectContext.Service<DataSpaceManagerService, DataSpaceManager>()(
+  '@dxos/client-services/DataSpaceManager',
+) {}
 
 export type DataSpaceManagerLayerOptions = Pick<DataSpaceManagerProps, 'runtimeProps' | 'edgeFeatures'>;
 

@@ -14,8 +14,8 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
 import { type URI } from '@dxos/keys';
 
 export const TypeInputOptions = Schema.Struct({
-  location: Schema.Array(Schema.Literal('database', 'runtime')),
-  kind: Schema.Array(Schema.Literal('hidden', 'user')),
+  location: Schema.Array(Schema.Literals(['database', 'runtime'])),
+  kind: Schema.Array(Schema.Literals(['hidden', 'user'])),
 });
 
 export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
@@ -23,7 +23,7 @@ export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
 /**
  * Used in forms to identify the field representing an object's type and determine which types are shown as options.
  */
-export const TypeInputOptionsAnnotationId = Symbol.for('@dxos/schema/annotation/TypeInputOptions');
+export const TypeInputOptionsAnnotationId = '@dxos/schema/annotation/TypeInputOptions';
 export const TypeInputOptionsAnnotation = createAnnotationHelper<TypeInputOptions>(TypeInputOptionsAnnotationId);
 
 /**

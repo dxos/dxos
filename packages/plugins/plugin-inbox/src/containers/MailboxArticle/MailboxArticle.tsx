@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -13,8 +14,9 @@ import {
   useOperationInvoker,
   useOptionalCapability,
 } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface, ProgressMeter, useAppGraph, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { type AppSurface, ProgressMeter, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -46,11 +48,10 @@ import {
 } from '#components';
 import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
 import { meta } from '#meta';
-import { InboxOperation } from '#types';
-import { InboxCapabilities, Mailbox, SystemTags } from '#types';
+import { createSyncProgressKey } from '#sync';
+import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { createSyncProgressKey } from '../../operations/mail/mail-sync';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
 import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
@@ -89,8 +90,14 @@ export const MailboxArticle = ({
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Gmail sync registers a monitor keyed by the mailbox URI (`#sync`); show it in the statusbar.
-  const progress = useProgress(createSyncProgressKey(mailbox));
+  // Gmail sync (`#sync`), the process pipeline (`#process`) and the enrichment cascade (`#enrich`)
+  // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
+  // first — it is the one that changes what the list contains rather than what is known about it.
+  const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
+  const processProgress = useProgressMonitor(InboxOperation.createProcessProgressKey(mailbox));
+  const enrichProgress = useProgressMonitor(InboxOperation.createEnrichProgressKey(mailbox));
+  const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
+  const progress = [syncProgress, processProgress, enrichProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
@@ -228,16 +235,20 @@ export const MailboxArticle = ({
   }, [filterProp, builder]);
 
   const handleNavigate = useCallback(
-    (messageId: string) => {
+    (messageId: string, newPlank = false) => {
       const message = messages.find((m) => m.id === messageId);
       if (!message || !db) {
         return;
       }
       // Open the message's conversation as its own plank beside the mailbox (add), never a companion.
       // The conversation node lives under this mailbox view; `MessageArticle` renders the whole thread.
+      // Ordinarily `level` names the rung in the mailbox's declared chain, so reading down the mailbox
+      // reuses one plank; meta/ctrl click asks for a plank of its own, so it opens without a level and
+      // keeps whatever is already there.
       void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
       void invokePromise(LayoutOperation.Open, {
         subject: [`${id}/${message.id}`],
+        ...(newPlank ? {} : { root: id, level: 'message' }),
         pivotId: id,
         disposition: 'add',
         navigation: 'immediate',
@@ -259,7 +270,7 @@ export const MailboxArticle = ({
           const message = messages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
-          handleNavigate(message.id);
+          handleNavigate(message.id, action.type === 'current' && action.newPlank);
           break;
         }
 
@@ -373,7 +384,9 @@ export const MailboxArticle = ({
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
           <Panel.Toolbar asChild>
-            <Menu.Toolbar />
+            <Menu.Toolbar>
+              <Menu.Items />
+            </Menu.Toolbar>
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>

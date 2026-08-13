@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
-import type * as SqlClient from '@effect/sql/SqlClient';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as EffectRuntime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Event, synchronized } from '@dxos/async';
 import {
@@ -32,7 +32,6 @@ import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platfor
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { isBun } from '@dxos/util';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
   new Promise((resolve) => {
@@ -91,19 +90,15 @@ const setupNetworking = async (
 
   const signals = config.get('runtime.services.signaling');
   const edgeFeatures = config.get('runtime.client.edgeFeatures');
+  const iceProviders = config.get('runtime.services.iceProviders');
+  const iceProvider = iceProviders && createIceProvider(iceProviders);
   if (signals || edgeFeatures?.signaling) {
     const {
       // EdgeSignalManager needs an EdgeConnection and is created in the services host; without edge
       // signaling fall back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
       signalManager = edgeFeatures?.signaling ? undefined : new MemorySignalManager(new MemorySignalManagerContext()),
-      // TODO(wittjosiah): P2P networking causes seg fault in bun currently.
-      transportFactory = isBun()
-        ? MemoryTransportFactory
-        : createRtcTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders') &&
-              createIceProvider(config.get('runtime.services.iceProviders')!),
-          ),
+      // node-datachannel supports bun and node alike, so both use the RTC transport.
+      transportFactory = createRtcTransportFactory({ iceServers: config.get('runtime.services.ice') }, iceProvider),
     } = options;
 
     return {
@@ -143,7 +138,7 @@ export class LocalClientServices implements ClientServicesProvider {
   };
 
   private _isOpen = false;
-  private _serviceScope?: Scope.CloseableScope;
+  private _serviceScope?: Scope.Closeable;
   private _rpc?: ClientServicesRpc;
   private _services?: Partial<ClientServices>;
 
@@ -250,7 +245,7 @@ export class LocalClientServices implements ClientServicesProvider {
 
     this._host = new ClientServicesHost({
       ...this._params,
-      runtime: this._runtime.runtimeEffect,
+      runtime: this._runtime.contextEffect,
       callbacks: {
         ...this._params.callbacks,
         onReset: async () => {
@@ -267,9 +262,9 @@ export class LocalClientServices implements ClientServicesProvider {
     // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
     this._serviceScope = Effect.runSync(Scope.make());
     this._rpc = await EffectEx.runPromise(
-      makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.extend(this._serviceScope)),
+      makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.provide(this._serviceScope)),
     );
-    this._services = makeServicesFromRpc(this._rpc, EffectRuntime.defaultRuntime);
+    this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
 
     setIdentityTags({
       identityService: this._rpc,

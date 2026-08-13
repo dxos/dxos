@@ -10,7 +10,6 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AiContext } from '@dxos/assistant';
-import { McpServer, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
   AgentService,
@@ -19,6 +18,9 @@ import {
   type Session,
   getSession,
 } from '@dxos/compute/AgentService';
+import * as McpServer from '@dxos/compute/McpServer';
+import * as Process from '@dxos/compute/Process';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EID } from '@dxos/keys';
@@ -56,7 +58,7 @@ export const createSession: (
   );
 
   const feed = yield* Database.add(Feed.make());
-  const runtime = yield* Effect.runtime<Database.Service>();
+  const runtime = yield* Effect.context<Database.Service>();
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
 
   yield* Effect.promise(() =>
@@ -142,7 +144,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
           yield* agent
             .hydrate(executable)
             .pipe(
-              Effect.catchAllCause((cause) =>
+              Effect.catchCause((cause) =>
                 Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
               ),
             );
@@ -244,13 +246,13 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
   feed,
   getContext: () =>
     Effect.gen(function* () {
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       return binder.getObjects().map((object) => Ref.make(object));
     }).pipe(Effect.scoped),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       yield* Effect.promise(() =>
         binder.bind({

@@ -2,6 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const StudioOperationHandlerSet = OperationHandlerSet.lazy(() => import('./generate'));
+import { StudioOperation } from '#types';
+
+export const StudioOperationHandlerSet = OperationHandlerSet.lazy([
+  StudioOperation.Generate.pipe(Operation.lazyHandler(() => import('./generate'))),
+]);

@@ -5,12 +5,12 @@
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Operation } from '@dxos/compute';
 import { type CellScalarValue, addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
 import { TestBuilder, testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { Sheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '#types';
+import { Sheet, SheetUtil } from '#types';
 
 import { SheetModel } from './sheet-model';
 import { createTestGrid } from './testing';
@@ -109,8 +109,8 @@ describe('SheetModel', () => {
       expect(isFormula(text)).to.be.true;
       expect(isFormula(raw)).to.be.true;
       expect(typeof value).to.eq('number');
-      expect(mapFormulaRefsToIndices(sheet, text as string)).to.eq(raw);
-      expect(mapFormulaIndicesToRefs(sheet, raw as string)).to.eq(text);
+      expect(SheetUtil.mapFormulaRefsToIndices(sheet, text as string)).to.eq(raw);
+      expect(SheetUtil.mapFormulaIndicesToRefs(sheet, raw as string)).to.eq(text);
     }
   });
 });

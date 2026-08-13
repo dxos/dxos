@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { FormLayoutAnnotation, FormOrderedAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
@@ -19,43 +20,44 @@ import { Form } from '../../../Form';
 // array of `Column`-like structs. The array is the field we render as either a
 // static or an ordered (drag-to-reorder) list.
 const Column = Schema.Struct({
-  name: Schema.String.annotations({ title: 'Name' }),
-  value: Schema.optional(Schema.Number.annotations({ title: 'Value' })),
-}).pipe(
-  Schema.mutable,
-  LabelAnnotation.set(['name']),
-  FormLayoutAnnotation.set({
-    default: trim`
+  name: Schema.String.annotate({ title: 'Name' }),
+  value: Schema.optional(Schema.Number.annotate({ title: 'Value' })),
+})
+  .mapFields(Struct.map(Schema.mutableKey))
+  .pipe(
+    LabelAnnotation.set(['name']),
+    FormLayoutAnnotation.set({
+      default: trim`
       <grid cols="2">
         <field name="name"/>
         <field name="value"/>
       </grid>
     `,
-  }),
-);
+    }),
+  );
 type Column = Schema.Schema.Type<typeof Column>;
 
-const columnsField = Schema.Array(Column).pipe(Schema.mutable, Schema.annotations({ title: 'Columns' }));
+const columnsField = Schema.Array(Column).pipe(Schema.mutable, Schema.annotate({ title: 'Columns' }));
 
 const headerFields = {
-  name: Schema.String.pipe(Schema.annotations({ title: 'Name' }), Schema.optional),
-  description: Schema.String.pipe(Schema.annotations({ title: 'Description' }), Schema.optional),
+  name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Schema.optional),
+  description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
 };
 
 const Pipeline = Schema.Struct({
   ...headerFields,
   columns: columnsField,
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 const OrderedPipeline = Schema.Struct({
   ...headerFields,
   columns: columnsField.pipe(FormOrderedAnnotation.set(true)),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 const StringPipeline = Schema.Struct({
   ...headerFields,
   columns: Schema.Array(Schema.String).pipe(FormOrderedAnnotation.set(true)),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 type PipelineValues = { name?: string; description?: string; columns: readonly unknown[] };
 
@@ -73,7 +75,7 @@ const stringColumns: PipelineValues = {
   columns: ['Contacts', 'Organizations', 'Tasks', 'Messages'],
 };
 
-const DefaultStory = ({ schema, values: initial }: { schema: Schema.Schema<any>; values: PipelineValues }) => {
+const DefaultStory = ({ schema, values: initial }: { schema: Schema.Codec<any, any>; values: PipelineValues }) => {
   const [values, setValues] = useState<PipelineValues>(initial);
 
   return (

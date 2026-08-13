@@ -7,8 +7,11 @@ import * as Effect from 'effect/Effect';
 import { expect } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Instructions, Operation, OperationHandlerSet, Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Text } from '@dxos/schema';
@@ -25,7 +28,7 @@ const TestLayer = AssistantTestLayer({
 // Control-plane only: the qualify:false path needs no LLM turn, so it runs ungated in CI.
 // Qualification itself (cheap-model relevance) is covered by the memoized agent-skill suite.
 describe('Agent relay (control plane)', () => {
-  it.scoped(
+  it.effect(
     'forwards onto the durable session for the chat feed',
     Effect.fnUntraced(
       function* (_) {

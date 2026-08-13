@@ -3,7 +3,6 @@
 //
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import { createContext } from '@radix-ui/react-context';
 import React, {
   Children,
   type KeyboardEvent,
@@ -20,11 +19,13 @@ import React, {
 
 import { mx } from '@dxos/ui-theme';
 
+import { translationKey } from '#translations';
+
 import { useTranslation } from '../../primitives';
-import { translationKey } from '../../translations';
 import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
 import { type MediaKind, MediaPlayer } from '../MediaPlayer';
+import { CarouselProvider, useCarousel } from './CarouselContext';
 
 // TODO(burdon): Controller.
 
@@ -35,7 +36,7 @@ import { type MediaKind, MediaPlayer } from '../MediaPlayer';
 /** Slide change behaviour: `none` hard-swaps the active slide, `slide` animates a horizontal track. */
 export type CarouselTransition = 'none' | 'slide';
 
-type CarouselContextValue = {
+export type CarouselContextValue = {
   index: number;
   count: number;
   transition: CarouselTransition;
@@ -55,13 +56,6 @@ type CarouselContextValue = {
   next: () => void;
   prev: () => void;
 };
-
-const CAROUSEL_NAME = 'Carousel';
-
-const [CarouselProvider, useCarouselContext] = createContext<CarouselContextValue>(CAROUSEL_NAME);
-
-/** Returns the current carousel state. Must be used within {@link Carousel.Root}. */
-export const useCarousel = (): CarouselContextValue => useCarouselContext('useCarousel');
 
 //
 // Root
@@ -347,8 +341,8 @@ const CarouselSlide = ({
     <div
       className={mx(
         transition === 'slide'
-          ? 'relative shrink-0 basis-full h-full bg-baseSurface'
-          : 'absolute inset-0 w-full h-full bg-baseSurface',
+          ? 'relative shrink-0 basis-full h-full dx-base-surface'
+          : 'absolute inset-0 w-full h-full dx-base-surface',
         classNames,
       )}
     >

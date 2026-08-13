@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import { Icon, IconButton, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
@@ -13,7 +15,17 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 
+import { useAccountUrl } from '../../hooks';
+
 export const MANAGE_CREDENTIALS_DIALOG = `${meta.profile.key}.ManageCredentialsDialog`;
+
+/** Icon per recovery kind, so a passkey is distinguishable from a recovery code at a glance. */
+const KIND_ICONS: Record<Identity.RecoveryKind, string> = {
+  'passkey': 'ph--key--regular',
+  'recovery-code': 'ph--receipt--regular',
+  'oauth': 'ph--user-circle--regular',
+  'unknown': 'ph--question--regular',
+};
 
 export const RecoveryCredentialsContainer = () => {
   const { t } = useTranslation(meta.profile.key);
@@ -21,6 +33,29 @@ export const RecoveryCredentialsContainer = () => {
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(
     (credential) => credential.type === 'dxos.halo.credentials.IdentityRecovery',
+  );
+  const activeCount = recoveryCredentials.filter((credential) => !credential.recovery?.revoked).length;
+  const [revokeError, setRevokeError] = useState<string | null>(null);
+
+  // The account page is where a revocation can also be confirmed with a fresh passkey assertion.
+  const { openAccountPage } = useAccountUrl();
+
+  const handleRevoke = useCallback(
+    (lookupKey: string) => {
+      // Revoking is not undoable and the passkey survives in the authenticator, so say both before
+      // writing anything.
+      if (!window.confirm(t('revoke-credential-confirm.message'))) {
+        return;
+      }
+      setRevokeError(null);
+      // Surfaced rather than rethrown: `onClick` does not await, so an escaping rejection would only
+      // reach the console and the row would silently stay.
+      void invokePromise(ClientOperation.RevokeRecoveryCredential, { lookupKey }).catch((error) => {
+        log.warn('failed to revoke recovery credential', { error });
+        setRevokeError(t('revoke-failed.message'));
+      });
+    },
+    [invokePromise, t],
   );
 
   return (
@@ -48,20 +83,68 @@ export const RecoveryCredentialsContainer = () => {
           <Form.Section title={t('credentials-list.label')}>
             {recoveryCredentials.length < 1 ? (
               <Message.Root valence='error'>
-                <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
-                <Message.Content>{t('no-credentials.message')}</Message.Content>
+                <Message.Content>
+                  <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
+                  <Message.Body>{t('no-credentials.message')}</Message.Body>
+                </Message.Content>
               </Message.Root>
             ) : (
               <Listbox.Root>
                 <Listbox.Content classNames='gap-1'>
-                  {recoveryCredentials.map((credential, index) => (
-                    <Listbox.Item key={credential.id ?? index} id={credential.id ?? `${index}`} classNames='gap-2'>
-                      <Icon icon='ph--key--regular' />
-                      <Listbox.ItemLabel>{credential.issuanceDate?.toLocaleString()}</Listbox.ItemLabel>
-                    </Listbox.Item>
-                  ))}
+                  {recoveryCredentials.map((credential, index) => {
+                    const { lookupKey, label, kind = 'unknown', revoked } = credential.recovery ?? { revoked: false };
+                    return (
+                      <Listbox.Item key={credential.id ?? index} id={credential.id ?? `${index}`} classNames='gap-2'>
+                        <Icon icon={KIND_ICONS[kind]} />
+                        <Listbox.ItemLabel classNames={revoked ? 'text-subdued line-through' : undefined}>
+                          {label ?? t(`recovery-kind-${kind}.label`)}
+                        </Listbox.ItemLabel>
+                        <span className='text-description text-sm'>{credential.issuanceDate?.toLocaleString()}</span>
+                        {revoked ? (
+                          <span className='text-subdued text-sm'>{t('credential-revoked.label')}</span>
+                        ) : (
+                          // Withheld on the last one: revoking it would leave no way to recover the
+                          // identity, and there is no self-service way back.
+                          lookupKey &&
+                          activeCount > 1 && (
+                            <IconButton
+                              iconOnly
+                              label={t('revoke-credential.label')}
+                              icon='ph--trash--regular'
+                              variant='ghost'
+                              onClick={() => handleRevoke(lookupKey)}
+                            />
+                          )
+                        )}
+                      </Listbox.Item>
+                    );
+                  })}
                 </Listbox.Content>
               </Listbox.Root>
+            )}
+            {revokeError && (
+              <Message.Root valence='error'>
+                <Message.Content>
+                  <Message.Body>{revokeError}</Message.Body>
+                </Message.Content>
+              </Message.Root>
+            )}
+            {activeCount === 1 && (
+              <Message.Root valence='warning'>
+                <Message.Content>
+                  <Message.Body>{t('last-credential.message')}</Message.Body>
+                </Message.Content>
+              </Message.Root>
+            )}
+            {recoveryCredentials.length > 0 && (
+              <Form.Row label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
+                <IconButton
+                  label={t('manage-passkeys.label')}
+                  icon='ph--arrow-square-out--regular'
+                  variant='default'
+                  onClick={openAccountPage}
+                />
+              </Form.Row>
             )}
           </Form.Section>
         </Form.Content>

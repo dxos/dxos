@@ -2,32 +2,43 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import { createContext } from '@radix-ui/react-context';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
-import { type Capabilities } from '@dxos/app-framework';
-import { type Graph } from '@dxos/app-graph';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as Graph from '@dxos/app-graph/Graph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
-import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Card,
+  Icon,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
+import { Html, emailDialect } from '@dxos/react-ui-components';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
-import { useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
+import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
-import { Mailbox, SystemTags } from '#types';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
-import { createDraftMessage, getMessageProps } from '../../util';
+import { createDraftMessage, formatAge, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
-import { HtmlViewer } from '../HtmlViewer';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
+import { keyOf } from './key-of';
 import { ExtractorMenuItem } from './useExtractorActions';
 import { useMessageExtractedObjects } from './useMessageExtractedObjects';
 import { useMessageActions } from './useToolbar';
@@ -36,11 +47,7 @@ import { useMessageActions } from './useToolbar';
 // Types
 //
 
-type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
-
-/** Stable id for a message or unresolved ref, keying tiles and collapse state. */
-export const keyOf = (message: MessageOrRef): string =>
-  Ref.isRef(message) ? String(message.uri) : Obj.getURI(message);
+export type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
 
 /**
  * Reactive view options for a rendered message (body render mode + image loading). Passed in as a
@@ -106,8 +113,14 @@ type ConversationStackContextValue = {
   graph?: Graph.ReadableGraph;
   /** Process-manager runtime for draft send / composer AI (container-resolved). */
   runtime?: Capabilities.ProcessManagerRuntime;
+  /** Send operation per installed mail provider, keyed by connector id (container-resolved). */
+  sendOperations?: readonly InboxCapabilities.MailSendOperation[];
   /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
   getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
+  /** Derived summaries keyed by message id (container-resolved from the mailbox's annotation feed). */
+  summaries?: ReadonlyMap<string, string>;
+  /** Summary of the conversation as a whole, rendered as the last tile in the stack. */
+  conversationSummary?: Mailbox.ConversationSummary;
   onExpandedChange?: (id: string, expanded: boolean) => void;
   /** Folds every message (thread toolbar only). */
   onCollapseAll?: () => void;
@@ -136,7 +149,10 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'expanded'
     | 'graph'
     | 'runtime'
+    | 'sendOperations'
     | 'getExtractActions'
+    | 'summaries'
+    | 'conversationSummary'
     | 'onExpandedChange'
     | 'onCollapseAll'
     | 'onExpandAll'
@@ -162,7 +178,10 @@ const ConversationStackRoot = ({
   options,
   graph,
   runtime,
+  sendOperations,
   getExtractActions,
+  summaries,
+  conversationSummary,
   onExpandedChange,
   onCollapseAll,
   onExpandAll,
@@ -187,7 +206,10 @@ const ConversationStackRoot = ({
     companion={companion}
     graph={graph}
     getExtractActions={getExtractActions}
+    summaries={summaries}
+    conversationSummary={conversationSummary}
     runtime={runtime}
+    sendOperations={sendOperations}
   >
     {children}
   </ConversationStackProvider>
@@ -211,7 +233,7 @@ export type ConversationStackContentProps = ThemedClassName<{ testId?: string }>
  */
 const ConversationStackContent = composable<HTMLDivElement, ConversationStackContentProps>(
   ({ testId, ...props }, forwardedRef) => {
-    const { items } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
+    const { items, conversationSummary } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
     const viewportRef = useRef<HTMLDivElement>(null);
 
     const tileItems = useMemo<ConversationTileData[]>(
@@ -240,11 +262,29 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
+      // Focus the reply's body editor (`.dx-expander` distinguishes it from the recipient editors,
+      // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
+      // editor appears, bounded by the same settle window as the scroll re-pinning below;
+      // `preventScroll` keeps the focus from cutting the smooth scroll short.
+      const focusBody = () => {
+        const content = tile.querySelector<HTMLElement>('.dx-expander .cm-content');
+        if (content) {
+          content.focus({ preventScroll: true });
+          focusObserver.disconnect();
+        }
+      };
+      const focusObserver = new MutationObserver(focusBody);
+      focusObserver.observe(tile, { childList: true, subtree: true });
+      focusBody();
       const observer = new ResizeObserver(scrollIntoView);
       observer.observe(tile);
-      const timeout = setTimeout(() => observer.disconnect(), 1_000);
+      const timeout = setTimeout(() => {
+        observer.disconnect();
+        focusObserver.disconnect();
+      }, 1_000);
       return () => {
         observer.disconnect();
+        focusObserver.disconnect();
         clearTimeout(timeout);
       };
     }, [tileItems]);
@@ -268,6 +308,9 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
               getId={getId}
               draggable={false}
             />
+            {/* Outside the stack: the summary describes the conversation, not a message, so it must not
+                be reorderable/selectable as a tile — but it shares the tile chrome and the document width. */}
+            {conversationSummary && <ConversationSummaryTile summary={conversationSummary} />}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
@@ -280,6 +323,17 @@ ConversationStackContent.displayName = CONVERSATION_STACK_CONTENT_NAME;
 //
 // Message Tile
 //
+
+/** Column template established by the tile; message parts subgrid into it. */
+const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
+
+/**
+ * Avatar footprint, which sets the width of column 1 — non-avatar tiles reserve the same gutter so
+ * their content aligns with the senders and bodies. `DxAvatar` renders `size * 4` px, matching `w-9`;
+ * `is-9` is not a real Tailwind utility (see the Slider regression guard).
+ */
+const MESSAGE_AVATAR_SIZE = 9;
+const MESSAGE_AVATAR_GUTTER = 'w-9';
 
 const MESSAGE_TILE_NAME = 'ConversationStack.MessageTile';
 
@@ -310,6 +364,66 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
 ConversationMessageTile.displayName = MESSAGE_TILE_NAME;
 
 //
+// Summary tile
+//
+
+const CONVERSATION_SUMMARY_TILE_NAME = 'ConversationStack.SummaryTile';
+
+type ConversationSummaryTileProps = {
+  summary: Mailbox.ConversationSummary;
+};
+
+/**
+ * Display form of a model id: `com.anthropic.model.claude-haiku-4-5.default` reads as
+ * `claude-haiku-4-5`. The full id is the reproducible one, so it stays as the title attribute.
+ */
+const modelLabel = (model: string): string => model.replace(/^.*\.model\./, '').replace(/\.default$/, '');
+
+/**
+ * The conversation's derived summary, as the last tile under the messages. Rendered as markdown: the
+ * summarization pipeline writes `text/markdown` blocks.
+ *
+ * The header carries the summary's provenance (model + when it was derived), which is what tells a
+ * reader whether it predates the newest replies — a summary is advisory, so it must be datable.
+ */
+const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  // Recomputed per render rather than ticked: the tile re-renders whenever the annotation feed does,
+  // and an age this coarse does not warrant a timer.
+  const age = formatAge(new Date(summary.created), new Date());
+  return (
+    <div
+      role='complementary'
+      aria-label={t('conversation-summary.title')}
+      // Same column template and gutter width as a message tile, so the heading and text line up with
+      // the senders and bodies above rather than starting at the tile edge.
+      className={mx(
+        'dx-document dx-attention-surface border border-subdued-separator rounded overflow-hidden mbs-2',
+        MESSAGE_TILE_COLUMNS,
+      )}
+      data-testid='conversation.summary'
+    >
+      <div className='p-2'>
+        <div className={mx('flex items-center justify-center', MESSAGE_AVATAR_GUTTER)}>
+          <Icon icon='ph--text-align-left--regular' size={5} classNames='text-subdued' />
+        </div>
+      </div>
+      <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
+        <div className='flex items-baseline gap-2 text-sm text-description'>
+          <h2 className='font-medium'>{t('conversation-summary.title')}</h2>
+          <span className='text-subdued truncate' title={summary.model} data-testid='conversation.summary.provenance'>
+            {summary.model ? t('summary-provenance.label', { model: modelLabel(summary.model), age }) : age}
+          </span>
+        </div>
+        <MarkdownViewer content={summary.summary} />
+      </div>
+    </div>
+  );
+};
+
+ConversationSummaryTile.displayName = CONVERSATION_SUMMARY_TILE_NAME;
+
+//
 // Message (read tile)
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
@@ -319,9 +433,6 @@ ConversationMessageTile.displayName = MESSAGE_TILE_NAME;
 //
 
 const MESSAGE_TILE_COLUMNS_NAME = 'ConversationStack.MessageTile.Columns';
-
-/** Column template established by the tile; message parts subgrid into it. */
-const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
 
 type MessageTileProps = {
   id: string;
@@ -341,6 +452,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     companion,
     graph,
     getExtractActions,
+    summaries,
     onAiReply,
     onDelete,
     onOpen,
@@ -368,6 +480,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
 
   const { from, to, date, snippet, subject } = getMessageProps(target);
   const sender = from ?? target.sender?.email ?? '';
+  // Derived by the summarization pipeline; absent for most messages, which is the normal case —
+  // collapsed tiles fall back to the provider's snippet rather than showing an empty affordance.
+  const summary = summaries?.get(target.id);
 
   // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
   return (
@@ -375,14 +490,28 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
       <div className='col-span-full grid grid-cols-subgrid items-start'>
         {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
         <div className='p-2'>
-          <Avatar actor={target.sender} name={sender} size={9} />
+          <Avatar actor={target.sender} name={sender} size={MESSAGE_AVATAR_SIZE} />
         </div>
 
         <div className='col-start-2 flex flex-col py-1'>
           <h2
-            className='text-lg line-clamp-2 min-w-0 cursor-pointer'
-            data-testid={isExpanded ? undefined : 'message.expand'}
-            onClick={() => onExpandedChange?.(id, !isExpanded)}
+            className={mx('text-lg line-clamp-2 min-w-0', onExpandedChange && 'cursor-pointer')}
+            data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
+            // Focusable and key-activated only when it actually toggles, so a single-message
+            // conversation doesn't put a dead tab stop in the reading order.
+            role={onExpandedChange && 'button'}
+            tabIndex={onExpandedChange && 0}
+            aria-expanded={onExpandedChange && isExpanded}
+            onClick={onExpandedChange && (() => onExpandedChange(id, !isExpanded))}
+            onKeyDown={
+              onExpandedChange &&
+              ((event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onExpandedChange(id, !isExpanded);
+                }
+              })
+            }
           >
             {sender}
           </h2>
@@ -392,7 +521,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
               {to && <div className='text-sm text-description'>{to}</div>}
             </>
           ) : (
-            <div className='text-sm text-description line-clamp-1'>{snippet}</div>
+            <div className='text-sm text-description line-clamp-1' data-testid={summary && 'message.summary'}>
+              {summary ?? snippet}
+            </div>
           )}
         </div>
 
@@ -415,7 +546,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
         <div className='col-span-full grid grid-cols-subgrid items-start'>
           {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
           <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
-          <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pe-3'>
+          <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pb-1'>
+            {/* The summary is not repeated here: an expanded message shows its body, and the
+                conversation's summary is the last tile in the stack. */}
             <MessageBody message={message} mailbox={mailbox} options={options} />
           </div>
         </div>
@@ -538,16 +671,7 @@ type MessageBodyProps = {
 const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
   const { viewMode, loadRemoteImages = false } = useAtomValue(options);
 
-  // Person-to-person mail carries a provider "personal" tag (e.g. Gmail's "Personal" category,
-  // persisted into the mailbox tag index during label sync); used to decide how aggressively the
-  // HTML view restyles the body.
   const db = Obj.getDatabase(mailbox ?? message);
-  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('personal')]))[0];
-  const isPersonal = useMemo(
-    () =>
-      !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),
-    [mailbox, message, personalTag],
-  );
 
   // Content blocks are typed by mimeType: `text/html` (raw email HTML), `text/markdown` (an authored
   // markdown rendering), `text/plain` or untyped (plaintext). The markdown view prefers an authored
@@ -560,18 +684,14 @@ const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
     return { html: htmlText, markdown: markdownBlock ?? (htmlText ? normalizeText(htmlText) : plainText) };
   }, [message.blocks]);
 
+  // Unconditional: the markdown fallback below is a conditional *return*, not a conditional hook call.
+  const resolveSrc = useCidResolver(message.attachments, db);
+
   // The HTML view needs an html block; without one (e.g. a markdown-only body) fall through to the
-  // markdown renderer.
+  // markdown renderer. The dialect is built inline — `Html` keys rebuilds on `dialect.key`, so it
+  // needs no memoization.
   if (viewMode === 'html' && html) {
-    return (
-      <HtmlViewer
-        html={html}
-        loadRemoteImages={loadRemoteImages}
-        isPersonal={isPersonal}
-        attachments={message.attachments}
-        db={db}
-      />
-    );
+    return <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect({ resolveSrc })} />;
   }
 
   return <MarkdownViewer content={markdown} markdown={viewMode !== 'plain'} loadRemoteImages={loadRemoteImages} />;
@@ -593,7 +713,9 @@ type MessageMenuProps = {
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
   <Menu.Root {...(actions ?? {})} attendableId={attendableId} alwaysActive>
-    <Menu.Toolbar classNames='p-1 bg-transparent' />
+    <Menu.Toolbar classNames='p-1 bg-transparent'>
+      <Menu.Items />
+    </Menu.Toolbar>
   </Menu.Root>
 );
 
@@ -671,12 +793,12 @@ type DraftTileProps = {
  */
 const DraftTile = ({ id, message }: DraftTileProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { mailbox, runtime, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
+  const { mailbox, runtime, sendOperations, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
   const db = Obj.getDatabase(mailbox ? mailbox : message);
   const live = useQuery(db, Filter.id(message.id))[0];
   const draft = live ?? message;
   const extensions = useEmailComposerExtensions(runtime, draft);
-  const onSend = useSendEmail(runtime, draft);
+  const onSend = useSendEmail(runtime, draft, sendOperations);
 
   // Sent once the draft carries the provider sent tag `useSendEmail` recorded on it (`sentTagUri`).
   // Read membership reactively from the tag index: the tag-uri list re-fires the instant the tag is
@@ -805,7 +927,9 @@ const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToo
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 });

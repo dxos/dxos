@@ -14,7 +14,7 @@ import { Menu, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilde
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';
-import type { Score, Sequence, Track } from '#types';
+import { Score, Sequence, Track } from '#types';
 
 import { ScorePlayer } from '../../audio';
 import { type LeadSheetDocument, formatLeadSheet, parseLeadSheet } from '../../util/lead-sheet';
@@ -449,6 +449,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Toolbar asChild>
           <Menu.Toolbar>
+            <Menu.Items />
             <Input.Root>
               <Input.Label classNames='text-xs mr-1'>BPM</Input.Label>
               <Input.TextInput

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
@@ -16,7 +16,7 @@ const JUDGE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 const JudgeVerdict = Schema.Struct({
   pass: Schema.Boolean,
-  reasoning: Schema.String.annotations({ description: 'One sentence explaining the verdict.' }),
+  reasoning: Schema.String.annotate({ description: 'One sentence explaining the verdict.' }),
 });
 
 export interface JudgeVerdict extends Schema.Schema.Type<typeof JudgeVerdict> {}

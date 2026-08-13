@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -16,9 +15,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Ibkr } from '#types';
 
 import { TRADINGVIEW_SOURCE } from '../../constants';
-import { Ibkr } from '../../types';
 import { InstrumentArticle } from './InstrumentArticle';
 
 // Fictional instrument only — this is a public repo (never real holdings). IbkrPlugin is intentionally
@@ -40,10 +39,9 @@ const meta = {
   decorators: [
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Ibkr.Instrument],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

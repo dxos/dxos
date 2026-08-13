@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DXN, Entity, Format, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
@@ -28,8 +27,8 @@ const textFilter = (text?: string) => {
     const schema = Type.getSchema(item);
     let match = false;
     match ||= !!Type.getURI(item)?.toString().match(matcher);
-    match ||= !!SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrUndefined)?.match(matcher);
-    match ||= !!SchemaAST.getDescriptionAnnotation(schema.ast).pipe(Option.getOrUndefined)?.match(matcher);
+    match ||= !!SchemaAST.getTitleAnnotation(schema.ast)?.toString().match(matcher);
+    match ||= !!SchemaAST.getDescriptionAnnotation(schema.ast)?.toString().match(matcher);
     return match;
   };
 };
@@ -147,7 +146,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
               className={mx(
                 'h-(--dx-statusbar-size)',
                 'flex shrink-0 justify-end items-center gap-2',
-                'bg-base-surface text-description',
+                'dx-base-surface text-description',
               )}
             >
               <div className='text-sm pe-2'>Objects: {dataRows.length}</div>

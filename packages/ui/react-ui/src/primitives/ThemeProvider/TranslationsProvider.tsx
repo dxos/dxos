@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Locale, enUS as dtLocaleEnUs } from 'date-fns/locale';
-import React, { type ReactNode, Suspense, createContext, useContext, useEffect, useState } from 'react';
-import { I18nextProvider, useTranslation as useI18NextTranslation } from 'react-i18next';
+import { type Locale } from 'date-fns';
+import React, { type ReactNode, Suspense, useEffect, useState } from 'react';
+import { I18nextProvider } from 'react-i18next';
 
 import { type Resource, addResources, i18n } from '@dxos/i18n';
 
-const initialNs = 'dxos-common';
-const initialDtLocale = dtLocaleEnUs;
+import { TranslationsContext, initialDtLocale, initialNs } from './TranslationsContext';
 
 export interface TranslationsProviderProps {
   children?: ReactNode;
@@ -20,17 +19,6 @@ export interface TranslationsProviderProps {
   appNs?: string;
   dtLocale?: Locale;
 }
-
-export const TranslationsContext = createContext({
-  appNs: initialNs,
-  dtLocale: initialDtLocale,
-});
-
-export const useTranslation = (...args: Parameters<typeof useI18NextTranslation>) => {
-  const result = useI18NextTranslation(...args);
-  const { dtLocale } = useContext(TranslationsContext);
-  return { ...result, dtLocale };
-};
 
 export const TranslationsProvider = ({
   fallback,

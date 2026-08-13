@@ -7,7 +7,7 @@ import React, { type Dispatch, type SetStateAction, useMemo, useState } from 're
 import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -30,7 +30,7 @@ import {
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
+import { SpaceOperation } from '#types';
 
 // TODO(wittjosiah): Copied from Shell.
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';

@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import type * as RpcServer from '@effect/rpc/RpcServer';
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Context_ from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Trigger } from '@dxos/async';
 import { type Config } from '@dxos/config';
@@ -35,8 +35,8 @@ import { WorkerSession } from './worker-session';
 // serves the client services (+ WorkerService); systemProtocol carries the reverse-direction
 // BridgeService (worker→tab).
 export type CreateSessionProps = {
-  appProtocol: RpcServer.Protocol['Type'];
-  systemProtocol: RpcClient.Protocol['Type'];
+  appProtocol: RpcServer.Protocol['Service'];
+  systemProtocol: RpcClient.Protocol['Service'];
   shellPort?: MessagePort;
   onClose?: () => Promise<void>;
 };
@@ -82,10 +82,9 @@ export interface WorkerRuntimeService {
 /**
  * Context tag for the dedicated-worker runtime service. Provided by {@link layerWorkerRuntime}.
  */
-export class WorkerRuntime extends Context_.Tag('@dxos/client-services/WorkerRuntime')<
-  WorkerRuntime,
-  WorkerRuntimeService
->() {}
+export class WorkerRuntime extends Context_.Service<WorkerRuntime, WorkerRuntimeService>()(
+  '@dxos/client-services/WorkerRuntime',
+) {}
 
 /**
  * Constructs the {@link WorkerRuntimeService}. The SQLite {@link ManagedRuntime} and
@@ -107,7 +106,7 @@ export const makeWorkerRuntime = ({
   let stopped = false;
   let sessionForNetworking: WorkerSession | undefined;
   let config: Config;
-  let serviceScope: Scope.CloseableScope | undefined;
+  let serviceScope: Scope.Closeable | undefined;
 
   if (sqliteLayer) {
     log.warn('Using testing SQLite layer');
@@ -147,7 +146,7 @@ export const makeWorkerRuntime = ({
         await EffectEx.runPromise(stop());
       },
     },
-    runtime: runtime.runtimeEffect,
+    runtime: runtime.contextEffect,
     runtimeProps: {
       // Auto-activate spaces that were previously active after leader changeover.
       autoActivateSpaces: true,

@@ -7,7 +7,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { TOOL_METADATA } from '@dxos/introspect-tools';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { ToolForm } from './ToolForm';
 
 const meta: Meta<typeof ToolForm> = {

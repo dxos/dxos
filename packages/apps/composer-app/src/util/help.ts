@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { sleep } from '@dxos/async';
-import { type Tour } from '@dxos/plugin-support';
+import type * as Tour from '@dxos/plugin-support/Tour';
 
 const ensureSidebar: Tour.Step['before'] = async (capabilities: CapabilityManager.CapabilityManager) => {
   const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
 /** Well-known local segment name (private — use the helpers below). */
 const PUBLICATIONS_SEGMENT = 'publications';

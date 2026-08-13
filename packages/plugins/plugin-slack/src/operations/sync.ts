@@ -2,26 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { Capability } from '@dxos/app-framework';
-import { LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
+import { SlackOperation } from '#types';
 
 import { SLACK_SOURCE } from '../constants';
 import { formatSlackSyncFailure } from '../errors';
 import { SlackApi } from '../services';
-import { SlackOperation } from '../types';
 
 type SlackConversation = SlackApi.SlackConversation;
 type SlackMessage = SlackApi.SlackMessage;
@@ -175,7 +176,7 @@ const resolveUsers = (
 ): Effect.Effect<
   Map<string, SlackApi.SlackUser>,
   never,
-  import('@effect/platform/HttpClient').HttpClient | SlackApi.SlackCredentials
+  import('effect/unstable/http/HttpClient').HttpClient | SlackApi.SlackCredentials
 > =>
   Effect.gen(function* () {
     const ids = new Set<string>();
@@ -190,7 +191,7 @@ const resolveUsers = (
       (id) =>
         SlackApi.fetchUser(id).pipe(
           Effect.tap((user) => Effect.sync(() => user && out.set(id, user))),
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error);
             return Effect.void;
           }),
@@ -212,7 +213,7 @@ const resolveBots = (
 ): Effect.Effect<
   Map<string, SlackApi.SlackBot>,
   never,
-  import('@effect/platform/HttpClient').HttpClient | SlackApi.SlackCredentials
+  import('effect/unstable/http/HttpClient').HttpClient | SlackApi.SlackCredentials
 > =>
   Effect.gen(function* () {
     const ids = new Set<string>();
@@ -227,7 +228,7 @@ const resolveBots = (
       (id) =>
         SlackApi.fetchBot(id).pipe(
           Effect.tap((bot) => Effect.sync(() => bot && out.set(id, bot))),
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error);
             return Effect.void;
           }),
@@ -282,7 +283,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
 
       const bindingId = EID.getEntityId(EID.tryParse(bindingRef.uri)!) ?? 'unknown';
 
-      const outcome = yield* Effect.either(
+      const outcome = yield* Effect.result(
         Effect.gen(function* () {
           const binding = yield* Database.load(bindingRef);
           if (!Cursor.isExternal(binding)) {
@@ -297,7 +298,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
 
           // Captured on the success path so the cursor's value + run status advance in one atomic update.
           let newestTs: string | undefined;
-          const syncResult = yield* Effect.either(
+          const syncResult = yield* Effect.result(
             Effect.gen(function* () {
               if (externalId === undefined) {
                 return { added: 0 } satisfies PullResult;
@@ -356,25 +357,25 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           );
 
           // Record per-binding sync status directly on the cursor (value + status in one atomic update).
-          if (syncResult._tag === 'Right') {
+          if (syncResult._tag === 'Success') {
             Cursor.advance(binding, newestTs);
           } else {
-            Cursor.recordError(binding, formatSlackSyncFailure(syncResult.left));
+            Cursor.recordError(binding, formatSlackSyncFailure(syncResult.failure));
           }
 
-          if (syncResult._tag === 'Left') {
-            log.warn('slack sync: binding failed', { error: syncResult.left });
-            return yield* Effect.fail(syncResult.left);
+          if (syncResult._tag === 'Failure') {
+            log.warn('slack sync: binding failed', { error: syncResult.failure });
+            return yield* Effect.fail(syncResult.failure);
           }
 
-          return { pulled: syncResult.right };
+          return { pulled: syncResult.success };
         }).pipe(
           Effect.provide(Database.layer(db)),
           Effect.provide(SlackApi.SlackCredentials.fromAccessToken(accessTokenRef)),
         ),
       );
 
-      if (outcome._tag === 'Right') {
+      if (outcome._tag === 'Success') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-success.${bindingId}`,
@@ -382,9 +383,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
             title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
-        return outcome.right;
+        return outcome.success;
       } else {
-        const message = formatSlackSyncFailure(outcome.left);
+        const message = formatSlackSyncFailure(outcome.failure);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-error.${bindingId}`,
@@ -393,7 +394,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
             description: message,
           }),
         );
-        return yield* Effect.fail(outcome.left);
+        return yield* Effect.fail(outcome.failure);
       }
     }, Effect.provide(FetchHttpClient.layer)),
   ),

@@ -3,5 +3,9 @@
   "include": [
     "**/*"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../plugins/plugin-chess"
+    }
+  ]
 }

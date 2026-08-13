@@ -2,10 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ExactEvmScheme, toClientEvmSigner } from '@x402/evm';
-import { wrapFetchWithPaymentFromConfig } from '@x402/fetch';
-import { type WalletClient, createPublicClient, createWalletClient, custom, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import type { WalletClient } from 'viem';
 
 import { type Client } from '@dxos/client';
 import { log } from '@dxos/log';
@@ -17,6 +14,16 @@ import { createEdgeAuthedFetch, getEdgeAuthHeader } from './edge-auth';
 //
 // Network is Base Sepolia testnet (CAIP-2 `eip155:84532`), testnet USDC, scheme `exact`.
 //
+
+/**
+ * viem plus its chain definitions is ~340 KB, and this module is reachable from the plugin's
+ * react-surface capability, so a static import made the EVM client resident for every user of the
+ * app rather than only those who open payments.
+ */
+const viem = () => Promise.all([import('viem'), import('viem/chains')]);
+
+/** The x402 client packages embed their own viem copy, so they load alongside it. */
+const x402 = () => Promise.all([import('@x402/evm'), import('@x402/fetch')]);
 
 /** CAIP-2 network id for the x402 v2 scheme registration. */
 export const PAYMENTS_NETWORK = 'eip155:84532' as const;
@@ -44,6 +51,7 @@ const UNRECOGNIZED_CHAIN_ERROR_CODE = 4902;
  * first if it isn't known. Idempotent when already on the right chain.
  */
 const ensureBaseSepolia = async (provider: Eip1193Provider): Promise<void> => {
+  const [, { baseSepolia }] = await viem();
   const chainId = `0x${baseSepolia.id.toString(16)}`;
   try {
     await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
@@ -84,6 +92,7 @@ const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `
     throw new Error('No account exposed by the injected wallet.');
   }
   await ensureBaseSepolia(provider);
+  const [{ createWalletClient, custom }, { baseSepolia }] = await viem();
   const walletClient = createWalletClient({ account: address, chain: baseSepolia, transport: custom(provider) });
   return { walletClient, address };
 };
@@ -94,10 +103,12 @@ const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `
  */
 const createPaidFetch = async (client: Client, baseUrl: string): Promise<typeof globalThis.fetch> => {
   const { walletClient, address } = await connectWallet();
+  const [{ createPublicClient, http }, { baseSepolia }] = await viem();
   const publicClient = createPublicClient({ chain: baseSepolia, transport: http() });
 
   // The x402 client signer needs `address` + `signTypedData`; `toClientEvmSigner` adds the public-client
   // read capability used for EIP-2612/allowance enrichment.
+  const [{ ExactEvmScheme, toClientEvmSigner }, { wrapFetchWithPaymentFromConfig }] = await x402();
   const signer = toClientEvmSigner(
     {
       address,

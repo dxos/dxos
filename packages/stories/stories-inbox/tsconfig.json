@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/fixtures"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -28,10 +31,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../core/compute/agent-runtime"
     },
     {
       "path": "../../core/compute/ai"
@@ -40,19 +43,13 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/compute-runtime"
-    },
-    {
       "path": "../../core/compute/extractor"
     },
     {
       "path": "../../core/compute/link"
     },
     {
-      "path": "../../core/compute/pipeline-email"
-    },
-    {
-      "path": "../../core/compute/pipeline-rdf"
+      "path": "../../core/compute/pipeline"
     },
     {
       "path": "../../core/echo/echo"
@@ -76,6 +73,9 @@
       "path": "../../plugins/plugin-connector"
     },
     {
+      "path": "../../plugins/plugin-crm"
+    },
+    {
       "path": "../../plugins/plugin-debug"
     },
     {
@@ -89,6 +89,9 @@
     },
     {
       "path": "../../plugins/plugin-progress"
+    },
+    {
+      "path": "../../plugins/plugin-projects"
     },
     {
       "path": "../../plugins/plugin-routine"
@@ -128,6 +131,9 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-debug"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

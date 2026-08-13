@@ -15,7 +15,8 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
@@ -24,7 +25,7 @@ import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
-import { MagazinePlugin } from '../../MagazinePlugin';
+import { MagazinePlugin } from '../../plugin';
 import { MagazineArticle } from './MagazineArticle';
 
 const DefaultStory = () => {
@@ -72,12 +73,12 @@ const buildMeta = (options: {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpace(options),
         }),
         SpacePlugin({}),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         MagazinePlugin(),
       ],
     }),
@@ -193,12 +194,12 @@ export const CurateFlow: Story = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpaceWithQueueItems,
         }),
         SpacePlugin({}),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         MagazinePlugin(),
       ],
     }),

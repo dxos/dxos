@@ -5,10 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { ClientService } from '@dxos/client';
-import { Credential, LayerSpec } from '@dxos/compute';
-import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Database } from '@dxos/echo';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
@@ -40,7 +42,7 @@ const ClientLayerSpec = LayerSpec.make(
     provides: [ClientService],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         const client = yield* Capability.get(ClientCapabilities.Client);
         return ClientService.fromClient(client);
@@ -62,7 +64,7 @@ const DatabaseLayerSpec = LayerSpec.make(
     provides: [Database.Service],
   },
   (context) =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for Database layer');
         const client = yield* ClientService;
@@ -74,10 +76,29 @@ const DatabaseLayerSpec = LayerSpec.make(
     ),
 );
 
+/**
+ * Resolves server-custodied access tokens through EDGE. Application-scoped: the resolver's cache is
+ * keyed by token id and is worth sharing across spaces.
+ */
+const AccessTokenResolverLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Capability.Service],
+    provides: [Credential.AccessTokenResolver],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const client = yield* Capability.get(ClientCapabilities.Client);
+        return accessTokenResolverFromEdge(() => client.edge.http);
+      }).pipe(Effect.orDie),
+    ),
+);
+
 const CredentialsLayerSpec = LayerSpec.make(
   {
     affinity: 'space',
-    requires: [Database.Service],
+    requires: [Database.Service, Credential.AccessTokenResolver],
     provides: [Credential.CredentialsService],
   },
   () => credentialsLayerFromDatabase(),
@@ -94,7 +115,7 @@ const IdentityLayerSpec = LayerSpec.make(
     provides: [Identity.Service],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         const client = yield* ClientService;
         return layerIdentity(client);
@@ -113,7 +134,7 @@ const SpaceLayerSpec = LayerSpec.make(
     provides: [Space.Service],
   },
   () =>
-    Layer.unwrapEffect(
+    Layer.unwrap(
       Effect.gen(function* () {
         const client = yield* ClientService;
         return layerSpace(client);
@@ -123,10 +144,13 @@ const SpaceLayerSpec = LayerSpec.make(
 
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contributes(Capabilities.LayerSpec, ClientLayerSpec),
-    Capability.contributes(Capabilities.LayerSpec, DatabaseLayerSpec),
-    Capability.contributes(Capabilities.LayerSpec, CredentialsLayerSpec),
-    Capability.contributes(Capabilities.LayerSpec, IdentityLayerSpec),
-    Capability.contributes(Capabilities.LayerSpec, SpaceLayerSpec),
+    Capability.contributeAll(Capabilities.LayerSpec, [
+      ClientLayerSpec,
+      DatabaseLayerSpec,
+      AccessTokenResolverLayerSpec,
+      CredentialsLayerSpec,
+      IdentityLayerSpec,
+      SpaceLayerSpec,
+    ]),
   ]),
 );

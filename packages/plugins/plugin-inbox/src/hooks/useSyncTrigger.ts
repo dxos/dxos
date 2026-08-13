@@ -5,22 +5,22 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useMemo, useState } from 'react';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import { type ConnectorEntry } from '@dxos/plugin-connector';
+import { createSyncRoutine, findBindingForTarget } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
 // (which exports this file), so going through the barrel would create a module cycle.
 import { useConnectorEntry, useTargetConnection } from '../components/Initialize/useTargetConnection';
-import { createSyncRoutine, findBindingForTarget } from '../util';
 
 /**
  * Hook to find, create, and toggle a timer-based sync Routine for a mailbox or calendar. Creation
- * wires the trigger to the bound connector's own `sync` operation (the same one
- * `ConnectorOperation.SyncConnection` invokes directly) via {@link createSyncRoutine}.
+ * wires the trigger to the bound connector's own `sync` operation via {@link createSyncRoutine} — the
+ * trigger a manual sync force-runs.
  *
  * `connectors` (the registered `Connector` capability list) is resolved by the calling container and
  * threaded down to `useConnectorEntry` — components and the hooks they use must not resolve
@@ -33,7 +33,7 @@ export const useSyncTrigger = ({
 }: {
   db: Database.Database | undefined;
   subject: Obj.Unknown;
-  connectors?: readonly ConnectorEntry[][];
+  connectors?: readonly ConnectorSpec.ConnectorEntry[][];
 }): {
   syncEnabled: boolean | undefined;
   syncTrigger: Trigger.Trigger | undefined;
@@ -67,8 +67,10 @@ export const useSyncTrigger = ({
       return;
     }
 
-    const sync = connector?.sync;
-    if (!connection || !sync) {
+    // Only a connector that declares a schedule can have a sync routine created for it.
+    const operation = connector?.sync?.operation;
+    const spec = connector?.sync?.trigger;
+    if (!connection || !operation || !spec) {
       return;
     }
 
@@ -79,7 +81,7 @@ export const useSyncTrigger = ({
         if (!cursor) {
           return;
         }
-        yield* createSyncRoutine({ target: subject, cursor, sync });
+        yield* createSyncRoutine({ target: subject, cursor, operation, spec });
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
     } finally {
       setPending(false);

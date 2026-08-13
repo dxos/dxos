@@ -44,7 +44,13 @@ export type QueryInfo = {
  */
 export type DatabaseInfo = {
   spaces: number;
-  objects?: number;
+  /** Objects across every open space, from `db.stats()`. Summed: the panel reports the profile. */
+  objects?: { alive: number; deleted: number };
+  /** Automerge documents owned by the spaces on disk, from `db.stats()`. */
+  storedDocuments?: number;
+  /** Feeds registered across every open space, and their blocks. */
+  feeds?: { count: number; blocks: number };
+  /** Automerge documents currently held in memory — unrelated to what is stored. */
   documents: number;
   documentsToReconcile: number;
   dataStats?: EchoDataStats;
@@ -126,20 +132,35 @@ export const useStats = (): [Stats, () => void] => {
   useAsyncEffect(async () => {
     const begin = performance.now();
 
-    const syncStates = await Promise.all(
-      client.spaces
-        .get()
-        .filter((space) => space.state.get() === SpaceState.SPACE_READY)
-        .map((space) => space.internal.db.getAutomergeSyncState()),
-    );
+    const spaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
+
+    const syncStates = await Promise.all(spaces.map((space) => space.internal.db.getAutomergeSyncState()));
     const documentsToReconcile = syncStates
       .flatMap((s) => s.peers?.map((p) => p.differentDocuments + p.missingOnLocal + p.missingOnRemote) ?? [])
       .reduce((acc, x) => acc + x, 0);
 
+    // Per-space storage census. Each is a round trip to the host, so it rides the slower interval
+    // alongside sync state rather than the frame-rate metrics above.
+    const spaceStats = await Promise.all(spaces.map((space) => space.db.stats()));
+    const objects = spaceStats.reduce(
+      (acc, { objects }) => ({ alive: acc.alive + objects.alive, deleted: acc.deleted + objects.deleted }),
+      { alive: 0, deleted: 0 },
+    );
+    const storedDocuments = spaceStats.reduce((acc, { documents }) => acc + documents, 0);
+    const feeds = spaceStats.reduce(
+      (acc, { feeds, feedBlocks }) => ({ count: acc.count + feeds, blocks: acc.blocks + feedBlocks }),
+      { count: 0, blocks: 0 },
+    );
+
     log('collected stats', { elapsed: performance.now() - begin });
     setStats((stats) =>
       Object.assign({}, stats, {
-        database: Object.assign({}, stats.database, { documentsToReconcile }),
+        database: Object.assign({}, stats.database, {
+          documentsToReconcile,
+          objects,
+          storedDocuments,
+          feeds,
+        }),
       }),
     );
   }, [update]);

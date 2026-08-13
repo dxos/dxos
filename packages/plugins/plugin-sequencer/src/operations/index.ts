@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const SequencerOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./read'),
-  () => import('./write'),
-);
+import { ScoreOperation } from '#types';
+
+export const SequencerOperationHandlerSet = OperationHandlerSet.lazy([
+  ScoreOperation.Read.pipe(Operation.lazyHandler(() => import('./read'))),
+  ScoreOperation.Write.pipe(Operation.lazyHandler(() => import('./write'))),
+]);

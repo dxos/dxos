@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
@@ -19,8 +19,8 @@ const TaggedSentences = Schema.Struct({
     Schema.Struct({
       tokens: Schema.Array(
         Schema.Struct({
-          text: Schema.String.annotations({ description: 'Token surface form exactly as in the source.' }),
-          upos: Upos.annotations({ description: 'Universal POS tag for the token.' }),
+          text: Schema.String.annotate({ description: 'Token surface form exactly as in the source.' }),
+          upos: Upos.annotate({ description: 'Universal POS tag for the token.' }),
         }),
       ),
     }),

@@ -16,10 +16,9 @@ import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { File } from '@dxos/types';
 import { focusField } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
-
-import { File } from '#types';
 
 const WAIT_UNTIL_LOADER = 1500;
 
@@ -154,7 +153,7 @@ const buildDecorations = ({
               return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
             }).pipe(
               Effect.provide(Database.layer(space.db)),
-              Effect.catchAll(() => Effect.succeed(undefined)),
+              Effect.catch(() => Effect.succeed(undefined)),
             ),
           );
           if (!url) {

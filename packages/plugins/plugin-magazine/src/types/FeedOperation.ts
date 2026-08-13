@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref, Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
@@ -45,13 +45,13 @@ export const FetchArticleContent = Operation.make({
     icon: 'ph--article--regular',
   },
   input: Schema.Struct({
-    post: Ref.Ref(Subscription.Post).annotations({
+    post: Ref.Ref(Subscription.Post).annotate({
       description: 'The Post to fetch content for. The Post must have a link.',
     }),
   }),
   output: Schema.Struct({
-    text: Schema.String.annotations({ description: 'Extracted plain text from the article page.' }),
-    imageUrls: Schema.Array(Schema.String).annotations({
+    text: Schema.String.annotate({ description: 'Extracted plain text from the article page.' }),
+    imageUrls: Schema.Array(Schema.String).annotate({
       description: 'Image URLs found on the page (og:image first, then <img> src values).',
     }),
   }),
@@ -74,11 +74,11 @@ export const LoadPostContent = Operation.make({
     icon: 'ph--download--regular',
   },
   input: Schema.Struct({
-    post: Ref.Ref(Subscription.Post).annotations({
+    post: Ref.Ref(Subscription.Post).annotate({
       description: 'The Post to load content for.',
     }),
     force: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         description: 'Re-fetch and append fresh content even if an entry already exists (refresh).',
       }),
     ),
@@ -100,13 +100,13 @@ export const CurateMagazine = Operation.make({
     icon: 'ph--sparkle--regular',
   },
   input: Schema.Struct({
-    magazine: Ref.Ref(Magazine.Magazine).annotations({
+    magazine: Ref.Ref(Magazine.Magazine).annotate({
       description: 'The Magazine to curate.',
     }),
   }),
   output: Schema.Struct({
-    synced: Schema.Number.annotations({ description: 'Number of feeds successfully synced.' }),
-    curated: Schema.Number.annotations({ description: 'Number of posts added to the magazine.' }),
+    synced: Schema.Number.annotate({ description: 'Number of feeds successfully synced.' }),
+    curated: Schema.Number.annotate({ description: 'Number of posts added to the magazine.' }),
   }),
   // Database.Service for candidate collection, Registry.Service to resolve the methodology skill;
   // sub-operations (SyncFeed, RunInstructions) resolve through the ambient Operation.Service invoker.
@@ -125,7 +125,7 @@ export const ClearMagazine = Operation.make({
     icon: 'ph--trash--regular',
   },
   input: Schema.Struct({
-    magazine: Ref.Ref(Magazine.Magazine).annotations({
+    magazine: Ref.Ref(Magazine.Magazine).annotate({
       description: 'The Magazine to clear.',
     }),
   }),

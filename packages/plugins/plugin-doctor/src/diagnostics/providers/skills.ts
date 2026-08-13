@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation, Skill } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
@@ -34,9 +35,14 @@ export const skillToolsDiagnostic: DiagnosticProvider = {
       }
     }
 
-    // Operations registered as handlers — their meta.key is usable as a tool id.
+    // Operations registered as handlers — their meta.key is usable as a tool id. Keyed sets
+    // enumerate definitions without loading handler bodies; unkeyed sets still force their own.
     const handlerSets = capabilities.getAll(Capabilities.OperationHandler);
-    const handlerLists = await Promise.all(handlerSets.map((set) => set.getHandlers().catch(() => [])));
+    const handlerLists = await Promise.all(
+      handlerSets.map((set) =>
+        set.definitions ? Promise.resolve(set.definitions()) : set.getHandlers().catch(() => []),
+      ),
+    );
     for (const handlers of handlerLists) {
       for (const handler of handlers) {
         if (handler.meta?.key) {

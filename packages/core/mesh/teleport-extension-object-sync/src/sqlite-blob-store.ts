@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { type BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
@@ -19,6 +19,7 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 import { BitField, arrayToBuffer } from '@dxos/util';
 
 import { type BlobStoreApi, BlobStoreApiService, DEFAULT_CHUNK_SIZE, type GetOptions } from './blob-store';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
 
 const BlobMetaCodec = schema.getCodecForType('dxos.echo.blob.BlobMeta');
 
@@ -41,24 +42,19 @@ export class SqliteBlobStore implements BlobStoreApi {
   }
 
   /**
-   * Creates the blobs_meta and blobs_data tables if they do not exist.
+   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
+   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
+   * `BEGIN` / `COMMIT` — rejected in workerd.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
-    'SqliteBlobStore.migrate',
-  )(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`CREATE TABLE IF NOT EXISTS blobs_meta (
-          id TEXT PRIMARY KEY,
-          meta BLOB NOT NULL
-        )`;
-      yield* sql`CREATE TABLE IF NOT EXISTS blobs_data (
-          id TEXT PRIMARY KEY,
-          data BLOB NOT NULL
-        )`;
-      log('blobs tables ready');
-    }).pipe(Effect.withSpan('SqliteBlobStore.migrate')),
-  )();
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
+    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
+  ).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('SqliteBlobStore.migrate'),
+  );
 
   @synchronized
   async getMeta(id: Uint8Array): Promise<BlobMeta | undefined> {

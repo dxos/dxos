@@ -132,13 +132,13 @@ export const EpubReader = forwardRef<EpubReaderHandle, EpubReaderProps>(
 
     if (failed) {
       return (
-        <div role='none' className='grid bs-full place-items-center gap-2 p-4 text-center text-description'>
+        <div role='none' className='grid h-full place-items-center gap-2 p-4 text-center text-description'>
           <Icon icon='ph--warning--regular' size={6} />
         </div>
       );
     }
 
-    return <div ref={containerRef} role='none' className='is-full bs-full overflow-hidden' />;
+    return <div ref={containerRef} role='none' className='w-full h-full overflow-hidden' />;
   },
 );
 

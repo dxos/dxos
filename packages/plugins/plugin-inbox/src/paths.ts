@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
 import { Calendar } from '#types';
 

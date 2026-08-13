@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -44,7 +44,7 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
       SqlTransaction.layer
         .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
         .pipe(Layer.orDie),
-    ).runtimeEffect,
+    ).contextEffect,
   });
 };
 
@@ -72,7 +72,7 @@ export const createServiceContext = async ({
     config: new Config(),
     signalManager,
     transportFactory: MemoryTransportFactory,
-    runtime: runtime.runtimeEffect,
+    runtime: runtime.contextEffect,
     runtimeProps: {
       invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
       ...runtimeProps,
@@ -148,7 +148,7 @@ export class TestPeer {
       .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
       .pipe(Layer.orDie),
   );
-  private readonly _feedStorage = new SqliteStorage({ runtime: this._runtime.runtimeEffect });
+  private readonly _feedStorage = new SqliteStorage({ runtime: this._runtime.contextEffect });
 
   constructor(
     private readonly _signalContext: MemorySignalManagerContext,
@@ -160,7 +160,7 @@ export class TestPeer {
   }
 
   get keyring() {
-    return (this._props.keyring ??= new SqliteKeyring({ runtime: this._runtime.runtimeEffect }));
+    return (this._props.keyring ??= new SqliteKeyring({ runtime: this._runtime.contextEffect }));
   }
 
   get feedStore() {
@@ -176,11 +176,11 @@ export class TestPeer {
   }
 
   get metadataStore() {
-    return (this._props.metadataStore ??= new SqliteMetadataStore({ runtime: this._runtime.runtimeEffect }));
+    return (this._props.metadataStore ??= new SqliteMetadataStore({ runtime: this._runtime.contextEffect }));
   }
 
   get blobStore() {
-    return (this._props.blobStore ??= new SqliteBlobStore({ runtime: this._runtime.runtimeEffect }));
+    return (this._props.blobStore ??= new SqliteBlobStore({ runtime: this._runtime.contextEffect }));
   }
 
   get networkManager() {
@@ -205,7 +205,7 @@ export class TestPeer {
 
   get echoHost() {
     return (this._props.echoHost ??= new EchoHost({
-      runtime: this._runtime.runtimeEffect,
+      runtime: this._runtime.contextEffect,
     }));
   }
 
@@ -254,7 +254,7 @@ export class TestPeer {
   }
 
   async migrate(): Promise<void> {
-    await RuntimeProvider.runPromise(this._runtime.runtimeEffect)(
+    await RuntimeProvider.runPromise(this._runtime.contextEffect)(
       Effect.all([this.metadataStore.migrate, this.blobStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
     );
   }

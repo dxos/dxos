@@ -11,6 +11,7 @@ export default defineConfig({
     Worker: 'src/Worker.ts',
     Coordinator: 'src/Coordinator/index.ts',
     WorkerProtocol: 'src/WorkerProtocol.ts',
+    RpcTiming: 'src/RpcTiming.ts',
   },
   jsx: 'react',
   test: { node: true, browser: 'chromium', storybook: true },

@@ -6,17 +6,19 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
 import {
+  // Unused by name, but the emitted declarations reference it — dropping the import breaks
+  // declaration emit (TS2742).
   // eslint-disable-next-line unused-imports/no-unused-imports
-  type Connection,
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
+  Connection,
+  Cursor,
+} from '@dxos/link';
+// Unused by name, but the emitted declarations reference it — dropping the import breaks
+// declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
 
@@ -38,8 +40,8 @@ export const GetGitHubRepositories = Operation.make({
     description: 'List GitHub repositories reachable from a connection without materializing local objects.',
     icon: 'ph--github-logo--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 /**
@@ -54,8 +56,8 @@ export const MaterializeGitHubTarget = Operation.make({
     description: 'Create the empty local root Project bound to a selected GitHub repository.',
     icon: 'ph--github-logo--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**
@@ -64,7 +66,7 @@ export const MaterializeGitHubTarget = Operation.make({
  * everything ever opened or edited."
  */
 export const SyncOptions = Schema.Struct({
-  maxDaysBack: Schema.Number.annotations({
+  maxDaysBack: Schema.Number.annotate({
     title: 'Sync history (days)',
     description: 'Pull issues and PRs updated within this many days. Leave empty to sync everything.',
   }).pipe(Schema.optional),

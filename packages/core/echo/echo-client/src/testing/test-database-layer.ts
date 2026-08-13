@@ -44,7 +44,7 @@ export const TestDatabaseLayer = ({
   storagePath,
   onInit,
 }: TestDatabaseOptions = {}): Layer.Layer<Database.Service, never, never> =>
-  Layer.scopedContext(
+  Layer.effectContext(
     Effect.gen(function* () {
       types ??= [];
       types.push(...DEFAULT_TYPES);

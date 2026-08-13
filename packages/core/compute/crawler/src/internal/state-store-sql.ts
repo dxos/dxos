@@ -2,33 +2,37 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
+
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { StateError } from '../errors';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/state-store';
 import { type RunStatus, type StateStoreApi } from '../StateStore';
 import type * as Type from '../types';
 
-/** Create the frontier + run-status tables (idempotent). */
-export const migrate = (sql: SqlClient.SqlClient) =>
-  Effect.gen(function* () {
-    yield* sql`CREATE TABLE IF NOT EXISTS crawl_target (
-      id TEXT PRIMARY KEY,
-      channel_id TEXT NOT NULL,
-      thread_id TEXT,
-      parent_message_id TEXT,
-      depth INTEGER NOT NULL,
-      position INTEGER NOT NULL,
-      status TEXT NOT NULL,
-      cursor TEXT,
-      last_run_at TEXT,
-      last_error TEXT
-    )`;
-    yield* sql`CREATE INDEX IF NOT EXISTS crawl_target_position ON crawl_target (position)`;
-    yield* sql`CREATE TABLE IF NOT EXISTS crawl_run (id INTEGER PRIMARY KEY CHECK (id = 1), status TEXT NOT NULL)`;
-    yield* sql`INSERT INTO crawl_run (id, status) VALUES (1, 'idle') ON CONFLICT(id) DO NOTHING`;
-  });
+/**
+ * Applies any migrations this database has not recorded yet.
+ *
+ * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+ * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+ */
+export const migrate = (): Effect.Effect<
+  void,
+  SqlError.SqlError,
+  SqlClient.SqlClient | SqlTransaction.SqlTransaction
+> =>
+  Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('crawler.stateStore.migrate'),
+  );
 
 type Row = {
   readonly id: string;

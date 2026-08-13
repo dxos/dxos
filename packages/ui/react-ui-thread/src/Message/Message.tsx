@@ -31,9 +31,10 @@ import { createBasicExtensions, createThemeExtensions, keymap, listener } from '
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
+import { translationKey } from '#translations';
+
 import { command } from '../command';
 import { useThreadContext } from '../context';
-import { translationKey } from '../translations';
 import { type MessageMetadata } from '../types';
 
 const avatarSize = 7;
@@ -222,7 +223,9 @@ const TextBlock = ({
     () => ({
       initialValue: block.text,
       extensions: [
-        createBasicExtensions({ readOnly: !isAuthor || !editing }),
+        // Edit mode is authorisation enough — the control that gets here is already gated on
+        // `isAuthor` — and a mid-edit flip to read-only makes the editor drop input silently.
+        createBasicExtensions({ readOnly: !editing }),
         createThemeExtensions({ themeMode }),
         command,
         EditorView.updateListener.of((update) => {
@@ -232,7 +235,10 @@ const TextBlock = ({
         }),
       ],
     }),
-    [block.text, editing, isAuthor, themeMode, handleDocumentChange],
+    // While editing, the editor owns its content and its authorisation: pinning both keeps an incoming
+    // `block.text` update or member-list refresh from rebuilding the view being typed in. `editing` is
+    // itself a dep, so the flip still rebuilds.
+    [editing, editing ? undefined : block.text, editing ? undefined : isAuthor, themeMode, handleDocumentChange],
   );
 
   useEffect(() => {
@@ -321,8 +327,13 @@ const MessageTextbox = forwardRef<MessageTextboxHandle, MessageTextboxProps>(
 
     return (
       <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
+        {/*
+          Addressable: the reply composer is the only textbox in a thread that is not a message body,
+          so without a testid a test can only guess at it by editor order.
+        */}
         <div
           ref={parentRef}
+          data-testid='thread.reply'
           className={mx('py-0.5 me-1 rounded-xs dx-focus-ring', disabled && 'opacity-50')}
           {...focusAttributes}
         />
@@ -466,7 +477,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
         hoverableControls,
         hoverableFocusedWithinControls,
         onMessageSelect && 'cursor-pointer',
-        currentMessageId === message.id && 'bg-activeSurface',
+        currentMessageId === message.id && 'bg-current-surface',
         classNames,
       ]}
     >

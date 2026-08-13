@@ -27,14 +27,14 @@ import { Listbox } from '@dxos/react-ui-list';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
-import { type ObjectViewerProps, SpaceCapabilities } from '#types';
+import { SpaceCapabilities, SpaceSchema } from '#types';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;
 const ACTIVITY_DURATION = 30_000;
 
 // TODO(thure): This is chiefly meant to satisfy TS & provide an empty map after `deepSignal` interactions.
-const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
+const noViewers = new ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
 const getName = (member: Space.Member) => member.displayName ?? generateName(member.identityKey ?? '0');
@@ -213,16 +213,18 @@ const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
 export type SmallPresenceLiveProps = {
   id?: string;
   open?: boolean;
-  viewers?: ComplexMap<PublicKey, ObjectViewerProps>;
+  viewers?: ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>;
 };
 
 export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps) => {
   const { hasAttention, isAncestor, isRelated } = useAttention(id);
   const attended = hasAttention || isRelated;
   const containsAttended = isAncestor && !open;
-  const getActiveViewers = (viewers: ComplexMap<PublicKey, ObjectViewerProps>): ObjectViewerProps[] => {
+  const getActiveViewers = (
+    viewers: ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>,
+  ): SpaceSchema.ObjectViewerProps[] => {
     const moment = Date.now();
-    return Array.from<ObjectViewerProps>(viewers.values()).filter(
+    return Array.from<SpaceSchema.ObjectViewerProps>(viewers.values()).filter(
       (viewer) => moment - viewer.lastSeen < ACTIVITY_DURATION,
     );
   };

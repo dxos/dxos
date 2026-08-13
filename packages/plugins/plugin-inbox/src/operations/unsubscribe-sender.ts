@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { InboxOperation, Mailbox } from '../types';
+import { InboxOperation, Mailbox } from '#types';
 
 /**
  * Unsubscribes from a bulk sender: adds a skip-sender filter to the mailbox (hides existing + future
@@ -44,7 +44,7 @@ const handler = InboxOperation.UnsubscribeSender.pipe(
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               body: 'List-Unsubscribe=One-Click',
             }).then(() => true),
-          ).pipe(Effect.orElse(() => Effect.succeed(false)))
+          ).pipe(Effect.catch(() => Effect.succeed(false)))
         : false;
 
       return { filtered: true, unsubscribed };

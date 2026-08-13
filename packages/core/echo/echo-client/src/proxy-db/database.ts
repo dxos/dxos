@@ -3,9 +3,9 @@
 //
 
 import { type Heads } from '@automerge/automerge';
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
+import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
@@ -179,7 +179,7 @@ export type EchoDatabaseProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
@@ -271,7 +271,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   #feedService: FeedService.Client | undefined;
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
-  readonly #runtime: Runtime.Runtime<never>;
+  readonly #runtime: EffectContext.Context<never>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -299,6 +299,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+
+    // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
+    // that recurses through the whole entity graph and throws on the first strict-mode function it
+    // reaches. Identity is the only sensible equality here, and it is what `Atom.family(db)` wants.
+    Equal.byReferenceUnsafe(this);
   }
 
   [inspect.custom]() {
@@ -402,12 +407,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext | Type.AnyEntity): Type.AnyEntity {
-    let schema: Schema.Schema.AnyNoContext;
+  private _addPersistentSchema(schemaInput: Schema.Codec<any, any> | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Codec<any, any>;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
-      schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
+      schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
       meta =
         getTypeAnnotation(schema) ??
         ({
@@ -428,10 +433,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // Update jsonSchema with the full annotated schema.
     // TypeSchema.jsonSchema is readonly in the type but writable via change context.
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
-      schema.annotations({
+      schema.annotate({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,
-        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        ...makeTypeJsonSchemaAnnotation({
           identifier: typeId,
           kind: meta.kind,
           typename: meta.typename,
@@ -814,7 +819,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
     const response = await runServiceCall(
       this.#runtime,
-      this.#feedService.FeedService.getSyncState({ spaceId: this.spaceId, namespaces: [] }),
+      this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
     );
     let blocksToPull = 0n;
     let blocksToPush = 0n;
@@ -965,6 +970,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
     await this._entityManager.updateIndexes();
+  }
+
+  async stats(): Promise<Database.DatabaseStats> {
+    return this._entityManager.stats();
+  }
+
+  async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
+    return this._entityManager.runGarbageCollection(options);
+  }
+
+  retainObjects(keep: Iterable<string>): string[] {
+    return this._entityManager.retainObjects(keep);
   }
 
   /**

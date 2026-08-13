@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import type * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import type { Obj } from '@dxos/echo';
 import type { EntityId, SpaceId } from '@dxos/keys';
+import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 /**
  * Data describing objects returned from sources to the indexer.
@@ -63,7 +64,7 @@ export interface Index {
    * Runs necessary migrations to the index before it is usable.
    * Idempotent.
    */
-  migrate: () => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
+  migrate: () => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
 
   /**
    * Updates the index with the given objects.

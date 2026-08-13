@@ -48,7 +48,7 @@ export const extractTag = (query: QueryAST.Query): Option.Option<string> => {
 const extractTypenameFromFilter = (filter: QueryAST.Filter): Option.Option<URI.URI> => {
   return Match.value(filter).pipe(
     Match.withReturnType<Option.Option<URI.URI>>(),
-    Match.when({ type: 'object' }, (f) => Option.fromNullable(f.typename)),
+    Match.when({ type: 'object' }, (f) => Option.fromNullishOr(f.typename)),
     Match.when({ type: 'and' }, (f) =>
       f.filters.reduce(
         (acc: Option.Option<URI.URI>, filterItem: QueryAST.Filter) =>

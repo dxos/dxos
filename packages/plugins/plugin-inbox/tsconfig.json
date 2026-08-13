@@ -23,9 +23,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -50,10 +47,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../core/compute/agent-runtime"
     },
     {
       "path": "../../core/compute/ai"
@@ -63,12 +60,6 @@
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/compute-runtime"
-    },
-    {
-      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/compute/extractor"
@@ -131,9 +122,6 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {
@@ -170,10 +158,10 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-rdf"
+      "path": "../../ui/react-ui-search"
     },
     {
-      "path": "../../ui/react-ui-search"
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-table"
@@ -185,7 +173,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-attention"
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-client"
@@ -206,6 +194,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-progress"
+    },
+    {
       "path": "../plugin-routine"
     },
     {
@@ -216,9 +207,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

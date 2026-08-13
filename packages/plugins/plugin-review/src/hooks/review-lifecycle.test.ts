@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { ReviewCapabilities } from '../types';
+import { ReviewCapabilities } from '#types';
+
 import {
   type BindingDescriptor,
   type LifecycleInputs,

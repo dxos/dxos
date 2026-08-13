@@ -6,10 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
 import { Reply } from '@dxos/compute/testing';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Query, Ref } from '@dxos/echo';
-import { ChessOperation } from '@dxos/plugin-chess';
+import * as ChessOperation from '@dxos/plugin-chess/ChessOperation';
 import { meta as automationMeta } from '@dxos/plugin-routine';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
@@ -54,14 +56,14 @@ export const WithTriggers: Story = {
 export const WithChessTrigger: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ Chess }, { ChessPlugin }, { Game }, { GamePlugin }] = await Promise.all([
+      const [{ Chess }, ChessPlugin, { Game }, GamePlugin] = await Promise.all([
         import('@dxos/plugin-chess'),
-        import('@dxos/plugin-chess/plugin'),
+        import('@dxos/plugin-chess/ChessPlugin'),
         import('@dxos/plugin-game'),
-        import('@dxos/plugin-game/plugin'),
+        import('@dxos/plugin-game/GamePlugin'),
       ]);
       return {
-        plugins: [GamePlugin(), ChessPlugin()],
+        plugins: [GamePlugin.make(), ChessPlugin.make()],
         types: [Game.Game, Chess.State],
       };
     },
@@ -118,9 +120,9 @@ export const WithChessTrigger: Story = {
 export const WithPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      const MarkdownPlugin = await import('@dxos/plugin-markdown/MarkdownPlugin');
       return {
-        plugins: [MarkdownPlugin()],
+        plugins: [MarkdownPlugin.make()],
       };
     },
     types: [Text.Text],

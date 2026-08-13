@@ -32,28 +32,13 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/test-utils"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/echo/echo-react"
@@ -65,10 +50,10 @@
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-toolkit"
+      "path": "../../sdk/app-graph"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
@@ -101,9 +86,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-inbox"
     },
     {
@@ -117,9 +99,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     },
     {
       "path": "../plugin-transcription"

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-tldraw",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "tldraw canvas renderer for the DXOS Illustrator plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,20 +33,20 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "default": "./dist/lib/hooks.mjs"
     },
-    "#model": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "default": "./dist/lib/model.mjs"
-    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/meta.mjs"
     },
+    "#model": {
+      "source": "./src/model/index.ts",
+      "types": "./dist/types/src/model/index.d.ts",
+      "default": "./dist/lib/model.mjs"
+    },
     "#plugin": {
-      "source": "./src/TldrawPlugin.tsx",
-      "types": "./dist/types/src/TldrawPlugin.d.ts",
-      "default": "./dist/lib/TldrawPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": {
@@ -67,11 +67,7 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -81,9 +77,55 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./Tldraw": {
+      "source": "./src/types/Tldraw.ts",
+      "types": "./dist/types/src/types/Tldraw.d.ts",
+      "import": "./dist/lib/Tldraw.mjs"
+    },
+    "./TldrawCapabilities": {
+      "source": "./src/types/TldrawCapabilities.ts",
+      "types": "./dist/types/src/types/TldrawCapabilities.d.ts",
+      "import": "./dist/lib/TldrawCapabilities.mjs"
+    },
+    "./TldrawEvents": {
+      "source": "./src/types/TldrawEvents.ts",
+      "types": "./dist/types/src/types/TldrawEvents.d.ts",
+      "import": "./dist/lib/TldrawEvents.mjs"
+    },
+    "./TldrawModel": {
+      "source": "./src/model/index.ts",
+      "types": "./dist/types/src/model/index.d.ts",
+      "import": "./dist/lib/model.mjs"
+    },
+    "./TldrawPlugin": {
+      "source": "./src/TldrawPlugin.ts",
+      "types": "./dist/types/src/TldrawPlugin.d.ts",
+      "import": "./dist/lib/TldrawPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "Tldraw": [
+        "dist/types/src/types/Tldraw.d.ts"
+      ],
+      "TldrawCapabilities": [
+        "dist/types/src/types/TldrawCapabilities.d.ts"
+      ],
+      "TldrawEvents": [
+        "dist/types/src/types/TldrawEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -94,14 +136,10 @@
     "copy:assets": "./scripts/copy_assets.sh"
   },
   "dependencies": {
-    "@automerge/automerge": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -109,18 +147,12 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@tldraw/assets": "catalog:",
     "@tldraw/editor": "catalog:",
     "@tldraw/state": "catalog:",
-    "@tldraw/store": "catalog:",
     "@tldraw/tldraw": "catalog:",
     "@tldraw/tlschema": "catalog:",
     "@tldraw/utils": "catalog:",
@@ -130,14 +162,14 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
-    "@dxos/plugin-testing": "workspace:*",
-    "@dxos/random": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@tldraw/store": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { Subscription } from '#types';
 
@@ -77,7 +77,7 @@ export const listStandardSitePublications = (
     const sites = distinct(records.map((record) => record.value.site).filter(isString));
     return yield* Effect.forEach(
       sites,
-      (site) => resolvePublication(site, proxy).pipe(Effect.catchAll(() => Effect.succeed({ site }))),
+      (site) => resolvePublication(site, proxy).pipe(Effect.catch(() => Effect.succeed({ site }))),
       { concurrency: 'unbounded' },
     );
   }).pipe(Effect.provide(FetchHttpClient.layer));
@@ -121,7 +121,7 @@ export const fetchStandardSite: FeedFetcher = (url, options) =>
 
     // Resolve the publication record once to get the canonical URL and name.
     const publication = yield* resolvePublication(url, proxy).pipe(
-      Effect.catchAll((): Effect.Effect<Publication> => Effect.succeed({ site: url })),
+      Effect.catch((): Effect.Effect<Publication> => Effect.succeed({ site: url })),
     );
 
     const posts = records.map((record) => {
@@ -322,7 +322,7 @@ const fetchProfile = (
   actor: string,
   proxy?: string,
 ): Effect.Effect<Profile | undefined, never, HttpClient.HttpClient> =>
-  getJson(Profile, endpoints.getProfile(actor), proxy).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+  getJson(Profile, endpoints.getProfile(actor), proxy).pipe(Effect.catch(() => Effect.succeed(undefined)));
 
 /**
  * Resolves a publication `site` reference to its {@link Publication} metadata:

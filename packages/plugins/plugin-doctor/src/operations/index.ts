@@ -2,6 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const DoctorOperationHandlerSet = OperationHandlerSet.lazy(() => import('./query-composer-logs'));
+import { DoctorOperation } from '#types';
+
+export const DoctorOperationHandlerSet = OperationHandlerSet.lazy([
+  DoctorOperation.QueryComposerLogs.pipe(Operation.lazyHandler(() => import('./query-composer-logs'))),
+]);

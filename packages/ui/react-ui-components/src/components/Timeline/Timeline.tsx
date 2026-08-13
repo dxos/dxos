@@ -15,27 +15,7 @@ import { trim } from '@dxos/util';
 import { translationKey } from '#translations';
 
 import { Shimmer } from '../Shimmer';
-
-export type TimelineOptions = {
-  lineHeight: number;
-  columnWidth: number;
-  nodeRadius: number;
-  lineStyle: string;
-};
-
-export const defaultOptions: TimelineOptions = {
-  lineHeight: 24,
-  columnWidth: 14,
-  nodeRadius: 5,
-  lineStyle: 'stroke-1',
-};
-
-export const compactOptions: TimelineOptions = {
-  lineHeight: 20,
-  columnWidth: 12,
-  nodeRadius: 4,
-  lineStyle: 'stroke-1',
-};
+import { type TimelineOptions, compactOptions, defaultOptions } from './timeline-options';
 
 /**
  * Mercurial-style Commit.
@@ -348,7 +328,7 @@ export const Timeline = memo(
                   aria-current={current === index}
                   className={mx(
                     'group/row col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]',
-                    'dx-row aria-[current=true]:bg-current-surface! hover:bg-hover-surface-subtle',
+                    'aria-[current=true]:bg-current-surface! hover:bg-hover-surface-subtle',
                   )}
                   style={{ height: `${options.lineHeight}px` }}
                   onClick={handleClick}

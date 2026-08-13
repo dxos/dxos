@@ -2,8 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const SpacetimeSettings = Capability.lazy('SpacetimeSettings', () => import('./settings'));
+import { SpacetimeCapabilities } from '#types';
+
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+});
+export const Schema = AppCapability.schema(() => import('./schema'));
+export const SpacetimeSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
+  provides: [SpacetimeCapabilities.Settings],
+});

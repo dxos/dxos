@@ -4,9 +4,8 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom';
-import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
@@ -28,7 +27,7 @@ import { EID, type EntityId } from '@dxos/keys';
 export class TagIndex extends Type.makeObject<TagIndex>(DXN.make('org.dxos.type.tagIndex', '0.1.0'))(
   Schema.Struct({
     /** Inverse index keyed by tag id; the value is the array of object ids carrying that tag. */
-    index: Schema.Record({ key: Schema.String, value: Schema.Array(Obj.ID) }).pipe(FormInputAnnotation.set(false)),
+    index: Schema.Record(Schema.String, Schema.Array(Obj.ID)).pipe(FormInputAnnotation.set(false)),
   }).pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
 
@@ -135,9 +134,9 @@ export function atom(
   tagUri?: string | undefined,
 ): ((objectId: EntityId) => Atom.Atom<string[]>) | Atom.Atom<boolean> {
   if (objectId === undefined) {
-    return (objectId: EntityId) => objectTagsFamily(Data.tuple(tagIndex, objectId, undefined));
+    return (objectId: EntityId) => objectTagsFamily([tagIndex, objectId, undefined]);
   }
-  return tagFamily(Data.tuple(tagIndex, objectId, tagUri));
+  return tagFamily([tagIndex, objectId, tagUri]);
 }
 
 /**
@@ -145,7 +144,7 @@ export function atom(
  * per-object family. Re-renders only when that tag's own id set changes (not on unrelated tags).
  */
 export const taggedIdsAtom = (tagIndex: TagIndex, tagId: string): Atom.Atom<readonly EntityId[]> =>
-  taggedIdsFamily(Data.tuple(tagIndex, tagId));
+  taggedIdsFamily([tagIndex, tagId]);
 
 /**
  * Reduce a tag id to its space-relative form for membership comparison. A tag id is a {@link Tag}

@@ -4,9 +4,9 @@
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
 import * as Stream from 'effect/Stream';
 
 import {
@@ -54,7 +54,7 @@ import {
   type LoadObjectOptions,
   type SpaceDocumentHeads,
 } from './types';
-import { getInlineAndLinkChanges } from './util';
+import { getInlineAndLinkChanges, getRemovedObjectIds } from './util';
 
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
@@ -82,7 +82,7 @@ export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
   queryService: QueryService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
   spaceKey: PublicKey;
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
@@ -101,7 +101,7 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _hypergraph: HypergraphImpl;
   private _dataService: DataService.Client;
   private _queryService: QueryService.Client;
-  private readonly _runtime: Runtime.Runtime<never>;
+  private readonly _runtime: EffectContext.Context<never>;
   readonly _repoProxy: RepoProxy;
 
   // ── Object storage ──────────────────────────────────────────────────────
@@ -203,9 +203,13 @@ export class EntityManager implements IDatabaseBinding {
    */
   async open(ctx: Context): Promise<void> {
     this._ctx = ctx;
-    this._updateScheduler = new UpdateScheduler(ctx, async () => this._emitDbUpdateEvents(ctx), {
-      maxFrequency: THROTTLED_UPDATE_FREQUENCY,
-    });
+    this._updateScheduler = new UpdateScheduler(
+      ctx,
+      async () => this._emitDbUpdateEvents(ctx),
+      // Throttling is disabled by bypassing it at every call site; configuring a rate and then always
+      // overriding it just made the two disagree.
+      DISABLE_THROTTLING ? {} : { maxFrequency: THROTTLED_UPDATE_FREQUENCY },
+    );
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
@@ -306,6 +310,7 @@ export class EntityManager implements IDatabaseBinding {
       const spaceRootDocHandle = this.getSpaceRootDocHandle();
       await this._handleSpaceRootDocumentChange(spaceRootDocHandle, objectIdsToLoad);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
+      this._updateScheduler.trigger(); // Flush notifications from the swap window.
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return;
@@ -561,6 +566,53 @@ export class EntityManager implements IDatabaseBinding {
     });
   }
 
+  /**
+   * Replaces the set of objects the space directory tracks, dropping everything not retained.
+   *
+   * The drop set is derived from the directory's own maps rather than queried, so clearing a space
+   * costs one root change instead of a scan of its contents. The dropped documents are orphaned,
+   * which is what the host reclaims.
+   *
+   * @returns Ids of the objects dropped from the directory.
+   */
+  retainObjects(keep: Iterable<string>): string[] {
+    const root = this.getSpaceRootDocHandle();
+    const doc = root.doc();
+    const retained = new Set(keep);
+    const droppedInline = Object.keys(doc.objects ?? {}).filter((id) => !retained.has(id));
+    const droppedLinks = Object.keys(doc.links ?? {}).filter((id) => !retained.has(id));
+    // A branch registry entry keeps its member documents reachable, so an entry outliving its root
+    // object pins storage that nothing can reach.
+    const droppedBranches = Object.keys(doc.branches ?? {}).filter((id) => !retained.has(id));
+    const dropped = [...droppedInline, ...droppedLinks];
+    if (dropped.length === 0 && droppedBranches.length === 0) {
+      return [];
+    }
+
+    root.change((draft: DatabaseDirectory) => {
+      for (const id of droppedInline) {
+        delete draft.objects![id];
+      }
+      for (const id of droppedLinks) {
+        delete draft.links![id];
+      }
+      for (const id of droppedBranches) {
+        delete draft.branches![id];
+      }
+    });
+
+    // Nothing re-derives a client's view of a space from the directory, so an object left here
+    // would keep answering queries. Evicting only what was dropped above spares an object whose
+    // document is still being created, which is bound before its link is written.
+    for (const id of dropped) {
+      this._objects.delete(id);
+      this._objectDocumentHandles.delete(id as EntityId);
+    }
+    this._updateScheduler.trigger();
+
+    return dropped;
+  }
+
   async unlinkDeletedObjects({ batchSize = 10 }: { batchSize?: number } = {}): Promise<void> {
     const idChunks = chunkArray(this.getAllObjectIds(), batchSize);
     for (const ids of idChunks) {
@@ -615,7 +667,7 @@ export class EntityManager implements IDatabaseBinding {
       await this._repoProxy.flush();
       await runServiceCall(
         this._runtime,
-        this._dataService.DataService.flush({
+        this._dataService['DataService.flush']({
           documentIds: this._getAllDocHandles()
             .map((handle) => handle.documentId)
             .filter((id): id is DocumentId => id != null),
@@ -625,7 +677,7 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     if (indexes) {
-      await runServiceCall(this._runtime, this._dataService.DataService.updateIndexes());
+      await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']());
     }
 
     if (updates) {
@@ -642,7 +694,7 @@ export class EntityManager implements IDatabaseBinding {
 
     const headsStates = await runServiceCall(
       this._runtime,
-      this._dataService.DataService.getDocumentHeads({
+      this._dataService['DataService.getDocumentHeads']({
         documentIds: Object.values(doc.links ?? {}).map((link) =>
           interpretAsDocumentId(link.toString() as AutomergeUrl),
         ),
@@ -663,11 +715,42 @@ export class EntityManager implements IDatabaseBinding {
   async waitUntilHeadsReplicated(heads: SpaceDocumentHeads): Promise<void> {
     await runServiceCall(
       this._runtime,
-      this._dataService.DataService.waitUntilHeadsReplicated({
+      this._dataService['DataService.waitUntilHeadsReplicated']({
         heads: {
           entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
         },
       }),
+    );
+
+    await this._waitUntilRootDocHasHeads(heads);
+  }
+
+  /**
+   * Waits for this client's replica of the space root document to carry the given heads.
+   *
+   * The service call is a host-side barrier only, but the root document carries the object ->
+   * document routing table that index-hit hydration validates against
+   * (`EchoClient._loadObjectFromDocument`), so a query run before this replica catches up drops the
+   * hits it cannot route and comes back empty. Cf. dxos/dxos#7240.
+   */
+  private async _waitUntilRootDocHasHeads(heads: SpaceDocumentHeads): Promise<void> {
+    const rootHandle = this._spaceRootDocHandle;
+    const rootDocumentId = rootHandle?.documentId;
+    if (!rootHandle || !rootDocumentId) {
+      return;
+    }
+    const rootHeads = heads.heads[rootDocumentId];
+    if (!rootHeads?.length) {
+      return;
+    }
+
+    await asyncTimeout(
+      Event.wrap<ChangeEvent<DatabaseDirectory>>(rootHandle, 'change').waitForCondition(() => {
+        const doc = rootHandle.doc();
+        return doc != null && A.hasHeads(doc, rootHeads);
+      }),
+      RPC_TIMEOUT,
+      'waiting for the space root document to replicate to the client',
     );
   }
 
@@ -679,7 +762,7 @@ export class EntityManager implements IDatabaseBinding {
 
     await runServiceCall(
       this._runtime,
-      this._dataService.DataService.reIndexHeads({
+      this._dataService['DataService.reIndexHeads']({
         documentIds: [
           root.documentId,
           ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
@@ -690,13 +773,31 @@ export class EntityManager implements IDatabaseBinding {
 
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
-    await runServiceCall(this._runtime, this._dataService.DataService.updateIndexes());
+    await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']());
+  }
+
+  async stats(): Promise<Database.DatabaseStats> {
+    return runServiceCall(this._runtime, this._dataService['DataService.stats']({ spaceId: this.spaceId }), {
+      timeout: RPC_TIMEOUT,
+    });
+  }
+
+  async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
+    return runServiceCall(
+      this._runtime,
+      this._dataService['DataService.runGarbageCollection']({
+        spaceId: this.spaceId,
+        index: options?.index,
+        feeds: options?.feeds,
+      }),
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   async getSyncState(): Promise<SpaceSyncState> {
     const value = await runServiceCall(
       this._runtime,
-      this._dataService.DataService.subscribeSpaceSyncState({ spaceId: this.spaceId }).pipe(
+      this._dataService['DataService.subscribeSpaceSyncState']({ spaceId: this.spaceId }).pipe(
         Stream.runHead,
         Effect.map(Option.getOrElse(() => raise(new Error('Failed to get sync state')))),
       ),
@@ -711,7 +812,7 @@ export class EntityManager implements IDatabaseBinding {
     const setupStream = () => {
       cleanup = subscribeStream(
         this._runtime,
-        this._dataService.DataService.subscribeSpaceSyncState({ spaceId: this.spaceId }),
+        this._dataService['DataService.subscribeSpaceSyncState']({ spaceId: this.spaceId }),
         {
           onData: (data) => {
             void runInContextAsync(ctx, () => callback(data));
@@ -1503,6 +1604,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   private readonly _onDocumentUpdate = (event: ChangeEvent<DatabaseDirectory>) => {
+    this._evictRemovedObjects(event);
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._onObjectLinksUpdated(documentChanges.linkedDocuments);
@@ -1510,6 +1612,30 @@ export class EntityManager implements IDatabaseBinding {
     this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
     this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
   };
+
+  /**
+   * Drops objects whose directory entry was removed — a garbage-collection pass replicating in, or
+   * a local {@link retainObjects}. Nothing else re-derives the working set from the directory, so an
+   * object left here keeps answering queries long after its document is gone.
+   *
+   * An object whose document is still being created is bound before its link is written, so it is
+   * momentarily absent from the directory; those are skipped rather than evicted mid-flight.
+   */
+  private _evictRemovedObjects(event: ChangeEvent<DatabaseDirectory>): void {
+    const removed = getRemovedObjectIds(event).filter(
+      (objectId) => this._objects.has(objectId) && !this._pendingDocumentCreations.has(objectId),
+    );
+    if (removed.length === 0) {
+      return;
+    }
+
+    for (const objectId of removed) {
+      this._objects.delete(objectId);
+      this._objectDocumentHandles.delete(objectId as EntityId);
+    }
+    log('evicted objects removed from the space directory', { count: removed.length });
+    this._updateScheduler.trigger();
+  }
 
   private _processDocumentUpdate(event: ChangeEvent<DatabaseDirectory>): DocumentChanges {
     const { inlineChangedObjects, linkedDocuments } = getInlineAndLinkChanges(event);
@@ -1668,6 +1794,11 @@ export class EntityManager implements IDatabaseBinding {
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private _emitDbUpdateEvents(_ctx: Context): void {
+    // Mid root-document swap there is nothing to emit against — listeners resolve cores through the
+    // root. Pending ids are kept; `updateSpaceState` re-triggers after the swap.
+    if (!this._spaceRootDocHandle) {
+      return;
+    }
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
     this._objectsForNextUpdate.clear();
@@ -1688,22 +1819,14 @@ export class EntityManager implements IDatabaseBinding {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
-    if (DISABLE_THROTTLING) {
-      this._updateScheduler.forceTrigger();
-    } else {
-      this._updateScheduler.trigger();
-    }
+    this._updateScheduler.trigger();
   }
 
   private _scheduleThrottledDbUpdate(objectId: string[]): void {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
     }
-    if (DISABLE_THROTTLING) {
-      this._updateScheduler.forceTrigger();
-    } else {
-      this._updateScheduler.trigger();
-    }
+    this._updateScheduler.trigger();
   }
 }
 

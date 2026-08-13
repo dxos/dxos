@@ -9,8 +9,8 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useActions } from '@dxos/plugin-graph/hooks';
-import { type DrawingVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { Flex, Panel } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -19,7 +19,7 @@ import { isTauri } from '@dxos/util';
 import { CanvasComponent } from '#components';
 import { TldrawCapabilities } from '#types';
 
-export type TldrawArticleProps = DrawingVariantSurfaceProps;
+export type TldrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
 export const TldrawArticle = ({ role, attendableId, drawing, canvas, extrinsic }: TldrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));

@@ -3,3 +3,4 @@
 //
 
 export * as Board from './Board';
+export * as BoardEvents from './BoardEvents';

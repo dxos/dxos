@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
 import { protoStruct, protoTimestamp } from './service-schemas.ts';
@@ -14,7 +14,7 @@ import { protoStruct, protoTimestamp } from './service-schemas.ts';
 // RPC message schemas.
 //
 
-export const KeyOption = Schema.Enums({
+export const KeyOption = Schema.Enum({
   NONE: 0,
   TRUNCATE: 1,
   HUMANIZE: 2,
@@ -32,7 +32,7 @@ export const GetDiagnosticsResponse = Schema.Struct({
 });
 export interface GetDiagnosticsResponse extends Schema.Schema.Type<typeof GetDiagnosticsResponse> {}
 
-export const SystemStatus = Schema.Enums({
+export const SystemStatus = Schema.Enum({
   INACTIVE: 0,
   ACTIVE: 1,
 });

@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
-import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
-import type * as PlatformError from '@effect/platform/Error';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import type * as ConfigError from 'effect/ConfigError';
+import type * as ConfigError from 'effect/Config';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
+import type * as PlatformError from 'effect/PlatformError';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
@@ -19,9 +19,11 @@ import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
-import { OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { TriggerDispatcher, TriggerStateStore } from '@dxos/compute-runtime';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, type Key } from '@dxos/echo';
 
 import { type AiChatServices, chatLayer } from './runtime';
@@ -52,10 +54,11 @@ export const triggerRuntimeLayer = ({
 }: TriggerRuntimeLayerOptions): Layer.Layer<
   TriggerRuntimeServices,
   ConfigError.ConfigError | PlatformError.PlatformError,
-  ClientService | ConfigService | FileSystem.FileSystem
+  // `Path` comes from `KeyValueStore.layerFileSystem`, which v4 moved into core effect.
+  ClientService | ConfigService | FileSystem.FileSystem | Path.Path
 > => {
   // Set up KeyValueStore for trigger state storage
-  const kvStoreLayer = Layer.unwrapEffect(
+  const kvStoreLayer = Layer.unwrap(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const storagePath = getProfilePath(DX_DATA, profile, 'trigger-state');
@@ -63,7 +66,7 @@ export const triggerRuntimeLayer = ({
       // Ensure directory exists
       yield* fs.makeDirectory(storagePath, { recursive: true });
 
-      return BunKeyValueStore.layerFileSystem(storagePath);
+      return KeyValueStore.layerFileSystem(storagePath);
     }),
   );
 
@@ -71,7 +74,7 @@ export const triggerRuntimeLayer = ({
   const triggerStateStoreLayer = TriggerStateStore.layerKv.pipe(Layer.provide(kvStoreLayer));
 
   // Build on top of chat layer, adding trigger-specific services
-  return Layer.unwrapEffect(
+  return Layer.unwrap(
     Effect.gen(function* () {
       // Use the same merged toolkit as chat.
       const toolkit = OpaqueToolkit.merge(...toolkits);

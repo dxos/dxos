@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,6 +22,41 @@
       "source": "./src/extraction/index.ts",
       "types": "./dist/types/src/extraction/index.d.ts",
       "import": "./dist/lib/extraction.mjs"
+    },
+    "./AiContext": {
+      "source": "./src/session/AiContext.ts",
+      "types": "./dist/types/src/session/AiContext.d.ts",
+      "import": "./dist/lib/session/AiContext.mjs"
+    },
+    "./AiRequest": {
+      "source": "./src/request/AiRequest.ts",
+      "types": "./dist/types/src/request/AiRequest.d.ts",
+      "import": "./dist/lib/request/AiRequest.mjs"
+    },
+    "./AiSession": {
+      "source": "./src/session/AiSession.ts",
+      "types": "./dist/types/src/session/AiSession.d.ts",
+      "import": "./dist/lib/session/AiSession.mjs"
+    },
+    "./ExecutionGraph": {
+      "source": "./src/util/execution-graph.ts",
+      "types": "./dist/types/src/util/execution-graph.d.ts",
+      "import": "./dist/lib/ExecutionGraph.mjs"
+    },
+    "./Harness": {
+      "source": "./src/session/Harness.ts",
+      "types": "./dist/types/src/session/Harness.d.ts",
+      "import": "./dist/lib/session/Harness.mjs"
+    },
+    "./SessionLink": {
+      "source": "./src/session/SessionLink.ts",
+      "types": "./dist/types/src/session/SessionLink.d.ts",
+      "import": "./dist/lib/session/SessionLink.mjs"
+    },
+    "./SkillHooks": {
+      "source": "./src/session/SkillHooks.ts",
+      "types": "./dist/types/src/session/SkillHooks.d.ts",
+      "import": "./dist/lib/session/SkillHooks.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -29,13 +64,10 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "run:chat": "vite-node ./bin/chat.ts"
-  },
+  "scripts": {},
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@dxos/ai": "workspace:*",
-    "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -46,7 +78,6 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -56,12 +87,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/ai": "catalog:",
-    "@effect/experimental": "catalog:",
-    "@effect/platform": "catalog:",
-    "@effect/rpc": "catalog:",
     "@xenova/transformers": "catalog:",
     "lodash.defaultsdeep": "catalog:"
   },

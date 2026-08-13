@@ -6,9 +6,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
+import { Chat } from '@dxos/assistant-toolkit';
+import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
-import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
@@ -27,7 +27,7 @@ export const ContextModule = () => {
 const ContextModuleContainer = ({ space }: { space: Space }) => {
   // Objects bound to the feed (the agent-independent context: `session.addContext` → `binder.bind`).
   // TODO(burdon): Reconcile objects vs. artifacts.
-  const chats = useQuery(space.db, Filter.type(Assistant.Chat));
+  const chats = useQuery(space.db, Filter.type(Chat.Chat));
   const feedTarget = chats.at(-1)?.feed.target;
   const binder = useContextBinder(space, feedTarget);
   const objects = useBoundObjects(binder);

@@ -31,13 +31,13 @@ export namespace TestSchema {
     name: Schema.String.pipe(GeneratorAnnotation.set('company.name')),
     description: Schema.optional(Schema.String),
     image: Schema.optional(
-      Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
+      Format.URL.pipe(Schema.annotate({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
     ),
     website: Schema.optional(
-      Format.URL.pipe(Schema.annotations({ title: 'Website' }), GeneratorAnnotation.set('internet.url')),
+      Format.URL.pipe(Schema.annotate({ title: 'Website' }), GeneratorAnnotation.set('internet.url')),
     ),
   }).pipe(
-    Schema.annotations({ title: 'Organization' }),
+    Schema.annotate({ title: 'Organization' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--building--regular', hue: 'blue' }),
   );
@@ -56,16 +56,16 @@ export namespace TestSchema {
   export const PersonSchema = Schema.Struct({
     name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
     image: Schema.optional(
-      Format.URL.pipe(Schema.annotations({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
+      Format.URL.pipe(Schema.annotate({ title: 'Preview image' }), GeneratorAnnotation.set('image.url')),
     ),
     email: Schema.optional(Format.Email.pipe(GeneratorAnnotation.set('internet.email'))),
     organization: Schema.optional(
-      Ref.Ref(Organization).annotations({
+      Ref.Ref(Organization).annotate({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
   }).pipe(
-    Schema.annotations({ title: 'Person' }),
+    Schema.annotate({ title: 'Person' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'green' }),
   );
@@ -83,7 +83,7 @@ export namespace TestSchema {
     description: Schema.optional(Schema.String),
     image: Schema.optional(Format.URL.pipe(GeneratorAnnotation.set('image.url'))),
   }).pipe(
-    Schema.annotations({ title: 'Project' }),
+    Schema.annotate({ title: 'Project' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'purple' }),
   );
@@ -101,7 +101,7 @@ export namespace TestSchema {
     created: Schema.String,
     title: Schema.String,
     content: Schema.String,
-  }).pipe(Schema.annotations({ title: 'Message' }), LabelAnnotation.set(['name']));
+  }).pipe(Schema.annotate({ title: 'Message' }), LabelAnnotation.set(['name']));
 
   export const Message = Type.makeObject(DXN.make('com.example.type.message', '0.1.0'))(MessageSchema);
 

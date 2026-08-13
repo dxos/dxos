@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
@@ -15,17 +16,17 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '#types';
+import { SheetRange, SheetUtil } from '#types';
 
 import { type SheetModel } from '../../model';
 import { useSheetContext } from '../SheetRoot';
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
 
-export type StyleState = Partial<Record<StyleValue, boolean>>;
+export type StyleState = Partial<Record<SheetRange.StyleValue, boolean>>;
 
-export type StyleAction = { key: StyleKey; value: StyleValue };
+export type StyleAction = { key: SheetRange.StyleKey; value: SheetRange.StyleValue };
 
-const styles: Record<StyleValue, string> = {
+const styles: Record<SheetRange.StyleValue, string> = {
   highlight: 'ph--highlighter--regular',
   softwrap: 'ph--paragraph--regular',
 };
@@ -40,7 +41,8 @@ export const useStyleState = (stateAtom: ToolbarStateAtom) => {
     if (cursorFallbackRange && model.sheet.ranges) {
       model.sheet.ranges
         .filter(
-          ({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
+          ({ range, key }) =>
+            key === 'style' && inRange(SheetUtil.rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
         )
         .forEach(({ value }) => {
           if (value === 'highlight') {
@@ -61,7 +63,7 @@ const createStyleGroup = (state: StyleState) => {
     variant: 'toggleGroup',
     selectCardinality: 'multiple',
     value: Object.keys(styles)
-      .filter((key) => !!state[key as StyleValue])
+      .filter((key) => !!state[key as SheetRange.StyleValue])
       .map((styleValue) => `style--${styleValue}`),
   } as ToolbarMenuActionGroupProperties);
 };
@@ -70,7 +72,7 @@ type StyleActionsContext = {
   model: SheetModel;
   state: ToolbarState;
   stateAtom: ToolbarStateAtom;
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   cursorFallbackRange?: CompleteCellRange;
 };
 
@@ -85,19 +87,20 @@ const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackR
         const index =
           model.sheet.ranges?.findIndex(
             (range) =>
-              range.key === 'style' && inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
+              range.key === 'style' &&
+              inRange(SheetUtil.rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
           ) ?? -1;
         const nextRangeEntity = {
-          range: rangeToIndex(model.sheet, cursorFallbackRange),
+          range: SheetUtil.rangeToIndex(model.sheet, cursorFallbackRange),
           key: 'style',
-          value: styleValue as StyleValue,
+          value: styleValue as SheetRange.StyleValue,
         };
         const currentState = registry.get(stateAtom);
         if (
           model.sheet.ranges
             .filter(
               ({ range, key: rangeKey }) =>
-                rangeKey === 'style' && inRange(rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
+                rangeKey === 'style' && inRange(SheetUtil.rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
             )
             .some(({ value: rangeValue }) => rangeValue === styleValue)
         ) {
@@ -117,10 +120,10 @@ const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackR
       },
       {
         key: 'style',
-        value: styleValue as StyleValue,
+        value: styleValue as SheetRange.StyleValue,
         icon,
         label: [`range-value.${styleValue}.label`, { ns: meta.profile.key }],
-        checked: !!state[styleValue as StyleValue],
+        checked: !!state[styleValue as SheetRange.StyleValue],
       },
     );
   });

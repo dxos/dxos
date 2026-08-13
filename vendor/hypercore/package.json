@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vendor-hypercore",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -36,7 +36,8 @@
     "hypercore": "catalog:",
     "hypercore-crypto": "catalog:",
     "hypercore-protocol": "catalog:",
-    "noise-protocol": "catalog:"
+    "noise-protocol": "catalog:",
+    "random-access-storage": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -6,11 +6,12 @@ import { DiscordREST } from 'dfx';
 import type { GuildChannelResponse, MyGuildResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
+import { DiscordOperation } from '#types';
+
 import { makeDiscordLayer } from '../services';
-import { DiscordOperation } from '../types';
 
 const GUILD_PAGE_LIMIT = 200;
 
@@ -74,7 +75,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.GetDiscordChannels>
                     },
                   })),
                 ),
-                Effect.catchAll((error) => {
+                Effect.catch((error) => {
                   log.catch(error);
                   return Effect.succeed([]);
                 }),

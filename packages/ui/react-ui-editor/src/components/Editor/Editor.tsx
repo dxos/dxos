@@ -3,8 +3,7 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom';
-import { createContext } from '@radix-ui/react-context';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
   type PropsWithChildren,
   forwardRef,
@@ -19,7 +18,6 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { type XmlWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -34,33 +32,9 @@ import {
   EditorToolbar as NaturalEditorToolbar,
   type EditorToolbarProps as NaturalEditorToolbarProps,
 } from '../EditorToolbar';
-import {
-  type EditorController,
-  EditorView as NaturalEditorContent,
-  type EditorViewProps as NaturalEditorContentProps,
-  createEditorController,
-  noopController,
-} from './EditorView';
-
-//
-// Context
-//
-
-type EditorContextValue = {
-  controller?: EditorController;
-  setController: (controller: EditorController) => void;
-  extensions?: Extension[];
-  /** xmlTags widget portals (embedded blocks); rendered by `Editor.Blocks`, fed via `setWidgets`. */
-  widgets?: XmlWidgetState[];
-  state: Atom.Writable<EditorToolbarState>;
-};
-
-const [EditorContextProvider, useEditorContext] = createContext<EditorContextValue>('Editor');
-
-/**
- * Access the editor context. Must be used within `Editor.Root`.
- */
-export { useEditorContext };
+import { type EditorController, noopController } from './controller';
+import { EditorContextProvider, type EditorContextValue, useEditorContext } from './EditorContext';
+import { EditorView as NaturalEditorContent, type EditorViewProps as NaturalEditorContentProps } from './EditorView';
 
 //
 // Root
@@ -69,7 +43,7 @@ export { useEditorContext };
 type EditorRootProps = PropsWithChildren<
   Pick<EditorContextValue, 'extensions' | 'widgets'> &
     Omit<UseEditorMenuProps, 'viewRef'> &
-    Pick<EditorMenuProviderProps, 'numItems'> & {
+    Pick<EditorMenuProviderProps, 'numItems' | 'searchPlaceholder'> & {
       viewMode?: EditorToolbarState['viewMode'];
     }
 >;
@@ -79,7 +53,10 @@ type EditorRootProps = PropsWithChildren<
  * Provides context for all child components and manages the editor controller state.
  */
 const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
-  ({ children, extensions: extensionsProp, widgets, viewMode, numItems, ...props }, forwardedRef) => {
+  (
+    { children, extensions: extensionsProp, widgets, viewMode, numItems, searchPlaceholder, ...props },
+    forwardedRef,
+  ) => {
     // TODO(wittjosiah): Including initialState in the deps causes reactivity issues.
     const state = useMemo(() => Atom.make<EditorToolbarState>({ viewMode }), [viewMode]);
 
@@ -103,7 +80,13 @@ const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
         widgets={widgets}
         state={state}
       >
-        <EditorMenuProvider getView={getView} groups={groupsRef.current} numItems={numItems} {...menuProps}>
+        <EditorMenuProvider
+          getView={getView}
+          groups={groupsRef.current}
+          numItems={numItems}
+          searchPlaceholder={searchPlaceholder}
+          {...menuProps}
+        >
           {children}
         </EditorMenuProvider>
       </EditorContextProvider>
@@ -309,5 +292,3 @@ export type {
   EditorToolbarState,
   EditorViewProps,
 };
-
-export { createEditorController };

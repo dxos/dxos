@@ -12,22 +12,24 @@ import type { Evalite } from 'evalite';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import type * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -69,7 +71,7 @@ const createDefaultPlugins = async (options: {
   plugins?: Plugin.Plugin[];
   types?: Type.AnyEntity[];
 }): Promise<Plugin.Plugin[]> => [
-  ClientPlugin({
+  ClientPlugin.make({
     types: [
       Organization.Organization,
       Person.Person,
@@ -79,11 +81,11 @@ const createDefaultPlugins = async (options: {
       ...(options.types ?? []),
     ],
   }),
-  AssistantPlugin({
+  AssistantPlugin.make({
     aiServiceMiddleware: await makeAiServiceMiddleware(),
   }),
-  RoutinePlugin(),
-  InboxPlugin(),
+  RoutinePlugin.make(),
+  InboxPlugin.make(),
   ...(options.plugins ?? []),
 ];
 
@@ -199,8 +201,8 @@ export type VariantConfig =
  * Model precedence: `variant.model` → `options.model` → `DEFAULT_MODEL`.
  *
  * The task creates a full Composer test harness via `createComposerTestApp` / `createDefaultPlugins`,
- * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runInstructions` with the
- * resolved model and the personal space. All execution is wrapped in an Effect scope; errors are
+ * initializes an identity, then invokes `runInstructions` with the resolved model and the personal
+ * space. All execution is wrapped in an Effect scope; errors are
  * propagated to the caller via `EffectEx.runAndForwardErrors`.
  *
  * Pass `dbQuery` to additionally run a deterministic DB-state assertion (TESTING.md dimension G)
@@ -248,9 +250,7 @@ export function createEvalRunner<I, O, D>(
           (testHarness) => Effect.promise(() => testHarness.dispose()),
         );
 
-        yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
-
-        const { personalSpace } = yield* Effect.promise(() =>
+        const { defaultSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
 
@@ -259,8 +259,8 @@ export function createEvalRunner<I, O, D>(
         if (seedFn) {
           seeded = yield* Effect.promise(() =>
             harness.runPromise(
-              seedFn({ spaceId: personalSpace.id, instructions }).pipe(
-                Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service)),
+              seedFn({ spaceId: defaultSpace.id, instructions }).pipe(
+                Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service)),
               ),
             ),
           );
@@ -274,7 +274,7 @@ export function createEvalRunner<I, O, D>(
 
         const agentOutput = yield* Effect.tryPromise({
           try: () =>
-            runInstructions(harness, instructions, model, personalSpace.id, input, options.sessionChat, seeded.chat),
+            runInstructions(harness, instructions, model, defaultSpace.id, input, options.sessionChat, seeded.chat),
           catch: (cause) => new AgentRunFailure({ cause }),
         });
 
@@ -285,9 +285,9 @@ export function createEvalRunner<I, O, D>(
 
         const dbQuery = yield* Effect.promise(() =>
           harness.runPromise(
-            dbQueryFn(input, personalSpace.id).pipe(
+            dbQueryFn(input, defaultSpace.id).pipe(
               Effect.provide(
-                ServiceResolver.provide({ space: personalSpace.id }, Database.Service, FeedTraceSink.FeedTraceSink),
+                ServiceResolver.provide({ space: defaultSpace.id }, Database.Service, FeedTraceSink.FeedTraceSink),
               ),
             ),
           ),
@@ -299,9 +299,9 @@ export function createEvalRunner<I, O, D>(
 
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
     const timedRun = run.pipe(
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: timeoutMillis,
-        onTimeout: () => new EvalTimeoutError({ millis: timeoutMillis }),
+        orElse: () => new EvalTimeoutError({ millis: timeoutMillis }),
       }),
     );
 
@@ -318,7 +318,7 @@ export function createEvalRunner<I, O, D>(
     // instructed" — a timeout, harness setup/disposal problem, or other infrastructure failure
     // means the run never got far enough to demonstrate anything, so it must propagate as a real
     // error instead of being silently scored as a pass.
-    if (Option.exists(Cause.failureOption(exit.cause), (error) => error instanceof AgentRunFailure)) {
+    if (Option.exists(Cause.findErrorOption(exit.cause), (error) => error instanceof AgentRunFailure)) {
       return { failed: true };
     }
     return EffectEx.unwrapExit(exit);

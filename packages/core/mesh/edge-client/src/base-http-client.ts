@@ -43,6 +43,11 @@ export type BaseHttpClientOptions = {
    * Used on Edge to classify traffic for metering (e.g. `ci-e2e`).
    */
   clientTag?: string;
+  /**
+   * Admin API key, sent as `Authorization: Bearer` on every request in place of the identity
+   * verifiable-presentation flow — for headless callers (CI) that hold no HALO identity.
+   */
+  apiKey?: string;
 };
 
 type HttpRequestArgs = {
@@ -65,6 +70,7 @@ export type RawHttpRequestArgs = {
 export abstract class BaseHttpClient {
   protected readonly _baseUrl: string;
   protected readonly _clientTag: string | undefined;
+  protected readonly _apiKey: string | undefined;
   protected _edgeIdentity: EdgeIdentity | undefined;
   /** Auth header cached until next 401. */
   protected _authHeader: string | undefined;
@@ -72,6 +78,7 @@ export abstract class BaseHttpClient {
   constructor(baseUrl: string, options?: BaseHttpClientOptions) {
     this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
     this._clientTag = options?.clientTag;
+    this._apiKey = options?.apiKey;
     log('created', { url: this._baseUrl });
   }
 
@@ -102,11 +109,11 @@ export abstract class BaseHttpClient {
     while (true) {
       let processingError: EdgeCallFailedError | undefined = undefined;
       try {
-        if (!this._authHeader && args.auth) {
+        if (!this._authHeader && args.auth && !this._apiKey) {
           await this._prefetchAuthHeader();
         }
 
-        const request = createRequest(args, this._authHeader, traceHeaders, this._clientTag);
+        const request = createRequest(args, this._authHeader, traceHeaders, this._clientTag, this._apiKey);
         log('call', { url, tryCount, authHeader: !!this._authHeader });
         const response = await fetch(url, request);
 
@@ -155,7 +162,10 @@ export abstract class BaseHttpClient {
           processingError = await EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
-        processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
+        // A thrown EdgeCallFailedError already carries its retry semantics (e.g. the terminal
+        // rejected-api-key 401) — wrapping it as a processing failure would mark it retryable.
+        processingError =
+          error instanceof EdgeCallFailedError ? error : EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
       if (processingError?.isRetryable && (await shouldRetry(ctx, processingError.retryAfterMs))) {
@@ -186,13 +196,17 @@ export abstract class BaseHttpClient {
     while (true) {
       let processingError: EdgeCallFailedError | undefined;
       try {
-        if (!this._authHeader && args.auth) {
+        if (!this._authHeader && args.auth && !this._apiKey) {
           await this._prefetchAuthHeader();
         }
 
         const headers: Record<string, string> = { ...args.headers };
         if (this._authHeader) {
           headers['Authorization'] = this._authHeader;
+        } else if (this._apiKey) {
+          // Canonical edgeAuth admin-key form; never collides with the VP header, since the
+          // api-key path skips the auth flow that would populate it.
+          headers['Authorization'] = `Bearer ${this._apiKey}`;
         }
         if (traceHeaders) {
           Object.assign(headers, traceHeaders);
@@ -215,7 +229,10 @@ export abstract class BaseHttpClient {
 
         processingError = await EdgeCallFailedError.fromHttpFailure(response);
       } catch (error: any) {
-        processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
+        // A thrown EdgeCallFailedError already carries its retry semantics (e.g. the terminal
+        // rejected-api-key 401) — wrapping it as a processing failure would mark it retryable.
+        processingError =
+          error instanceof EdgeCallFailedError ? error : EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
       if (processingError?.isRetryable && (await shouldRetry(ctx, processingError.retryAfterMs))) {
@@ -245,6 +262,10 @@ export abstract class BaseHttpClient {
   }
 
   protected async _handleUnauthorized(response: Response): Promise<string> {
+    // A rejected API key is terminal — there is no challenge an identityless caller could answer.
+    if (this._apiKey) {
+      throw await EdgeCallFailedError.fromHttpFailure(response);
+    }
     if (!this._edgeIdentity) {
       log.warn('unauthorized response received before identity was set');
       throw await EdgeCallFailedError.fromHttpFailure(response);
@@ -270,6 +291,7 @@ const createRequest = (
   authHeader: string | undefined,
   traceHeaders?: Record<string, string>,
   clientTag?: string,
+  apiKey?: string,
 ): RequestInit => {
   let requestBody: BodyInit | undefined;
   const headers: HeadersInit = {};
@@ -287,6 +309,10 @@ const createRequest = (
 
   if (authHeader) {
     headers['Authorization'] = authHeader;
+  } else if (apiKey) {
+    // Canonical edgeAuth admin-key form; never collides with the VP header, since the
+    // api-key path skips the auth flow that would populate it.
+    headers['Authorization'] = `Bearer ${apiKey}`;
   }
 
   if (traceHeaders) {

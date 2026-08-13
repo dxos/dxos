@@ -4,12 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AppNode, AppNodeMatcher, AppSpace } from '@dxos/app-toolkit';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SETTINGS_SECTION_ID, SETTINGS_SECTION_TYPE } from '#types';
+import { SpaceSchema } from '#types';
 
 //
 // Extension Factory
@@ -30,8 +33,8 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
     connector: (space) =>
       Effect.succeed([
         AppNode.makeSection({
-          id: SETTINGS_SECTION_ID,
-          type: SETTINGS_SECTION_TYPE,
+          id: SpaceSchema.SETTINGS_SECTION_ID,
+          type: SpaceSchema.SETTINGS_SECTION_TYPE,
           label: ['settings-section.label', { ns: meta.profile.key }],
           icon: 'ph--sliders--regular',
           iconHue: 'emerald',
@@ -46,7 +49,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
   // id-less key can address only one fixed node — its terminal segment IS the key).
   const generalExtension = yield* GraphBuilder.createExtension({
     id: 'settingsGeneral',
-    url: { key: 'settings', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
+    url: { key: 'settings', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) =>
       Effect.succeed([
@@ -68,11 +71,12 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
 
   const membersExtension = yield* GraphBuilder.createExtension({
     id: 'settingsMembers',
-    url: { key: 'members', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
+    url: { key: 'members', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
+    // A private space is locked at genesis and can never admit members, so it has nothing to manage.
     connector: (space) =>
       Effect.succeed(
-        AppSpace.isPersonalSpace(space)
+        space.membershipPolicy === MembershipPolicy.LOCKED
           ? []
           : [
               Node.make({

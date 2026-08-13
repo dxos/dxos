@@ -4,8 +4,8 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
-import { Sandbox } from '@dxos/plugin-sandbox/types';
+import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
+import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import { trim } from '@dxos/util';
 
 import { DEFAULT_TEST_TIMEOUT, agentTest, agentTestTimeout } from '../harness';
@@ -15,7 +15,7 @@ import { DEFAULT_TEST_TIMEOUT, agentTest, agentTestTimeout } from '../harness';
  * Entity IDs must be unique per run (do not call `Obj.ID.dangerouslyDisableRandomness`) so sandbox-service
  * KV does not reject the same sandboxId under a new space from a prior run.
  * Regenerate memoized conversations with:
- *   ALLOW_LLM_GENERATION=1 VITEST_TAGS_FILTER='manual' moon run assistant-e2e:test -- src/testing/sandbox.test.ts
+ *   DX_UPDATE_MODEL_FIXTURES=1 VITEST_TAGS_FILTER='manual' moon run assistant-e2e:test -- src/testing/sandbox.test.ts
  */
 // TODO(wittjosiah): Migrate to an eval (see .agents/skills/agent-eval-tests). createEvalRunner has
 // no `randomEntityIds`, `sandbox`, or `clientTypes` options yet — all three would need adding,
@@ -26,7 +26,7 @@ describe('Sandbox', { tags: ['manual'] }, () => {
     agentTest({
       randomEntityIds: true,
       sandbox: 'local',
-      plugins: [SandboxPlugin()],
+      plugins: [SandboxPlugin.make()],
       clientTypes: [Sandbox.Sandbox],
       instructions: trim`
         The database starts empty. The sandbox service is available at http://localhost:8792.
@@ -52,7 +52,7 @@ describe('Sandbox', { tags: ['manual'] }, () => {
     agentTest({
       randomEntityIds: true,
       sandbox: 'local',
-      plugins: [SandboxPlugin()],
+      plugins: [SandboxPlugin.make()],
       clientTypes: [Sandbox.Sandbox],
       instructions: trim`
         Query contributors to the dxos/dxos repository using CLI in the sandbox.

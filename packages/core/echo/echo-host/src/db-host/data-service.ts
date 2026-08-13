@@ -8,6 +8,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,6 +37,11 @@ export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
   updateIndexes: () => Promise<void>;
+  getSpaceStats: (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
+  runGarbageCollection: (
+    spaceId: SpaceId,
+    options: DataService.RunGarbageCollectionRequest,
+  ) => Promise<DataService.GarbageCollectionReport>;
 };
 
 /**
@@ -52,15 +58,22 @@ export class DataServiceImpl implements DataService.Handlers {
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
   private readonly '_updateIndexes': () => Promise<void>;
+  private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
+  private readonly '_runGarbageCollection': (
+    spaceId: SpaceId,
+    options: DataService.RunGarbageCollectionRequest,
+  ) => Promise<DataService.GarbageCollectionReport>;
 
   'constructor'(params: DataServiceProps) {
     this._automergeHost = params.automergeHost;
     this._spaceStateManager = params.spaceStateManager;
     this._updateIndexes = params.updateIndexes;
+    this._getSpaceStats = params.getSpaceStats;
+    this._runGarbageCollection = params.runGarbageCollection;
   }
 
   ['DataService.subscribe'](request: SubscribeRequest): EffectStream.Stream<BatchedDocumentUpdates, Error> {
-    return EffectStream.async<BatchedDocumentUpdates, Error>((emit) => {
+    return EffectEx.streamFromEmitter<BatchedDocumentUpdates, Error>((emit) => {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
         sendUpdates: (updates) => void emit.single(updates),
@@ -154,6 +167,22 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
+  ['DataService.stats'](request: DataService.DatabaseStatsRequest): Effect.Effect<DataService.DatabaseStats, Error> {
+    return Effect.promise(async () => {
+      invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
+      return this._getSpaceStats(request.spaceId);
+    });
+  }
+
+  ['DataService.runGarbageCollection'](
+    request: DataService.RunGarbageCollectionRequest,
+  ): Effect.Effect<DataService.GarbageCollectionReport, Error> {
+    return Effect.promise(async () => {
+      invariant(SpaceId.isValid(request.spaceId), 'Invalid space id');
+      return this._runGarbageCollection(request.spaceId, request);
+    });
+  }
+
   /**
    * Test affordance: pause/resume flushing of document updates on every
    * active subscription. See `DocumentsSynchronizer.setSendUpdatesPaused`.
@@ -167,7 +196,7 @@ export class DataServiceImpl implements DataService.Handlers {
   ['DataService.subscribeSpaceSyncState'](
     request: GetSpaceSyncStateRequest,
   ): EffectStream.Stream<SpaceSyncState, Error> {
-    return EffectStream.async<SpaceSyncState, Error>((emit) => {
+    return EffectEx.streamFromEmitter<SpaceSyncState, Error>((emit) => {
       const ctx = Context.default();
       const spaceId = request.spaceId;
       invariant(SpaceId.isValid(spaceId));

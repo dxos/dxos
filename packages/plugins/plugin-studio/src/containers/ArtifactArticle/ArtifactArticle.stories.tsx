@@ -7,27 +7,29 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 
+import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
-import { Artifact, type GenerationService, StudioCapabilities, Variant } from '#types';
+import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
 
-import { StudioPlugin } from '../../StudioPlugin';
 import { ArtifactArticle } from './ArtifactArticle';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */
 const MockRequestSchema = Schema.Struct({
-  prompt: Schema.optional(Schema.String.annotations({ title: 'Prompt' })),
-  style: Schema.optional(Schema.String.annotations({ title: 'Style' })),
-  aspectRatio: Schema.optional(Schema.String.annotations({ title: 'Aspect ratio' })),
+  prompt: Schema.optional(Schema.String.annotate({ title: 'Prompt' })),
+  style: Schema.optional(Schema.String.annotate({ title: 'Style' })),
+  aspectRatio: Schema.optional(Schema.String.annotate({ title: 'Aspect ratio' })),
 });
 
 /** A keyless mock provider (kind 'image') returning placeholder images. */
@@ -57,8 +59,8 @@ const MockProviderPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'story.studio.mock-provider/module',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(StudioCapabilities.GenerationService, mockService)),
+    provides: [StudioCapabilities.GenerationService],
+    activate: () => Effect.succeed([Capability.contribute(StudioCapabilities.GenerationService, mockService)]),
   }),
   Plugin.make,
 );
@@ -90,7 +92,7 @@ const meta_ = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Artifact.Artifact, Variant.Variant],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -120,8 +122,8 @@ const meta_ = {
         }),
         StudioPlugin(),
         MockProviderPlugin(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
       ],
     }),
   ],

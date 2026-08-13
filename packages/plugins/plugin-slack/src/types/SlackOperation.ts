@@ -6,11 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import { Connection, MaterializeTargetInput, MaterializeTargetOutput } from '@dxos/plugin-connector';
+import { Connection, Cursor } from '@dxos/link';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
 
@@ -21,7 +21,7 @@ const RemoteTarget = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   description: Schema.String.pipe(Schema.optional),
-  metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(Schema.optional),
+  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 });
 
 /**
@@ -63,8 +63,8 @@ export const MaterializeSlackTarget = Operation.make({
     description: 'Create the empty local Channel bound to a selected Slack conversation.',
     icon: 'ph--slack-logo--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-pickers",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "A collection of picker components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,19 +24,16 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/log": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@emoji-mart/data": "catalog:",
     "@emoji-mart/react": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
-    "emoji-mart": "catalog:",
-    "react-resize-detector": "catalog:"
+    "emoji-mart": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

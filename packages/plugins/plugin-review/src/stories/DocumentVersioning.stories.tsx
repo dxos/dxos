@@ -25,24 +25,28 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { translations as markdownTranslations } from '@dxos/plugin-markdown/translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
+
+import { translations } from '#translations';
 
 import { ReviewPlugin } from '../plugin';
 import {
@@ -60,7 +64,6 @@ import {
   tableSuggestScenario,
 } from '../testing';
 import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
-import { translations } from '../translations';
 
 const concat = (...lines: string[]) => lines.join('\n');
 
@@ -76,8 +79,8 @@ const MarkdownExtensionsPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'extensions',
-    activatesOn: MarkdownEvents.SetupExtensions,
-    activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.ExtensionProvider, [])),
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activate: () => Effect.succeed([Capability.contribute(MarkdownCapabilities.ExtensionProvider, [])]),
   }),
   Plugin.make,
 );
@@ -96,11 +99,11 @@ const AmbientReviewPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ambient-review',
-    activatesOn: MarkdownEvents.SetupExtensions,
+    provides: [MarkdownCapabilities.ViewModeExtension],
     activate: () =>
       Effect.succeed([
-        // Stand in for plugin-comments' contribution so the Suggesting view-mode entry appears.
-        Capability.contributes(MarkdownCapabilities.ViewModeExtension, {
+        // Stand in for the plugin's own contribution so the Suggesting view-mode entry appears.
+        Capability.contribute(MarkdownCapabilities.ViewModeExtension, {
           id: 'suggesting',
           icon: 'ph--note-pencil--regular',
           label: 'Suggesting',
@@ -274,22 +277,21 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>((context) => ({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         MarkdownExtensionsPlugin(),
         // Ambient-review fixtures only for the AmbientReview story (keeps other stories untouched).
         ...(context.parameters?.ambientReview ? [AmbientReviewPlugin()] : []),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
-              currentDoc = personalSpace.db.add(
+              const { defaultSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
+              currentDoc = defaultSpace.db.add(
                 Markdown.make({ name: 'Versioning', content: context.args.content ?? '' }),
               );
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               // Seeded before mount so a manual story opens already reviewable — the same state the
               // play-driven stories build up step by step, without a play mutating it first.
@@ -298,14 +300,14 @@ const meta = {
               }
               if (context.parameters?.ambientReview) {
                 const text = yield* Effect.promise(() => currentDoc!.content.load());
-                seedComments(personalSpace, currentDoc!, text, [COMMENT_ANCHOR]);
+                seedComments(defaultSpace, currentDoc!, text, [COMMENT_ANCHOR]);
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         SpacePlugin({}),
         ReviewPlugin(),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     })),
   ],
@@ -754,7 +756,7 @@ const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
  * - Editing: both authors' suggestions overlay inline and the comment highlight shows; editor editable.
  * - Viewing: suggestions hide, the comment stays, the editor goes read-only.
  * - Suggestion sources + comments are stood in by story-local `@dxos/ui-editor` fixtures
- *   (plugin-markdown cannot depend on plugin-comments).
+ *   (plugin-markdown cannot depend on plugin-review).
  */
 export const AmbientReviewTest: Story = {
   args: {

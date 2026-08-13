@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
@@ -12,7 +12,7 @@ import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
-import { CrmOperation } from '../types';
+import { CrmOperation } from '#types';
 
 /**
  * Default image service base URL. Overridable per-invocation via the
@@ -170,110 +170,130 @@ const isAbsoluteHttpUrl = (raw: string): boolean => {
   }
 };
 
+/**
+ * The hardened attach path shared by `AttachImage` and `EnrichImages`: validate the external URL,
+ * download it (SSRF-guarded, size- and content-type-capped), re-host through the image service, and
+ * write the canonical URL onto the already-loaded subject's `image` field. Fails with `Error` on
+ * any rejection (invalid URL, blocked host, oversize, wrong type, upload failure).
+ */
+export const attachImageToSubject = ({
+  subject,
+  url,
+  imageServiceUrl,
+}: {
+  subject: Person.Person | Organization.Organization;
+  url: string;
+  imageServiceUrl?: string;
+}): Effect.Effect<string, Error> =>
+  Effect.gen(function* () {
+    const serviceUrl = getImageServiceUrl(imageServiceUrl);
+
+    const validatedSource = yield* Effect.try({
+      try: () => validateExternalUrl(url),
+      catch: (cause) => new Error(`Rejected source URL: ${String(cause)}`),
+    });
+
+    const downloaded = yield* Effect.tryPromise({
+      try: () => proxyFetchLegacy(validatedSource, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
+      catch: (cause) => new Error(`Failed to download image: ${String(cause)}`),
+    });
+    if (!downloaded.ok) {
+      return yield* Effect.fail(new Error(`Failed to download image: ${downloaded.status} ${downloaded.statusText}`));
+    }
+
+    const contentLengthHeader = downloaded.headers.get('content-length');
+    if (contentLengthHeader) {
+      const contentLength = Number(contentLengthHeader);
+      if (Number.isFinite(contentLength) && contentLength > MAX_IMAGE_BYTES) {
+        return yield* Effect.fail(new Error(`Image exceeds size cap (${contentLength} bytes > ${MAX_IMAGE_BYTES})`));
+      }
+    }
+
+    // Stream the body and enforce the size cap as we go — a server that
+    // omits content-length or lies about it can otherwise feed arbitrary
+    // bytes bounded only by the fetch timeout.
+    const sourceBlob = yield* Effect.tryPromise({
+      try: async () => {
+        const body = downloaded.body;
+        if (!body) {
+          // No stream available (should be rare); fall back to .blob() but
+          // re-check size below.
+          const fallback = await downloaded.blob();
+          if (fallback.size > MAX_IMAGE_BYTES) {
+            throw new Error(`Image exceeds size cap (${fallback.size} bytes > ${MAX_IMAGE_BYTES})`);
+          }
+          return fallback;
+        }
+        const reader = body.getReader();
+        const chunks: Uint8Array[] = [];
+        let total = 0;
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) {
+              break;
+            }
+            total += value.byteLength;
+            if (total > MAX_IMAGE_BYTES) {
+              await reader.cancel();
+              throw new Error(`Image exceeds size cap (>${MAX_IMAGE_BYTES} bytes)`);
+            }
+            chunks.push(value);
+          }
+        } finally {
+          reader.releaseLock?.();
+        }
+        return new Blob(chunks as BlobPart[]);
+      },
+      catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+    });
+
+    const responseType = downloaded.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
+    // Strict: if the server supplied a content-type we require it to be
+    // in the allowlist. No fallthrough to the URL extension — that was
+    // exploitable by a .png URL that actually serves HTML.
+    let contentType: string | undefined;
+    if (responseType) {
+      if (!ALLOWED_CONTENT_TYPES.has(responseType)) {
+        return yield* Effect.fail(new Error(`Unsupported image content-type: ${responseType}`));
+      }
+      contentType = responseType;
+    } else {
+      contentType = inferContentTypeFromUrl(validatedSource.toString());
+    }
+    if (!contentType || !ALLOWED_CONTENT_TYPES.has(contentType)) {
+      return yield* Effect.fail(new Error('Unable to determine image content-type'));
+    }
+
+    const blob = sourceBlob.type === contentType ? sourceBlob : new Blob([sourceBlob], { type: contentType });
+
+    const client = new EdgeServiceClient({ baseUrl: serviceUrl, timeout: FETCH_TIMEOUT_MS });
+    const { url: uploadedUrl } = yield* Image.thumbnail(client, blob, {
+      filename: filenameFromUrl(validatedSource.toString()),
+    }).pipe(Effect.mapError((cause) => new Error(`Image service upload failed: ${cause.message}`)));
+    if (!isAbsoluteHttpUrl(uploadedUrl)) {
+      return yield* Effect.fail(new Error('Image service returned an invalid or non-absolute URL'));
+    }
+
+    Entity.update(subject as Entity.Any, (obj) => {
+      (obj as { image?: string }).image = uploadedUrl;
+    });
+
+    log.info('attach-image', { uploadedUrl });
+    return uploadedUrl;
+  });
+
 export default CrmOperation.AttachImage.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ subject, url, imageServiceUrl }) {
-      const serviceUrl = getImageServiceUrl(imageServiceUrl);
-
-      const validatedSource = yield* Effect.try({
-        try: () => validateExternalUrl(url),
-        catch: (cause) => new Error(`Rejected source URL: ${String(cause)}`),
-      });
-
-      const downloaded = yield* Effect.tryPromise({
-        try: () => proxyFetchLegacy(validatedSource, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
-        catch: (cause) => new Error(`Failed to download image: ${String(cause)}`),
-      });
-      if (!downloaded.ok) {
-        return yield* Effect.fail(new Error(`Failed to download image: ${downloaded.status} ${downloaded.statusText}`));
-      }
-
-      const contentLengthHeader = downloaded.headers.get('content-length');
-      if (contentLengthHeader) {
-        const contentLength = Number(contentLengthHeader);
-        if (Number.isFinite(contentLength) && contentLength > MAX_IMAGE_BYTES) {
-          return yield* Effect.fail(new Error(`Image exceeds size cap (${contentLength} bytes > ${MAX_IMAGE_BYTES})`));
-        }
-      }
-
-      // Stream the body and enforce the size cap as we go — a server that
-      // omits content-length or lies about it can otherwise feed arbitrary
-      // bytes bounded only by the fetch timeout.
-      const sourceBlob = yield* Effect.tryPromise({
-        try: async () => {
-          const body = downloaded.body;
-          if (!body) {
-            // No stream available (should be rare); fall back to .blob() but
-            // re-check size below.
-            const fallback = await downloaded.blob();
-            if (fallback.size > MAX_IMAGE_BYTES) {
-              throw new Error(`Image exceeds size cap (${fallback.size} bytes > ${MAX_IMAGE_BYTES})`);
-            }
-            return fallback;
-          }
-          const reader = body.getReader();
-          const chunks: Uint8Array[] = [];
-          let total = 0;
-          try {
-            while (true) {
-              const { value, done } = await reader.read();
-              if (done) {
-                break;
-              }
-              total += value.byteLength;
-              if (total > MAX_IMAGE_BYTES) {
-                await reader.cancel();
-                throw new Error(`Image exceeds size cap (>${MAX_IMAGE_BYTES} bytes)`);
-              }
-              chunks.push(value);
-            }
-          } finally {
-            reader.releaseLock?.();
-          }
-          return new Blob(chunks as BlobPart[]);
-        },
-        catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
-      });
-
-      const responseType = downloaded.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
-      // Strict: if the server supplied a content-type we require it to be
-      // in the allowlist. No fallthrough to the URL extension — that was
-      // exploitable by a .png URL that actually serves HTML.
-      let contentType: string | undefined;
-      if (responseType) {
-        if (!ALLOWED_CONTENT_TYPES.has(responseType)) {
-          return yield* Effect.fail(new Error(`Unsupported image content-type: ${responseType}`));
-        }
-        contentType = responseType;
-      } else {
-        contentType = inferContentTypeFromUrl(validatedSource.toString());
-      }
-      if (!contentType || !ALLOWED_CONTENT_TYPES.has(contentType)) {
-        return yield* Effect.fail(new Error('Unable to determine image content-type'));
-      }
-
-      const blob = sourceBlob.type === contentType ? sourceBlob : new Blob([sourceBlob], { type: contentType });
-
-      const client = new EdgeServiceClient({ baseUrl: serviceUrl, timeout: FETCH_TIMEOUT_MS });
-      const { url: uploadedUrl } = yield* Image.thumbnail(client, blob, {
-        filename: filenameFromUrl(validatedSource.toString()),
-      }).pipe(Effect.mapError((cause) => new Error(`Image service upload failed: ${cause.message}`)));
-      if (!isAbsoluteHttpUrl(uploadedUrl)) {
-        return yield* Effect.fail(new Error('Image service returned an invalid or non-absolute URL'));
-      }
-
       const target = yield* Database.load(subject);
       if (!Obj.instanceOf(Person.Person, target) && !Obj.instanceOf(Organization.Organization, target)) {
         return yield* Effect.fail(
           new Error('Subject must be a Person or Organization (image field is only defined on those types)'),
         );
       }
-      Entity.update(target as Entity.Any, (obj) => {
-        (obj as { image?: string }).image = uploadedUrl;
-      });
-
-      log.info('attach-image', { uploadedUrl });
-      return { imageUrl: uploadedUrl };
+      const imageUrl = yield* attachImageToSubject({ subject: target, url, imageServiceUrl });
+      return { imageUrl };
     }),
   ),
   Operation.opaqueHandler,

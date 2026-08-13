@@ -5,8 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import type * as Node from '@dxos/app-graph/Node';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { type Node } from '@dxos/plugin-graph';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
@@ -58,7 +58,9 @@ export const Drawer = () => {
     <Panel.Root>
       <Panel.Toolbar>
         <Menu.Root {...menuActions} alwaysActive onAction={onAction}>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content>

@@ -13,6 +13,8 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     testing: 'src/testing.ts',
+    AttentionAction: 'src/types/AttentionAction.ts',
+    AttentionCapabilities: 'src/types/AttentionCapabilities.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

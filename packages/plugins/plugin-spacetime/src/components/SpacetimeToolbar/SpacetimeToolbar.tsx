@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { ElevationProvider } from '@dxos/react-ui';
@@ -44,6 +46,7 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
       <ElevationProvider elevation='base'>
         <Menu.Root attendableId={attendableId} alwaysActive={alwaysActive} {...menuActions}>
           <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+            <Menu.Items />
             {/* TODO(burdon): Extend builder to support custom components. */}
             <HuePicker value={editorState.hue} onChange={(hue) => updateEditorState({ hue })} />
           </Menu.Toolbar>

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { setProjectAnnotations } from '@storybook/react';
+import { setProjectAnnotations } from '@storybook/react-vite';
 import { afterEach, beforeAll, beforeEach } from 'vitest';
 
 import * as preview from './preview';

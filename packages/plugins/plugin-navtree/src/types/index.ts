@@ -1,8 +1,6 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './schema';
-
 export * as NavTreeCapabilities from './NavTreeCapabilities';
-export * as NavTreeEvents from './NavTreeEvents';
+export * as NavTreeNode from './NavTreeNode';

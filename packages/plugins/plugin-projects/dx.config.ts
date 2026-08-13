@@ -16,6 +16,6 @@ export default Config2.make({
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-projects',
     icon: { key: 'ph--stack--regular', hue: 'rose' },
-    tags: ['assistant'],
+    tags: ['labs', 'assistant'],
   },
 });

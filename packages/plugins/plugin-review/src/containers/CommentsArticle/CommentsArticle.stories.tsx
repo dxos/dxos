@@ -6,22 +6,33 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { qualifyId } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -31,11 +42,12 @@ import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
-import { ReviewPlugin } from '../../ReviewPlugin';
+import { translations } from '#translations';
+import { AgentIdentity, CommentCapabilities } from '#types';
+
+import { ReviewPlugin, type ReviewPluginOptions } from '../../plugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
-import { translations } from '../../translations';
-import { AgentIdentity, CommentCapabilities } from '../../types';
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
@@ -87,7 +99,7 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
 const StubAgentRunner: CommentCapabilities.AgentRunner = {
   run: ({ thread }) =>
     Effect.gen(function* () {
-      const identity = yield* Capability.get(AgentIdentity);
+      const identity = yield* Capability.get(AgentIdentity.AgentIdentity);
       // User-authored messages have no role set; only assistant messages do.
       const lastUser = [...thread.messages].reverse().find((ref) => ref.target?.sender.role !== 'assistant');
       const echoText = textOf(lastUser?.target);
@@ -104,80 +116,64 @@ const StubAgentRunner: CommentCapabilities.AgentRunner = {
 
 /**
  * Common story-only plugin:
- * 1. Exposes Markdown documents in the personal space as direct children of the
+ * 1. Exposes Markdown documents in the default space as direct children of the
  *    graph root, so ReviewPlugin's `comment-toolbar` extension can attach the
  *    `comment` action to the doc's node.
  * 2. Stubs out plugin-deck's layout operations (`UpdateCompanion`,
  *    `ScrollIntoView`) that ReviewPlugin and the CommentsArticle invoke.
- * 3. Contributes a static `AgentIdentity` ("Kai") so any AgentRunner has a name
- *    to stamp on assistant messages.
  */
+const StoryAppGraphBuilder = Capability.inlineModule(
+  'StoryAppGraphBuilder',
+  { provides: [AppCapabilities.AppGraphBuilder] },
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+    const extensions = yield* GraphBuilder.createExtension({
+      id: 'storyDocs',
+      match: NodeMatcher.whenRoot,
+      connector: (_, get) =>
+        Effect.gen(function* () {
+          const client = capabilities.get(ClientCapabilities.Client);
+          // `initialize()` is forked off the startup pass, so the graph can build before the client
+          // has a runtime; reading spaces then trips its not-initialized invariant. The connector is
+          // reactive, so yielding nothing here just re-runs once the client lands.
+          if (!client.initialized) {
+            return [];
+          }
+          const space = AppSpace.getDefaultSpace(client);
+          if (!space) {
+            return [];
+          }
+          const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
+          return docs
+            .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
+            .filter(isNonNullable);
+        }),
+    });
+    return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions)];
+  }),
+);
+
+const StoryOperationHandler = Capability.inlineModule(
+  'StoryOperationHandler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.contribute(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+          Operation.withHandler(LayoutOperation.ScrollIntoView, () => Effect.void),
+        ),
+      ),
+    ]),
+);
+
 const StoryGraphPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.comments.story.storyGraph'),
     name: 'Story Graph',
   }),
-).pipe(
-  AppPlugin.addAppGraphModule({
-    activate: Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      const extensions = yield* GraphBuilder.createExtension({
-        id: 'storyDocs',
-        match: NodeMatcher.whenRoot,
-        connector: (_, get) =>
-          Effect.gen(function* () {
-            const client = capabilities.get(ClientCapabilities.Client);
-            const space = AppSpace.getPersonalSpace(client);
-            if (!space) {
-              return [];
-            }
-            const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
-            return docs
-              .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
-              .filter(isNonNullable);
-          }),
-      });
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
-    }),
-  }),
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(
-            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-            Operation.withHandler(LayoutOperation.ScrollIntoView, () => Effect.void),
-          ),
-        ),
-      ),
-  }),
-  Plugin.addModule({
-    id: 'story-graph.identity',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(AgentIdentity, { name: STORY_AGENT_NAME })),
-  }),
-  Plugin.make,
-);
-
-/**
- * Stub agent runner — used by the WithMentionAgent / WithAutoAgent variants.
- * Loaded BEFORE ReviewPlugin so its `AgentRunner` contribution wins over
- * ReviewPlugin's default LLM-backed runner.
- */
-const StoryStubAgentPlugin = Plugin.define(
-  Plugin.makeMeta({
-    key: DXN.make('org.dxos.plugin.comments.story.storyStubAgent'),
-    name: 'Story Stub Agent',
-  }),
-).pipe(
-  Plugin.addModule({
-    id: 'story-stub-agent.runner',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(CommentCapabilities.AgentRunner, StubAgentRunner)),
-  }),
-  Plugin.make,
-);
+).pipe(Plugin.addModule(StoryAppGraphBuilder), Plugin.addModule(StoryOperationHandler), Plugin.make);
 
 type StoryArgs = {
   /**
@@ -225,37 +221,38 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
+              const { defaultSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
               const doc = Markdown.make({ name: 'Sample', content: SAMPLE_CONTENT });
-              personalSpace.db.add(doc);
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              defaultSpace.db.add(doc);
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               if (args.seedComments) {
                 const text = yield* Effect.promise(() => doc.content.load());
-                seedComments(personalSpace, doc, text);
-                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+                seedComments(defaultSpace, doc, text);
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }
 
               if (args.seedAgentSuggestions) {
                 const text = yield* Effect.promise(() => doc.content.load());
                 invariant(text, 'document content not loaded');
                 yield* Effect.promise(() => seedAgentSuggestions(doc, text));
-                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }
             }),
         }),
         SpacePlugin({}),
-        ReviewPlugin(),
-        MarkdownPlugin(),
+        ReviewPlugin({
+          agentRunner: StubAgentRunner,
+          agentIdentity: { name: STORY_AGENT_NAME },
+        } satisfies ReviewPluginOptions),
+        MarkdownPlugin.make(),
         StoryGraphPlugin(),
-        StoryStubAgentPlugin(),
       ],
     })),
   ],

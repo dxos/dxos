@@ -15,6 +15,7 @@ import {
   type ThemedClassName,
   composable,
   composableProps,
+  useInColumn,
   useMergeRefs,
   useTranslation,
   withColumn,
@@ -95,20 +96,39 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, gutter = 'sm', ...props }, forwardedRef) => {
     const { variant = 'default' } = useFormContext(FORM_VIEWPORT_NAME);
     const styles = formTheme.styles({ variant });
+    const inColumn = useInColumn();
     // Span the full width when nested inside another Column grid (e.g. Card.Root)
     // instead of landing in a single narrow track.
     const span = '[.dx-column-root_&]:col-span-full';
+
+    // Inside a host Column (a Card, a Dialog body), the host already owns the gutter: place the
+    // body in its content track rather than nesting a second grid, which is what made form fields
+    // inset differently from the card title above them. Non-scrolling only — a scrolling viewport
+    // needs its own gutter to host the scrollbar.
+    if (inColumn && !scroll) {
+      return (
+        <Column.Center
+          {...composableProps(props, { classNames: ['w-full min-w-0', styles.viewport()] })}
+          ref={forwardedRef}
+        >
+          {children}
+        </Column.Center>
+      );
+    }
+
+    // Forwarded props land on the OUTERMOST element, never on the inner ScrollArea. A host places
+    // this component by passing placement down (`Panel.Content asChild` merges `[grid-area:content]`
+    // into it); on an inner element that name belongs to no line of the enclosing Column grid, and
+    // CSS answers an unmatched name by fabricating an implicit row rather than ignoring it — which
+    // silently pushed the form into a phantom second row (AUDIT.md §3).
     if (scroll) {
       return (
-        <Column.Root gutter={gutter} classNames={['dx-expander', span]}>
-          <ScrollArea.Root
-            {...composableProps(props, { classNames: styles.viewport() })}
-            orientation='vertical'
-            centered
-            padding
-            thin
-            ref={forwardedRef}
-          >
+        <Column.Root
+          {...composableProps(props, { classNames: ['dx-expander', span, styles.viewport()] })}
+          gutter={gutter}
+          ref={forwardedRef}
+        >
+          <ScrollArea.Root orientation='vertical' centered padding thin>
             <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
           </ScrollArea.Root>
         </Column.Root>
@@ -368,7 +388,9 @@ export const FormError = ({ children, classNames }: FormErrorProps) => {
 
   return (
     <Input.Root validationValence='error'>
-      <Input.Validation classNames={classNames}>{children}</Input.Validation>
+      <Input.Validation classNames={classNames} data-testid='form.error'>
+        {children}
+      </Input.Validation>
     </Input.Root>
   );
 };

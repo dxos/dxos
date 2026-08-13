@@ -5,23 +5,28 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
-import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as Operation from '@dxos/compute/Operation';
+import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Connection, Cursor } from '@dxos/link';
+import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
+import { createSyncProgressKey } from '#sync';
 import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
-import { createSyncProgressKey } from '../operations/mail/mail-sync';
 import {
   getAllMailId,
   getCalendarsPath,
@@ -32,7 +37,7 @@ import {
   getSentId,
   getSubscriptionsId,
 } from '../paths';
-import { getMessageLabel, syncTarget } from '../util';
+import { getMessageLabel } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -397,6 +402,101 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
+        id: 'processMailbox',
+        // Matches every sibling view node (they all share node.data: mailbox), not just the primary.
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        actions: (mailbox, get) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          return Effect.gen(function* () {
+            // Same monitor MailboxArticle's statusbar meter reads, so the button's stop state agrees
+            // with a run kicked off from either surface (or a routine).
+            const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+            const progressKey = InboxOperation.createProcessProgressKey(mailbox);
+            const isRunning = Option.match(progressRegistry, {
+              onNone: () => false,
+              onSome: (registry) => get(registry.monitorAtom(progressKey))?.status === 'running',
+            });
+            const enrichKey = InboxOperation.createEnrichProgressKey(mailbox);
+            const isEnriching = Option.match(progressRegistry, {
+              onNone: () => false,
+              onSome: (registry) => get(registry.monitorAtom(enrichKey))?.status === 'running',
+            });
+            return [
+              {
+                // The pipeline cascade the user runs by hand after a first sync: deterministic
+                // extraction, then cheap LLM labelling. Each spawned tier keeps its own cursor, so
+                // a repeat run catches up rather than redoing the mailbox.
+                id: 'enrich',
+                data: () =>
+                  isEnriching
+                    ? Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(enrichKey))
+                    : // Scheduled (not invoked): the cascade is a long run the meter/stop can cancel
+                      // between tiers.
+                      Operation.schedule(
+                        InboxOperation.EnrichMailbox,
+                        { mailbox: Ref.make(mailbox), me: Mailbox.identityAddresses(mailbox) },
+                        { spaceId: db.spaceId },
+                      ),
+                properties: {
+                  label: isEnriching
+                    ? ['stop-enrich-mailbox.label', { ns: meta.profile.key }]
+                    : ['enrich-mailbox.label', { ns: meta.profile.key }],
+                  icon: isEnriching ? 'ph--stop--regular' : 'ph--stack-simple--regular',
+                  disposition: ['toolbar', 'list-item'],
+                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  testId: 'inbox.mailbox.enrich',
+                },
+              },
+              {
+                // The cursored walking-skeleton pipeline. Kept out of the toolbar (`enrich` is the
+                // single pipeline trigger) but reachable from the context menu, since its durable
+                // cursor plus `resetProcessCursor` are what the cursor machinery is verified through.
+                id: 'process',
+                data: () =>
+                  isRunning
+                    ? // Cancel routes through the progress trace sink, terminating the emitting process.
+                      Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(progressKey))
+                    : // Scheduled (not invoked) so the run is a real process the meter/stop can cancel.
+                      Operation.schedule(
+                        InboxOperation.ProcessMailbox,
+                        { mailbox: Ref.make(mailbox) },
+                        { spaceId: db.spaceId },
+                      ),
+                properties: {
+                  label: isRunning
+                    ? ['stop-process-mailbox.label', { ns: meta.profile.key }]
+                    : ['process-mailbox.label', { ns: meta.profile.key }],
+                  icon: isRunning ? 'ph--stop--regular' : 'ph--play--regular',
+                  disposition: ['list-item'],
+                  testId: 'inbox.mailbox.process',
+                },
+              },
+              {
+                id: 'resetProcessCursor',
+                data: () =>
+                  Operation.invoke(
+                    InboxOperation.ResetProcessCursor,
+                    { mailbox: Ref.make(mailbox) },
+                    { spaceId: db.spaceId },
+                  ).pipe(Effect.asVoid),
+                properties: {
+                  label: ['reset-process-cursor.label', { ns: meta.profile.key }],
+                  icon: 'ph--arrow-counter-clockwise--regular',
+                  // Context menu only; disabled mid-run so a reset never races the advancing cursor.
+                  disposition: ['list-item'],
+                  disabled: isRunning,
+                  testId: 'inbox.mailbox.processReset',
+                },
+              },
+            ];
+          });
+        },
+      }),
+
+      GraphBuilder.createExtension({
         id: 'syncCalendar',
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (calendar, get) => {
@@ -432,6 +532,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

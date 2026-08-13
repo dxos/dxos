@@ -308,15 +308,7 @@ export const createConfig = ({
               'effect/Console',
               '@effect/platform',
               '@effect/platform-browser',
-              // Effect AI (with submodule exports).
-              '@effect/ai',
-              '@effect/ai/AiError',
-              '@effect/ai/Chat',
-              '@effect/ai/LanguageModel',
-              '@effect/ai/Prompt',
-              '@effect/ai/Response',
-              '@effect/ai/Tool',
-              '@effect/ai/Toolkit',
+              // Effect AI (absorbed into the core train under `effect/unstable/ai`).
               '@effect/ai-anthropic',
               '@effect/ai-anthropic/AnthropicClient',
               '@effect/ai-anthropic/AnthropicLanguageModel',
@@ -396,18 +388,9 @@ export const createConfig = ({
             // not run. Fast mode (`DX_FASTBUNDLE`) still needs this — it only wants to skip
             // forcing `@dxos/**` to source (so those resolve from dist and get pre-bundled),
             // NOT the `#*` resolution, which every plugin relies on.
+            // Packages whose source is not vite-safe publish no `source` condition at all, so they
+            // resolve to dist here just as they do under node/bun — no app-local exclude list.
             include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
-            exclude: [
-              '@dxos/random-access-storage',
-              '@dxos/lock-file',
-              '@dxos/network-manager',
-              '@dxos/teleport',
-              '@dxos/config',
-              '@dxos/client-services',
-              '@dxos/observability',
-              // TODO(dmaretskyi): Decorators break in lit.
-              '@dxos/lit-*',
-            ],
           }),
 
           // https://www.npmjs.com/package/vite-plugin-wasm

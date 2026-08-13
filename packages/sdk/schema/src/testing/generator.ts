@@ -3,14 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Database, DXN, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { GeneratorAnnotationId, type GeneratorAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { type AnyProperties, getSchemaReference } from '@dxos/echo/internal';
 import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
-import { EffectEx, SchemaEx } from '@dxos/effect';
+import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
@@ -159,9 +157,10 @@ const createValue = <S extends Type.AnyObj>(
   property: SchemaEx.SchemaProperty,
   force = false,
 ): any | undefined => {
+  // v4 annotations are a plain record; the accessor returns the value or `undefined`.
   const defaultValue = SchemaAST.getDefaultAnnotation(property.type);
-  if (Option.isSome(defaultValue)) {
-    return structuredClone(defaultValue.value);
+  if (defaultValue !== undefined) {
+    return structuredClone(defaultValue);
   }
 
   // Generator value from annotation.

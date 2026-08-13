@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Atom, useAtomValue } from '@effect-atom/atom-react';
-import { createContext } from '@radix-ui/react-context';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, {
   type PropsWithChildren,
   type ReactElement,
@@ -15,51 +14,16 @@ import React, {
 
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type DndContainerHandler, type GetId, useDndRootContext } from '@dxos/react-ui-dnd';
+import { type DndContainerHandler, useDndRootContext } from '@dxos/react-ui-dnd';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicPlaceholderProps, type MosaicStackProps, mosaicStyles } from '../Mosaic';
-import { BoardColumn, type BoardColumnProps, DefaultBoardColumn, useBoardColumn } from './Column';
+import { BoardContextProvider, type BoardContextValue, useBoardContext } from './BoardContext';
+import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
-
-//
-// Model
-//
-
-export interface BoardModel<TColumn = any, TItem = any> {
-  getColumnId: GetId<TColumn>;
-  getItemId: GetId<TItem>;
-  isColumn: (obj: unknown) => obj is TColumn;
-  isItem: (obj: unknown) => obj is TItem;
-  columns: Atom.Atom<readonly TColumn[] | TColumn[]>;
-  items: (column: TColumn) => Atom.Atom<TItem[]>;
-  getColumns: () => TColumn[];
-  getItems: (column: TColumn) => TItem[];
-  onColumnCreate?: () => Promise<TColumn>;
-  onColumnDelete?: (column: TColumn) => void;
-  onItemCreate?: (column: TColumn) => Promise<TItem>;
-  onItemDelete?: (column: TColumn, item: TItem) => void;
-}
-
-//
-// Context
-//
-
-const BOARD_NAME = 'Board';
-
-type BoardContextValue<TColumn = any, TItem = any> = {
-  model: BoardModel<TColumn, TItem>;
-};
-
-const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>(BOARD_NAME);
-
-/** Hook to read the board model from context (e.g. in custom column tiles). Pass TColumn and TItem for typed model. */
-function useBoard<TColumn = any, TItem = any>(displayName?: string): BoardContextValue<TColumn, TItem> {
-  return useBoardContext(displayName ?? BOARD_NAME) as BoardContextValue<TColumn, TItem>;
-}
 
 //
 // Root
@@ -178,7 +142,5 @@ export const Board = {
   Placeholder: BoardPlaceholder,
   Debug: BoardDebug,
 };
-
-export { useBoard, useBoardColumn };
 
 export type { BoardColumnProps, BoardContentProps, BoardItemProps, BoardRootProps };

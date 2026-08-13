@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/assistant';
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -55,7 +56,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
     );
   });
 
-  return <TemplateEditor classNames='dx-document bg-base-surface' id={skill.id} source={skill.instructions.source} />;
+  return <TemplateEditor classNames='dx-document dx-base-surface' id={skill.id} source={skill.instructions.source} />;
 };
 
 const meta = {

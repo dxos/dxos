@@ -2,11 +2,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+
+import { SpaceOperation } from '#types';
 
 import { RENAME_POPOVER } from '../constants';
-import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RenameObject> = SpaceOperation.RenameObject.pipe(
   Operation.withHandler(

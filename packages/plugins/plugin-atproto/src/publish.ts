@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { type Database, Obj, Relation, type Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import { type Connection } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/link';
 import { type AtprotoPolicy, type PublishEligibility, type PublishInspection } from '@dxos/schema';
 
 import { AtprotoPublication } from '#types';

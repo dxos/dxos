@@ -7,14 +7,16 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 
 /**
  * Internal tag carrying the monotonic clock created by {@link collectTraceEvents}. Nested
  * {@link withMeta} scopes read it so every emitted message gets a strictly increasing
  * timestamp regardless of how many writes happened in the same wall-clock millisecond.
  */
-class TestClock extends Context.Tag('@dxos/plugin-assistant/CollectTraceEvents/TestClock')<TestClock, () => number>() {}
+class TestClock extends Context.Service<TestClock, () => number>()(
+  '@dxos/plugin-assistant/CollectTraceEvents/TestClock',
+) {}
 
 /**
  * Runs the given Effect with a mock {@link Trace.TraceService} and {@link Trace.TraceSink}

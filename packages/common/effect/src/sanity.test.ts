@@ -24,17 +24,11 @@ describe('sanity tests', () => {
     const result = await runAndForwardErrors(
       Function.pipe(
         Effect.promise(() => Promise.resolve(100)),
-        Effect.tap((value) => {
-          log('tap', { value });
-        }),
+        Effect.tap((value) => Effect.sync(() => log('tap', { value }))),
         Effect.map((value: number) => String(value)),
-        Effect.tap((value) => {
-          log('tap', { value });
-        }),
+        Effect.tap((value) => Effect.sync(() => log('tap', { value }))),
         Effect.map((value: string) => value.length),
-        Effect.tap((value) => {
-          log('tap', { value });
-        }),
+        Effect.tap((value) => Effect.sync(() => log('tap', { value }))),
       ),
     );
     expect(result).to.eq(3);
@@ -44,17 +38,11 @@ describe('sanity tests', () => {
     const result = await runAndForwardErrors(
       Function.pipe(
         Effect.succeed(100),
-        Effect.tap((value) => {
-          log('tap', { value });
-        }),
+        Effect.tap((value) => Effect.sync(() => log('tap', { value }))),
         Effect.flatMap((value) => Effect.promise(() => Promise.resolve(String(value)))),
-        Effect.tap((value) => {
-          log('tap', { value });
-        }),
+        Effect.tap((value) => Effect.sync(() => log('tap', { value }))),
         Effect.map((value) => value.length),
-        Effect.tap((value) => {
-          log('tap', { value });
-        }),
+        Effect.tap((value) => Effect.sync(() => log('tap', { value }))),
       ),
     );
     expect(result).to.eq(3);

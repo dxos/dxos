@@ -35,7 +35,7 @@ export const SimpleLayout = () => {
       <PopoverRoot>
         <Dnd.Root>
           <MobileLayout.Root
-            classNames='dx-container grid relative bg-toolbar-surface'
+            classNames='dx-container grid relative dx-toolbar-surface'
             onKeyboardOpenChange={(nextKeyboardOpen) => setKeyboardOpen(nextKeyboardOpen)}
           >
             <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'start' }}>

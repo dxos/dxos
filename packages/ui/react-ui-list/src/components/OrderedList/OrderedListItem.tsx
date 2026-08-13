@@ -26,7 +26,7 @@ import { mx, osTranslations } from '@dxos/ui-theme';
 import { useListGrid, useReorderItem } from '../../aspects';
 import { DropIndicator } from '../DropIndicator';
 import { listTheme } from '../List.theme';
-import { type ListItemRecord, useOrderedListContext } from './OrderedListRoot';
+import { type ListItemRecord, useOrderedListContext } from './OrderedListContext';
 
 const styles = listTheme.styles();
 

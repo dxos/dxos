@@ -4,18 +4,20 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
 import {
+  // Unused by name, but the emitted declarations reference it — dropping the import breaks
+  // declaration emit (TS2742).
   // eslint-disable-next-line unused-imports/no-unused-imports
-  type Connection,
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
+  Connection,
+  Cursor,
+} from '@dxos/link';
+// Unused by name, but the emitted declarations reference it — dropping the import breaks
+// declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
 
@@ -39,8 +41,8 @@ export const GetBlueskyTargets = Operation.make({
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 /**
@@ -56,8 +58,8 @@ export const MaterializeBlueskyTarget = Operation.make({
     description: 'Create the empty local Subscription feed bound to a selected Bluesky target.',
     icon: 'ph--butterfly--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**

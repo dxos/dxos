@@ -4,8 +4,8 @@
 
 import * as Predicate from 'effect/Predicate';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { type Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import type * as Operation from '@dxos/compute/Operation';
 import { BaseError } from '@dxos/errors';
 
 const NO_CONNECTOR_MESSAGE = 'No Connector registered with id.' as const;
@@ -18,11 +18,24 @@ const AUTH_EXPIRED_MESSAGE = 'Connection credentials have expired and must be re
 
 const TEST_FAILED_MESSAGE = 'Connection test failed.' as const;
 
+const SYNC_FAILED_MESSAGE = 'Connection sync could not be run.' as const;
+
 /**
  * A connector's {@link TestConnection} probe rejected the stored credential or could not reach the
  * service. Its `message` is the user-facing reason shown in the connection UI.
  */
 export class ConnectionTestError extends BaseError.extend('ConnectionTestError', TEST_FAILED_MESSAGE) {}
+
+/**
+ * A binding's sync could not be run at all — no handler is registered for the connector's sync
+ * operation, or the space has no trigger monitor to force-run the schedule the connector declares.
+ * Distinct from a sync that ran and failed, which the run's own process reports.
+ */
+export class ConnectionSyncError extends BaseError.extend('ConnectionSyncError', SYNC_FAILED_MESSAGE) {
+  constructor(input: { connectorId?: string; cause?: unknown } = {}) {
+    super({ context: { connectorId: input.connectorId }, cause: input.cause });
+  }
+}
 
 /** No Connector capability row matches the requested `connectorId`. */
 export class ConnectorNotFoundError extends BaseError.extend('ConnectorNotFoundError', NO_CONNECTOR_MESSAGE) {
@@ -89,14 +102,14 @@ export class ConnectionAuthExpiredError extends BaseError.extend('ConnectionAuth
  * `@effect/platform`'s `ResponseError`.
  */
 export const isUnauthorizedError = (error: unknown): boolean => {
-  if (!Predicate.isRecord(error)) {
+  if (!Predicate.isObject(error)) {
     return false;
   }
   if (error.code === 401 || error.status === 401) {
     return true;
   }
-  if (Predicate.isRecord(error.context) && (error.context.code === 401 || error.context.status === 401)) {
+  if (Predicate.isObject(error.context) && (error.context.code === 401 || error.context.status === 401)) {
     return true;
   }
-  return error._tag === 'ResponseError' && Predicate.isRecord(error.response) && error.response.status === 401;
+  return error._tag === 'ResponseError' && Predicate.isObject(error.response) && error.response.status === 401;
 };

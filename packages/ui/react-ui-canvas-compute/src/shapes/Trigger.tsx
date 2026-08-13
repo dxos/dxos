@@ -2,54 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useEffect } from 'react';
 
-import { Trigger, TriggerEvent } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { VoidInput } from '@dxos/conductor';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/Obj';
-import { type SpaceId } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
-import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { FunctionBody, createFunctionAnchors, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
-
-const TriggerShapeSchema = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('trigger'),
-    functionTrigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
-  }),
-);
-
-// TODO(wittjosiah): Try to clean up this type inference.
-export interface TriggerShape extends ComputeShape {
-  type: 'trigger';
-  functionTrigger?: Ref.Ref<Trigger.Trigger>;
-}
-
-export const TriggerShape: Schema.Schema<TriggerShape> = TriggerShapeSchema as any;
-
-export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
-  spaceId?: SpaceId;
-  triggerKind?: Trigger.Kind;
-};
-
-export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
-  const functionTrigger = Trigger.make({
-    enabled: true,
-    spec: createTriggerSpec(props),
-  });
-  return createShape<TriggerShape>({
-    type: 'trigger',
-    functionTrigger: Ref.make(functionTrigger),
-    size: { width: 192, height: getHeight(TriggerEvent.EmailEvent) },
-    ...props,
-  });
-};
+import { FunctionBody, getHeight } from './common';
+import { type TriggerShape } from './trigger-def';
+import { createTriggerSpec, getOutputSchema } from './trigger-spec';
 
 export type TriggerComponentProps = ShapeComponentProps<TriggerShape>;
 
@@ -114,45 +79,4 @@ const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'valu
       </Select.Portal>
     </Select.Root>
   );
-};
-
-const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?: SpaceId }): Trigger.Spec => {
-  const kind = props.triggerKind ?? 'email';
-  switch (kind) {
-    case 'timer':
-      return Trigger.specTimer('*/10 * * * * *');
-    case 'webhook':
-      return Trigger.specWebhook({ method: 'POST' });
-    case 'subscription':
-      return Trigger.specSubscription(Query.select(Filter.nothing()));
-    case 'email':
-      return Trigger.specEmail();
-    case 'feed': {
-      return { kind: 'feed' } satisfies Trigger.FeedSpec;
-    }
-    case 'direct':
-      return Trigger.specDirect();
-  }
-};
-
-const getOutputSchema = (kind: Trigger.Kind) => {
-  const kindToSchema: Record<Trigger.Kind, Schema.Schema<any>> = {
-    ['email']: TriggerEvent.EmailEvent,
-    ['subscription']: TriggerEvent.SubscriptionEvent,
-    ['timer']: TriggerEvent.TimerEvent,
-    ['webhook']: TriggerEvent.WebhookEvent,
-    ['feed']: TriggerEvent.FeedEvent,
-    ['direct']: TriggerEvent.DirectEvent,
-  };
-  return kindToSchema[kind];
-};
-
-export const triggerShape: ShapeDef<TriggerShape> = {
-  type: 'trigger',
-  name: 'Trigger',
-  icon: 'ph--lightning--regular',
-  component: TriggerComponent,
-  createShape: createTrigger,
-  getAnchors: (shape) =>
-    createFunctionAnchors(shape, VoidInput, getOutputSchema(shape.functionTrigger?.target?.spec?.kind ?? 'email')),
 };

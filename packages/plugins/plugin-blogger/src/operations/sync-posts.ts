@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { type Connection } from '@dxos/plugin-connector/types';
+import { Connection } from '@dxos/link';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -105,13 +105,13 @@ const handler: Operation.WithHandler<typeof SyncPosts> = SyncPosts.pipe(
       // failures — dangling refs (e.g. a removed post, or pre-redesign posts with no `content`) must
       // not abort the whole sync; `runSyncPosts` reads `ref.target` and skips whatever is unresolved.
       const posts = yield* Effect.forEach(publication.posts ?? [], (ref) =>
-        Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(undefined))),
+        Database.load(ref).pipe(Effect.catch(() => Effect.succeed(undefined))),
       );
       yield* Effect.forEach(posts.filter(isNonNullable), (post) =>
         post.content
           ? Database.load(post.content).pipe(
               Effect.flatMap((doc) => (doc?.content ? Database.load(doc.content) : Effect.void)),
-              Effect.catchAll(() => Effect.void),
+              Effect.catch(() => Effect.void),
             )
           : Effect.void,
       );

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 import { Actor, ContentBlock } from '@dxos/types';
 
@@ -39,7 +39,7 @@ export const AgentRequestBegin = Trace.EventType('assistant.agentRequestBegin', 
 
 export const AgentRequestEnd = Trace.EventType('assistant.agentRequestEnd', {
   schema: Schema.Struct({
-    status: Schema.Literal('success', 'error', 'interrupted'),
+    status: Schema.Literals(['success', 'error', 'interrupted']),
     error: Schema.optional(Schema.String),
   }),
   isEphemeral: false,
@@ -53,7 +53,7 @@ export const AgentRequestEnd = Trace.EventType('assistant.agentRequestEnd', {
 export const McpServerError = Trace.EventType('assistant.mcpServerError', {
   schema: Schema.Struct({
     url: Schema.String,
-    protocol: Schema.Literal('sse', 'http'),
+    protocol: Schema.Literals(['sse', 'http']),
     message: Schema.String,
   }),
   isEphemeral: true,

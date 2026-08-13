@@ -26,6 +26,8 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Editor',
+        'add-object.label': 'Add object',
+        'link-query.placeholder': 'Search or create…',
         'choose-markdown-from-space-dialog.title': 'Choose one or more documents to add',
         'empty-choose-markdown-from-space.message': 'None available; try creating a new one instead?',
         'chooser-done.label': 'Add selected',

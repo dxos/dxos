@@ -14,37 +14,39 @@ import { Foo } from '#types';
 import { translations } from './translations';
 
 export const FooPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Foo.Thing.typename,
-      metadata: { icon: '...', iconHue: '...', skills: [MySkill.key], createObject: ... },
-    },
-  }),
-  AppPlugin.addSchemaModule({ schema: [Foo.Thing] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
+  // Modules declared in `capabilities/index.ts` (via makers) are added by reference.
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  // Value-shaped contributions have inline makers.
+  Plugin.addModule(AppCapability.schema([Foo.Thing])),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 ```
 
-## Module → activation event reference
+## Maker → default activation wave
 
-| Method                        | Purpose                        | Activation event          |
-| ----------------------------- | ------------------------------ | ------------------------- |
-| `addSurfaceModule`            | React surface components       | `SetupReactSurface`       |
-| `addMetadataModule`           | Type metadata (icon, creation) | `SetupMetadata`           |
-| `addSchemaModule`             | ECHO type registration         | `SetupSchema`             |
-| `addOperationHandlerModule`   | Operation handlers             | `SetupOperationHandler`   |
-| `addTranslationsModule`       | i18n resources                 | `SetupTranslations`       |
-| `addSkillDefinitionModule`    | AI skills                      | `SetupArtifactDefinition` |
-| `addSettingsModule`           | Plugin settings                | `SetupSettings`           |
-| `addAppGraphModule`           | Graph builder extensions       | `SetupAppGraph`           |
-| `addCommandModule`            | CLI commands                   | `Startup`                 |
-| `addReactContextModule`       | React context provider         | `Startup`                 |
-| `addNavigationResolverModule` | Navigation resolvers           | `OperationInvokerReady`   |
-| `addNavigationHandlerModule`  | Navigation handlers            | `OperationInvokerReady`   |
+Modules are declared in `capabilities/index.ts` with a maker, then added by reference with
+`Plugin.addModule(...)`. Each maker carries the wave that kind of contribution requires.
+
+| Maker                                                   | Contributes                 | Default wave                                         |
+| ------------------------------------------------------- | --------------------------- | ---------------------------------------------------- |
+| `AppCapability.surface`                                 | React surfaces              | demand — `SurfacesRequested(role)` per declared role |
+| `AppCapability.reactContext`                            | React context provider      | **Startup** (a context wraps the first render)       |
+| `AppCapability.reactRoot`                               | React root                  | **Startup**                                          |
+| `AppCapability.settings`                                | Plugin settings             | **Startup**                                          |
+| `AppCapability.operationHandler`                        | Operation handlers          | **Startup**                                          |
+| `AppCapability.navigationResolver`                      | Navigation target resolvers | **Startup**                                          |
+| `AppCapability.navigationHandler`                       | Navigation handlers         | **Startup**                                          |
+| `AppCapability.layerSpec`                               | Effect layer specs          | **Startup** (restart-scoped snapshot)                |
+| `AppCapability.commands`                                | CLI commands                | **Startup**                                          |
+| `AppCapability.appGraphBuilder`                         | Graph builder extensions    | `Idle`                                               |
+| `AppCapability.skillDefinition`                         | AI skills                   | the assistant's start event                          |
+| `AppCapability.schema` / `translations` / `pluginAsset` | as named                    | idle (ungated)                                       |
+
+Anything without a maker uses `Capability.lazyModule(name, spec, loader)` and states its own
+`activatesOn`. **Omitting `activatesOn` means idle**, not startup.
 
 ## Activation timing
 
