@@ -74,9 +74,9 @@ export abstract class BaseHttpClient {
   protected _edgeIdentity: EdgeIdentity | undefined;
   /** Auth header cached until it goes stale (see `_authRefreshAt`) or a 401 replaces it. */
   protected _authHeader: string | undefined;
-  /** When to proactively refresh `_authHeader`; undefined = refresh only on 401. */
-  private _authRefreshAt: number | undefined;
-  /** Last TTL `/auth` advertised — reapplied to 401-minted headers, since the TTL is a server constant. */
+  /** When the current `_authHeader` was signed; with the TTL below it decides proactive refresh. */
+  private _authAcquiredAt: number | undefined;
+  /** Last TTL `/auth` advertised — a server constant, so 401-minted headers reuse it. */
   private _authTtlMs: number | undefined;
   /** Single-flight guard so concurrent requests with a stale header share one `/auth` round trip. */
   private _authPrefetch: Promise<void> | undefined;
@@ -96,7 +96,7 @@ export abstract class BaseHttpClient {
     if (this._edgeIdentity?.identityDid !== identity.identityDid || this._edgeIdentity?.peerKey !== identity.peerKey) {
       this._edgeIdentity = identity;
       this._authHeader = undefined;
-      this._authRefreshAt = undefined;
+      this._authAcquiredAt = undefined;
       // Drop any in-flight prefetch: it authenticates the previous identity, and awaiting it
       // would commit that identity's header for requests now belonging to the new one.
       this._authPrefetch = undefined;
@@ -277,25 +277,29 @@ export abstract class BaseHttpClient {
     // committing then would send the new identity's requests signed as the old one.
     if (authentication && this._edgeIdentity === identity) {
       this._authHeader = encodeAuthHeader(authentication.presentation);
-      this._recordAuthExpiry(authentication.expiresInMs);
+      this._recordAuthAcquired(authentication.expiresInMs);
     }
   }
 
   /** Stale means past the proactive-refresh point, not necessarily rejected yet. */
   private _authHeaderIsStale(): boolean {
-    return this._authRefreshAt !== undefined && Date.now() >= this._authRefreshAt;
+    if (this._authAcquiredAt === undefined || this._authTtlMs === undefined) {
+      return false;
+    }
+    // Refresh a margin ahead of expiry, floored at half the TTL so tiny windows still refresh.
+    const refreshAfterMs = Math.max(this._authTtlMs - AUTH_REFRESH_MARGIN_MS, Math.floor(this._authTtlMs / 2));
+    return Date.now() - this._authAcquiredAt >= refreshAfterMs;
   }
 
   /**
-   * Schedule the next proactive refresh from an advertised TTL. Without one (older servers, the
-   * 401-minted path on a server that never advertised), the last known TTL is reused; if none was
-   * ever advertised the header lives until a 401, exactly as before proactive refresh existed.
+   * Record when the current header was signed and the TTL advertised beside its challenge — only
+   * originals; the refresh point is derived at read time. Without an advertised TTL (older
+   * servers, the 401-minted path) the last known one is reused; if none was ever advertised the
+   * header lives until a 401, exactly as before proactive refresh existed.
    */
-  private _recordAuthExpiry(expiresInMs: number | undefined): void {
+  private _recordAuthAcquired(expiresInMs: number | undefined): void {
+    this._authAcquiredAt = Date.now();
     this._authTtlMs = expiresInMs ?? this._authTtlMs;
-    const ttl = this._authTtlMs;
-    this._authRefreshAt =
-      ttl === undefined ? undefined : Date.now() + Math.max(ttl - AUTH_REFRESH_MARGIN_MS, Math.floor(ttl / 2));
   }
 
   protected async _handleUnauthorized(response: Response): Promise<string> {
@@ -309,7 +313,7 @@ export abstract class BaseHttpClient {
     }
     const challenge = await handleAuthChallenge(response, this._edgeIdentity);
     // The fresh header starts a new window; the 401 body carries no TTL, so the last one applies.
-    this._recordAuthExpiry(undefined);
+    this._recordAuthAcquired(undefined);
     return encodeAuthHeader(challenge);
   }
 }
