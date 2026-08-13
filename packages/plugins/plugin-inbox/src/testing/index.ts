@@ -6,4 +6,5 @@
 export * from '../InboxPlugin';
 
 export * from './builder';
+export * from './contact-preview';
 export * from './data';

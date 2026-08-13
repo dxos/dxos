@@ -6,19 +6,17 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { buildContactFromActor } from '@dxos/extractor-lib';
-import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card, Icon, Popover } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
-import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Actor, Person } from '@dxos/types';
-import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
+import { ContactPreview } from '#testing';
 import { translations } from '#translations';
 
 import { Header } from './Header';
@@ -65,40 +63,6 @@ const useContactCreate = (space?: Space) =>
   );
 
 /**
- * Renders the popover the avatar's hover asks for. In Composer this is PreviewPlugin's job (it
- * listens on `window` and dispatches a layout operation); a story stands in for it with
- * `EditorPreviewProvider` plus this content, or hovering would fire an event nothing answers.
- */
-const ContactPreviewCard = () => {
-  const { target } = useEditorPreview('ContactPreviewCard');
-  const contact: Person.Person | undefined = target?.object;
-  if (!target) {
-    return null;
-  }
-
-  return (
-    <Popover.Portal>
-      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport classNames='dx-card-popover-width'>
-          <Card.Root border={false} data-testid='contact-preview'>
-            <Card.Header>
-              <Card.Block>
-                <Icon icon='ph--user--regular' />
-              </Card.Block>
-              <Card.Title>{contact?.fullName ?? target.label}</Card.Title>
-            </Card.Header>
-            <Card.Row>
-              <Card.Text variant='description'>{contact?.emails?.[0]?.value}</Card.Text>
-            </Card.Row>
-          </Card.Root>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
-  );
-};
-
-/**
  * Header.Root chrome composing shared Row.* primitives — the structure both article headers use.
  *
  * Live rather than static: the star owns its state, and each avatar resolves its actor's contact, so
@@ -110,20 +74,8 @@ const DefaultStory = ({ actors = [KNOWN_SENDER] }: StoryArgs) => {
   const [starred, setStarred] = useState(true);
   const handleContactCreate = useContactCreate(space);
 
-  // Resolves the hovered avatar's DXN back to its Person, so the card shows the real contact.
-  const handlePreviewLookup = useCallback(
-    async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
-      const eid = EID.tryParse(dxn);
-      const id = eid && EID.getEntityId(eid);
-      const object = id && space ? (await space.db.query(Filter.id(id)).run())[0] : undefined;
-      return { label, object };
-    },
-    [space],
-  );
-
   return (
-    <EditorPreviewProvider onLookup={handlePreviewLookup}>
-      <ContactPreviewCard />
+    <ContactPreview db={space?.db}>
       <Header.Root>
         <Card.Row>
           <Card.Block>
@@ -145,7 +97,7 @@ const DefaultStory = ({ actors = [KNOWN_SENDER] }: StoryArgs) => {
         <Row.Date start={new Date('2025-11-19T12:00:00')} end={new Date('2025-11-19T13:00:00')} />
         <Row.Tags tags={[{ id: 'a', label: 'planning', hue: 'cyan' }]} />
       </Header.Root>
-    </EditorPreviewProvider>
+    </ContactPreview>
   );
 };
 

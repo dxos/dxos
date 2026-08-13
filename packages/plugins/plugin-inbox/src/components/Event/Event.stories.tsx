@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { Fragment, useMemo } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -14,6 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Event as EventType, Person } from '@dxos/types';
 
+import { ContactPreview } from '#testing';
 import { translations } from '#translations';
 
 import { Event } from './Event';
@@ -62,6 +64,12 @@ const PeopleGrid = ({ db }: { db?: Database.Database }) => {
   );
 };
 
+/**
+ * A seeded attendee who IS a Person in the space, so the attendee rows show BOTH contact states:
+ * hovering this one opens their card, hovering a generated (unknown) address offers to create it.
+ */
+const KNOWN_ATTENDEE = { name: 'Alice Avery', email: 'alice@example.com' };
+
 // `createObject` yields a live, reactive ECHO object so the editable inputs (useObject) and the
 // markdown body editor (Doc.createAccessor) work in the story; the client space provides the
 // Person registry backing the attendee typeahead.
@@ -76,24 +84,34 @@ const DefaultStory = ({ editable }: { editable?: boolean }) => {
           owner: {},
           startDate: new Date('2025-11-19T12:00:00').toISOString(),
           endDate: new Date('2025-11-19T13:00:00').toISOString(),
-          attendees: Array.from({ length: 3 }, () => ({
-            name: random.person.fullName(),
-            email: random.internet.email(),
-          })),
+          attendees: [
+            KNOWN_ATTENDEE,
+            ...Array.from({ length: 2 }, () => ({
+              name: random.person.fullName(),
+              email: random.internet.email(),
+            })),
+          ],
         }),
       ),
     [],
   );
 
   return (
-    <Event.Root event={event}>
-      <Event.Toolbar alwaysActive onSave={editable ? () => {} : undefined} onDelete={editable ? () => {} : undefined} />
-      <Event.Header db={space?.db} editable={editable} />
-      <Event.Viewport>
-        <Event.Body editable={editable} />
-      </Event.Viewport>
-      <PeopleGrid db={space?.db} />
-    </Event.Root>
+    // Hosts the contact card each attendee row asks for on hover (PreviewPlugin's job in the app).
+    <ContactPreview db={space?.db}>
+      <Event.Root event={event}>
+        <Event.Toolbar
+          alwaysActive
+          onSave={editable ? () => {} : undefined}
+          onDelete={editable ? () => {} : undefined}
+        />
+        <Event.Header db={space?.db} editable={editable} />
+        <Event.Viewport>
+          <Event.Body editable={editable} />
+        </Event.Viewport>
+        <PeopleGrid db={space?.db} />
+      </Event.Root>
+    </ContactPreview>
   );
 };
 
@@ -109,6 +127,9 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         await generatePeople(space.db, 8);
+        space.db.add(
+          Obj.make(Person.Person, { fullName: KNOWN_ATTENDEE.name, emails: [{ value: KNOWN_ATTENDEE.email }] }),
+        );
       },
     }),
   ],
@@ -127,5 +148,38 @@ export const Default: Story = {};
 export const Editable: Story = {
   args: {
     editable: true,
+  },
+};
+
+/** The attendee rows' two contact states, which every `Row.Person` surface shares. */
+export const Spec: Story = {
+  play: async ({ canvasElement }) => {
+    // Scoped to the header's rows: the story also lists every seeded person in its reference grid,
+    // so the name alone is ambiguous.
+    const attendeeRow = () =>
+      [...canvasElement.querySelectorAll('.dx-card__row')].find((row) =>
+        row.textContent?.includes(KNOWN_ATTENDEE.name),
+      );
+    await waitFor(() => expect(attendeeRow()).toBeTruthy(), { timeout: 12_000 });
+
+    // The known attendee's row resolves to a Person, so hovering its contact anchor opens the card.
+    // The popover renders in a portal outside the canvas, hence the document-level query.
+    const anchor = attendeeRow()?.querySelector('button');
+    if (!anchor) {
+      throw new Error('Contact anchor not found for the known attendee.');
+    }
+    await userEvent.hover(anchor);
+    const card = await waitFor(
+      () => {
+        const found = document.body.querySelector('[data-testid="contact-preview"]');
+        if (!found) {
+          throw new Error('Contact preview card did not open.');
+        }
+        return found;
+      },
+      { timeout: 5_000 },
+    );
+    await expect(card).toHaveTextContent(KNOWN_ATTENDEE.name);
+    await expect(card).toHaveTextContent(KNOWN_ATTENDEE.email);
   },
 };
