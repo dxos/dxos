@@ -214,6 +214,17 @@ const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToP
 const FEED_SYNC_POLL_INTERVAL = 2_000;
 
 /**
+ * Ceiling for the no-change backoff below: the poll delay doubles after each tick that reports the
+ * same backlog, and resets to {@link FEED_SYNC_POLL_INTERVAL} the moment it changes.
+ */
+const MAX_FEED_SYNC_POLL_INTERVAL = 15_000;
+
+const feedSyncStateChanged = (before: SpaceFeedSyncState, after: SpaceFeedSyncState): boolean =>
+  before.blocksToPull !== after.blocksToPull ||
+  before.blocksToPush !== after.blocksToPush ||
+  before.totalBlocks !== after.totalBlocks;
+
+/**
  * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
  * otherwise the EDGE peer.
  */
@@ -775,8 +786,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    // Feed blocks have no change stream, so poll the backend.
+    // Feed blocks have no change stream, so poll the backend. No-change backoff widens the delay
+    // while the backlog stays put (an idle space otherwise polls forever at a fixed 2 s cadence)
+    // and snaps back to FEED_SYNC_POLL_INTERVAL the moment the backlog actually moves.
     let pollInFlight = false;
+    let pollDelay = FEED_SYNC_POLL_INTERVAL;
+    let pollTimer: ReturnType<typeof setTimeout> | undefined;
     const pollFeeds = async () => {
       // Skip overlapping ticks so a slow RPC can't emit stale state after a newer poll.
       if (pollInFlight) {
@@ -786,23 +801,33 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       try {
         const next = await this.#getSpaceFeedSyncState();
         if (!cancelled) {
+          pollDelay = feedSyncStateChanged(feeds, next)
+            ? FEED_SYNC_POLL_INTERVAL
+            : Math.min(pollDelay * 2, MAX_FEED_SYNC_POLL_INTERVAL);
           feeds = next;
           emit();
         }
       } catch (error) {
         // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
+        // Reset the delay too: a failed read can't tell us the backlog is quiet, so retry promptly
+        // rather than waiting out whatever delay a prior run of no-change ticks had grown to.
+        pollDelay = FEED_SYNC_POLL_INTERVAL;
         if (!cancelled) {
           log.warn('failed to poll feed sync state', { error });
         }
       } finally {
         pollInFlight = false;
+        if (!cancelled) {
+          pollTimer = setTimeout(() => void pollFeeds(), pollDelay);
+        }
       }
     };
     void pollFeeds();
-    const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
     ctx.onDispose(() => {
       cancelled = true;
-      clearInterval(timer);
+      if (pollTimer) {
+        clearTimeout(pollTimer);
+      }
     });
 
     return () => {
