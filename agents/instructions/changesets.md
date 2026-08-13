@@ -65,10 +65,27 @@ Add streaming query API and surface it in the markdown plugin.
 not how many packages, groups, or commits you touched. Work spanning two groups is still one story and
 belongs in one file with a line per group, as above; so does a fix that took five commits.
 
+**This one is a gate, not a nudge** (unlike the missing-changeset reminder): `pnpm check-changeset-count`
+in **Check** fails the build when a branch adds more than one `.changeset/*.md`, counted against the
+merge base. When a PR grows and you have accumulated a file per commit, consolidate before opening it.
+
 Add a second file **only when the PR genuinely addresses two unrelated things** a reader would look up
 separately — e.g. a query-planner fix that happens to ride along with an unrelated toolbar change. If
 you catch yourself writing "and also" between two unrelated clauses, that's the signal. Splitting one
 piece of work into several files fragments the changelog into entries nobody can follow, and re-reads
 as several releases' worth of change.
 
-When a PR grows and you have accumulated a file per commit, consolidate before opening it.
+That rare case waives the gate with a **YAML comment in the front matter** of one of the files — a
+comment, so `@changesets/parse` drops it and the reason never reaches `CHANGELOG.md`:
+
+```md
+---
+# multiple-changesets: unrelated toolbar fix rides along with the query-planner fix
+'@dxos/plugin-markdown': patch
+---
+
+Keep the toolbar overflow menu open while a submenu is focused.
+```
+
+Write the waiver only when the second entry is genuinely a second story — it is the escape hatch for the
+exception, not a way to skip consolidating.
