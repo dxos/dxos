@@ -19,7 +19,6 @@ so `warn` and `error` both fail CI; the distinction is documentary.
 | `dxos-package-imports` | A package's own `imports` aliases over relative paths to the same file | warn | yes |
 | `effect-subpath-imports` | Subpath imports for Effect packages | warn | yes |
 | `import-as-namespace` | `import * as X` for modules marked `@import-as-namespace`, with `X` matching the filename | warn | yes |
-| `local-id-format` | `Surface.create` / `GraphBuilder.createExtension` ids end in a camelCase segment | error | yes |
 | `no-bare-dot-imports` | No bare `.` or `..` specifiers | error | yes |
 | `no-effect-run-promise` | `EffectEx.runPromise` from `@dxos/effect` over `Effect.runPromise` | error | no |
 | `no-empty-promise-catch` | `.catch()` is passed a handler | error | yes |
@@ -33,7 +32,7 @@ so `warn` and `error` both fail CI; the distinction is documentary.
 
 ### Scoping worth knowing
 
-Four rules are narrower than their names suggest, and a finding's absence does not mean a file was
+Three rules are narrower than their names suggest, and a finding's absence does not mean a file was
 checked and passed:
 
 - **`dxos-subpath-exports` only engages for a package that already declares at least one PascalCase
@@ -49,11 +48,6 @@ checked and passed:
   condition (`#plugin` → `plugin.node.ts` under node, `plugin.tsx` by default), it and a relative
   path to one branch are *different modules*, so substituting one for the other would change which
   module loads. Naming a branch deliberately is not a bypass and is not reported.
-- **`local-id-format` reads string literals only**, at the three call sites whose ids the runtime
-  validates (`Surface.create`, `GraphBuilder.createExtension`, `createExtensionRaw`). A computed id
-  is not checked. It exists because both runtimes drop a malformed contribution with only a
-  `log.warn`, which reads as "the surface renders nothing" rather than as an error — the id
-  `article.task-set` kept plugin-tasks' TaskSet surface out of the Project article entirely.
 
 ### `dxos-subpath-exports` findings
 

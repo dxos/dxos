@@ -4,12 +4,13 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import { isValidLocalId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
-import { type Definition, isValidLocalId } from './types';
+import { type Definition } from './types';
 
 const EMPTY_CANDIDATES: ReadonlyArray<Definition> = [];
 

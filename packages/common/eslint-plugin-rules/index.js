@@ -12,7 +12,6 @@ import dxosSubpathImports from './rules/dxos-subpath-imports.js';
 import effectSubpathImports from './rules/effect-subpath-imports.js';
 import header from './rules/header.js';
 import importAsNamespace from './rules/import-as-namespace.js';
-import localIdFormat from './rules/local-id-format.js';
 import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
@@ -35,7 +34,6 @@ const plugin = {
     'effect-subpath-imports': effectSubpathImports,
     header,
     'import-as-namespace': importAsNamespace,
-    'local-id-format': localIdFormat,
     'no-bare-dot-imports': noBareDotImports,
     'no-effect-run-promise': noEffectRunPromise,
     'no-empty-promise-catch': noEmptyPromiseCatch,
@@ -50,7 +48,6 @@ const plugin = {
         'dxos-plugin/effect-subpath-imports': 'error',
         'dxos-plugin/header': 'error',
         'dxos-plugin/import-as-namespace': 'error',
-        'dxos-plugin/local-id-format': 'error',
         'dxos-plugin/no-bare-dot-imports': 'error',
         'dxos-plugin/no-effect-run-promise': 'error',
         'dxos-plugin/no-empty-promise-catch': 'error',

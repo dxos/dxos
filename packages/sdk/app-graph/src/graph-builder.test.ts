@@ -1656,12 +1656,12 @@ describe('GraphBuilder', () => {
 
   describe('invalid local id', () => {
     test('drops an extension with an invalid id rather than throwing', ({ expect }) => {
+      // Widened to `string` so it reaches the runtime check: `LocalId` rejects a malformed literal
+      // outright, and this covers the computed ids it deliberately lets through.
+      const computedId: string = 'gallery-article';
       expect(
         GraphBuilder.createExtensionRaw({
-          // The malformed id is the fixture under test; the lint rule that normally forbids it
-          // guards authoring sites, not this one.
-          // eslint-disable-next-line @dxos/rules/local-id-format
-          id: 'gallery-article',
+          id: computedId,
           connector: () => Atom.make([{ id: 'foo', type: EXAMPLE_TYPE, data: null }]),
         }),
       ).toEqual([]);
