@@ -28,6 +28,8 @@ export type UseMessageToolbarActionsProps = {
   inInbox?: boolean;
   /** Toggles the message's `inbox` tag — archiving when it is in the inbox, restoring when it is not. */
   onArchive?: () => void;
+  /** Creates a tracking Project from this message. */
+  onCreateProject?: () => void;
 };
 
 /**
@@ -47,6 +49,7 @@ export const useMessageActions = ({
   onAiReply,
   inInbox,
   onArchive,
+  onCreateProject,
 }: UseMessageToolbarActionsProps) => {
   return useMenuBuilder(
     (get) =>
@@ -132,9 +135,25 @@ export const useMessageActions = ({
               }
             }
 
+            // Derive-something-from-this-message actions. Grouped with the contributed extractors
+            // because they are the same gesture: turn this message into another object.
+            if (onCreateProject || extractActions.length > 0) {
+              builder.separator('line');
+            }
+            if (onCreateProject) {
+              builder.action(
+                'create-project',
+                {
+                  label: ['message-toolbar-create-project.menu', { ns: meta.profile.key }],
+                  icon: 'ph--stack--regular',
+                  testId: 'inbox.message.createProject',
+                },
+                onCreateProject,
+              );
+            }
+
             // Extraction actions (trips, people, …) contributed for this message.
             if (extractActions.length > 0) {
-              builder.separator('line');
               for (const item of extractActions) {
                 builder.action(
                   `extract-${item.id}`,
@@ -157,6 +176,19 @@ export const useMessageActions = ({
           'inbox.message.more',
         )
         .build(),
-    [graph, nodeId, extractActions, onOpen, onReply, onReplyAll, onForward, onAiReply, inInbox, onArchive, onDelete],
+    [
+      graph,
+      nodeId,
+      extractActions,
+      onOpen,
+      onReply,
+      onReplyAll,
+      onForward,
+      onAiReply,
+      inInbox,
+      onArchive,
+      onCreateProject,
+      onDelete,
+    ],
   );
 };

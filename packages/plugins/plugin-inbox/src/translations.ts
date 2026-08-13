@@ -119,6 +119,7 @@ export const translations = [
         'message-toolbar-forward.menu': 'Forward',
         'message-toolbar-ai-reply.menu': 'AI reply',
         'message-toolbar-archive.menu': 'Archive',
+        'message-toolbar-create-project.menu': 'Create Project',
         'message-toolbar-move-to-inbox.menu': 'Move to Inbox',
         'draft-toolbar.label': 'Draft toolbar',
         'draft-toolbar-generate.menu': 'Generate reply',

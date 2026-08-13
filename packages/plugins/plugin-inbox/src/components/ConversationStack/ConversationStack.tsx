@@ -87,6 +87,8 @@ type ConversationMessageActions = {
   onAiReply?: (message: MessageType.Message) => void;
   onDelete?: (message: MessageType.Message) => void;
   onOpen?: (message: MessageType.Message) => void;
+  /** Creates a tracking Project from the message (container-invoked; the component holds no invoker). */
+  onCreateProject?: (message: MessageType.Message) => void;
   /**
    * Fired after a message is archived (never on restore). The tag toggle itself is tile-local so
    * archiving works in every consumer; this is the container's hook for the layout consequence —
@@ -168,6 +170,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'onDelete'
     | 'onOpen'
     | 'onArchived'
+    | 'onCreateProject'
   >
 >;
 
@@ -198,6 +201,7 @@ const ConversationStackRoot = ({
   onDelete,
   onOpen,
   onArchived,
+  onCreateProject,
 }: ConversationStackRootProps) => (
   <ConversationStackProvider
     attendableId={attendableId}
@@ -213,6 +217,7 @@ const ConversationStackRoot = ({
     onDelete={onDelete}
     onOpen={onOpen}
     onArchived={onArchived}
+    onCreateProject={onCreateProject}
     companion={companion}
     graph={graph}
     getExtractActions={getExtractActions}
@@ -467,6 +472,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     onDelete,
     onOpen,
     onArchived,
+    onCreateProject,
     onExpandedChange,
     onContactCreate,
   } = useConversationStackContext(MESSAGE_TILE_NAME);
@@ -494,12 +500,19 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
       onArchived?.(target);
     }
   }, [toggleInbox, inInbox, target, onArchived]);
+  const handleCreateProject = useCallback(() => {
+    if (target) {
+      onCreateProject?.(target);
+    }
+  }, [onCreateProject, target]);
+
   const menuActions = useMessageActions({
     graph,
     extractActions,
     nodeId: attendableId,
     inInbox,
     onArchive: handleArchive,
+    onCreateProject: onCreateProject && target ? handleCreateProject : undefined,
     ...handlers,
   });
 

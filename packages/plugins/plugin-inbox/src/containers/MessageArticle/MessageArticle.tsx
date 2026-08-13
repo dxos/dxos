@@ -170,6 +170,24 @@ export const MessageArticle = ({
     [db, invoker],
   );
 
+  // Derives a tracking Project from the message and opens it. Failures surface rather than being
+  // swallowed: the operation runs an AI step, so a timeout is a plausible outcome the user must see.
+  const handleCreateProject = useCallback(
+    (message: MessageType.Message) => {
+      if (!db || !mailbox) {
+        return;
+      }
+      void invoker
+        .invokePromise(
+          InboxOperation.CreateProjectFromMessage,
+          { mailbox: Ref.make(mailbox), message },
+          { spaceId: db.spaceId },
+        )
+        .catch((err) => log.catch(err));
+    },
+    [db, invoker, mailbox],
+  );
+
   // Per-message delete action, backed by the space operation for removing objects.
   const handleDelete = useCallback(
     (message: MessageType.Message) => {
@@ -253,6 +271,7 @@ export const MessageArticle = ({
       onDelete={mailbox ? handleDelete : undefined}
       onOpen={mailbox ? handleOpen : undefined}
       onArchived={mailbox ? handleArchived : undefined}
+      onCreateProject={mailbox ? handleCreateProject : undefined}
     >
       <Panel.Root role={role} data-testid={testId}>
         <Panel.Toolbar asChild>
