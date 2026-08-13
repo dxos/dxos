@@ -196,6 +196,20 @@ Committed, unpushed. This is the PR to open first.
 
 ---
 
+## Coverage gap: `useBlobUrl`'s lifecycle (from codecov on PR #12555)
+
+Codecov put the patch at 53.7% — above the project's 48.5%, and most of the miss is React containers
+this repo does not unit-test. One entry is worth acting on rather than dismissing:
+
+- [ ] **Test `useBlobUrl`'s resolve/revoke lifecycle** — 4.76% covered (30 missing, 10 partials), the
+      largest gap in the patch and the only non-React logic among them. The pure half
+      (`getAttachmentKind`) has 6 tests; the EFFECT is untested, and it is where the real risk lives:
+      the url must be revoked on unmount, on ref change, AND when resolution lands after unmount — a
+      leak that nothing would surface at runtime. Needs a DOM test env; copy the `renderHook` pattern
+      from `plugin-markdown/src/hooks/useExtensions.test.tsx`, or the `.browser.test.ts` convention
+      `plugin-kanban` uses. Deliberately NOT done at the end of a long session: adding a test
+      environment unverified is how the last CI break happened.
+
 ## Phase 4: Summarization
 
 ### Tasks
