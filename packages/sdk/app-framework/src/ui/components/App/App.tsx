@@ -117,7 +117,8 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
 /**
  * Nests each provider around the next at render time so the element type is a constant: composing
  * the nesting into a component makes it a new type per render, remounting the whole app on any
- * capability change. Sorting only appends, so the chain extends inward and providers keep place.
+ * capability change. A contributed context appends, so the chain extends inward and the providers
+ * above keep their positions; a removed one still shifts everything below it.
  */
 const ContextChain = ({ contexts, children }: PropsWithChildren<{ contexts: Capabilities.ReactContext[] }>) => {
   if (contexts.length === 0) {
