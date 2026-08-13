@@ -13,7 +13,7 @@ tasks:
       --export ./JmapPlugin
       --to "@dxos/react-ui"
       --to react
-      --conditions workerd,worker,browser
+      --conditions workerd,worker
       --fail-on present
     deps:
       - dx-trace-imports:build

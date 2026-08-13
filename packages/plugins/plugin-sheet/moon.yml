@@ -16,7 +16,7 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./SheetPlugin
       --to "{react,react-dom}"
-      --conditions workerd,worker,browser
+      --conditions workerd,worker
       --fail-on present
     deps:
       - dx-trace-imports:build

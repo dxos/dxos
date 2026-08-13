@@ -14,7 +14,7 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./MarkdownPlugin
       --to "@dxos/react-ui"
-      --conditions workerd,worker,browser
+      --conditions workerd,worker
       --fail-on present
     deps:
       - dx-trace-imports:build

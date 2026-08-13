@@ -17,7 +17,7 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./KanbanPlugin
       --to "{react,react-dom}"
-      --conditions workerd,worker,browser
+      --conditions workerd,worker
       --fail-on present
     deps:
       - dx-trace-imports:build
