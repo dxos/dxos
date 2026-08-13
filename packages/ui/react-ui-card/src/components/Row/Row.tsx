@@ -294,8 +294,11 @@ const PersonAvatarHoverRow = ({
   return (
     <Card.Row>
       <Card.Block>
+        {/* `grid place-items-center`: a plain block wrapper takes its line box (30px for a 24px
+            avatar), which knocked the avatar off the gutter's centre. */}
         <div
           ref={anchorRef}
+          className='grid place-items-center'
           data-testid='row.contact-avatar'
           onPointerEnter={() => {
             setHovered(true);

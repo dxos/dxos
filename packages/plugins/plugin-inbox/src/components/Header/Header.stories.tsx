@@ -20,15 +20,25 @@ import { translations } from '#translations';
 
 import { Header } from './Header';
 
-const SENDER: Actor.Actor = {
+/** An actor with a known address, so `contacts` can name one without a non-null assertion. */
+type StoryActor = Actor.Actor & { email: string };
+
+const KNOWN_SENDER: StoryActor = {
   name: 'Alice Avery',
   email: 'alice@example.com',
 };
 
-/** Second actor, deliberately without a Person record, so the create affordance has somewhere to appear. */
-const STRANGER: Actor.Actor = {
+/** Second actor, used by the variant that needs an address the space has no Person for. */
+const STRANGER: StoryActor = {
   name: 'Bob Bell',
   email: 'bob@example.com',
+};
+
+type StoryArgs = {
+  /** Person rows to render, in order; the first is the sender. */
+  actors?: StoryActor[];
+  /** Emails to seed a Person for — an actor NOT listed here exercises the create-contact affordance. */
+  contacts?: string[];
 };
 
 /**
@@ -51,17 +61,18 @@ const useContactCreate = (space?: Space) =>
     [space],
   );
 
-type StoryArgs = {
-  sender: Actor.Actor;
-};
-
-// Header.Root chrome composing shared Row.* primitives — the structure both article headers use.
-// Star and avatar are live: the star owns its state, and the avatar resolves the actor's contact (so
-// it opens a card on hover, or offers to create the Person when the space has none).
-const DefaultStory = () => {
+/**
+ * Header.Root chrome composing shared Row.* primitives — the structure both article headers use.
+ *
+ * Live rather than static: the star owns its state, and each avatar resolves its actor's contact, so
+ * hovering one opens that Person's card (or offers to create the Person when the space has none —
+ * always a click, never the hover).
+ */
+const DefaultStory = ({ actors = [KNOWN_SENDER] }: StoryArgs) => {
   const { space } = useClientStory();
   const [starred, setStarred] = useState(true);
   const handleContactCreate = useContactCreate(space);
+
   return (
     <Header.Root>
       <Card.Row>
@@ -70,7 +81,17 @@ const DefaultStory = () => {
         </Card.Block>
         <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
       </Card.Row>
-      <Row.Person avatar actor={SENDER} role='from' db={space?.db} onContactCreate={handleContactCreate} />
+      {actors.map((actor, index) => (
+        // `avatar` + `db` is the interactive variant: it resolves the contact, so it can hover.
+        <Row.Person
+          key={actor.email}
+          avatar
+          actor={actor}
+          role={index === 0 ? 'from' : 'to'}
+          db={space?.db}
+          onContactCreate={handleContactCreate}
+        />
+      ))}
       <Row.Date start={new Date('2025-11-19T12:00:00')} end={new Date('2025-11-19T13:00:00')} />
       <Row.Tags tags={[{ id: 'a', label: 'planning', hue: 'cyan' }]} />
     </Header.Root>
@@ -87,9 +108,15 @@ const meta = {
       types: [Person.Person],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: ({ space }) => {
-        // SENDER has a contact (card on hover); STRANGER deliberately does not (create affordance).
-        space.db.add(Obj.make(Person.Person, { fullName: SENDER.name, emails: [{ value: SENDER.email! }] }));
+      // Seeds a Person per `contacts` entry, so which rows have a contact is an arg rather than a
+      // separate story component.
+      onCreateSpace: ({ space }, context) => {
+        const args: StoryArgs = context.args ?? {};
+        const { actors = [KNOWN_SENDER], contacts = [] } = args;
+        for (const email of contacts) {
+          const actor = actors.find((candidate) => candidate.email === email);
+          space.db.add(Obj.make(Person.Person, { fullName: actor?.name, emails: [{ value: email }] }));
+        }
       },
     }),
   ],
@@ -104,93 +131,67 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    // `Row.Star` labels itself from react-ui's own translation namespace, which this isolated story
-    // does not load — so the accessible name is the raw key. Asserting on it still pins the behaviour
-    // under test: the star owns its state, and toggling swaps which action the button offers.
-    const unstar = await canvas.findByRole('button', { name: 'system-button.unstar.label' }, { timeout: 12_000 });
-    await userEvent.click(unstar);
-    await canvas.findByRole('button', { name: 'system-button.star.label' }, undefined, { timeout: 5_000 });
+  args: {
+    actors: [KNOWN_SENDER],
+    contacts: [KNOWN_SENDER.email],
   },
 };
 
-export const UnknownSender: Story = {};
-
-export const KnownSender: Story = {};
-
-/**
- * The avatar's two hover states, which are what the sender gutter is for:
- *
- *  - the actor HAS a Person → hovering the avatar opens that contact's card;
- *  - the actor has none → the avatar gives way to a create-contact button (a click, never the hover,
- *    since hovering must not write to the space).
- *
- * `onContactCreate` runs the extractor's own `buildContactFromActor` — the same core the app reaches
- * through `InboxOperation.ExtractContact` — so creating the contact here flips the row into its
- * card-on-hover state exactly as it does in the app.
- */
-const ContactStory = () => {
-  const { space } = useClientStory();
-  const handleContactCreate = useContactCreate(space);
-
-  return (
-    <Header.Root>
-      <Card.Row>
-        <Card.Block>
-          <Row.Star starred onToggle={() => {}} />
-        </Card.Block>
-        <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
-      </Card.Row>
-      {/* `avatar` + `db` is the interactive variant: it resolves the contact, so it can hover. */}
-      <Row.Person avatar actor={SENDER} role='from' db={space?.db} onContactCreate={handleContactCreate} />
-      <Row.Person avatar actor={STRANGER} role='to' db={space?.db} onContactCreate={handleContactCreate} />
-    </Header.Root>
-  );
+export const UnknownSender: Story = {
+  args: {
+    actors: [STRANGER],
+    contacts: [STRANGER.email],
+  },
 };
 
-export const Contact: Story = {
-  render: ContactStory,
+/**
+ * Both avatar hover states side by side: `SENDER` has a Person (card on hover), `STRANGER` has none
+ * (create-contact button on hover, and creating it hands over to the card).
+ */
+export const Spec: Story = {
+  args: {
+    actors: [KNOWN_SENDER, STRANGER],
+    contacts: [KNOWN_SENDER.email],
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getByText('Bob Bell')).toBeInTheDocument(), { timeout: 12_000 });
 
+    const avatarFor = (name: string) => {
+      const avatar = canvas
+        .getByText(name)
+        .closest('.dx-card__row')
+        ?.querySelector('[data-testid="row.contact-avatar"]');
+      if (!avatar) {
+        throw new Error(`Contact avatar not found for ${name}.`);
+      }
+      return avatar;
+    };
+
     // The actor WITH a Person: hovering the avatar asks the card surface to open that contact's card.
-    // No preview surface is mounted here, so the request itself is what this asserts.
     // Captured on `window`, which is where PreviewPlugin listens: the event does not bubble, so only
-    // the capture phase sees it from an element this deep.
+    // the capture phase sees it from an element this deep. No preview surface is mounted here, so the
+    // request itself is what this asserts.
     const activations: string[] = [];
     window.addEventListener('dx-anchor-activate', () => activations.push('activated'), true);
-    const senderAvatar = canvas
-      .getByText('Alice Avery')
-      .closest('.dx-card__row')
-      ?.querySelector('[data-testid="row.contact-avatar"]');
-    if (!senderAvatar) {
-      throw new Error('Contact avatar not found for the actor with a contact.');
-    }
-    await userEvent.hover(senderAvatar);
+    await userEvent.hover(avatarFor('Alice Avery'));
     await waitFor(() => expect(activations).toHaveLength(1), { timeout: 5_000 });
-    await userEvent.unhover(senderAvatar);
+    await userEvent.unhover(avatarFor('Alice Avery'));
 
-    // Neither row shows a create button until hovered.
+    // The actor WITHOUT one: no create button until hovered, then a click creates the Person and the
+    // row goes back to showing an avatar (now card-backed).
     await expect(canvas.queryByRole('button', { name: 'Create contact' })).toBeNull();
-
-    // Hovering the contactless actor's avatar offers to create the Person. The hover target is the
-    // avatar in the row's gutter, not the row's text cell.
-    const strangerAvatar = canvas
-      .getByText('Bob Bell')
-      .closest('.dx-card__row')
-      ?.querySelector('[data-testid="row.contact-avatar"]');
-    if (!strangerAvatar) {
-      throw new Error('Contact avatar not found for the contactless actor.');
-    }
-    await userEvent.hover(strangerAvatar);
+    await userEvent.hover(avatarFor('Bob Bell'));
     const create = await canvas.findByRole('button', { name: 'Create contact' }, { timeout: 5_000 });
-
-    // Clicking it creates the contact, and the row goes back to showing an avatar (now card-backed).
     await userEvent.click(create);
     await waitFor(() => expect(canvas.queryByRole('button', { name: 'Create contact' })).toBeNull(), {
       timeout: 5_000,
     });
+
+    // `Row.Star` labels itself from react-ui's own translation namespace, which this isolated story
+    // does not load — so the accessible name is the raw key. Asserting on it still pins the behaviour
+    // under test: the star owns its state, and toggling swaps which action the button offers.
+    await userEvent.click(canvas.getByRole('button', { name: 'system-button.unstar.label' }));
+    await canvas.findByRole('button', { name: 'system-button.star.label' }, undefined, { timeout: 5_000 });
   },
 };
