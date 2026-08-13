@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
@@ -42,6 +43,27 @@ import {
 import { getMessageLabel } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
+
+/**
+ * Whether an external sync connection targets this mailbox. Gates the pipeline actions: with nothing
+ * connected there is no mail to act on, so offering them is a dead affordance. Mirrors the lookup the
+ * sync action does — the cursor no longer relates to a Connection directly, so the Connection is found
+ * by matching access tokens.
+ */
+const hasConnection = (mailbox: Mailbox.Mailbox, get: Atom.AtomContext): boolean => {
+  const db = Obj.getDatabase(mailbox);
+  if (!db) {
+    return false;
+  }
+  const cursor = get(db.query(Filter.type(Cursor.Cursor)).atom).find(
+    (candidate): candidate is Cursor.ExternalCursor =>
+      Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
+  );
+  if (!cursor) {
+    return false;
+  }
+  return get(db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom).length > 0;
+};
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
@@ -436,7 +458,9 @@ export default Capability.makeModule(
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
-          if (!db) {
+          // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
+          // view's main call to action on a mailbox that has nothing to enrich yet.
+          if (!db || !hasConnection(mailbox, get)) {
             return Effect.succeed([]);
           }
           return Effect.gen(function* () {

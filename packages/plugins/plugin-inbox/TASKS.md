@@ -82,9 +82,14 @@ Committed, unpushed. This is the PR to open first.
       (a sender with no linked contact). OPEN: `EnrichImages` is set-scoped (`limit`), not
       subject-scoped, so it enriches whatever is missing an image rather than this sender — a
       subject-scoped variant would be the cleaner call.
-- [ ] **Gate the Enrich button on configured connections** — gate the CONTRIBUTION in
+- [x] **Gate the Enrich button on configured connections** — gate the CONTRIBUTION in
       `app-graph-builder.ts`, not a disabled button; a disabled primary still reads as the main call to
-      action. `'no-connections.label'` already exists; check whether one predicate can drive both.
+      action. SHIPPED: a shared `hasConnection(mailbox, get)` helper, extracted from the lookup the sync
+      action already did (cursor → Connection by access token), now gates the whole pipeline action set —
+      Enrich AND Process, since neither has anything to act on without a connection. NOTE the scope
+      question from triage is answered by that: the gate is per action-set, not per button. The existing
+      `'no-connections.label'` empty state is NOT yet driven by the same predicate — worth folding
+      together if that string ever moves off its current surface.
 - [ ] **plugin-crm story driving `CrmOperation.EnrichImages`** — the package's first storybook (config,
       deps, moon target). Seed a Person and an Organization with no `image`, render their cards, add a
       button that invokes the operation and shows the result. Establish image-service reachability
