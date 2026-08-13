@@ -232,7 +232,9 @@ so it is NOT a regression from this work. Console shows the cause: the ECHO clie
 to 8 objects did NOT help, so seeding is not the bottleneck.
 
 Consequence: **the manual test plan below cannot be executed from my storybook instance.** Everything on
-this branch is verified only by build, lint and unit tests. Same family as the already-tracked "story
+this branch is verified by build, lint and unit tests only — with ONE exception: F1 (the Row story star)
+was confirmed headlessly on :9013 by driving the DOM, before this blocker appeared. Headless DOM
+assertions are NOT the same as seeing a surface render, so every other step remains unverified. Same family as the already-tracked "story
 invoker wedge (env)" and the 20s index-query timeouts.
 
 Next steps when someone picks this up: check whether the user's own :9009 instance shows it too (if not,

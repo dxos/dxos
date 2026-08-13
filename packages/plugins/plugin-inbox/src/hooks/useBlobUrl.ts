@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 
 import { Blob, Database, Obj, type Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 
 export type BlobResource = {
   /** Object url for the blob's bytes, or `undefined` until resolved (or on failure). */
@@ -59,16 +60,26 @@ export const useBlobUrl = (ref: Ref.Ref<Obj.Unknown> | undefined, db: Database.D
         Effect.provide(Database.layer(db)),
         Effect.catch(() => Effect.succeed(undefined)),
       ),
-    ).then((resolved) => {
-      if (cancelled) {
-        // Resolved after unmount: nothing will render it, so release it here instead of leaking.
-        if (minted) {
-          URL.revokeObjectURL(minted);
+    )
+      .then((resolved) => {
+        if (cancelled) {
+          // Resolved after unmount: nothing will render it, so release it here instead of leaking.
+          if (minted) {
+            URL.revokeObjectURL(minted);
+          }
+          return;
         }
-        return;
-      }
-      setResource({ ...resolved, pending: false });
-    });
+        setResource({ ...resolved, pending: false });
+      })
+      .catch((err) => {
+        // `Effect.catch` above only handles TYPED failures; a defect still rejects here. Without this
+        // the rejection would be unhandled — logged rather than swallowed, and the viewer falls back to
+        // its "could not be loaded" state instead of spinning forever.
+        log.catch(err);
+        if (!cancelled) {
+          setResource({ pending: false });
+        }
+      });
 
     return () => {
       cancelled = true;
