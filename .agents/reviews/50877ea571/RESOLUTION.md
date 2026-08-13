@@ -2993,7 +2993,7 @@
 - 50877ea571-2989 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-peer-connection.ts:145
 - 50877ea571-2990 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-peer-connection.ts:169
 - 50877ea571-2991 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-peer-connection.ts:473
-- 50877ea571-2992 - unresolved - no-sleep-in-test - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:47
+- 50877ea571-2992 - resolved - no-sleep-in-test - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:47
 - 50877ea571-2993 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:116
 - 50877ea571-2994 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:119
 - 50877ea571-2995 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:124
@@ -3028,7 +3028,7 @@
 - 50877ea571-3024 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:413
 - 50877ea571-3025 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:414
 - 50877ea571-3026 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:415
-- 50877ea571-3027 - unresolved - no-sleep-in-test - packages/core/mesh/rpc/src/rpc.test.ts:441
+- 50877ea571-3027 - resolved - no-sleep-in-test - packages/core/mesh/rpc/src/rpc.test.ts:441
 - 50877ea571-3028 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:453
 - 50877ea571-3029 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:500
 - 50877ea571-3030 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:501
@@ -3082,13 +3082,13 @@
 - 50877ea571-3078 - ignored - no-casts - packages/core/mesh/teleport-extension-replicator/src/stress.test.ts:69
 - 50877ea571-3079 - ignored - no-casts - packages/core/mesh/teleport/src/control-extension.ts:27
 - 50877ea571-3080 - ignored - no-casts - packages/core/mesh/teleport/src/control-extension.ts:122
-- 50877ea571-3081 - unresolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/balancer.test.ts:101
+- 50877ea571-3081 - resolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/balancer.test.ts:101
 - 50877ea571-3082 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:89
 - 50877ea571-3083 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:92
 - 50877ea571-3084 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:98
 - 50877ea571-3085 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:129
 - 50877ea571-3086 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:186
-- 50877ea571-3087 - unresolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/framer.test.ts:104
+- 50877ea571-3087 - resolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/framer.test.ts:104
 - 50877ea571-3088 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/framer.ts:117
 - 50877ea571-3089 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/framer.ts:118
 - 50877ea571-3090 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/framer.ts:129
