@@ -58,8 +58,13 @@ Committed, unpushed. This is the PR to open first.
       display name that already appears as the tile heading.
 - [x] **Conversation avatar contact affordance** (`aca3222ead`) — bare `Avatar` → `ContactAvatar`,
       resolving through `db` (a conversation holds few messages, unlike the virtualized list).
-- [ ] **ConversationStack story: host `ContactPreview`, seed ~50% of actors as Persons** — the story
+- [x] **ConversationStack story: host `ContactPreview`, seed ~50% of actors as Persons** — the story
       half of the item above, so both resolved and unresolved states are visible.
+      DONE. `onContactCreate` now actually adds a Person rather than being a no-op, so the create
+      affordance can be exercised. GOTCHA worth remembering: the seeding must derive senders from the
+      FEED-scoped query — a bare `space.db.query(Filter.type(Message.Message))` does not see feed
+      messages and silently seeds nobody, which would have made the story look correct while testing
+      nothing.
 
 ### DECIDED
 
