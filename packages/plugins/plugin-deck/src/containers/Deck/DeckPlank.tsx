@@ -7,6 +7,7 @@ import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRe
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
@@ -21,6 +22,16 @@ import { PlankErrorFallback, PlankLoading } from './PlankFallback';
 import { useDeckPlank } from './useDeckPlank';
 
 const PLANK_LOADING = <PlankLoading />;
+
+// The same article the not-found sentinel renders, addressed by the sentinel's own path so the
+// contributing surface (`react-surface.ts`) matches without the deck knowing what renders it.
+const PLANK_NOT_FOUND = (
+  <Surface.Surface
+    type={AppSurface.Article}
+    data={{ subject: null, attendableId: NotFound.NOT_FOUND_PATH } satisfies AppSurface.ArticleData}
+    limit={1}
+  />
+);
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;
@@ -56,6 +67,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   const rootRef = useRef<HTMLDivElement>(null);
   const {
     node,
+    unresolved,
     capabilities,
     sigilActions,
     popoverAnchorId,
@@ -116,7 +128,10 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   const articleData = useMemo(() => ({ path }), [path]);
 
   if (!node) {
-    return PLANK_LOADING;
+    // A plank whose restore gave up keeps its own id (so it renders for real if the node ever
+    // arrives) and shows not-found in place, rather than the indefinite blank loader an absent node
+    // would otherwise get.
+    return unresolved ? PLANK_NOT_FOUND : PLANK_LOADING;
   }
 
   const controls = (

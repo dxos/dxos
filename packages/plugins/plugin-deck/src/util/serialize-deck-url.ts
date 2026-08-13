@@ -20,8 +20,12 @@ export type CompanionRepresentation = {
  * Pure serialization of a deck's `active` plank list (plus its companion, if open) into a pathname
  * under the pair-chain grammar — the reverse of `PathResolution.resolveUrl`. Extracted as a pure
  * function (taking pre-computed representations rather than a live graph builder) so it is testable
- * without an Effect runtime. A plank with no representation (an unmapped node, or the not-found
- * sentinel) is skipped with a `log.warn`, per the design's "unmapped nodes" rule.
+ * without an Effect runtime.
+ *
+ * A plank with no representation is skipped with a `log.warn`. Callers must not write the result to
+ * the URL when that happens: a shortened URL is indistinguishable from one the user chose, so the
+ * next restore reads it as truth and the plank is lost for good. The deck's sync checks for an
+ * unrepresentable plank first and leaves the URL alone — this skip only keeps the pure function total.
  */
 export const serializeDeckToUrl = (params: {
   workspace: string;

@@ -41,6 +41,8 @@ export type UseDeckPlankOptions = {
 
 export type DeckPlank = {
   node: Node.Node | undefined;
+  /** Whether a URL restore gave up on this plank; distinguishes "gave up" from "still loading". */
+  unresolved: boolean;
   capabilities: PlankCapabilities;
   /** Grouped sigil-menu actions, or `undefined` when the node is unresolved. */
   sigilActions: AttentionSigilAction[][] | undefined;
@@ -150,6 +152,9 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
 
   return {
     node,
+    // Only while the node is genuinely absent: once it lands the plank renders for real, so a stale
+    // entry from a restore that has since healed cannot keep showing not-found.
+    unresolved: !node && !!state.unresolved?.includes(id),
     capabilities,
     sigilActions,
     popoverAnchorId: state.popoverAnchorId,

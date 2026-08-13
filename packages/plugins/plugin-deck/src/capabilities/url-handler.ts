@@ -55,6 +55,7 @@ export default Capability.makeModule(
     const navigationTargetLoaders = yield* AppCapabilities.NavigationTargetLoader;
     const registry = yield* Capabilities.AtomRegistry;
     const stateAtom = yield* DeckCapabilities.State;
+    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
     const settingsAtom = yield* DeckCapabilities.Settings;
     const viewState = yield* AttentionCapabilities.ViewState;
     const attention = yield* AttentionCapabilities.Attention;
@@ -130,6 +131,17 @@ export default Capability.makeModule(
           orElse: () => Effect.succeed(Option.none<A>()),
         }),
       );
+
+    /**
+     * Last known URL representation per plank, keyed by node id. The outbound sync derives the URL
+     * from live graph provenance, which a plank loses whenever its node is out of the graph — while
+     * its subtree is still loading, or for the whole time an unresolved plank waits. This is what the
+     * sync falls back to so those windows cannot truncate the URL.
+     */
+    const lastRepresentation = new Map<string, PathResolution.RepresentedNode>();
+    const seedRepresentation = (nodeId: string, node: PathResolution.RepresentedNode) => {
+      lastRepresentation.set(nodeId, node);
+    };
 
     const handleNavigation = Effect.fn(function* (url?: URL, options?: { abortIf?: () => boolean }) {
       const resolvedUrl = url ?? new URL(window.location.href);
@@ -278,6 +290,7 @@ export default Capability.makeModule(
       // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
       // than being a plank of its own, so it drives that plank's companion state and the selected variant.
       const plankIds: string[] = [];
+      const unresolved: string[] = [];
       let companionNodeId: string | null = null;
       let companionAnchorId: string | undefined;
       pairs.forEach((pair, index) => {
@@ -287,9 +300,28 @@ export default Capability.makeModule(
             companionNodeId = nodeId;
             companionAnchorId = plankIds[plankIds.length - 1];
           }
-        } else {
-          plankIds.push(nodeId ?? NotFound.NOT_FOUND_PATH);
+          return;
         }
+        if (nodeId) {
+          plankIds.push(nodeId);
+          return;
+        }
+        // Unresolved: keep addressing the plank by the id it WOULD have rather than collapsing it to
+        // the not-found sentinel. The sentinel is a different object — it discards which object was
+        // asked for, so the URL can no longer be written from the deck and the plank can never heal.
+        // Keyed on the real id, `useNode` renders it the moment the node lands, and the pair below
+        // keeps the URL writable in the meantime.
+        const candidateId = resolved[index]?.candidateId;
+        if (!candidateId) {
+          // No candidate at all (an unknown key): nothing to address, so the sentinel is all that's left.
+          plankIds.push(NotFound.NOT_FOUND_PATH);
+          return;
+        }
+        plankIds.push(candidateId);
+        unresolved.push(candidateId);
+        // Seed the outbound sync from the URL we are restoring FROM: an absent node has no graph
+        // provenance, so `representNode` cannot derive this pair and the URL would go out truncated.
+        seedRepresentation(candidateId, { key: pair.key, id: pair.id, workspace: pair.workspace });
       });
 
       // Re-checked after resolution, which is a second multi-second wait: `Set` overrides the deck
@@ -297,6 +329,9 @@ export default Capability.makeModule(
       if (options?.abortIf?.()) {
         return;
       }
+
+      // Recorded before `Set` so the planks never render as blank loaders in the frame that adds them.
+      registry.set(ephemeralAtom, { ...registry.get(ephemeralAtom), unresolved });
 
       // `Set` already means "override the deck's active list wholesale" — exactly a URL-driven
       // restore, for one plank or many, with no separate disposition to invent.
@@ -394,13 +429,32 @@ export default Capability.makeModule(
       const workspace = bareWorkspace(state.activeDeck);
 
       const representations = new Map<string, PathResolution.RepresentedNode>();
+      let lossy = false;
       for (const id of deck.active) {
-        const represented = PathResolution.representNode(builder, id);
+        const represented = PathResolution.representNode(builder, id).pipe(
+          // `representNode` reads live graph provenance, which is deleted the moment a node leaves the
+          // graph — so a plank whose subtree is momentarily absent (a connector re-emitting, a query
+          // settling) is unrepresentable through no fault of the plank. The last representation it had
+          // is still the right answer, and it is what lets an unresolved restore round-trip the pair the
+          // URL came from.
+          Option.orElse(() => Option.fromUndefinedOr(lastRepresentation.get(id))),
+        );
         if (Option.isSome(represented)) {
           representations.set(id, represented.value);
+          lastRepresentation.set(id, represented.value);
         } else {
-          log.warn('plank has no URL representation; omitting from URL', { id });
+          lossy = true;
+          log.warn('plank has no URL representation', { id });
         }
+      }
+
+      // Never write a URL that has silently lost a plank. Dropping the pair looks harmless — the deck
+      // still renders — but the URL is the only durable record of a plank whose node did not resolve,
+      // so a truncated write is what turned a transient miss into permanent data loss: the next reload
+      // restores the shortened URL and the plank is gone for good. A stale URL heals on the next
+      // successful sync; a truncated one cannot.
+      if (lossy) {
+        return;
       }
 
       // The companion shares a container with the attended plank, and is serialized as
