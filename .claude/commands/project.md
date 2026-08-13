@@ -7,7 +7,7 @@ allowed-tools: Bash, Read, Edit, Write, Glob, Grep
 Arguments: `$ARGUMENTS`
 
 `.claude/hooks/track.sh` runs on `UserPromptSubmit`, which carries the raw
-`/legacy-project …` text and fires before this expansion reaches you, so **a
+`/project …` text and fires before this expansion reaches you, so **a
 `TASK-PLANNING …` directive for this invocation is already in your context.**
 Follow that directive — it is the authoritative one, generated from the verb you
 were actually given.

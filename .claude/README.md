@@ -147,7 +147,7 @@ A sentinel is a **marker typed inside a normal message** that a
 | Marker                          | Hook                                 | Effect                                                     |
 | ------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | `/mode terse` / `/mode normal`  | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
-| `/legacy-project VERB [ARGS]`          | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
+| `/project VERB [ARGS]`          | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
 
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
@@ -200,7 +200,7 @@ it is a misuse.
 >   (2026-08-03) → verb made mandatory, then `$mode` dropped for `/mode`.
 > - `$project` fired on the message asking to convert it (2026-08-04) →
 >   `$project` and its `$track`/`$hydrate`/`$resume` aliases dropped for
->   `/legacy-project`.
+>   `/project`.
 >
 > Both now match only on the **first line**, where a slash command must appear
 > and prose cannot reach. Any new marker should start there.

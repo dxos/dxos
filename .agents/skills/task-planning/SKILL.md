@@ -1,20 +1,9 @@
 ---
 name: task-planning
-description: The file-based project system, superseded by the space-backed `projects` prompt on the dxos MCP server — prefer that, and use this only on the explicit `/legacy-project` command (any verb — list, tasks, new, end, track, hydrate, resume), or in a repo with no MCP access. Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
+description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `/project` command (any verb — list, tasks, new, end, track, hydrate, resume). Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
 ---
 
 # Task Planning
-
-## Superseded — read this first
-
-This skill keeps project state in committed files. It is being replaced by project state in an ECHO
-space, reached through the `projects` prompt on the dxos MCP server, and it is retained only while
-both exist.
-
-The two no longer share a verb: this skill answers to **`/legacy-project`**, and plain `/project`
-belongs to the MCP prompt. Bind a repo with `/project setup`, which only the MCP prompt implements.
-Reach for this skill when the user explicitly types `/legacy-project`, or when a repo has no MCP
-access; otherwise prefer the space-backed system. This file is deleted once the migration lands.
 
 ## Overview
 
@@ -61,9 +50,9 @@ ended: []
   at its package files and a brand-new project defaults to
   `.agents/projects/<name>/{TASKS.md,DESIGN.md}`. Keep it committed and current.
 
-### The `/legacy-project` command
+### The `/project` command
 
-`/legacy-project VERB [ARGS]` drives the registry — `(bare) | list [all] | tasks | new | end |
+`/project VERB [ARGS]` drives the registry — `(bare) | list [all] | tasks | new | end |
 track | hydrate | resume`. **The per-verb instructions are not repeated here.**
 `.claude/hooks/track.sh` reads the raw typed text on `UserPromptSubmit` and
 injects the directive for the verb actually given; that directive is
@@ -74,7 +63,7 @@ This file covers what applies **without** the command — the TASKS.md conventio
 the registry schema, and the handoff steps below — because the skill loads on
 "work spans several steps" or "resuming work", when nobody has typed anything.
 
-**A lone number** in the user's next message after a `/legacy-project list` table means
+**A lone number** in the user's next message after a `/project list` table means
 "resume the project at that row". With no argument, `resume`/`hydrate` fall back
 to the single `active` entry for the current user; if more than one is active,
 ask which (list them numbered) — never a guess.
@@ -94,7 +83,7 @@ ask which (list them numbered) — never a guess.
 - Work spans **3+ distinct steps**, multiple files, or phases.
 - The task will likely outlive one session (you'll resume it later).
 - The user asks for a plan, roadmap, or to track progress.
-- The user uses **`/legacy-project track <text>`** — always record the item, never a
+- The user uses **`/project track <text>`** — always record the item, never a
   task chip.
 - You are resuming work — read the existing `TASKS.md` first to reload state.
 
@@ -147,12 +136,12 @@ Short paragraph of context — what this phase delivers and why.
 5. **Commit it** — `TASKS.md` is committed alongside the work it tracks. Do not
    leave it as an uncommitted local edit (see "commit nothing silently").
 
-## Project handoff (`/legacy-project hydrate` / `/legacy-project resume`)
+## Project handoff (`/project hydrate` / `/project resume`)
 
 `TASKS.md` is the handoff medium — no separate `HANDOFF.md` (keep plans in the
 original doc). The two verbs are the explicit checkpoint/reload actions.
 
-### `/legacy-project hydrate` — checkpoint before stopping or opening a PR
+### `/project hydrate` — checkpoint before stopping or opening a PR
 
 1. **Reconcile `TASKS.md`** — check off what's done; add a one-line status note to
    each in-progress item (what's blocked, what's next).
@@ -168,7 +157,7 @@ original doc). The two verbs are the explicit checkpoint/reload actions.
 5. **Confirm** the checkpoint in one short block (done / in-progress / next /
    uncommitted).
 
-### `/legacy-project resume` — reload at the start of a session
+### `/project resume` — reload at the start of a session
 
 1. **Stay put** — resume continues the work-stream in **this session's assigned
    worktree**; never `cd` into or adopt the project's previous worktree/branch.
