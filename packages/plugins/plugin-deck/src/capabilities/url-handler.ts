@@ -40,6 +40,11 @@ import { shouldDeferNavigationHandlers } from './check-app-scheme';
  * waits on the candidate node and returns as soon as it lands, so this only bounds the wait for a
  * node that never arrives. Generous because it costs nothing when the chain lands early.
  */
+// TODO(wittjosiah): Reconsider the length now that missing the deadline is non-destructive — the
+//  plank keeps its own id, heals when the node lands, and never truncates the URL. The remaining cost
+//  is how long a genuinely-missing plank looks plausible before it flips, and `Set` applies once after
+//  every pair settles, so the slowest pair also holds back the ones that already resolved. Either
+//  shorten this, or apply the restore per-pair so the deadline only costs the missing plank.
 const RESOLVE_TIMEOUT = '10 seconds';
 
 /** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
