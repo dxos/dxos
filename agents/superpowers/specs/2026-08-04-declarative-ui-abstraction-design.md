@@ -1,7 +1,10 @@
 # Declarative UI Abstraction — Design Exploration
 
 - **Date:** 2026-08-04
-- **Status:** Exploration; Experiment 1 implemented on this branch (see Results)
+- **Status:** Exploration; Experiment 1 implemented on this branch (see Results),
+  then **parked** — the direction is reframed around authored composition in
+  `2026-08-06-scenes-app-ontology-design.md` (Scenes). The survey, prior art,
+  and Experiment 1's bridge findings remain the substrate for that design.
 - **Scope:** `react-ui-form` / `react-ui-card` / `react-ui-list` / `react-ui-mosaic`,
   plugin containers, the Surface system, and the effect-atom substrate.
 
