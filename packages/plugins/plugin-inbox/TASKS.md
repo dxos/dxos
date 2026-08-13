@@ -19,14 +19,20 @@ the PR.
 
 ### Tasks
 
-- [ ] **Toolbar + menu for `RecordArticle`** (`plugin-space/src/containers/RecordArticle/RecordArticle.tsx`)
+- [x] **Toolbar + menu for `RecordArticle`** (`plugin-space/src/containers/RecordArticle/RecordArticle.tsx`)
       built on the menu idiom (`MenuBuilder` + `useMenuActions` + `Menu.Root`, threading `attendableId`).
-- [ ] **Decide how enrich actions are injected** — the open design question. Candidates: a
+- [x] **Decide how enrich actions are injected** — ANSWERED: graph-contributed actions. The toolbar reads
+      the subject's own app-graph node via `graphActions`, so plugin-crm donates `Enrich` for Person /
+      Organization without plugin-space depending on it. Matches `ProviderArticle`/`MarkdownArticle`.
+      Found en route: the record surface never forwarded `attendableId`, so the toolbar had no node to
+      read — fixed. Originally: — the open design question. Candidates: a
       `Capabilities`-contributed action provider keyed by typename (so plugin-crm donates "enrich
       contact"/"enrich organization" without plugin-space depending on it), versus resolving
       `CrmOperation.*` directly. The contributed route matches the cross-plugin capability convention;
       confirm against `list_idioms` before building.
-- [ ] **Storybook** for the toolbar + menu.
+- [x] **Storybook** for the toolbar + menu — the story contributes its OWN action rather than importing
+      plugin-crm's, since not depending on plugin-crm is the point of the design. NOT RUN (storybook
+      startup blocker).
 
 ---
 
