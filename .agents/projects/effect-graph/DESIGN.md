@@ -64,6 +64,15 @@ immutable value at all.
 - Discipline the model owns: version bump exactly once per batch; the mutable graph never escapes
   the model; graph-level `Equal` unused (by-reference on mutables); node-data replaced, never
   field-mutated, when reactive.
+- **Why a version atom at all**: the mutable graph is plain data the atom registry cannot observe
+  — derived views need a writable atom in their dependency chain as the invalidation signal. The
+  version atom is that doorbell, not data versioning.
+- **Granular-invalidation refinement (optional lever)**: the model knows which ids each batch
+  touches, so it can bump a per-id version family (+ one structural tick for edge changes) inside
+  a single `Atom.batch` instead of one global tick; `nodeAtom(id)` then depends on
+  `versionAtom(id)` and untouched node atoms skip even the recompute. Not needed at current scale
+  (recomputes ~1µs; 0.12ms for 200 mounted views) — reach for it if mounted-view counts grow into
+  the thousands.
 - Codec: id-keyed `encode()`/`decode()` between the Effect graph and the schema `{nodes, edges}`
   shape. Round-trip proven in spike. Persisted data is byte-identical to today — **no migration**.
 - Algorithms exposed id-translated (`model.topo(): string[]`, etc.). `topo` throws `GraphError` on
