@@ -254,20 +254,32 @@ const withEchoRefinements = (ast: SchemaAST.AST, expansions: Map<SchemaAST.AST, 
  * @param root
  * @param definitions
  */
+/**
+ * Whether the node is an ECHO reference, by either spelling of the sentinel.
+ *
+ * Checked before structural keywords so that a reference is never mistaken for the plain object
+ * its encoded side looks like.
+ */
+const isEchoReferenceNode = (node: JsonSchemaType): boolean =>
+  ('$ref' in node && node.$ref === JSON_SCHEMA_ECHO_REF_ID) ||
+  ('$id' in node && decodeURIComponent(node.$id as string) === JSON_SCHEMA_ECHO_REF_ID);
+
 export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Codec<any, any> => {
   const defs = root.$defs ? { ..._defs, ...root.$defs } : (_defs ?? {});
-  if ('type' in root && root.type === 'object') {
+
+  // Tested before the generic object branch: a reference now carries `type: 'object'` (see
+  // `collapseEchoRef`), and matching on that first would rebuild it as a plain `{ '/': string }`
+  // struct, silently losing the reference semantics.
+  const isReference = isEchoReferenceNode(root);
+  if (!isReference && 'type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
   }
 
   let result: Schema.Codec<any, any> = Schema.Unknown;
-  if ('$ref' in root) {
-    switch (root.$ref) {
-      case '/schemas/echo/ref': {
-        result = refToEffectSchema(root);
-        break;
-      }
-    }
+  if (isReference) {
+    // Assigned rather than returned so the annotation handling below still runs: a reference
+    // carrying `title`/`description` must keep it through the round trip.
+    result = refToEffectSchema(root);
   } else if ('$id' in root) {
     switch (decodeURIComponent(root.$id as string)) {
       case '/schemas/any': {
@@ -281,11 +293,6 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       case '/schemas/{}':
       case '/schemas/object': {
         result = Schema.Struct({});
-        break;
-      }
-      // Custom ECHO object reference.
-      case '/schemas/echo/ref': {
-        result = refToEffectSchema(root);
         break;
       }
     }
@@ -629,7 +636,10 @@ const inlineAllOf = (node: Record<string, any>): Record<string, any> => {
     (branch: any) =>
       branch &&
       typeof branch === 'object' &&
-      !('type' in branch) &&
+      // A reference declares `type: 'object'` (see `collapseEchoRef`) yet is still a plain keyword
+      // contribution, so it stays inlinable; without the exemption an annotated reference keeps its
+      // `allOf` wrapper and loses the sibling annotation that prompted the wrapper.
+      (isEchoReferenceNode(branch) || !('type' in branch)) &&
       // ECHO's reference sentinel is not a JSON Schema pointer into a definitions map, so a branch
       // carrying it is still a plain keyword contribution.
       (!('$ref' in branch) || branch.$ref === JSON_SCHEMA_ECHO_REF_ID),
@@ -642,18 +652,25 @@ const inlineAllOf = (node: Record<string, any>): Record<string, any> => {
 };
 
 /**
- * Collapses an ECHO reference back to its `$ref` form.
+ * Normalizes an ECHO reference node.
  *
  * The reference's encoded side is a struct so that Effect 4 will serialize it at all (declarations
- * have no JSON schema representation), but that also emits the `{ '/': string }` shape. A JSON
- * Schema `$ref` node carries no sibling structural keywords, and ECHO readers match on `$ref`, so
- * the structural keys are dropped. Keyed on ECHO's own reference id, so no other node is affected.
+ * have no JSON schema representation), which emits the `{ '/': string }` shape. Those structural
+ * keywords are **kept**: a reference *is* an object on the wire, and consumers that do not know
+ * ECHO's `$ref` sentinel — language models reading an MCP tool schema, most of all — decide whether
+ * an argument is structured JSON by looking for `type`. Without it they send the envelope as a
+ * JSON string and the call fails to decode. `$ref` siblings are permitted from JSON Schema
+ * 2019-09 onward, and ECHO readers still match on `$ref`, so nothing that understood these nodes
+ * before is affected.
+ *
+ * `additionalProperties: false` is still dropped: it would contradict the sibling `reference`
+ * keyword for a strict validator. Keyed on ECHO's own reference id, so no other node is affected.
  */
 const collapseEchoRef = (node: Record<string, any>): Record<string, any> => {
   if (node.$ref !== JSON_SCHEMA_ECHO_REF_ID) {
     return node;
   }
-  const { type, properties, required, additionalProperties, ...rest } = node;
+  const { additionalProperties, ...rest } = node;
   return rest;
 };
 

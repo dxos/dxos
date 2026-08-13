@@ -213,6 +213,9 @@ describe('effect-to-json', () => {
         organization: {
           $id: '/schemas/echo/ref',
           $ref: '/schemas/echo/ref',
+          type: 'object',
+          properties: { '/': { type: 'string' } },
+          required: ['/'],
           description: 'Contact organization',
           reference: {
             schema: {
@@ -674,12 +677,21 @@ describe('json-to-effect', () => {
           "contact": {
             "$id": "/schemas/echo/ref",
             "$ref": "/schemas/echo/ref",
+            "properties": {
+              "/": {
+                "type": "string",
+              },
+            },
             "reference": {
               "schema": {
                 "$ref": "dxn:com.example.type.person",
               },
               "schemaVersion": "0.1.0",
             },
+            "required": [
+              "/",
+            ],
+            "type": "object",
           },
         },
         "propertyOrder": [
@@ -772,6 +784,9 @@ describe('reference', () => {
     expect(jsonSchema).toEqual({
       $id: '/schemas/echo/ref',
       $ref: '/schemas/echo/ref',
+      type: 'object',
+      properties: { '/': { type: 'string' } },
+      required: ['/'],
       $schema: 'http://json-schema.org/draft-07/schema#',
       reference: {
         schema: {
@@ -789,6 +804,9 @@ describe('reference', () => {
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: '/schemas/echo/ref',
       $ref: '/schemas/echo/ref',
+      type: 'object',
+      properties: { '/': { type: 'string' } },
+      required: ['/'],
       reference: {
         schema: {
           $ref: 'dxn:com.example.type.person',
@@ -806,6 +824,9 @@ describe('reference', () => {
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: '/schemas/echo/ref',
       $ref: '/schemas/echo/ref',
+      type: 'object',
+      properties: { '/': { type: 'string' } },
+      required: ['/'],
       description: 'My custom description',
       reference: {
         schema: {
