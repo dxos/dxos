@@ -247,19 +247,15 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
 
 - [x] **`Enrich` was four unrelated things** — two of them primary buttons on adjacent toolbars. The
       mailbox one was not enrichment at all: it runs the extract → classify → summarize cascade, which
-      creates objects rather than filling gaps. Renamed:
-      - `InboxOperation.EnrichMailbox` → `ScanMailbox` (op key `enrichMailbox` → `scanMailbox`,
-        `createEnrichProgressKey` → `createScanProgressKey`, `#enrich` → `#scan`,
-        `DEFAULT_ENRICH_MAILBOX_TIERS` → `DEFAULT_SCAN_MAILBOX_TIERS`, files under `operations/scan/`,
-        template `org.dxos.routine.scanMailbox`). **Not** `AnalyzeMailbox` — that name is taken by the
-        cascade's own third tier. Safe to rename the op key because its changeset is still pending, so
-        no released routine references the old DXN.
-      - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
-        operations they actually invoke, and signalling the outbound web/LLM run that `Enrich` hid.
-      - `Enrich images` → `Find images`. `CrmOperation.EnrichImages` keeps its id — that one really is
-        enrichment.
-      - Deleted the dead `view-mode-enriched.menu` key: labels derive from `VIEW_MODES`
-        (`html`/`markdown`/`plain`), so nothing could ever resolve it.
+      creates objects rather than filling gaps. Renamed: - `InboxOperation.EnrichMailbox` → `ScanMailbox` (op key `enrichMailbox` → `scanMailbox`,
+      `createEnrichProgressKey` → `createScanProgressKey`, `#enrich` → `#scan`,
+      `DEFAULT_ENRICH_MAILBOX_TIERS` → `DEFAULT_SCAN_MAILBOX_TIERS`, files under `operations/scan/`,
+      template `org.dxos.routine.scanMailbox`). **Not** `AnalyzeMailbox` — that name is taken by the
+      cascade's own third tier. Safe to rename the op key because its changeset is still pending, so
+      no released routine references the old DXN. - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
+      operations they actually invoke, and signalling the outbound web/LLM run that `Enrich` hid. - `Enrich images` → `Find images`. `CrmOperation.EnrichImages` keeps its id — that one really is
+      enrichment. - Deleted the dead `view-mode-enriched.menu` key: labels derive from `VIEW_MODES`
+      (`html`/`markdown`/`plain`), so nothing could ever resolve it.
 - [x] **`create-project-from-message.ts` moved out of `operations/analyze/`** — every subfolder there
       is a cascade tier or extraction family; this is a user-initiated one-off from the message toolbar,
       so it belongs at the top level beside `draft-email.ts` and `unsubscribe-sender.ts`. It is not
@@ -267,11 +263,29 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
 
 ### Open, from this work
 
-- [ ] **`AnalyzeMailbox` lives in plugin-inbox but is owned by plugin-brain** — brain holds the
-      FactStore it writes to, the settings atom that parameterizes it, and both production invocation
-      paths (the `Analyze` toolbar item and the "Mailbox Facts" routine template). It cannot move,
-      because inbox's own scan cascade imports it as the `analyze` tier. Worth revisiting whether the
-      tier should go through a capability seam instead, so the operation can follow its owner.
+- [ ] **A missing `FactStore` fails the scan cascade instead of skipping the tier.** `AnalyzeMailbox`
+      declares `services: [AiService, Database.Service, FactStore, Trace.TraceService]`, and the process
+      invoker resolves those eagerly at spawn time. In the app runtime plugin-brain is the only plugin
+      contributing a `FactStore` layer, so with brain disabled the `analyze` tier dies with a
+      `ServiceNotAvailableError` naming the tag — structurally the same "precondition not met" that
+      `ai-gate.ts` absorbs for `AiService`. But `isAiUnavailableCause` matches only
+      `AiService.AiService.key` and `AiModelNotAvailableError`, so the stage is classified `failed`, and
+      with `continueOnError` defaulting to false one absent layer aborts the whole run and marks
+      everything downstream `upstream stage failed` — the red-meter-for-a-healthy-mailbox case that
+      branch exists to prevent. The suite already documents this by dodging it:
+      `scan-mailbox.test.ts:166` excludes `analyze` with "it needs a FactStore this layer does not
+      provide, so it would fail". Fix by generalising the gate to any declared-but-unprovided tag, or by
+      marking the tier `skip` at plan time (`Stage.skip` already exists for the identity-address case).
+      NOT YET REPRODUCED — inferred from the service declaration, the classification branch, and that
+      comment. Write the failing test first.
+- [x] **CORRECTION: `AnalyzeMailbox` does NOT depend on plugin-brain.** An earlier entry claimed brain
+      owned it and the operation should follow its owner through a capability seam — false, and there is
+      no dependency to invert. `FactStore` and `FactStoreLive` are both from `@dxos/pipeline-rdf`, a
+      direct plugin-inbox dependency; brain is not a dependency of inbox in either direction, and several
+      core packages provide the layer in their own tests. The operation is correctly placed — inbox owns
+      `Mailbox`, everything else it touches is core. Brain contributes four separable things, none of
+      them the operation: a FactStore provider layer, the `Analyze` toolbar action, the settings atom,
+      and the fact surfaces/template. The only real residue is the runtime gap in the item above.
 
 ## Phase 4: Summarization
 
