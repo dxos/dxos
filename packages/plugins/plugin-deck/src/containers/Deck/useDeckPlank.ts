@@ -95,7 +95,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       if (node) {
-        void Graph.expand(graph, node.id, 'child');
+        void Graph.expandSync(graph, node.id, 'child');
       }
     });
 

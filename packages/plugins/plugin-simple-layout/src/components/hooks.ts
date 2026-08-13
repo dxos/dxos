@@ -19,7 +19,7 @@ export const useExpandPath = (nodeId?: string) => {
   useEffect(() => {
     if (nodeId) {
       for (const prefix of Attention.expandAttendableId(nodeId)) {
-        Graph.expand(graph, prefix, 'child');
+        Graph.expandSync(graph, prefix, 'child');
       }
     }
   }, [nodeId, graph]);

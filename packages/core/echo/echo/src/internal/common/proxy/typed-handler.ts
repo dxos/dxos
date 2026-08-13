@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Equal from 'effect/Equal';
+import * as Hash from 'effect/Hash';
 import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
@@ -12,6 +14,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaURI } from '../../Annotation/annotations';
+import { isEntity } from '../../Entity/guard';
 import { toEffectSchema } from '../../JsonSchema/json-schema';
 import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
@@ -204,6 +207,25 @@ Object.defineProperties(TypedObjectPrototype, {
         return undefined;
       }
       return (callback: (obj: any) => void) => executeChange(target, target, this, callback);
+    },
+  },
+  // Effect `Hash`/`Equal` traits, keyed by entity id: an entity has exactly one live proxy, and the
+  // bare `id` spells that invariant without the throw a derived URI risks on a malformed id.
+  // Effect's structural default would instead deep-read the record and go stale on the next mutation.
+  // Selected by the `[KindId]` brand, not by the presence of an `id`, since a nested record sharing
+  // this prototype may carry an application-level one; those keep reference identity.
+  [Hash.symbol]: {
+    get(this: ProxyTarget) {
+      const target = getRawTarget(this);
+      return () => (isEntity(target) ? Hash.hash(target.id) : Hash.random(target));
+    },
+  },
+  [Equal.symbol]: {
+    get(this: ProxyTarget) {
+      const target = getRawTarget(this);
+      return isEntity(target)
+        ? (that: unknown) => isEntity(that) && that.id === target.id
+        : (that: unknown) => getRawTarget(that) === target;
     },
   },
   [StaticTypeSchemaSlot]: {

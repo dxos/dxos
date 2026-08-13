@@ -356,9 +356,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * that predate the challenge endpoint.
    */
   private async _createAuthHeader(path: string): Promise<string | undefined> {
-    const presentation = await authenticateViaChallengeEndpoint(this._baseHttpUrl, this._identity);
-    if (presentation) {
-      return encodePresentationWsAuthHeader(presentation);
+    const authentication = await authenticateViaChallengeEndpoint(this._baseHttpUrl, this._identity);
+    if (authentication) {
+      return encodePresentationWsAuthHeader(authentication.presentation);
     }
 
     const response = await fetch(new URL(path, this._baseHttpUrl), { method: 'GET' });
