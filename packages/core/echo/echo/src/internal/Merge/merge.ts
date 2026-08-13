@@ -2,53 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { type ForeignKey, PROPERTY_ID } from '@dxos/echo-protocol';
 import { type EntityId } from '@dxos/keys';
 
-import type * as Entity from './Entity';
-import * as Obj from './Obj';
-
-//
-// Natural key
-//
-
-/**
- * Read the natural key an entity declares, if any.
- *
- * The natural key is a caller-supplied domain identity, unique within a space: two entities
- * carrying the same natural key are the same entity and converge to one via {@link merge}.
- * It sits alongside the entity's id, which is a surrogate — system-minted, random, and
- * meaningless outside the database.
- */
-export const getNaturalKey = (entity: Entity.Unknown | Entity.Snapshot): string | undefined =>
-  Obj.getMeta(entity as any).naturalKey;
-
-/**
- * Declare an entity's natural key, or clear it when passed `undefined`.
- *
- * Objects only: relations and types are not merge subjects yet — merging a relation would
- * tombstone it without reconciling its endpoints, and merging a type would break schema
- * resolution for its instances.
- *
- * @throws On a non-object entity, or an empty-string key (which would group unrelated entities).
- */
-export const setNaturalKey = (entity: Entity.Unknown, naturalKey: string | undefined): void => {
-  if (!Obj.isObject(entity)) {
-    throw new TypeError('Natural keys are limited to objects; relations and types are not merge subjects.');
-  }
-  if (naturalKey !== undefined && naturalKey.length === 0) {
-    throw new TypeError('Natural key must be a non-empty string.');
-  }
-  Obj.update(entity, (entity) => {
-    Obj.getMeta(entity).naturalKey = naturalKey;
-  });
-};
-
-//
-// Candidates
-//
+import type * as Entity from '../../Entity';
+import { getMetaChecked } from '../common';
+import { getSnapshot } from '../Obj';
 
 /**
  * Storage-independent view of one entity participating in a merge.
@@ -56,7 +15,7 @@ export const setNaturalKey = (entity: Entity.Unknown, naturalKey: string | undef
  * The merge core is defined over these rather than over live objects so that winner selection
  * and the merge function stay pure and testable without a database.
  */
-export type Candidate = {
+export type MergeCandidate = {
   readonly id: EntityId;
 
   /** The declared natural key; candidates in one merge group all share it. */
@@ -65,7 +24,7 @@ export type Candidate = {
   /** User-defined data. A property present with value `undefined` counts as undefined. */
   readonly data: Readonly<Record<string, unknown>>;
 
-  /** Foreign keys, unioned across the group by {@link merge}. */
+  /** Foreign keys, unioned across the group by {@link mergeCandidates}. */
   readonly keys?: readonly ForeignKey[];
 };
 
@@ -77,11 +36,11 @@ const INTERNAL_KEY_PREFIX = '~@dxos/echo/';
 const isDataField = (field: string): boolean => field !== PROPERTY_ID && !field.startsWith(INTERNAL_KEY_PREFIX);
 
 /**
- * Build a {@link Candidate} from a live entity or snapshot.
+ * Build a {@link MergeCandidate} from a live entity or snapshot.
  */
-export const candidateOf = (entity: Entity.Unknown | Entity.Snapshot): Candidate => {
-  const meta = Obj.getMeta(entity as any);
-  const snapshot = Obj.getSnapshot(entity as any) as Record<string, unknown>;
+export const toMergeCandidate = (entity: (Entity.Unknown | Entity.Snapshot) & { id: EntityId }): MergeCandidate => {
+  const meta = getMetaChecked(entity);
+  const snapshot = getSnapshot(entity);
   // Accumulate in a Map: on a plain object, field names colliding with `Object.prototype`
   // members (`toString`, `__proto__`, ...) would be dropped or would mutate the prototype.
   const data = new Map<string, unknown>();
@@ -92,39 +51,20 @@ export const candidateOf = (entity: Entity.Unknown | Entity.Snapshot): Candidate
   }
 
   return {
-    id: (entity as { id: EntityId }).id,
+    id: entity.id,
     naturalKey: meta.naturalKey,
     data: Object.fromEntries(data),
     keys: meta.keys,
   };
 };
 
-//
-// Winner selection
-//
-
-/**
- * The winner of a merge group: the minimum id.
- *
- * Ids are ULIDs, so this is also the earliest-created entity. Being a pure function of the id
- * set, it is stable under permutation and agreed on by every peer that sees the same set — and
- * because it is a minimum, a peer seeing a superset picks an id no larger than a peer seeing a
- * subset, which is what makes redirect chains terminate (see {@link resolveRedirect}).
- */
-export const selectWinner = (candidates: readonly Candidate[]): EntityId | undefined =>
-  candidates.reduce<EntityId | undefined>(
-    (winner, candidate) => (winner === undefined || candidate.id < winner ? candidate.id : winner),
-    undefined,
-  );
-
 /**
  * Partition entities into merge groups by natural key.
  *
- * Entities that declare no natural key are not merge candidates and are omitted. Groups are
- * returned regardless of size; a group of one is a no-op for {@link merge}.
+ * Entities that declare no natural key are not merge candidates and are omitted.
  */
-export const groupByNaturalKey = (candidates: readonly Candidate[]): Map<string, Candidate[]> => {
-  const groups = new Map<string, Candidate[]>();
+const groupByNaturalKey = (candidates: readonly MergeCandidate[]): Map<string, MergeCandidate[]> => {
+  const groups = new Map<string, MergeCandidate[]>();
   for (const candidate of candidates) {
     if (candidate.naturalKey === undefined) {
       continue;
@@ -142,7 +82,7 @@ export const groupByNaturalKey = (candidates: readonly Candidate[]): Map<string,
 /**
  * Groups holding more than one entity — i.e. the ones that actually need merging.
  */
-export const findDuplicates = (candidates: readonly Candidate[]): Map<string, Candidate[]> => {
+export const findMergeDuplicates = (candidates: readonly MergeCandidate[]): Map<string, MergeCandidate[]> => {
   const groups = groupByNaturalKey(candidates);
   for (const [naturalKey, group] of groups) {
     if (group.length < 2) {
@@ -151,10 +91,6 @@ export const findDuplicates = (candidates: readonly Candidate[]): Map<string, Ca
   }
   return groups;
 };
-
-//
-// Merge
-//
 
 export type MergeResult = {
   /** The surviving entity. */
@@ -176,6 +112,12 @@ const compareForeignKeys = (a: ForeignKey, b: ForeignKey): number =>
 /**
  * Merge a group of duplicates into a single deterministic result.
  *
+ * The winner is the minimum id. Ids are ULIDs, so this is also the earliest-created entity —
+ * and, being a pure function of the id set, it is agreed on by every peer that sees the same
+ * set. Because it is a minimum, a peer seeing a superset picks an id no larger than a peer
+ * seeing a subset, which is what makes redirect chains terminate (see
+ * {@link resolveMergeRedirect}).
+ *
  * The result is a pure function of the candidate **set**: for each field, the value comes from
  * the smallest-id candidate that defines it. This is deliberately not a pairwise fold —
  * pairwise winner-preference is not associative, so different application orders would diverge
@@ -195,7 +137,7 @@ const compareForeignKeys = (a: ForeignKey, b: ForeignKey): number =>
  *
  * @throws If given no candidates.
  */
-export const merge = (candidates: readonly Candidate[]): MergeResult => {
+export const mergeCandidates = (candidates: readonly MergeCandidate[]): MergeResult => {
   if (candidates.length === 0) {
     throw new TypeError('Cannot merge an empty candidate set.');
   }
@@ -203,7 +145,7 @@ export const merge = (candidates: readonly Candidate[]): MergeResult => {
   // Deduplicate by id first: a caller may pass the same entity twice (query results are not unique
   // until presentation), and without this the repeat becomes a loser pointing at itself, which
   // would tombstone the winner.
-  const byId = new Map<EntityId, Candidate>();
+  const byId = new Map<EntityId, MergeCandidate>();
   for (const candidate of candidates) {
     if (!byId.has(candidate.id)) {
       byId.set(candidate.id, candidate);
@@ -238,10 +180,6 @@ export const merge = (candidates: readonly Candidate[]): MergeResult => {
   return { winner: winner.id, losers: losers.map(({ id }) => id), data: Object.fromEntries(data), keys };
 };
 
-//
-// Redirects
-//
-
 /**
  * Follow `system.mergedInto` from `start` to the entity that finally survives.
  *
@@ -255,7 +193,7 @@ export const merge = (candidates: readonly Candidate[]): MergeResult => {
  *
  * @param lookup Returns the `mergedInto` of an entity, or `undefined` if it was not merged away.
  */
-export const resolveRedirect = (start: EntityId, lookup: (id: EntityId) => EntityId | undefined): EntityId => {
+export const resolveMergeRedirect = (start: EntityId, lookup: (id: EntityId) => EntityId | undefined): EntityId => {
   let current = start;
   for (;;) {
     const next = lookup(current);

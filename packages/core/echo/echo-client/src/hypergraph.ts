@@ -5,18 +5,7 @@
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import {
-  type Database,
-  type Entity,
-  Feed,
-  Filter,
-  type Hypergraph,
-  Merge,
-  Query,
-  Ref,
-  type Registry,
-  Type,
-} from '@dxos/echo';
+import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import { type BlobBackend } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
@@ -26,6 +15,7 @@ import {
   batchEvents,
   getStrongDependencies,
   isInstanceOf,
+  resolveMergeRedirect,
   setRefResolver,
 } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
@@ -576,7 +566,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * already loaded, so a miss here falls through to the resolve trap rather than being final.
    */
   #followMergeRedirect(db: DatabaseImpl, objectId: EntityId): Entity.Any | undefined {
-    const survivor = Merge.resolveRedirect(objectId, (id) => {
+    const survivor = resolveMergeRedirect(objectId, (id) => {
       const entity = db.getObjectById(id, { deleted: true });
       return entity && isEchoObject(entity) ? getObjectCore(entity).getMergedInto() : undefined;
     });

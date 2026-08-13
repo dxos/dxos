@@ -7,10 +7,16 @@ import { describe, test } from 'vitest';
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { type EntityId } from '@dxos/keys';
 
-import * as Merge from './Merge';
-import * as Obj from './Obj';
-import * as Relation from './Relation';
-import { TestSchema } from './testing';
+import * as Entity from '../../Entity';
+import * as Obj from '../../Obj';
+import { TestSchema } from '../../testing';
+import {
+  type MergeCandidate,
+  findMergeDuplicates,
+  mergeCandidates,
+  resolveMergeRedirect,
+  toMergeCandidate,
+} from './merge';
 
 // Ids are compared lexicographically, so fixed ULID-shaped literals keep the ordering readable:
 // `idA < idB < idC`.
@@ -23,7 +29,7 @@ const candidate = (
   id: EntityId,
   data: Record<string, unknown> = {},
   options: { naturalKey?: string; keys?: ForeignKey[] } = {},
-): Merge.Candidate => ({ id, naturalKey: options.naturalKey ?? 'org.example.seed', data, keys: options.keys });
+): MergeCandidate => ({ id, naturalKey: options.naturalKey ?? 'org.example.seed', data, keys: options.keys });
 
 // Every permutation of the input, so order-independence is asserted exhaustively rather than sampled.
 const permutations = <T>(items: readonly T[]): T[][] => {
@@ -35,73 +41,12 @@ const permutations = <T>(items: readonly T[]): T[][] => {
   );
 };
 
-describe('Merge', () => {
-  describe('getNaturalKey / setNaturalKey', () => {
-    const task = (title: string) => Obj.make(TestSchema.Task, { title });
-
-    test('an entity declares no natural key by default', ({ expect }) => {
-      expect(Merge.getNaturalKey(task('one'))).toBeUndefined();
-    });
-
-    test('round-trips a natural key', ({ expect }) => {
-      const object = task('one');
-      Merge.setNaturalKey(object, 'org.example.seed');
-      expect(Merge.getNaturalKey(object)).toBe('org.example.seed');
-    });
-
-    test('re-setting replaces rather than accumulates', ({ expect }) => {
-      const object = task('one');
-      Merge.setNaturalKey(object, 'org.example.seed');
-      Merge.setNaturalKey(object, 'org.example.seed@2');
-      expect(Merge.getNaturalKey(object)).toBe('org.example.seed@2');
-    });
-
-    test('undefined clears the natural key', ({ expect }) => {
-      const object = task('one');
-      Merge.setNaturalKey(object, 'org.example.seed');
-      Merge.setNaturalKey(object, undefined);
-      expect(Merge.getNaturalKey(object)).toBeUndefined();
-    });
-
-    test('the natural key is independent of the registry key and version', ({ expect }) => {
-      const object = task('one');
-      Obj.update(object, (object) => {
-        Obj.getMeta(object).key = 'org.example.registry.entry';
-        Obj.getMeta(object).version = '1.2.0';
-      });
-      Merge.setNaturalKey(object, 'org.example.seed@2');
-      expect(Merge.getNaturalKey(object)).toBe('org.example.seed@2');
-      expect(Obj.getMeta(object).key).toBe('org.example.registry.entry');
-      expect(Obj.getMeta(object).version).toBe('1.2.0');
-    });
-
-    test('survives a snapshot round-trip', ({ expect }) => {
-      const object = task('one');
-      Merge.setNaturalKey(object, 'org.example.seed');
-      expect(Merge.getNaturalKey(Obj.getSnapshot(object))).toBe('org.example.seed');
-    });
-
-    test('rejects relations — they are not merge subjects', ({ expect }) => {
-      const person = Obj.make(TestSchema.Person, { name: 'Test' });
-      const organization = Obj.make(TestSchema.Organization, { name: 'DXOS' });
-      const employment = Relation.make(TestSchema.EmployedBy, {
-        [Relation.Source]: person,
-        [Relation.Target]: organization,
-        role: 'CEO',
-      });
-      expect(() => Merge.setNaturalKey(employment, 'org.example.employment')).toThrow(TypeError);
-    });
-
-    test('rejects an empty-string key', ({ expect }) => {
-      expect(() => Merge.setNaturalKey(task('one'), '')).toThrow(TypeError);
-    });
-  });
-
-  describe('candidateOf', () => {
+describe('merge core', () => {
+  describe('toMergeCandidate', () => {
     test('builds a candidate from a live object', ({ expect }) => {
       const object = Obj.make(TestSchema.Task, { title: 'one' });
-      Merge.setNaturalKey(object, 'org.example.seed');
-      const candidate = Merge.candidateOf(object);
+      Entity.setNaturalKey(object, 'org.example.seed');
+      const candidate = toMergeCandidate(object);
       expect(candidate.id).toBe(object.id);
       expect(candidate.naturalKey).toBe('org.example.seed');
       expect(candidate.data.title).toBe('one');
@@ -111,10 +56,10 @@ describe('Merge', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second', description: 'only on second' });
       for (const object of [first, second]) {
-        Merge.setNaturalKey(object, 'org.example.seed');
+        Entity.setNaturalKey(object, 'org.example.seed');
       }
       // Ids are ULIDs minted in creation order, so `first` is the winner.
-      const result = Merge.merge([Merge.candidateOf(second), Merge.candidateOf(first)]);
+      const result = mergeCandidates([toMergeCandidate(second), toMergeCandidate(first)]);
       expect(result.winner).toBe(first.id);
       expect(result.losers).toEqual([second.id]);
       expect(result.data.title).toBe('first');
@@ -124,117 +69,97 @@ describe('Merge', () => {
     test('objects without a natural key are not grouped as duplicates', ({ expect }) => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
-      const duplicates = Merge.findDuplicates([Merge.candidateOf(first), Merge.candidateOf(second)]);
+      const duplicates = findMergeDuplicates([toMergeCandidate(first), toMergeCandidate(second)]);
       expect(duplicates.size).toBe(0);
     });
   });
 
-  describe('selectWinner', () => {
-    test('an empty set has no winner', ({ expect }) => {
-      expect(Merge.selectWinner([])).toBeUndefined();
-    });
-
-    test('a single candidate wins', ({ expect }) => {
-      expect(Merge.selectWinner([candidate(idB)])).toBe(idB);
-    });
-
-    test('the minimum id wins', ({ expect }) => {
-      expect(Merge.selectWinner([candidate(idC), candidate(idA), candidate(idB)])).toBe(idA);
-    });
-
-    test('is stable under permutation', ({ expect }) => {
-      const candidates = [candidate(idC), candidate(idA), candidate(idB)];
-      for (const permutation of permutations(candidates)) {
-        expect(Merge.selectWinner(permutation)).toBe(idA);
-      }
-    });
-
-    test('a subset never yields a smaller winner than the superset', ({ expect }) => {
-      const superset = [candidate(idA), candidate(idB), candidate(idC)];
-      const subset = [candidate(idB), candidate(idC)];
-      expect(Merge.selectWinner(subset)! >= Merge.selectWinner(superset)!).toBe(true);
-    });
-  });
-
-  describe('groupByNaturalKey', () => {
-    test('partitions by key', ({ expect }) => {
-      const groups = Merge.groupByNaturalKey([
-        candidate(idA, {}, { naturalKey: 'one' }),
-        candidate(idB, {}, { naturalKey: 'two' }),
-        candidate(idC, {}, { naturalKey: 'one' }),
-      ]);
-      expect([...groups.keys()].sort()).toEqual(['one', 'two']);
-      expect(groups.get('one')!.map(({ id }) => id)).toEqual([idA, idC]);
-    });
-
-    test('entities without a natural key are not candidates', ({ expect }) => {
-      const groups = Merge.groupByNaturalKey([{ id: idA, data: {} }, candidate(idB)]);
-      expect(groups.size).toBe(1);
-      expect(groups.get('org.example.seed')!.map(({ id }) => id)).toEqual([idB]);
-    });
-
-    test('keys differing only by encoded generation do not group together', ({ expect }) => {
-      const groups = Merge.groupByNaturalKey([
-        candidate(idA, {}, { naturalKey: 'org.example.seed' }),
-        candidate(idB, {}, { naturalKey: 'org.example.seed@2' }),
-      ]);
-      expect(groups.size).toBe(2);
-    });
-  });
-
-  describe('findDuplicates', () => {
-    test('drops groups of one', ({ expect }) => {
-      const duplicates = Merge.findDuplicates([
+  describe('findMergeDuplicates', () => {
+    test('partitions by key and drops groups of one', ({ expect }) => {
+      const duplicates = findMergeDuplicates([
         candidate(idA, {}, { naturalKey: 'one' }),
         candidate(idB, {}, { naturalKey: 'two' }),
         candidate(idC, {}, { naturalKey: 'two' }),
       ]);
       expect([...duplicates.keys()]).toEqual(['two']);
+      expect(duplicates.get('two')!.map(({ id }) => id)).toEqual([idB, idC]);
     });
 
     test('no duplicates in a set of distinct keys', ({ expect }) => {
-      const duplicates = Merge.findDuplicates([
+      const duplicates = findMergeDuplicates([
         candidate(idA, {}, { naturalKey: 'one' }),
         candidate(idB, {}, { naturalKey: 'two' }),
       ]);
       expect(duplicates.size).toBe(0);
     });
+
+    test('entities without a natural key never group, not even with each other', ({ expect }) => {
+      const duplicates = findMergeDuplicates([
+        { id: idA, data: {} },
+        { id: idB, data: {} },
+      ]);
+      expect(duplicates.size).toBe(0);
+    });
+
+    test('keys differing only by encoded generation do not group together', ({ expect }) => {
+      const duplicates = findMergeDuplicates([
+        candidate(idA, {}, { naturalKey: 'org.example.seed' }),
+        candidate(idB, {}, { naturalKey: 'org.example.seed@2' }),
+        candidate(idC, {}, { naturalKey: 'org.example.seed@2' }),
+      ]);
+      expect([...duplicates.keys()]).toEqual(['org.example.seed@2']);
+    });
   });
 
-  describe('merge', () => {
+  describe('mergeCandidates', () => {
     test('throws on an empty candidate set', ({ expect }) => {
-      expect(() => Merge.merge([])).toThrow(TypeError);
+      expect(() => mergeCandidates([])).toThrow(TypeError);
     });
 
     test('the same entity passed twice is not a duplicate of itself', ({ expect }) => {
       // Query results are not unique until presentation, so a caller can hand the same entity in
       // more than once. Treating the repeat as a loser would tombstone the winner.
-      const result = Merge.merge([candidate(idB, { title: 'only' }), candidate(idB, { title: 'only' })]);
+      const result = mergeCandidates([candidate(idB, { title: 'only' }), candidate(idB, { title: 'only' })]);
       expect(result.winner).toBe(idB);
       expect(result.losers).toEqual([]);
     });
 
     test('a repeat alongside a genuine duplicate still yields one loser', ({ expect }) => {
-      const result = Merge.merge([candidate(idB), candidate(idA), candidate(idB)]);
+      const result = mergeCandidates([candidate(idB), candidate(idA), candidate(idB)]);
       expect(result.winner).toBe(idA);
       expect(result.losers).toEqual([idB]);
     });
 
     test('a single candidate merges to itself with no losers', ({ expect }) => {
-      const result = Merge.merge([candidate(idB, { title: 'only' })]);
+      const result = mergeCandidates([candidate(idB, { title: 'only' })]);
       expect(result.winner).toBe(idB);
       expect(result.losers).toEqual([]);
       expect(result.data).toEqual({ title: 'only' });
     });
 
     test('the minimum id is the winner and the rest are losers, ascending', ({ expect }) => {
-      const result = Merge.merge([candidate(idC), candidate(idA), candidate(idB)]);
+      const result = mergeCandidates([candidate(idC), candidate(idA), candidate(idB)]);
       expect(result.winner).toBe(idA);
       expect(result.losers).toEqual([idB, idC]);
     });
 
+    test('the winner is stable under permutation', ({ expect }) => {
+      const candidates = [candidate(idC), candidate(idA), candidate(idB)];
+      for (const permutation of permutations(candidates)) {
+        expect(mergeCandidates(permutation).winner).toBe(idA);
+      }
+    });
+
+    test('a subset never yields a smaller winner than the superset', ({ expect }) => {
+      // The monotonicity that makes redirect chains terminate: partial views can only pick
+      // larger winners, so every redirect edge points at a smaller id.
+      const superset = [candidate(idA), candidate(idB), candidate(idC)];
+      const subset = [candidate(idB), candidate(idC)];
+      expect(mergeCandidates(subset).winner >= mergeCandidates(superset).winner).toBe(true);
+    });
+
     test('a field defined by several candidates takes the smallest-id value', ({ expect }) => {
-      const result = Merge.merge([
+      const result = mergeCandidates([
         candidate(idC, { title: 'from C' }),
         candidate(idA, { title: 'from A' }),
         candidate(idB, { title: 'from B' }),
@@ -243,12 +168,12 @@ describe('Merge', () => {
     });
 
     test('a field only a larger-id candidate defines is still carried over', ({ expect }) => {
-      const result = Merge.merge([candidate(idA, { title: 'from A' }), candidate(idB, { subtitle: 'from B' })]);
+      const result = mergeCandidates([candidate(idA, { title: 'from A' }), candidate(idB, { subtitle: 'from B' })]);
       expect(result.data).toEqual({ title: 'from A', subtitle: 'from B' });
     });
 
     test('a property present but undefined does not claim the field', ({ expect }) => {
-      const result = Merge.merge([candidate(idA, { title: undefined }), candidate(idB, { title: 'from B' })]);
+      const result = mergeCandidates([candidate(idA, { title: undefined }), candidate(idB, { title: 'from B' })]);
       expect(result.data.title).toBe('from B');
     });
 
@@ -258,9 +183,9 @@ describe('Merge', () => {
         candidate(idA, { shared: 'A' }),
         candidate(idB, { shared: 'B', onlyB: 'b' }),
       ];
-      const expected = Merge.merge(candidates);
+      const expected = mergeCandidates(candidates);
       for (const permutation of permutations(candidates)) {
-        expect(Merge.merge(permutation)).toEqual(expected);
+        expect(mergeCandidates(permutation)).toEqual(expected);
       }
     });
 
@@ -270,14 +195,17 @@ describe('Merge', () => {
       const zed = candidate(idA, { base: 'z' });
       const ex = candidate(idB, { base: 'x', a: 'from X' });
       const why = candidate(idC, { base: 'y', a: 'from Y' });
-      expect(Merge.merge([zed, ex, why]).data.a).toBe('from X');
-      expect(Merge.merge([zed, why, ex]).data.a).toBe('from X');
+      expect(mergeCandidates([zed, ex, why]).data.a).toBe('from X');
+      expect(mergeCandidates([zed, why, ex]).data.a).toBe('from X');
     });
 
     test('is idempotent — merging the result back in changes nothing', ({ expect }) => {
       const candidates = [candidate(idA, { title: 'A' }), candidate(idB, { title: 'B', extra: 'b' })];
-      const once = Merge.merge(candidates);
-      const twice = Merge.merge([{ id: once.winner, naturalKey: 'org.example.seed', data: once.data }, ...candidates]);
+      const once = mergeCandidates(candidates);
+      const twice = mergeCandidates([
+        { id: once.winner, naturalKey: 'org.example.seed', data: once.data },
+        ...candidates,
+      ]);
       expect(twice.data).toEqual(once.data);
       expect(twice.winner).toBe(once.winner);
     });
@@ -285,7 +213,7 @@ describe('Merge', () => {
     test('field names colliding with Object.prototype members merge like any other field', ({ expect }) => {
       // A plain-object accumulator checked with `in` would see these as already present and drop
       // them from every candidate; `__proto__` would silently mutate the prototype instead.
-      const result = Merge.merge([
+      const result = mergeCandidates([
         candidate(idA, { title: 'from A' }),
         candidate(idB, {
           toString: 'B toString',
@@ -307,7 +235,7 @@ describe('Merge', () => {
     test('an own __proto__ field is stored as data, not as the prototype', ({ expect }) => {
       // JSON.parse produces own `__proto__` properties, so imported data can carry one.
       const evil = JSON.parse('{"__proto__": {"polluted": true}, "title": "from B"}');
-      const result = Merge.merge([candidate(idA, {}), candidate(idB, evil)]);
+      const result = mergeCandidates([candidate(idA, {}), candidate(idB, evil)]);
       expect(Object.getPrototypeOf(result.data)).toBe(Object.prototype);
       expect(({} as Record<string, unknown>).polluted).toBeUndefined();
       expect(Object.getOwnPropertyDescriptor(result.data, '__proto__')?.value).toEqual({ polluted: true });
@@ -315,7 +243,7 @@ describe('Merge', () => {
     });
 
     test('unions foreign keys, deduplicated and deterministically ordered', ({ expect }) => {
-      const result = Merge.merge([
+      const result = mergeCandidates([
         candidate(
           idB,
           {},
@@ -350,44 +278,44 @@ describe('Merge', () => {
         candidate(idB, {}, { keys: [{ source: 'a.com', id: '2' }] }),
         candidate(idC, {}, { keys: [{ source: 'a.com', id: '1' }] }),
       ];
-      const expected = Merge.merge(candidates).keys;
+      const expected = mergeCandidates(candidates).keys;
       for (const permutation of permutations(candidates)) {
-        expect(Merge.merge(permutation).keys).toEqual(expected);
+        expect(mergeCandidates(permutation).keys).toEqual(expected);
       }
     });
   });
 
-  describe('resolveRedirect', () => {
+  describe('resolveMergeRedirect', () => {
     const chain = (edges: Record<string, EntityId>) => (id: EntityId) => edges[id];
 
     test('an entity that was not merged away resolves to itself', ({ expect }) => {
-      expect(Merge.resolveRedirect(idB, chain({}))).toBe(idB);
+      expect(resolveMergeRedirect(idB, chain({}))).toBe(idB);
     });
 
     test('follows a single hop', ({ expect }) => {
-      expect(Merge.resolveRedirect(idB, chain({ [idB]: idA }))).toBe(idA);
+      expect(resolveMergeRedirect(idB, chain({ [idB]: idA }))).toBe(idA);
     });
 
     test('follows a chain transitively to the global minimum', ({ expect }) => {
       // The partial-view case: one peer wrote C -> B, another later wrote B -> A.
-      expect(Merge.resolveRedirect(idC, chain({ [idC]: idB, [idB]: idA }))).toBe(idA);
+      expect(resolveMergeRedirect(idC, chain({ [idC]: idB, [idB]: idA }))).toBe(idA);
     });
 
     test('terminates on a cycle instead of looping', ({ expect }) => {
-      expect(Merge.resolveRedirect(idA, chain({ [idA]: idB, [idB]: idA }))).toBe(idA);
+      expect(resolveMergeRedirect(idA, chain({ [idA]: idB, [idB]: idA }))).toBe(idA);
     });
 
     test('terminates on a self-reference', ({ expect }) => {
-      expect(Merge.resolveRedirect(idA, chain({ [idA]: idA }))).toBe(idA);
+      expect(resolveMergeRedirect(idA, chain({ [idA]: idA }))).toBe(idA);
     });
 
     test('stops at a forward reference rather than following it', ({ expect }) => {
       // Every legitimate edge decreases the id; an increasing edge is corrupt data, not a hop.
-      expect(Merge.resolveRedirect(idA, chain({ [idA]: idC }))).toBe(idA);
+      expect(resolveMergeRedirect(idA, chain({ [idA]: idC }))).toBe(idA);
     });
 
     test('every edge produced by a merge decreases the id, so chains are finite', ({ expect }) => {
-      const result = Merge.merge([candidate(idA), candidate(idB), candidate(idC), candidate(idD)]);
+      const result = mergeCandidates([candidate(idA), candidate(idB), candidate(idC), candidate(idD)]);
       for (const loser of result.losers) {
         expect(loser > result.winner).toBe(true);
       }
@@ -395,8 +323,8 @@ describe('Merge', () => {
 
     test('partial-view merges converge on the global minimum', ({ expect }) => {
       // Peer 1 sees {B, C} and writes C -> B. Peer 2 also sees A and writes B -> A, C -> A.
-      const peer1 = Merge.merge([candidate(idB), candidate(idC)]);
-      const peer2 = Merge.merge([candidate(idA), candidate(idB), candidate(idC)]);
+      const peer1 = mergeCandidates([candidate(idB), candidate(idC)]);
+      const peer2 = mergeCandidates([candidate(idA), candidate(idB), candidate(idC)]);
       const edges: Record<string, EntityId> = {};
       for (const loser of peer1.losers) {
         edges[loser] = peer1.winner;
@@ -406,7 +334,7 @@ describe('Merge', () => {
         edges[loser] = peer2.winner;
       }
       for (const start of [idA, idB, idC]) {
-        expect(Merge.resolveRedirect(start, chain(edges))).toBe(idA);
+        expect(resolveMergeRedirect(start, chain(edges))).toBe(idA);
       }
     });
 
@@ -415,7 +343,7 @@ describe('Merge', () => {
       // peer 2, so C still reaches A by one extra hop.
       const edges: Record<string, EntityId> = { [idB]: idA, [idC]: idB };
       for (const start of [idA, idB, idC]) {
-        expect(Merge.resolveRedirect(start, chain(edges))).toBe(idA);
+        expect(resolveMergeRedirect(start, chain(edges))).toBe(idA);
       }
     });
   });

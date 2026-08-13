@@ -81,7 +81,7 @@
      rewriting is an optimization and the old-client compatibility path, as
      designed. `rewriteReferences` also now recurses into arrays and nested
      records (a collection's members live in an array).
-  3. **Objects only, enforced.** `Merge.setNaturalKey` rejects relations/types
+  3. **Objects only, enforced.** `Entity.setNaturalKey` rejects relations/types
      and empty keys; detection filters `entityKind`; the worker re-verifies
      `system.kind` — previously a keyed relation would have been merged with its
      endpoints unreconciled.
@@ -91,7 +91,7 @@
      clobbered) on every pass; `mergedFrom` was assigned as a whole list, which
      loses ids under concurrent merges (now append-in-place, dedup on read — same
      for `meta.keys`); index rows created before the `naturalKey` column existed
-     were permanently invisible to detection (one-time cursor reset on upgrade);
+     were permanently invisible to detection (index-name versioning: the driving cursors were renamed, purging pre-`naturalKey` progress on upgrade);
      the detection lookup is chunked under SQLite's bound-variable cap; and `@meta`
      no longer leaks into full-text search matching or the reverse-ref index for
      document objects (it briefly made `Query.incoming()` on a Tag return everything
@@ -154,7 +154,7 @@
      old-client compatibility concern; `@parent` was in the same category and
      undeclared). Fixed: the deletion walk follows `mergedInto` chains
      (strictly-decreasing edges, unresolvable hop = live) and judges the survivor.
-  2. **Prototype-safe merge accumulation** (`Merge.merge`/`candidateOf`): the
+  2. **Prototype-safe merge accumulation** (`mergeCandidates`/`toMergeCandidate`): the
      field union used `field in data` on a plain object, so field names colliding
      with `Object.prototype` members (`toString`, `constructor`, …) were silently
      dropped from every candidate, and an own `__proto__` key polluted the
@@ -175,6 +175,31 @@
      ordinary register writes — sequential straggler edits observed by different
      folders can deterministically resolve to the earlier value (agreement holds;
      the later value remains on the tombstone under `deleted: 'include'`).
+- **2026-08-13 (dmaretskyi PR review; Josiah ratified)** — Structural review of
+  PR #12412; no semantic findings ("the approach with `mergedInto` seems right").
+  Four restructurings, all behavior-preserving:
+  1. **The public `Merge` namespace is dissolved.** Users declare identity with
+     `Entity.setNaturalKey` / `Entity.getNaturalKey` (beside the other meta
+     accessors); the machinery moved to `@dxos/echo/internal` as `mergeCandidates`,
+     `toMergeCandidate`, `findMergeDuplicates`, `resolveMergeRedirect`
+     (`src/internal/Merge/`). `selectWinner` was deleted (its min-id semantics live
+     inside `mergeCandidates`); `groupByNaturalKey` became a private helper.
+  2. **Index-name versioning replaced the cursor wipe.** The driving cursor names
+     bumped (`fts5` → `fts6`, `reverseRef` → `reverseRef2`) and the old names purge
+     via `DEPRECATED_INDEX_NAMES` — the tracker's existing declarative mechanism —
+     retiring the `pragma_table_info` probe, the `DELETE FROM indexCursor`, and its
+     wipe-before-ALTER ordering subtlety.
+  3. **The intent log moved out of the indexer** into `NaturalKeyIntentStore`
+     (index-core), joining the same `SqlTransaction` in `IndexEngine.#update` — the
+     coupling was transactional, never conceptual.
+  4. **`natural-key-merge.ts` became a class.** `NaturalKeyMerger` takes the
+     narrow `loadDoc`/`flushDoc`/`queryByNaturalKeys` seam as constructor deps
+     (tests keep driving it with plain fakes); `EchoHost` constructs it once.
+     Also proposed in review, **declined for now (Josiah)**: renaming the field to
+     `singletonKey` plus `Database.querySingleton`/`ensureSingleton` APIs — the name
+     reads as a write-time uniqueness guarantee the engine deliberately does not make
+     (§4.4); the API sketch is noted against the Phase-2 `db.ensure` item. The field
+     name stays `naturalKey` while alternatives are gathered.
 
 ---
 
@@ -634,12 +659,12 @@ Rules the implementation had to learn (each one a bug first):
   section, matching the feed path, whose blocks always carried it.
 - **Query results are not unique** — the same entity can appear twice before
   presentation dedupes. Merging a repeat treated it as a duplicate of itself and
-  tombstoned the winner; `Merge.merge` now deduplicates by id.
+  tombstoned the winner; `mergeCandidates` now deduplicates by id.
 - **A query asking for tombstones must not filter.** `deleted: 'include'` exists to
   show what was merged away; the option can sit at any AST depth because scoping
   wraps it.
 - **Objects only, and only automerge-backed ones** — enforced, not assumed:
-  `Merge.setNaturalKey` rejects relations and types, detection filters on
+  `Entity.setNaturalKey` rejects relations and types, detection filters on
   `entityKind`, and the worker re-verifies `system.kind` against the document.
   (An earlier draft claimed reading meta off a relation throws — it does not;
   without the explicit guards a keyed relation was merged with its endpoints
@@ -720,7 +745,7 @@ whatever the code happens to do:
 None of these corrupts data or breaks resolution — the failure mode is stranded
 late edits on a tombstone whose group no longer contains its winner. If key
 mutation ever becomes a real workflow, the candidate hard guard is
-`Merge.setNaturalKey` throwing on a merged-away entity (needs `mergedInto`
+`Entity.setNaturalKey` throwing on a merged-away entity (needs `mergedInto`
 visibility at the `Obj` layer — not currently exposed there).
 
 ### 4.6 Principal risks

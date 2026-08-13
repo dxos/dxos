@@ -11,7 +11,7 @@ import { DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { type EntityMeta } from '@dxos/index-core';
 import { EntityId, SpaceId, URI } from '@dxos/keys';
 
-import { type NaturalKeyGroupContext, mergeNaturalKeyDuplicates, mergeNaturalKeyGroup } from './natural-key-merge';
+import { NaturalKeyMerger, type NaturalKeyMergerDeps } from './natural-key-merge';
 
 const KEY = 'example.com/thing/main';
 
@@ -29,7 +29,7 @@ const makeEntity = (naturalKey: string, data: Record<string, unknown>): EntitySt
 type Fixture = {
   handles: Map<EntityId, DocHandle<DatabaseDirectory>>;
   group: { objectId: EntityId; documentId: string }[];
-  context: NaturalKeyGroupContext;
+  context: NaturalKeyMergerDeps;
 };
 
 /**
@@ -52,6 +52,7 @@ const setup = (entities: [EntityId, EntityStructure][]): Fixture => {
     context: {
       loadDoc: async (_ctx, documentId) => byDocumentId.get(documentId) ?? null,
       flushDoc: async () => {},
+      queryByNaturalKeys: async () => [],
     },
   };
 };
@@ -91,7 +92,7 @@ beforeAll(async () => {
   await initSubduction();
 });
 
-describe('mergeNaturalKeyGroup', () => {
+describe('NaturalKeyMerger.mergeGroup', () => {
   test('an edit landing while another document loads is folded and covered by the watermark', async ({ expect }) => {
     // The loser loads first; the edit lands during the winner's load. The merge must compute
     // from the post-edit state — reading at load time would put the edit below the tombstone's
@@ -101,7 +102,7 @@ describe('mergeNaturalKeyGroup', () => {
       [ID_A, makeEntity(KEY, { title: 'a' })],
     ]);
     let loads = 0;
-    const context: NaturalKeyGroupContext = {
+    const context: NaturalKeyMergerDeps = {
       ...fixture.context,
       loadDoc: async (ctx, documentId) => {
         loads++;
@@ -114,7 +115,7 @@ describe('mergeNaturalKeyGroup', () => {
       },
     };
 
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, context)).toBe(true);
+    expect(await new NaturalKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
 
     const winner = entityOf(fixture, ID_A);
     const loser = entityOf(fixture, ID_B);
@@ -123,7 +124,7 @@ describe('mergeNaturalKeyGroup', () => {
     expect(loser?.system?.mergedInto).toBe(ID_A);
     expect(loser?.system?.deleted).toBe(true);
     // Idempotent: the watermark covers the edit, so a re-run writes nothing.
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(false);
+    expect(await new NaturalKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(false);
   });
 
   test('a straggler edit on a chain member collapsed in the same pass reaches the final winner', async ({ expect }) => {
@@ -140,14 +141,14 @@ describe('mergeNaturalKeyGroup', () => {
       entity.data.description = 'straggler';
     });
 
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(true);
+    expect(await new NaturalKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
 
     const winner = entityOf(fixture, ID_A);
     expect(winner?.data.description).toBe('straggler');
     expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBe(ID_A);
     // C's original redirect is preserved; resolution reaches A transitively.
     expect(entityOf(fixture, ID_C)?.system?.mergedInto).toBe(ID_B);
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(false);
+    expect(await new NaturalKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(false);
   });
 
   test('the fold writes the value from the same state as the diff and the watermark', async ({ expect }) => {
@@ -163,7 +164,7 @@ describe('mergeNaturalKeyGroup', () => {
       entity.data.description = 'v1';
     });
     let loads = 0;
-    const context: NaturalKeyGroupContext = {
+    const context: NaturalKeyMergerDeps = {
       ...fixture.context,
       loadDoc: async (ctx, documentId) => {
         loads++;
@@ -176,10 +177,10 @@ describe('mergeNaturalKeyGroup', () => {
       },
     };
 
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, context)).toBe(true);
+    expect(await new NaturalKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
 
     expect(entityOf(fixture, ID_A)?.data.description).toBe('v2');
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(false);
+    expect(await new NaturalKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(false);
   });
 
   test('a fold blocked by a deleted winner leaves the watermark alone for a later pass', async ({ expect }) => {
@@ -203,7 +204,7 @@ describe('mergeNaturalKeyGroup', () => {
       entity.data.description = 'straggler';
     });
 
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(true);
+    expect(await new NaturalKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
     expect(entityOf(fixture, ID_C)?.system?.deleted).toBe(true);
     expect(entityOf(fixture, ID_A)?.data.description).toBeUndefined();
 
@@ -212,7 +213,7 @@ describe('mergeNaturalKeyGroup', () => {
         entity.system.deleted = false;
       }
     });
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(true);
+    expect(await new NaturalKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
     expect(entityOf(fixture, ID_A)?.data.description).toBe('straggler');
   });
 
@@ -223,7 +224,7 @@ describe('mergeNaturalKeyGroup', () => {
       [ID_A, makeEntity(KEY, { title: 'a' })],
       [ID_B, makeEntity(KEY, { title: 'b' })],
     ]);
-    const context: NaturalKeyGroupContext = {
+    const context: NaturalKeyMergerDeps = {
       ...fixture.context,
       flushDoc: async () => {
         edit(fixture, ID_B, (entity) => {
@@ -232,7 +233,7 @@ describe('mergeNaturalKeyGroup', () => {
       },
     };
 
-    await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, context);
+    await new NaturalKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group);
 
     const rekeyed = entityOf(fixture, ID_B);
     expect(rekeyed?.system?.mergedInto).toBeUndefined();
@@ -246,7 +247,7 @@ describe('mergeNaturalKeyGroup', () => {
       [ID_A, makeEntity(KEY, { title: 'a' })],
       [ID_B, makeEntity(KEY, { title: 'b' })],
     ]);
-    const context: NaturalKeyGroupContext = {
+    const context: NaturalKeyMergerDeps = {
       ...fixture.context,
       flushDoc: async () => {
         edit(fixture, ID_A, (entity) => {
@@ -257,7 +258,7 @@ describe('mergeNaturalKeyGroup', () => {
       },
     };
 
-    await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, context);
+    await new NaturalKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group);
 
     const survivor = entityOf(fixture, ID_B);
     expect(survivor?.system?.mergedInto).toBeUndefined();
@@ -276,7 +277,7 @@ describe('mergeNaturalKeyGroup', () => {
     ]);
     const flushed: string[] = [];
     const tombstonedAtFlush = new Map<EntityId, boolean>();
-    const context: NaturalKeyGroupContext = {
+    const context: NaturalKeyMergerDeps = {
       ...fixture.context,
       flushDoc: async (_ctx, documentId) => {
         flushed.push(documentId);
@@ -287,7 +288,7 @@ describe('mergeNaturalKeyGroup', () => {
       },
     };
 
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, context)).toBe(true);
+    expect(await new NaturalKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
 
     const documentIdOf = (id: EntityId) => fixture.handles.get(id)?.documentId;
     expect(flushed[0]).toBe(documentIdOf(ID_A));
@@ -360,7 +361,7 @@ describe('mergeNaturalKeyGroup', () => {
     expect(loser?.system && A.getConflicts(loser.system, 'mergedAtHeads')).toBeDefined();
 
     // Nothing is above the union, so the pass folds nothing and 'v3' stands.
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(false);
+    expect(await new NaturalKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(false);
     expect(entityOf(fixture, ID_A)?.data.title).toBe('v3');
 
     // The union must not over-suppress: a genuinely new straggler edit, above both watermarks,
@@ -368,7 +369,7 @@ describe('mergeNaturalKeyGroup', () => {
     edit(fixture, ID_B, (entity) => {
       entity.data.description = 'late';
     });
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(true);
+    expect(await new NaturalKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
     expect(entityOf(fixture, ID_A)?.data.description).toBe('late');
     expect(entityOf(fixture, ID_A)?.data.title).toBe('v3');
   });
@@ -385,14 +386,14 @@ describe('mergeNaturalKeyGroup', () => {
       entity.data.title = 'straggler';
     });
     const flushed: string[] = [];
-    const context: NaturalKeyGroupContext = {
+    const context: NaturalKeyMergerDeps = {
       ...fixture.context,
       flushDoc: async (_ctx, documentId) => {
         flushed.push(documentId);
       },
     };
 
-    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, context)).toBe(true);
+    expect(await new NaturalKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
 
     expect(entityOf(fixture, ID_A)?.data.title).toBe('straggler');
     const documentIdOf = (id: EntityId) => fixture.handles.get(id)?.documentId;
@@ -400,7 +401,7 @@ describe('mergeNaturalKeyGroup', () => {
   });
 });
 
-describe('mergeNaturalKeyDuplicates', () => {
+describe('NaturalKeyMerger.mergeDuplicates', () => {
   test('a throwing group is reported un-serviced without blocking the rest of the batch', async ({ expect }) => {
     const spaceId = SpaceId.random();
     const goodKey = 'example.com/thing/good';
@@ -433,21 +434,18 @@ describe('mergeNaturalKeyDuplicates', () => {
       makeRow(EntityId.make('01J00000000000000000000003'), 'automerge:unloadable-2', badKey),
     ];
 
-    const result = await mergeNaturalKeyDuplicates(
-      Context.default(),
-      new Map([[spaceId, new Set([goodKey, badKey])]]),
-      {
-        queryByNaturalKeys: async (_spaceId, keys) =>
-          rows.filter(({ naturalKey }) => naturalKey !== null && keys.includes(naturalKey)),
-        loadDoc: async (ctx, documentId) => {
-          if (String(documentId).startsWith('automerge:unloadable')) {
-            throw new Error('storage fault');
-          }
-          return good.context.loadDoc(ctx, documentId);
-        },
-        flushDoc: async () => {},
+    const merger = new NaturalKeyMerger({
+      queryByNaturalKeys: async (_spaceId, keys) =>
+        rows.filter(({ naturalKey }) => naturalKey !== null && keys.includes(naturalKey)),
+      loadDoc: async (ctx, documentId) => {
+        if (String(documentId).startsWith('automerge:unloadable')) {
+          throw new Error('storage fault');
+        }
+        return good.context.loadDoc(ctx, documentId);
       },
-    );
+      flushDoc: async () => {},
+    });
+    const result = await merger.mergeDuplicates(Context.default(), new Map([[spaceId, new Set([goodKey, badKey])]]));
 
     expect(result.mergedGroups).toBe(1);
     expect(result.serviced.get(spaceId)?.has(goodKey)).toBe(true);

@@ -23,6 +23,7 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
+import { NaturalKeyIntentStore } from './natural-key-intent-store';
 
 /**
  * Result of a single indexing pass over a data source.
@@ -124,6 +125,9 @@ export interface IndexEngineParams {
   objectMetaIndex: EntityMetaIndex;
   ftsIndex: FtsIndex;
   reverseRefIndex: ReverseRefIndex;
+
+  /** Defaults to a fresh store; injectable for tests. */
+  naturalKeyIntents?: NaturalKeyIntentStore;
 }
 
 export class IndexEngine {
@@ -131,12 +135,14 @@ export class IndexEngine {
   readonly #objectMetaIndex: EntityMetaIndex;
   readonly #ftsIndex: FtsIndex;
   readonly #reverseRefIndex: ReverseRefIndex;
+  readonly #naturalKeyIntents: NaturalKeyIntentStore;
 
   constructor(params?: IndexEngineParams) {
     this.#tracker = params?.tracker ?? new IndexTracker();
     this.#objectMetaIndex = params?.objectMetaIndex ?? new EntityMetaIndex();
     this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
     this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
+    this.#naturalKeyIntents = params?.naturalKeyIntents ?? new NaturalKeyIntentStore();
   }
 
   migrate() {
@@ -145,6 +151,7 @@ export class IndexEngine {
       yield* this.#objectMetaIndex.migrate();
       yield* this.#ftsIndex.migrate();
       yield* this.#reverseRefIndex.migrate();
+      yield* this.#naturalKeyIntents.migrate();
     });
   }
 
@@ -190,14 +197,14 @@ export class IndexEngine {
   }
 
   /**
-   * Pending natural-key merge intents (see {@link EntityMetaIndex.recordNaturalKeyIntents}).
+   * Pending natural-key merge intents (see {@link NaturalKeyIntentStore.record}).
    */
   takeNaturalKeyIntents(): Effect.Effect<
     { maxId: number; intents: Map<SpaceId, Set<string>> },
     SqlError.SqlError,
     SqlClient.SqlClient
   > {
-    return this.#objectMetaIndex.takeNaturalKeyIntents();
+    return this.#naturalKeyIntents.take();
   }
 
   /**
@@ -208,7 +215,7 @@ export class IndexEngine {
     naturalKey: string,
     upToId: number,
   ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
-    return this.#objectMetaIndex.clearNaturalKeyIntents(spaceId, naturalKey, upToId);
+    return this.#naturalKeyIntents.clear(spaceId, naturalKey, upToId);
   }
 
   queryType(
@@ -286,7 +293,7 @@ export class IndexEngine {
         done: doneFtsIndex,
         objects: ftsObjects,
       } = yield* this.#update(ctx, this.#ftsIndex, dataSource, {
-        indexName: 'fts5',
+        indexName: 'fts6',
         spaceId: opts.spaceId,
         limit: opts.limit,
       });
@@ -299,7 +306,7 @@ export class IndexEngine {
         done: doneReverseRefIndex,
         objects: reverseRefObjects,
       } = yield* this.#update(ctx, this.#reverseRefIndex, dataSource, {
-        indexName: 'reverseRef',
+        indexName: 'reverseRef2',
         spaceId: opts.spaceId,
         limit: opts.limit,
       });
@@ -374,7 +381,7 @@ export class IndexEngine {
           // Look up recordIds for the objects.
           yield* this.#objectMetaIndex.lookupRecordIds(objects);
 
-          yield* this.#objectMetaIndex.recordNaturalKeyIntents(intents);
+          yield* this.#naturalKeyIntents.record(intents);
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(

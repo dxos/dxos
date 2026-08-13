@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Merge, Obj, Ref } from '@dxos/echo';
+import { Entity, Obj, Ref } from '@dxos/echo';
 import { PROPERTY_ID } from '@dxos/echo-protocol';
+import { mergeCandidates, resolveMergeRedirect, toMergeCandidate } from '@dxos/echo/internal';
 import { EID, type EntityId } from '@dxos/keys';
 
 import { getObjectCore, isEchoObject } from '../echo-handler';
@@ -45,12 +46,12 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
     losers: readonly EntityId[];
   }[] = [];
 
-  // Group on the natural key alone first. Building a `Candidate` snapshots the entity, which is a
+  // Group on the natural key alone first. Building a `MergeCandidate` snapshots the entity, which is a
   // deep copy — too costly to pay for every entity on a path that runs per query, when almost none
   // are duplicated.
   const groups = new Map<string, Obj.Unknown[]>();
   for (const entity of entities) {
-    const naturalKey = Merge.getNaturalKey(entity);
+    const naturalKey = Entity.getNaturalKey(entity);
     // The empty string is not a key — grouping on it would merge unrelated entities.
     if (naturalKey === undefined || naturalKey.length === 0) {
       continue;
@@ -81,7 +82,7 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
     if (group.length < 2) {
       continue;
     }
-    const result = Merge.merge(group.map(Merge.candidateOf));
+    const result = mergeCandidates(group.map(toMergeCandidate));
     const winner = byId.get(result.winner);
     if (!winner) {
       continue;
@@ -309,7 +310,7 @@ export const resolveMerged = (start: EntityId, entities: readonly Obj.Unknown[])
     byId.set(entity.id, entity);
   }
 
-  return Merge.resolveRedirect(start, (id) => {
+  return resolveMergeRedirect(start, (id) => {
     const entity = byId.get(id);
     return entity ? getObjectCore(entity).getMergedInto() : undefined;
   });

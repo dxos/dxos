@@ -740,7 +740,7 @@ export class ObjectCore {
   /**
    * Follow `mergedInto` redirects to the live end of the chain. Edges must strictly decrease the
    * id — a non-decreasing edge is corrupt data and terminates the walk at the current entity,
-   * matching `Merge.resolveRedirect`. A hop whose core is not loaded returns `undefined`: the
+   * matching `resolveMergeRedirect` in `@dxos/echo/internal`. A hop whose core is not loaded returns `undefined`: the
    * survivor cannot be judged synchronously, and an unresolvable dependency is treated as live.
    */
   private _resolveMergeRedirect(core: ObjectCore | undefined): ObjectCore | undefined {

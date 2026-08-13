@@ -6,14 +6,15 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
-import { Database, Filter, Merge, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { findMergeDuplicates, mergeCandidates, toMergeCandidate } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
 import { getMergedFrom, mergeDuplicates, resolveMerged, rewriteReferences } from './merge-executor';
 
-describe('Merge', () => {
+describe('natural-key merging', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -31,14 +32,14 @@ describe('Merge', () => {
 
     await Effect.gen(function* () {
       const task = Obj.make(TestSchema.Task, { title: 'seeded' });
-      Merge.setNaturalKey(task, 'org.example.seed');
+      Entity.setNaturalKey(task, 'org.example.seed');
       const added = yield* Database.add(task);
-      expect(Merge.getNaturalKey(added)).toBe('org.example.seed');
+      expect(Entity.getNaturalKey(added)).toBe('org.example.seed');
 
       yield* Database.flush();
 
       const [queried] = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(Merge.getNaturalKey(queried)).toBe('org.example.seed');
+      expect(Entity.getNaturalKey(queried)).toBe('org.example.seed');
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
@@ -48,7 +49,7 @@ describe('Merge', () => {
 
     await Effect.gen(function* () {
       const task = Obj.make(TestSchema.Task, { title: 'seeded' });
-      Merge.setNaturalKey(task, 'org.example.seed');
+      Entity.setNaturalKey(task, 'org.example.seed');
       yield* Database.add(task);
       yield* Database.flush();
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
@@ -59,7 +60,7 @@ describe('Merge', () => {
 
     await Effect.gen(function* () {
       const [queried] = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(Merge.getNaturalKey(queried)).toBe('org.example.seed');
+      expect(Entity.getNaturalKey(queried)).toBe('org.example.seed');
     }).pipe(Effect.provide(Database.layer(reopened)), EffectEx.runAndForwardErrors);
   });
 
@@ -70,21 +71,21 @@ describe('Merge', () => {
 
     await Effect.gen(function* () {
       const first = Obj.make(TestSchema.Task, { title: 'from the first writer' });
-      Merge.setNaturalKey(first, 'org.example.seed');
+      Entity.setNaturalKey(first, 'org.example.seed');
       yield* Database.add(first);
 
       const second = Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' });
-      Merge.setNaturalKey(second, 'org.example.seed');
+      Entity.setNaturalKey(second, 'org.example.seed');
       yield* Database.add(second);
 
       yield* Database.flush();
 
       // Deliberately not via a query: a query collapses duplicates on sight, so this exercises the
       // pure detection over the two entities directly.
-      const duplicates = Merge.findDuplicates([first, second].map(Merge.candidateOf));
+      const duplicates = findMergeDuplicates([first, second].map(toMergeCandidate));
       expect(duplicates.size).toBe(1);
 
-      const result = Merge.merge(duplicates.get('org.example.seed')!);
+      const result = mergeCandidates(duplicates.get('org.example.seed')!);
       // Ids are ULIDs minted in creation order, so the first writer's object wins.
       expect(result.winner).toBe(first.id);
       expect(result.losers).toEqual([second.id]);
@@ -99,11 +100,11 @@ describe('Merge', () => {
 
     await Effect.gen(function* () {
       const first = Obj.make(TestSchema.Task, { title: 'from the first writer' });
-      Merge.setNaturalKey(first, 'org.example.seed');
+      Entity.setNaturalKey(first, 'org.example.seed');
       yield* Database.add(first);
 
       const second = Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' });
-      Merge.setNaturalKey(second, 'org.example.seed');
+      Entity.setNaturalKey(second, 'org.example.seed');
       yield* Database.add(second);
 
       // Same tick as the adds, before the worker can see the documents; either engine computes
@@ -132,11 +133,11 @@ describe('Merge', () => {
     await Effect.gen(function* () {
       // Ids are ULIDs minted in creation order, so the first-created duplicate wins the merge.
       const winner = Obj.make(TestSchema.Person, { name: 'Alice (first writer)' });
-      Merge.setNaturalKey(winner, 'org.example.alice');
+      Entity.setNaturalKey(winner, 'org.example.alice');
       yield* Database.add(winner);
 
       const loser = Obj.make(TestSchema.Person, { name: 'Alice (second writer)' });
-      Merge.setNaturalKey(loser, 'org.example.alice');
+      Entity.setNaturalKey(loser, 'org.example.alice');
       yield* Database.add(loser);
 
       const org = yield* Database.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
@@ -172,11 +173,11 @@ describe('Merge', () => {
 
     await Effect.gen(function* () {
       const winner = Obj.make(TestSchema.Person, { name: 'Alice (first writer)' });
-      Merge.setNaturalKey(winner, 'org.example.alice');
+      Entity.setNaturalKey(winner, 'org.example.alice');
       yield* Database.add(winner);
 
       const loser = Obj.make(TestSchema.Person, { name: 'Alice (second writer)' });
-      Merge.setNaturalKey(loser, 'org.example.alice');
+      Entity.setNaturalKey(loser, 'org.example.alice');
       yield* Database.add(loser);
 
       const child = yield* Database.add(Obj.make(TestSchema.Task, { title: 'filed under Alice' }));
@@ -197,7 +198,7 @@ describe('Merge', () => {
 
     const tasks = ['first', 'second', 'third'].map((title) => {
       const task = db.add(Obj.make(TestSchema.Task, { title }));
-      Merge.setNaturalKey(task, 'org.example.seed');
+      Entity.setNaturalKey(task, 'org.example.seed');
       return task;
     });
     await db.flush();
@@ -221,7 +222,7 @@ describe('Merge', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Merge.setNaturalKey(task, 'org.example.seed');
+        Entity.setNaturalKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
       mergeDuplicates([first, second]);
@@ -242,7 +243,7 @@ describe('Merge', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Merge.setNaturalKey(task, 'org.example.seed');
+        Entity.setNaturalKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
 
@@ -272,7 +273,7 @@ describe('Merge', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Merge.setNaturalKey(task, 'org.example.seed');
+        Entity.setNaturalKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
       const referrer = Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) });
@@ -298,7 +299,7 @@ describe('Merge', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Merge.setNaturalKey(task, 'org.example.seed');
+        Entity.setNaturalKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
 
@@ -337,13 +338,13 @@ describe('Merge', () => {
       const targetWinner = Obj.make(TestSchema.Task, { title: 'target winner' });
       const targetLoser = Obj.make(TestSchema.Task, { title: 'target loser' });
       for (const task of [targetWinner, targetLoser]) {
-        Merge.setNaturalKey(task, 'org.example.target');
+        Entity.setNaturalKey(task, 'org.example.target');
         yield* Database.add(task);
       }
       const referrerWinner = Obj.make(TestSchema.Task, { title: 'referrer winner', previous: Ref.make(targetLoser) });
       const referrerLoser = Obj.make(TestSchema.Task, { title: 'referrer loser', previous: Ref.make(targetLoser) });
       for (const task of [referrerWinner, referrerLoser]) {
-        Merge.setNaturalKey(task, 'org.example.referrer');
+        Entity.setNaturalKey(task, 'org.example.referrer');
         yield* Database.add(task);
       }
       mergeDuplicates([targetWinner, targetLoser, referrerWinner, referrerLoser]);
@@ -367,7 +368,7 @@ describe('Merge', () => {
     const first = db.add(Obj.make(TestSchema.Task, { title: 'first' }));
     const second = db.add(Obj.make(TestSchema.Task, { title: 'second', description: 'only here' }));
     for (const task of [first, second]) {
-      Merge.setNaturalKey(task, 'org.example.seed');
+      Entity.setNaturalKey(task, 'org.example.seed');
     }
     const referrer = db.add(Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) }));
     await db.flush();
@@ -404,7 +405,7 @@ describe('Merge', () => {
 
     const tasks = ['first', 'second', 'third'].map((title) => {
       const task = db.add(Obj.make(TestSchema.Task, { title }));
-      Merge.setNaturalKey(task, 'org.example.seed');
+      Entity.setNaturalKey(task, 'org.example.seed');
       return task;
     });
 
@@ -434,7 +435,7 @@ describe('Merge', () => {
 
     const tasks = ['a', 'b', 'c'].map((title) => {
       const task = db.add(Obj.make(TestSchema.Task, { title }));
-      Merge.setNaturalKey(task, 'org.example.seed');
+      Entity.setNaturalKey(task, 'org.example.seed');
       return task;
     });
     const [smallest, middle, largest] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
@@ -471,7 +472,7 @@ describe('Merge', () => {
 
       const tasks = ['first', 'second'].map((title) => {
         const task = db.add(Obj.make(TestSchema.Task, { title, description: title }));
-        Merge.setNaturalKey(task, 'org.example.seed');
+        Entity.setNaturalKey(task, 'org.example.seed');
         return task;
       });
       await db.flush();
@@ -490,7 +491,7 @@ describe('Merge', () => {
 
       for (const title of ['first', 'second', 'third']) {
         const task = db.add(Obj.make(TestSchema.Task, { title }));
-        Merge.setNaturalKey(task, 'org.example.seed');
+        Entity.setNaturalKey(task, 'org.example.seed');
       }
       await db.flush();
       await waitForLiveCount(db, 1);
@@ -508,7 +509,7 @@ describe('Merge', () => {
 
       for (const title of ['first', 'second']) {
         const task = db.add(Obj.make(TestSchema.Task, { title }));
-        Merge.setNaturalKey(task, 'org.example.seed');
+        Entity.setNaturalKey(task, 'org.example.seed');
       }
       await db.flush();
       await waitForLiveCount(db, 1);
@@ -542,7 +543,7 @@ describe('Merge', () => {
 
       for (const naturalKey of ['org.example.seed', 'org.example.seed@2']) {
         const task = db.add(Obj.make(TestSchema.Task, { title: naturalKey }));
-        Merge.setNaturalKey(task, naturalKey);
+        Entity.setNaturalKey(task, naturalKey);
       }
       await db.flush();
 
@@ -557,13 +558,13 @@ describe('Merge', () => {
     await Effect.gen(function* () {
       for (const naturalKey of ['org.example.seed', 'org.example.seed@2', 'org.example.other']) {
         const task = Obj.make(TestSchema.Task, { title: naturalKey });
-        Merge.setNaturalKey(task, naturalKey);
+        Entity.setNaturalKey(task, naturalKey);
         yield* Database.add(task);
       }
       yield* Database.flush();
 
       const tasks = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(Merge.findDuplicates(tasks.map(Merge.candidateOf)).size).toBe(0);
+      expect(findMergeDuplicates(tasks.map(toMergeCandidate)).size).toBe(0);
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 });

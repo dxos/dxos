@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: worker-side merging is live and hardened through three review rounds (§4.8; 2026-08-02, 2026-08-03 ×2); next per TASKS backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. Last: third-review fixes — transitive deletion follows redirects (relations/children at a loser stay visible), prototype-safe merge accumulation, loser docs flushed before intent clear, conflict-union fold watermark in both engines; all suites green._
+_Resume: worker-side merging is live and hardened through three review rounds (§4.8; 2026-08-02, 2026-08-03 ×2); dmaretskyi's 2026-08-13 PR review drove a behavior-preserving restructuring (public API = `Entity.get/setNaturalKey`, machinery internal, index-name versioning, `NaturalKeyIntentStore`, `NaturalKeyMerger` class). Open: field-name decision (`singletonKey` declined; alternatives under review), singleton APIs vs Phase-2 `db.ensure`; then the backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. All suites green._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -126,6 +126,17 @@ than by a spike.
       fields), `merge.test.ts` (relation/child at loser), and
       `natural-key-merge.test.ts` (flush ordering ×2, concurrent-merge watermark
       conflict via forked-and-merged doc states).
+- [x] **2026-08-13 restructuring** (dmaretskyi PR review; DESIGN decision log
+      "2026-08-13" has the rationale): public `Merge` namespace dissolved —
+      `Entity.get/setNaturalKey` is the user API, machinery
+      (`mergeCandidates`/`toMergeCandidate`/`findMergeDuplicates`/`resolveMergeRedirect`)
+      moved to `@dxos/echo/internal`, `selectWinner` deleted, `groupByNaturalKey`
+      privatized; cursor wipe replaced by index-name versioning (`fts6`,
+      `reverseRef2`, `DEPRECATED_INDEX_NAMES`); intent log split into
+      `NaturalKeyIntentStore` joining the same transaction; `NaturalKeyMerger`
+      class with constructor-injected `loadDoc`/`flushDoc`/`queryByNaturalKeys`.
+      Declined for now: `singletonKey` rename + `querySingleton`/`ensureSingleton`
+      APIs (name search continues; API sketch noted against `db.ensure`).
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] **Decide the collaborative-text policy before adoption widens** (§4.6 risk).

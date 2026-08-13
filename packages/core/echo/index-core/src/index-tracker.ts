@@ -37,8 +37,14 @@ export interface IndexCursor extends Schema.Schema.Type<typeof IndexCursor> {}
 
 /**
  * Deprecated index names that are no longer used. Will be cleaned up on migration.
+ *
+ * Renaming an index is also the invalidation mechanism: a build whose driven schema changed in a
+ * way per-object re-indexing cannot repair (e.g. `objectMeta.naturalKey`, populated only when an
+ * object re-indexes) bumps the driving cursor names, so every document re-presents to the new
+ * name while the old cursors are purged here. `fts5`/`reverseRef` were retired by the
+ * `naturalKey` backfill.
  */
-const DEPRECATED_INDEX_NAMES = ['fts'];
+const DEPRECATED_INDEX_NAMES = ['fts', 'fts5', 'reverseRef'];
 
 export class IndexTracker {
   migrate = Effect.fn('IndexTracker.migrate')(function* () {

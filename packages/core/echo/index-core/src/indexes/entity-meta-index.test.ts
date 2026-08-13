@@ -13,6 +13,7 @@ import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } f
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { IndexTracker } from '../index-tracker';
+import { NaturalKeyIntentStore } from '../natural-key-intent-store';
 import { EntityMetaIndex } from './entity-meta-index';
 import type { IndexerObject } from './interface';
 
@@ -529,42 +530,25 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('upgrading a pre-naturalKey table resets index cursors so everything re-indexes', () =>
+  it.effect('cursors under retired index names are purged so pre-naturalKey data re-indexes', () =>
     Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      // The table as a build before `naturalKey` would have created it. Existing rows hold NULL
-      // after the ALTER, and re-indexing is per-object, so without a cursor reset an unchanged
-      // duplicate would never become visible to detection.
-      yield* sql`CREATE TABLE objectMeta (
-        recordId INTEGER PRIMARY KEY AUTOINCREMENT,
-        objectId TEXT NOT NULL,
-        queueId TEXT NOT NULL DEFAULT '',
-        queueNamespace TEXT NOT NULL DEFAULT '',
-        spaceId TEXT NOT NULL,
-        documentId TEXT NOT NULL DEFAULT '',
-        entityKind TEXT NOT NULL,
-        typeDXN TEXT NOT NULL,
-        deleted INTEGER NOT NULL,
-        source TEXT,
-        target TEXT,
-        parent TEXT,
-        version INTEGER NOT NULL,
-        createdAt INTEGER,
-        updatedAt INTEGER
-      )`;
-
+      // A build before `naturalKey` tracked its progress under the retired names (`fts5`,
+      // `reverseRef`); rows it indexed hold NULL keys and re-indexing is per-object, so those
+      // cursors must not survive the upgrade — the bumped names re-present every document.
       const tracker = new IndexTracker();
       yield* tracker.migrate();
       yield* tracker.updateCursors([
         { indexName: 'fts5', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+        { indexName: 'reverseRef', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+        { indexName: 'fts6', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
       ]);
 
-      const index = new EntityMetaIndex();
-      yield* index.migrate();
+      // The purge runs on every startup's migration pass.
+      yield* tracker.migrate();
 
       expect(yield* tracker.queryCursors({ indexName: 'fts5' })).toEqual([]);
-      const columns = yield* sql<{ name: string }>`SELECT name FROM pragma_table_info('objectMeta')`;
-      expect(columns.map(({ name }) => name)).toContain('naturalKey');
+      expect(yield* tracker.queryCursors({ indexName: 'reverseRef' })).toEqual([]);
+      expect(yield* tracker.queryCursors({ indexName: 'fts6' })).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -576,36 +560,37 @@ describe('EntityMetaIndex', () => {
       const index = new EntityMetaIndex();
       yield* index.migrate();
       yield* tracker.updateCursors([
-        { indexName: 'fts5', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+        { indexName: 'fts6', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
       ]);
 
-      // Re-running the migration (every startup does) must not wipe progress.
+      // Re-running the migrations (every startup does) must not wipe progress under live names.
       yield* index.migrate();
-      expect(yield* tracker.queryCursors({ indexName: 'fts5' })).toHaveLength(1);
+      yield* tracker.migrate();
+      expect(yield* tracker.queryCursors({ indexName: 'fts6' })).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 
   it.effect('natural-key intents survive until cleared, bounded by the id captured at read time', () =>
     Effect.gen(function* () {
-      const index = new EntityMetaIndex();
-      yield* index.migrate();
+      const store = new NaturalKeyIntentStore();
+      yield* store.migrate();
 
       const spaceId = SpaceId.random();
-      yield* index.recordNaturalKeyIntents([
+      yield* store.record([
         { spaceId, naturalKey: 'example.com/thing/a' },
         { spaceId, naturalKey: 'example.com/thing/b' },
         { spaceId, naturalKey: 'example.com/thing/a' }, // Re-recorded — deduplicated on read.
       ]);
 
-      const { maxId, intents } = yield* index.takeNaturalKeyIntents();
+      const { maxId, intents } = yield* store.take();
       expect([...(intents.get(spaceId) ?? [])].sort()).toEqual(['example.com/thing/a', 'example.com/thing/b']);
 
       // A key recorded after the read (a concurrent indexing pass) must survive the clear.
-      yield* index.recordNaturalKeyIntents([{ spaceId, naturalKey: 'example.com/thing/a' }]);
-      yield* index.clearNaturalKeyIntents(spaceId, 'example.com/thing/a', maxId);
-      yield* index.clearNaturalKeyIntents(spaceId, 'example.com/thing/b', maxId);
+      yield* store.record([{ spaceId, naturalKey: 'example.com/thing/a' }]);
+      yield* store.clear(spaceId, 'example.com/thing/a', maxId);
+      yield* store.clear(spaceId, 'example.com/thing/b', maxId);
 
-      const remaining = yield* index.takeNaturalKeyIntents();
+      const remaining = yield* store.take();
       expect([...(remaining.intents.get(spaceId) ?? [])]).toEqual(['example.com/thing/a']);
     }).pipe(Effect.provide(TestLayer)),
   );

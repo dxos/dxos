@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Filter, Merge, Obj, Query, Relation } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
@@ -29,7 +29,7 @@ describe('merge convergence', () => {
 
   const seed = (db: any, title: string) => {
     const task = db.add(Obj.make(TestSchema.Task, { title }));
-    Merge.setNaturalKey(task, 'org.example.seed');
+    Entity.setNaturalKey(task, 'org.example.seed');
     return task;
   };
 
@@ -207,7 +207,7 @@ describe('merge convergence', () => {
     });
     await using db = await peer.createDatabase(spaceKey);
 
-    // `Merge.setNaturalKey` rejects relations, so stamp the key the way a legacy or hostile
+    // `Entity.setNaturalKey` rejects relations, so stamp the key the way a legacy or hostile
     // writer would — directly on meta — and verify the worker refuses to act on it.
     const makeEmployment = () => {
       const person = db.add(Obj.make(TestSchema.Person, { name: 'someone' }));
@@ -329,9 +329,9 @@ describe('merge convergence', () => {
     // A sentinel pair under a different key that does merge — proof the worker pass ran and
     // examined this batch, rather than simply not having gotten to it yet.
     const sentinelFirst = db.add(Obj.make(TestSchema.Task, { title: 'sentinel first' }));
-    Merge.setNaturalKey(sentinelFirst, 'org.example.sentinel');
+    Entity.setNaturalKey(sentinelFirst, 'org.example.sentinel');
     const sentinelSecond = db.add(Obj.make(TestSchema.Task, { title: 'sentinel second' }));
-    Merge.setNaturalKey(sentinelSecond, 'org.example.sentinel');
+    Entity.setNaturalKey(sentinelSecond, 'org.example.sentinel');
     await db.flush();
 
     // The client pass declines the deleted twin outright.
@@ -341,7 +341,7 @@ describe('merge convergence', () => {
     await waitForCondition({
       condition: async () => {
         const live = await liveTasks(db);
-        return live.filter((task: Obj.Unknown) => Merge.getNaturalKey(task) === 'org.example.sentinel').length === 1;
+        return live.filter((task: Obj.Unknown) => Entity.getNaturalKey(task) === 'org.example.sentinel').length === 1;
       },
       timeout: 10_000,
     });
@@ -349,7 +349,7 @@ describe('merge convergence', () => {
     // The worker reached the same verdict: nothing under the seed key was redirected, and the
     // live twin is still the one visible object for it.
     const live = await liveTasks(db);
-    const seedLive = live.filter((task: Obj.Unknown) => Merge.getNaturalKey(task) === 'org.example.seed');
+    const seedLive = live.filter((task: Obj.Unknown) => Entity.getNaturalKey(task) === 'org.example.seed');
     expect(seedLive).toHaveLength(1);
     expect(seedLive[0].id).toBe(liveTwin.id);
     const all = await allTasks(db);

@@ -45,7 +45,7 @@ import { type DatabaseRoot } from './database-root';
 import { FeedDataSource } from './feed-data-source';
 import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalFeedServiceImpl } from './local-feed-service';
-import { mergeNaturalKeyDuplicates } from './natural-key-merge';
+import { NaturalKeyMerger } from './natural-key-merge';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
 
@@ -103,6 +103,7 @@ export class EchoHost extends Resource {
 
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexEngine: IndexEngine;
+  private readonly _naturalKeyMerger: NaturalKeyMerger;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
@@ -155,6 +156,13 @@ export class EchoHost extends Resource {
 
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();
+
+    this._naturalKeyMerger = new NaturalKeyMerger({
+      queryByNaturalKeys: (spaceId, keys) =>
+        this._indexEngine.queryByNaturalKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
+      loadDoc: (ctx, documentId) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId),
+      flushDoc: (ctx, documentId) => this._automergeHost.flush(ctx, { documentIds: [documentId] }),
+    });
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
@@ -497,12 +505,7 @@ export class EchoHost extends Resource {
           .takeNaturalKeyIntents()
           .pipe(RuntimeProvider.runPromise(this._runtime));
         if (intents.size > 0) {
-          const { serviced } = await mergeNaturalKeyDuplicates(this._ctx, intents, {
-            queryByNaturalKeys: (spaceId, keys) =>
-              this._indexEngine.queryByNaturalKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
-            loadDoc: (ctx, documentId) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId),
-            flushDoc: (ctx, documentId) => this._automergeHost.flush(ctx, { documentIds: [documentId] }),
-          });
+          const { serviced } = await this._naturalKeyMerger.mergeDuplicates(this._ctx, intents);
           for (const [spaceId, keys] of serviced) {
             for (const key of keys) {
               await this._indexEngine
