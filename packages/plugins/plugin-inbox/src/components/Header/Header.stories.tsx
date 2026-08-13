@@ -166,7 +166,8 @@ export const Spec: Story = {
 
     // The actor WITHOUT one: no create button until hovered, then a click creates the Person and the
     // row goes back to showing an avatar (now card-backed).
-    await expect(canvas.queryByRole('button', { name: 'Create contact' })).toBeNull();
+    // Mounted for keyboard access, faded until hover/focus (see `ContactAvatar`).
+    await expect(canvas.getAllByRole('button', { name: 'Create contact' }).length).toBeGreaterThan(0);
     await userEvent.hover(avatarFor('Bob Bell'));
     const create = await canvas.findByRole('button', { name: 'Create contact' }, { timeout: 5_000 });
     await userEvent.click(create);

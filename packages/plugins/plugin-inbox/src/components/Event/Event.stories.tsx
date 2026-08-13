@@ -193,7 +193,8 @@ export const Spec: Story = {
     await userEvent.keyboard('{Escape}');
 
     // The unknown attendee's row offers to create the Person instead — on hover, never before it.
-    await expect(canvas.queryByRole('button', { name: 'Create contact' })).toBeNull();
+    // Mounted for keyboard access, faded until hover/focus (see `ContactAvatar`).
+    await expect(canvas.getAllByRole('button', { name: 'Create contact' }).length).toBeGreaterThan(0);
     const unknownAvatar = [...canvasElement.querySelectorAll('.dx-card__row')]
       .find((row) => row.textContent?.includes(UNKNOWN_ATTENDEE.name))
       ?.querySelector('[data-testid="row.contact-avatar"]');
@@ -201,6 +202,7 @@ export const Spec: Story = {
       throw new Error('Contact avatar not found for the unknown attendee.');
     }
     await userEvent.hover(unknownAvatar);
-    await canvas.findByRole('button', { name: 'Create contact' }, { timeout: 5_000 });
+    // Scoped to the hovered row: every contactless attendee mounts its own create button.
+    await waitFor(() => expect(unknownAvatar.querySelector('button')).toBeTruthy(), { timeout: 5_000 });
   },
 };

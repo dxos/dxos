@@ -3,7 +3,7 @@
 //
 
 import { format, intervalToDuration } from 'date-fns';
-import React, { type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
@@ -305,7 +305,6 @@ export const ContactAvatar = ({
   const resolved = useActorContact(getContact ? undefined : db, actor);
   const contactDXN = getContact ? getContact(actor) : resolved;
   const anchorRef = useRef<HTMLDivElement>(null);
-  const [hovered, setHovered] = useState(false);
 
   const openCard = useCallback(() => {
     if (contactDXN) {
@@ -321,30 +320,25 @@ export const ContactAvatar = ({
 
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 
-  // The button replaces the avatar in place, so the gutter width does not change on hover.
-  const showCreate = !contactDXN && hovered && !!onContactCreate;
+  // Both are always mounted when a contact can be created: swapping them on hover dropped focus the
+  // instant a keyboard user reached the button, and mounting it only on hover kept it out of the tab
+  // order entirely. The avatar fades out instead, so the gutter width never changes.
+  const canCreate = !contactDXN && !!onContactCreate;
 
   return (
-    // `grid place-items-center`: a plain block wrapper takes its line box (30px for a 24px avatar),
-    // which knocked the avatar off the gutter's centre. Pointer only when hovering does something.
     <div
       ref={anchorRef}
-      className={mx('grid place-items-center', contactDXN && 'cursor-pointer')}
+      // Pointer only when hovering does something: a resolved contact opens its card.
+      className={mx('relative grid place-items-center group/contact', contactDXN && 'cursor-pointer')}
       data-testid='row.contact-avatar'
-      onPointerEnter={() => {
-        setHovered(true);
-        startHover();
-      }}
-      onPointerLeave={() => {
-        setHovered(false);
-        cancelHover();
-      }}
-      // Focus reveals it too (both bubble in React), or the create button — mounted only while
-      // hovered — would be unreachable without a pointer.
-      onFocus={() => setHovered(true)}
-      onBlur={() => setHovered(false)}
+      onPointerEnter={startHover}
+      onPointerLeave={cancelHover}
     >
-      {showCreate ? (
+      {/* Faded (not unmounted) while the create button covers it, so the gutter never resizes. */}
+      <div className={mx(canCreate && 'group-hover/contact:opacity-0 group-focus-within/contact:opacity-0')}>
+        <Avatar actor={actor} size={size} onClick={onClick} />
+      </div>
+      {canCreate && (
         <IconButton
           variant='ghost'
           iconOnly
@@ -353,10 +347,9 @@ export const ContactAvatar = ({
           // as a heavier stand-in for the face.
           size={Number(size) >= 8 ? 6 : 5}
           label={t('create-contact.label')}
+          classNames='absolute inset-0 opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
           onClick={handleContactCreate}
         />
-      ) : (
-        <Avatar actor={actor} size={size} onClick={onClick} />
       )}
     </div>
   );

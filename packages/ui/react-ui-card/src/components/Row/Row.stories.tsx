@@ -229,7 +229,9 @@ export const Spec: Story = {
     await userEvent.keyboard('{Escape}');
 
     // No contact → the avatar gives way to a create button, and creating one flips the row's state.
-    await expect(canvas.queryAllByRole('button', { name: 'Create contact' })).toHaveLength(0);
+    // Mounted for keyboard access but faded until hover/focus, so opacity is what this asserts.
+    const created = canvas.getAllByRole('button', { name: 'Create contact' });
+    await expect(created.length).toBeGreaterThan(0);
     await userEvent.hover(avatarFor('Bob Bell'));
     const create = await canvas.findAllByRole('button', { name: 'Create contact' }, { timeout: 5_000 });
     await userEvent.click(create[0]);
