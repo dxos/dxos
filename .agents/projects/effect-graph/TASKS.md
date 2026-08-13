@@ -83,6 +83,27 @@ alongside the ones Effect ships (and stops being app-framework-specific code).
       improves their error story), then `topoLevels` (natural `topo` companion / `{levels: true}`);
       keep `includeEdge` in our layer if upstream declines the predicate.
 
+## Phase 7: split a generic GraphBuilder from AppGraphBuilder
+
+Measured 2026-08-13: of `AppGraphBuilder.ts`'s 1172 lines, 72 mention URL concepts, 30 the app
+node vocabulary and 8 ECHO — the rest is generic expansion machinery.
+
+- [x] **Probe the coupling** — `extension.url` is read in exactly ONE place (the connector flush),
+      and `urlGrammar` exists only to feed it. The contract coupling was a single call site.
+- [x] **Sever it** — the flush now applies an injected `decorateNode(node, extension)` whose
+      default stamps the URL segment. The generic path no longer reads URL data.
+- [ ] **Move the machinery down** to `@dxos/graph/GraphBuilder`: `ConnectorExtension`,
+      `ResolverExtension`, `BuilderExtension` (with `url` generalized to an opaque `meta`),
+      `GraphBuilder`/`GraphBuilderProps`, `make`/`from`/`addExtension`/`removeExtension`/
+      `explore`/`destroy`/`flush`, `createExtensionRaw`, `createConnector`, `flattenExtensions`,
+      and the impl class (connectors, expansion state, dirty-flush).
+- [ ] **Keep in `AppGraphBuilder`**: `UrlBinding`/`UrlGrammar`/`PathResolver`/`urlRepresentation`/
+      `nodeUrlSegment`/`stampUrlSegment`, `BuilderNode`, `ActionsExtension`/`ActionGroupsExtension`,
+      `createExtension` (actions), `createTypeExtension` (ECHO) — all layered on the generic one,
+      supplying the URL decorator.
+- [ ] **Split the tests** — most of `graph-builder.test.ts` (1676 lines) exercises generic
+      expansion and moves down; app-graph keeps the URL/action/ECHO cases.
+
 ## Phase 6: app-graph reconciliation
 
 Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-graph reconciliation.
