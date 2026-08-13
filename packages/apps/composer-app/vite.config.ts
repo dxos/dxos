@@ -270,7 +270,6 @@ export default defineConfig((env) => ({
       'effect/Context',
       'effect/Stream',
       'effect/Console',
-      '@effect/platform',
       '@effect/platform-browser',
       // Effect Atom (reactive state; always loaded, triggered a mid-session reload before being listed).
       '@effect/atom-react',
