@@ -12,6 +12,36 @@ alignment in the mailbox message card, then the `useContactLookup` defect. NOT V
 the navtree folders typecheck and test but have never been seen rendering; Composer boots only after a
 `pnpm install` fixes a Vite dep-scan failure on `@dxos/vendor-hyperformula`. Uncommitted: none._
 
+## Priorities (triaged with the user 2026-08-13)
+
+Work this order. Items not listed are P2 — real, but not this push.
+
+**P0 — next:** RecordArticle toolbar + menu (`plugin-space/src/containers/RecordArticle/`) built on the
+menu idiom, with injected enrich actions (contact, organization).
+
+**P1 — this push,** in the user's stated order: ConversationStack contact affordance → conversation menu
+actions (create Project + composite sender enrichment) → gate the Enrich button on configured
+connections → plugin-crm `EnrichImages` story → delete `ProcessMailbox` → **open the PR** → attachment
+in its own plank. Also P1: the `useContactLookup` defect; `useCardHover` regression test; avatar/name
+alignment (both surfaces); whole-conversation summarization incl. `dx-anchor` links and task extraction;
+investor-log LLM summaries; messages without `threadId` never rendering; mailbox-card inbox counts;
+live verification in the app (AFTER the PR).
+
+**Resolved by triage — do not re-open as separate work:**
+
+- `ProcessMailbox` deletion CLOSES "real stages behind the `log-title` seam" — the seam is
+  `ProcessMailbox`, so it goes with it.
+- Conversation-menu create-Project ABSORBS the create-project-from-message form.
+- The two single-flight items are ONE item, P2.
+- The ConversationStack story item is part of the contact-affordance item.
+- DROPPED: hover-driven LLM enrichment (the menu action covers it); regenerating a summary with extra
+  instructions.
+- Syncing tags back to Gmail is P2 — so archive is LOCAL-ONLY for now, and a Gmail sync will restore an
+  archived message. Accepted deliberately, not an oversight.
+
+**Structural:** this ledger moves to `packages/plugins/plugin-inbox/TASKS.md` as its own registry
+project; `stories-brain` keeps the model-ladder/FINDINGS research it was created for.
+
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
 
@@ -248,11 +278,12 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       extraction consults, skipping any subscription whose evidence predates its last unsubscribe.
       Note the corpus is immutable: the old messages remain and will always match, so suppression has to
       live in the mailbox's own state rather than in message filtering.
-- [ ] **ConversationStack story: popovers + unknown actors** (requested 2026-08-12) — the
+- [ ] **(part of the contact-affordance item above) ConversationStack story: popovers + unknown actors** (requested 2026-08-12) — the
       `ConversationStack` `Default` story should (a) host `ContactPreview` so DXN links in message
       content open popovers, (b) give the message avatar the same hover/create mechanism as
       `Row.Person` (use the extracted `ContactAvatar`), and (c) seed only 50% of actors as Persons.
-- [ ] **Enhanced (LLM) enrichment from the hover affordance** (requested 2026-08-12) — hovering a
+- [x] **DROPPED (2026-08-13) — Enhanced (LLM) enrichment from the hover affordance** — superseded by the
+      composite sender-enrichment MENU action; the hover path is not wanted. Originally (2026-08-12) — hovering a
       Person/Organization icon should also offer the AGENTIC enrichment, not just the deterministic
       create: run the research operation to create/update the object's researched fields AND fetch its
       image. The pieces exist — `CrmOperation.ResearchPerson` / `ResearchOrganization`
@@ -282,7 +313,8 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       the first row; the conversation tile appears to center across both rows).
 - [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
-- [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
+- [x] **CLOSED (2026-08-13) — Real stages behind the `log-title` seam** — the seam IS `ProcessMailbox`,
+      which is being deleted, so there is nothing left to put stages behind. Was: — facts/tag/summarize (see the model-policy /
       triage work above) once the skeleton is proven live.
 - [ ] **Operation-level single-flight per mailbox** (from PR #12538 review) — nothing serializes a
       routine-triggered run against a manual one, and a reset issued mid-run (UI-guarded only) could
@@ -364,7 +396,7 @@ analyze`) with a mailbox-global default and per-project overrides (user chose op
       NOT taken by `EnrichMailbox`, which spawns `SummarizeMailbox` and would deadlock on its own
       child. A re-entrant or durable lease at the operation layer would close both this and the
       `ProcessMailbox` gap above.
-- [ ] **Create-project-from-message UI** — the operation side is done; the message-context form is
+- [ ] **(absorbed by the conversation-menu item) Create-project-from-message UI** — the operation side is done; the message-context form is
       not built (PLAN.md deliverable 3).
 - [x] **Conversation summary tile** — the summary renders once, as the last tile under the messages
       (`ConversationStack.SummaryTile`), aligned to the message column template via the shared avatar
@@ -376,7 +408,7 @@ analyze`) with a mailbox-global default and per-project overrides (user chose op
     message in isolation. The annotation still names a parent, so the read model keeps working.
   - `dx-anchor` links (ECHO DXNs) to entities the summary references — Person, Organization, etc.
   - Task extraction, rendered as a markdown task list with those links at the foot of the summary.
-- [ ] **Regenerate a summary with extra instructions** — the user re-runs summarization for a
+- [x] **DROPPED (2026-08-13) — Regenerate a summary with extra instructions** — the user re-runs summarization for a
       conversation while adding guidance ("focus on the contract terms", "who owes what?"), either
       from the MessageArticle UI or the companion chat. Re-derivation already appends and supersedes,
       so the storage model needs nothing; the missing pieces are the instruction input surface and an

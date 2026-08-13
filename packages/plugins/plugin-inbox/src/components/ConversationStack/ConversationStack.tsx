@@ -22,7 +22,7 @@ import {
   composableProps,
   useTranslation,
 } from '@dxos/react-ui';
-import { Avatar, Row } from '@dxos/react-ui-card';
+import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Html, emailDialect } from '@dxos/react-ui-components';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -482,6 +482,8 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     () => (target ? (getExtractActions?.(target) ?? []) : []),
     [getExtractActions, target],
   );
+  const db = mailbox && Obj.getDatabase(mailbox);
+
   // Archiving is the `inbox` tag coming off (Gmail's model — INBOX is a label), so one toggle serves
   // both directions and membership picks the menu label.
   const [inInbox, toggleInbox] = useSystemTag(target, mailbox, 'inbox');
@@ -517,8 +519,16 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     <div className='contents'>
       <div className='col-span-full grid grid-cols-subgrid items-start'>
         {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
+        {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is
+            affordable here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
         <div className='p-2'>
-          <Avatar actor={target.sender} name={sender} size={MESSAGE_AVATAR_SIZE} />
+          <ContactAvatar
+            actor={target.sender}
+            role='from'
+            db={db}
+            size={MESSAGE_AVATAR_SIZE}
+            onContactCreate={onContactCreate}
+          />
         </div>
 
         <div className='col-start-2 flex flex-col py-1'>
