@@ -365,3 +365,57 @@ Option<GraphNode.Any>`), so composing them with app-level matchers widened the m
 
 Node-id composition moved to `GraphNode` (`PathSeparator`, `qualifyId`, `validateSegmentId`,
 `parentId`, `segmentId`) — it sits with `RootId`, and both layers were otherwise duplicating `'/'`.
+
+## Before/after benchmarks (Phase 8)
+
+`packages/sdk/app-graph/src/bench.test.ts`, kept in-repo behind `describe.skip`. The "before" column
+was taken by extracting `graph.ts`/`graph-builder.ts`/`node.ts`/`util.ts`/`node-matcher.ts` from
+`4ed7683d` (the last commit before this work) into a scratch directory inside the package, so the
+same benchmark file ran against both trees with only its import block rewritten.
+
+Best-of-3, node 22, cloud sandbox — a noisy box, so read ratios, not absolutes. Anything inside
+±30% is run-to-run variance; the two entries that mattered were far outside it.
+
+| operation                         |      before | after (a973a66f) |   after fix |
+| --------------------------------- | ----------: | ---------------: | ----------: |
+| expand 1000 nodes                 |      618 ms |           682 ms |      572 ms |
+| 50 connector updates @ 1000 nodes |     1202 ms |          1385 ms |     1354 ms |
+| 50 updates @ 200 mounted atoms    |     1098 ms |          1701 ms |     1457 ms |
+| expand 100x10 tree                |      833 ms |          1025 ms |      936 ms |
+| read `connections()` x1000        |     0.87 ms |          1.22 ms |     1.29 ms |
+| read `node()` x1000               |     0.60 ms |          1.22 ms |     0.43 ms |
+| `getNode()` x1000                 |     0.66 ms |          0.50 ms |     0.46 ms |
+| traverse 1000 nodes               |     2.05 ms |          7.91 ms |     2.50 ms |
+| `getPath` root → leaf             |     3.53 ms |          6.76 ms |     2.81 ms |
+| **remove 1000 nodes**             | **17.3 ms** |       **830 ms** | **21.5 ms** |
+
+### The removal regression (found, diagnosed, fixed)
+
+Dropping a connector's whole node set was **48× slower** after the consolidation. The path is
+`_applyConnectorUpdate` → `Graph.removeEdges(..., removeOrphans: true)` → `removeEdgeImpl` per edge,
+and the orphan check read `_edges(source)`/`_edges(target)` through the registry. On the old sharded
+storage that was an O(1) read of a stored record. On the consolidated core `_edges` is a derived view
+over `model.outgoing`/`incoming`, which materializes the adjacency index — and the index is keyed on
+the version atom, which the preceding edge removal just bumped. So every iteration rebuilt the whole
+O(E) index: 1000 removals × 1000 edges.
+
+Two changes, both in the model rather than the call site:
+
+1. **An endpoint→edge-id index** (`#incident`) maintained alongside `#edgeIndex` in `addEdge`,
+   `#detachEdge` and `#load`. `#incidentEdges` was scanning every edge in the graph to find a node's
+   own; it is now O(deg). (This alone did not move the benchmark — the adjacency rebuild dominated —
+   but it removes the other quadratic on the same path.)
+2. **`model.hasEdges(id)`**, answered from that index, and the orphan check routed through it. The
+   check only ever needed a boolean; reading the full edge record to compute one was what dragged the
+   adjacency index in.
+
+Note the first fix was the one I expected to work and did not. The measurement, not the reasoning,
+identified the adjacency rebuild.
+
+### Still open
+
+`50 updates @ 200 mounted atoms` sits ~1.3× slower than before (1098 ms → ~1457 ms), consistently
+across runs and outside the noise on that row. Not diagnosed; the suspicion is the same adjacency
+rebuild, once per flush rather than once per edge, now that a mounted `connections` atom reads
+through the model. Tracked in TASKS.md — the lever is incremental adjacency maintenance, for which
+`#incident` is now most of the machinery.

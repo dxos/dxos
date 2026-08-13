@@ -141,12 +141,17 @@ Gate before Phase 9. Requested 2026-08-13.
       not just the packages touched by the refactor.
 - [ ] **Composer e2e** — run the Composer e2e suite; the builder/expansion path is only exercised
       end-to-end there (navtree expansion, URL resolution, deck routing).
-- [ ] **Benchmarks as skipped tests** — app-graph operation timings kept in-repo as
-      `describe.skip`/`it.skip` cases (not deleted after the measurement), so the numbers can be
-      re-run on demand. Cover: connector flush at N nodes, node/connections atom reads under mount,
-      expansion of a wide subtree, `getPath`/traversal.
-- [ ] **Before/after numbers** — measure the same suite against the pre-refactor commit (the merge
-      base of this branch) and the current head; record the table in DESIGN.md.
+- [x] **Benchmarks as skipped tests** — `packages/sdk/app-graph/src/bench.test.ts`, 10 timings
+      behind `describe.skip`: wide expansion, two-level tree expansion, repeated connector updates
+      (bare and with 200 mounted atoms), `connections`/`node`/`getNode` reads, `traverse`,
+      `getPath`, bulk removal. Public API only, so the same file runs against a pre-refactor tree.
+- [x] **Before/after numbers** — table in DESIGN.md §Before/after benchmarks, measured against
+      `4ed7683d`. Found and fixed a **48× removal regression** (830 ms → 21.5 ms for 1000 nodes):
+      the orphan check read `_edges`, whose adjacency read rebuilds an O(E) index per version bump.
+      Fixed by an endpoint→edge index in the model plus `hasEdges(id)`.
+- [ ] **Chase the mounted-update gap** — `50 updates @ 200 mounted atoms` is ~1.3× slower than
+      pre-refactor (1098 ms → 1457 ms), consistent across runs. Suspect the same adjacency rebuild,
+      once per flush. Lever: incremental adjacency maintenance (`#incident` is most of it).
 
 ## Phase 9: node atom release / eviction
 

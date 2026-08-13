@@ -13,7 +13,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { type MakeOptional, type Specialize } from '@dxos/util';
+import { type MakeOptional, type Specialize, isNonNullable } from '@dxos/util';
 
 import * as GraphEdge from './GraphEdge';
 import * as GraphNode from './GraphNode';
@@ -91,6 +91,9 @@ export abstract class AbstractGraphModel<
   readonly #version: Atom.Writable<number>;
   readonly #nodeIndex = new Map<string, EffectGraph.NodeIndex>();
   readonly #edgeIndex = new Map<string, EffectGraph.EdgeIndex>();
+  // Edge ids by endpoint, maintained with the edge index. Removing a node needs its incident edges,
+  // and scanning every edge to find them makes a bulk removal quadratic.
+  readonly #incident = new Map<string, Set<string>>();
   readonly #change?: GraphChangeFunction;
   readonly #mirror?: Partial<Data<Node, Edge>>;
   readonly #id?: string;
@@ -580,6 +583,14 @@ export abstract class AbstractGraphModel<
   /**
    * Edges leaving the node, in insertion order.
    */
+  /**
+   * Whether any edge is incident on the node. Answered from the endpoint index, so it costs nothing
+   * even mid-mutation — unlike reading the adjacency index, which rebuilds on every version bump.
+   */
+  hasEdges(id: string): boolean {
+    return (this.#incident.get(id)?.size ?? 0) > 0;
+  }
+
   outgoing(id: string, type?: string): Edge[] {
     const edges = this.#adjacency().outgoing.get(id) ?? [];
     return type ? edges.filter((edge) => edge.type === type) : edges;
@@ -607,6 +618,7 @@ export abstract class AbstractGraphModel<
         resolved,
       );
       this.#edgeIndex.set(resolved.id, index);
+      this.#trackIncident(resolved);
       this.#touch();
       this.#mirrorMutate((mirror) => mirror.edges?.push(resolved));
     });
@@ -894,6 +906,7 @@ export abstract class AbstractGraphModel<
       graph.edges?.forEach((edge) => {
         const index = EffectGraph.addEdge(this.#graph, this.#slot(edge.source), this.#slot(edge.target), edge);
         this.#edgeIndex.set(edge.id, index);
+        this.#trackIncident(edge);
         if (mirror) {
           this.#mirrorMutate((target) => target.edges?.push(edge));
         }
@@ -906,19 +919,26 @@ export abstract class AbstractGraphModel<
    * Edges incident to the node, read from the working graph so removal avoids a snapshot rebuild.
    */
   #incidentEdges(id: string): Edge[] {
-    const index = this.#nodeIndex.get(id);
-    if (index === undefined) {
-      return [];
-    }
+    // Copied, since the caller detaches the edges it is handed, which mutates the set.
+    const ids = this.#incident.get(id);
+    return ids ? [...ids].map((edgeId) => this.findEdge(edgeId)).filter(isNonNullable) : [];
+  }
 
-    const edges: Edge[] = [];
-    for (const [, edge] of EffectGraph.entries(EffectGraph.edges(this.#graph))) {
-      if (edge.source === index || edge.target === index) {
-        edges.push(edge.data);
+  #trackIncident(edge: Edge): void {
+    for (const endpoint of [edge.source, edge.target]) {
+      const ids = this.#incident.get(endpoint) ?? new Set<string>();
+      ids.add(edge.id);
+      this.#incident.set(endpoint, ids);
+    }
+  }
+
+  #untrackIncident(edge: Edge): void {
+    for (const endpoint of [edge.source, edge.target]) {
+      const ids = this.#incident.get(endpoint);
+      if (ids?.delete(edge.id) && ids.size === 0) {
+        this.#incident.delete(endpoint);
       }
     }
-
-    return edges;
   }
 
   /**
@@ -942,6 +962,7 @@ export abstract class AbstractGraphModel<
 
     EffectGraph.removeEdge(this.#graph, index);
     this.#edgeIndex.delete(edge.id);
+    this.#untrackIncident(edge);
     this.#touch();
     this.#mirrorMutate((mirror) => removeInPlace(mirror.edges, (candidate) => candidate.id === edge.id));
   }
@@ -953,6 +974,7 @@ export abstract class AbstractGraphModel<
     this.#graph = EffectGraph.beginMutation(EffectGraph.directed<Slot<Node>, Edge>());
     this.#nodeIndex.clear();
     this.#edgeIndex.clear();
+    this.#incident.clear();
     this.#touch();
   }
 

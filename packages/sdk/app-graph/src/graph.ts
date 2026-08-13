@@ -1247,14 +1247,12 @@ const removeEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge, remove
   internal._removeEdge(edgeArg.source, edgeArg.target, relationId);
 
   if (removeOrphans) {
-    const sourceAfter = internal._registry.get(internal._edges(edgeArg.source));
-    const targetAfter = internal._registry.get(internal._edges(edgeArg.target));
-    const isEmpty = (edges: Edges) => Object.values(edges).every((ids) => ids.length === 0);
-    if (isEmpty(sourceAfter) && edgeArg.source !== GraphNode.RootId) {
-      removeNodesImpl(graph, [edgeArg.source]);
-    }
-    if (isEmpty(targetAfter) && edgeArg.target !== GraphNode.RootId) {
-      removeNodesImpl(graph, [edgeArg.target]);
+    // Asked of the model directly rather than through `_edges`, whose adjacency read rebuilds an
+    // O(E) index on every version bump — quadratic when a connector drops all of its nodes at once.
+    for (const endpoint of [edgeArg.source, edgeArg.target]) {
+      if (endpoint !== GraphNode.RootId && !internal._model.hasEdges(endpoint)) {
+        removeNodesImpl(graph, [endpoint]);
+      }
     }
   }
   return graph;
