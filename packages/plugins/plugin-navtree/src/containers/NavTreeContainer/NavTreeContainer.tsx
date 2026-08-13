@@ -5,6 +5,9 @@
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -27,8 +30,8 @@ import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-/** Idle time before a hovered row is prefetched; long enough that a cursor crossing a row does not trigger it. */
-const HOVER_EXPAND_DELAY = 150;
+/** How long the cursor must rest on a row before it is prefetched; long enough that merely crossing it does not. */
+const HOVER_SETTLE_DELAY = Duration.millis(150);
 
 // TODO(wittjosiah): Avoid using Surface within the navtree, prefer declarative data flow.
 const NavTreeItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => {
@@ -75,14 +78,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item: { id }, path, open }: { item: Node.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        Graph.expand(graph, id, 'child');
+        Graph.expandSync(graph, id, 'child');
       },
       [graph, setItem],
     );
 
     const handleTabChange = useCallback(
       (node: NavTreeNode.NavTreeItemGraphNode) => {
-        Graph.expand(graph, node.id, 'child');
+        Graph.expandSync(graph, node.id, 'child');
 
         const {
           tab: activeTab,
@@ -240,23 +243,30 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       for (const child of workspaceChildren) {
         if (Node.hasDisposition(child, 'group')) {
           setItem([Node.RootId, tab, child.id], 'open', true);
-          Graph.expand(graph, child.id, 'child');
+          Graph.expandSync(graph, child.id, 'child');
         }
       }
     }, [workspaceChildren, tab, setItem, graph]);
 
-    // Expanding a node runs every matching graph-builder connector synchronously, so doing it straight from
-    // the pointer handler makes a fast cursor sweep pay for every row it crossed. Trailing-edge only the row
-    // the cursor settles on is prefetched; `Graph.expand` is idempotent, so settling on an already-expanded
-    // row costs nothing.
-    const hoverExpandRef = useRef<NodeJS.Timeout>(undefined);
-    useEffect(() => () => clearTimeout(hoverExpandRef.current), []);
+    // Prefetching a hovered row is speculative, so it waits out the cursor rather than racing it: each hover
+    // interrupts the previous fiber, cancelling both the settle delay and any expansion `Graph.expand` has
+    // yet to run, so a sweep only pays for the row the cursor stops on.
+    const hoverExpandRef = useRef<Fiber.Fiber<void> | undefined>(undefined);
+    const interruptHoverExpand = useCallback(() => {
+      if (hoverExpandRef.current) {
+        void Effect.runFork(Fiber.interrupt(hoverExpandRef.current));
+        hoverExpandRef.current = undefined;
+      }
+    }, []);
+    useEffect(() => interruptHoverExpand, [interruptHoverExpand]);
     const onItemHover = useCallback(
       ({ item }: { item: Node.Node }) => {
-        clearTimeout(hoverExpandRef.current);
-        hoverExpandRef.current = setTimeout(() => Graph.expand(graph, item.id, 'child'), HOVER_EXPAND_DELAY);
+        interruptHoverExpand();
+        hoverExpandRef.current = Effect.runFork(
+          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(Graph.expand(graph, item.id, 'child'))),
+        );
       },
-      [graph],
+      [graph, interruptHoverExpand],
     );
 
     const navTreeContextValue = useMemo(

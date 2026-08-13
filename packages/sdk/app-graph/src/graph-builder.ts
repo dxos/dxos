@@ -477,7 +477,7 @@ class GraphBuilderImpl implements GraphBuilder {
 
     // TODO(wittjosiah): Remove. This is for backwards compatibility.
     if (relation.kind === 'child' && relation.direction === 'outbound') {
-      Graph.expand(this._graph, id, 'action');
+      Graph.expandSync(this._graph, id, 'action');
     }
   }
 
