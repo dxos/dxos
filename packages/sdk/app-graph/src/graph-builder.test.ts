@@ -1658,6 +1658,9 @@ describe('GraphBuilder', () => {
     test('drops an extension with an invalid id rather than throwing', ({ expect }) => {
       expect(
         GraphBuilder.createExtensionRaw({
+          // The malformed id is the fixture under test; the lint rule that normally forbids it
+          // guards authoring sites, not this one.
+          // eslint-disable-next-line @dxos/rules/local-id-format
           id: 'gallery-article',
           connector: () => Atom.make([{ id: 'foo', type: EXAMPLE_TYPE, data: null }]),
         }),
