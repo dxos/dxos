@@ -544,12 +544,6 @@ export const AnalyzeMailbox = Operation.make({
 const createProgressKey = (mailbox: Mailbox.Mailbox, suffix: string) =>
   Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + suffix;
 
-/**
- * Progress-registry key for a mailbox's process-pipeline monitor — the mailbox URI plus `#process`,
- * so it coexists with the `#sync` monitor. `MailboxArticle` and the toolbar action subscribe to it.
- */
-export const createProcessProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#process');
-
 /** Progress-registry key for a mailbox's fact-analysis monitor ({@link AnalyzeMailbox}). */
 export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
 
@@ -726,38 +720,15 @@ export const ExtractCorrespondents = Operation.make({
   }),
 }).pipe(Operation.idempotent);
 
-/** Default page size for {@link ProcessMailbox} cursor commits. */
-export const DEFAULT_PROCESS_MAILBOX_PAGE_SIZE = 10;
-
-export const ProcessMailbox = Operation.make({
+/**
+ * Clears one consumer's feed cursor. Generic rather than pipeline-specific: several pipelines keep
+ * their own tagged cursor on the same feed (`classifyMailbox`, …), and each needs a way to start over.
+ */
+export const ResetFeedCursor = Operation.make({
   meta: {
-    key: makeKey('processMailbox'),
-    name: 'Process Mailbox',
-    description:
-      'Runs the cursored processing pipeline over the mailbox feed, resuming after the last processed message.',
-    icon: 'ph--play--regular',
-  },
-  services: [Database.Service, Trace.TraceService],
-  input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
-      description: 'Mailbox whose feed messages are processed.',
-    }),
-    pageSize: Schema.optional(
-      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
-        description: 'Number of messages processed per cursor advance.',
-      }),
-    ),
-  }),
-  output: Schema.Struct({
-    processed: Schema.Number,
-  }),
-}).pipe(Operation.idempotent);
-
-export const ResetProcessCursor = Operation.make({
-  meta: {
-    key: makeKey('resetProcessCursor'),
-    name: 'Reset Process Cursor',
-    description: 'Clears a pipeline cursor so the next run re-processes the whole mailbox feed.',
+    key: makeKey('resetFeedCursor'),
+    name: 'Reset Feed Cursor',
+    description: "Clears a pipeline's cursor so its next run reprocesses the whole mailbox feed.",
     icon: 'ph--arrow-counter-clockwise--regular',
   },
   services: [Database.Service],
@@ -765,11 +736,10 @@ export const ResetProcessCursor = Operation.make({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose pipeline cursor is reset.',
     }),
-    cursorId: Schema.optional(
-      Schema.String.annotate({
-        description: "Consumer cursor id to reset (e.g. 'classifyMailbox'); defaults to the process pipeline's.",
-      }),
-    ),
+    // Required: defaulting it silently reset whichever pipeline happened to own the default tag.
+    cursorId: Schema.String.annotate({
+      description: "Consumer cursor id to reset (e.g. 'classifyMailbox').",
+    }),
   }),
   output: Schema.Struct({
     /** False when no cursor existed yet (nothing to reset). */

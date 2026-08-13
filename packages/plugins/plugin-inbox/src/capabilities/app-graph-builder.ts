@@ -464,14 +464,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
           return Effect.gen(function* () {
-            // Same monitor MailboxArticle's statusbar meter reads, so the button's stop state agrees
-            // with a run kicked off from either surface (or a routine).
             const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
-            const progressKey = InboxOperation.createProcessProgressKey(mailbox);
-            const isRunning = Option.match(progressRegistry, {
-              onNone: () => false,
-              onSome: (registry) => get(registry.monitorAtom(progressKey))?.status === 'running',
-            });
             const enrichKey = InboxOperation.createEnrichProgressKey(mailbox);
             const isEnriching = Option.match(progressRegistry, {
               onNone: () => false,
@@ -501,47 +494,6 @@ export default Capability.makeModule(
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
                   testId: 'inbox.mailbox.enrich',
-                },
-              },
-              {
-                // The cursored walking-skeleton pipeline. Kept out of the toolbar (`enrich` is the
-                // single pipeline trigger) but reachable from the context menu, since its durable
-                // cursor plus `resetProcessCursor` are what the cursor machinery is verified through.
-                id: 'process',
-                data: () =>
-                  isRunning
-                    ? // Cancel routes through the progress trace sink, terminating the emitting process.
-                      Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(progressKey))
-                    : // Scheduled (not invoked) so the run is a real process the meter/stop can cancel.
-                      Operation.schedule(
-                        InboxOperation.ProcessMailbox,
-                        { mailbox: Ref.make(mailbox) },
-                        { spaceId: db.spaceId },
-                      ),
-                properties: {
-                  label: isRunning
-                    ? ['stop-process-mailbox.label', { ns: meta.profile.key }]
-                    : ['process-mailbox.label', { ns: meta.profile.key }],
-                  icon: isRunning ? 'ph--stop--regular' : 'ph--play--regular',
-                  disposition: ['list-item'],
-                  testId: 'inbox.mailbox.process',
-                },
-              },
-              {
-                id: 'resetProcessCursor',
-                data: () =>
-                  Operation.invoke(
-                    InboxOperation.ResetProcessCursor,
-                    { mailbox: Ref.make(mailbox) },
-                    { spaceId: db.spaceId },
-                  ).pipe(Effect.asVoid),
-                properties: {
-                  label: ['reset-process-cursor.label', { ns: meta.profile.key }],
-                  icon: 'ph--arrow-counter-clockwise--regular',
-                  // Context menu only; disabled mid-run so a reset never races the advancing cursor.
-                  disposition: ['list-item'],
-                  disabled: isRunning,
-                  testId: 'inbox.mailbox.processReset',
                 },
               },
             ];

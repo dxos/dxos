@@ -12,8 +12,8 @@ import { InboxOperation } from '#types';
 
 import { findFeedCursor } from './cursor';
 
-/** Clears a pipeline cursor (the process pipeline's by default) so the next run re-processes the feed. */
-const handler = InboxOperation.ResetProcessCursor.pipe(
+/** Clears a consumer's feed cursor so its next run reprocesses the whole mailbox feed. */
+const handler = InboxOperation.ResetFeedCursor.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ mailbox: mailboxRef, cursorId }) {
       const mailbox = yield* Database.load(mailboxRef);
@@ -28,7 +28,7 @@ const handler = InboxOperation.ResetProcessCursor.pipe(
         cursor.lastTick = undefined;
         cursor.lastError = undefined;
       });
-      log.info('process: cursor reset', { mailbox: Obj.getURI(mailbox) });
+      log.info('cursor reset', { mailbox: Obj.getURI(mailbox), cursorId });
       return { reset: true };
     }),
   ),

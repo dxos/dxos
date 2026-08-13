@@ -98,9 +98,9 @@ type StoryAction = {
 };
 
 /**
- * Story-local module: drives the cursored `ProcessMailbox` pipeline, `ResetProcessCursor`, and the
- * `AnalyzeMailbox` fact variant via the OperationInvoker (the same operations the mailbox toolbar
- * runs), reporting live counts so the play function can assert cursor semantics from the DOM.
+ * Story-local module: drives the cursored mailbox pipelines and their cursor resets via the
+ * OperationInvoker (the same operations the mailbox toolbar runs), reporting live counts so the play
+ * function can assert cursor semantics from the DOM.
  * Resolves the active space like every module surface (`ModuleContainer` sets the workspace).
  */
 const ProcessModule = () => {
@@ -186,19 +186,14 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         },
       },
       {
-        // Every pipeline cursor at once: the tagged process/classify cursors (reset operation) and
+        // Every pipeline cursor at once: the tagged classify cursor (reset operation) and
         // the analyze pipeline's UNTAGGED feed cursor (a plain object removal — it predates the
         // tagged-consumer convention), so the next run of any cursored pipeline re-reads the feed.
         id: 'reset',
         label: 'Cursors',
         run: async () => {
-          const process = await invoker.invokePromise(
-            InboxOperation.ResetProcessCursor,
-            { mailbox: Ref.make(mailbox) },
-            { spaceId: space.id },
-          );
           const classify = await invoker.invokePromise(
-            InboxOperation.ResetProcessCursor,
+            InboxOperation.ResetFeedCursor,
             { mailbox: Ref.make(mailbox), cursorId: 'classifyMailbox' },
             { spaceId: space.id },
           );
@@ -213,7 +208,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           if (analyze) {
             space.db.remove(analyze);
           }
-          return { process, classify, analyzeCursor: !!analyze };
+          return { classify, analyzeCursor: !!analyze };
         },
       },
     ];
@@ -261,13 +256,6 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       //
       // InboxOperation
       //
-      {
-        // The cursored log-title pipeline (resumes after the cursor; Reset clears it).
-        id: 'process',
-        label: 'InboxOperation.ProcessMailbox',
-        run: () =>
-          invoker.invokePromise(InboxOperation.ProcessMailbox, { mailbox: Ref.make(mailbox) }, { spaceId: space.id }),
-      },
       {
         // Correspondent pipeline: Person (+ derived Organization) per sender the user has sent or
         // replied to — the outbound signal is derived from the feed, so no allow-list is needed.

@@ -52,7 +52,21 @@ project; `stories-brain` keeps the model-ladder/FINDINGS research it was created
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
 
-## Mailbox pipeline routine (2026-08-10)
+## Mailbox pipeline routine (2026-08-10) — REMOVED 2026-08-13
+
+**`InboxOperation.ProcessMailbox` and its routine template were deleted.** The checked items below
+describe work that no longer exists; they are kept as a record of what was learned, not as shipped
+features. Do not treat them as available functionality.
+
+What SURVIVED the deletion, because it turned out not to be process-specific:
+
+- The feed-cursor helpers, now `plugin-inbox/src/operations/cursor.ts` (out of the deleted `process/`
+  directory). `ClassifyMailbox` depends on them. `PROCESS_CURSOR_KEY_SOURCE` became
+  `FEED_CURSOR_KEY_SOURCE`, and `id` is now REQUIRED — it used to default to the process pipeline's
+  tag, so a caller that forgot one silently shared that pipeline's cursor.
+- The cursor-reset operation, renamed `ResetFeedCursor` with a required `cursorId`. Deleting it would
+  have removed the only way to reset the classify cursor, which its test relies on.
+- `CrmOperation.ProcessMailbox` is a DIFFERENT operation in plugin-crm and is untouched.
 
 Spec: `agents/superpowers/specs/2026-08-10-mailbox-pipeline-routine-design.md`. A manually
 triggerable routine driving a **cursored** pipeline over the Mailbox feed — the cursor machinery

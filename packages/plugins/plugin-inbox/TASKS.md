@@ -103,10 +103,17 @@ Committed, unpushed. This is the PR to open first.
       that host is no longer the default and is the only one that fails DNS. Comment removed.
       The story reports the operation's real result (including `result.error`) rather than faking one.
       NOT RUN: blocked by the storybook startup timeout above, so it is unverified like everything else.
-- [ ] **Delete `ProcessMailbox`** — the operation, `ResetProcessCursor`, its routine template, cursor
+- [x] **Delete `ProcessMailbox`** — the operation, `ResetProcessCursor`, its routine template, cursor
       helpers, tests and translations. Rewrite the "Mailbox pipeline routine" phase in the
       `stories-brain` ledger so it does not keep claiming shipped features. This CLOSES "real stages
       behind the `log-title` seam" — the seam is `ProcessMailbox`.
+      DONE, with two things the task description did not anticipate: (1) the cursor helpers are SHARED
+      with `ClassifyMailbox`, so they moved to `operations/cursor.ts` rather than being deleted, and
+      `findFeedCursor`/`findOrCreateFeedCursor` now REQUIRE an id (the old default silently handed a
+      caller the process pipeline's cursor); (2) `ResetProcessCursor` is likewise used by classify, so
+      it survives as `ResetFeedCursor` with a required `cursorId` instead of being removed. Also note
+      `CrmOperation.ProcessMailbox` is a different operation and was left alone. The `stories-brain`
+      phase that documented building it is marked REMOVED.
 
 ---
 

@@ -45,7 +45,6 @@ describe('progress keys', () => {
     expect(absolute).toContain('//');
     for (const key of [
       InboxOperation.createEnrichProgressKey(mailbox),
-      InboxOperation.createProcessProgressKey(mailbox),
       InboxOperation.createSummarizeProgressKey(mailbox),
       InboxOperation.createClassifyProgressKey(mailbox),
       InboxOperation.createAnalyzeProgressKey(mailbox),
