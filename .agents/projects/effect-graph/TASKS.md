@@ -1,9 +1,11 @@
 # effect-graph — Tasks
 
-_Resume: Phases 1, 2 and 5 IMPLEMENTED and green — `GraphModel` rebuilt on a long-lived Effect
+_Resume: Phases 1-6 IMPLEMENTED and green — `GraphModel` rebuilt on a long-lived Effect
 `MutableGraph` + version atom, consumers migrated, `topoLevels`/`findCycle` landed and consumed by
 activation-graph. graph 17/17, app-framework 231/231, schema 48/50 (2 skipped), conductor 31/31,
-react-ui-graph 19/19. Next: Phase 3 (ECHO remote-change reconciliation via `reload()`), then 4/6._
+react-ui-graph 19/19, app-graph 151/151 on the consolidated core. Remaining: app-graph algorithm
+upgrades (dijkstra/pathAtom), the `explore` isolation decision, ECHO undo/concurrency tests, and
+the upstream proposals._
 
 ## Phase 1: Core (`packages/common/graph`)
 
@@ -95,13 +97,17 @@ Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-gr
       surgical notifications) + perf 3.1ms per 50-write flush @2k nodes / 11.2ms @7k with 200
       mounted connections atoms, via the layered adjacency-index atom (naive per-atom O(E) reads
       cost 21ms — the index layer is mandatory). Supersedes the earlier projection-only verdict.
-- [ ] **Rebuild `GraphImpl` on the core** — same public API (node/connections/actions/edges
-      atoms, add/remove/sort, traverse/getPath/toJSON, `onNodeChanged`); internals: canonical
-      graph + `Option<NodeData>` values + `{relation, order}` edge data + adjacency-index atom.
-      Existing graph.test.ts + graph-builder.test.ts must pass unchanged. Depends on Phase 1;
-      lands separately — app-graph is load-bearing for all plugin UI.
-- [ ] **Algorithm upgrades in app-graph** — `getPath` → `dijkstra`; `waitForPath` poll →
-      reactive `pathAtom` + equality cutoff; `traverse`/`toJSON` → `dfs` walkers.
+- [x] **Rebuild `GraphImpl` on the core** — storage is now one `GraphModel`; `_node`/`_edges`
+      became derived views (edges grouped by relation with `order` from edge data, equality-cut on
+      the record), and add/remove/sort route through the model. Public API unchanged; all 151
+      app-graph tests pass. Core gained `setNode` (upsert), `touch()`, and
+      `removeNode(id, {detachEdges})` for the tombstone semantics.
+- [ ] **Follow-up: `explore` isolation** — it used a throwaway registry so speculative traversal
+      did not pollute the graph; with a single store the nodes it reaches are now materialized.
+      No production callers (tests only) — decide whether to restore isolation or drop the option.
+- [ ] **Algorithm upgrades in app-graph** — now unblocked (the core model is in place):
+      `getPath` → `dijkstra`; `waitForPath` poll → reactive `pathAtom` + equality cutoff;
+      `traverse`/`toJSON` → `dfs` walkers.
 - [ ] **Watch flush scaling** — with the long-lived-mutable core, per-flush cost is the O(E)
       adjacency-index rebuild (~1.5ms @7k; writes now beat today's sharded design). Lever if it
       pinches: incremental index maintenance; fallback: per-workspace partitioning.

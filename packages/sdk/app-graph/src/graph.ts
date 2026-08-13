@@ -11,6 +11,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
+import { GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
@@ -146,25 +147,22 @@ class GraphImpl implements WritableGraph {
 
   readonly _registry: Registry.AtomRegistry;
   readonly _expanded = new Set<string>();
+  /** Relation keys a node has held, so an emptied relation still reports an empty list. */
+  readonly _relations = new Map<string, Set<string>>();
   readonly _pendingExpands = new Set<string>();
   readonly _initialized = new Set<string>();
-  readonly _initialEdges = new Map<string, Edges>();
-  readonly _initialNodes = new Map<string, Option.Option<Node.Node>>([
-    [
-      Node.RootId,
-      this._constructNode({
-        id: Node.RootId,
-        type: Node.RootType,
-        data: null,
-        properties: {},
-      }),
-    ],
-  ]);
+
+  /**
+   * Canonical store. Nodes an edge references before they are contributed sit in it as
+   * placeholders, and a removed node leaves one behind, so arrival order is free.
+   */
+  readonly _model: GraphModel.GraphModel<GraphNode, GraphEdge>;
 
   /** @internal */
-  readonly _node = Atom.family<string, Atom.Writable<Option.Option<Node.Node>>>((id) => {
-    const initial = this._initialNodes.get(id) ?? Option.none();
-    return Atom.make<Option.Option<Node.Node>>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:node:${id}`));
+  readonly _node = Atom.family<string, Atom.Atom<Option.Option<Node.Node>>>((id) => {
+    return Atom.make((get) => Option.fromUndefinedOr(get(this._model.nodeAtom(id))?.data)).pipe(
+      Atom.withLabel(`graph:node:${id}`),
+    );
   });
 
   readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node.Node>>((id) => {
@@ -175,9 +173,21 @@ class GraphImpl implements WritableGraph {
     });
   });
 
-  readonly _edges = Atom.family<string, Atom.Writable<Edges>>((id) => {
-    const initial = this._initialEdges.get(id) ?? ({} as Edges);
-    return Atom.make<Edges>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:edges:${id}`));
+  readonly _edges = Atom.family<string, Atom.Atom<Edges>>((id) => {
+    return Atom.make((get) => {
+      get(this._model.version);
+      const edges: Edges = {};
+      for (const relation of this._relations.get(id) ?? []) {
+        edges[relation] = [];
+      }
+      for (const edge of sortByOrder(this._model.outgoing(id))) {
+        (edges[edge.type] ??= []).push(edge.target);
+      }
+      for (const edge of sortByOrder(this._model.incoming(id))) {
+        (edges[inverseKey(edge.type)] ??= []).push(edge.source);
+      }
+      return edges;
+    }).pipe(Atom.withEquality(edgesEqual), Atom.withLabel(`graph:edges:${id}`));
   });
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
@@ -241,18 +251,17 @@ class GraphImpl implements WritableGraph {
     this._onInitialize = onInitialize;
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
+    this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });
 
-    if (nodes) {
-      nodes.forEach((node) => {
-        this._initialNodes.set(node.id, this._constructNode(node));
+    this._model.batch(() => {
+      this._setNode(Node.RootId, this._constructNode({ id: Node.RootId, type: Node.RootType, data: null }));
+      nodes?.forEach((node) => this._setNode(node.id, this._constructNode(node)));
+      Object.entries(edges ?? {}).forEach(([source, relations]) => {
+        Object.entries(relations).forEach(([relation, targets]) => {
+          targets.forEach((target, order) => this._setEdge(source, target, relation, order));
+        });
       });
-    }
-
-    if (edges) {
-      Object.entries(edges).forEach(([source, edges]) => {
-        this._initialEdges.set(source, edges);
-      });
-    }
+    });
   }
 
   json(id = Node.RootId): Atom.Atom<any> {
@@ -288,7 +297,60 @@ class GraphImpl implements WritableGraph {
       ...node,
     });
   }
+
+  /**
+   * Writes the node payload, materializing a placeholder slot when the id is new.
+   * @internal
+   */
+  _setNode(id: string, node: Option.Option<Node.Node>): void {
+    this._model.setNode({ id, data: Option.getOrUndefined(node) });
+  }
+
+  /** @internal */
+  _setEdge(source: string, target: string, relation: string, order: number): void {
+    const id = edgeKey(source, target, relation);
+    this._trackRelation(source, relation);
+    this._trackRelation(target, inverseKey(relation));
+    if (this._model.findEdge(id)) {
+      return;
+    }
+
+    this._model.addEdge({ id, type: relation, source, target, data: { order } });
+  }
+
+  /** @internal */
+  _trackRelation(id: string, relation: string): void {
+    const relations = this._relations.get(id) ?? new Set<string>();
+    relations.add(relation);
+    this._relations.set(id, relations);
+  }
 }
+
+/** Node payload; `data` is undefined for a placeholder the graph has not been given yet. */
+type GraphNode = { id: string; data?: Node.Node };
+
+/** Relation lives in `type`; `order` carries the caller's sort position. */
+type GraphEdge = { id: string; type: string; source: string; target: string; data: { order: number } };
+
+const edgeKey = (source: string, target: string, relation: string): string =>
+  primaryKey(source, secondaryKey(relation, target));
+
+const sortByOrder = (edges: readonly GraphEdge[]): GraphEdge[] =>
+  [...edges].sort((a, b) => a.data.order - b.data.order);
+
+const inverseKey = (relation: string): string => relationKey(inverseRelation(relationFromKey(relation)));
+
+const edgesEqual = (a: Edges, b: Edges): boolean => {
+  const keys = Object.keys(a);
+  return (
+    keys.length === Object.keys(b).length &&
+    keys.every((key) => {
+      const left = a[key];
+      const right = b[key];
+      return right !== undefined && left.length === right.length && left.every((id, index) => id === right[index]);
+    })
+  );
+};
 
 /**
  * Internal helper to access GraphImpl internals.
@@ -813,8 +875,7 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   order: string[],
 ): T => {
   const internal = getInternal(graph);
-  const edgesAtom = internal._edges(id);
-  const edges = internal._registry.get(edgesAtom);
+  const edges = internal._registry.get(internal._edges(id));
   const relationId = relationKey(relation);
   const current = edges[relationId] ?? [];
   const unsorted = current.filter((id) => !order.includes(id));
@@ -823,9 +884,14 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   if (newOrder.length === current.length && newOrder.every((id, i) => id === current[i])) {
     return graph;
   }
-  internal._registry.set(edgesAtom, {
-    ...edges,
-    [relationId]: newOrder,
+  internal._model.batch(() => {
+    newOrder.forEach((target, index) => {
+      const edge = internal._model.findEdge(edgeKey(id, target, relationId));
+      if (edge) {
+        edge.data.order = index;
+      }
+    });
+    internal._model.touch();
   });
   return graph;
 };
@@ -913,8 +979,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
   } = nodeArg as Node.NodeArg<any> & {
     _actionContext?: Node.ActionContext;
   };
-  const nodeAtom = internal._node(id);
-  const existingNode = internal._registry.get(nodeAtom);
+  const existingNode = internal._registry.get(internal._node(id));
   Option.match(existingNode, {
     onSome: (existing) => {
       const typeChanged = existing.type !== type;
@@ -939,14 +1004,14 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
           data,
           properties: { ...existing.properties, ...properties },
         });
-        internal._registry.set(nodeAtom, newNode);
+        internal._setNode(id, newNode);
         graph.onNodeChanged.emit({ id, node: newNode });
       }
     },
     onNone: () => {
       log('new node', { id, type, data, properties });
       const newNode = internal._constructNode({ id, type, data, properties, ...rest });
-      internal._registry.set(nodeAtom, newNode);
+      internal._setNode(id, newNode);
       graph.onNodeChanged.emit({ id, node: newNode });
 
       // Apply any expands that were deferred because this node did not exist yet.
@@ -1050,9 +1115,7 @@ export function removeNodes<T extends WritableGraph>(
  */
 const removeNodeImpl = <T extends WritableGraph>(graph: T, id: string, edges = false): T => {
   const internal = getInternal(graph);
-  const nodeAtom = internal._node(id);
-  // TODO(wittjosiah): Is there a way to mark these atom values for garbage collection?
-  internal._registry.set(nodeAtom, Option.none());
+  internal._setNode(id, Option.none());
   graph.onNodeChanged.emit({ id, node: Option.none() });
   // TODO(wittjosiah): Reset expanded and initialized flags?
 
@@ -1142,20 +1205,10 @@ const addEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge): T => {
   const inverseId = relationKey(inverse);
   const internal = getInternal(graph);
 
-  const sourceAtom = internal._edges(edgeArg.source);
-  const source = internal._registry.get(sourceAtom);
-  const sourceList = source[relationId] ?? [];
+  const sourceList = internal._registry.get(internal._edges(edgeArg.source))[relationId] ?? [];
   if (!sourceList.includes(edgeArg.target)) {
     log('add edge', { source: edgeArg.source, target: edgeArg.target, relation: relationId });
-    internal._registry.set(sourceAtom, { ...source, [relationId]: [...sourceList, edgeArg.target] });
-  }
-
-  const targetAtom = internal._edges(edgeArg.target);
-  const target = internal._registry.get(targetAtom);
-  const targetList = target[inverseId] ?? [];
-  if (!targetList.includes(edgeArg.source)) {
-    log('add inverse edge', { source: edgeArg.source, target: edgeArg.target, relation: inverseId });
-    internal._registry.set(targetAtom, { ...target, [inverseId]: [...targetList, edgeArg.source] });
+    internal._setEdge(edgeArg.source, edgeArg.target, relationId, sourceList.length);
   }
 
   return graph;
@@ -1225,23 +1278,11 @@ const removeEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge, remove
   const inverseId = relationKey(inverse);
   const internal = getInternal(graph);
 
-  const sourceAtom = internal._edges(edgeArg.source);
-  const source = internal._registry.get(sourceAtom);
-  const sourceList = source[relationId] ?? [];
-  if (sourceList.includes(edgeArg.target)) {
-    internal._registry.set(sourceAtom, { ...source, [relationId]: sourceList.filter((id) => id !== edgeArg.target) });
-  }
-
-  const targetAtom = internal._edges(edgeArg.target);
-  const target = internal._registry.get(targetAtom);
-  const targetList = target[inverseId] ?? [];
-  if (targetList.includes(edgeArg.source)) {
-    internal._registry.set(targetAtom, { ...target, [inverseId]: targetList.filter((id) => id !== edgeArg.source) });
-  }
+  internal._model.removeEdge(edgeKey(edgeArg.source, edgeArg.target, relationId));
 
   if (removeOrphans) {
-    const sourceAfter = internal._registry.get(sourceAtom);
-    const targetAfter = internal._registry.get(targetAtom);
+    const sourceAfter = internal._registry.get(internal._edges(edgeArg.source));
+    const targetAfter = internal._registry.get(internal._edges(edgeArg.target));
     const isEmpty = (edges: Edges) => Object.values(edges).every((ids) => ids.length === 0);
     if (isEmpty(sourceAfter) && edgeArg.source !== Node.RootId) {
       removeNodesImpl(graph, [edgeArg.source]);

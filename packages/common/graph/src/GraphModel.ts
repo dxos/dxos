@@ -248,13 +248,42 @@ export abstract class AbstractGraphModel<
   }
 
   /**
-   * Removes the node and its incident edges, returning them as a detached graph.
+   * Adds the node, or replaces the payload of an existing one, leaving its edges alone.
    */
-  removeNode(id: string): Model {
+  setNode(node: Node): Node {
+    invariant(node.id, 'ID is required');
+    this.batch(() => {
+      const existed = this.findNode(node.id) !== undefined;
+      EffectGraph.updateNode(this.#graph, this.#slot(node.id), (slot) => ({ ...slot, value: Option.some(node) }));
+      this.#touch();
+      this.#mirrorMutate((mirror) => {
+        if (existed) {
+          removeInPlace(mirror.nodes, (candidate) => candidate.id === node.id);
+        }
+        mirror.nodes?.push(node);
+      });
+    });
+
+    return node;
+  }
+
+  /**
+   * Marks the graph changed after an in-place edit the model cannot observe, so derived views
+   * recompute.
+   */
+  touch(): void {
+    this.batch(() => this.#touch());
+  }
+
+  /**
+   * Removes the node, returning it and any detached edges as a separate graph. Retaining the
+   * incident edges leaves them dangling, which is legal — they resolve again if the node returns.
+   */
+  removeNode(id: string, { detachEdges = true }: { detachEdges?: boolean } = {}): Model {
     return this.batch(() => {
       const node = this.findNode(id);
       const removedNodes = node ? [node] : [];
-      const removedEdges = this.#incidentEdges(id);
+      const removedEdges = detachEdges ? this.#incidentEdges(id) : [];
       removedEdges.forEach((edge) => this.#detachEdge(edge));
 
       const index = this.#nodeIndex.get(id);
@@ -268,9 +297,9 @@ export abstract class AbstractGraphModel<
     });
   }
 
-  removeNodes(ids: string[]): Model {
+  removeNodes(ids: string[], options?: { detachEdges?: boolean }): Model {
     return this.batch(() => {
-      const graphs = ids.map((id) => this.removeNode(id));
+      const graphs = ids.map((id) => this.removeNode(id, options));
       return this.copy().addGraphs(graphs);
     });
   }

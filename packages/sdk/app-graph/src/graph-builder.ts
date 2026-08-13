@@ -317,7 +317,7 @@ class GraphBuilderImpl implements GraphBuilder {
   readonly _registry: Registry.AtomRegistry;
   /** Backing graph with internal accessors for node atoms and construction. */
   readonly _graph: Graph.Graph & {
-    _node: (id: string) => Atom.Writable<Option.Option<Node.Node>>;
+    _setNode: (id: string, node: Option.Option<Node.Node>) => void;
     _constructNode: (node: Node.NodeArg<any>) => Option.Option<Node.Node>;
   };
 
@@ -337,7 +337,7 @@ class GraphBuilderImpl implements GraphBuilder {
     });
     // Access internal methods via type assertion since GraphBuilder needs them
     this._graph = graph as Graph.Graph & {
-      _node: (id: string) => Atom.Writable<Option.Option<Node.Node>>;
+      _setNode: (id: string, node: Option.Option<Node.Node>) => void;
       _constructNode: (node: Node.NodeArg<any>) => Option.Option<Node.Node>;
     };
   }
@@ -689,7 +689,7 @@ const exploreImpl = async (
 
   await Promise.all(
     nodes.map((nodeArg) => {
-      registry.set(internal._graph._node(nodeArg.id), internal._graph._constructNode(nodeArg));
+      internal._graph._setNode(nodeArg.id, internal._graph._constructNode(nodeArg));
       return exploreImpl(builder, { registry, source: nodeArg.id, relation, visitor }, [...path, node.id]);
     }),
   );
@@ -702,6 +702,9 @@ const exploreImpl = async (
 
 /**
  * Explore the graph by traversing it with the given options.
+ *
+ * Nodes reached along the way are materialized into the graph. The `registry` option now only
+ * scopes the connector reads, not the nodes themselves, which the single-store model always owns.
  */
 export function explore(builder: GraphBuilder, options: GraphBuilderTraverseOptions, path?: string[]): Promise<void>;
 export function explore(
