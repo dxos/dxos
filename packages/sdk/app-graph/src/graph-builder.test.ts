@@ -14,7 +14,6 @@ import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { qualifyId } from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import * as GraphBuilder from './AppGraphBuilder';
@@ -60,34 +59,6 @@ describe('GraphBuilder', () => {
       expect(inbound).has.length(1);
       expect(inbound[0].id).to.equal('root/parent');
       expect(inbound[0].data).to.equal(0);
-    });
-
-    test('updates', async () => {
-      const registry = Registry.make();
-      const builder = GraphBuilder.make({ registry });
-      const state = Atom.make(0);
-      GraphBuilder.addExtension(
-        builder,
-        GraphBuilder.createExtensionRaw({
-          id: 'connector',
-          connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
-        }),
-      );
-      const graph = builder.graph;
-      Graph.expand(graph, GraphNode.RootId, 'child');
-      await GraphBuilder.flush(builder);
-
-      {
-        const [node] = registry.get(graph.connections(GraphNode.RootId, 'child'));
-        expect(node.data).to.equal(0);
-      }
-
-      {
-        registry.set(state, 1);
-        await GraphBuilder.flush(builder);
-        const [node] = registry.get(graph.connections(GraphNode.RootId, 'child'));
-        expect(node.data).to.equal(1);
-      }
     });
 
     test('subscribes to updates', async () => {
@@ -162,41 +133,6 @@ describe('GraphBuilder', () => {
       expect(count).to.equal(2);
     });
 
-    test('removes', async () => {
-      const registry = Registry.make();
-      const builder = GraphBuilder.make({ registry });
-      const nodes = Atom.make([
-        { id: exampleId(1), type: EXAMPLE_TYPE },
-        { id: exampleId(2), type: EXAMPLE_TYPE },
-      ]);
-      GraphBuilder.addExtension(
-        builder,
-        GraphBuilder.createExtensionRaw({
-          id: 'connector',
-          connector: () => Atom.make((get) => get(nodes)),
-        }),
-      );
-      const graph = builder.graph;
-      Graph.expand(graph, GraphNode.RootId, 'child');
-      await GraphBuilder.flush(builder);
-
-      {
-        const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
-        expect(nodes).has.length(2);
-        expect(nodes[0].id).to.equal(qualifyId('root', exampleId(1)));
-        expect(nodes[1].id).to.equal(qualifyId('root', exampleId(2)));
-      }
-
-      registry.set(nodes, [{ id: exampleId(3), type: EXAMPLE_TYPE }]);
-      await GraphBuilder.flush(builder);
-
-      {
-        const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
-        expect(nodes).has.length(1);
-        expect(nodes[0].id).to.equal(qualifyId('root', exampleId(3)));
-      }
-    });
-
     test('nodes are updated when removed', async () => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });
@@ -222,7 +158,7 @@ describe('GraphBuilder', () => {
 
       let count = 0;
       let exists = false;
-      const cancel = registry.subscribe(graph.node(qualifyId('root', EXAMPLE_ID)), (node) => {
+      const cancel = registry.subscribe(graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)), (node) => {
         count++;
         exists = Option.isSome(node);
       });
@@ -514,9 +450,9 @@ describe('GraphBuilder', () => {
       {
         const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
         expect(nodes).has.length(3);
-        expect(nodes[0].id).to.equal(qualifyId('root', exampleId(1)));
-        expect(nodes[1].id).to.equal(qualifyId('root', exampleId(2)));
-        expect(nodes[2].id).to.equal(qualifyId('root', exampleId(3)));
+        expect(nodes[0].id).to.equal(GraphNode.qualifyId('root', exampleId(1)));
+        expect(nodes[1].id).to.equal(GraphNode.qualifyId('root', exampleId(2)));
+        expect(nodes[2].id).to.equal(GraphNode.qualifyId('root', exampleId(3)));
       }
 
       registry.set(nodes, [
@@ -529,9 +465,9 @@ describe('GraphBuilder', () => {
       {
         const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
         expect(nodes).has.length(3);
-        expect(nodes[0].id).to.equal(qualifyId('root', exampleId(3)));
-        expect(nodes[1].id).to.equal(qualifyId('root', exampleId(1)));
-        expect(nodes[2].id).to.equal(qualifyId('root', exampleId(2)));
+        expect(nodes[0].id).to.equal(GraphNode.qualifyId('root', exampleId(3)));
+        expect(nodes[1].id).to.equal(GraphNode.qualifyId('root', exampleId(1)));
+        expect(nodes[2].id).to.equal(GraphNode.qualifyId('root', exampleId(2)));
       }
     });
 
@@ -562,7 +498,7 @@ describe('GraphBuilder', () => {
               Function.pipe(
                 get(node),
                 Option.flatMap((node) =>
-                  node.id === qualifyId('root', EXAMPLE_ID) ? Option.some(get(sub)) : Option.none(),
+                  node.id === GraphNode.qualifyId('root', EXAMPLE_ID) ? Option.some(get(sub)) : Option.none(),
                 ),
                 Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
                 Option.getOrElse(() => []),
@@ -576,7 +512,7 @@ describe('GraphBuilder', () => {
               Function.pipe(
                 get(node),
                 Option.flatMap((node) =>
-                  node.id === qualifyId('root', EXAMPLE_ID) ? Option.some(node.data) : Option.none(),
+                  node.id === GraphNode.qualifyId('root', EXAMPLE_ID) ? Option.some(node.data) : Option.none(),
                 ),
                 Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
                 Option.getOrElse(() => []),
@@ -588,21 +524,27 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
 
       let parentCount = 0;
-      const parentCancel = registry.subscribe(graph.node(qualifyId('root', EXAMPLE_ID)), (_) => {
+      const parentCancel = registry.subscribe(graph.node(GraphNode.qualifyId('root', EXAMPLE_ID)), (_) => {
         parentCount++;
       });
       onTestFinished(() => parentCancel());
 
       let independentCount = 0;
-      const independentCancel = registry.subscribe(graph.node(qualifyId('root', EXAMPLE_ID, exampleId(2))), (_) => {
-        independentCount++;
-      });
+      const independentCancel = registry.subscribe(
+        graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(2))),
+        (_) => {
+          independentCount++;
+        },
+      );
       onTestFinished(() => independentCancel());
 
       let dependentCount = 0;
-      const dependentCancel = registry.subscribe(graph.node(qualifyId('root', EXAMPLE_ID, exampleId(3))), (_) => {
-        dependentCount++;
-      });
+      const dependentCancel = registry.subscribe(
+        graph.node(GraphNode.qualifyId('root', EXAMPLE_ID, exampleId(3))),
+        (_) => {
+          dependentCount++;
+        },
+      );
       onTestFinished(() => dependentCancel());
 
       // Counts should not increment until the node is expanded.
@@ -613,7 +555,7 @@ describe('GraphBuilder', () => {
       expect(dependentCount).to.equal(0);
 
       // Counts should increment when the node is expanded.
-      Graph.expand(graph, qualifyId('root', EXAMPLE_ID), 'child');
+      Graph.expand(graph, GraphNode.qualifyId('root', EXAMPLE_ID), 'child');
       await GraphBuilder.flush(builder);
       expect(parentCount).to.equal(1);
       expect(independentCount).to.equal(1);
@@ -651,7 +593,7 @@ describe('GraphBuilder', () => {
       expect(dependentCount).to.equal(3);
 
       // Counts should not increment when the node is expanded again.
-      Graph.expand(graph, qualifyId('root', EXAMPLE_ID), 'child');
+      Graph.expand(graph, GraphNode.qualifyId('root', EXAMPLE_ID), 'child');
       await GraphBuilder.flush(builder);
       expect(parentCount).to.equal(3);
       expect(independentCount).to.equal(3);
@@ -695,67 +637,7 @@ describe('GraphBuilder', () => {
     });
   });
 
-  describe('explore', () => {
-    test('works', async () => {
-      const builder = GraphBuilder.make();
-      GraphBuilder.addExtension(
-        builder,
-        GraphBuilder.createExtensionRaw({
-          id: 'connector',
-          connector: (node) =>
-            Atom.make((get) =>
-              Function.pipe(
-                get(node),
-                Option.map((node) => (node.data ? node.data + 1 : 1)),
-                Option.filter((data) => data <= 5),
-                Option.map((data) => [{ id: `node-${data}`, type: EXAMPLE_TYPE, data }]),
-                Option.getOrElse(() => []),
-              ),
-            ),
-        }),
-      );
-
-      let count = 0;
-      await GraphBuilder.explore(builder, {
-        relation: 'child',
-        visitor: () => {
-          count++;
-        },
-      });
-
-      expect(count).to.equal(6);
-    });
-  });
-
   describe('helpers', () => {
-    describe('createConnector', () => {
-      test('creates connector with type inference', async () => {
-        const registry = Registry.make();
-        const builder = GraphBuilder.make({ registry });
-        const graph = builder.graph;
-
-        const matcher = (node: GraphNode.Any) => GraphNodeMatcher.whenId('root')(node);
-        const factory = (node: GraphNode.Any) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.id }];
-
-        const connector = GraphBuilder.createConnector(matcher, factory);
-
-        GraphBuilder.addExtension(
-          builder,
-          GraphBuilder.createExtensionRaw({
-            id: 'testConnector',
-            connector,
-          }),
-        );
-
-        Graph.expand(graph, GraphNode.RootId, 'child');
-        await GraphBuilder.flush(builder);
-
-        const connections = registry.get(graph.connections(GraphNode.RootId, 'child'));
-        expect(connections).has.length(1);
-        expect(connections[0].id).to.equal('root/child');
-      });
-    });
-
     describe('createExtension', () => {
       test('works with Effect connector', async () => {
         const registry = Registry.make();
@@ -1179,197 +1061,6 @@ describe('GraphBuilder', () => {
       });
     });
   });
-  describe('path-based ID qualification', () => {
-    test('rejects segment IDs containing slash', async () => {
-      const registry = Registry.make();
-      const builder = GraphBuilder.make({ registry });
-      GraphBuilder.addExtension(
-        builder,
-        GraphBuilder.createExtensionRaw({
-          id: 'badConnector',
-          connector: () => Atom.make([{ id: 'foo/bar', type: EXAMPLE_TYPE, data: null }]),
-        }),
-      );
-
-      expect(() => Graph.expand(builder.graph, GraphNode.RootId, 'child')).toThrow(/must not contain/);
-    });
-
-    test('multi-level path qualification', async () => {
-      const registry = Registry.make();
-      const builder = GraphBuilder.make({ registry });
-      GraphBuilder.addExtension(builder, [
-        GraphBuilder.createExtensionRaw({
-          id: 'level1',
-          connector: (node) =>
-            Atom.make((get) =>
-              Function.pipe(
-                get(node),
-                Option.filter((n) => n.id === 'root'),
-                Option.map(() => [{ id: 'A', type: EXAMPLE_TYPE, data: 'a' }]),
-                Option.getOrElse(() => []),
-              ),
-            ),
-        }),
-        GraphBuilder.createExtensionRaw({
-          id: 'level2',
-          connector: (node) =>
-            Atom.make((get) =>
-              Function.pipe(
-                get(node),
-                Option.filter((n) => n.id === 'root/A'),
-                Option.map(() => [{ id: 'B', type: EXAMPLE_TYPE, data: 'b' }]),
-                Option.getOrElse(() => []),
-              ),
-            ),
-        }),
-      ]);
-
-      const graph = builder.graph;
-
-      Graph.expand(graph, GraphNode.RootId, 'child');
-      await GraphBuilder.flush(builder);
-
-      const level1 = registry.get(graph.connections(GraphNode.RootId, 'child'));
-      expect(level1).has.length(1);
-      expect(level1[0].id).to.equal('root/A');
-
-      Graph.expand(graph, 'root/A', 'child');
-      await GraphBuilder.flush(builder);
-
-      const level2 = registry.get(graph.connections('root/A', 'child'));
-      expect(level2).has.length(1);
-      expect(level2[0].id).to.equal('root/A/B');
-    });
-
-    test('inline nodes are recursively qualified', async () => {
-      const registry = Registry.make();
-      const builder = GraphBuilder.make({ registry });
-      GraphBuilder.addExtension(
-        builder,
-        GraphBuilder.createExtensionRaw({
-          id: 'inlineConnector',
-          connector: () =>
-            Atom.make([
-              {
-                id: 'parent-node',
-                type: EXAMPLE_TYPE,
-                data: null,
-                nodes: [
-                  {
-                    id: 'inline-child',
-                    type: EXAMPLE_TYPE,
-                    data: null,
-                    nodes: [{ id: 'deep-child', type: EXAMPLE_TYPE, data: null }],
-                  },
-                ],
-              },
-            ]),
-        }),
-      );
-
-      const graph = builder.graph;
-      Graph.expand(graph, GraphNode.RootId, 'child');
-      await GraphBuilder.flush(builder);
-
-      const connections = registry.get(graph.connections(GraphNode.RootId, 'child'));
-      expect(connections).has.length(1);
-      expect(connections[0].id).to.equal('root/parent-node');
-
-      const inlineNode = Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull);
-      expect(inlineNode).to.not.be.null;
-      expect(inlineNode?.id).to.equal('root/parent-node/inline-child');
-
-      const deepNode = Graph.getNode(graph, 'root/parent-node/inline-child/deep-child').pipe(Option.getOrNull);
-      expect(deepNode).to.not.be.null;
-      expect(deepNode?.id).to.equal('root/parent-node/inline-child/deep-child');
-    });
-
-    test('constant connector produces distinct nodes under different parents', async () => {
-      const registry = Registry.make();
-      const builder = GraphBuilder.make({ registry });
-
-      GraphBuilder.addExtension(builder, [
-        GraphBuilder.createExtensionRaw({
-          id: 'parents',
-          connector: (node) =>
-            Atom.make((get) =>
-              Function.pipe(
-                get(node),
-                Option.filter((n) => n.id === 'root'),
-                Option.map(() => [
-                  { id: 'A', type: EXAMPLE_TYPE, data: 'a' },
-                  { id: 'B', type: EXAMPLE_TYPE, data: 'b' },
-                ]),
-                Option.getOrElse(() => []),
-              ),
-            ),
-        }),
-        GraphBuilder.createExtensionRaw({
-          id: 'constantChild',
-          connector: () => Atom.make([{ id: 'shared', type: EXAMPLE_TYPE, data: 'constant' }]),
-        }),
-      ]);
-
-      const graph = builder.graph;
-
-      Graph.expand(graph, GraphNode.RootId, 'child');
-      await GraphBuilder.flush(builder);
-
-      Graph.expand(graph, 'root/A', 'child');
-      Graph.expand(graph, 'root/B', 'child');
-      await GraphBuilder.flush(builder);
-
-      const childrenOfA = registry.get(graph.connections('root/A', 'child'));
-      const childrenOfB = registry.get(graph.connections('root/B', 'child'));
-
-      expect(childrenOfA).has.length(1);
-      expect(childrenOfB).has.length(1);
-      expect(childrenOfA[0].id).to.equal('root/A/shared');
-      expect(childrenOfB[0].id).to.equal('root/B/shared');
-
-      const nodeA = Graph.getNode(graph, 'root/A/shared').pipe(Option.getOrNull);
-      const nodeB = Graph.getNode(graph, 'root/B/shared').pipe(Option.getOrNull);
-      expect(nodeA).to.not.be.null;
-      expect(nodeB).to.not.be.null;
-      expect(nodeA?.id).to.not.equal(nodeB?.id);
-    });
-
-    test('explore qualifies node IDs', async () => {
-      const builder = GraphBuilder.make();
-      GraphBuilder.addExtension(
-        builder,
-        GraphBuilder.createExtensionRaw({
-          id: 'connector',
-          connector: (node) =>
-            Atom.make((get) =>
-              Function.pipe(
-                get(node),
-                Option.filter((n) => n.id === 'root'),
-                Option.map(() => [
-                  { id: 'first', type: EXAMPLE_TYPE, data: 1 },
-                  { id: 'second', type: EXAMPLE_TYPE, data: 2 },
-                ]),
-                Option.getOrElse(() => []),
-              ),
-            ),
-        }),
-      );
-
-      const visited: Array<{ id: string; path: string[] }> = [];
-      await GraphBuilder.explore(builder, {
-        relation: 'child',
-        visitor: (node, path) => {
-          visited.push({ id: node.id, path });
-        },
-      });
-
-      expect(visited).has.length(3);
-      expect(visited[0].id).to.equal('root');
-      expect(visited[1].id).to.equal('root/first');
-      expect(visited[2].id).to.equal('root/second');
-    });
-  });
-
   describe('invalid local id', () => {
     test('drops an extension with an invalid id rather than throwing', ({ expect }) => {
       expect(

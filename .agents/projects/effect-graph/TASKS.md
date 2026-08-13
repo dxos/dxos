@@ -3,8 +3,10 @@
 _Resume: Phases 1-6 IMPLEMENTED and green — `GraphModel` rebuilt on a long-lived Effect
 `MutableGraph` + version atom, consumers migrated, `topoLevels`/`findCycle` landed and consumed by
 activation-graph. graph 17/17, app-framework 231/231, schema 48/50 (2 skipped), conductor 31/31,
-react-ui-graph 19/19, app-graph 120/120 on the consolidated core. Phase 7 (GraphBuilder split) is
-mid-flight: the coupling is severed (injected `decorateNode`), the machinery move is not started.
+react-ui-graph 19/19 on the consolidated core. Phase 7 (GraphBuilder split) is DONE: the generic
+engine lives in `@dxos/graph/GraphBuilder` with `ModelGraphBuilder` as its default specialization,
+`AppGraphBuilder` is a subclass, and the suites are split (graph 49/49, app-graph 111/111). The
+whole dependent closure is green (2113 passed / 0 failed across 52 suites).
 **Phase 8 is the current gate** — repo-wide dependent test sweep + composer e2e + before/after
 benchmarks kept as skipped tests — before Phase 9 (node atom release/eviction). Also remaining:
 app-graph algorithm upgrades (dijkstra/pathAtom), the `explore` isolation decision, ECHO
@@ -113,14 +115,22 @@ node vocabulary and 8 ECHO — the rest is generic expansion machinery.
       `validateSegmentId`, `parentId`, `segmentId`); app-graph's duplicates deleted and call sites
       updated. `GraphNodeMatcher`'s basic matchers made node-type-preserving (they erased app nodes
       to `GraphNode.Any`, which broke composition with app-level matchers).
-- [x] **Generic tests at the low level** — `GraphBuilder.test.ts` (19 cases) against a minimal
-      in-test store: expansion, qualification, extension order, sibling position, relation
-      filtering, updates, late registration, removal, inline staleness, provenance (incl. `owned`),
-      decoration, `unchanged` short-circuit, `destroy`, `explore`, `createConnector`. Surfaced a
-      real footgun now documented on `Store`: a node view without an equality cutoff spins the
-      flush loop forever.
-- [ ] **Thin app-graph's suite** — `graph-builder.test.ts` (1392 lines) still covers generic
-      expansion alongside the URL/action/ECHO cases; prune what the low-level suite now owns.
+- [x] **Ship a default specialization** — `ModelGraphBuilder` builds into `@dxos/graph`'s own
+      `GraphModel`: relations are strings in the edge `type`, sibling order in edge `data.order`,
+      `children(id, relation)` expands on first read and reads back in order. Replaces the
+      hand-rolled test store, so the generic suite exercises a real store on real per-node atoms.
+- [x] **Generic tests at the low level** — `GraphBuilder.test.ts` (20 cases) on
+      `ModelGraphBuilder`: expansion, qualification (incl. deep inline), extension order, sibling
+      position, relation filtering, updates, granularity (an unrelated node must not re-run a
+      connector), `unchanged` short-circuit, late registration, removal, inline staleness,
+      provenance, decoration, `destroy`, `explore`, `createConnector`, supplied model.
+- [x] **Thinned app-graph's suite** — pruned the 9 cases the low-level suite now owns (`updates`,
+      `removes`, the whole `path-based ID qualification` block, `explore`, `createConnector`);
+      app-graph keeps the URL/action/ECHO/notification-count cases. 111 tests, from 120.
+
+Note on the flush-loop footgun recorded earlier: it was an artifact of the fake store's single global
+version atom, not of the engine. `GraphModel`'s per-node cutoffs mean it does not arise for any real
+store; the requirement stays documented on `Store.node` and is now covered by a granularity test.
 
 ## Phase 8: verification sweep + before/after benchmarks
 

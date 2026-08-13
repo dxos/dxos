@@ -240,7 +240,7 @@ const children: GraphBuilder.Extension<Node, Arg> = {
 GraphBuilder.addExtension(builder, children);
 ```
 
-Connector ids are *segments*: the builder qualifies each against the node it was produced from, so the
+Connector ids are _segments_: the builder qualifies each against the node it was produced from, so the
 example above yields `root/a` and `root/b`. Reading a node's relation is what triggers expansion —
 nothing is materialized until something asks. Updates are coalesced, so wait for them explicitly:
 
@@ -248,7 +248,20 @@ nothing is materialized until something asks. Updates are coalesced, so wait for
 await GraphBuilder.flush(builder);
 ```
 
-Construction is over a `Store` — the graph the builder drives, and the only thing it needs:
+`ModelGraphBuilder` is the default specialization, building into a `GraphModel`: relations are plain
+strings in the edge `type`, sibling order lives in the edge `data.order`, and `children` reads it back.
+
+```ts
+const builder = new GraphBuilder.ModelGraphBuilder();
+GraphBuilder.addExtension(builder, children);
+
+registry.get(builder.children(GraphNode.RootId)); // expands on first read
+await GraphBuilder.flush(builder);
+registry.get(builder.children(GraphNode.RootId)); // [{ id: 'root/a' }, { id: 'root/b' }]
+```
+
+A layer that needs its own node vocabulary constructs the builder over a `Store` instead — the graph it
+drives, and the only thing it needs (`@dxos/app-graph` does exactly this):
 
 ```ts
 const builder = GraphBuilder.make({
@@ -258,6 +271,10 @@ const builder = GraphBuilder.make({
   decorateNode: (node, extension) => stamp(node, extension?.meta), // per-layer metadata
 });
 ```
+
+A store's `node(id)` view must cut off at that node's own value. Connectors read it, so a view that
+notifies on writes to unrelated nodes both cascades expansion across the graph and puts the builder in a
+flush-invalidate-flush loop. `GraphModel`'s per-node atoms already do this.
 
 `meta` is opaque to the builder and reaches `decorateNode` unchanged — the seam a layer uses to attach
 its own vocabulary (app-graph stamps URL segments through it). `getNodeExtensionId(nodeId)` maps back

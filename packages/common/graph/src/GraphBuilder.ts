@@ -14,8 +14,10 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
+import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
+import * as GraphEdge from './GraphEdge';
+import * as GraphModel from './GraphModel';
 import * as GraphNode from './GraphNode';
 
 // Separates the components of the compound keys this module builds (a node id from a relation key, a
@@ -444,6 +446,148 @@ export class GraphBuilder<
  * Any builder, whatever vocabulary it was specialized with.
  */
 export type Any = GraphBuilder<any, any, any, any, any>;
+
+//
+// Model-backed builder
+//
+
+/** A node the model-backed builder materializes: the graph node vocabulary plus open properties. */
+export type ModelNode = Specialize<GraphNode.Any, { properties?: Record<string, any> }>;
+
+/** What a model-backed connector returns: a node, optionally with inline descendants. */
+export type ModelNodeArg = Specialize<ModelNode, { nodes?: ModelNodeArg[] }>;
+
+/** The edge the model store writes: `type` is the relation, `data.order` the builder's sibling order. */
+export type ModelEdge = GraphEdge.Of<{ order: number }>;
+
+export type Model = GraphModel.GraphModel<ModelNode, ModelEdge>;
+
+/** A graph shaped for {@link ModelGraphBuilder} to build into. */
+export const makeModel = (options?: GraphModel.Options<ModelNode, ModelEdge>): Model =>
+  GraphModel.make<ModelNode, ModelEdge>(options);
+
+export type ModelProps<Meta = unknown> = Pick<
+  Props<ModelNode, ModelNodeArg, string, Meta, Model>,
+  'registry' | 'decorateNode' | 'unchanged'
+> & {
+  /** The graph to build into; a fresh one holding only the root by default. */
+  model?: Model;
+  /** The node expansion starts from, seeded when the model does not already hold it. */
+  rootId?: string;
+};
+
+/**
+ * The builder over `@dxos/graph`'s own {@link GraphModel} — the default specialization, and the one to
+ * reach for unless a layer needs its own node vocabulary (as `@dxos/app-graph` does).
+ *
+ * Relations are plain strings carried in the edge `type`, and sibling order in the edge `data.order`;
+ * {@link ModelGraphBuilder.children} reads them back in that order.
+ */
+export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, ModelNodeArg, string, Meta, Model> {
+  /** Relations already expanded, so a repeated read does not re-subscribe the same connectors. */
+  readonly #expanded = new Set<string>();
+
+  constructor({ model, rootId = GraphNode.RootId, ...props }: ModelProps<Meta> = {}) {
+    super({
+      ...props,
+      relationKey: (relation) => relation ?? 'child',
+      inline: {
+        children: (node) => node.nodes ?? [],
+        map: (node, fn) => ({ ...node, nodes: node.nodes?.map(fn) }),
+      },
+      store: (hooks, registry) => modelStore(model ?? GraphModel.make({ registry }), hooks),
+    });
+    if (!this.graph.findNode(rootId)) {
+      this.graph.addNode({ id: rootId });
+    }
+  }
+
+  /**
+   * The nodes a relation of `node` resolves to, in sibling order, expanding it on first read — the
+   * entry point that makes the graph grow.
+   */
+  children(id: string, relation = 'child'): Atom.Atom<ModelNode[]> {
+    const key = primaryKey(id, relation);
+    if (!this.#expanded.has(key)) {
+      this.#expanded.add(key);
+      this._onExpand(id, relation);
+    }
+
+    const model = this.graph;
+    return Atom.make((get) => {
+      get(model.version);
+      return model
+        .outgoing(id, relation)
+        .toSorted((a, b) => a.data.order - b.data.order)
+        .map((edge) => model.findNode(edge.target))
+        .filter(isNonNullable);
+    });
+  }
+
+  override _onRemoveNode(id: string): void {
+    super._onRemoveNode(id);
+    // A node that returns must expand again, so drop its expansion marks along with its subscriptions.
+    for (const key of this.#expanded) {
+      if (primaryParts(key)[0] === id) {
+        this.#expanded.delete(key);
+      }
+    }
+  }
+}
+
+/** Adapt a {@link GraphModel} to the store port. */
+const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNodeArg, Model> => {
+  const nodes = Atom.family<string, Atom.Atom<Option.Option<ModelNode>>>((id) =>
+    Atom.make((get) => {
+      const node = get(model.nodeAtom(id));
+      return node ? Option.some(node) : Option.none();
+    }),
+  );
+
+  const addNode = (node: ModelNodeArg): void => {
+    const { nodes: children, ...rest } = node;
+    model.setNode(rest);
+    children?.forEach(addNode);
+  };
+
+  const edgeId = ({ source, target, relation }: Edge) => GraphEdge.createId({ source, target, relation });
+
+  return {
+    graph: model,
+    node: (id) => nodes(id),
+    nodeOrThrow: (id) => Atom.make((get) => Option.getOrThrowWith(get(nodes(id)), () => new Error(`No node: ${id}`))),
+    addNodes: (args) => model.batch(() => args.forEach(addNode)),
+    removeNodes: (ids, edges) =>
+      model.batch(() => {
+        model.removeNodes([...ids], { detachEdges: edges });
+        ids.forEach((id) => hooks.onRemoveNode(id));
+      }),
+    addEdges: (edges) =>
+      model.batch(() =>
+        edges.forEach((edge) => {
+          const id = edgeId(edge);
+          if (!model.findEdge(id)) {
+            model.addEdge({ id, type: edge.relation, source: edge.source, target: edge.target, data: { order: 0 } });
+          }
+        }),
+      ),
+    removeEdges: (edges) => model.removeEdges(edges.map(edgeId).filter((id) => model.findEdge(id) !== undefined)),
+    sortEdges: (id, relation, order) =>
+      model.batch(() => {
+        for (const edge of model.outgoing(id, relation)) {
+          const index = order.indexOf(edge.target);
+          if (index >= 0) {
+            // The edge object is the one the model holds, so the write needs a touch to be observed.
+            edge.data.order = index;
+          }
+        }
+        model.touch();
+      }),
+    setNode: (id, node) =>
+      Option.match(node, { onNone: () => model.removeNode(id), onSome: (value) => model.setNode(value) }),
+    constructNode: ({ nodes: _, ...node }) => Option.some(node),
+  };
+};
 
 /**
  * Creates a new GraphBuilder.
