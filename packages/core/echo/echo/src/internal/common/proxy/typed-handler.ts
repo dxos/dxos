@@ -217,6 +217,11 @@ Object.defineProperties(TypedObjectPrototype, {
   // own, and `Equal` (not the hash) decides identity. Both traits ship together: a `Hash` that
   // disagrees with `Equal` breaks every hash-map lookup. Nested records carry no `id` and fall
   // back to reference identity.
+  //
+  // Id and reference identity coincide here: an entity has exactly one live proxy (`createProxy`
+  // caches by target, and the database asserts a single `core.rootProxy`), so keying by id is the
+  // cheap, throw-free way to spell that invariant. Two live proxies over one entity is a bug, and
+  // this pair keeps them one hash-map entry rather than letting them race.
   [Hash.symbol]: {
     get(this: ProxyTarget) {
       const target = getRawTarget(this);

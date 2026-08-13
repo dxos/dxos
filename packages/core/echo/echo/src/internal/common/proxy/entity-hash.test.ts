@@ -13,8 +13,18 @@ import { TestSchema } from '../../../testing';
 
 const makePerson = (name: string) => Obj.make(TestSchema.Person, { name });
 
-/** A second live proxy for the same entity, whose contents have since diverged from the original. */
-const divergedCopy = (person: TestSchema.Person): TestSchema.Person => {
+/**
+ * Fabricate the state ECHO forbids: a second live proxy over an entity that already has one, with
+ * contents since diverged from the original.
+ *
+ * One entity has exactly one live proxy — `createProxy` caches by target, `EchoDatabase.getObjectById`
+ * hands back `core.rootProxy`, and `initEchoReactiveObjectRootProxy` asserts `!core.rootProxy`. A
+ * duplicate is a bug, not a supported way to hold two views; `clone(…, { retainId: true })` produces
+ * one only because the copy is meant to be handed to a *different* database, not kept alongside the
+ * original. The tests below pin what the traits do if that invariant is broken anyway — the pair
+ * agrees on entity identity instead of silently keying off whichever copy's contents were read first.
+ */
+const duplicateProxy = (person: TestSchema.Person): TestSchema.Person => {
   const copy = Obj.clone(person, { retainId: true });
   Obj.update(copy, (copy) => {
     copy.name = 'diverged';
@@ -57,17 +67,13 @@ describe('entity Hash/Equal traits', () => {
     expect(Equal.equals(person, person)).to.be.true;
   });
 
-  test('same id, diverged contents — equal', () => {
+  test('a duplicate proxy (invariant violation) still resolves to one entity', () => {
     const person = makePerson('Alice');
-    // `clone` returns a distinct live proxy; `retainId` makes it the same entity.
-    const copy = Obj.clone(person, { retainId: true });
-    expect(copy).to.not.eq(person);
-    Obj.update(copy, (copy) => {
-      copy.name = 'Bob';
-    });
+    const duplicate = duplicateProxy(person);
+    expect(duplicate).to.not.eq(person);
 
-    expect(Equal.equals(person, copy)).to.be.true;
-    expect(Hash.hash(copy)).to.eq(Hash.hash(person));
+    expect(Equal.equals(person, duplicate)).to.be.true;
+    expect(Hash.hash(duplicate)).to.eq(Hash.hash(person));
   });
 
   test('distinct ids, identical contents — not equal', () => {
@@ -106,15 +112,22 @@ describe('entity Hash/Equal traits', () => {
     // Structurally identical but distinct entities must not collapse into one atom.
     expect(Obj.atom(makePerson('Alice'))).to.not.eq(Obj.atom(makePerson('Alice')));
 
-    // The same entity reached through a second live proxy shares one atom, even once the two
-    // views have diverged — the family keys the entity, not the snapshot of its contents.
-    expect(Obj.atom(divergedCopy(person))).to.eq(Obj.atom(person));
+    // Mutation must not re-key an entity mid-flight: an atom is looked up many times over an
+    // object's life, and a contents-derived key would hand out a fresh atom after every update.
+    Obj.update(person, (person) => {
+      person.name = 'Bob';
+    });
+    expect(Obj.atom(person)).to.eq(Obj.atom(person));
   });
 
   test('a family keyed directly by an entity round-trips', () => {
     const family = Atom.family((obj: Obj.Unknown) => Atom.make(() => obj.id));
     const person = makePerson('Alice');
-    expect(family(person)).to.eq(family(divergedCopy(person)));
+    expect(family(person)).to.eq(family(person));
     expect(family(person)).to.not.eq(family(makePerson('Alice')));
+
+    // A duplicate proxy is an invariant violation (see `duplicateProxy`); should one appear, both
+    // resolve to the same family entry rather than to two atoms racing over one entity.
+    expect(family(person)).to.eq(family(duplicateProxy(person)));
   });
 });
