@@ -64,6 +64,12 @@ export class ManagerState {
   readonly initialized = Effect.runSync(Deferred.make<void, PluginInitializationError>());
   /** Whether `start()` has run — gates incremental activation on later enables. */
   readonly started = Effect.runSync(Ref.make(false));
+  /**
+   * Completed when the Startup wave has finished. Events dispatched while startup is in flight
+   * await it, so a module activating on one of them can rely on every startup capability being
+   * present. Reset by {@link clearEventsFired} so a restarted manager gates again.
+   */
+  startupComplete = Effect.runSync(Deferred.make<void>());
   /** Set for the duration of `shutdown()` — new starts/activations are skipped meanwhile. */
   readonly shuttingDown = Effect.runSync(Ref.make(false));
   /**
@@ -238,6 +244,7 @@ export class ManagerState {
 
   clearEventsFired(): void {
     this.#update(this.eventsFired, () => []);
+    this.startupComplete = Effect.runSync(Deferred.make<void>());
   }
 
   isStarted(): Effect.Effect<boolean> {

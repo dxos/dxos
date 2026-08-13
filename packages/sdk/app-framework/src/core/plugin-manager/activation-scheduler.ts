@@ -155,6 +155,8 @@ export class ActivationScheduler {
       // signal (see useApp); it must not publish before the startup wave finishes.
       this.#state.markEventFired(key);
       yield* PubSub.publish(this.#state.activation, { event: key, state: 'activated' });
+      // Releases the events that were dispatched while this wave ran (see `activate`).
+      yield* Deferred.succeed(this.#state.startupComplete, undefined);
 
       // The idle wave belongs to the manager rather than to each host: it is an app-framework
       // event, and a host that owned the wait would re-implement it (and could forget to).
@@ -192,16 +194,27 @@ export class ActivationScheduler {
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error, Plugin.Service> {
     const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
+    const startupKey = ActivationEvent.eventKey(ActivationEvent.Startup);
     return Effect.gen({ self: this }, function* () {
       // Startup is not a plain event: it triggers the dependency pass alongside the event
       // dispatch. Delegating keeps useApp/harness/cli call sites unchanged.
-      if (key === ActivationEvent.eventKey(ActivationEvent.Startup)) {
+      if (key === startupKey) {
         return yield* this.start();
       }
 
       if (yield* this.#state.isShuttingDown()) {
         log('skipping activation during shutdown', { key, ...params });
         return false;
+      }
+
+      // Held until the Startup wave completes. Startup is what makes the baseline capabilities
+      // available, so a module activating on an event dispatched mid-startup could otherwise find
+      // a require unsatisfied purely because of when its event happened to land. Waiting also
+      // keeps the wave out of startup's own settle check, which counts every in-flight load and
+      // would otherwise hold `ready` behind work that has nothing to do with first paint.
+      if ((yield* Ref.get(this.#state.started)) && !this.#state.eventFired(startupKey)) {
+        log('deferring activation until startup completes', { key, ...params });
+        yield* Deferred.await(this.#state.startupComplete);
       }
 
       // Re-dispatching a fired event is already a no-op — an active module is never re-selected —
