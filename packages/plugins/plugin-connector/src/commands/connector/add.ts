@@ -2,20 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 
-import * as Connection from '../../types/Connection';
 import { performOAuthFlow } from './oauth';
 import { OAUTH_PRESETS, type OAuthPreset, printTokenAdded } from './util';
 
@@ -23,13 +22,16 @@ export const add = Command.make(
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    preset: Options.text('preset').pipe(Options.withDescription('OAuth preset name (e.g., google)'), Options.optional),
-    source: Options.text('source').pipe(Options.withDescription('Token source'), Options.optional),
-    account: Options.text('account').pipe(
+    preset: Options.string('preset').pipe(
+      Options.withDescription('OAuth preset name (e.g., google)'),
+      Options.optional,
+    ),
+    source: Options.string('source').pipe(Options.withDescription('Token source'), Options.optional),
+    account: Options.string('account').pipe(
       Options.withDescription('Account associated with the token'),
       Options.optional,
     ),
-    token: Options.text('token').pipe(Options.withDescription('Token value'), Options.optional),
+    token: Options.string('token').pipe(Options.withDescription('Token value'), Options.optional),
   },
   ({ preset, source, account, token }) =>
     Effect.gen(function* () {

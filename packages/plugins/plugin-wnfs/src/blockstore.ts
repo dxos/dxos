@@ -12,7 +12,7 @@ import all from 'it-all';
 import { CID } from 'multiformats';
 import * as Uint8Arrays from 'uint8arrays';
 
-import { storeName } from './helpers';
+import { storeName } from '#helpers';
 
 export const create = (apiHost?: string) => {
   return new MixedBlockstore(apiHost);

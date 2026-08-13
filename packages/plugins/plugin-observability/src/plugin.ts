@@ -1,9 +1,49 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { meta } from './meta';
+import {
+  ClientReady,
+  Namespace,
+  Observability,
+  ObservabilitySettings,
+  ObservabilityState,
+  OperationHandler,
+  PrivacyNotice,
+  ReactSurface,
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { ObservabilityCapabilities, ObservabilityOptions } from '#types';
 
-export const ObservabilityPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Observability),
+  Plugin.addModule(ObservabilitySettings),
+  Plugin.addModule(ObservabilityState),
+  Plugin.addModule(Namespace),
+  Plugin.addModule(({ downloadLogs }: ObservabilityOptions.ObservabilityPluginOptions) => ({
+    id: 'log-downloader',
+    requires: [],
+    provides: downloadLogs !== undefined ? [ObservabilityCapabilities.LogDownloader] : [],
+    activate: () =>
+      Effect.succeed(
+        downloadLogs !== undefined
+          ? [Capability.contribute(ObservabilityCapabilities.LogDownloader, downloadLogs)]
+          : [],
+      ),
+  })),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PrivacyNotice),
+  Plugin.addModule(ClientReady),
+  Plugin.make,
+);
+
+export default ObservabilityPlugin;

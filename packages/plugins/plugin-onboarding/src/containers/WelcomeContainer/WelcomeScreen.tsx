@@ -2,26 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useRef, useState } from 'react';
+import * as Effect from 'effect/Effect';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Account from '@dxos/app-toolkit/Account';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { createDidFromIdentityKey } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation, classifyPasskeyFailure } from '@dxos/plugin-client';
+import { ClientOperation } from '@dxos/plugin-client';
+import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
-import {
-  isAccountErrorType,
-  joinWaitlist,
-  login,
-  probeEmailExists,
-  redeemAccountInvitation,
-  validateInvitationCode,
-} from '../../credentials';
+import { joinWaitlist, login } from '../../credentials';
 import { useForceDarkTheme } from '../../hooks';
 import { OnboardingOperation } from '../../operations';
 import { translations } from '../../translations';
@@ -34,6 +31,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState<WelcomeError | null>(null);
   const pendingRef = useRef(false);
+  const hub = useMemo(() => Account.createHubClient(hubUrl), [hubUrl]);
 
   // The welcome screen always renders dark, regardless of the system theme.
   useForceDarkTheme();
@@ -77,17 +75,10 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           return;
         }
 
-        if (result.token) {
-          // Inline token: server matched the email and handed us a recovery
-          // token. Redeem it to restore the existing identity.
-          await invokePromise(ClientOperation.RedeemToken, { token: result.token });
-          await invokePromise(LayoutOperation.UpdateDialog, { state: false });
-          return;
-        }
-        // No inline token: either no Account for this email or production env
-        // mailed the link out-of-band. Show the same "check your email" UI in
-        // both cases so the response stays enumeration-safe. When no Account
-        // exists hub-service silently submits the email to the waitlist.
+        // Either no Account for this email or the link went out by email.
+        // Show the same "check your email" UI in both cases so the response
+        // stays enumeration-safe. When no Account exists hub-service silently
+        // submits the email to the waitlist.
         setState(WelcomeState.LOGIN_SENT);
       } catch (err) {
         log.catch(err);
@@ -107,7 +98,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     const { error: redeemError } = await invokePromise(ClientOperation.RedeemPasskey);
     if (redeemError) {
       log.catch(redeemError);
-      setError(passkeyError(classifyPasskeyFailure(redeemError)));
+      setError(passkeyError(PasskeyError.classify(redeemError)));
     }
   }, [invokePromise]);
 
@@ -148,15 +139,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
 
   const handleValidateInvitationCode = useCallback(
-    async (code: string) => {
-      try {
-        return await validateInvitationCode({ hubUrl, code });
-      } catch (err) {
-        log.catch(err);
-        return false;
-      }
-    },
-    [hubUrl],
+    (code: string) => EffectEx.runPromise(Account.checkAccessCode({ hub, code })),
+    [hub],
   );
 
   const handleCreateAccount = useCallback(
@@ -169,50 +153,56 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       }
       pendingRef.current = true;
       try {
-        // Probe before creating anything: redemption rejects a duplicate email, and an
-        // identity created first would be stranded with no account and no way to retry.
-        // An inconclusive probe is not permission to proceed, so it stops here too.
-        const probe = await probeEmailExists({ hubUrl, email });
-        if (probe !== 'available') {
-          setError(probe === 'exists' ? 'account-exists' : 'email-check-unavailable');
-          return;
-        }
-
-        const ensureIdentity = async () => {
+        const ensureIdentity = Effect.gen(function* () {
           if (identity) {
             return identity;
           }
-          await invokePromise(ClientOperation.CreateIdentity, {
-            displayName: email.split('@')[0],
-          });
-          return client.halo.identity.get();
-        };
-
-        const resolvedIdentity = await ensureIdentity();
-        invariant(resolvedIdentity, 'identity should exist after create');
-
-        const result = await redeemAccountInvitation({
-          hubUrl,
-          email,
-          identityDid: await createDidFromIdentityKey(resolvedIdentity.identityKey),
-          identityKey: resolvedIdentity.identityKey.toHex(),
-          code: code.replace(/-/g, '').toUpperCase(),
+          // `invokePromise` resolves with `{ error }` rather than rejecting, so fail explicitly —
+          // otherwise a failed creation only surfaces via the invariant below, as a defect.
+          const { error: createError } = yield* Effect.promise(() =>
+            invokePromise(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] }),
+          );
+          if (createError) {
+            return yield* Effect.fail(createError);
+          }
+          const created = client.halo.identity.get();
+          invariant(created, 'identity should exist after create');
+          return created;
         });
-        if ('accountId' in result) {
-          log.info('account created', { accountId: result.accountId });
-          void invokePromise(ClientOperation.CreateAgent);
+
+        // Errors are mapped to UI states inside the Effect — `runPromise` rejects with a
+        // FiberFailure, so the typed errors are not matchable from a catch block.
+        const outcome = await EffectEx.runPromise(
+          Account.signUpWithEmail({ hub, email, code, ensureIdentity }).pipe(
+            Effect.map(() => 'ok' as const),
+            Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('email-check-unavailable' as const)),
+            Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('account-exists' as const)),
+            Effect.catch((err) =>
+              Effect.sync(() => {
+                log.catch(err);
+                // Another signup can register the email between the probe and redemption, so the
+                // server remains the final duplicate-email check.
+                return Account.accountErrorType(err) === 'email_already_registered'
+                  ? ('account-exists' as const)
+                  : ('email' as const);
+              }),
+            ),
+          ),
+        );
+        if (outcome !== 'ok') {
+          setError(outcome);
+          return;
         }
+        void invokePromise(ClientOperation.CreateAgent);
         await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       } catch (err) {
         log.catch(err);
-        // Another signup can register the email between the probe and redemption, so the
-        // server remains the final duplicate-email check.
-        setError(isAccountErrorType(err, 'email_already_registered') ? 'account-exists' : 'email');
+        setError('email');
       } finally {
         pendingRef.current = false;
       }
     },
-    [hubUrl, identity, client, invokePromise, error],
+    [hub, identity, client, invokePromise, error],
   );
 
   const handleCreateAccountWithOAuth = useCallback(

@@ -8,7 +8,8 @@ import { type Obj, Type } from '@dxos/echo';
 import { type ExtractInput, type ExtractResult, type MatchResult, type ObjectExtractor } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import { buildContactFromActor } from './contact';
+import { buildContactGraph } from './contact';
+import { isAutomatedSender, senderSignals } from './selection';
 
 export const TEMPLATE_ID = 'org.dxos.extractor.contact';
 
@@ -19,20 +20,35 @@ export const matchMessage = (source: Obj.Any): MatchResult => {
 };
 
 /**
- * Turns the sender into a Person (+ Organization link by domain) via the shared helper. Deterministic
- * (`R = never`): requires neither `Resolver` nor `AiService`, so it composes into contexts without
- * those layers (e.g. a streaming pipeline stage). Does NOT write to the database.
+ * Turns the sender into a Person plus their Organization — linked when the domain resolves to a
+ * known Organization, freshly created (placeholder name/website from the domain) when it does not
+ * and the domain is corporate. Deterministic (`R = never`): requires neither `Resolver` nor
+ * `AiService`, so it composes into contexts without those layers (e.g. a streaming pipeline
+ * stage). Does NOT write to the database.
  */
 export const extractContact = ({ db, source }: ExtractInput): Effect.Effect<ExtractResult, never> =>
   Effect.gen(function* () {
     // `dispatch` may invoke an explicitly-selected extractor without `match()`, so guard a
-    // sender-less message rather than crashing in `buildContactFromActor`.
-    const sender = (source as Message.Message).sender;
+    // sender-less message rather than crashing in `buildContactGraph`.
+    const message = source as Message.Message;
+    const sender = message.sender;
     if (!sender) {
       return { created: [], updated: [], relations: [] };
     }
-    const contact = yield* buildContactFromActor(sender, db);
-    return { created: contact ? [contact] : [], updated: [], relations: [] };
+
+    // A machine is never a contact. Only the deny half of the contact gate applies here: this
+    // extractor runs per message, so it has no outbound/known-organization evidence to satisfy the
+    // full allow-list — but running with NO gate at all (as it did) turned every `no-reply@`,
+    // `mailer-daemon@` and `invoice+statements+acct_…@stripe.com` sender in a mailbox into a Person.
+    if (isAutomatedSender(sender.email, senderSignals(message))) {
+      return { created: [], updated: [], relations: [] };
+    }
+    const { contact, organization } = yield* buildContactGraph(sender, db);
+    return {
+      created: [organization, contact].filter((object): object is NonNullable<typeof object> => !!object),
+      updated: [],
+      relations: [],
+    };
   });
 
 /**

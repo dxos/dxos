@@ -31,8 +31,8 @@ import { traceBootLeak } from './src/vite/trace-boot-leak';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
-// DX_PLUGIN_SET=minimal (serve-min task) swaps the full plugin registry for
-// plugin-defs.minimal.tsx without touching main.tsx.
+// Opt-in `DX_PLUGIN_SET=minimal` swaps the full plugin registry for plugin-defs.minimal.tsx
+// without touching main.tsx — for a faster boot when the full registry is not needed.
 const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
 const pluginSetFile = isMinimalPluginSet ? 'src/plugin-defs.minimal.tsx' : 'src/plugin-defs.tsx';
 
@@ -85,7 +85,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
   // Packages whose source is not vite-safe publish no `source` condition at all, so they resolve
   // to dist here exactly as they do under node/bun — no app-local exclude list, and no divergence
-  // between runtimes. The `dist-runtime` moon tag keeps their dist built for `serve-min`. The same
+  // between runtimes. The `dist-runtime` moon tag keeps their dist built for `serve`. The same
   // holds per-export for bundler-plugin entrypoints (`./vite-plugin`, `./plugin`) of packages whose
   // remaining exports are vite-safe; the `vite-plugin` tag builds their dist.
   importSource({
@@ -273,17 +273,8 @@ export default defineConfig((env) => ({
       '@effect/platform',
       '@effect/platform-browser',
       // Effect Atom (reactive state; always loaded, triggered a mid-session reload before being listed).
-      '@effect-atom/atom',
-      '@effect-atom/atom/Registry',
-      // Effect AI (with submodule exports).
-      '@effect/ai',
-      '@effect/ai/AiError',
-      '@effect/ai/Chat',
-      '@effect/ai/LanguageModel',
-      '@effect/ai/Prompt',
-      '@effect/ai/Response',
-      '@effect/ai/Tool',
-      '@effect/ai/Toolkit',
+      '@effect/atom-react',
+      // Effect AI (absorbed into the core train under `effect/unstable/ai`).
       '@effect/ai-anthropic',
       '@effect/ai-anthropic/AnthropicClient',
       '@effect/ai-anthropic/AnthropicLanguageModel',

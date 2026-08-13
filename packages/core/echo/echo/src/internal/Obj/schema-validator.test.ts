@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { SchemaAST } from '@dxos/effect';
 import { getDeep } from '@dxos/util';
 
 import { SchemaValidator } from './schema-validator';
@@ -13,7 +14,7 @@ describe('schema-validator', () => {
   describe('validateSchema', () => {
     test('throws on ambiguous discriminated type union', () => {
       const TestSchema = Schema.Struct({
-        union: Schema.Union(Schema.Struct({ a: Schema.Number }), Schema.Struct({ b: Schema.String })),
+        union: Schema.Union([Schema.Struct({ a: Schema.Number }), Schema.Struct({ b: Schema.String })]),
       });
 
       expect(() => SchemaValidator.validateSchema(TestSchema)).to.throw();
@@ -22,12 +23,12 @@ describe('schema-validator', () => {
 
   describe('hasPropertyAnnotation', () => {
     test('has annotation', () => {
-      const annotationId = Symbol('foo');
+      const annotationId = 'test.annotation.foo';
       const annotationValue = 'bar';
-      const TestSchema: Schema.Schema.AnyNoContext = Schema.Struct({
-        name: Schema.String.annotations({ [annotationId]: annotationValue }),
-        parent: Schema.optional(Schema.suspend(() => TestSchema.annotations({ [annotationId]: annotationValue }))),
-        friends: Schema.suspend(() => Schema.Array(TestSchema.annotations({ [annotationId]: annotationValue }))),
+      const TestSchema: Schema.Codec<any, any> = Schema.Struct({
+        name: Schema.String.annotate({ [annotationId]: annotationValue }),
+        parent: Schema.optional(Schema.suspend(() => TestSchema.annotate({ [annotationId]: annotationValue }))),
+        friends: Schema.suspend(() => Schema.Array(TestSchema.annotate({ [annotationId]: annotationValue }))),
       });
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'name', annotationId)).to.be.true;
       expect(SchemaValidator.hasTypeAnnotation(TestSchema, 'parent', annotationId)).to.be.true;
@@ -35,8 +36,8 @@ describe('schema-validator', () => {
     });
 
     test('no annotation', () => {
-      const annotationId = Symbol('foo');
-      const Person: Schema.Schema.AnyNoContext = Schema.Struct({
+      const annotationId = 'test.annotation.foo';
+      const Person: Schema.Codec<any, any> = Schema.Struct({
         name: Schema.String,
         parent: Schema.optional(Schema.suspend(() => Person)),
         friends: Schema.suspend(() => Schema.Array(Person)),
@@ -49,7 +50,7 @@ describe('schema-validator', () => {
 
   describe('getPropertySchema', () => {
     const validateValueToAssign = (args: {
-      schema: Schema.Schema.AnyNoContext;
+      schema: Schema.Codec<any, any>;
       target: any;
       path: string[];
       valueToAssign: any;
@@ -59,7 +60,7 @@ describe('schema-validator', () => {
         const nestedSchema = SchemaValidator.getPropertySchema(args.schema, args.path, (path) => {
           return getDeep(args.target, path);
         });
-        Schema.validateSync(nestedSchema)(args.valueToAssign);
+        Schema.decodeSync(Schema.toType(nestedSchema))(args.valueToAssign);
       });
       if (args.expectToThrow) {
         expectation.to.throw();
@@ -81,24 +82,24 @@ describe('schema-validator', () => {
     });
 
     test('preserves annotations', () => {
-      const annotationId = Symbol('foo');
+      const annotationId = 'test.annotation.foo';
       const annotationValue = 'bar';
-      const Person: Schema.Schema.AnyNoContext = Schema.Struct({
-        parent: Schema.optional(Schema.suspend(() => Person.annotations({ [annotationId]: annotationValue }))),
-        friends: Schema.suspend(() => Schema.Array(Person.annotations({ [annotationId]: annotationValue }))),
+      const Person: Schema.Codec<any, any> = Schema.Struct({
+        parent: Schema.optional(Schema.suspend(() => Person.annotate({ [annotationId]: annotationValue }))),
+        friends: Schema.suspend(() => Schema.Array(Person.annotate({ [annotationId]: annotationValue }))),
       });
-      expect(SchemaValidator.getPropertySchema(Person, ['parent']).ast.annotations[annotationId]).to.eq(
+      expect(SchemaAST.getAnnotation(SchemaValidator.getPropertySchema(Person, ['parent']).ast, annotationId)).to.eq(
         annotationValue,
       );
-      expect(SchemaValidator.getPropertySchema(Person, ['friends', '0']).ast.annotations[annotationId]).to.eq(
-        annotationValue,
-      );
+      expect(
+        SchemaAST.getAnnotation(SchemaValidator.getPropertySchema(Person, ['friends', '0']).ast, annotationId),
+      ).to.eq(annotationValue);
     });
 
     test('discriminated union', () => {
       const square = Schema.Struct({ type: Schema.Literal('square'), side: Schema.Number });
       const circle = Schema.Struct({ type: Schema.Literal('circle'), radius: Schema.Number });
-      const shape = Schema.Union(square, circle);
+      const shape = Schema.Union([square, circle]);
       validateValueToAssign({
         schema: shape,
         target: { type: 'square' },
@@ -133,7 +134,7 @@ describe('schema-validator', () => {
     test('walking into an Unknown-typed value does not throw', ({ expect }) => {
       // Mirrors the annotation Dictionary (Record<string, Unknown>): nested keys/indices under an
       // Unknown slot are all valid, so the validator must not reject while walking them.
-      const schema = Schema.Struct({ dict: Schema.Record({ key: Schema.String, value: Schema.Unknown }) });
+      const schema = Schema.Struct({ dict: Schema.Record(Schema.String, Schema.Unknown) });
       for (const path of [
         ['dict', 'someType'],
         ['dict', 'someType', 'nested'],
@@ -145,7 +146,9 @@ describe('schema-validator', () => {
     test('index signatures', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
-          schema: Schema.Struct({ field: Schema.String }, { key: Schema.String, value: Schema.Number }),
+          schema: Schema.StructWithRest(Schema.Struct({ field: Schema.String }), [
+            Schema.Record(Schema.String, Schema.Number),
+          ]),
           target: {},
           path: ['unknownField'],
           valueToAssign: value,
@@ -158,7 +161,7 @@ describe('schema-validator', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
           schema: Schema.Struct({
-            field: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Number })),
+            field: Schema.optional(Schema.Record(Schema.String, Schema.Number)),
           }),
           target: {},
           path: ['field', 'unknownField'],
@@ -170,9 +173,9 @@ describe('schema-validator', () => {
 
     test('suspend', () => {
       const schemaWithSuspend = Schema.Struct({
-        array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union(Schema.Null, Schema.Number)))),
+        array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union([Schema.Null, Schema.Number])))),
         object: Schema.optional(
-          Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number }))),
+          Schema.suspend(() => Schema.Union([Schema.Null, Schema.Struct({ field: Schema.Number })])),
         ),
       });
       const target: any = { array: [1, 2, null], object: { field: 3 } };
@@ -202,7 +205,7 @@ describe('schema-validator', () => {
     });
 
     test('allows extra properties when the schema has an index signature', () => {
-      const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any });
+      const Expando = Schema.StructWithRest(Schema.Struct({}), [Schema.Record(Schema.String, Schema.Any)]);
       expect(() => SchemaValidator.assertExactProperties(Expando, { custom: 'value' })).not.to.throw();
     });
 
@@ -216,10 +219,10 @@ describe('schema-validator', () => {
     });
 
     test('resolves nested discriminated union using target property values', () => {
-      const spec = Schema.Union(
+      const spec = Schema.Union([
         Schema.Struct({ kind: Schema.Literal('feed'), feed: Schema.optional(Schema.String) }),
         Schema.Struct({ kind: Schema.Literal('timer'), cron: Schema.String }),
-      );
+      ]);
       const schema = Schema.Struct({ spec });
       const target = { spec: { kind: 'feed' as const, feed: 'echo:/feed', extra: true } };
       expect(() => SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path))).to.throw(

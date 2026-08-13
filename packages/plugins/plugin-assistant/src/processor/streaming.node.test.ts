@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
@@ -10,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Stream from 'effect/Stream';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
@@ -84,7 +84,7 @@ const makeTestRuntime = Effect.gen(function* () {
     | ServiceResolver.ServiceResolver
   >();
   const manager = PluginManager.make({
-    pluginLoader: (id: string) => Effect.dieMessage(`No plugins in test runtime: ${id}`),
+    pluginLoader: (id: string) => Effect.die(new Error(`No plugins in test runtime: ${id}`)),
     plugins: [],
   });
   const runtime: Capabilities.ProcessManagerRuntime = ManagedRuntime.make(
@@ -101,12 +101,12 @@ const makeTestRuntime = Effect.gen(function* () {
 });
 
 describe('AiChatProcessor streaming', () => {
-  it.scoped(
+  it.effect(
     'upserts partials, finalizes complete blocks, ignores late partials, and flushes on completion',
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         // The scripted stream: a growing partial for m1, its finalization, a late (stale) partial

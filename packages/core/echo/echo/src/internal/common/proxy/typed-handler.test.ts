@@ -33,7 +33,7 @@ describe('complex schema validations', () => {
   });
 
   test('object', () => {
-    const schema = Schema.Struct({ field: Schema.optional(Schema.Object) });
+    const schema = Schema.Struct({ field: Schema.optional(Schema.ObjectKeyword) });
     const object = makeObject(schema, { field: { nested: { value: 100 } } });
     change(object, (o) => {
       expect(() => (o.field = { any: 'value' })).not.to.throw();
@@ -53,7 +53,7 @@ describe('complex schema validations', () => {
   });
 
   test('index signatures', () => {
-    const schema = Schema.Struct({}, { key: Schema.String, value: Schema.Number });
+    const schema = Schema.StructWithRest(Schema.Struct({}), [Schema.Record(Schema.String, Schema.Number)]);
     const object = makeObject(schema, { unknownField: 1 });
     change(object, (o) => {
       expect(() => setValue(o, ['field'], '42')).to.throw();
@@ -63,8 +63,10 @@ describe('complex schema validations', () => {
 
   test('suspend', () => {
     const schema = Schema.Struct({
-      array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union(Schema.Null, Schema.Number)))),
-      object: Schema.optional(Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number })))),
+      array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union([Schema.Null, Schema.Number])))),
+      object: Schema.optional(
+        Schema.suspend(() => Schema.Union([Schema.Null, Schema.Struct({ field: Schema.Number })])),
+      ),
     });
 
     const object = makeObject(schema, { array: [1, 2, null], object: { field: 3 } });

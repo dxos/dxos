@@ -13,8 +13,8 @@ import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
+import { DeckSchema } from '#types';
 
-import * as DeckSchema from '../../types/DeckSchema';
 import { CompanionPlank } from './CompanionPlank';
 import { PlankControls } from './PlankControls';
 import { PlankErrorFallback, PlankLoading } from './PlankFallback';

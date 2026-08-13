@@ -131,8 +131,11 @@ const finalizeStore = (storeDir) => {
   const manifestPath = join(storeDir, GROUPS_MANIFEST);
   const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {};
   const groupsDir = join(storeDir, 'groups');
-  const groupFiles =
-    existsSync(groupsDir) ? readdirSync(groupsDir).filter((name) => name.endsWith('.md')).sort() : [];
+  const groupFiles = existsSync(groupsDir)
+    ? readdirSync(groupsDir)
+        .filter((name) => name.endsWith('.md'))
+        .sort()
+    : [];
 
   const diagnostics = [];
   let fromGroups = false;
@@ -196,7 +199,12 @@ const finalizeStore = (storeDir) => {
   if (existsSync(resolutionPath)) {
     try {
       priorStatuses = parseResolution(readFileSync(resolutionPath, 'utf8'));
-    } catch {
+    } catch (error) {
+      // A corrupt RESOLUTION.md must not abort finalize, but surface it —
+      // silently resetting every issue to unresolved would hide lost statuses.
+      console.error(
+        `warning: ${slug}/${RESOLUTION_FILE} unparseable (${error.message}); statuses reset to unresolved.`,
+      );
       priorStatuses = null;
     }
   }

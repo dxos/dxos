@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { invariant } from '@dxos/invariant';
 
@@ -20,10 +20,10 @@ const defaultPluginLoader =
       return { plugin };
     });
 
-type SubCommands = [Command.Command<any, any, any, any>, ...Array<Command.Command<any, any, any, any>>];
+type SubCommands = [Command.Command<any, any, any, any, any>, ...Array<Command.Command<any, any, any, any, any>>];
 
 export type CreateCliAppOptions = {
-  rootCommand: Command.Command<any, any, any, any>;
+  rootCommand: Command.Command<any, any, any, any, any>;
   subCommands?: SubCommands;
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];

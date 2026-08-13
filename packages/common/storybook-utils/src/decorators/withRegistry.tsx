@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Decorator } from '@storybook/react-vite';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { memo, useMemo } from 'react';
 
 /**

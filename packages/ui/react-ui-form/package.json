@@ -55,7 +55,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:"
   },

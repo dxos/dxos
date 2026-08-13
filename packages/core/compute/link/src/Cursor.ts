@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -41,9 +40,9 @@ export const ExternalSpec = Schema.Struct({
   /** Cached display label for the remote target. */
   label: Schema.String.pipe(Schema.optional),
   /** Provider-specific options; opaque here — providers validate their shape. */
-  options: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+  options: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   /** Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`); drives 3-way merge. */
-  snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+  snapshots: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   /**
    * Opaque provider delta-resume token (Gmail `historyId`, JMAP `Email/get` `state`). An optional
    * fast-path alongside `max`/`min`: when valid the provider fetches an exact delta, else it falls back
@@ -63,7 +62,7 @@ export const FeedSpec = Schema.Struct({
 export type FeedSpec = Schema.Schema.Type<typeof FeedSpec>;
 
 /** Discriminated union of what a cursor tracks progress against. Distinguished by `kind`. */
-export const Spec = Schema.Union(ExternalSpec, FeedSpec);
+export const Spec = Schema.Union([ExternalSpec, FeedSpec]);
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
@@ -76,23 +75,23 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  */
 export class Cursor extends Type.makeObject<Cursor>(DXN.make('org.dxos.type.cursor', '0.2.0'))(
   Schema.Struct({
-    max: Schema.String.annotations({
+    max: Schema.String.annotate({
       title: 'Max',
       description: 'Opaque, provider-defined high-water mark identifying the newest consumed position.',
     }).pipe(Schema.optional),
-    min: Schema.String.annotations({
+    min: Schema.String.annotate({
       title: 'Min',
       description:
         'Opaque, provider-defined low-water mark some consumers maintain alongside `max`; unused by ' +
         'single-directional consumers.',
     }).pipe(Schema.optional),
-    lastTick: Format.DateTime.pipe(Schema.annotations({ title: 'Last tick' }), Schema.optional),
-    lastError: Schema.String.pipe(Schema.annotations({ title: 'Last error' }), Schema.optional),
+    lastTick: Format.DateTime.pipe(Schema.annotate({ title: 'Last tick' }), Schema.optional),
+    lastError: Schema.String.pipe(Schema.annotate({ title: 'Last error' }), Schema.optional),
     spec: Spec,
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--map-pin--regular', hue: 'amber' }),
     HiddenAnnotation.set(true),
-    Schema.annotations({ description: 'Durable progress cursor for a source-driven pipeline.' }),
+    Schema.annotate({ description: 'Durable progress cursor for a source-driven pipeline.' }),
   ),
 ) {}
 
@@ -437,7 +436,7 @@ export type CommitUnit = {
 export type CommitEffect = (units: readonly CommitUnit[]) => Effect.Effect<void, never, Database.Service>;
 
 /** Effect Requirements tag carrying the per-run {@link State}. */
-export class Service extends Context.Tag('@dxos/link/Cursor')<Service, State>() {}
+export class Service extends Context.Service<Service, State>()('@dxos/link/Cursor') {}
 
 /**
  * Dependencies supplied by the caller; the Layer seeds `dedupSet` and defaults `formatCursor`,
@@ -569,9 +568,9 @@ const recordCommitted = Effect.fn('cursor.commit.recordCommitted')(function* (
  * flushes were O(n²)); the caller flushes once at the end, so a crash only loses this run's in-memory
  * cursor advance + space mutations.
  */
-export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never, Service | Database.Service> =>
+export const commit = (page: ReadonlyArray<CommitUnit>): Effect.Effect<void, never, Service | Database.Service> =>
   Effect.gen(function* () {
-    const units = Chunk.toReadonlyArray(page);
+    const units = page;
     if (units.length === 0) {
       return;
     }
@@ -597,9 +596,9 @@ export type UpsertUnit<T> = { readonly item: T; readonly foreignId: string; read
  */
 export const upsertCommit =
   <T>(write: (item: T) => Effect.Effect<boolean, never, Database.Service>) =>
-  (page: Chunk.Chunk<UpsertUnit<T>>): Effect.Effect<void, never, Service | Database.Service> =>
+  (page: ReadonlyArray<UpsertUnit<T>>): Effect.Effect<void, never, Service | Database.Service> =>
     Effect.gen(function* () {
-      const units = Chunk.toReadonlyArray(page);
+      const units = page;
       if (units.length === 0) {
         return;
       }

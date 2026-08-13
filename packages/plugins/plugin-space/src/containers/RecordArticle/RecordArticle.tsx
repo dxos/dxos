@@ -14,8 +14,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useRelatedObjects } from '#hooks';
 import { meta } from '#meta';
-
-import * as SpaceSurface from '../../types/SpaceSurface';
+import { SpaceSurface } from '#types';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);

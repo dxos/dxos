@@ -12,7 +12,7 @@ import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions';
@@ -42,7 +42,7 @@ const task = createEvalRunner({
   input: Schema.Unknown,
   output: Schema.Unknown,
   skills: [...getDefaultSkills(), Ref.make(ProjectSkill.make())],
-  plugins: [MarkdownPlugin()],
+  plugins: [MarkdownPlugin.make()],
   types: [Project.Project, Collection.Collection],
   // Multi-tool scenario (create + context-add + artifact-add), so allow more round-trips.
   timeout: 150_000,

@@ -13,8 +13,9 @@ import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { AssistantService } from '#types';
+
 import { type AiChatProcessor } from '../../processor';
-import * as AssistantService from '../../types/AssistantService';
 
 export type ToolboxProps = {
   services?: { service: AssistantService.ServiceType }[];

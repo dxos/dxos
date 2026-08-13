@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import * as Drawing from '../types/Drawing';
+import { Drawing } from '#types';
 
 const activate = Effect.fnUntraced(function* () {
   return [

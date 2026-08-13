@@ -29,7 +29,7 @@ export const isURI = (value: unknown): value is URI =>
  */
 // Identity-encoded `Schema<URI, URI>` so consumers can refine without the encode/decode
 // types diverging. Runtime representation is identical (a branded string).
-const Schema_: Schema.Schema<URI, URI> = Schema.String.pipe(
-  Schema.filter((value): value is URI => isURI(value), { message: () => 'Invalid URI' }),
-) as unknown as Schema.Schema<URI, URI>;
+const Schema_: Schema.Codec<URI, URI> = Schema.String.pipe(
+  Schema.refine((value): value is URI => isURI(value), { message: 'Invalid URI' }),
+) as unknown as Schema.Codec<URI, URI>;
 export { Schema_ as Schema };

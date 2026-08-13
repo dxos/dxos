@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { type Label } from '@dxos/react-ui';
 import { type MaybePromise, type Position } from '@dxos/util';
 

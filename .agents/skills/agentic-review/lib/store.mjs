@@ -115,6 +115,8 @@ export const ruleIdsFromReviewDir = (dir, review = null) => {
       ),
     ];
   } catch {
+    // Best-effort: a corrupt/unreadable manifest falls back to "no rules seen",
+    // so those rules get a conservative full re-scan rather than being skipped.
     return [];
   }
 };

@@ -11,10 +11,9 @@ import { invariant } from '@dxos/invariant';
 import * as Game from '@dxos/plugin-game/Game';
 import * as GameUtil from '@dxos/plugin-game/GameUtil';
 
+import { Chess, ChessOperation, ChessPositionIndex } from '#types';
+
 import * as positionIndexInternal from '../internal/position-index';
-import * as Chess from '../types/Chess';
-import * as ChessOperation from '../types/ChessOperation';
-import * as ChessPositionIndex from '../types/ChessPositionIndex';
 
 export default ChessOperation.RebuildPositionIndex.pipe(
   Operation.withHandler(

@@ -8,14 +8,13 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
-import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
-
-import * as InboxCapabilities from '../types/InboxCapabilities';
+import { InboxCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
@@ -24,11 +23,6 @@ export const IdentitySpecs = Capability.lazyModule(
   'IdentitySpecs',
   { provides: [SpaceCapabilities.IdentitySpec] },
   () => import('./identity-specs'),
-);
-export const Connector = Capability.lazyModule(
-  'Connector',
-  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
 );
 export const ContactExtractor = Capability.inlineModule(
   'contact-extractor',
@@ -39,6 +33,11 @@ export const SummarizeExtractor = Capability.inlineModule(
   'summarize-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
   () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
+);
+export const AutomationTemplates = Capability.lazyModule(
+  'AutomationTemplates',
+  { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+  () => import('./automation-templates'),
 );
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],

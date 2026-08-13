@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 
 import { l0ItemType } from '../../util';
 import { L1Panel, type L1PanelProps } from './L1Panel';

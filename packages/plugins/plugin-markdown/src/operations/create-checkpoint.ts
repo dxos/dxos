@@ -8,8 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { Version } from '@dxos/versioning';
 
-import * as Markdown from '../types/Markdown';
-import * as MarkdownOperation from '../types/MarkdownOperation';
+import { Markdown, MarkdownOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.CreateCheckpoint> =
   MarkdownOperation.CreateCheckpoint.pipe(

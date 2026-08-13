@@ -16,3 +16,4 @@ export {
   unwrapExit,
 } from './internal/errors';
 export { acquireReleaseResource } from './internal/resource';
+export { type Emitter, streamFromEmitter } from './internal/stream';

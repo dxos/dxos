@@ -8,8 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import * as CodeOperation from '../types/CodeOperation';
-import * as SourceFile from '../types/SourceFile';
+import { CodeOperation, SourceFile } from '#types';
 
 const HELLO_PATH = 'src/hello.ts';
 

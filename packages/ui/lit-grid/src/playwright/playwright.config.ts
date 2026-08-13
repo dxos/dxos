@@ -4,14 +4,13 @@
 
 import { defineConfig } from '@playwright/test';
 
-import { e2ePreset } from '@dxos/test-utils/playwright';
+import { e2ePreset, storybookWebServer } from '@dxos/test-utils/playwright';
 
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
+  // `storybook dev` compiles per request, so concurrent story boots starve each other on a loaded
+  // CI cell.
+  workers: 1,
   // TODO(wittjosiah): Avoid hard-coding ports.
-  webServer: {
-    command: 'pnpm storybook dev --ci --quiet --port=9002 --config-dir=.storybook',
-    port: 9002,
-    reuseExistingServer: false,
-  },
+  webServer: storybookWebServer(9002),
 });

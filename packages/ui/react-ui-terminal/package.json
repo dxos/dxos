@@ -1,7 +1,7 @@
 {
   "name": "@dxos/react-ui-terminal",
   "version": "0.10.0",
-  "description": "Browser terminal emulator for @effect/cli applications.",
+  "description": "Browser terminal emulator for Effect CLI applications.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -37,8 +37,6 @@
     "@dxos/effect": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect/cli": "catalog:",
-    "@effect/platform": "catalog:",
     "@xterm/addon-fit": "catalog:",
     "@xterm/xterm": "catalog:",
     "effect": "catalog:"

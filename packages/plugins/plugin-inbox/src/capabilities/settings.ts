@@ -9,9 +9,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-
-import * as InboxCapabilities from '../types/InboxCapabilities';
-import * as Settings from '../types/Settings';
+import { InboxCapabilities, Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

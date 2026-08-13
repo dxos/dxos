@@ -77,8 +77,14 @@ jobs:
       - name: Version (snapshot)
         if: github.event_name == 'workflow_dispatch'
         run: |
-          pnpm exec changeset version --snapshot next
-          node scripts/sync-versions.mjs
+          # Changesets v3 makes `changeset version` exit 1 when nothing is pending, so gate on the
+          # presence of a changeset file to keep an empty @next dispatch a no-op rather than a failure.
+          if ls .changeset/*.md 2>/dev/null | grep -qv '^\.changeset/README\.md$'; then
+            pnpm exec changeset version --snapshot next
+            node scripts/sync-versions.mjs
+          else
+            echo 'No pending changesets — skipping snapshot version.'
+          fi
 
       - name: Build
         run: moon run :build

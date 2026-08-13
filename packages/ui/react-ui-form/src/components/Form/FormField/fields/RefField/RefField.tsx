@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
-import { Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
@@ -19,6 +19,7 @@ import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps
 
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';
+import { filterTagCandidates } from '../../../meta-tags';
 import { FormFieldLabel } from '../../FormRow';
 import { presentationFor } from '../../presentation';
 import { findRefOption } from './find-ref-option';
@@ -44,8 +45,8 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
       return { id, label };
     });
 
-const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) =>
-  useQuery(
+const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) => {
+  const results = useQuery(
     db,
     !typename
       ? Query.select(Filter.nothing())
@@ -55,6 +56,14 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
         : // Include registry scope so keyed entities (skills, operations) appear as options.
           Query.select(Filter.type(DXN.make(typename))).from(Scope.space(), Scope.registry()),
   );
+
+  // Tag candidates are narrowed to user tags; pass an explicit `useResults` to offer a given origin
+  // domain. See `filterTagCandidates`. Gated on the field's own type so no other field's candidates are
+  // walked — under `Scope.registry()` those include entities an object instance check has no business
+  // being handed.
+  const isTagField = typename === Type.getTypename(Tag.Tag);
+  return useMemo(() => (isTagField ? filterTagCandidates(results) : results), [isTagField, results]);
+};
 
 export type RefFieldProps = FormFieldRendererProps & RefFieldDataProps & CreateOptions;
 

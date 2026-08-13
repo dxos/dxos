@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/tracker';
+import { chunkArray } from './utils';
 
 export const IndexCursor = Schema.Struct({
   /**
@@ -35,7 +36,7 @@ export const IndexCursor = Schema.Struct({
   /**
    * Heads, queue position, version.
    */
-  cursor: Schema.Union(Schema.Number, Schema.String),
+  cursor: Schema.Union([Schema.Number, Schema.String]),
 });
 export interface IndexCursor extends Schema.Schema.Type<typeof IndexCursor> {}
 
@@ -103,6 +104,20 @@ export class IndexTracker {
           },
           { discard: true },
         );
+      }),
+  );
+
+  /** Delete cursors for documents (resource ids) wiped by garbage collection. */
+  deleteCursors = Effect.fn('IndexTracker.deleteCursors')(
+    (query: {
+      spaceId: SpaceId;
+      resourceIds: readonly string[];
+    }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(query.resourceIds)) {
+          yield* sql`DELETE FROM indexCursor WHERE spaceId = ${query.spaceId} AND ${sql.in('resourceId', chunk)}`;
+        }
       }),
   );
 }

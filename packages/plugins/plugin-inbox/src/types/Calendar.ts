@@ -7,10 +7,9 @@ import * as Schema from 'effect/Schema';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { connectorIdsForTarget } from '@dxos/plugin-connector';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
-
-import { GOOGLE_CALENDAR_CONNECTOR_ID } from '../constants';
 
 export const SKILL_KEY = 'org.dxos.skill.calendar';
 
@@ -27,8 +26,9 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the calendar toolbar; bind the calendar as the new connection's sync target.
+    // Providers are resolved from the registry — see `Mailbox`.
     ConnectorAnnotations.ConnectorAuthAnnotation.set({
-      connectorIds: [GOOGLE_CALENDAR_CONNECTOR_ID],
+      connectorIds: connectorIdsForTarget,
       bindTarget: true,
     }),
   ),
@@ -38,7 +38,7 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
 export const instanceOf = (value: unknown): value is Calendar => Obj.instanceOf(Calendar, value);
 
 export const CreateCalendarSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 });
 
 type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'tags'>;

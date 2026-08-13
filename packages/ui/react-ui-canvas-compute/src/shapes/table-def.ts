@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -20,9 +21,8 @@ const InputSchema = createInputSchema(Type.getSchema(Message.Message));
 
 const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Type.getSchema(Message.Message))));
 
-export const TableShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const TableShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('table'),
   }),
 );

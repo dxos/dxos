@@ -7,7 +7,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Graph, GraphBuilder, PathResolution } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as PathResolution from '@dxos/app-graph/PathResolution';
 
 import * as UrlPath from './UrlPath';
 
@@ -37,7 +39,7 @@ export const resolveInternalLink = (
     }
 
     const resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs: [plankPair] });
-    return Option.fromNullable(resolved[0]?.nodeId);
+    return Option.fromNullishOr(resolved[0]?.nodeId);
   });
 
 /**

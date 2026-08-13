@@ -13,7 +13,13 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/util"
     },
     {
       "path": "../../../sdk/client"

@@ -13,8 +13,8 @@ import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
+import { Notebook } from '#types';
 
-import type * as Notebook from '../../types/Notebook';
 import { type TypescriptEditorProps } from '../TypescriptEditor';
 import { NotebookCell, type NotebookCellProps } from './NotebookCell';
 import { NotebookMenu } from './NotebookMenu';

@@ -15,8 +15,7 @@ import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-edito
 
 import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
 import { useDeployState, useToolbarState } from '#hooks';
-
-import type * as Settings from '../../types/Settings';
+import { Settings } from '#types';
 
 export type ScriptEditorProps = AppSurface.ObjectArticleProps<
   Script.Script,

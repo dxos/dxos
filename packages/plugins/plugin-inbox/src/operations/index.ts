@@ -5,10 +5,9 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as InboxOperation from '../types/InboxOperation';
+import { InboxOperation } from '#types';
 
 export * from './extractor';
-export * from './util';
 
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy([
   InboxOperation.AddMailbox.pipe(Operation.lazyHandler(() => import('./add-mailbox'))),
@@ -17,28 +16,25 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy([
     Operation.lazyHandler(() => import('./analyze/create-project-from-message')),
   ),
   InboxOperation.ClassifyEmail.pipe(Operation.lazyHandler(() => import('./classify-email'))),
+  InboxOperation.ClassifyMailbox.pipe(Operation.lazyHandler(() => import('./classify/classify-mailbox'))),
   InboxOperation.DraftEmailAndOpen.pipe(Operation.lazyHandler(() => import('./draft-email-and-open'))),
+  InboxOperation.EnrichMailbox.pipe(Operation.lazyHandler(() => import('./enrich/enrich-mailbox'))),
   InboxOperation.DraftEmail.pipe(Operation.lazyHandler(() => import('./draft-email'))),
   InboxOperation.ExtractContactFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/contact-extractor'))),
+  InboxOperation.ExtractCorrespondents.pipe(
+    Operation.lazyHandler(() => import('./correspondents/extract-correspondents')),
+  ),
   InboxOperation.ExtractContact.pipe(Operation.lazyHandler(() => import('./extractor/extract-contact'))),
   InboxOperation.ExtractMailbox.pipe(Operation.lazyHandler(() => import('./extractor/extract-mailbox'))),
   InboxOperation.ExtractMessage.pipe(Operation.lazyHandler(() => import('./extractor/extract-message'))),
-  InboxOperation.ExtractSummaryFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/summarize-extractor'))),
-  InboxOperation.CreateGoogleCalendarEvent.pipe(Operation.lazyHandler(() => import('./calendar/google/create'))),
-  InboxOperation.GetGoogleCalendars.pipe(Operation.lazyHandler(() => import('./calendar/google/list'))),
-  InboxOperation.MaterializeCalendarTarget.pipe(
-    Operation.lazyHandler(() => import('./calendar/google/materialize/handler')),
+  InboxOperation.ExtractSubscriptions.pipe(
+    Operation.lazyHandler(() => import('./subscriptions/extract-subscriptions')),
   ),
-  InboxOperation.GoogleCalendarSync.pipe(Operation.lazyHandler(() => import('./calendar/google/sync'))),
-  InboxOperation.GetGoogleContactGroups.pipe(Operation.lazyHandler(() => import('./contacts/google/list-groups'))),
-  InboxOperation.GoogleContactsSync.pipe(Operation.lazyHandler(() => import('./contacts/google/sync'))),
-  InboxOperation.MaterializeGmailTarget.pipe(Operation.lazyHandler(() => import('./mail/google/materialize/handler'))),
-  InboxOperation.GmailSend.pipe(Operation.lazyHandler(() => import('./mail/google/send'))),
-  InboxOperation.GoogleMailSync.pipe(Operation.lazyHandler(() => import('./mail/google/sync'))),
-  InboxOperation.MaterializeJmapTarget.pipe(Operation.lazyHandler(() => import('./mail/jmap/materialize/handler'))),
-  InboxOperation.JmapSend.pipe(Operation.lazyHandler(() => import('./mail/jmap/send'))),
-  InboxOperation.JmapSync.pipe(Operation.lazyHandler(() => import('./mail/jmap/sync'))),
+  InboxOperation.ExtractSummaryFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/summarize-extractor'))),
+  InboxOperation.SummarizeMailbox.pipe(Operation.lazyHandler(() => import('./summarize/summarize-mailbox'))),
+  InboxOperation.ProcessMailbox.pipe(Operation.lazyHandler(() => import('./process/process-mailbox'))),
   InboxOperation.ReadEmail.pipe(Operation.lazyHandler(() => import('./read-email'))),
   InboxOperation.RenameFilter.pipe(Operation.lazyHandler(() => import('./rename-filter'))),
+  InboxOperation.ResetProcessCursor.pipe(Operation.lazyHandler(() => import('./process/reset-process-cursor'))),
   InboxOperation.UnsubscribeSender.pipe(Operation.lazyHandler(() => import('./unsubscribe-sender'))),
 ]);

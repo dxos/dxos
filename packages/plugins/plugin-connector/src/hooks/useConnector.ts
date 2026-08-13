@@ -4,7 +4,7 @@
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
 
 /**
  * Resolve a contributed {@link ConnectorSpec.ConnectorEntry} by stable `id`.

@@ -16,10 +16,10 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { BookmarksPlugin } from '#plugin';
 import { translations } from '#translations';
+import { Bookmark } from '#types';
 
-import { BookmarksPlugin } from '../../plugin';
-import * as Bookmark from '../../types/Bookmark';
 import { BookmarkArticle } from './BookmarkArticle';
 
 const DefaultStory = () => {
@@ -46,7 +46,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Bookmark.Bookmark, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

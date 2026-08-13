@@ -8,10 +8,13 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Graph, Node } from '@dxos/plugin-graph';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
@@ -55,11 +58,9 @@ export default Capability.makeModule(
       const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
       yield* Effect.all(
         onCreateSpaceCallbacks.map((onCreateSpace) =>
-          onCreateSpace({ space: defaultSpace, isDefault: true, rootCollection: rootCollection }).pipe(
-            Effect.provideService(Operation.Service, operationInvoker),
-          ),
+          onCreateSpace({ space: defaultSpace, isDefault: true, rootCollection: rootCollection }),
         ),
-      );
+      ).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
       const welcomeDoc = Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT });
       defaultSpace.db.add(welcomeDoc);
@@ -81,6 +82,21 @@ export default Capability.makeModule(
     } else {
       graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(defaultSpace.id, 'child'));
     }
+
+    const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
+    yield* Effect.gen(function* () {
+      // Claim the workspace before setting the plank: `plugin-space` switches to the default space
+      // from a forked fiber, and a switch restores the target workspace's (empty) persisted deck, so
+      // a plank set first is wiped. Switching here also satisfies that fiber's `workspace === default`
+      // guard, leaving it a no-op.
+      yield* Operation.invoke(LayoutOperation.SwitchWorkspace, {
+        subject: GraphPath.getSpacePath(defaultSpace.id),
+      });
+      // Land on the default space's Home, which surfaces the seeded README among its recent objects.
+      yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] });
+      // Expose is scheduled because the navtree may not have rendered yet at this point.
+      yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
+    }).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
     return [];
   }),

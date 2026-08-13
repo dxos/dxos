@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type LegacyListActiveIdentitiesResponse, type ListActiveIdentitiesResponse } from '@dxos/protocols';
@@ -26,7 +26,7 @@ export const list = Command.make(
   'list',
   {
     limit: Options.integer('limit').pipe(Options.withDescription('Max results per page.'), Options.optional),
-    cursor: Options.text('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
+    cursor: Options.string('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
   },
   Effect.fn(function* ({ limit, cursor }) {
     const query: Record<string, string> = {};
@@ -41,7 +41,7 @@ export const list = Command.make(
       'GET',
       '/admin/identities',
       { query },
-    ).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))));
+    ).pipe(Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));

@@ -21,17 +21,16 @@ import {
   ResetDialog,
   UsageContainer,
 } from '#containers';
+import { Account, ClientOptions } from '#types';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants';
-import * as Account from '../types/Account';
-import * as ClientOptions from '../types/ClientOptions';
 
-type ReactSurfaceOptions = Pick<ClientOptions.ClientPluginOptions, 'onReset'> & {
+type ReactSurfaceOptions = Pick<ClientOptions.ClientPluginOptions, 'onReset' | 'identityTestActions'> & {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ createInvitationUrl, onReset }: ReactSurfaceOptions) {
+  Effect.fnUntraced(function* ({ createInvitationUrl, onReset, identityTestActions }: ReactSurfaceOptions) {
     const capabilityManager = yield* Capability.Service;
 
     return Capability.contribute(Capabilities.ReactSurface, [
@@ -44,7 +43,7 @@ export default Capability.makeModule(
         id: Account.Devices,
         filter: AppSurface.literal(AppSurface.Article, Account.Devices),
         component: DevicesContainer,
-        props: () => ({ createInvitationUrl }),
+        props: () => ({ createInvitationUrl, identityTestActions }),
       }),
       Surface.create({
         id: Account.Security,

@@ -10,11 +10,11 @@ import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
-import { ReportSections } from '../../components';
+import { ReportSections } from '#components';
+import { Ibkr, IbkrOperation } from '#types';
+
 import { meta } from '../../meta';
 import { parseCash, parseClosedLots, parseOpenLots, parsePositions, parseTrades } from '../../services';
-import type * as Ibkr from '../../types/Ibkr';
-import * as IbkrOperation from '../../types/IbkrOperation';
 
 export type PortfolioReportDetailProps = Pick<
   AppSurface.ObjectArticleProps<Ibkr.Report, {}, Ibkr.Portfolio>,

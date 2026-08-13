@@ -13,7 +13,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Type } from '@dxos/echo';
 import { Form, omitId } from '@dxos/react-ui-form';
 
-import * as SampleItem from '../types/SampleItem';
+import { SampleItem } from '#types';
 
 type StatusValue = 'active' | 'archived' | 'draft';
 

@@ -13,9 +13,10 @@ import { TestContextService } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { File } from '@dxos/types';
 
+import { Sandbox } from '#types';
+
 import { CreateSandbox, DownloadFile, Exec, SandboxHandlers, UploadFile } from '../skills/functions';
 import SandboxSkill from '../skills/sandbox-skill';
-import * as Sandbox from '../types/Sandbox';
 
 EntityId.dangerouslyDisableRandomness();
 

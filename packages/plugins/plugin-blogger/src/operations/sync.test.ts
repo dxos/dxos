@@ -7,11 +7,10 @@ import { describe, expect, test } from 'vitest';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { AccessToken, Connection } from '@dxos/link';
 
-import * as Blog from '../types/Blog';
-import * as Publisher from '../types/Publisher';
+import { Blog, Publisher } from '#types';
+
 import { runSyncPosts } from './sync-posts';
 
 const SOURCE = 'stub.test';

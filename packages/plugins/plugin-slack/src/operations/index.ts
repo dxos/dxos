@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as SlackOperation from '../types/SlackOperation';
+import { SlackOperation } from '#types';
 
 export const SlackOperationHandlerSet = OperationHandlerSet.lazy([
   SlackOperation.GetSlackChannels.pipe(Operation.lazyHandler(() => import('./get-slack-channels'))),

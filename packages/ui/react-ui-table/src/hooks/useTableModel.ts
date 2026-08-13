@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { useContext, useEffect, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';

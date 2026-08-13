@@ -9,8 +9,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
-import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
-import * as TranscriptionEvents from '../types/TranscriptionEvents';
+import { TranscriptionCapabilities, TranscriptionEvents } from '#types';
 
 // RecordingSession / PipelineStatus / TranscriptionSettings stay eager with the driver
 // (ReactContext): its components read them via strict useAtomCapability hooks, so deferring

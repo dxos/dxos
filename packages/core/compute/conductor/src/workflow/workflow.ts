@@ -59,7 +59,7 @@ export class Workflow {
 
     const allAffectedNodes = executor.getAllDependantNodes(inputNodeId);
 
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const tasks: ComputeResult<ValueBag<any>>[] = allAffectedNodes.map((nodeId) => {
         const executable = this._requireResolved(nodeId);
         const computingOutputs = executable.exec != null;
@@ -134,7 +134,7 @@ export class Workflow {
     return this._graph;
   }
 
-  private _requireResolved(nodeId: string): Executable<Schema.Schema.AnyNoContext, Schema.Schema.AnyNoContext> {
+  private _requireResolved(nodeId: string): Executable<Schema.Codec<any, any>, Schema.Codec<any, any>> {
     const resolved = this._resolvedNodeById.get(nodeId);
     if (!resolved) {
       throw new Error(`Node ${nodeId} was not resolved in ${this._uri}.`);

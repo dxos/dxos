@@ -13,8 +13,8 @@ import { SchemaEx } from '@dxos/effect';
 import { Position } from '@dxos/util';
 
 import { MapSurface, MapViewEditor } from '#containers';
+import { Map } from '#types';
 
-import * as Map from '../types/Map';
 import { LocationAnnotationId } from '../types/MapCapabilities';
 import { MapInline } from '../types/MapRole';
 import { LocationField } from './LocationField';

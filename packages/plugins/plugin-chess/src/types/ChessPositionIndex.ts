@@ -11,7 +11,7 @@ import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import * as Game from '@dxos/plugin-game/Game';
 
 /** Side the reviewed player may play in indexed games. */
-export const Side = Schema.Literal('white', 'black');
+export const Side = Schema.Literals(['white', 'black']);
 export type Side = Schema.Schema.Type<typeof Side>;
 
 /** Games that reached a normalized FEN while the reviewed player was on this side. */
@@ -22,7 +22,7 @@ export const PositionEntry = Schema.Struct({
 export type PositionEntry = Schema.Schema.Type<typeof PositionEntry>;
 
 /** FEN-keyed lookup of {@link PositionEntry} for one side. */
-export const SideIndex = Schema.Record({ key: Schema.String, value: PositionEntry });
+export const SideIndex = Schema.Record(Schema.String, PositionEntry);
 
 export type SideIndex = Schema.Schema.Type<typeof SideIndex>;
 

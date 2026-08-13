@@ -91,10 +91,9 @@ export type IdentityProvider = () => Identity;
 /**
  * Effect service tag for {@link IdentityProvider}.
  */
-export class IdentityProviderService extends EffectContext.Tag('@dxos/client-services/IdentityProvider')<
-  IdentityProviderService,
-  IdentityProvider
->() {}
+export class IdentityProviderService extends EffectContext.Service<IdentityProviderService, IdentityProvider>()(
+  '@dxos/client-services/IdentityProvider',
+) {}
 
 /**
  * Builds an {@link IdentityProvider} from an {@link IdentityManager}.
@@ -107,10 +106,9 @@ export const identityProviderFromManager =
 /**
  * Effect service tag for {@link IdentityManager}.
  */
-export class IdentityManagerService extends EffectContext.Tag('@dxos/client-services/IdentityManager')<
-  IdentityManagerService,
-  IdentityManager
->() {}
+export class IdentityManagerService extends EffectContext.Service<IdentityManagerService, IdentityManager>()(
+  '@dxos/client-services/IdentityManager',
+) {}
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
 export class IdentityManager {

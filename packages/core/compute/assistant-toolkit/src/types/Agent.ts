@@ -43,7 +43,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      * HALO identity DID takes once agents get first-class identities. Optional because nothing
      * populates it yet.
      */
-    did: Schema.optional(IdentityDid).annotations({
+    did: Schema.optional(IdentityDid).annotate({
       title: 'DID',
       description: "The agent's identity DID; attributes content the agent authors.",
     }),
@@ -51,7 +51,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     /**
      * Master switch for the agent's automation (propagated onto its compiled routine triggers).
      */
-    enabled: Schema.optional(Schema.Boolean).annotations({
+    enabled: Schema.optional(Schema.Boolean).annotate({
       title: 'Enabled',
       description: 'Master switch for agent automation; propagated to all triggers on sync.',
     }),
@@ -60,7 +60,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      * Instructions for the agent — the preset payload (text, skills, objects, commands) a chat
      * receives when the agent is applied to it.
      */
-    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotations({ title: 'Instructions' })),
+    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotate({ title: 'Instructions' })),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),
@@ -155,7 +155,7 @@ export const makeInitialized = (
     );
     Obj.setParent(instructions, agent);
     const feed = yield* Database.add(Feed.make());
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const runtime = yield* Effect.context<Database.Service>();
     const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
     // TODO(dmaretskyi): Skill registry.
     const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
@@ -197,11 +197,11 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
   Effect.gen(function* () {
     const existingChat = yield* loadChat(agent);
     if (!existingChat) {
-      return yield* Effect.dieMessage('Agent must have an existing chat to reset.');
+      return yield* Effect.die(new Error('Agent must have an existing chat to reset.'));
     }
 
     const existingFeed = yield* Database.load(existingChat.feed);
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const runtime = yield* Effect.context<Database.Service>();
     const { AiContext: AiContextRuntime } = yield* Effect.promise(assistantRuntime);
     const existingContextBinder = yield* EffectEx.acquireReleaseResource(
       () =>

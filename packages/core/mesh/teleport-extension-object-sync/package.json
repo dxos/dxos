@@ -41,7 +41,6 @@
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/sql": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

@@ -43,9 +43,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/worker-framework": "workspace:*",
-    "@effect/platform": "catalog:",
     "@effect/platform-browser": "catalog:",
-    "@effect/rpc": "catalog:",
     "base-x": "catalog:",
     "effect": "catalog:"
   },

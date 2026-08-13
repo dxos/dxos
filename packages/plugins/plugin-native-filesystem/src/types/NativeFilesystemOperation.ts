@@ -22,7 +22,7 @@ export const OpenDirectory = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Void,
-  output: Schema.Union(Schema.Void, Schema.Struct({ id: Schema.String, subject: Schema.Array(Schema.String) })),
+  output: Schema.Union([Schema.Void, Schema.Struct({ id: Schema.String, subject: Schema.Array(Schema.String) })]),
 });
 
 export const CloseDirectory = Operation.make({

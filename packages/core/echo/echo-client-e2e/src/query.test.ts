@@ -816,6 +816,11 @@ describe('Query', () => {
           boundary.category = 'b';
         });
         await db.flush({ updates: true });
+
+        // `orderBy` makes this host-routed (the working set does not serve windowed queries), and
+        // `db.flush({ updates: true })` does not await that round trip — poll, as the feed-scoped
+        // reactivity tests below do.
+        await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
         const lastResult = query.results;
 
         expect(lastResult).to.have.length(1);

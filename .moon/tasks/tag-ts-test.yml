@@ -6,7 +6,10 @@ tasks:
     # all opt-in tags (flaky, LLM, sync, e2e) so local + PR CI runs only fast
     # unit tests. CI overrides this via the `VITEST_TAGS_FILTER` env to opt-in
     # specific tags (e.g. `flaky`).
-    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}"'
+    # Trailing `"$@"' --` forwards moon passthrough args (after `--`) to vitest, so
+    # `moon run <pkg>:test -- src/foo.test.ts` filters to one file (needed by the DX_DEBUG_LEAKS
+    # single-suite mode). The `--` is the `$0` placeholder; args land as `$1+` in `"$@"`.
+    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}" "$@"' --
     deps:
       - esbuild-plugins:build
       - node-std:build
@@ -28,6 +31,11 @@ tasks:
       - $VITEST_TAGS_FILTER
       - $DX_RUN_MODEL_FIXTURE_TESTS
       - $DX_UPDATE_MODEL_FIXTURES
+      # Env-gated CPU-profile / leak-detect instrumentation (vite.base.config.ts); listed so toggling
+      # a var busts the cached test result instead of replaying an un-instrumented run.
+      - $DX_PROFILE_TESTS
+      - $DX_DEBUG_LEAKS
+      - $DX_DEBUG_LEAKS_DIR
     outputs:
       - /coverage/$project/node/**
       - /test-results/$project/node/**

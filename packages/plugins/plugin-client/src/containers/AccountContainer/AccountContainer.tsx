@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtom, useAtomSet } from '@effect-atom/atom-react';
+import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { type FormEvent, useCallback, useState } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -13,10 +13,10 @@ import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslatio
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { ClientCapabilities } from '#types';
 
 import { RESET_DIALOG } from '../../constants';
-import { useHubHttpClient } from '../../hooks';
-import * as ClientCapabilities from '../../types/ClientCapabilities';
+import { useAccountUrl, useHubHttpClient } from '../../hooks';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
@@ -35,6 +35,7 @@ export const AccountContainer = () => {
   // Single shared instance keeps the VP-auth handshake (request → 401 → signed
   // retry) at one round-trip per session instead of one per panel.
   const hubHttp = useHubHttpClient();
+  const { openAccountPage } = useAccountUrl();
 
   useAsyncEffect(async () => {
     if (!hubHttp) {
@@ -179,6 +180,18 @@ export const AccountContainer = () => {
               </>
             ) : null}
           </Form.Section>
+          {account ? (
+            <Form.Section title={t('account-page-section.title')} description={t('account-page-section.description')}>
+              <Form.Row label={t('open-account-page.label')} description={t('open-account-page.description')}>
+                <IconButton
+                  icon='ph--arrow-square-out--regular'
+                  label={t('open-account-page.label')}
+                  variant='default'
+                  onClick={openAccountPage}
+                />
+              </Form.Row>
+            </Form.Section>
+          ) : null}
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

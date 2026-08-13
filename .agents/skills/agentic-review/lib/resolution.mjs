@@ -12,8 +12,7 @@ export const RESOLUTION_FILE = 'RESOLUTION.md';
 export const STATUSES = ['unresolved', 'ignored', 'resolved'];
 
 // Bullet form (current): `- id - status - rule - file:line[:col]`
-const LINE_RE =
-  /^\s*-\s+`?([A-Za-z0-9._]+-\d+)`?\s*-\s*(unresolved|ignored|resolved)\s*-\s+(\S+)\s+-\s+(\S+)\s*$/i;
+const LINE_RE = /^\s*-\s+`?([A-Za-z0-9._]+-\d+)`?\s*-\s*(unresolved|ignored|resolved)\s*-\s+(\S+)\s+-\s+(\S+)\s*$/i;
 // Legacy one-field form kept so older ledgers still parse until re-finalized.
 const LEGACY_LINE_RE = /^\s*`?([A-Za-z0-9._]+-\d+)`?\s*-\s*(unresolved|ignored|resolved)\s*$/i;
 
@@ -63,13 +62,9 @@ export const renderResolution = (slug, diagnostics, priorStatuses = null) => {
     lines.push('<!-- no issues -->', '');
   } else {
     for (const diagnostic of diagnostics) {
-      const location = `${diagnostic.file}:${diagnostic.line}${
-        diagnostic.col != null ? `:${diagnostic.col}` : ''
-      }`;
+      const location = `${diagnostic.file}:${diagnostic.line}${diagnostic.col != null ? `:${diagnostic.col}` : ''}`;
       const status = priorStatuses?.get(diagnostic.id) ?? 'unresolved';
-      lines.push(
-        `- ${diagnostic.id} - ${status} - ${diagnostic.ruleId ?? 'unknown'} - ${location}`,
-      );
+      lines.push(`- ${diagnostic.id} - ${status} - ${diagnostic.ruleId ?? 'unknown'} - ${location}`);
     }
     lines.push('');
   }

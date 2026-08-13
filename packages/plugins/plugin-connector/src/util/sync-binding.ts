@@ -9,8 +9,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, type Key, Ref } from '@dxos/echo';
 import { type Cursor } from '@dxos/link';
 
+import { ConnectorSpec } from '#types';
+
 import { ConnectionSyncError } from '../errors';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { ensureSyncTrigger } from './sync-routine';
 import { fireSyncTrigger, syncTriggerMonitorLayer } from './sync-trigger';
 

@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext, type SourceEntry } from './query-context';
-import { getTargetSpacesForQuery, isSimpleSelectionQuery, queryHasWindowing } from './util';
+import { getTargetSpacesForQuery, isSimpleSelectionQuery, queryHasWindowing, queryTargetsSpacesOrFeeds } from './util';
 import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
 
 export type GraphQueryContextProps = {
@@ -379,17 +379,7 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     // Disabled if the from clause has explicit scopes but none target spaces or feeds (e.g. registry-only).
-    let hasExplicitNonEmptyScope = false;
-    let hasSpaceOrFeedScope = false;
-    QueryAST.visit(query, (node) => {
-      if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.length > 0) {
-        hasExplicitNonEmptyScope = true;
-        if (node.from.scopes.some((s) => s._tag === 'space' || s._tag === 'feed')) {
-          hasSpaceOrFeedScope = true;
-        }
-      }
-    });
-    if (hasExplicitNonEmptyScope && !hasSpaceOrFeedScope) {
+    if (!queryTargetsSpacesOrFeeds(query)) {
       return false;
     }
 

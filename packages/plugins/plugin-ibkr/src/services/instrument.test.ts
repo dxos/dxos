@@ -6,8 +6,9 @@ import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
+import { Ibkr } from '#types';
+
 import { TRADINGVIEW_SOURCE } from '../constants';
-import * as Ibkr from '../types/Ibkr';
 import { foreignKeyEquals, mergeForeignKeys, resolveTradingViewSymbol } from './instrument';
 
 // `resolveTradingViewSymbol` takes a snapshot (what `useObject` yields in the UI); mirror that here.

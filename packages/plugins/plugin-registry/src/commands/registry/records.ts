@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -23,8 +23,8 @@ import { ALL_NSIDS, AUTH_OPTION_DESCRIPTIONS, type ListRecordsEntry, listRecords
 export const records = Command.make(
   'records',
   {
-    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
-    appPassword: Options.text('app-password').pipe(
+    handle: Options.string('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
+    appPassword: Options.string('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
@@ -49,7 +49,7 @@ export const records = Command.make(
               // Empty collections come back as a 200 with `records: []`; if the
               // PDS responds 400 because we've never written that collection we
               // still want the others to render.
-              Effect.catchAll(() => Effect.succeed({ collection, records: [] as readonly ListRecordsEntry[] })),
+              Effect.catch(() => Effect.succeed({ collection, records: [] as readonly ListRecordsEntry[] })),
             ),
           ),
           { concurrency: 'unbounded' },

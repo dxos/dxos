@@ -23,7 +23,7 @@ export type OptionsLookup = {
   readonly combobox?: boolean;
 };
 
-export const OptionsLookupAnnotationId = Symbol.for('@dxos/schema/annotation/OptionsLookup');
+export const OptionsLookupAnnotationId = '@dxos/schema/annotation/OptionsLookup';
 export const OptionsLookupAnnotation = createAnnotationHelper<OptionsLookup>(OptionsLookupAnnotationId);
 
 /**
@@ -51,7 +51,7 @@ export type Autofill = {
   readonly derive: (values: any) => Effect.Effect<string | undefined, unknown>;
 };
 
-export const AutofillAnnotationId = Symbol.for('@dxos/schema/annotation/Autofill');
+export const AutofillAnnotationId = '@dxos/schema/annotation/Autofill';
 export const AutofillAnnotation = createAnnotationHelper<Autofill>(AutofillAnnotationId);
 
 /** Builds an {@link Autofill} typed against a schema's value type `Values` (see {@link optionsLookup}). */

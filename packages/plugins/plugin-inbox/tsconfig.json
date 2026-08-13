@@ -23,9 +23,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -53,6 +50,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -60,12 +60,6 @@
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/compute-runtime"
-    },
-    {
-      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/compute/extractor"
@@ -167,6 +161,9 @@
       "path": "../../ui/react-ui-search"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
@@ -174,6 +171,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-client"
@@ -192,6 +192,12 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-progress"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-settings"

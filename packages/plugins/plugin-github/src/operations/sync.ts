@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Semaphore from 'effect/Semaphore';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -14,11 +15,11 @@ import { log } from '@dxos/log';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
+import { GitHubOperation } from '#types';
 
 import { GITHUB_SOURCE } from '../constants';
 import { formatGitHubSyncFailure } from '../errors';
 import { GitHubApi } from '../services';
-import * as GitHubOperation from '../types/GitHubOperation';
 
 const { mergeField, snapshotField } = ConnectorSync;
 
@@ -356,7 +357,7 @@ export type GitHubPushResult = {
  * sent so the next pass sees no divergence even before the next pull.
  *
  * The push callbacks' error type is generic. The reconciler doesn't inspect
- * or recover from those errors — it propagates so the outer `Effect.either`
+ * or recover from those errors — it propagates so the outer `Effect.result`
  * at the call site can record the binding's `lastError`. Generic-`E` keeps
  * this module decoupled from the HTTP error hierarchy of `GitHubApi`.
  */
@@ -509,13 +510,13 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
         //   db from the binding's endpoints (which the caller preloads).
         const binding = yield* Database.load(bindingRef);
         if (!Cursor.isExternal(binding)) {
-          return yield* Effect.dieMessage('GitHub sync requires an external-sync cursor.');
+          return yield* Effect.die(new Error('GitHub sync requires an external-sync cursor.'));
         }
 
         const project = yield* Database.load(binding.spec.target);
         const db = Obj.getDatabase(binding) ?? Obj.getDatabase(project);
         if (!db) {
-          return yield* Effect.dieMessage('Binding ref must be preloaded by caller (no database derivable).');
+          return yield* Effect.die(new Error('Binding ref must be preloaded by caller (no database derivable).'));
         }
 
         // The repo's foreign id: prefer the binding's `externalId`, falling back
@@ -525,10 +526,10 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
 
         const bindingId = binding.id;
 
-        const outcome = yield* Effect.either(
+        const outcome = yield* Effect.result(
           Effect.gen(function* () {
             if (externalId === undefined) {
-              return yield* Effect.dieMessage('Cursor has no externalId and the target has no GitHub foreign key.');
+              return yield* Effect.die(new Error('Cursor has no externalId and the target has no GitHub foreign key.'));
             }
 
             // Fetch all repos visible to the token once so the binding can
@@ -540,7 +541,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             const allRepos = yield* GitHubApi.fetchUserRepos();
             const remoteRepo = allRepos.find((repo) => String(repo.id) === externalId);
             if (!remoteRepo) {
-              return yield* Effect.dieMessage('Repository not accessible to connection token');
+              return yield* Effect.die(new Error('Repository not accessible to connection token'));
             }
 
             const options = (binding.spec.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
@@ -555,7 +556,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             // semaphore + cache pair gives us a single in-flight upsert per login;
             // subsequent callers read from `personByLogin`.
             const personByLogin = new Map<string, Person.Person>();
-            const personSemaphore = yield* Effect.makeSemaphore(1);
+            const personSemaphore = yield* Semaphore.make(1);
             const ensurePerson = (user: GitHubApi.GitHubUser, organization: Organization.Organization | undefined) =>
               personSemaphore.withPermits(1)(
                 Effect.gen(function* () {
@@ -575,9 +576,9 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             // continue — the Project just won't have a parent organization.
             let pulledOrganizations = 0;
             const owner = remoteRepo.owner.login;
-            const orgResult = yield* Effect.either(GitHubApi.fetchOrg(owner));
-            if (orgResult._tag === 'Right') {
-              const organization = yield* upsertOrganization(orgResult.right);
+            const orgResult = yield* Effect.result(GitHubApi.fetchOrg(owner));
+            if (orgResult._tag === 'Success') {
+              const organization = yield* upsertOrganization(orgResult.success);
               pulledOrganizations++;
               const members = yield* GitHubApi.fetchOrgMembers(owner);
               for (const member of members) {
@@ -591,7 +592,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             // pushes operate on the persisted record.
             const localProject = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, remoteRepo.id);
             if (!localProject) {
-              return yield* Effect.dieMessage('Local Project missing after upsert.');
+              return yield* Effect.die(new Error('Local Project missing after upsert.'));
             }
 
             let pulledTasks = 0;
@@ -654,7 +655,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
         );
 
         // Write sync state onto the binding.
-        if (outcome._tag === 'Right') {
+        if (outcome._tag === 'Success') {
           Cursor.advance(binding);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
@@ -663,11 +664,11 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
               title: ['sync-toast.success.label', { ns: meta.profile.key }],
             }),
           );
-          return { pulled: outcome.right.pulled };
+          return { pulled: outcome.success.pulled };
         } else {
-          const message = formatGitHubSyncFailure(outcome.left);
+          const message = formatGitHubSyncFailure(outcome.failure);
           Cursor.recordError(binding, message);
-          log.warn('github sync: binding failed', { error: outcome.left });
+          log.warn('github sync: binding failed', { error: outcome.failure });
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
               id: `${meta.profile.key}.sync-error.${bindingId}`,
@@ -676,7 +677,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
               description: message,
             }),
           );
-          return yield* Effect.fail(outcome.left);
+          return yield* Effect.fail(outcome.failure);
         }
       }, Effect.provide(FetchHttpClient.layer)),
     ),

@@ -18,6 +18,7 @@ export {
 export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';
 
 import * as Schema from 'effect/Schema';
+import * as Tuple from 'effect/Tuple';
 
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -119,7 +120,7 @@ export const QueryRequest = Schema.Struct({
   feedNamespace: Schema.String,
 
   query: Schema.optional(
-    Schema.Union(
+    Schema.Union([
       Schema.Struct({
         /**
          * Explicit list of feed IDs to read from.
@@ -132,7 +133,7 @@ export const QueryRequest = Schema.Struct({
          */
         subscriptionId: Schema.String,
       }),
-    ),
+    ]),
   ),
 
   /**
@@ -276,8 +277,11 @@ export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse
 
 /**
  * Tagged transport message union for queue protocol RPC traffic.
+ *
+ * The routing envelope is distributed over the members with `mapMembers`, which is what Effect 4
+ * replaced the union-distributing `Schema.extend` with.
  */
-export const ProtocolMessage = Schema.Union(
+export const ProtocolMessage = Schema.Union([
   Schema.TaggedStruct('QueryRequest', QueryRequest.fields),
   Schema.TaggedStruct('QueryResponse', QueryResponse.fields),
   Schema.TaggedStruct('SubscribeRequest', SubscribeRequest.fields),
@@ -290,9 +294,9 @@ export const ProtocolMessage = Schema.Union(
      */
     message: Schema.String,
   }),
-).pipe(
-  Schema.extend(
-    Schema.Struct({
+]).mapMembers(
+  Tuple.map(
+    Schema.fieldsAssign({
       senderPeerId: Schema.UndefinedOr(Schema.String),
       /**
        * Could be undefined if the recipient could be assumed from the context.

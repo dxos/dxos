@@ -2,18 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
+import { NativeFilesystemCapabilities } from '#types';
 
 import { MockFilesystemManager } from '../testing/mock-filesystem-manager';
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
 import { createFilesystemEntryExtensions } from './app-graph-builder';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
@@ -146,7 +149,7 @@ const setupNativeFilesystemGraphBuilder = ({
   registry,
   stateAtom,
 }: {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>;
 }) => {
   const initialState = registry.get(stateAtom);

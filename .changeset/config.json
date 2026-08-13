@@ -1,7 +1,8 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
   "changelog": "@changesets/changelog-git",
   "commit": false,
+  "format": "oxfmt",
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
@@ -256,6 +257,7 @@
       "@dxos/plugin-freeq",
       "@dxos/plugin-game",
       "@dxos/plugin-github",
+      "@dxos/plugin-google",
       "@dxos/plugin-graph",
       "@dxos/plugin-heygen",
       "@dxos/plugin-ibkr",
@@ -263,6 +265,7 @@
       "@dxos/plugin-illustrator",
       "@dxos/plugin-inbox",
       "@dxos/plugin-iroh-beacon",
+      "@dxos/plugin-jmap",
       "@dxos/plugin-kanban",
       "@dxos/plugin-library",
       "@dxos/plugin-linear",
@@ -343,8 +346,5 @@
   "snapshot": {
     "useCalculatedVersion": true,
     "prereleaseTemplate": "{tag}-{commit}"
-  },
-  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
-    "onlyUpdatePeerDependentsWhenOutOfRange": true
   }
 }

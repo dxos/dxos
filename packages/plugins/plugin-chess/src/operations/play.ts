@@ -9,8 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as GameUtil from '@dxos/plugin-game/GameUtil';
 
-import * as Chess from '../types/Chess';
-import * as ChessOperation from '../types/ChessOperation';
+import { Chess, ChessOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof ChessOperation.Play> = ChessOperation.Play.pipe(
   Operation.withHandler(

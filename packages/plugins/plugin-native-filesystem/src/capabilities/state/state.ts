@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
+import { NativeFilesystemCapabilities } from '#types';
+
 import { loadWorkspace, refreshWorkspace } from '../../util';
 import { createDirectoryWatcher } from './directory-watcher';
 import * as FilesystemManager from './FilesystemManager';
@@ -51,7 +52,7 @@ export default Capability.makeModule(
       (workspace) =>
         mirrorSpaceManager.getOrCreateSpace(workspace).pipe(
           Effect.asVoid,
-          Effect.catchAllCause((cause) => {
+          Effect.catchCause((cause) => {
             log.warn('Failed to restore mirror space for workspace', { workspaceId: workspace.id, cause });
             return Effect.void;
           }),
@@ -107,7 +108,7 @@ export default Capability.makeModule(
           }
           yield* markdownDocuments.syncFromDisk(workspace);
         }).pipe(
-          Effect.catchAllCause((cause) => {
+          Effect.catchCause((cause) => {
             log.warn('Failed to restore markdown documents for workspace', { workspaceId: workspace.id, cause });
             return Effect.void;
           }),
@@ -115,7 +116,7 @@ export default Capability.makeModule(
       { discard: true, concurrency: 'unbounded' },
     );
 
-    yield* Effect.forkDaemon(restoreFromDiskEffect);
+    yield* Effect.forkDetach(restoreFromDiskEffect);
 
     // Start directory watchers for restored workspaces.
     const currentWorkspaces = registry.get(stateAtom).workspaces;

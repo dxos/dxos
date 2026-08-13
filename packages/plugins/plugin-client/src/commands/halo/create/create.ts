@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -64,10 +64,10 @@ export const handler = Effect.fn(function* ({
 export const create = Command.make(
   'create',
   {
-    agent: Options.boolean('noAgent', { ifPresent: false }).pipe(
-      Options.withDescription('Do not create an EDGE agent for the identity.'),
-    ),
-    displayName: Options.text('displayName').pipe(
+    agent: Options.boolean('noAgent')
+      .pipe(Options.map((value) => !value))
+      .pipe(Options.withDescription('Do not create an EDGE agent for the identity.')),
+    displayName: Options.string('displayName').pipe(
       Options.withDescription('The display name of the identity.'),
       Options.optional,
     ),

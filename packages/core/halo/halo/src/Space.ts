@@ -20,28 +20,28 @@ import * as Invitation from './Invitation';
  * implies the previous: `pull` < `read` < `edit` < `admin`. Replaces the legacy
  * `SpaceMember.Role` enum.
  */
-export const Access = Schema.Literal('pull', 'read', 'edit', 'admin');
+export const Access = Schema.Literals(['pull', 'read', 'edit', 'admin']);
 export type Access = typeof Access.Type;
 
 /**
  * Lifecycle state of a space. Replaces the legacy `SpaceState` protobuf enum (subset relevant to
  * consumers).
  */
-export const State = Schema.Literal('inactive', 'closed', 'ready');
+export const State = Schema.Literals(['inactive', 'closed', 'ready']);
 export type State = typeof State.Type;
 
 /**
  * Who may join a space. Replaces the legacy `MembershipPolicy` protobuf enum: `invite` admits
  * members via invitation only; `locked` admits no new members.
  */
-export const MembershipPolicy = Schema.Literal('invite', 'locked');
+export const MembershipPolicy = Schema.Literals(['invite', 'locked']);
 export type MembershipPolicy = typeof MembershipPolicy.Type;
 
 /**
  * Whether a space replicates through EDGE. Replaces the legacy `EdgeReplicationSetting` protobuf
  * enum.
  */
-export const EdgeReplication = Schema.Literal('disabled', 'enabled');
+export const EdgeReplication = Schema.Literals(['disabled', 'enabled']);
 export type EdgeReplication = typeof EdgeReplication.Type;
 
 /**
@@ -55,7 +55,7 @@ export const Member = Schema.Struct({
   identityKey: Schema.optional(Schema.String),
   displayName: Schema.optional(Schema.String),
   /** Arbitrary profile metadata (e.g. avatar emoji, hue). */
-  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   role: Access,
   /** Whether the member is currently online. */
   online: Schema.Boolean,
@@ -96,7 +96,7 @@ export type CreateOptions = {
  */
 /**
  * The service shape backing {@link Service}. Named (rather than inline in the `Context.Tag`) so
- * consumers referencing it — e.g. a capability typed `Context.Tag.Service<Space.Service>` — name
+ * consumers referencing it — e.g. a capability typed `Context.Service.Shape<typeof Space.Service>` — name
  * it portably instead of expanding its structure and leaking the transitive {@link Invitation}
  * types into their declaration emit (TS2883).
  */
@@ -132,7 +132,7 @@ export interface ServiceApi {
   readonly import: (archive: Archive, options?: { tags?: readonly string[] }) => Effect.Effect<Info, SpaceError>;
 }
 
-export class Service extends Context.Tag('@dxos/halo/Space')<Service, ServiceApi>() {}
+export class Service extends Context.Service<Service, ServiceApi>()('@dxos/halo/Space') {}
 
 /** All spaces as a current-value stream (requires {@link Service}). */
 export const spaces: Stream.Stream<readonly Info[], never, Service> = Stream.unwrap(

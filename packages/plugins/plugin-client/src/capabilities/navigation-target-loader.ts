@@ -12,8 +12,7 @@ import { Database, EID } from '@dxos/echo';
 import { EntityId, SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';
-
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { ClientCapabilities } from '#types';
 
 /** Cap on the remote edge existence check so an unreachable edge cannot block navigation. */
 const EDGE_EXISTENCE_TIMEOUT = '3 seconds';
@@ -54,7 +53,7 @@ export default Capability.makeModule(
             const loaded = yield* Effect.promise(() => space.waitUntilReady()).pipe(
               Effect.flatMap(() => Database.load(space.db.makeRef(eid))),
               Effect.as(true),
-              Effect.catchAll(() => Effect.succeed(false)),
+              Effect.catch(() => Effect.succeed(false)),
             );
             if (loaded) {
               return true;
@@ -66,7 +65,7 @@ export default Capability.makeModule(
           // unreachable edge cannot hang navigation.
           return yield* checkRemote(eid).pipe(
             Effect.timeout(EDGE_EXISTENCE_TIMEOUT),
-            Effect.catchAll(() => Effect.succeed(false)),
+            Effect.catch(() => Effect.succeed(false)),
           );
         }),
     };

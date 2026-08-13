@@ -11,13 +11,12 @@ import { Obj, Ref, Relation } from '@dxos/echo';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
+import { AgentIdentity, CommentCapabilities, CommentOperation } from '#types';
+
 import { shouldTriggerAgent } from '../should-trigger-agent';
-import * as AgentIdentity from '../types/AgentIdentity';
-import * as CommentCapabilities from '../types/CommentCapabilities';
-import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = CommentOperation.AddMessage.pipe(
   Operation.withHandler(
@@ -40,7 +39,10 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
 
       const state = registry.get(stateAtom);
       const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
-      if (draft) {
+      // The database association, not the draft entry, is the signal: a reply sent while the thread's
+      // own persist is in flight reads the same not-yet-cleared draft.
+      const alreadyPersisted = Obj.getDatabase(thread) !== undefined;
+      if (draft && !alreadyPersisted) {
         Obj.update(thread, (thread) => {
           thread.status = 'active';
         });

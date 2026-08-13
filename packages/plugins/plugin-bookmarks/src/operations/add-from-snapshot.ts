@@ -5,10 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as Bookmark from '../types/Bookmark';
-import * as BookmarkOperation from '../types/BookmarkOperation';
+import { Bookmark, BookmarkOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof BookmarkOperation.AddFromSnapshot> = BookmarkOperation.AddFromSnapshot.pipe(
   Operation.withHandler(

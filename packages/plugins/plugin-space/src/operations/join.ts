@@ -9,11 +9,11 @@ import { Identity } from '@dxos/halo';
 import { HaloServicesLayer } from '@dxos/plugin-client';
 
 import { meta } from '#meta';
+import { SpaceOperation } from '#types';
 
 import { JOIN_DIALOG } from '../constants';
 import type { JoinDialogProps } from '../containers/JoinDialog';
 import { NoIdentityError } from '../errors';
-import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperation.Join.pipe(
   Operation.withHandler(

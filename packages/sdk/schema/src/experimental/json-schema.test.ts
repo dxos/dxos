@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
 import { JsonSchema } from '@dxos/echo';
@@ -16,7 +17,7 @@ const TestSchema = Schema.Struct({
     Schema.Array(
       Schema.Struct({
         id: Schema.String,
-        type: Schema.Literal('email', 'phone', 'other'),
+        type: Schema.Literals(['email', 'phone', 'other']),
       }),
     ),
   ),
@@ -34,33 +35,29 @@ describe('json-schema', () => {
    */
   test('AST equivalence', ({ expect }) => {
     {
-      const schema1 = Schema.mutable(
-        Schema.partial(
-          Schema.Struct({
-            x: Schema.Number,
-            y: Schema.String,
-          }),
-        ),
-      );
+      // v4's `Schema.mutable` narrowed to arrays/tuples; struct mutability is a per-field modifier.
+      const schema1 = Schema.Struct({
+        x: Schema.Number,
+        y: Schema.String,
+      })
+        .mapFields(Struct.map(Schema.optional))
+        .mapFields(Struct.map(Schema.mutableKey));
 
       const schema2 = Schema.Struct({
         x: Schema.optional(Schema.Number),
         y: Schema.optional(Schema.String),
-      }).pipe(Schema.mutable);
+      }).mapFields(Struct.map(Schema.mutableKey));
 
       const schema3 = Schema.Struct({
         x: Schema.Number,
         y: Schema.String,
-      }).pipe(Schema.partial, Schema.mutable);
+      })
+        .mapFields(Struct.map(Schema.optional))
+        .mapFields(Struct.map(Schema.mutableKey));
 
-      const schema4 = Schema.extend(
-        schema1.pipe(Schema.omit('y')),
-        Schema.mutable(
-          Schema.Struct({
-            y: Schema.optional(Schema.String),
-          }),
-        ),
-      );
+      const schema4 = schema1
+        .mapFields((fields) => Struct.omit(fields, ['y']))
+        .pipe(Schema.fieldsAssign({ y: Schema.mutableKey(Schema.optional(Schema.String)) }));
 
       expect(schema2.ast).toEqual(schema1.ast);
       expect(schema3.ast).toEqual(schema1.ast);
@@ -69,11 +66,11 @@ describe('json-schema', () => {
 
     {
       const schema1 = Schema.Struct({
-        x: Schema.Number.annotations({ title: 'foo', description: 'bar' }),
+        x: Schema.Number.annotate({ title: 'foo', description: 'bar' }),
       });
 
       const schema2 = Schema.Struct({
-        x: Schema.Number.pipe(Schema.annotations({ description: 'bar', title: 'foo' })),
+        x: Schema.Number.pipe(Schema.annotate({ description: 'bar', title: 'foo' })),
       });
 
       expect(schema1.ast).toEqual(schema2.ast);
@@ -263,13 +260,7 @@ export type AddNewPropertyProps = {
  * Finds a target object schema by its pointer and adds a new property definition.
  * @returns The modified rootSchema.
  */
-export function addProperty({
-  root,
-  path,
-  name,
-  schema: schema,
-  optional,
-}: AddNewPropertyProps): JsonSchema.JsonSchema {
+export function addProperty({ root, path, name, schema, optional }: AddNewPropertyProps): JsonSchema.JsonSchema {
   const callback: ContextualVisitorCallback = (parent, context) => {
     // Check if the current schema is the target schema.
     if (context.path === path) {

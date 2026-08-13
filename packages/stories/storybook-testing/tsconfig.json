@@ -75,6 +75,9 @@
       "path": "../../ui/react-ui-debug"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-masonry"
     },
     {

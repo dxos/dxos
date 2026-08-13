@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig } from '@dxos/cli-util';
@@ -38,7 +38,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
 export const enable = Command.make(
   'enable',
   {
-    id: Args.text({ name: 'id' }).pipe(Args.withDescription('The ID of the plugin to enable.')),
+    id: Args.string('id').pipe(Args.withDescription('The ID of the plugin to enable.')),
   },
   handler,
 ).pipe(Command.withDescription('Enable a plugin.'));

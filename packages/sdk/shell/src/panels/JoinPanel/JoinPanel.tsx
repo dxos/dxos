@@ -213,6 +213,27 @@ export const JoinPanel = ({
     return subscription.unsubscribe;
   }, [joinService]);
 
+  // TODO(wittjosiah): Workaround, not a fix. The defect is in the join machine: `identity` enters it as
+  //   a one-time context snapshot, so a panel mounting while a `client.reset()` settles routes on the
+  //   outgoing identity into `resettingIdentity`, a state with no automatic exit. The machine should
+  //   react to identity clearing rather than needing this effect to re-issue the disposition from
+  //   outside it. Doing that means editing the machine's routing, which is riskier than this is worth
+  //   until someone can reason through every transition it feeds.
+  useEffect(() => {
+    if (identity || initialDisposition !== 'accept-halo-invitation') {
+      return;
+    }
+
+    // The two states that leave the panel without the invitation input the caller asked for: the
+    // chooser is where the machine lands when the snapshot was null but the routing already consumed.
+    if (joinState.matches('resettingIdentity')) {
+      joinSend({ type: 'resetIdentity' });
+      joinSend({ type: 'acceptHaloInvitation' });
+    } else if (joinState.matches({ choosingIdentity: 'choosingAuthMethod' })) {
+      joinSend({ type: 'acceptHaloInvitation' });
+    }
+  }, [identity, initialDisposition, joinState, joinSend]);
+
   useEffect(() => {
     const stateStack = joinState.configuration[0].id.split('.');
     const innermostState = stateStack[stateStack.length - 1];

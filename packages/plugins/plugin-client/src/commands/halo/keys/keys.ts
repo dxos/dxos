@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { FormBuilder, print } from '@dxos/cli-util';
@@ -30,8 +30,8 @@ export const handler = Effect.fn(function* () {
     );
   } else {
     const builder = FormBuilder.make({ title: 'HALO Keys' }).pipe(
-      FormBuilder.option('identityKey', Option.fromNullable(identity?.identityKey.truncate())),
-      FormBuilder.option('deviceKey', Option.fromNullable(device?.deviceKey.truncate())),
+      FormBuilder.option('identityKey', Option.fromNullishOr(identity?.identityKey.truncate())),
+      FormBuilder.option('deviceKey', Option.fromNullishOr(device?.deviceKey.truncate())),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

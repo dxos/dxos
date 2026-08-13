@@ -16,9 +16,7 @@ import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import * as FeedOperation from '../../types/FeedOperation';
-import * as Subscription from '../../types/Subscription';
+import { FeedOperation, Subscription } from '#types';
 
 export type FeedPropertiesProps = AppSurface.ObjectPropertiesProps<Subscription.Subscription>;
 

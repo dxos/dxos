@@ -15,9 +15,8 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { FilePlugin } from '#plugin';
+import { FileCapabilities, FileOperation } from '#types';
 
-import * as FileCapabilities from '../types/FileCapabilities';
-import * as FileOperation from '../types/FileOperation';
 import { FileTooLargeError, UnsupportedFileTypeError } from './create';
 
 describe('FileOperation.Create', () => {
@@ -103,7 +102,7 @@ describe('FileOperation.Create', () => {
         FileOperation.Create,
         { file: makeFile('notes.txt', 'text/plain', new Uint8Array(8)), db: defaultSpace.db },
         { spaceId: defaultSpace.id },
-      ).pipe(Effect.catchAllCause((cause) => Effect.succeed(Cause.squash(cause)))),
+      ).pipe(Effect.catchCause((cause) => Effect.succeed(Cause.squash(cause)))),
     );
     expect(error).toBeInstanceOf(UnsupportedFileTypeError);
   });
@@ -118,7 +117,7 @@ describe('FileOperation.Create', () => {
         FileOperation.Create,
         { file: makeFile('big.png', 'image/png', oversized), db: defaultSpace.db },
         { spaceId: defaultSpace.id },
-      ).pipe(Effect.catchAllCause((cause) => Effect.succeed(Cause.squash(cause)))),
+      ).pipe(Effect.catchCause((cause) => Effect.succeed(Cause.squash(cause)))),
     );
     expect(error).toBeInstanceOf(FileTooLargeError);
   });
@@ -128,7 +127,7 @@ const makeFile = (name: string, type: string, bytes: Uint8Array): globalThis.Fil
   new globalThis.File([bytes as BlobPart], name, { type });
 
 const setup = async () => {
-  const harness = await createComposerTestApp({ plugins: [ClientPlugin({}), FilePlugin()] });
+  const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
   // The node plugin variant omits the browser-only `InlineBackend` module (settings UI, etc.) —
   // contribute the descriptor directly so `resolveActiveStorage` has something to resolve.
   harness.capabilities.contribute({

@@ -12,9 +12,8 @@ import { Panel } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';
+import { FeedOperation, Subscription } from '#types';
 
-import * as FeedOperation from '../../types/FeedOperation';
-import * as Subscription from '../../types/Subscription';
 import { FeedToolbar } from './FeedToolbar';
 
 export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Subscription>;

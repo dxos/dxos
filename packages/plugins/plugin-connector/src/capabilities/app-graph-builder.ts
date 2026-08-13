@@ -6,24 +6,23 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import { Connection, Cursor } from '@dxos/link';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { meta } from '#meta';
+import { ConnectorAnnotations, ConnectorOperation, ConnectorSpec } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import * as Connection from '../types/Connection';
-import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
-import * as ConnectorOperation from '../types/ConnectorOperation';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { connectorAuthActions, isCursorForConnection, isCursorForTarget } from '../util';
 
 /**
@@ -184,6 +183,12 @@ export default Capability.makeModule(
             if (!db) {
               return [];
             }
+            // Read the connector list reactively BEFORE anything can return early. Connector modules
+            // activate lazily, so on a fresh load this runs while the list is still empty — and an
+            // early return that never touched the atom registered no dependency, so the action never
+            // reappeared once the provider activated. That is why Connect showed up only right after
+            // creating a mailbox: unrelated graph churn, not the capability arriving.
+            const allConnectors = get(connectorAtom).flat();
             const capabilities = yield* Capability.Service;
             const connectorIds =
               typeof annotation.connectorIds === 'function'
@@ -206,7 +211,6 @@ export default Capability.makeModule(
               // Connected: the owning plugin's own sync/generate action covers this state.
               return [];
             }
-            const allConnectors = get(connectorAtom).flat();
             return connectorAuthActions({
               connectorIds,
               db,

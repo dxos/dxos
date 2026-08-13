@@ -34,7 +34,7 @@ describe('Sync', () => {
           data: block,
         })),
       )
-      .pipe(RuntimeProvider.runPromise(server.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(server.runtime.contextEffect));
 
     await builder.pull(client);
 
@@ -43,7 +43,7 @@ describe('Sync', () => {
         spaceId,
         feedNamespace: WellKnownNamespaces.data,
       })
-      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(client.runtime.contextEffect));
     expect(blocks.map((block) => block.data)).toEqual(testBlocks);
   });
 
@@ -62,7 +62,7 @@ describe('Sync', () => {
           data: block,
         })),
       )
-      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(client.runtime.contextEffect));
 
     await builder.push(client);
 
@@ -71,7 +71,7 @@ describe('Sync', () => {
         spaceId,
         feedNamespace: WellKnownNamespaces.data,
       })
-      .pipe(RuntimeProvider.runPromise(server.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(server.runtime.contextEffect));
     expect(serverBlocks.blocks.map((block) => block.data)).toEqual(testBlocks);
     expect(serverBlocks.blocks.every((block) => block.position != null)).toBe(true);
 
@@ -80,7 +80,7 @@ describe('Sync', () => {
         spaceId,
         feedNamespace: WellKnownNamespaces.data,
       })
-      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(client.runtime.contextEffect));
     expect(clientBlocks.blocks.map((block) => block.position)).toEqual(
       serverBlocks.blocks.map((block) => block.position),
     );
@@ -101,7 +101,7 @@ describe('Sync', () => {
           data: block,
         })),
       )
-      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(client.runtime.contextEffect));
 
     let done = false,
       numBatches = 0;
@@ -119,7 +119,7 @@ describe('Sync', () => {
         spaceId,
         feedNamespace: WellKnownNamespaces.data,
       })
-      .pipe(RuntimeProvider.runPromise(server.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(server.runtime.contextEffect));
     expect(serverBlocks.blocks.map((block) => block.data)).toEqual(testBlocks);
     expect(serverBlocks.blocks.every((block) => block.position != null)).toBe(true);
 
@@ -128,7 +128,7 @@ describe('Sync', () => {
         spaceId,
         feedNamespace: WellKnownNamespaces.data,
       })
-      .pipe(RuntimeProvider.runPromise(client.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(client.runtime.contextEffect));
     expect(clientBlocks.blocks.map((block) => block.position)).toEqual(
       serverBlocks.blocks.map((block) => block.position),
     );
@@ -144,17 +144,17 @@ describe('Sync', () => {
       .appendLocal(
         testBlocks.map((block) => ({ spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: block })),
       )
-      .pipe(RuntimeProvider.runPromise(client1.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(client1.runtime.contextEffect));
     await builder.push(client1);
 
     await builder.pull(client2);
 
     const { blocks: client1Blocks } = await client1.feedStore
       .query({ spaceId, feedNamespace: WellKnownNamespaces.data })
-      .pipe(RuntimeProvider.runPromise(client1.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(client1.runtime.contextEffect));
     const { blocks: client2Blocks } = await client2.feedStore
       .query({ spaceId, feedNamespace: WellKnownNamespaces.data })
-      .pipe(RuntimeProvider.runPromise(client2.runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(client2.runtime.contextEffect));
     expect(client1Blocks).toEqual(client2Blocks);
     expect(client1Blocks.every((block) => block.position != null)).toBe(true);
   });

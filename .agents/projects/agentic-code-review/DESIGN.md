@@ -81,6 +81,7 @@ base: full # `full` or the commit this review diffs against
 mode: default # default | pr-only
 createdAt: 2026-08-09T…
 isFinalized: false # set true by finalize; unfinalized reviews are ignored
+reviewId: b217ecc635 # <review_id> prefix for issue ids; added by finalize
 pr: 12520 # optional, if on a PR
 groups: 4
 rules: [no-casts, no-sleep-in-test] # ids covered; new rules get a full first pass
@@ -114,11 +115,10 @@ Column is optional.
   for readability, but finalize stamps every diagnostic in a group with the rule's
   severity from the run manifest (`groups.json`), so a subagent cannot change it.
 - **Finalize** rewrites each diagnostic as
-  `# SEVERITY <review_id>-<seq> <rule_id> \`file:line[:col]\`` and writes
-  `RESOLUTION.md` bullets
-  (`- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>`,
-  all seeded unresolved). `unresolved.mjs` re-prints open issues across all runs
-  (`--path` / `--rule`).
+  `# SEVERITY <review_id>-<seq> <rule_id> \`file:line[:col]\``and writes`RESOLUTION.md` bullets
+(`- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>`,
+all seeded unresolved). `unresolved.mjs` re-prints open issues across all runs
+(`--path`/`--rule`).
 
 ## Workflow (three steps)
 

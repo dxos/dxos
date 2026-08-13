@@ -39,20 +39,25 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
     },
+    "#plugin": {
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
     "#surfaces": {
       "source": "./src/surfaces.ts",
       "types": "./dist/types/src/surfaces.d.ts",
       "default": "./dist/lib/surfaces.mjs"
     },
-    "#plugin": {
-      "source": "./src/StudioPlugin.tsx",
-      "types": "./dist/types/src/StudioPlugin.d.ts",
-      "default": "./dist/lib/StudioPlugin.mjs"
-    },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -62,11 +67,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./surfaces": {
       "source": "./src/surfaces.ts",
       "types": "./dist/types/src/surfaces.d.ts",
@@ -77,6 +77,7 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Artifact": {
       "source": "./src/types/Artifact.ts",
       "types": "./dist/types/src/types/Artifact.d.ts",
@@ -112,12 +113,16 @@
       "types": "./dist/types/src/types/StudioOperation.d.ts",
       "import": "./dist/lib/StudioOperation.mjs"
     },
+    "./StudioPlugin": {
+      "source": "./src/StudioPlugin.ts",
+      "types": "./dist/types/src/StudioPlugin.d.ts",
+      "import": "./dist/lib/StudioPlugin.mjs"
+    },
     "./Variant": {
       "source": "./src/types/Variant.ts",
       "types": "./dist/types/src/types/Variant.d.ts",
       "import": "./dist/lib/Variant.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -156,6 +161,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -163,6 +169,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -178,8 +185,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
@@ -189,7 +195,7 @@
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

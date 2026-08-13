@@ -8,8 +8,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui';
 
 import { VoxelEditor } from '#components';
-
-import * as Voxel from '../../types/Voxel';
+import { Voxel } from '#types';
 
 export type VoxelCardProps = AppSurface.ObjectCardProps<Voxel.World>;
 

@@ -13,8 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { PostStack, type PostStackAction } from '#components';
 import { generateFeed, generatePosts } from '#testing';
-
-import type * as Subscription from '../../types/Subscription';
+import { Subscription } from '#types';
 
 type FeedArticleStoryProps = {
   feedUrl?: string;

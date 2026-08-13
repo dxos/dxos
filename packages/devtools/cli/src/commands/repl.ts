@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Cause from 'effect/Cause';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { getDispatcher } from '../dispatcher';
 import { closeLineReader, multilinePrompt } from '../util';
@@ -84,8 +84,8 @@ export const repl = Command.make(
           // Dispatch in-process. Command failures are caught so the REPL
           // stays alive for the next prompt.
           yield* dispatch([...argvPrefix, ...tokens]).pipe(
-            Effect.catchAllCause((cause) =>
-              Cause.isInterruptedOnly(cause) ? Effect.void : Console.error(Cause.pretty(cause)),
+            Effect.catchCause((cause) =>
+              Cause.hasInterruptsOnly(cause) ? Effect.void : Console.error(Cause.pretty(cause)),
             ),
           );
         }

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, {
   type PropsWithChildren,
   type ReactElement,

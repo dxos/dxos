@@ -13,7 +13,8 @@ import { EffectEx } from '@dxos/effect';
 import { Text } from '@dxos/schema';
 import { TaskSet } from '@dxos/types';
 
-import * as ProjectCapabilities from '../types/ProjectCapabilities';
+import { ProjectCapabilities } from '#types';
+
 import { blank, defaultTemplates, scaffoldProject } from './index';
 
 describe('project templates', () => {

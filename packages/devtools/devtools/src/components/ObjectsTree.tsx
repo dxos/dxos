@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import React from 'react';
 
@@ -209,13 +209,13 @@ export type ObjectsTreeItem = {
   entity: Entity.Snapshot;
 };
 
-const ExpandedKeySchema = Schema.TemplateLiteralParser(
+const ExpandedKeySchema = Schema.TemplateLiteralParser([
   // id
   Schema.String,
   '-',
   // level
   Schema.Number,
-);
+]);
 
 class ObjectsTreeModel {
   #onSelect: (entity: Entity.Snapshot) => void;
@@ -329,7 +329,7 @@ const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
 const DEFAULT_RELATION_ICON = 'ph--link--regular';
 
 const itemOrder: Order.Order<ObjectsTreeItem> = Order.mapInput(
-  Order.number,
+  Order.Number,
   Match.type<ObjectsTreeItem>().pipe(
     Match.when({ type: 'object' }, () => 0),
     Match.when({ type: 'outgoing-relation' }, () => 1),

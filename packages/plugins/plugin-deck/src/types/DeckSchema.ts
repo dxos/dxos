@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -16,7 +17,7 @@ export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 export type Part = 'main' | 'complementary';
 export type ResolvedPart = Part;
 
-export const PlankSizing = Schema.Record({ key: Schema.String, value: Schema.Number });
+export const PlankSizing = Schema.Record(Schema.String, Schema.mutableKey(Schema.Number));
 export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
 export const DeckState = Schema.Struct({
@@ -28,7 +29,7 @@ export const DeckState = Schema.Struct({
    * Absolute widths in rem, keyed by item id — a plank keeps its width wherever it sits. The companion's
    * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
    */
-  plankSizing: Schema.mutable(PlankSizing),
+  plankSizing: Schema.mutableKey(PlankSizing),
   /**
    * Planks showing their companion, by id. Per plank rather than per deck so moving between planks
    * restores what each was left in — a plank you closed the companion on stays closed when you come
@@ -40,7 +41,7 @@ export const DeckState = Schema.Struct({
    * like a browser tab: opening under a name that is already taken replaces its occupant in place.
    * Entries are pruned as their plank closes.
    */
-  plankNames: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.String })),
+  plankNames: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
@@ -63,7 +64,7 @@ export const defaultDeck: DeckState = {
 // Layout
 //
 
-const LayoutMode = Schema.Literal('multi', 'solo', 'solo--fullscreen');
+const LayoutMode = Schema.Literals(['multi', 'solo', 'solo--fullscreen']);
 export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => Schema.is(LayoutMode)(value);
 
@@ -76,13 +77,15 @@ export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean
 
 // Persisted plugin state (stored in KVS/localStorage).
 export const StoredDeckState = Schema.Struct({
-  sidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
-  complementarySidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
+  sidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
+  complementarySidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
-}).pipe(Schema.mutable);
+  decks: Schema.mutableKey(
+    Schema.Record(Schema.String, Schema.mutableKey(DeckState.mapFields(Struct.map(Schema.mutableKey)))),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 
 // Transient/ephemeral plugin state (not persisted).
@@ -97,50 +100,52 @@ export const EphemeralDeckState = Schema.Struct({
   /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
   expose: Schema.optional(Schema.Boolean),
   dialogOpen: Schema.Boolean,
-  dialogType: Schema.optional(Schema.Literal('default', 'alert')),
-  dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
+  dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),
+  dialogBlockAlign: Schema.optional(Schema.Literals(['start', 'center', 'end'])),
   dialogOverlayClasses: Schema.optional(Schema.String),
-  dialogOverlayStyle: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  dialogOverlayStyle: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   /** Data to be passed to the dialog Surface. */
   dialogContent: Schema.NullOr(Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) })),
   popoverOpen: Schema.Boolean,
-  popoverSide: Schema.optional(Schema.Literal('top', 'right', 'bottom', 'left')),
+  popoverSide: Schema.optional(Schema.Literals(['top', 'right', 'bottom', 'left'])),
   popoverAnchor: Schema.optional(Schema.Any),
   popoverAnchorId: Schema.optional(Schema.String),
-  popoverKind: Schema.optional(Schema.Literal('base', 'card', 'rename')),
-  popoverTitle: Schema.optional(Translations.Label.annotations({ description: 'The title of the popover.' })),
+  popoverKind: Schema.optional(Schema.Literals(['base', 'card', 'rename'])),
+  popoverTitle: Schema.optional(Translations.Label.annotate({ description: 'The title of the popover.' })),
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
   popoverContent: Schema.NullOr(
-    Schema.Union(
+    Schema.Union([
       Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) }),
       Schema.Struct({ subject: Schema.Any }),
-    ),
+    ]),
   ),
   toasts: Schema.mutable(Schema.Array(LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
   /** The identifier of a component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(Schema.String),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 export type EphemeralDeckState = Schema.Schema.Type<typeof EphemeralDeckState>;
 
 // Combined state type (for convenience in components that need both).
 export type DeckPluginState = StoredDeckState & EphemeralDeckState;
 
 export namespace DeckAction {
-  const PartAdjustmentSchema = Schema.Union(
-    Schema.Literal('close').annotations({ description: 'Close the plank.' }),
-    Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
-    Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
-    Schema.Literal('expand').annotations({
+  const PartAdjustmentSchema = Schema.Union([
+    Schema.Literal('close').annotate({ description: 'Close the plank.' }),
+    Schema.Literal('companion').annotate({ description: 'Open the companion plank side-by-side.' }),
+    Schema.Literal('fullscreen').annotate({ description: 'Toggle fullscreen display of the plank.' }),
+    Schema.Literal('expand').annotate({
       description: "Toggle the plank filling the deck, leaving only the other planks' spines beside it.",
     }),
-    Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
-    Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
-  );
+    Schema.Literal('increment-start').annotate({ description: 'Move the plank towards the start of the deck.' }),
+    Schema.Literal('increment-end').annotate({ description: 'Move the plank towards the end of the deck.' }),
+  ]);
   export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
-  export const Adjustment = Schema.mutable(Schema.Struct({ id: Schema.String, type: PartAdjustmentSchema }));
+  export const Adjustment = Schema.Struct({ id: Schema.String, type: PartAdjustmentSchema }).mapFields(
+    Struct.map(Schema.mutableKey),
+  );
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { raise } from '@dxos/debug';
+import { EffectEx } from '@dxos/effect';
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -39,13 +40,16 @@ export class DataServiceImpl implements DataService.Handlers {
   ) {}
 
   ['DataService.subscribe'](request: SubscribeRequest): EffectStream.Stream<BatchedDocumentUpdates, Error> {
-    return EffectStream.async<BatchedDocumentUpdates, Error>((emit) => {
+    return EffectEx.streamFromEmitter<BatchedDocumentUpdates, Error>((emit) => {
       try {
         invariant(SpaceId.isValid(request.spaceId));
         const next = (msg: BatchedDocumentUpdates) => {
           void emit.single(msg);
         };
         this.dataSubscriptions.set(request.subscriptionId, { spaceId: request.spaceId, next });
+        // Ready beacon: `RepoProxy` gates every `updateSubscription` on the subscription's first
+        // batch, so without it document loads wait forever (mirrors the echo-host `DataService`).
+        next({ updates: [] });
         return Effect.sync(() => {
           this.dataSubscriptions.delete(request.subscriptionId);
         });
@@ -186,6 +190,26 @@ export class DataServiceImpl implements DataService.Handlers {
     return Effect.fail(
       new NotImplementedError({
         message: 'waitUntilHeadsReplicated is not implemented.',
+      }),
+    );
+  }
+
+  ['DataService.stats'](_request: DataService.DatabaseStatsRequest): Effect.Effect<DataService.DatabaseStats, Error> {
+    // TODO(dmaretskyi): Implement per the EDGE section of `echo-host/docs/GARBAGE_COLLECTION.md`.
+    return Effect.fail(
+      new NotImplementedError({
+        message: 'stats is not implemented in the EDGE runtime.',
+      }),
+    );
+  }
+
+  ['DataService.runGarbageCollection'](
+    _request: DataService.RunGarbageCollectionRequest,
+  ): Effect.Effect<DataService.GarbageCollectionReport, Error> {
+    // TODO(dmaretskyi): Implement per the EDGE section of `echo-host/docs/GARBAGE_COLLECTION.md`.
+    return Effect.fail(
+      new NotImplementedError({
+        message: 'runGarbageCollection is not implemented in the EDGE runtime.',
       }),
     );
   }

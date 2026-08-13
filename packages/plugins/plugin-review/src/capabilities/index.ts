@@ -11,11 +11,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
 import type { ReviewPluginOptions } from '#plugin';
-
-import * as AgentIdentity from '../types/AgentIdentity';
-import * as CommentCapabilities from '../types/CommentCapabilities';
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
-import * as ReviewEvents from '../types/ReviewEvents';
+import { AgentIdentity, CommentCapabilities, ReviewCapabilities, ReviewEvents } from '#types';
 
 export const AgentIdentityModule = Capability.inlineModule(
   'agent-identity',

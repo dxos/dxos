@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
-import { CapabilityManager } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type WithPluginManagerOptions, activateDemandGatedModules } from '@dxos/app-framework/testing';
@@ -49,21 +49,22 @@ import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { type Client, Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -165,7 +166,7 @@ const buildPluginManagerOptions = ({
     // that surfaces like TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [
           AccessToken.AccessToken,
           Assistant.Chat,
@@ -224,15 +225,15 @@ const buildPluginManagerOptions = ({
       }),
 
       // User plugins.
-      PreviewPlugin(),
-      RoutinePlugin(),
-      AssistantPlugin(
+      PreviewPlugin.make(),
+      RoutinePlugin.make(),
+      AssistantPlugin.make(
         scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
       ),
-      TranscriptionPlugin(),
+      TranscriptionPlugin.make(),
 
       // Test-specific.
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       StoryPlugin({ onChatCreated, createAgent, layoutAtom, layoutHolder }),
       ...plugins,
     ],
@@ -345,7 +346,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
 
     const feed = await chat.feed.load();
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+      Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const binder = new AiContext.Binder({ feed, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ skills: skillObjects.map((skill) => Ref.make(skill)) }));
@@ -531,7 +532,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
           invariant(chat, 'Agent chat not found.');
           const feed = yield* Effect.promise(() => chat.feed.load());
-          const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+          const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not
@@ -549,7 +550,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         if (onChatCreated) {
           const registry = yield* Capabilities.AtomRegistry;
           const feed = yield* Effect.promise(() => chat.feed.load());
-          const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+          const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
           // Ensure the binder is released even if the callback fails, so subscriptions/state do not

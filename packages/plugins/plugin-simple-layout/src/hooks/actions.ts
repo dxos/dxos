@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
+import * as Node from '@dxos/app-graph/Node';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Node } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { Position } from '@dxos/util';
 
-import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
+import { SimpleLayoutCapabilities } from '#types';
 
 // TODO(wittjosiah): Factor out to shared location with plugin-deck.
 export const PLANK_COMPANION_TYPE = 'org.dxos.plugin.deck.plank-companion';

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { type Database, Entity, type Filter, Query, type QueryResult, Registry, Type } from '@dxos/echo';

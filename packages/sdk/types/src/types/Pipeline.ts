@@ -30,10 +30,10 @@ export class Pipeline extends Type.makeObject<Pipeline>(DXN.make('org.dxos.type.
   Schema.Struct({
     name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
     description: Schema.String.pipe(Schema.optional),
-    image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
+    image: Format.URL.pipe(Schema.annotate({ title: 'Image' }), Schema.optional),
     columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
   }).pipe(
-    Schema.annotations({ title: 'Pipeline' }),
+    Schema.annotate({ title: 'Pipeline' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--path--regular', hue: 'purple' }),
   ),

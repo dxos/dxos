@@ -2,21 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import type * as JSONSchema from 'effect/JSONSchema';
-import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
+import type * as JSONSchema from 'effect/JsonSchema';
+
+import { SchemaAST } from '@dxos/effect';
 
 import { createAnnotationHelper } from '../Annotation';
 import { type JsonSchemaType } from '../JsonSchema';
 
 // TODO(burdon): Rename PropertyType.
-export type ScalarType =
-  | JSONSchema.JsonSchema7Object
-  | JSONSchema.JsonSchema7String
-  | JSONSchema.JsonSchema7Number
-  | JSONSchema.JsonSchema7Boolean
-  | JSONSchema.JsonSchema7Ref;
+// Effect 4 consolidated the individual draft-07 node interfaces into one `JsonSchema` model.
+export type ScalarType = JSONSchema.JsonSchema;
 
 // TODO(burdon): Rename ValueType and change to disciminated union.
 // export type ValueType = 'array' | 'object' | 'string' | 'number' | 'boolean' | 'ref';
@@ -51,13 +46,13 @@ export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
  * https://json-schema.org/understanding-json-schema/reference/schema
  * https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
  */
-export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
+export const FormatAnnotationId = '@dxos/schema/annotation/Format';
 
 export const FormatAnnotation = createAnnotationHelper<TypeFormat>(FormatAnnotationId);
 
 /** @deprecated */
 export const getFormatAnnotation = (node: SchemaAST.AST): TypeFormat | undefined =>
-  Function.pipe(SchemaAST.getAnnotation<TypeFormat>(FormatAnnotationId)(node), Option.getOrUndefined);
+  SchemaAST.getAnnotation<TypeFormat>(node, FormatAnnotationId);
 
 // TODO(burdon): Rename Format; Change to discriminated union?
 export enum TypeFormat {
@@ -177,7 +172,7 @@ export const formatToType: Record<TypeFormat, TypeEnum> = {
 /**
  * Allowed value options for select.
  */
-export const OptionsAnnotationId = Symbol.for('@dxos/schema/annotation/Options');
+export const OptionsAnnotationId = '@dxos/schema/annotation/Options';
 
 // TODO(wittjosiah): Reconcile with `SelectOption`.
 export type Options = string | number;
@@ -185,4 +180,4 @@ export const OptionsAnnotation = createAnnotationHelper<Options[]>(OptionsAnnota
 
 /** @deprecated */
 export const getOptionsAnnotation = (node: SchemaAST.AST): Options[] | undefined =>
-  Function.pipe(SchemaAST.getAnnotation<Options[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
+  SchemaAST.getAnnotation<Options[]>(node, OptionsAnnotationId);

@@ -16,8 +16,7 @@ import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
-
-import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
+import { TranscriptionCapabilities } from '#types';
 
 // Recorder chunk interval; the transcriber's chunk threshold is derived from the buffering setting.
 const RECORDER_INTERVAL_MS = 200;

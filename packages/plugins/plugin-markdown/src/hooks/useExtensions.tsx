@@ -19,6 +19,7 @@ import { Domino } from '@dxos/ui';
 import {
   AnchorWidget,
   Cursor,
+  EditorState,
   type EditorStateStore,
   EditorView,
   type Extension,
@@ -40,9 +41,10 @@ import {
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
+import { Markdown } from '#types';
+
 import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label';
 import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
-import * as Markdown from '../types/Markdown';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -131,6 +133,9 @@ export const useExtensions = ({
     ],
   );
 
+  // The content ref exists but its target has not loaded: the editor has no persistence binding yet.
+  const contentPending = !!contentRef && !target;
+
   return useMemo<Extension[]>(
     () =>
       [
@@ -144,6 +149,12 @@ export const useExtensions = ({
             identity,
           }),
 
+        // Never editable before the binding: input typed into an unbound editor lives only in
+        // CodeMirror state, which the automerge extension's attach-reconcile then replaces wholesale
+        // with the loaded value. `editable(false)` as well as the advisory `readOnly`, so the DOM is
+        // not contenteditable and a caller's editability wait holds.
+        contentPending && [EditorState.readOnly.of(true), EditorView.editable.of(false)],
+
         // TODO(burdon): Reconcile with effect in parent.
         Obj.instanceOf(Markdown.Document, object) &&
           listener({
@@ -155,7 +166,7 @@ export const useExtensions = ({
         baseExtensions,
         selectionState(editorStateStore),
       ].filter(isTruthy),
-    [identity, space, id, object, target, baseExtensions],
+    [identity, space, id, object, target, contentPending, baseExtensions],
   );
 };
 

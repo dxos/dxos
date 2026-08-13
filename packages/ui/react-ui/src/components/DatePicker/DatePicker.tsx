@@ -14,9 +14,10 @@ import React, {
   useState,
 } from 'react';
 
+import { translationKey } from '#translations';
+
 import { useThemeContext } from '../../hooks';
 import { useTranslation } from '../../primitives';
-import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
 import { Calendar, type DateRange } from '../Calendar';
 import { Icon } from '../Icon';

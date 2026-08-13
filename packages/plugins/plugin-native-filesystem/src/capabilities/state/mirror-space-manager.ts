@@ -11,7 +11,8 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
+import { NativeFilesystemCapabilities } from '#types';
+
 import { readComposerConfig, writeComposerConfig } from '../../util';
 
 const FILESYSTEM_MIRROR_TAG = 'org.dxos.space.filesystem-mirror';

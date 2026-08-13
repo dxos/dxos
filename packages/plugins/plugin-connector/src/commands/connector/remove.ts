@@ -2,28 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 
-import * as Connection from '../../types/Connection';
 import { printConnectionRemoved } from './util';
 
 export const remove = Command.make(
   'remove',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    id: Options.text('id').pipe(Options.withDescription('The connection ID.'), Options.optional),
+    id: Options.string('id').pipe(Options.withDescription('The connection ID.'), Options.optional),
   },
   ({ id }) =>
     Effect.gen(function* () {

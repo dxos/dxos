@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
-import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as Statement from 'effect/unstable/sql/Statement';
 
 import { SemanticIndexError } from '../../errors';
 import { type Fact } from '../../types';

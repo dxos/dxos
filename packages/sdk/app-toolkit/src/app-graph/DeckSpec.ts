@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
  *
  * `'fill'` shares the span the two spine piles leave with the other open `'fill'` levels.
  */
-export const LevelSize = Schema.Union(Schema.Number, Schema.Literal('fill'));
+export const LevelSize = Schema.Union([Schema.Number, Schema.Literal('fill')]);
 export type LevelSize = Schema.Schema.Type<typeof LevelSize>;
 
 /**
@@ -24,13 +24,13 @@ export type LevelSize = Schema.Schema.Type<typeof LevelSize>;
  * it — reading a second message drops the first one's attachment.
  */
 export const DeckLevel = Schema.Struct({
-  key: Schema.String.annotations({ description: 'Level key; forms the plank name as `<rootId>/<key>`.' }),
+  key: Schema.String.annotate({ description: 'Level key; forms the plank name as `<rootId>/<key>`.' }),
   size: Schema.optional(LevelSize),
 });
 export type DeckLevel = Schema.Schema.Type<typeof DeckLevel>;
 
 /** What a deck opens when it is adopted. `'children'` opens the root node's graph children. */
-export const DeckInitial = Schema.Literal('children', 'none');
+export const DeckInitial = Schema.Literals(['children', 'none']);
 export type DeckInitial = Schema.Schema.Type<typeof DeckInitial>;
 
 /**
@@ -45,9 +45,12 @@ export const DeckSpec = Schema.Struct({
     Schema.Array(DeckLevel).pipe(
       // Keys must be unique: a duplicate would make two rungs share one plank name, so `levelOf` and
       // the below-pruning become ambiguous.
-      Schema.filter((levels) => new Set(levels.map((level) => level.key)).size === levels.length, {
-        message: () => 'level keys must be unique',
-      }),
+      Schema.check(
+        Schema.makeFilter(
+          (levels: ReadonlyArray<DeckLevel>) =>
+            new Set(levels.map((level) => level.key)).size === levels.length || 'level keys must be unique',
+        ),
+      ),
     ),
   ),
   initial: Schema.optional(DeckInitial),

@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 
 import { Mermaid } from '#model';
+import { DrawingOperation } from '#types';
 
-import * as DrawingOperation from '../types/DrawingOperation';
 import { resolveVariant } from '../util/load-drawing';
 
 const handler: Operation.WithHandler<typeof DrawingOperation.Generate> = DrawingOperation.Generate.pipe(

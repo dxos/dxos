@@ -8,8 +8,8 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'ObservabilityPlugin': 'src/ObservabilityPlugin.ts',
-    'ObservabilityPlugin.node': 'src/ObservabilityPlugin.node.ts',
-    'ObservabilityPlugin.workerd': 'src/ObservabilityPlugin.workerd.ts',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',
@@ -21,6 +21,7 @@ export default defineConfig({
     'ObservabilityEvents': 'src/types/ObservabilityEvents.ts',
     'ObservabilityOperation': 'src/types/ObservabilityOperation.ts',
     'Settings': 'src/types/Settings.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

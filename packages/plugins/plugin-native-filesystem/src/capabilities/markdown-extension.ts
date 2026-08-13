@@ -11,7 +11,8 @@ import { log } from '@dxos/log';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { listener } from '@dxos/ui-editor';
 
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
+import { NativeFilesystemCapabilities } from '#types';
+
 import { findFileById, updateFileInWorkspace, writeFileContent } from '../util';
 
 const AUTO_SAVE_DELAY_MS = 1000;

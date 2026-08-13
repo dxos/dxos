@@ -10,8 +10,7 @@ import { createKvsStore } from '@dxos/effect';
 import { Observability } from '@dxos/observability';
 
 import { meta } from '#meta';
-
-import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
+import { ObservabilityCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ namespace }: { namespace: string }) {

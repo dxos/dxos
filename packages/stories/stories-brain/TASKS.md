@@ -1,7 +1,320 @@
 # stories-brain research tasks
 
+_Resume: PR #12546 MERGED 2026-08-12 (squash `12b6618058`); since then, on this branch: the
+conversation summary is its own tile at the foot of the ConversationStack (`5a50523dca`) and carries
+its provenance (`54ddecd421`). Next action: whole-conversation summarization — thread-scoped input to
+`SummarizeMailbox`, then `dx-anchor` DXN links to referenced entities, then task extraction rendered
+as a markdown task list. Uncommitted: none._
+
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
+
+## Mailbox pipeline routine (2026-08-10)
+
+Spec: `agents/superpowers/specs/2026-08-10-mailbox-pipeline-routine-design.md`. A manually
+triggerable routine driving a **cursored** pipeline over the Mailbox feed — the cursor machinery
+(incremental + reset) is the thing under test; the pipeline body is a log-title walking skeleton.
+
+### Tasks
+
+- [x] **`InboxOperation.ProcessMailbox`** — cursored log-title pipeline over the feed
+      (`plugin-inbox/src/operations/process/`): tagged feed cursor (`org.dxos.plugin.inbox` /
+      `processMailbox`, DXN-conformant — the CRM precedent's hyphenated tags are not), per-page
+      `Cursor.advance`, strictly-greater skip, sync-style `#process` progress (title as status
+      text), `Cancellation.signal` via `Pipeline.abortWith`.
+- [x] **`InboxOperation.ResetProcessCursor`** — clears max/min/lastTick/lastError; `reset: false`
+      when no cursor exists; cursor object reused (found by tag), never recreated.
+- [x] **Toolbar start/stop + reset** — app-graph `processMailbox` extension: Process/Stop primary
+      toolbar toggle (`Operation.schedule` so the run is a cancellable process; stop =
+      `ProgressRegistry.cancel`), reset as a context-menu action disabled mid-run.
+- [x] **`MailboxArticle` statusbar** — shows whichever of `#sync` / `#process` is active.
+- [x] **Routine template** — plugin-inbox contributes `org.dxos.routine.processMailbox`
+      (Automations companion, Mailbox subjects, disabled hourly timer, runnable = the operation).
+- [x] **Tests** — node unit tests (`process-mailbox.test.ts`: cursor tag + advance, incremental,
+      reset cycle, malformed `created` skip, foreign-cursor isolation) + stories-inbox
+      `ProcessPipeline.stories.tsx` play test (`run N → rerun 0 → reset → run N`, `N` = seeded
+      message count) green.
+- [x] **Storybook driven from the `@dxos/fixtures` mailbox corpus** — `.storybook/main.mts` vite
+      middleware serves `/fixtures/<name>.json` (node-side `fixturePath`, `DX_FIXTURES_DIR`
+      override); the story seeds from it (391 real messages) with a demo fallback so CI stays
+      green; play test made count-agnostic + load-stabilized. Verified live on :9016 and headless
+      with/without the fixture.
+- [x] **Progress monitor in the story** — ProgressPlugin + `useProgressMonitors` meters (with
+      cancel) in the harness statusbar; verified live (meter + cancel → interrupted run, committed
+      facts + cursor survive).
+- [x] **Fact-pipeline variant** — Analyze button runs `AnalyzeMailbox` against local Ollama
+      (`StoryAiPlugin`, strict:false, pageSize 1); `runFactPipeline` gained an `onProgress` seam and
+      `AnalyzeMailbox` now emits `#analyze` progress. Live-verified: meter ticks, facts committed.
+      Found + fixed TWO real bugs en route: (1) `AnalyzeMailbox` adopted other consumers' tagged
+      cursors on the same feed (it resumed from the process pipeline's position) — its finder now
+      matches only untagged cursors; (2) `runFactPipeline` streamed in feed order, so a newest-first
+      feed (archive import) advanced the cursor past everything after one message — messages are now
+      sorted ascending. Regression tests for both.
+- [x] **No progress meter in the app for `#sync` or `#enrich`** — ROOT CAUSE, found by driving the
+      live app over the debug port: the process-manager runtime SNAPSHOTTED `Capabilities.TraceSink`
+      when it was built (`process-manager-capability.ts`), and plugin-progress contributes its
+      progress adapter from an on-demand module with no activation event, so that sink landed after
+      the snapshot and was silently dropped. Instrumentation proved both halves: the operation wrote
+      `status.update` (386 of them for one `ExtractSubscriptions` run) and the progress sink's `write`
+      was never called, so `ProgressRegistry.register` never ran and NO monitor existed for any UI to
+      read — nothing to do with plugin-inbox or the keys. FIX: sinks are resolved per write (instances
+      cached per factory, since the progress adapter holds monitor + tombstone state); regression test
+      in `process-manager-capability.test.ts` fails without it. Verified live: the same run then wrote
+      386 messages into the sink and registered `echo://…#subscriptions`. NOTE the sibling gotcha
+      found en route: plugin-debug's "Start test progress" registers DIRECTLY on the registry, so it
+      always worked but was only visible in the R0 popover — never as a meter in the panel itself.
+      `ProgressGenerator` now renders its own `ProgressMeter` while running, with a `Progress` play
+      test in `SpaceGenerator.stories.tsx` (start → meter appears, cancel → meter goes).
+- [x] **One pipeline trigger** (user decision 2026-08-12) — `Enrich` is now the only pipeline button
+      on the mailbox toolbar. `ProcessMailbox` (the `log-title` walking skeleton from #12538) moved to
+      `disposition: ['list-item']` — context menu only, kept alongside `resetProcessCursor` because
+      that pair is how the cursor machinery is verified; delete both once the cascade has been
+      verified live end-to-end.
+- [x] **AI-unavailability is a skip, not a cascade failure** — `EnrichMailbox` now recognises both
+      flavours ("no `AiService` in the stack" and "no resolver serves this model", the app's actual
+      case) via `ai-gate.ts#isAiUnavailableCause` and reports that tier as SKIPPED with
+      `ai unavailable (assistant not ready)`, continuing rather than blaming every later tier on it.
+      `SummarizeMailbox` no longer swallows an unavailable model either: per-message generation
+      failures are still skipped, but an unavailable model propagates, since it fails identically for
+      every message and used to report a successful run that summarized nothing. Corrected a WRONG
+      comment in the old tests while doing it: `AssistantTestLayer` DOES provide an `AiService` — the
+      classify tier fails there on a 401, not on a missing service, which is why the genuine-failure
+      test still holds. `analyze` cannot be exercised in that layer at all (no `FactStore`).
+- [x] **Mailbox article showed only one page of messages** (regression) — ROOT CAUSE: the next-page
+      triggers all required a scrollable window (and a non-zero scroll offset once the window was no
+      larger than `paginationThreshold`), so a first page whose rows happened to FIT the plank left
+      the list unscrollable — the user could never produce the offset the trigger waited on, and the
+      window never grew. Found by probing the live app: the article's list was not scrollable at all
+      (the one scrollable element in the document was the navtree), which is why the storybook
+      repro passed — there the first page overflowed. FIX: `useVirtualizerPagination` treats an
+      UNDERFILLED window (total size <= viewport) as its own trigger, bounded by `usePagination`'s
+      exhaustion check so an exhausted short list does not spin. Unit test
+      (`extends an underfilled window that cannot be scrolled`) fails without the fix; `Paging` +
+      `PagingGrouped` play tests cover the scrollable path. STILL TO DO: confirm in the app.
+- [x] **Contact extraction created a Person for every machine sender** (reported 2026-08-12: 101
+      Persons in a real mailbox, incl. `no-reply@grafana.com`,
+      `invoice+statements+acct_1ika5ja3kz32dpo1@stripe.com`) — TWO defects. (1) The shared
+      `extractContact` (the `Contact` ObjectExtractor, run over a whole mailbox from the toolbar menu)
+      called `buildContactGraph(sender, db)` with NO signals, and the gate in `buildContactFromActor`
+      only applies `if (signals)` — so the bulk path was completely ungated. (2) `selection.ts`'s role
+      pattern was an EXACT match (`^(billing|invoice|…)$`), so every qualified bulk address
+      (`invoice+statements+acct_…`, `payments-noreply@`, `no.reply@`) slipped past it. FIX: split the
+      deny half out as `isAutomatedSender` (address + header signals) and call it from
+      `extractContact` — a per-message extraction has no outbound evidence to satisfy the full
+      allow-list, but it must still refuse machines; role pattern is now a prefix+separator match;
+      `senderSignals` moved into extractor-lib and the two duplicate copies (EmailStage, CRM
+      process-mailbox) deleted. Tests: `selection.test.ts` (real junk addresses, individuals incl.
+      plus-addressing, header-only denial, prefix-vs-equality) and a new `contact-extractor.test.ts`
+      at the actual bug site; 6 of them fail without the fix.
+- [x] **Whole-conversation summarization (thread-scoped input)** — `SummarizeMailbox` now summarizes a
+      THREAD per LLM call, not a message: `groupThreads` groups by `threadId` (a message without one is
+      its own conversation, NOT part of a `null` group), the prompt carries the exchange as a
+      transcript oldest-first (trimmed from the FRONT when over budget, since a summary states where
+      things now stand), and the annotation is filed under the thread's NEWEST message — which is what
+      makes a later reply invalidate it and trigger re-summarization. Contact gate now qualifies the
+      whole thread if any message's sender is known. Deterministic tests in `summarize-threads.test.ts`
+      (5); the model-fixture test is tagged `model-fixture` and SKIPPED here, so its recordings still
+      need regenerating for the new prompt (`regenerate-model-fixture` skill, needs a key).
+- [ ] **`dx-anchor` DXN links + task extraction in summaries** — the remaining two parts of the
+      summarization work (entity links to Person/Organization, and a markdown task list at the foot of
+      the summary). Not started.
+- [ ] **List-level contact lookup does not resolve** (open, found 2026-08-12) — `InboxStack` gained a
+      `db` prop → `useContactLookup` (ONE `Person` query for the whole list, passed to tiles as
+      `getContact`, so a list costs one query rather than a hook per row) and `ContactAvatar` was
+      factored out of `Row.Person` so list tiles share the hover/create treatment. In the
+      `InboxStack` `Spec` story the seeds ARE created (18 senders, every other one seeded, flushed with
+      `{ indexes: true }`) but every avatar still renders as unknown, so `getContact` returns undefined
+      for all of them. Suspects: the URI→`EID.tryParse` of a freshly added object, or the story's
+      `useQuery` not seeing the seeds. The story's play test therefore asserts only that the list
+      renders. NEXT: log the lookup map inside `useContactLookup`.
+- [ ] **Toolbar Clear does not clear the filter** (reported 2026-08-13) — `MailboxArticle`'s
+      `handleClear` (around `MailboxArticle.tsx:232`) resets only React state (`setFilterText` /
+      `setFilter`), but the filter box is an UNCONTROLLED CodeMirror `QueryEditor`, so its text
+      survives and the box still reads as filtered. Fix: also drive the editor, which the container
+      already holds a ref to — `filterEditorRef.current?.setText(filterProp ?? '')` — the same pattern
+      `EventEditor` uses for its attendee editor (`actorListRef.current?.setText(...)`). Cover it in
+      the `MailboxArticle` `SearchFilter` play test: type a term, press Clear, assert both the editor
+      text and the tile count return to their pre-filter state.
+- [ ] **Open an attachment in a new plank** (requested 2026-08-13) — the attachments row in the
+      message header (`ConversationStack.tsx`'s `Row.Attachments`, fed from `message.attachments`)
+      lists them but does not open them. Clicking one should open it as its own plank via
+      `LayoutOperation.Open` with the attachment's object path (the same call the message tile's
+      `onOpen` uses for a message), so a PDF/image gets the deck's own surface rather than an inline
+      preview. Needs: a click handler on `Row.Attachments` (react-ui-card, currently presentational),
+      the attachment ref resolved to its Blob/object DXN, and a surface that renders that type.
+- [ ] **Starred virtual folder in the navtree** (requested 2026-08-13) — add a mailbox child node in
+      the app graph (beside `All Mail` / `Sent` / `Drafts` / `Subscriptions`) that opens the mailbox
+      with a starred filter. The pieces exist: those siblings are graph nodes carrying a
+      `properties.filter` / `systemTag` that `MailboxArticle` reads, and starred membership already
+      lives in the mailbox tag index (`SystemTags.systemTagKey('starred')`), so this is a node plus a
+      filter, not new query machinery.
+- [ ] **ConversationStack avatar has no contact affordance** (reported 2026-08-13) — the message tile
+      renders a bare `Avatar`, so the popover/create mechanism the `Row.Person` surfaces got is absent
+      in `MessageArticle`. Swap it for the exported `ContactAvatar` and host `ContactPreview` in the
+      story.
+- [ ] **`useCardHover` target-change regression test** — the cleanup now also runs when `open`/
+      `enabled` change (a timer armed for the previous contact could fire a stale `open`), but the test
+      CodeRabbit asked for is not written; it needs the hook exported from `Row.tsx` or a story-level
+      driver.
+- [ ] **MessageArticle conversation menu actions** (requested 2026-08-12) — add per-message menu items
+      to (a) create a Project from the message, and (b) run enhanced extraction on the sender (image +
+      Organization). (a) reuses `ProjectOperation.CreateTrackingProject` (the operation exists; PLAN.md
+      deliverable 3's form is still unbuilt); (b) is the same research + `EnrichImages` path as the
+      hover-enrichment item below. Menu is built in `ConversationStack`'s `useMessageActions`.
+- [ ] **ConversationStack story: popovers + unknown actors** (requested 2026-08-12) — the
+      `ConversationStack` `Default` story should (a) host `ContactPreview` so DXN links in message
+      content open popovers, (b) give the message avatar the same hover/create mechanism as
+      `Row.Person` (use the extracted `ContactAvatar`), and (c) seed only 50% of actors as Persons.
+- [ ] **Enhanced (LLM) enrichment from the hover affordance** (requested 2026-08-12) — hovering a
+      Person/Organization icon should also offer the AGENTIC enrichment, not just the deterministic
+      create: run the research operation to create/update the object's researched fields AND fetch its
+      image. The pieces exist — `CrmOperation.ResearchPerson` / `ResearchOrganization`
+      (`plugin-crm/src/types/CrmOperation.ts:105,136`, which fill the object's own sections rather than
+      writing a separate document) and `CrmOperation.EnrichImages` / `AttachImage` (Gravatar/Clearbit +
+      favicon fallback through the SSRF/size/type-hardened path). Open questions to settle when
+      building: (1) one composite operation vs. invoking research + image separately from the UI;
+      (2) hover should not fire an LLM call on its own — the affordance appears on hover, the run is a
+      click; (3) progress/failure surfacing, since research is slow and `AiModelNotAvailable` must read
+      as "assistant not ready" (see the enrich-cascade gate). Builds on the hover affordance below and
+      shares its storybook.
+- [x] **Avatar hover: contact card, or create-the-contact** — `Row.Person`'s `avatar` variant now has
+      an interactive form, chosen by whether the caller passes `db` (the hook-free one stays for
+      virtualized list tiles, where a contact query per row would be too costly). Hovering resolves to
+      one of two states: a Person exists → after 400ms the avatar opens that contact's card (the same
+      `DxAnchorActivate` path a `dx-anchor` link takes; PreviewPlugin listens on `window` with
+      `capture`, since the event does not bubble); no Person → the avatar gives way to a
+      `ph--user-circle-plus--regular` button, and CREATION is a click, never the hover. The anchor
+      variant opens its card on hover too. Demonstrated in `Header.stories.tsx` (`Default` +
+      `Contact`), whose `onContactCreate` runs the extractor's own `buildContactFromActor`; play tests
+      cover both states, including that no create button exists until hover. `Default` is also live
+      now (star owns its state, avatar resolves its contact).
+- [ ] **Conversation-view avatar is not centered on the actor's name** (reported 2026-08-12) — in
+      `MailboxArticle` grouped/conversation mode (story `Default`) the avatar sits low, centered
+      against the whole tile instead of the sender line; the flat view (`Flat`) is correct. Look at
+      the conversation tile's grid row alignment in `InboxStack` (the flat tile aligns its avatar to
+      the first row; the conversation tile appears to center across both rows).
+- [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
+      meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
+- [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
+      triage work above) once the skeleton is proven live.
+- [ ] **Operation-level single-flight per mailbox** (from PR #12538 review) — nothing serializes a
+      routine-triggered run against a manual one, and a reset issued mid-run (UI-guarded only) could
+      be overwritten by a later page commit. Needs a mailbox-keyed guard at the operation layer (no
+      such primitive exists in the repo today); benign for the log-title body, matters once real
+      stages land. Documented as a v1 limitation in the spec's error-handling section.
+
+## Mailbox pipeline suite (2026-08-12, autonomous session)
+
+Six pipelines over the FeedPipeline workbench plus a summarization tier and the orchestrator that
+cascades them, shipped on **PR #12546** (branch `claude/mailbox-research-1e4396`, opened
+after #12538 landed). Test index: `packages/stories/stories-inbox/AUDIT.md`; product plan:
+`packages/plugins/plugin-inbox/PLAN.md` § "Mailbox pipelines → product".
+
+### Tasks
+
+- [x] **`InboxOperation.ExtractCorrespondents`** — Persons (+ derived Organizations) for anyone the
+      user has sent or replied to; outbound signal recovered from an inbox-only corpus (replies
+      addressed directly to `me`); idempotent via the shared identity index. Live on the fixture:
+      391 scanned → 16 correspondents → 12 Persons, reruns 0.
+- [x] **`InboxOperation.ExtractSubscriptions`** — unsubscribe affordances (header + body links)
+      aggregated per sender onto the new `mailbox.subscriptions` field (wholesale replace). Live:
+      135 matched messages → 45 subscriptions.
+- [x] **`InboxOperation.ClassifyMailbox`** — LLM spam + category labeling (canonical system tags,
+      new `spam` tag), cursored ≤100-message batches, known-Person senders short-circuited (never
+      spam, never billed); strict structured output with lenient JSON-salvage fallback. Model-fixture
+      unit tests (recorded on Haiku) + opt-in live harness (`stories-inbox/src/test/classify-fixture.test.ts`).
+      Full-corpus run 2026-08-12: 391/391 — Updates 219, Promotions 58, Personal 52, Forums 34,
+      Social 15, Spam 13; 23 known-person shortcuts. Spend well under $1.
+- [x] **`buildContactGraph` (extractor-lib)** — contact extraction now derives an Organization from
+      a corporate sender domain (free-mail deny list; gate evaluated before the org exists so it
+      never admits its own sender); Extract/CRM/correspondents paths all converge on it.
+- [x] **`CrmOperation.EnrichImages`** — avatars (Gravatar SHA-256, `d=404`) + logos (Clearbit,
+      favicon fallback) through the hardened `AttachImage` path (refactored to a shared core).
+- [x] **`ProjectOperation.{UpdateProjectTasks, UpdateTravelLog, UpdateInvestorLog,
+CreateTrackingProject}`** — the routine→operation→artifact pattern: mailbox pipelines that
+      contribute to a Project (task set requests, regenerated Travel Bookings / Investor
+      Conversations documents, contact extraction), plus project-from-a-message (sender's corporate
+      domain defines the tracked group; feed-triggered runnable routine + backfill). The
+      kirkconsult admin example verified in unit tests and live (project + task + investor contact
+      created in-browser via the Projects button).
+- [x] **`InboxOperation.SummarizeMailbox`** — per-message summaries for mail from known contacts
+      (the correspondent gate), hard-capped per run (≤50) and idempotent by parent id rather than by
+      cursor, so a reset never re-bills a summary already in the feed. A failed generation skips its
+      message instead of failing the run.
+- [x] **Summary storage = a second feed** (user's design, adopted) — `Mailbox.annotations` holds
+      immutable `Message`s whose `parentMessage` names the subject and whose text block carries
+      `disposition: 'summary'` + `mimeType: 'text/markdown'`; `Mailbox.mergeAnnotations` merges the
+      two feeds on read (newest annotation wins) and `summaryIndex` gives a flat lookup. Feed
+      messages are immutable, so re-derivation appends and supersedes. Tests: `Mailbox.test.ts` →
+      "Mailbox annotations" (22 green).
+- [x] **`InboxOperation.EnrichMailbox`** — the orchestrator: spawns the tiers in cascade order
+      (`deterministic → classify → summarize`, `analyze` opt-in) via `Operation.Service`, reporting
+      per-stage progress. Failure handling had to use `Effect.exit` + `Cause.isInterruptedOnly`:
+      AI layers `Layer.orDie`, so a model failure arrives as a **defect** and `Effect.either` let it
+      escape the cascade. Cancellation stops the remaining stages; an error marks them `skipped`.
+- [x] **Tier taxonomy + product plan** — `MailboxTier` (`deterministic | classify | summarize |
+analyze`) with a mailbox-global default and per-project overrides (user chose option 3), plus
+      PLAN.md's three product deliverables (toolbar trigger, summaries in the message article,
+      create-project-from-message) and the layering recommendation (node unit tests = logic,
+      storybook = runtime wiring, product = the user contract).
+- [x] **Story workbench** — `MailboxArticle.stories.tsx` is now a three-panel harness (article /
+      message JSON / content blocks) with the article cell attended and selection read through
+      `useSelection`; `TestGrid` moved to `@dxos/react-ui/testing`; `seedSummaries` seeds mock
+      summaries for 50% of messages so the annotation merge is exercised without an LLM. The blocks
+      panel merges the message's own blocks with its annotations' — a view reading only
+      `message.blocks` never shows a summary.
+
+### Follow-ups
+
+- [x] **CodeRabbit review on #12546 (8 comments)** — all fixed, replied per thread, resolved
+      (`bc19f424a1`). The two that were more than mechanical: `tiers` is now documented and enforced
+      as a SET flattened through `InboxOperation.MAILBOX_TIER_ORDER` (honoring a caller's order would
+      let classification run before the contact gate it consumes — test:
+      `runs the tiers in cascade order however the caller lists them`), and `withMailboxLock`
+      (`operations/mailbox-lock.ts`) serializes `SummarizeMailbox` per mailbox URI so overlapping
+      runs cannot double-summarize or double-provision the annotation feed.
+- [ ] **Operation-layer single-flight (still open)** — the lock above is in-process and deliberately
+      NOT taken by `EnrichMailbox`, which spawns `SummarizeMailbox` and would deadlock on its own
+      child. A re-entrant or durable lease at the operation layer would close both this and the
+      `ProcessMailbox` gap above.
+- [ ] **Create-project-from-message UI** — the operation side is done; the message-context form is
+      not built (PLAN.md deliverable 3).
+- [x] **Conversation summary tile** — the summary renders once, as the last tile under the messages
+      (`ConversationStack.SummaryTile`), aligned to the message column template via the shared avatar
+      gutter; the duplicate inside each expanded message is gone. `Mailbox.conversationSummary` picks
+      the newest summarized message in the thread (a seam for a future thread-level annotation).
+      `MessageArticle.stories` now seeds summaries and the Spec play test asserts the tile.
+- [ ] **Whole-conversation summarization** (IN PROGRESS 2026-08-12) — three parts, in this order:
+  - Thread-scoped input: summarize the whole conversation (every message in the `threadId`), not each
+    message in isolation. The annotation still names a parent, so the read model keeps working.
+  - `dx-anchor` links (ECHO DXNs) to entities the summary references — Person, Organization, etc.
+  - Task extraction, rendered as a markdown task list with those links at the foot of the summary.
+- [ ] **Regenerate a summary with extra instructions** — the user re-runs summarization for a
+      conversation while adding guidance ("focus on the contract terms", "who owes what?"), either
+      from the MessageArticle UI or the companion chat. Re-derivation already appends and supersedes,
+      so the storage model needs nothing; the missing pieces are the instruction input surface and an
+      operation input for it.
+- [ ] **Summarization eval** — score thread summaries (coverage/faithfulness/task-extraction
+      precision) so a prompt change is measurable; reuses `judge.ts` per the model-ladder work below.
+- [x] **Summary provenance in the article** — the summary tile's header carries `model · age`
+      (`summary-provenance.label`), the full model id as its `title`, and the age is the ANNOTATION's
+      `created`, not the message's, so a summary that predates the newest replies reads as stale.
+      `Mailbox.conversationSummary` now takes the annotations rather than a `summaryIndex` map, since
+      the map discards provenance; `modelLabel` shortens `com.anthropic.model.claude-haiku-4-5.default`
+      for display.
+- [ ] **Story invoker wedge (env)** — in the dev storybook, an operation's FIRST invocation after a
+      server restart often hangs (lazy-handler vite load?) and `invokePromise` results render `{}`
+      even when the operation completes (ECHO side-effects land). Unit tests unaffected. Needs an
+      OperationInvoker-side look.
+- [ ] **One-shot index queries time out (20s) during indexing backlog** — `getIdentityIndex` /
+      `Feed.query` against a freshly imported 391-message space; settles after ~2 min. Retry or
+      backoff at the query layer would unblock pipelines run right after a big import.
+- [ ] **Investor-log LLM summaries live** — `summarize: true` path is implemented + degrades to the
+      digest; run against the fixture with the real key and eyeball quality.
+- [ ] **Travel/investor project templates** — register `ProjectCapabilities.Template`s wrapping the
+      new operations (scaffold + routine), mirroring `inboxResearch` / `crmProject`.
+- [ ] **Messages without `threadId` never render** in the mailbox conversation view
+      (`buildThreadSemiJoin`) — product edge found while seeding; decide fallback grouping.
 
 ## Overnight model-ladder experiment
 

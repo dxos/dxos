@@ -4,8 +4,9 @@
 
 import { Key, Obj } from '@dxos/echo';
 
+import { Ibkr } from '#types';
+
 import { TRADINGVIEW_SOURCE } from '../constants';
-import type * as Ibkr from '../types/Ibkr';
 
 /** Returns whether two foreign keys refer to the same external identifier. */
 export const foreignKeyEquals = (left: Key.ForeignKey, right: Key.ForeignKey): boolean =>

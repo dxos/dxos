@@ -12,14 +12,13 @@ import { Column, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import * as OutlineOperation from '../../types/OutlineOperation';
+import { OutlineOperation } from '#types';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
-    Schema.filter((value) => value.trim().length > 0, { message: () => 'Entry cannot be empty.' }),
+    Schema.check(Schema.makeFilter((value: string) => value.trim().length > 0 || 'Entry cannot be empty.')),
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ description: 'Journal entry' }),
+    Schema.annotate({ description: 'Journal entry' }),
   ),
 });
 

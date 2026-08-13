@@ -13,7 +13,7 @@ import * as PageAction from './PageAction';
 
 const input = Schema.Struct({
   snapshot: PageAction.Snapshot,
-  target: Database.Database.annotations({ description: 'The database to add the object to.' }),
+  target: Database.Database.annotate({ description: 'The database to add the object to.' }),
 });
 
 const output = Schema.Struct({

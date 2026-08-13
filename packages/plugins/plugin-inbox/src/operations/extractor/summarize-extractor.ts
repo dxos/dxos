@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,7 +19,7 @@ import {
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
+import { InboxOperation } from '#types';
 
 /**
  * AI summarization extractor. Matches any message with a non-trivial plain-text body
@@ -86,9 +86,9 @@ export const summarizeMessage = ({
   }).pipe(
     Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
     // Wrap genuine failures + defects as ExtractError, but leave fiber interruption untouched so
-    // cancellation propagates (neither catchAll nor catchAllDefect catches interruption).
-    Effect.catchAll((error) => Effect.fail(new ExtractError('Summarize failed', error))),
-    Effect.catchAllDefect((defect) => Effect.fail(new ExtractError('Summarize failed', defect))),
+    // cancellation propagates (neither `catch` nor `catchDefect` catches interruption).
+    Effect.catch((error) => Effect.fail(new ExtractError('Summarize failed', error))),
+    Effect.catchDefect((defect) => Effect.fail(new ExtractError('Summarize failed', defect))),
   );
 
 /**

@@ -30,9 +30,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/BlueskyPlugin.ts",
-      "types": "./dist/types/src/BlueskyPlugin.d.ts",
-      "default": "./dist/lib/BlueskyPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -52,15 +52,15 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./BlueskyPlugin": {
+      "source": "./src/BlueskyPlugin.ts",
+      "types": "./dist/types/src/BlueskyPlugin.d.ts",
+      "import": "./dist/lib/BlueskyPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -87,7 +87,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

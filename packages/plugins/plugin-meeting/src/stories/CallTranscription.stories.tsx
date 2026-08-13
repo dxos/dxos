@@ -13,13 +13,14 @@ import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
-import { CallsPlugin } from '@dxos/plugin-calls/plugin';
+import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { getSpace, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
@@ -27,8 +28,8 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Transcript } from '@dxos/types';
 
-import { MeetingPlugin } from '../MeetingPlugin';
-import * as Meeting from '../types/Meeting';
+import { MeetingPlugin } from '#plugin';
+import { Meeting } from '#types';
 
 type StoryArgs = {};
 
@@ -154,7 +155,7 @@ const meta = {
     withPluginManager<StoryArgs>(() => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Transcript.Transcript, Meeting.Meeting, Text.Text],
           // CallManager requires the edge service config to construct (it throws otherwise).
           config: new Config({
@@ -188,12 +189,12 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
-        CallsPlugin(),
-        TranscriptionPlugin(),
+        StorybookPlugin.make({}),
+        CallsPlugin.make(),
+        TranscriptionPlugin.make(),
         MeetingPlugin(),
-        MarkdownPlugin(),
-        PreviewPlugin(),
+        MarkdownPlugin.make(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

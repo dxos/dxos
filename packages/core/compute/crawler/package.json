@@ -35,9 +35,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
-    "@dxos/sql-sqlite": "workspace:*",
-    "@effect/ai": "catalog:",
-    "@effect/sql": "catalog:"
+    "@dxos/sql-sqlite": "workspace:*"
   },
   "devDependencies": {
     "@effect/sql-sqlite-node": "catalog:",

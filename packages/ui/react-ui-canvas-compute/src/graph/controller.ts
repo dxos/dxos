@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
@@ -271,7 +271,7 @@ export class ComputeGraphController extends Resource {
 
     EffectEx.unwrapExit(
       await this._computeRuntime.runPromiseExit(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           const scope = yield* Scope.make();
 
           // TODO(dmaretskyi): Code duplication.
@@ -280,7 +280,7 @@ export class ComputeGraphController extends Resource {
           // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
           const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
             Effect.withSpan('runGraph'),
-            Scope.extend(scope),
+            Scope.provide(scope),
             Effect.provide(
               Layer.mergeAll(
                 Layer.succeed(Trace.TraceService, this._createTraceWriter()),
@@ -289,15 +289,18 @@ export class ComputeGraphController extends Resource {
             ),
             Effect.flatMap(computeValueBag),
             Effect.withSpan('test'),
-            Effect.tap((values) => {
-              for (const [key, value] of Object.entries(values)) {
-                if (computingOutputs) {
-                  this._onOutputComputed(nodeId, key, value);
-                } else {
-                  this._onInputComputed(nodeId, key, value);
+            // v4's `tap` requires the callback to return an `Effect`.
+            Effect.tap((values) =>
+              Effect.sync(() => {
+                for (const [key, value] of Object.entries(values)) {
+                  if (computingOutputs) {
+                    this._onOutputComputed(nodeId, key, value);
+                  } else {
+                    this._onInputComputed(nodeId, key, value);
+                  }
                 }
-              }
-            }),
+              }),
+            ),
           );
 
           yield* effect;
@@ -334,7 +337,7 @@ export class ComputeGraphController extends Resource {
 
     EffectEx.unwrapExit(
       await this._computeRuntime.runPromiseExit(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           const scope = yield* Scope.make();
 
           // TODO(burdon): Return map?
@@ -347,7 +350,7 @@ export class ComputeGraphController extends Resource {
             // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
             const effect = (computingOutputs ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
               Effect.withSpan('runGraph'),
-              Scope.extend(scope),
+              Scope.provide(scope),
               Effect.flatMap(computeValueBag),
               Effect.provide(
                 Layer.mergeAll(
@@ -357,15 +360,17 @@ export class ComputeGraphController extends Resource {
               ),
 
               Effect.withSpan('test'),
-              Effect.tap((values) => {
-                for (const [key, value] of Object.entries(values)) {
-                  if (computingOutputs) {
-                    this._onOutputComputed(node, key, value);
-                  } else {
-                    this._onInputComputed(node, key, value);
+              Effect.tap((values) =>
+                Effect.sync(() => {
+                  for (const [key, value] of Object.entries(values)) {
+                    if (computingOutputs) {
+                      this._onOutputComputed(node, key, value);
+                    } else {
+                      this._onInputComputed(node, key, value);
+                    }
                   }
-                }
-              }),
+                }),
+              ),
             );
 
             tasks.push(effect);
@@ -447,16 +452,16 @@ const traceEventToComputeEvent = (key: string, payload: unknown): ComputeEvent |
 const computeValueBag = (bag: ValueBag<any>): Effect.Effect<Record<string, RuntimeValue>, never, never> => {
   return Effect.all(
     Object.entries(bag.values).map(([key, eff]) =>
-      Effect.either(eff).pipe(
+      Effect.result(eff).pipe(
         Effect.map((value) => {
-          if (Either.isLeft(value)) {
-            if (isNotExecuted(value.left)) {
+          if (Result.isFailure(value)) {
+            if (isNotExecuted(value.failure)) {
               return [key, { type: 'not-executed' }] as const;
             } else {
-              return [key, { type: 'error', error: value.left }] as const;
+              return [key, { type: 'error', error: value.failure }] as const;
             }
           } else {
-            return [key, { type: 'executed', value: value.right }] as const;
+            return [key, { type: 'executed', value: value.success }] as const;
           }
         }),
       ),

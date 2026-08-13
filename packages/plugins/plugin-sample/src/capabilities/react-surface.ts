@@ -22,8 +22,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
 import { SampleArticle, SampleCompanionPanel, SampleProperties } from '#containers';
+import { SampleItem } from '#types';
 
-import * as SampleItem from '../types/SampleItem';
 import { SampleDeckCompanionSurface, SampleStatusSurface } from './SampleSurfaces';
 
 export default Capability.makeModule(() =>

@@ -6,7 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as SpacetimeCapabilities from '../types/SpacetimeCapabilities';
+import { SpacetimeCapabilities } from '#types';
 
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {

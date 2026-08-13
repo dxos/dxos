@@ -6,7 +6,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import { afterAll, beforeAll, describe, onTestFinished, test } from 'vitest';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -60,11 +59,11 @@ describe('ClientPlugin startup', () => {
 
     // Phase 1: Lazy-load plugins.
     let phaseStart = performance.now();
-    const [{ PluginManager, ProcessManagerPlugin }, { ClientPlugin }, { GraphPlugin }, { ClientCapabilities }] =
+    const [{ PluginManager, ProcessManagerPlugin }, ClientPlugin, GraphPlugin, { ClientCapabilities }] =
       await Promise.all([
         import('@dxos/app-framework'),
-        import('@dxos/plugin-client/plugin'),
-        import('@dxos/plugin-graph/plugin'),
+        import('@dxos/plugin-client/ClientPlugin'),
+        import('@dxos/plugin-graph/GraphPlugin'),
         import('@dxos/plugin-client'),
       ]);
     mark('dynamic imports', phaseStart);
@@ -72,7 +71,7 @@ describe('ClientPlugin startup', () => {
     // Phase 2: Create PluginManager with core plugins + ClientPlugin.
     phaseStart = performance.now();
 
-    const clientPlugin = ClientPlugin({
+    const clientPlugin = ClientPlugin.make({
       config: localConfig,
       onClientInitialized: ({ client }) =>
         Effect.gen(function* () {
@@ -106,7 +105,7 @@ describe('ClientPlugin startup', () => {
     });
 
     // Minimal set of framework plugins needed for ClientPlugin to activate.
-    const plugins: Plugin.Plugin[] = [GraphPlugin(), ProcessManagerPlugin(), clientPlugin];
+    const plugins: Plugin.Plugin[] = [GraphPlugin.make(), ProcessManagerPlugin(), clientPlugin];
 
     const pluginLoader = Effect.fn(function* (id: string) {
       const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
@@ -138,9 +137,10 @@ describe('ClientPlugin startup', () => {
     const eventStarts: Record<string, number> = {};
     const startupDone = new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('Startup timed out after 30s')), 30_000);
+      // v4's `subscribe` yields a `Subscription` read through `PubSub.take`, not a `Queue`.
       PubSub.subscribe(manager.activation).pipe(
-        Effect.flatMap((queue) =>
-          Queue.take(queue).pipe(
+        Effect.flatMap((subscription) =>
+          PubSub.take(subscription).pipe(
             Effect.tap(({ event, state, error: activationError }) =>
               Effect.sync(() => {
                 if (state === 'activating') {

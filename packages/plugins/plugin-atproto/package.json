@@ -35,14 +35,19 @@
       "default": "./dist/lib/neutral/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/AtprotoPlugin.tsx",
-      "types": "./dist/types/src/AtprotoPlugin.d.ts",
-      "default": "./dist/lib/neutral/AtprotoPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -52,11 +57,6 @@
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -66,6 +66,26 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "./AtprotoCapabilities": {
+      "source": "./src/types/AtprotoCapabilities.ts",
+      "types": "./dist/types/src/types/AtprotoCapabilities.d.ts",
+      "default": "./dist/lib/neutral/AtprotoCapabilities.mjs"
+    },
+    "./AtprotoEvents": {
+      "source": "./src/types/AtprotoEvents.ts",
+      "types": "./dist/types/src/types/AtprotoEvents.d.ts",
+      "default": "./dist/lib/neutral/AtprotoEvents.mjs"
+    },
+    "./AtprotoPlugin": {
+      "source": "./src/AtprotoPlugin.ts",
+      "types": "./dist/types/src/AtprotoPlugin.d.ts",
+      "default": "./dist/lib/neutral/AtprotoPlugin.mjs"
+    },
+    "./AtprotoPublication": {
+      "source": "./src/types/AtprotoPublication.ts",
+      "types": "./dist/types/src/types/AtprotoPublication.d.ts",
+      "default": "./dist/lib/neutral/AtprotoPublication.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -77,6 +97,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -86,7 +107,6 @@
     "@dxos/link": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -95,8 +115,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

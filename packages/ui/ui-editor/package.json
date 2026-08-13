@@ -85,7 +85,6 @@
     "@automerge/automerge": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect/platform": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/lodash.sortby": "catalog:",
     "effect": "catalog:",
@@ -97,7 +96,6 @@
   },
   "peerDependencies": {
     "@dxos/ui-theme": "workspace:^",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

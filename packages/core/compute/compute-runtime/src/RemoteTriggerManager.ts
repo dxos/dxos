@@ -4,10 +4,11 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Trigger from '@dxos/compute/Trigger';
 
@@ -23,7 +24,7 @@ export interface Manager {
   readonly invokeTrigger: (options: Trigger.InvokeOptions) => Effect.Effect<void>;
 }
 
-export class Service extends Context.Tag('@dxos/compute-runtime/RemoteTriggerManager')<Service, Manager>() {}
+export class Service extends Context.Service<Service, Manager>()('@dxos/compute-runtime/RemoteTriggerManager') {}
 
 /**
  * Empty remote trigger manager for local-only deployments.

@@ -7,13 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage } from '@dxos/types';
 
+import { InboxOperation, Mailbox, SystemTags } from '#types';
+
 import { getFeedObjectPath, getMailboxPath } from '../paths';
-import * as InboxOperation from '../types/InboxOperation';
-import * as Mailbox from '../types/Mailbox';
-import * as SystemTags from '../types/SystemTags';
 import { createDraftMessage } from '../util';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
