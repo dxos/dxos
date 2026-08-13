@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { type Database, Filter, Obj } from '@dxos/echo';
+import { type Database, Filter } from '@dxos/echo';
 import { type PaginationResult, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { Card, Icon, ScrollArea } from '@dxos/react-ui';

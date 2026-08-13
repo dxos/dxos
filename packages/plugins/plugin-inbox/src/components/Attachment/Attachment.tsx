@@ -7,7 +7,7 @@ import React from 'react';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type AttachmentKind } from '../../hooks';
+import { type AttachmentKind } from '#hooks';
 
 export type AttachmentViewerProps = ThemedClassName<{
   /** Object url for the attachment's bytes; absent while resolving or after a failure. */
