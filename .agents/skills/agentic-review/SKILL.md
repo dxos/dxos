@@ -41,9 +41,9 @@ more block type. The harness scans every `.mdl` file, extracts the `rule` blocks
 and ignores the rest, so descriptor documents (`SPEC.mdl`, `PLUGIN.mdl`) define no
 rules and are passed over. Put rules wherever they belong — colocated in a
 package's `.mdl`, or in a shared document like `rules/non-negotiables.mdl`. The
-run store is written to `.agents/reviews/<short-sha>/` (slug = `git rev-parse
---short HEAD`) and committed in full (REVIEW.md, RESOLUTION.md, STAGING.md /
-groups.json / per-group fragments) so runs stay auditable.
+run store lives at `.agents/reviews/<short-sha>/` (slug = `git rev-parse --short
+HEAD`). Prepare writes STAGING.md / groups for the subagent loop; finalize keeps
+only `REVIEW.md` + `RESOLUTION.md` and deletes the intermediates.
 
 ## Workflow
 
@@ -59,7 +59,8 @@ It prints the STAGING.md / REVIEW.md paths, the resolved base (`full` or a
 commit), the mode, and the **group count** plus a per-group line
 (`NN  <rule-id>  (<n> files, full|delta)`). Read the group count — it is exactly
 how many subagents to spawn. If the count is `0`, nothing matched; report clean
-and stop.
+and stop. Prepare **errors** if the working tree is dirty or
+`.agents/reviews/<short-sha>/` already exists — commit first, then stage.
 
 Useful flags: `--chunk=<N>` (max files per group when uncapped, default 15),
 `--max-groups=<N>` (cap total groups, default 20; spreads all matched files
@@ -105,8 +106,9 @@ node .agents/skills/agentic-review/scripts/finalize.mjs --all --force   # re-sta
 run.) It parses every `groups/NN.md`, merges diagnostics into `REVIEW.md`
 (sorted by file then line, deduped), stamps each issue with a stable id
 `<review_id>-<seq>`, writes `RESOLUTION.md` with every issue as `unresolved`,
-sets `isFinalized: true`, and prints counts by severity. `--force` re-finalizes
-an already-finalized run; `--all` walks every store under `.agents/reviews/`.
+sets `isFinalized: true`, **deletes** `STAGING.md` / `groups.json` / `groups/`,
+and prints counts by severity. `--force` re-finalizes an already-finalized run;
+`--all` walks every store under `.agents/reviews/`.
 
 Finalized diagnostic header form:
 

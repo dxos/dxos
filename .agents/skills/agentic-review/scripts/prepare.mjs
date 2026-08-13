@@ -17,9 +17,12 @@
 // Groups are capped at `--max-groups` (default 20; 0 = unlimited): all matched
 // files are still covered — chunk sizes grow so the file set fits the budget.
 //
+// Refuses a dirty working tree or an existing store for HEAD — reviews are
+// keyed by commit, so stage only from a clean, not-yet-reviewed commit.
+//
 // Prints the STAGING.md / REVIEW.md paths, the group count, and a per-group line.
 
-import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -30,6 +33,7 @@ import {
   currentBranch,
   headCommit,
   isAncestor,
+  isWorkingTreeDirty,
   mainMergeBase,
   repoRoot,
   shortSha,
@@ -63,6 +67,19 @@ const root = repoRoot();
 const head = headCommit();
 const short = shortSha(head);
 const branch = currentBranch();
+const slug = values.slug ? assertSafeSlug(values.slug) : reviewSlug(branch, short);
+const storeDir = join(root, REVIEWS_DIR, slug);
+
+if (isWorkingTreeDirty()) {
+  console.error('prepare: working tree is dirty — commit your changes first, then stage a review.');
+  process.exit(1);
+}
+if (existsSync(storeDir)) {
+  console.error(
+    `prepare: a review for this commit already exists at ${REVIEWS_DIR}/${slug}/ — commit a new change (or remove that store) before staging again.`,
+  );
+  process.exit(1);
+}
 
 /**
  * Scan finalized reviews whose commit is an ancestor of HEAD. Returns the
@@ -159,11 +176,7 @@ if (!prOnly && ruleMatches.length > 0 && ruleMatches.every(({ scope }) => scope 
   base = FULL_BASE;
 }
 
-const slug = values.slug ? assertSafeSlug(values.slug) : reviewSlug(branch, short);
-const storeDir = join(root, REVIEWS_DIR, slug);
 const groupsDir = join(storeDir, 'groups');
-// A re-run for the same slug replaces prior fragments so stale diagnostics never linger.
-rmSync(storeDir, { recursive: true, force: true });
 mkdirSync(groupsDir, { recursive: true });
 
 const modeLabel = prOnly ? 'pr-only' : 'default';

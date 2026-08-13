@@ -58,14 +58,12 @@ rule no-sleep-in-test: No sleep in tests
 Each review run gets a slug directory:
 
 ```text
-.agents/reviews/<slug>/
-  REVIEW.md            # frontmatter + merged, finalized diagnostics
-  STAGING.md           # groups of (rule × files) for subagents; input only
-  groups.json          # per-group manifest: NN → { ruleId, severity, title }
-  groups/
-    01.md              # one fragment per group — a subagent writes here
-    02.md
-    ...
+.agents/reviews/<slug>/          # after finalize
+  REVIEW.md                      # frontmatter + merged, stamped diagnostics
+  RESOLUTION.md                  # issue status ledger
+
+# prepare also writes (deleted by finalize):
+#   STAGING.md, groups.json, groups/NN.md
 ```
 
 `<slug>` is the short commit sha (e.g. `b217ecc`) so runs stay short and
@@ -243,9 +241,8 @@ CI wiring is a later phase; the skill + scripts are usable manually first.
 - Scripts are dependency-free Node ESM `.mjs` — a hand-rolled frontmatter parser
   is used because a standalone script can't resolve a pnpm-hoisted YAML package.
 - Subagents run on **Sonnet**.
-- The run store is **committed in full** — `REVIEW.md` drives incremental base
-  resolution, and STAGING.md / groups.json / the per-group fragments are kept so a
-  run's inputs and raw diagnostics stay auditable.
+- Finalize keeps only `REVIEW.md` + `RESOLUTION.md`; staging/group intermediates
+  are deleted. `REVIEW.md` drives incremental base resolution.
 
 ## Status
 

@@ -232,6 +232,5 @@ node_modules
 # Remote-cache benchmark output (tools/moon-cache/bench).
 .moon-bench/
 
-# Agentic-review run store is committed in full — REVIEW.md drives incremental
-# base resolution, and STAGING.md / groups.json / the per-group fragments are
-# kept so a run's inputs and raw diagnostics stay auditable.
+# Agentic-review: finalize keeps only REVIEW.md + RESOLUTION.md per run
+# (STAGING.md / groups.json / groups/ are deleted on finalize).

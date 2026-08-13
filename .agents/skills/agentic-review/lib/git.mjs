@@ -58,6 +58,15 @@ export const shortSha = (commit) => git(['rev-parse', '--short', commit]);
 
 export const currentBranch = () => git(['rev-parse', '--abbrev-ref', 'HEAD']);
 
+/**
+ * True when the working tree has staged, unstaged, or untracked changes.
+ * Reviews are keyed by commit, so prepare refuses to run on a dirty tree.
+ */
+export const isWorkingTreeDirty = () => {
+  const out = git(['status', '--porcelain'], { allowFail: true });
+  return Boolean(out && out.length > 0);
+};
+
 /** Committer timestamp (unix seconds) for a commit, or 0 if unknown. */
 export const commitTimestamp = (commit) => {
   const out = git(['show', '-s', '--format=%ct', commit], { allowFail: true });

@@ -45,12 +45,14 @@ export const parseResolution = (text) => {
 };
 
 /**
- * Render RESOLUTION.md for a finalized run. Every issue starts unresolved.
+ * Render RESOLUTION.md for a finalized run. New issues default to unresolved;
+ * pass `priorStatuses` on re-finalize to keep agent updates.
  *
  * @param {string} slug
  * @param {Array<{ id: string, ruleId: string, file: string, line: number, col: number|null }>} diagnostics
+ * @param {Map<string, string>|null} [priorStatuses]
  */
-export const renderResolution = (slug, diagnostics) => {
+export const renderResolution = (slug, diagnostics, priorStatuses = null) => {
   const lines = [
     `# Resolution — ${slug}`,
     '',
@@ -64,8 +66,9 @@ export const renderResolution = (slug, diagnostics) => {
       const location = `${diagnostic.file}:${diagnostic.line}${
         diagnostic.col != null ? `:${diagnostic.col}` : ''
       }`;
+      const status = priorStatuses?.get(diagnostic.id) ?? 'unresolved';
       lines.push(
-        `- ${diagnostic.id} - unresolved - ${diagnostic.ruleId ?? 'unknown'} - ${location}`,
+        `- ${diagnostic.id} - ${status} - ${diagnostic.ruleId ?? 'unknown'} - ${location}`,
       );
     }
     lines.push('');
