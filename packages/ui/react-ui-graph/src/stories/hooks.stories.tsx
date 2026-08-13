@@ -47,7 +47,7 @@ const Component = ({
   grid: showGrid = false,
 }: ComponentProps) => {
   const registry = useContext(RegistryContext);
-  const model = useMemo(() => new TestGraphModel(registry, graphFactory()), [registry, graphFactory]);
+  const model = useMemo(() => new TestGraphModel({ registry, graph: graphFactory() }), [registry, graphFactory]);
 
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);

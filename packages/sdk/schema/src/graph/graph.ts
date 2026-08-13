@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
  * References are mapped onto graph edges.
  */
 export const createGraph = <T extends Entity.Unknown>(objects: T[]): GraphModel.GraphModel<Graph.Node.Node<T>> => {
-  const graph = new GraphModel.GraphModel<Graph.Node.Node<T>>({ nodes: [], edges: [] });
+  const graph = new GraphModel.GraphModel<Graph.Node.Node<T>>();
 
   // Map objects.
   objects.forEach((object) => {

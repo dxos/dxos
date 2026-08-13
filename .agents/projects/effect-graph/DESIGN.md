@@ -53,7 +53,7 @@ immutable value at all.
 - `model.batch(fn)` = mutations + **one version-atom bump** (the `Obj.update` analog). Derived
   atoms depend on the version atom and read the mutable graph directly.
 - **Granular reactivity does not need root immutability** — equality cutoffs operate on derived
-  *outputs* (arrays of node-data refs), which stay correct as long as `updateNode` replaces the
+  _outputs_ (arrays of node-data refs), which stay correct as long as `updateNode` replaces the
   data object (model-enforced discipline). Verified: touched-collection subscribers fire,
   untouched stay silent.
 - Algorithms (`dijkstra`, `dfs`, `topo`, SCC, …) run directly on the `MutableGraph`.
@@ -85,10 +85,10 @@ across snapshots, and Atom's default equality is `Object.is`. So granularity is 
 equality cutoffs, no per-node stores to sync:
 
 ```ts
-const nodeAtom = Atom.family((id: string) =>
-  Atom.make((get) => lookupNode(get(rootAtom), id)));                      // ref cutoff
+const nodeAtom = Atom.family((id: string) => Atom.make((get) => lookupNode(get(rootAtom), id))); // ref cutoff
 const neighborhoodAtom = Atom.family((id: string) =>
-  Atom.make((get) => neighborIds(get(rootAtom), id)).pipe(Atom.withEquality(arrayEq)));
+  Atom.make((get) => neighborIds(get(rootAtom), id)).pipe(Atom.withEquality(arrayEq)),
+);
 ```
 
 `Atom.family` memoizes behind `WeakRef`/`FinalizationRegistry` — unsubscribed atoms are GC'd.
@@ -96,7 +96,7 @@ Subgraph subscription is the same pattern at any grain (k-hop neighborhood, filt
 components) via `withEquality` on the projection.
 
 **Hybrid for hot paths:** 60fps churn (drag positions) does not route through the graph — volatile
-data lives in per-node *writable* family atoms; the graph atom holds structure only. `Atom.batch`
+data lives in per-node _writable_ family atoms; the graph atom holds structure only. `Atom.batch`
 coalesces multi-node frames.
 
 **Reactivity split for ECHO-backed graphs:** node `data` is a live ECHO proxy whose reference never
@@ -113,16 +113,16 @@ same op into the atom. Remote/peer changes: subscribe to the ECHO object, deboun
 
 ## Measurements (effect 4.0.0-rc.108, node 22, warmed, best-of-3)
 
-| Operation | 100 nodes | 500 | 2000 | 5000 |
-|---|---:|---:|---:|---:|
-| structural mutation, one batched COW scope | 0.074ms | 0.392ms | 1.71ms | 7.2ms |
-| mutation + notify, 100 mounted node atoms | — | — | 2.8ms | — |
-| mutation + notify, 1000 mounted node atoms | — | — | 3.8ms | — |
-| full rebuild/decode (remote-sync case) | — | — | 12.3ms | — |
-| `topo` whole graph | — | — | 8.6ms | — |
-| per-node writable set (hybrid hot path) | ~1.25µs | | | |
-| 5-node `Atom.batch` drag frame | ~8.7µs | | | |
-| plain array push (today's model, reference) | ~0.001ms | | | |
+| Operation                                   | 100 nodes |     500 |   2000 |  5000 |
+| ------------------------------------------- | --------: | ------: | -----: | ----: |
+| structural mutation, one batched COW scope  |   0.074ms | 0.392ms | 1.71ms | 7.2ms |
+| mutation + notify, 100 mounted node atoms   |         — |       — |  2.8ms |     — |
+| mutation + notify, 1000 mounted node atoms  |         — |       — |  3.8ms |     — |
+| full rebuild/decode (remote-sync case)      |         — |       — | 12.3ms |     — |
+| `topo` whole graph                          |         — |       — |  8.6ms |     — |
+| per-node writable set (hybrid hot path)     |   ~1.25µs |         |        |       |
+| 5-node `Atom.batch` drag frame              |    ~8.7µs |         |        |       |
+| plain array push (today's model, reference) |  ~0.001ms |         |        |       |
 
 Real graph sizes: canvas boards 10s–100s, activation rounds ~100–300, explorer space graphs 1000s
 (already rebuilt wholesale today). Bundle: tree-shaken `effect/Graph` subset ~20KB min (~5KB today).
@@ -150,14 +150,14 @@ Real graph sizes: canvas boards 10s–100s, activation rounds ~100–300, explor
 
 ## Consumer migration map (38 import sites, 8 packages)
 
-| Consumer | Today | Plan |
-|---|---|---|
-| conductor `ComputeNode/Edge`, canvas `Shape`/`Connection`, `CanvasBoard.layout`, Notebook ref | schema layer | unchanged |
-| ~22 type-only sites (d3 projectors, `GraphAdapter`, testing data) | `{nodes, edges}` arrays | model exposes cached snapshot `.nodes`/`.edges` (codec encode per version) |
-| `activation-graph` (app-framework) | hand-rolled Kahn's + cycle DFS | port; waves via `topo`+`predecessors` levels; cycle path stays hand-rolled over SCC (ordered, capability-annotated — spike-verified) |
-| `useRope`, `createGraph` (sdk/schema), `SpaceGraphModel`, `react-ui-graph` | build/rebuild + subscribe | clean port; `traverse` → `dfs`; rebuild → one `set` |
-| `ComputeGraphModel` (conductor), `CanvasGraphModel` (canvas-editor) | wrap live ECHO arrays + `_change` | ECHO adapter (Phase 3) |
-| `SelectionModel` | atom-based, not graph-related | untouched (possible later split) |
+| Consumer                                                                                      | Today                             | Plan                                                                                                                                 |
+| --------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| conductor `ComputeNode/Edge`, canvas `Shape`/`Connection`, `CanvasBoard.layout`, Notebook ref | schema layer                      | unchanged                                                                                                                            |
+| ~22 type-only sites (d3 projectors, `GraphAdapter`, testing data)                             | `{nodes, edges}` arrays           | model exposes cached snapshot `.nodes`/`.edges` (codec encode per version)                                                           |
+| `activation-graph` (app-framework)                                                            | hand-rolled Kahn's + cycle DFS    | port; waves via `topo`+`predecessors` levels; cycle path stays hand-rolled over SCC (ordered, capability-annotated — spike-verified) |
+| `useRope`, `createGraph` (sdk/schema), `SpaceGraphModel`, `react-ui-graph`                    | build/rebuild + subscribe         | clean port; `traverse` → `dfs`; rebuild → one `set`                                                                                  |
+| `ComputeGraphModel` (conductor), `CanvasGraphModel` (canvas-editor)                           | wrap live ECHO arrays + `_change` | ECHO adapter (Phase 3)                                                                                                               |
+| `SelectionModel`                                                                              | atom-based, not graph-related     | untouched (possible later split)                                                                                                     |
 
 `AbstractGraphModel`/`AbstractBuilder` subclass hierarchy is replaced by the new core's extension
 surface; all call sites are in-repo — migrate in the same change, **no compat shims** (repo rule).
@@ -216,21 +216,21 @@ may be too opinionated for upstream — keep it in our layer if so.
 
 `@dxos/app-graph` independently converged on the granular pattern (`Atom.family` per node id,
 writable per-node `_edges` family, `keepAlive`, labels; `useNavTreeModel` already derives atoms
-over `node()`/`connections()`). The storage designs differ for a *semantic* reason, not a
+over `node()`/`connections()`). The storage designs differ for a _semantic_ reason, not a
 historical one:
 
-| | `@dxos/app-graph` | planned `@dxos/graph` core |
-|---|---|---|
-| graph is | **virtual/lazily materialized** — connectors expand on demand, unbounded | **complete data** — canvas/compute docs, serializable |
-| storage | sharded writable family atoms, O(1) writes, **no global node list** | one canonical COW graph value in a root atom |
-| dangling edges | legal (arrival order arbitrary; filtered at read) | `addEdge` throws on missing endpoint |
-| removal | tombstone (`Option.none`, atom persists, pending expands resurrect) | real removal |
-| edges | relation-typed (kind+direction), per-node **ordered** adjacency, inverse lists maintained, no payload | edge objects with id + data payload |
-| algorithms | hand-rolled `traverse` (visitor DFS), `getPath` (DFS scan), `waitForPath` (**500ms poll**), `toJSON` | full `effect/Graph` library |
+|                | `@dxos/app-graph`                                                                                     | planned `@dxos/graph` core                            |
+| -------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| graph is       | **virtual/lazily materialized** — connectors expand on demand, unbounded                              | **complete data** — canvas/compute docs, serializable |
+| storage        | sharded writable family atoms, O(1) writes, **no global node list**                                   | one canonical COW graph value in a root atom          |
+| dangling edges | legal (arrival order arbitrary; filtered at read)                                                     | `addEdge` throws on missing endpoint                  |
+| removal        | tombstone (`Option.none`, atom persists, pending expands resurrect)                                   | real removal                                          |
+| edges          | relation-typed (kind+direction), per-node **ordered** adjacency, inverse lists maintained, no payload | edge objects with id + data payload                   |
+| algorithms     | hand-rolled `traverse` (visitor DFS), `getPath` (DFS scan), `waitForPath` (**500ms poll**), `toJSON`  | full `effect/Graph` library                           |
 
 **Decision (REVISED, superseding the first-pass verdict): Option A — consolidate app-graph's
 storage onto the canonical core.** The initial rejection over-weighted the storage deltas. The
-key realization (user challenge, then spike-verified): the *virtual* part of app-graph is the
+key realization (user challenge, then spike-verified): the _virtual_ part of app-graph is the
 **builder** (expansion protocol, connectors) — a layer in either design. The core app graph —
 everything expanded so far — is a legitimate complete graph, and the storage deltas unify:
 
@@ -254,11 +254,11 @@ it at O(deg):
 Measured A/B/C vs a faithful replica of today's sharded `GraphImpl` (same tree, same 100 flush
 bursts, 200 mounted connections atoms, graph growing 1.9k→6.9k nodes):
 
-| | today's sharded | canonical COW `mutate` | **long-lived mutable (adopted)** |
-|---|---:|---:|---:|
-| write: per 50-node batched flush | 3.76ms | 8.66ms | **1.83ms (2× faster than today)** |
-| read: path search @ ~6.9k nodes | 20.2ms (DFS through atoms; `waitForPath` re-runs it every 500ms) | 9.0ms | **9.0ms (reactive, no polling)** |
-| explicit immutable snapshot | n/a | free (is the value) | 5.4ms, on demand only |
+|                                  |                                                  today's sharded | canonical COW `mutate` |  **long-lived mutable (adopted)** |
+| -------------------------------- | ---------------------------------------------------------------: | ---------------------: | --------------------------------: |
+| write: per 50-node batched flush |                                                           3.76ms |                 8.66ms | **1.83ms (2× faster than today)** |
+| read: path search @ ~6.9k nodes  | 20.2ms (DFS through atoms; `waitForPath` re-runs it every 500ms) |                  9.0ms |  **9.0ms (reactive, no polling)** |
+| explicit immutable snapshot      |                                                              n/a |    free (is the value) |             5.4ms, on demand only |
 
 COW's write cost decomposes as ~65% the double full-graph clone (`beginMutation` + `endMutation`),
 ~25% the O(E) adjacency-index rebuild, ~1% the actual writes — which is why dropping the clone
@@ -268,7 +268,7 @@ are not O(1) either: `addEdgeImpl` spreads the whole edges record per add — O(
 collections, quadratic within a burst. Net for the adopted design: **writes 2× faster than today,
 reads 2× faster, polling eliminated.** It buys: algorithms run
 directly on the live canonical value (no projection rebuild — the interim Option B paid ~17ms per
-flush *while mounted*), `getPath`→`dijkstra` (shortest path; replaces DFS scan), reactive
+flush _while mounted_), `getPath`→`dijkstra` (shortest path; replaces DFS scan), reactive
 `pathAtom` (kills `waitForPath`'s 500ms poll), free inverse edges, a serializable/cacheable
 expanded graph (`Node.cacheable` finally has a natural target), and one graph model repo-wide.
 

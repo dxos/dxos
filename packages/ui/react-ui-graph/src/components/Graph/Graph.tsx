@@ -34,7 +34,7 @@ export type GraphProps<Node extends Graph$.Node.Any = any, Edge extends Graph$.E
     GraphRendererOptions<Node>,
     'labels' | 'subgraphs' | 'attributes' | 'renderNode' | 'highlightOnHover' | 'applyNode' | 'edgeOpacity'
   > & {
-    model?: GraphModel.ReactiveGraphModel<Node, Edge>;
+    model?: GraphModel.GraphModel<Node, Edge>;
     projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
     drag?: boolean;

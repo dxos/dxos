@@ -40,7 +40,12 @@ export type SpaceGraphModelOptions = {
 /**
  * Converts ECHO objects to a graph.
  */
-export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNode, SpaceGraphEdge> {
+export class SpaceGraphModel extends GraphModel.AbstractGraphModel<
+  SpaceGraphNode,
+  SpaceGraphEdge,
+  SpaceGraphModel,
+  SpaceGraphBuilder
+> {
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
   private _db?: Database.Database;
@@ -56,7 +61,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   }
 
   override copy(graph?: Partial<Graph.Graph<SpaceGraphNode, SpaceGraphEdge>>): SpaceGraphModel {
-    return new SpaceGraphModel(this.registry, graph);
+    return new SpaceGraphModel({ registry: this.registry, graph });
   }
 
   get objects(): Entity.Unknown[] {
@@ -163,14 +168,14 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
   private _update() {
     log('update', {
-      nodes: this._graph.nodes.length,
-      edges: this._graph.edges.length,
+      nodes: this.nodes.length,
+      edges: this.edges.length,
       objects: this._objects?.length,
       extraItems: this._extraItems?.length,
     });
 
     // TOOD(burdon): Merge edges also?
-    const currentNodes: SpaceGraphNode[] = [...this._graph.nodes] as SpaceGraphNode[];
+    const currentNodes: SpaceGraphNode[] = [...this.nodes];
 
     // Build new graph state locally, then set it all at once.
     const newNodes: SpaceGraphNode[] = [];

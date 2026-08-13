@@ -21,12 +21,14 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
     change?: GraphModel.GraphChangeFunction,
   ): CanvasGraphModel<S> {
     if (isProxy(graph) as any) {
-      return new CanvasGraphModel<S>(graph as Graph.Graph<S, Connection>, change);
+      return new CanvasGraphModel<S>({ graph: graph as Graph.Graph<S, Connection>, change });
     }
 
     return new CanvasGraphModel<S>({
-      nodes: (graph?.nodes ?? []) as S[],
-      edges: (graph?.edges ?? []) as Connection[],
+      graph: {
+        nodes: (graph?.nodes ?? []) as S[],
+        edges: (graph?.edges ?? []) as Connection[],
+      },
     });
   }
 

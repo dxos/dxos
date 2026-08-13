@@ -12,15 +12,15 @@ export type TestNode = Graph.Node.Any & {
   children?: TestNode[];
 };
 
-export class TestGraphModel extends GraphModel.ReactiveGraphModel<TestNode> {
+export class TestGraphModel extends GraphModel.GraphModel<TestNode> {
   getRandomNode() {
-    return random.helpers.arrayElement(this._graph.nodes);
+    return random.helpers.arrayElement(this.nodes);
   }
 
   createNodes(node: TestNode = undefined, n = 1): void {
     Array.from({ length: n }).forEach(() => {
       const child = this.addNode(createNode());
-      const parent = node || random.helpers.arrayElement(this._graph.nodes);
+      const parent = node || random.helpers.arrayElement(this.nodes);
       if (parent) {
         this.addEdge(createEdge(parent, child));
       }

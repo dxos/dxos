@@ -79,9 +79,9 @@ const DefaultStory = ({
 
   // Models.
   const selection = useMemo(() => new SelectionModel({ mode: selectionMode }), [selectionMode]);
-  const [model, setModel] = useState<GraphModel.ReactiveGraphModel | undefined>(() => {
+  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
     const graph = _graph?.();
-    return graph ? new TestGraphModel(registry, graph) : undefined;
+    return graph ? new TestGraphModel({ registry, graph }) : undefined;
   });
 
   // Projector.
@@ -160,7 +160,7 @@ const DefaultStory = ({
 
   const handleRegenerate = useCallback(() => {
     const graph = _graph?.();
-    setModel(graph ? new TestGraphModel(registry, graph) : undefined);
+    setModel(graph ? new TestGraphModel({ registry, graph }) : undefined);
   }, [_graph, registry]);
 
   const handleClear = useCallback(() => {
@@ -282,7 +282,7 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel.ReactiveGraphModel;
+  model?: GraphModel.GraphModel;
   selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;

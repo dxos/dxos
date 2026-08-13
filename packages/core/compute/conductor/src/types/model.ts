@@ -31,7 +31,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
   private readonly _root: ComputeGraph;
 
   constructor(root: ComputeGraph) {
-    super(root.graph as Graph.Graph<ComputeNode, ComputeEdge>, (fn) => Obj.update(root, fn));
+    super({ graph: root.graph as Graph.Graph<ComputeNode, ComputeEdge>, change: (fn) => Obj.update(root, fn) });
     this._root = root;
   }
 
@@ -73,12 +73,15 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
         ? target.node
         : target.node.id;
 
+    const output = source.property ?? DEFAULT_OUTPUT;
+    const input = target.property ?? DEFAULT_INPUT;
     const edge: ComputeEdge = {
-      id: Graph.createEdgeId({ source: sourceId, target: targetId }),
+      // Ports disambiguate the parallel edges a pair of nodes may carry.
+      id: Graph.createEdgeId({ source: sourceId, target: targetId, relation: `${output}-${input}` }),
       source: sourceId,
       target: targetId,
-      output: source.property ?? DEFAULT_OUTPUT,
-      input: target.property ?? DEFAULT_INPUT,
+      output,
+      input,
     };
 
     this.addEdge(edge);
