@@ -5,18 +5,18 @@
 
 // Finalize an agentic review run: parse every group fragment, merge diagnostics
 // into REVIEW.md (sorted, deduped, each stamped with `<review_id>-<seq>`), write
-// RESOLUTION.md (all unresolved), mark the run finalized, and print a summary.
+// RESOLUTION.md, delete intermediate staging/group files, and print a summary.
 //
 // Usage:
 //   node finalize.mjs [--slug=<slug>] [--dir=<path to review store>] [--force]
 //   node finalize.mjs --all [--force]
 //
 // With neither --slug/--dir/--all, the most recently modified non-finalized
-// review is used. `--force` re-finalizes an already-finalized run (re-stamps
-// ids + regenerates RESOLUTION.md). `--all` walks every store under
-// `.agents/reviews/` (skips finalized unless `--force`).
+// review is used. `--force` re-finalizes an already-finalized run. `--all` walks
+// every store under `.agents/reviews/` (skips finalized unless `--force`).
+// After a successful finalize the store keeps only REVIEW.md + RESOLUTION.md.
 
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -28,7 +28,7 @@ import {
   renderDiagnostic,
 } from '../lib/diagnostics.mjs';
 import { repoRoot } from '../lib/git.mjs';
-import { renderResolution, RESOLUTION_FILE } from '../lib/resolution.mjs';
+import { parseResolution, renderResolution, RESOLUTION_FILE } from '../lib/resolution.mjs';
 import {
   assertSafeSlug,
   GROUPS_MANIFEST,
@@ -37,6 +37,9 @@ import {
   renderFrontmatter,
   reviewIdFromStore,
 } from '../lib/store.mjs';
+
+const STAGING_FILE = 'STAGING.md';
+const INTERMEDIATES = [STAGING_FILE, GROUPS_MANIFEST, 'groups'];
 
 const { values } = parseArgs({
   options: {
@@ -123,28 +126,37 @@ const finalizeStore = (storeDir) => {
     return { skipped: true };
   }
 
-  // The manifest carries each group's authoritative rule id + severity, so a
-  // subagent's WARN/ERROR header cannot change the rule-fixed severity.
+  // Prefer group fragments (fresh run). After intermediates are pruned, --force
+  // re-reads the already-stamped REVIEW.md body so ids/statuses can be refreshed.
   const manifestPath = join(storeDir, GROUPS_MANIFEST);
   const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {};
-
   const groupsDir = join(storeDir, 'groups');
+  const groupFiles =
+    existsSync(groupsDir) ? readdirSync(groupsDir).filter((name) => name.endsWith('.md')).sort() : [];
+
   const diagnostics = [];
-  if (existsSync(groupsDir)) {
-    for (const name of readdirSync(groupsDir).sort()) {
-      if (name.endsWith('.md')) {
-        const nn = name.replace(/\.md$/, '');
-        const rule = manifest[nn];
-        const parsed = parseDiagnostics(readFileSync(join(groupsDir, name), 'utf8'), `groups/${name}`);
-        for (const diagnostic of parsed) {
-          // Rule severity + id win; fall back to the parsed value only for a manifest-less run.
-          diagnostics.push({
-            ...diagnostic,
-            severity: rule?.severity ?? diagnostic.severity,
-            ruleId: rule?.ruleId ?? diagnostic.ruleId ?? 'unknown',
-          });
-        }
+  let fromGroups = false;
+  if (groupFiles.length > 0) {
+    fromGroups = true;
+    for (const name of groupFiles) {
+      const nn = name.replace(/\.md$/, '');
+      const rule = manifest[nn];
+      const parsed = parseDiagnostics(readFileSync(join(groupsDir, name), 'utf8'), `groups/${name}`);
+      for (const diagnostic of parsed) {
+        // Rule severity + id win; fall back to the parsed value only for a manifest-less run.
+        diagnostics.push({
+          ...diagnostic,
+          severity: rule?.severity ?? diagnostic.severity,
+          ruleId: rule?.ruleId ?? diagnostic.ruleId ?? 'unknown',
+        });
       }
+    }
+  } else if (review.body?.trim()) {
+    for (const diagnostic of parseDiagnostics(review.body, `${slug}/REVIEW.md`)) {
+      diagnostics.push({
+        ...diagnostic,
+        ruleId: diagnostic.ruleId ?? 'unknown',
+      });
     }
   }
 
@@ -161,20 +173,33 @@ const finalizeStore = (storeDir) => {
   merged.sort(compareDiagnostics);
 
   const reviewId = reviewIdFromStore(slug, review.data.commit);
-  const numbered = assignIssueIds(merged, reviewId);
+  // Fresh from groups → assign ids; REVIEW re-read → keep existing ids.
+  const numbered = fromGroups
+    ? assignIssueIds(merged, reviewId)
+    : merged.map((diagnostic, index) =>
+        diagnostic.id != null ? diagnostic : { ...diagnostic, id: `${reviewId}-${index + 1}` },
+      );
 
   const counts = { error: 0, warn: 0 };
   for (const diagnostic of numbered) {
     counts[diagnostic.severity]++;
   }
 
-  // Preserve known frontmatter; refresh groups count from the fragment set.
-  const groupCount = existsSync(groupsDir)
-    ? readdirSync(groupsDir).filter((name) => name.endsWith('.md')).length
-    : Number(review.data.groups) || 0;
+  const groupCount = fromGroups ? groupFiles.length : Number(review.data.groups) || 0;
   const appliedRuleIds = [
     ...new Set(numbered.map((diagnostic) => diagnostic.ruleId).filter((id) => id && id !== 'unknown')),
   ].sort();
+
+  // Preserve agent-updated statuses on --force; new issues default to unresolved.
+  const resolutionPath = join(storeDir, RESOLUTION_FILE);
+  let priorStatuses = null;
+  if (existsSync(resolutionPath)) {
+    try {
+      priorStatuses = parseResolution(readFileSync(resolutionPath, 'utf8'));
+    } catch {
+      priorStatuses = null;
+    }
+  }
 
   const frontmatter = renderFrontmatter({
     ...review.data,
@@ -188,7 +213,12 @@ const finalizeStore = (storeDir) => {
       ? ['<!-- no diagnostics: clean -->']
       : [`_${counts.error} error(s), ${counts.warn} warning(s)._`, ...numbered.map(renderDiagnostic)];
   writeFileSync(reviewPath, `${frontmatter}\n${bodyBlocks.join('\n\n')}\n`);
-  writeFileSync(join(storeDir, RESOLUTION_FILE), renderResolution(slug, numbered));
+  writeFileSync(resolutionPath, renderResolution(slug, numbered, priorStatuses));
+
+  // Staging + group fragments are ephemeral; only the finalized ledger remains.
+  for (const name of INTERMEDIATES) {
+    rmSync(join(storeDir, name), { recursive: true, force: true });
+  }
 
   const rel = reviewPath.slice(root.length + 1);
   console.log(`REVIEW:     ${rel}`);
