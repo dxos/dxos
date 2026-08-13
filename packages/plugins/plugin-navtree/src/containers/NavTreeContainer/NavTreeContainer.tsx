@@ -27,6 +27,9 @@ import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
+/** Idle time before a hovered row is prefetched; long enough that a cursor crossing a row does not trigger it. */
+const HOVER_EXPAND_DELAY = 150;
+
 // TODO(wittjosiah): Avoid using Surface within the navtree, prefer declarative data flow.
 const NavTreeItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => {
   const data = useMemo(() => ({ id: node.id, subject: node.data, open }), [node.id, node.data, open]);
@@ -242,7 +245,19 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       }
     }, [workspaceChildren, tab, setItem, graph]);
 
-    const onItemHover = useCallback(({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'child'), [graph]);
+    // Expanding a node runs every matching graph-builder connector synchronously, so doing it straight from
+    // the pointer handler makes a fast cursor sweep pay for every row it crossed. Trailing-edge only the row
+    // the cursor settles on is prefetched; `Graph.expand` is idempotent, so settling on an already-expanded
+    // row costs nothing.
+    const hoverExpandRef = useRef<NodeJS.Timeout>(undefined);
+    useEffect(() => () => clearTimeout(hoverExpandRef.current), []);
+    const onItemHover = useCallback(
+      ({ item }: { item: Node.Node }) => {
+        clearTimeout(hoverExpandRef.current);
+        hoverExpandRef.current = setTimeout(() => Graph.expand(graph, item.id, 'child'), HOVER_EXPAND_DELAY);
+      },
+      [graph],
+    );
 
     const navTreeContextValue = useMemo(
       () => ({

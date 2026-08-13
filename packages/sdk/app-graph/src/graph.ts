@@ -16,7 +16,15 @@ import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
 import * as Node from './node';
-import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, shallowEqual } from './util';
+import {
+  normalizeRelation,
+  primaryKey,
+  primaryParts,
+  secondaryKey,
+  secondaryParts,
+  shallowEqual,
+  withLabel,
+} from './util';
 
 const graphSymbol = Symbol('graph');
 
@@ -164,7 +172,7 @@ class GraphImpl implements WritableGraph {
   /** @internal */
   readonly _node = Atom.family<string, Atom.Writable<Option.Option<Node.Node>>>((id) => {
     const initial = this._initialNodes.get(id) ?? Option.none();
-    return Atom.make<Option.Option<Node.Node>>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:node:${id}`));
+    return Atom.make<Option.Option<Node.Node>>(initial).pipe(Atom.keepAlive, withLabel(`graph:node:${id}`));
   });
 
   readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node.Node>>((id) => {
@@ -177,7 +185,7 @@ class GraphImpl implements WritableGraph {
 
   readonly _edges = Atom.family<string, Atom.Writable<Edges>>((id) => {
     const initial = this._initialEdges.get(id) ?? ({} as Edges);
-    return Atom.make<Edges>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:edges:${id}`));
+    return Atom.make<Edges>(initial).pipe(Atom.keepAlive, withLabel(`graph:edges:${id}`));
   });
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
@@ -196,7 +204,7 @@ class GraphImpl implements WritableGraph {
         .map((id) => get(this._node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
-    }).pipe(Atom.withLabel(`graph:connections:${key}`));
+    }).pipe(withLabel(`graph:connections:${key}`));
   });
 
   readonly _actions = Atom.family<string, Atom.Atom<(Node.Action | Node.ActionGroup)[]>>((id) => {
@@ -205,7 +213,7 @@ class GraphImpl implements WritableGraph {
         return [];
       }
       return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
-    }).pipe(Atom.withLabel(`graph:actions:${id}`));
+    }).pipe(withLabel(`graph:actions:${id}`));
   });
 
   readonly _json = Atom.family<string, Atom.Atom<any>>((id) => {
@@ -233,7 +241,7 @@ class GraphImpl implements WritableGraph {
 
       const root = get(this._nodeOrThrow(id));
       return toJSON(root);
-    }).pipe(Atom.withLabel(`graph:json:${id}`));
+    }).pipe(withLabel(`graph:json:${id}`));
   });
 
   constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphProps = {}) {
