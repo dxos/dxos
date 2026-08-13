@@ -191,11 +191,14 @@ Both of activation-graph's hand-rolled algorithms generalize cleanly to graph-le
 the `dijkstra` family — validated against the real `activation-graph.test.ts` fixtures (hard-only
 waves, hard+soft layering, cyclic → none, ordered annotated cycle, parallel edges):
 
-- **`waves(graph, {includeEdge?})` → `Option<NodeIndex[][]>`** — Kahn levels (layered topological
-  sort): wave N = nodes whose longest included-edge incoming path has length N; `Option.none` on
-  cycle. Effect's `topo` uses the same Kahn machinery but flattens to a linear order and THROWS on
-  cycles — `waves` subsumes activation's need. ~35 lines; 4.4ms over 5000 nodes / 14.7k edges
-  (activation rounds are ~100–300 modules → sub-0.1ms).
+- **`topoLevels(graph, {includeEdge?})` → `Option<NodeIndex[][]>`** — layered topological sort
+  (Kahn levels; NetworkX: `topological_generations`): level N = nodes whose longest included-edge
+  incoming path has length N; `Option.none` on cycle. Effect's `topo` uses the same Kahn
+  machinery but flattens to a linear order and THROWS on cycles — `topoLevels` subsumes
+  activation's need. ~35 lines; 4.4ms over 5000 nodes / 14.7k edges (activation rounds are
+  ~100–300 modules → sub-0.1ms). Named to align with Effect's `topo` rather than the algorithm's
+  inventor or activation-graph's "wave" domain term — "wave" stays app-framework vocabulary for
+  what it does with a level (concurrent activation batch).
 - **`findCycle(graph, {includeEdge?})` → `Array<{node, edge, edgeIndex}>`** — one cycle IN ORDER
   with edge annotations (the diagnostic `findCyclePath` needs; SCC gives only unordered
   membership, and Effect's `topo` throws `GraphError` with no witness). ~40 lines.
@@ -205,7 +208,7 @@ waves, hard+soft layering, cyclic → none, ordered annotated cycle, parallel ed
 Net effect on activation-graph: `computeActivationWaves` + `findCyclePath` (~60 lines) reduce to
 ~10 lines of calls + module mapping; what stays app-framework-specific is only building the graph
 from capability declarations. Upstream candidates, in order of strength: `findCycle` (improves
-Effect's own cycle-error story — their `topo` currently throws witness-free), then `waves`
+Effect's own cycle-error story — their `topo` currently throws witness-free), then `topoLevels`
 (natural `topo` companion, possibly as `topo(graph, {levels: true})`); the `includeEdge` predicate
 may be too opinionated for upstream — keep it in our layer if so.
 
