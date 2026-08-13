@@ -142,7 +142,7 @@ projects:
     summary: The inbox product surface — virtual folders, message actions (archive/enrich/project), contact affordances, and the summarization UI.
     tasks: packages/plugins/plugin-inbox/TASKS.md
     design: packages/plugins/plugin-inbox/PLAN.md
-    prs: []
+    prs: [12555]
     resume: 'Split out of mailbox-research 2026-08-13 (that ledger keeps the model-ladder/FINDINGS research). TASKS.md is structured as PHASES THAT MAP 1:1 ONTO PRs — one phase, one PR, do not start a phase before its predecessor is open. Phase 1 (inbox surface) is COMMITTED but UNPUSHED on claude/suspicious-wilson-a54e74: Inbox+Starred navtree folders, archive/restore in both the conversation menu and the mailbox tile menu, archive grouped with delete, close-the-plank on archive, recipients row with icon + bare addresses, ContactAvatar in the conversation. KEY DECISION: archive is the `inbox` tag coming OFF, never an `archived` tag — Gmail models INBOX as a label, JMAP as a role, both already mapped in the providers, so one toggle serves both directions and no filter-complement operator is needed. CONSEQUENCE ACCEPTED BY THE USER: archive is LOCAL-ONLY (Gmail tag sync is P2), so a sync WILL restore an archived message — do not re-file as a bug. NEXT: Phase 0, the RecordArticle toolbar+menu in plugin-space (P0, may deserve its own project); the open design question is how enrich actions get injected — a capability-contributed provider keyed by typename vs resolving CrmOperation directly. TASKS.md also carries a MANUAL TEST PLAN (sections A-F) covering everything built but never seen running; nothing in Phase 1 has been verified in a live app.'
   - name: mailbox-research
     status: active

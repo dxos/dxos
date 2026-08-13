@@ -1,8 +1,8 @@
 # plugin-inbox — Tasks
 
-_Resume: Phase 1 is committed on `claude/suspicious-wilson-a54e74` (13 commits, unpushed, rebased onto
-the #12553 squash `9c86066e45`). Next action: Phase 0 — the RecordArticle toolbar/menu. Phases below map
-1:1 onto PRs. Uncommitted: none._
+_Resume: **PR #12555 OPEN** — Phases 0, 1 and 2 all landed in it (22 commits). Next action: Phase 3, starting
+with the `useContactLookup` defect. NOTHING IS VERIFIED IN A RUNNING APP — see the storybook blocker
+below; the manual test plan (A–F) is written but unrun. Uncommitted: none._
 
 Split out of `packages/stories/stories-brain/TASKS.md` on 2026-08-13: that ledger is the model-ladder /
 FINDINGS research harness, this one is the inbox product surface. The ~40 older Topics / FINDINGS /
