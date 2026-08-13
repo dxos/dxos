@@ -3,7 +3,7 @@
 //
 
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, forwardRef } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
 import { ThemeProvider } from '../../primitives';
@@ -28,14 +28,26 @@ describe('Tooltip', () => {
     </Tooltip.Provider>
   );
 
-  const CountingTrigger = ({ label, onRender }: { label: string; onRender?: (label: string) => void }) => {
-    onRender?.(label);
-    return (
-      <Tooltip.Trigger content={`${label} tip`}>
-        <span>{label}</span>
-      </Tooltip.Trigger>
-    );
-  };
+  // `asChild` mirrors how `IconButton` uses the trigger, and is what makes this measurable: when
+  // `Tooltip.Trigger` re-renders, `Slot` clones its child with freshly-composed handlers, so the wrapped
+  // button re-renders with it. Counting the child therefore counts trigger re-renders — counting the
+  // *parent* would not, since a context change re-renders the consumer, not whoever rendered it.
+  const CountingTrigger = ({ label, onRender }: { label: string; onRender?: (label: string) => void }) => (
+    <Tooltip.Trigger asChild content={`${label} tip`}>
+      <CountingButton label={label} onRender={onRender} />
+    </Tooltip.Trigger>
+  );
+
+  const CountingButton = forwardRef<HTMLButtonElement, { label: string; onRender?: (label: string) => void }>(
+    ({ label, onRender, ...props }, forwardedRef) => {
+      onRender?.(label);
+      return (
+        <button {...props} ref={forwardedRef}>
+          {label}
+        </button>
+      );
+    },
+  );
 
   test('only the hovered trigger carries the open tooltip attributes', async ({ expect }) => {
     render(<Harness />, { wrapper: Wrapper });
