@@ -650,8 +650,31 @@ export const McpTool = Schema$.Struct({
   safety: Schema$.Literals(['read', 'write', 'destructive']),
   /** Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`). */
   aspect: Schema$.optional(Schema$.String),
+  /**
+   * Prompt name of the skill whose workflow this tool belongs to (a skill key's final segment,
+   * e.g. `codeProject`) — the wire form of {@link SkillRef}, derived by {@link mcpTool}; never
+   * written by hand. The MCP projection appends a load-the-skill-first pointer to the tool's
+   * description and serves the skill body through its `skillLoad` tool, so a model discovers the
+   * workflow from the tool it is about to call — progressive disclosure in the direction of the
+   * MCP "Skills over MCP" extension (SEP-2640), whose hosts likewise expose a model-invocable
+   * skill-loading tool keyed by skill name. MCP prompts cannot serve this purpose: the spec makes
+   * them user-controlled, so a model can never fetch one on its own.
+   */
+  skill: Schema$.optional(Schema$.String),
 });
 export type McpTool = Schema$.Schema.Type<typeof McpTool>;
+
+/**
+ * Reference to the skill a tool belongs to, for {@link mcpTool}'s `skill` prop.
+ *
+ * Structurally a `Skill.Definition`, so a plugin that owns (or already depends on) the definition
+ * passes it directly and the annotation can never name a skill that does not exist. Kept
+ * structural rather than importing the type — `Skill` imports this module — and so that a plugin
+ * which must not depend on the skill's owner can pass a shared key constant instead (the
+ * plain-keys idiom of plugin-projects' `skills/keys.ts`). Only the key's final segment is
+ * persisted; it doubles as the skill's MCP prompt name.
+ */
+export type SkillRef = { readonly key: string };
 
 /**
  * Annotation that opts an operation into MCP projection. The annotation rides through
@@ -669,8 +692,16 @@ export const McpToolAnnotation = Annotation.make({
 /**
  * Pipeable combinator that opts an operation into MCP projection. Apply at the definition site:
  * `Operation.make({ ... }).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write' }))`.
+ *
+ * `skill` takes a {@link SkillRef} — the skill definition itself, or a shared key constant — and
+ * persists the key's final segment, the coordinate the MCP surface uses for both the prompt and
+ * `skillLoad`.
  */
-export const mcpTool = (props: McpTool) => annotate(McpToolAnnotation, props);
+export const mcpTool = ({ skill, ...props }: Omit<McpTool, 'skill'> & { skill?: SkillRef }) =>
+  annotate(McpToolAnnotation, {
+    ...props,
+    ...(skill == null ? {} : { skill: skill.key.split('.').at(-1) }),
+  });
 
 /**
  * Returns the MCP projection descriptor when the operation is annotated for it, else undefined.

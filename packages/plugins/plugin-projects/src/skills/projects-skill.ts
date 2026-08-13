@@ -7,9 +7,12 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 // The workflow content lives beside this module as markdown so it can be edited as prose.
+import { CodeProjectSkill } from './keys';
 import instructions from './projects-skill.md?raw';
 
-const SKILL_KEY = 'org.dxos.plugin.projects.skill.codeProject';
+// Shared with the mcpTool annotation sites via `keys.ts`, so a tool that declares itself part of
+// this workflow always names the skill that actually ships.
+const SKILL_KEY = CodeProjectSkill.key;
 
 /**
  * Project-management workflow for agents driving the projected MCP verbs: work-stream projects
