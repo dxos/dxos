@@ -9,9 +9,9 @@ import {
   AppGraphBuilder,
   AutomationTemplates,
   MailboxAction,
-  SenderAction,
   OperationHandler,
   ProjectTemplates,
+  SenderAction,
   SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';

@@ -90,10 +90,19 @@ Committed, unpushed. This is the PR to open first.
       question from triage is answered by that: the gate is per action-set, not per button. The existing
       `'no-connections.label'` empty state is NOT yet driven by the same predicate — worth folding
       together if that string ever moves off its current surface.
-- [ ] **plugin-crm story driving `CrmOperation.EnrichImages`** — the package's first storybook (config,
+- [x] **plugin-crm story driving `CrmOperation.EnrichImages`** — the package's first storybook (config,
       deps, moon target). Seed a Person and an Organization with no `image`, render their cards, add a
       button that invokes the operation and shows the result. Establish image-service reachability
       empirically and report it; never fake a result.
+      SHIPPED. TWO CORRECTIONS to the assumption above: (1) NO storybook config was needed — the shared
+      config already globs `plugins/*/src/**/*.stories.tsx`, so a story file is enough; only devDeps
+      (`@dxos/plugin-testing`, `@dxos/plugin-client`, `@dxos/echo-react`, `@storybook/react-vite`) were
+      missing. (2) **The image service IS reachable.** Default is `image.main.dxos.network` — DNS
+      resolves and HTTPS answers (404 on `/` is just the bare root). A stale
+      `TODO: images.dxos.org does not resolve` sat above the constant and was the source of the doubt;
+      that host is no longer the default and is the only one that fails DNS. Comment removed.
+      The story reports the operation's real result (including `result.error`) rather than faking one.
+      NOT RUN: blocked by the storybook startup timeout above, so it is unverified like everything else.
 - [ ] **Delete `ProcessMailbox`** — the operation, `ResetProcessCursor`, its routine template, cursor
       helpers, tests and translations. Rewrite the "Mailbox pipeline routine" phase in the
       `stories-brain` ledger so it does not keep claiming shipped features. This CLOSES "real stages
