@@ -1,6 +1,7 @@
 # Mailbox pipelines — current state and target design
 
-Status: **design, not built.** Records the analysis behind turning the closed `ScanMailbox` cascade
+Status: **partly built** — D1-D4 landed (the `MailboxProcessor` capability, `operations/topology.ts`,
+and `ScanMailbox` resolving its run from contributions); D5 and D6 are still design. Records the analysis behind turning the closed `ScanMailbox` cascade
 into an open, contributable processor topology. Sibling docs: [`PLAN.md`](PLAN.md) (product plan),
 [`TASKS.md`](TASKS.md) (ledger), [`AUDIT.md`](AUDIT.md) (component/test index).
 
@@ -163,7 +164,7 @@ test comment. Write the failing test first.
    `unmetPrecondition` in `operations/precondition.ts`.
 2. ~~Tag `AnalyzeMailbox`'s cursor with an explicit id (plus a one-time migration for existing
    untagged cursors), removing the "untagged means mine" inference.~~ DONE.
-3. `MailboxProcessor` capability + topology resolution in the harness; port the five built-ins.
+3. ~~`MailboxProcessor` capability + topology resolution in the harness; port the five built-ins.~~ DONE.
 4. Move `AnalyzeMailbox` to plugin-brain and `ProcessMailbox` to a contributed processor; drop
    `@dxos/pipeline-rdf` from plugin-inbox.
 5. Generalize off `Mailbox` to a feed-generic processor host.

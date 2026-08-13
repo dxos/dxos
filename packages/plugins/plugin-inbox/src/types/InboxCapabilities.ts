@@ -85,6 +85,59 @@ export type SenderAction = {
 /** Plugins contribute sender-scoped conversation-menu actions via this capability. */
 export const SenderAction = Capability.make<SenderAction>()(`${meta.profile.key}.capability.senderAction`);
 
+/** Run-scoped settings the cascade passes to every processor; each uses only what it needs. */
+export type MailboxProcessorOptions = {
+  /** The user's own addresses, for processors that derive a relationship from them. */
+  readonly me: readonly string[];
+  /** Message cap for processors that batch. */
+  readonly batchLimit?: number;
+  /** Model name for LLM processors; each defaults its own. */
+  readonly model?: string;
+  /** AI provider id (e.g. ollama). */
+  readonly provider?: string;
+  /** Attempt strict structured output; set false for weak local models. */
+  readonly strict?: boolean;
+};
+
+/**
+ * One cursored pass over a mailbox feed, contributed by whichever plugin owns it — a node in the
+ * topology {@link import('./InboxOperation').ScanMailbox} resolves and runs.
+ *
+ * This is the seam that keeps the cascade open: a plugin owning a pass contributes it here rather
+ * than plugin-inbox enumerating every pass it must know about. It is deliberately NOT the same thing
+ * as `@dxos/pipeline`'s `Stage`, which is a stream transform *within* one run; a processor is coarser
+ * — an independently-cursored, separately-spawned operation.
+ */
+export type MailboxProcessor = {
+  /**
+   * Stable id. Doubles as the topology key and as the tag its feed cursor carries, so a processor's
+   * watermark is its own — two processors sharing an id would silently skip each other's work.
+   */
+  id: string;
+  /** Cost class: what the `tiers` filter selects on, and how a run is reported. */
+  tier: import('./InboxOperation').MailboxTier;
+  /**
+   * Ids this processor must run after. Unknown ids are ignored rather than failing the run — naming a
+   * processor whose plugin is not installed is the normal case for an optional dependency.
+   */
+  after?: readonly string[];
+  /**
+   * Builds the invocation for one run, or returns a reason the pass cannot run against this mailbox
+   * (reported as skipped rather than attempted). A closure rather than value properties, for the same
+   * reason as {@link MailboxAction}: holding an `Operation.Definition` on the capability value makes
+   * the capability atom read recurse.
+   */
+  createInvocation: (
+    mailbox: import('./Mailbox').Mailbox,
+    options: MailboxProcessorOptions,
+  ) => { operation: import('@dxos/compute').Operation.Definition.Any; input: unknown } | { skip: string };
+};
+
+// Multi: the whole point is that several plugins contribute; plugin-inbox contributes its own passes
+// through the same seam rather than privileging them.
+/** Plugins contribute mailbox feed processors via this capability (see {@link MailboxProcessor}). */
+export const MailboxProcessor = Capability.make<MailboxProcessor>()(`${meta.profile.key}.capability.mailboxProcessor`);
+
 /**
  * The send operation a mail provider handles outbound drafts with. Each provider plugin contributes one
  * entry keyed by its `Connector.id`, so the composer routes a draft by its mailbox binding's

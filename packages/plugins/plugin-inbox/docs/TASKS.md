@@ -426,8 +426,22 @@ generalize now with mailbox as instance #1.
       the two tests that cover it, so neither is vacuous. `analyze-mailbox.test.ts` seeds untagged
       cursors and still passes, which exercises the migration path in situ. Delete the adoption branch
       once no untagged cursors remain in the wild.
-- [ ] **`MailboxProcessor` capability + topology resolution** in the harness; port the five built-ins
-      off the hardcoded `plan: Record<MailboxTier, () => Stage[]>`.
+- [x] **`MailboxProcessor` capability + topology resolution** — `ScanMailbox` now reads its passes
+      from `InboxCapabilities.MailboxProcessor` and orders them by the `after` edges each declares.
+      plugin-inbox contributes its own five through the SAME seam (`capabilities/mailbox-processors.ts`),
+      so there is no privileged built-in path to drift from the contributed one. - `operations/topology.ts` is pure and ECHO-free: unknown `after` ids ignored (optional
+      dependency whose plugin is absent), duplicate ids keep the first (ids are cursor tags, so
+      sharing one shares a watermark), a cycle excludes only what it blocks and every member names
+      the whole cycle. Ties resolve to contribution order — a topology that reshuffled between runs
+      would make cursor behaviour irreproducible. 10 tests. - FEASIBILITY CHECKED FIRST: `Capability.Service` really is reachable from an operation —
+      `process-manager-capability.ts:138` provides it explicitly "so that operations declaring
+      `services: [Capability.Service]` (and friends)" resolve, including the routine/trigger path. - GOTCHA that cost a cycle: providing `Capability.Service` via `Effect.provideService` on the
+      test effect does NOT work. The operation runtime resolves declared services through the
+      `ServiceResolver`, not the caller's Effect context, so it must go through
+      `AssistantTestLayer`'s `extraServices` (precedent: `plugin-tldraw/src/variant.test.ts:30`). - `stages[].operation` → `stages[].processor`, carrying the processor id rather than the
+      operation DXN. Free to rename because the cascade's changeset is still pending. - `MAILBOX_TIER_ORDER` deleted — a tier selects WHICH processors run, the edges decide order. - 2 tests cover the seam itself: a third-party processor contributed FIRST but declared
+      `after: ['subscriptions']` runs last (so ordering is the topology, not contribution order), and
+      a contributor shipping a cycle costs only itself while everything else still runs.
 - [ ] **Move `AnalyzeMailbox` to plugin-brain**; make `CrmOperation.ProcessMailbox` a contributed
       processor rather than a rival toolbar button. plugin-inbox then drops `@dxos/pipeline-rdf`, and
       the missing-`FactStore` case becomes structurally impossible rather than merely handled.

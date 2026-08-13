@@ -607,7 +607,7 @@ export const SummarizeMailbox = Operation.make({
 }).pipe(Operation.idempotent);
 
 /**
- * The cost classes {@link ScanMailbox} runs, in cascade order. Each tier's output gates the next,
+ * The cost classes {@link ScanMailbox} runs. Each tier's output gates the next,
  * so the ordering is the contract — not a convenience:
  *
  * - `deterministic` — no LLM, no spend: contacts (the known-sender allow-list) and subscriptions.
@@ -622,12 +622,11 @@ export const MailboxTier = Schema.Literals(['deterministic', 'classify', 'summar
 export type MailboxTier = Schema.Schema.Type<typeof MailboxTier>;
 
 /**
- * Cascade order. Each tier consumes what the ones before it wrote, so this order — not the order the
- * caller happens to list — is the one {@link ScanMailbox} runs in.
+ * Tiers run when the caller names none: the bounded ones (`analyze` walks the whole feed).
+ *
+ * A tier SELECTS which processors run, never their order — that comes from the `after` edges each
+ * processor declares, so a caller listing tiers backwards still gets the cascade order.
  */
-export const MAILBOX_TIER_ORDER: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize', 'analyze'];
-
-/** Tiers run when the caller names none: the bounded ones (`analyze` walks the whole feed). */
 export const DEFAULT_SCAN_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
 
 export const ScanMailbox = Operation.make({
@@ -640,7 +639,9 @@ export const ScanMailbox = Operation.make({
   },
   // Only the orchestrator's own needs: each spawned operation resolves its own services (an AI tier
   // brings its own AiService), so the cascade itself stays runnable where no AI layer exists.
-  services: [Database.Service, Trace.TraceService],
+  // `Capability.Service` is the exception it cannot do without — the processors it runs are read from
+  // a capability, so without it there is no topology to resolve.
+  services: [Capability.Service, Database.Service, Trace.TraceService],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox every tier operates on.',
@@ -684,11 +685,12 @@ export const ScanMailbox = Operation.make({
     completed: Schema.Number,
     failed: Schema.Number,
     skipped: Schema.Number,
-    /** Per-stage outcome in run order — the spawned operation's own output, or why it did not run. */
+    /** Per-processor outcome in run order — the spawned operation's own output, or why it did not run. */
     stages: Schema.Array(
       Schema.Struct({
         tier: MailboxTier,
-        operation: Schema.String,
+        /** The contributed processor's id — its topology key and its cursor tag. */
+        processor: Schema.String,
         status: Schema.Literals(['completed', 'failed', 'skipped', 'cancelled']),
         output: Schema.optional(Schema.Any),
         error: Schema.optional(Schema.String),

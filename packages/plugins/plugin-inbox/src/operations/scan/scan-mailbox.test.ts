@@ -4,8 +4,12 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -15,25 +19,55 @@ import { Message, Organization, Person } from '@dxos/types';
 
 import { InboxOperationHandlerSet } from '#operations';
 
+import { inboxMailboxProcessors } from '../../capabilities/mailbox-processors';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as InboxOperation from '../../types/InboxOperation';
 import * as Mailbox from '../../types/Mailbox';
 
-const TestLayer = AssistantTestLayer({
-  operationHandlers: InboxOperationHandlerSet,
-  types: [
-    Cursor.Cursor,
-    Feed.Feed,
-    Mailbox.Mailbox,
-    Message.Message,
-    Organization.Organization,
-    Person.Person,
-    Tag.Tag,
-    TagIndex.TagIndex,
-  ],
-  disableLlmMemoization: true,
-});
+const capabilityService = (processors: readonly InboxCapabilities.MailboxProcessor[] = inboxMailboxProcessors) => {
+  const manager = CapabilityManager.make({ registry: Registry.make() });
+  for (const processor of processors) {
+    manager.contribute({
+      interface: InboxCapabilities.MailboxProcessor,
+      implementation: processor,
+      module: `plugin-inbox/mailbox-processors/${processor.id}`,
+    });
+  }
+  return manager;
+};
+
+/**
+ * The cascade reads its processors from the capability and nothing else, so the test layer has to
+ * contribute them the way the app does — `extraServices`, not an ambient `provideService`, because the
+ * operation runtime resolves declared services through the ServiceResolver rather than the caller's
+ * Effect context.
+ */
+const makeTestLayer = (processors: readonly InboxCapabilities.MailboxProcessor[] = inboxMailboxProcessors) =>
+  AssistantTestLayer({
+    operationHandlers: InboxOperationHandlerSet,
+    types: [
+      Cursor.Cursor,
+      Feed.Feed,
+      Mailbox.Mailbox,
+      Message.Message,
+      Organization.Organization,
+      Person.Person,
+      Tag.Tag,
+      TagIndex.TagIndex,
+    ],
+    disableLlmMemoization: true,
+    extraServices: Layer.sync(Capability.Service, () => capabilityService(processors)),
+  });
+
+const TestLayer = makeTestLayer();
 
 const ME = ['me@example.com'];
+
+/**
+ * The processors plugin-inbox itself contributes, resolved through the real capability manager — the
+ * cascade reads only contributions, so a test that stubbed a plan instead would exercise a path the
+ * app never takes.
+ */
 
 const makeMessage = (email: string, subject: string, index: number, listUnsubscribe?: string) =>
   Message.make({
@@ -73,10 +107,7 @@ describe('ScanMailbox cascade', () => {
         expect(result.completed).toBe(2);
         expect(result.failed).toBe(0);
         // Contacts first: classification's allow-list is built before any model sees a message.
-        expect(result.stages.map((stage) => stage.operation)).toEqual([
-          InboxOperation.ExtractCorrespondents.meta.key.toString(),
-          InboxOperation.ExtractSubscriptions.meta.key.toString(),
-        ]);
+        expect(result.stages.map((stage) => stage.processor)).toEqual(['contacts', 'subscriptions']);
         expect(result.stages.every((stage) => stage.status === 'completed')).toBe(true);
 
         // Each spawned operation actually ran: a Person for the replied-to sender, a subscription
@@ -221,6 +252,90 @@ describe('ScanMailbox cascade', () => {
         expect((yield* Database.query(Filter.type(Person.Person)).run).length).toBe(1);
       },
       Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'runs a processor contributed by another plugin, in its position rather than its contribution order',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { mailbox } = yield* seedMailbox();
+
+        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+          mailbox: Ref.make(mailbox),
+          me: ME,
+          tiers: ['deterministic'],
+        });
+
+        // Contributed FIRST but declared `after: ['subscriptions']`, so running last is the topology
+        // doing its job — contribution order alone would have put it at the front.
+        expect(result.stages.map((stage) => stage.processor)).toEqual(['contacts', 'subscriptions', 'thirdParty']);
+        expect(result.completed).toBe(3);
+      },
+      Effect.provide(
+        makeTestLayer([
+          {
+            id: 'thirdParty',
+            tier: 'deterministic',
+            after: ['subscriptions'],
+            createInvocation: (mailbox) => ({
+              operation: InboxOperation.ExtractSubscriptions,
+              input: { mailbox: Ref.make(mailbox) },
+            }),
+          },
+          ...inboxMailboxProcessors.filter((processor) => processor.tier === 'deterministic'),
+        ]),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'reports processors caught in a dependency cycle instead of dropping them',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { mailbox } = yield* seedMailbox();
+
+        // One contributor shipping a cycle must not cost everyone else their run, and the members must
+        // be named — silence here would look exactly like a pass that ran and found nothing.
+        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+          mailbox: Ref.make(mailbox),
+          me: ME,
+          tiers: ['deterministic'],
+        });
+
+        expect(result.completed).toBe(2);
+        expect(result.failed).toBe(0);
+        const cycled = result.stages.filter((stage) => stage.status === 'skipped');
+        expect(cycled.map((stage) => stage.processor).sort()).toEqual(['x', 'y']);
+        for (const stage of cycled) {
+          expect(stage.error).toBe('dependency cycle among [x, y]');
+        }
+      },
+      Effect.provide(
+        makeTestLayer([
+          ...inboxMailboxProcessors.filter((processor) => processor.tier === 'deterministic'),
+          {
+            id: 'x',
+            tier: 'deterministic',
+            after: ['y'],
+            createInvocation: (mailbox) => ({
+              operation: InboxOperation.ExtractSubscriptions,
+              input: { mailbox: Ref.make(mailbox) },
+            }),
+          },
+          {
+            id: 'y',
+            tier: 'deterministic',
+            after: ['x'],
+            createInvocation: (mailbox) => ({
+              operation: InboxOperation.ExtractSubscriptions,
+              input: { mailbox: Ref.make(mailbox) },
+            }),
+          },
+        ]),
+      ),
       TestHelpers.provideTestContext,
     ),
   );
