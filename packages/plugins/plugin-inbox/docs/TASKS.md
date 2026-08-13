@@ -266,21 +266,8 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
 
 ### Open, from this work
 
-- [ ] **A missing `FactStore` fails the scan cascade instead of skipping the tier.** `AnalyzeMailbox`
-      declares `services: [AiService, Database.Service, FactStore, Trace.TraceService]`, and the process
-      invoker resolves those eagerly at spawn time. In the app runtime plugin-brain is the only plugin
-      contributing a `FactStore` layer, so with brain disabled the `analyze` tier dies with a
-      `ServiceNotAvailableError` naming the tag — structurally the same "precondition not met" that
-      `ai-gate.ts` absorbs for `AiService`. But `isAiUnavailableCause` matches only
-      `AiService.AiService.key` and `AiModelNotAvailableError`, so the stage is classified `failed`, and
-      with `continueOnError` defaulting to false one absent layer aborts the whole run and marks
-      everything downstream `upstream stage failed` — the red-meter-for-a-healthy-mailbox case that
-      branch exists to prevent. The suite already documents this by dodging it:
-      `scan-mailbox.test.ts:166` excludes `analyze` with "it needs a FactStore this layer does not
-      provide, so it would fail". Fix by generalising the gate to any declared-but-unprovided tag, or by
-      marking the tier `skip` at plan time (`Stage.skip` already exists for the identity-address case).
-      NOT YET REPRODUCED — inferred from the service declaration, the classification branch, and that
-      comment. Write the failing test first.
+- [x] **A missing `FactStore` failed the scan cascade instead of skipping the tier** — FIXED in
+      Phase 5; see that entry for the reproduction and the uniform-gate reasoning.
 - [x] **CORRECTION: `AnalyzeMailbox` does NOT depend on plugin-brain.** An earlier entry claimed brain
       owned it and the operation should follow its owner through a capability seam — false, and there is
       no dependency to invert. `FactStore` and `FactStoreLive` are both from `@dxos/pipeline-rdf`, a
@@ -445,5 +432,18 @@ generalize now with mailbox as instance #1.
 - [ ] **Move `AnalyzeMailbox` to plugin-brain**; make `CrmOperation.ProcessMailbox` a contributed
       processor rather than a rival toolbar button. plugin-inbox then drops `@dxos/pipeline-rdf`, and
       the missing-`FactStore` case becomes structurally impossible rather than merely handled.
-- [ ] **Generalize off `Mailbox`** to a feed-generic processor host. Second instance already exists
-      (plugin-projects' three whole-feed pipelines); transcription is a third.
+- [ ] **Failure policy from the DAG edges** (D4) — buildable now that the topology has landed, but not
+      built: `continueOnError` still aborts in LIST order, so a failing `classify` strands whatever
+      happens to sit behind it even when nothing connects them. Intended: a failed processor fails its
+      descendants, independent branches continue.
+- [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6). Second instance already exists
+      (plugin-projects' three whole-feed pipelines); transcription is a third. FOURTH candidate found
+      while documenting the stages: `onArrivalExtractors` is commented OUT of the sync chain because it
+      reaches `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge
+      compute — moving it to a processor that runs where those services exist is exactly this work.
+      NOTE before assuming a shared substrate: only 4 of the 12 pipelines have an internal
+      `@dxos/pipeline` chain at all; the other 8 are plain loops.
+- [ ] **Give the seven cursorless consumers a cursor** — mechanical now that a processor id is also its
+      cursor tag, but each needs its own call on whether feed position or derived-state replacement is
+      the right idempotency story (`ExtractSubscriptions` replaces wholesale; `SummarizeMailbox` skips
+      by newest thread id).

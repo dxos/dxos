@@ -81,7 +81,7 @@ Mailbox
 └── feed                                     the durable log every pipeline below reads
     │
     ├── SYNC (half 1) — WRITES the feed
-    │   └── GoogleMailSync │ JmapSync        one harness, provider layer swapped (sync/mail-sync.ts)
+    │   └── [GoogleMailSync] │ [JmapSync]    one harness, provider layer swapped (sync/mail-sync.ts)
     │       ├── dedup                        on foreignId/key, against the cursor's seed set
     │       ├── bound                        cap at maxMessages
     │       ├── decode                       provider item → insert Change
@@ -95,19 +95,19 @@ Mailbox
     │       └── » commitPageSize ⇒ Cursor.commit
     │
     └── SCAN (half 2) — READS the feed, one cursor per processor
-        └── ScanMailbox                      topology from MailboxProcessor contributions
-            ├── contacts       [deterministic]   ExtractCorrespondents · no cursor
+        └── [ScanMailbox]                         topology from MailboxProcessor contributions
+            ├── contacts       [deterministic]    [ExtractCorrespondents] · no cursor
             │   └── build-contact ⇒ add Organization / Person
-            ├── subscriptions  [deterministic]   ExtractSubscriptions · no cursor
+            ├── subscriptions  [deterministic]    [ExtractSubscriptions] · no cursor
             │   └── extract-unsubscribe » 50 ⇒ aggregate per sender
-            ├── classify       [classify]        ClassifyMailbox · cursor classifyMailbox
-            │   │                                after: contacts
+            ├── classify       [classify]         [ClassifyMailbox] · cursor classifyMailbox
+            │   │                                 after: contacts
             │   └── » page → classify ⇒ advance cursor per LLM page
-            ├── summarize      [summarize]       SummarizeMailbox · no cursor
-            │   │                                after: contacts, classify
+            ├── summarize      [summarize]        [SummarizeMailbox] · no cursor
+            │   │                                 after: contacts, classify
             │   └── (no stages — loop over threads)
-            └── analyze        [analyze]         AnalyzeMailbox · cursor analyzeMailbox
-                │                                after: summarize · opt-in, not in the default tiers
+            └── analyze        [analyze]          [AnalyzeMailbox] · cursor analyzeMailbox
+                │                                 after: summarize · opt-in, not in the default tiers
                 └── runFactPipeline
                     ├── facts-dedup
                     ├── extract-facts-unit
