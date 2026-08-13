@@ -144,6 +144,16 @@ export const readAuthChallenge = async (response: Response): Promise<string | un
   }
 };
 
+export type AuthChallengeInfo = {
+  /** Base64 challenge nonce. */
+  challenge: string;
+  /**
+   * Server-advertised challenge validity. Absent on servers predating the TTL contract — there the
+   * only refresh signal is the eventual 401.
+   */
+  expiresInMs?: number;
+};
+
 /**
  * Fetch a challenge nonce from the edge `/auth` endpoint.
  *
@@ -154,19 +164,33 @@ export const readAuthChallenge = async (response: Response): Promise<string | un
  * Returns undefined if the endpoint is unreachable or answers in neither known shape; callers fall
  * back to the 401 path, which still works against every server.
  */
-export const fetchAuthChallenge = async (baseHttpUrl: string | URL): Promise<string | undefined> => {
+export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise<AuthChallengeInfo | undefined> => {
   try {
     const response = await fetch(new URL('/auth', baseHttpUrl));
     const challenge = await readAuthChallenge(response);
     if (!challenge) {
       log.verbose('no challenge in /auth response', { status: response.status });
+      return undefined;
     }
-    return challenge;
+    let expiresInMs: number | undefined;
+    try {
+      const body = await response.clone().json();
+      const advertised = body?.data?.expiresInMs;
+      // Finite-positive only: `1e400` parses to `Infinity`, which would schedule a refresh at never.
+      expiresInMs = Number.isFinite(advertised) && advertised > 0 ? advertised : undefined;
+    } catch {
+      // Header-shaped challenge (the 401 fallback) — no JSON body to read a TTL from.
+    }
+    return { challenge, expiresInMs };
   } catch (error) {
     log.verbose('failed to fetch auth challenge', { error });
     return undefined;
   }
 };
+
+/** The challenge alone; see {@link fetchAuthChallengeInfo}. */
+export const fetchAuthChallenge = async (baseHttpUrl: string | URL): Promise<string | undefined> =>
+  (await fetchAuthChallengeInfo(baseHttpUrl))?.challenge;
 
 /**
  * Sign a base64 challenge, returning the encoded presentation.
@@ -182,6 +206,13 @@ export const presentCredentialsForChallenge = async (
   return schema.getCodecForType('dxos.halo.credentials.Presentation').encode(presentation);
 };
 
+export type ChallengeAuthentication = {
+  /** Encoded presentation bound to the fetched challenge. */
+  presentation: Uint8Array;
+  /** TTL advertised beside the challenge, when the server provides one. */
+  expiresInMs?: number;
+};
+
 /**
  * Obtain a challenge from `/auth` and sign it.
  * Returns undefined when no challenge could be obtained, leaving the caller on the 401 fallback.
@@ -189,9 +220,15 @@ export const presentCredentialsForChallenge = async (
 export const authenticateViaChallengeEndpoint = async (
   baseHttpUrl: string | URL,
   identity: EdgeIdentity,
-): Promise<Uint8Array | undefined> => {
-  const challenge = await fetchAuthChallenge(baseHttpUrl);
-  return challenge === undefined ? undefined : presentCredentialsForChallenge(identity, challenge);
+): Promise<ChallengeAuthentication | undefined> => {
+  const info = await fetchAuthChallengeInfo(baseHttpUrl);
+  if (info === undefined) {
+    return undefined;
+  }
+  return {
+    presentation: await presentCredentialsForChallenge(identity, info.challenge),
+    expiresInMs: info.expiresInMs,
+  };
 };
 
 /**
