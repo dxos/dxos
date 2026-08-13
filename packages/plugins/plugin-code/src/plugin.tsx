@@ -11,6 +11,7 @@ import {
   CreateObject,
   OperationHandler,
   ReactSurface,
+  Schema,
   Settings as SettingsCapability,
   SkillDefinition,
 } from '#capabilities';
@@ -25,7 +26,7 @@ export const CodePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(SettingsCapability),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

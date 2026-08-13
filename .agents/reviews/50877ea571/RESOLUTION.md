@@ -52,7 +52,7 @@
 - 50877ea571-48 - ignored - no-casts - packages/apps/todomvc/src/components/TodoItem.tsx:60
 - 50877ea571-49 - ignored - no-casts - packages/apps/todomvc/src/components/Todos.tsx:54
 - 50877ea571-50 - ignored - no-casts - packages/common/async/src/chain.ts:5
-- 50877ea571-51 - unresolved - no-sleep-in-test - packages/common/async/src/debounce.test.ts:24
+- 50877ea571-51 - resolved - no-sleep-in-test - packages/common/async/src/debounce.test.ts:24
 - 50877ea571-52 - ignored - no-casts - packages/common/async/src/debounce.test.ts:32
 - 50877ea571-53 - ignored - no-casts - packages/common/async/src/debounce.test.ts:33
 - 50877ea571-54 - ignored - no-casts - packages/common/async/src/debounce.test.ts:86
@@ -68,7 +68,7 @@
 - 50877ea571-64 - ignored - no-casts - packages/common/async/src/event-emitter.ts:13
 - 50877ea571-65 - ignored - no-casts - packages/common/async/src/event-emitter.ts:34
 - 50877ea571-66 - ignored - no-casts - packages/common/async/src/event-emitter.ts:37
-- 50877ea571-67 - unresolved - no-sleep-in-test - packages/common/async/src/events.test.ts:37
+- 50877ea571-67 - resolved - no-sleep-in-test - packages/common/async/src/events.test.ts:37
 - 50877ea571-68 - ignored - no-casts - packages/common/async/src/events.ts:21
 - 50877ea571-69 - ignored - no-casts - packages/common/async/src/events.ts:22
 - 50877ea571-70 - ignored - no-casts - packages/common/async/src/events.ts:73
@@ -88,7 +88,7 @@
 - 50877ea571-84 - ignored - no-casts - packages/common/async/src/mutex.ts:120
 - 50877ea571-85 - ignored - no-casts - packages/common/async/src/mutex.ts:121
 - 50877ea571-86 - ignored - no-casts - packages/common/async/src/observable.test.ts:148
-- 50877ea571-87 - unresolved - no-sleep-in-test - packages/common/async/src/persistent-lifecycle.test.ts:109
+- 50877ea571-87 - resolved - no-sleep-in-test - packages/common/async/src/persistent-lifecycle.test.ts:109
 - 50877ea571-88 - ignored - no-casts - packages/common/async/src/persistent-lifecycle.ts:123
 - 50877ea571-89 - ignored - no-casts - packages/common/async/src/persistent-lifecycle.ts:154
 - 50877ea571-90 - ignored - no-casts - packages/common/async/src/push-iterable.ts:23
@@ -280,9 +280,9 @@
 - 50877ea571-276 - ignored - no-casts - packages/common/feed-store/src/feed-factory.ts:43
 - 50877ea571-277 - ignored - no-casts - packages/common/feed-store/src/feed-queue.browser.test.ts:23
 - 50877ea571-278 - ignored - no-casts - packages/common/feed-store/src/feed-queue.browser.test.ts:31
-- 50877ea571-279 - unresolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.browser.test.ts:35
+- 50877ea571-279 - ignored - no-sleep-in-test - packages/common/feed-store/src/feed-queue.browser.test.ts:35
 - 50877ea571-280 - ignored - no-casts - packages/common/feed-store/src/feed-queue.test.ts:38
-- 50877ea571-281 - unresolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.test.ts:50
+- 50877ea571-281 - ignored - no-sleep-in-test - packages/common/feed-store/src/feed-queue.test.ts:50
 - 50877ea571-282 - ignored - no-casts - packages/common/feed-store/src/feed-queue.test.ts:75
 - 50877ea571-283 - ignored - no-casts - packages/common/feed-store/src/feed-queue.test.ts:113
 - 50877ea571-284 - ignored - no-casts - packages/common/feed-store/src/feed-queue.test.ts:164
@@ -1421,7 +1421,7 @@
 - 50877ea571-1417 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:112:28
 - 50877ea571-1418 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:134:29
 - 50877ea571-1419 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:135:33
-- 50877ea571-1420 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:233
+- 50877ea571-1420 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:233
 - 50877ea571-1421 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:234:29
 - 50877ea571-1422 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:269:29
 - 50877ea571-1423 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:297:106
@@ -1513,7 +1513,7 @@
 - 50877ea571-1509 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/object-core.ts:554:39
 - 50877ea571-1510 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/object-core.ts:555:43
 - 50877ea571-1511 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/object-core.ts:566:46
-- 50877ea571-1512 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:93
+- 50877ea571-1512 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:93
 - 50877ea571-1513 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:114:19
 - 50877ea571-1514 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:287:42
 - 50877ea571-1515 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:316:20
@@ -1654,7 +1654,7 @@
 - 50877ea571-1650 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:698:75
 - 50877ea571-1651 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:712:24
 - 50877ea571-1652 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:732:70
-- 50877ea571-1653 - unresolved - no-compat-shims - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:745
+- 50877ea571-1653 - resolved - no-compat-shims - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:745
 - 50877ea571-1654 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:754:48
 - 50877ea571-1655 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:763:35
 - 50877ea571-1656 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:774:39
@@ -1804,7 +1804,7 @@
 - 50877ea571-1800 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/add-type.test.ts:55:34
 - 50877ea571-1801 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/add-type.test.ts:62:48
 - 50877ea571-1802 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/database.test.ts:73:27
-- 50877ea571-1803 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/proxy-db/database.test.ts:78
+- 50877ea571-1803 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/proxy-db/database.test.ts:78
 - 50877ea571-1804 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/database.test.ts:197:27
 - 50877ea571-1805 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/database.test.ts:235:44
 - 50877ea571-1806 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/database.test.ts:262:31
@@ -1987,7 +1987,7 @@
 - 50877ea571-1983 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:398:29
 - 50877ea571-1984 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:464:25
 - 50877ea571-1985 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:467:25
-- 50877ea571-1986 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:795
+- 50877ea571-1986 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:795
 - 50877ea571-1987 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:27:41
 - 50877ea571-1988 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:28:25
 - 50877ea571-1989 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:32:24
@@ -2093,7 +2093,7 @@
 - 50877ea571-2089 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:511:47
 - 50877ea571-2090 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:516:46
 - 50877ea571-2091 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:517:34
-- 50877ea571-2092 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:520
+- 50877ea571-2092 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:520
 - 50877ea571-2093 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:525:46
 - 50877ea571-2094 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:526:34
 - 50877ea571-2095 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:535:36
@@ -2108,7 +2108,7 @@
 - 50877ea571-2104 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:627:29
 - 50877ea571-2105 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:643:29
 - 50877ea571-2106 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:670:29
-- 50877ea571-2107 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:674
+- 50877ea571-2107 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:674
 - 50877ea571-2108 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:704:29
 - 50877ea571-2109 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:710:56
 - 50877ea571-2110 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:711:38
@@ -2137,7 +2137,7 @@
 - 50877ea571-2133 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:1008:41
 - 50877ea571-2134 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:1009:41
 - 50877ea571-2135 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:1013:55
-- 50877ea571-2136 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/collection-synchronizer.test.ts:106
+- 50877ea571-2136 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/collection-synchronizer.test.ts:106
 - 50877ea571-2137 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/echo-data-monitor.ts:119:52
 - 50877ea571-2138 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/echo-network-adapter.test.ts:30:34
 - 50877ea571-2139 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/echo-network-adapter.test.ts:40:41
@@ -2159,8 +2159,8 @@
 - 50877ea571-2155 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/automerge-data-source.test.ts:155:65
 - 50877ea571-2156 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/automerge-metrics.ts:18:46
 - 50877ea571-2157 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:80:25
-- 50877ea571-2158 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:111
-- 50877ea571-2159 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:142
+- 50877ea571-2158 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:111
+- 50877ea571-2159 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:142
 - 50877ea571-2160 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts:100:37
 - 50877ea571-2161 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts:165:31
 - 50877ea571-2162 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts:201:27
@@ -2652,7 +2652,7 @@
 - 50877ea571-2648 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.test.ts:276
 - 50877ea571-2649 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.test.ts:288
 - 50877ea571-2650 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.test.ts:313
-- 50877ea571-2651 - unresolved - no-compat-shims - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:47
+- 50877ea571-2651 - resolved - no-compat-shims - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:47
 - 50877ea571-2652 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:51
 - 50877ea571-2653 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:102
 - 50877ea571-2654 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:184
@@ -2668,7 +2668,7 @@
 - 50877ea571-2664 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/schema-validator.test.ts:53
 - 50877ea571-2665 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/schema-validator.test.ts:55
 - 50877ea571-2666 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/schema-validator.test.ts:178
-- 50877ea571-2667 - unresolved - no-compat-shims - packages/core/echo/echo/src/internal/Obj/schema-validator.ts:5
+- 50877ea571-2667 - resolved - no-compat-shims - packages/core/echo/echo/src/internal/Obj/schema-validator.ts:5
 - 50877ea571-2668 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/set-value.test.ts:115
 - 50877ea571-2669 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/set-value.ts:19
 - 50877ea571-2670 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/set-value.ts:115
@@ -2993,7 +2993,7 @@
 - 50877ea571-2989 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-peer-connection.ts:145
 - 50877ea571-2990 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-peer-connection.ts:169
 - 50877ea571-2991 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-peer-connection.ts:473
-- 50877ea571-2992 - unresolved - no-sleep-in-test - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:47
+- 50877ea571-2992 - resolved - no-sleep-in-test - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:47
 - 50877ea571-2993 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:116
 - 50877ea571-2994 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:119
 - 50877ea571-2995 - ignored - no-casts - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-channel.test.ts:124
@@ -3028,7 +3028,7 @@
 - 50877ea571-3024 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:413
 - 50877ea571-3025 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:414
 - 50877ea571-3026 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:415
-- 50877ea571-3027 - unresolved - no-sleep-in-test - packages/core/mesh/rpc/src/rpc.test.ts:441
+- 50877ea571-3027 - resolved - no-sleep-in-test - packages/core/mesh/rpc/src/rpc.test.ts:441
 - 50877ea571-3028 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:453
 - 50877ea571-3029 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:500
 - 50877ea571-3030 - ignored - no-casts - packages/core/mesh/rpc/src/rpc.test.ts:501
@@ -3082,13 +3082,13 @@
 - 50877ea571-3078 - ignored - no-casts - packages/core/mesh/teleport-extension-replicator/src/stress.test.ts:69
 - 50877ea571-3079 - ignored - no-casts - packages/core/mesh/teleport/src/control-extension.ts:27
 - 50877ea571-3080 - ignored - no-casts - packages/core/mesh/teleport/src/control-extension.ts:122
-- 50877ea571-3081 - unresolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/balancer.test.ts:101
+- 50877ea571-3081 - resolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/balancer.test.ts:101
 - 50877ea571-3082 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:89
 - 50877ea571-3083 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:92
 - 50877ea571-3084 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:98
 - 50877ea571-3085 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:129
 - 50877ea571-3086 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/balancer.ts:186
-- 50877ea571-3087 - unresolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/framer.test.ts:104
+- 50877ea571-3087 - resolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/framer.test.ts:104
 - 50877ea571-3088 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/framer.ts:117
 - 50877ea571-3089 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/framer.ts:118
 - 50877ea571-3090 - ignored - no-casts - packages/core/mesh/teleport/src/muxing/framer.ts:129
@@ -3377,7 +3377,7 @@
 - 50877ea571-3373 - ignored - no-casts - packages/e2e/blade-runner/src/tracing/perfetto-events.ts:24:17
 - 50877ea571-3374 - ignored - no-casts - packages/e2e/blade-runner/src/tracing/perfetto-events.ts:137:21
 - 50877ea571-3375 - ignored - no-casts - packages/e2e/blade-runner/src/tracing/perfetto-events.ts:142:23
-- 50877ea571-3376 - unresolved - no-sleep-in-test - packages/e2e/blade-runner/src/tracing/readable-muxer.node.test.ts:30
+- 50877ea571-3376 - ignored - no-sleep-in-test - packages/e2e/blade-runner/src/tracing/readable-muxer.node.test.ts:30
 - 50877ea571-3377 - ignored - no-casts - packages/e2e/proto-guard/src/generate-snapshot.ts:79:33
 - 50877ea571-3378 - ignored - no-casts - packages/e2e/proto-guard/src/snapshots-registry.ts:51:62
 - 50877ea571-3379 - ignored - no-casts - packages/experimental/discord-bot/src/bot.ts:89:25
@@ -3409,14 +3409,14 @@
 - 50877ea571-3405 - ignored - no-casts - packages/plugins/plugin-assistant/src/testing/test-generator.test.ts:45:5
 - 50877ea571-3406 - ignored - no-casts - packages/plugins/plugin-assistant/src/testing/test-generator.test.ts:66:34
 - 50877ea571-3407 - ignored - no-casts - packages/plugins/plugin-assistant/src/testing/test-services.ts:9:56
-- 50877ea571-3408 - unresolved - no-compat-shims - packages/plugins/plugin-assistant/src/types/Assistant.ts:7
+- 50877ea571-3408 - resolved - no-compat-shims - packages/plugins/plugin-assistant/src/types/Assistant.ts:7
 - 50877ea571-3409 - ignored - no-casts - packages/plugins/plugin-assistant/src/types/AssistantService.ts:72:3
 - 50877ea571-3410 - ignored - no-casts - packages/plugins/plugin-attention/src/capabilities/attention.ts:27:15
 - 50877ea571-3411 - ignored - no-casts - packages/plugins/plugin-attention/src/capabilities/attention.ts:29:15
-- 50877ea571-3412 - unresolved - workspace-deps - packages/plugins/plugin-blogger/package.json:152
-- 50877ea571-3413 - unresolved - workspace-deps - packages/plugins/plugin-blogger/package.json:153
+- 50877ea571-3412 - resolved - workspace-deps - packages/plugins/plugin-blogger/package.json:152
+- 50877ea571-3413 - resolved - workspace-deps - packages/plugins/plugin-blogger/package.json:153
 - 50877ea571-3414 - ignored - no-casts - packages/plugins/plugin-bookmarks/src/operations/summarize.ts:75:13
-- 50877ea571-3415 - unresolved - workspace-deps - packages/plugins/plugin-brain/package.json:164
+- 50877ea571-3415 - resolved - workspace-deps - packages/plugins/plugin-brain/package.json:164
 - 50877ea571-3416 - ignored - no-casts - packages/plugins/plugin-brain/src/operations/generate-reply.test.ts:58:9
 - 50877ea571-3417 - ignored - no-casts - packages/plugins/plugin-brain/src/operations/generate-reply.test.ts:78:37
 - 50877ea571-3418 - ignored - no-casts - packages/plugins/plugin-brain/src/operations/generate-reply.test.ts:110:37
@@ -3463,8 +3463,8 @@
 - 50877ea571-3459 - ignored - no-casts - packages/plugins/plugin-calls/src/components/ResponsiveGrid/ResponsiveGrid.tsx:54:62
 - 50877ea571-3460 - ignored - no-casts - packages/plugins/plugin-calls/src/containers/CallDebugPanel/CallDebugPanel.tsx:145:50
 - 50877ea571-3461 - ignored - no-casts - packages/plugins/plugin-calls/src/hooks/useVideoStreamTrack.tsx:21:44
-- 50877ea571-3462 - unresolved - workspace-deps - packages/plugins/plugin-chess-com/package.json:151
-- 50877ea571-3463 - unresolved - workspace-deps - packages/plugins/plugin-chess-com/package.json:152
+- 50877ea571-3462 - resolved - workspace-deps - packages/plugins/plugin-chess-com/package.json:151
+- 50877ea571-3463 - resolved - workspace-deps - packages/plugins/plugin-chess-com/package.json:152
 - 50877ea571-3464 - ignored - no-casts - packages/plugins/plugin-chess-com/src/operations/sync-games.test.ts:107:64
 - 50877ea571-3465 - ignored - no-casts - packages/plugins/plugin-client/src/capabilities/migrations.ts:23:19
 - 50877ea571-3466 - ignored - no-casts - packages/plugins/plugin-client/src/capabilities/migrations.ts:33:43
@@ -3514,8 +3514,8 @@
 - 50877ea571-3510 - ignored - no-casts - packages/plugins/plugin-deck/src/containers/DeckSettings/DeckSettings.tsx:16:32
 - 50877ea571-3511 - ignored - no-casts - packages/plugins/plugin-deck/src/containers/Sidebar/ComplementarySidebar.tsx:151:12
 - 50877ea571-3512 - ignored - no-casts - packages/plugins/plugin-deck/src/types/DeckSchema.ts:68:35
-- 50877ea571-3513 - unresolved - workspace-deps - packages/plugins/plugin-devtools/package.json:134
-- 50877ea571-3514 - unresolved - workspace-deps - packages/plugins/plugin-devtools/package.json:135
+- 50877ea571-3513 - resolved - workspace-deps - packages/plugins/plugin-devtools/package.json:134
+- 50877ea571-3514 - resolved - workspace-deps - packages/plugins/plugin-devtools/package.json:135
 - 50877ea571-3515 - ignored - no-casts - packages/plugins/plugin-devtools/src/DevtoolsPlugin.tsx:41:15
 - 50877ea571-3516 - ignored - no-casts - packages/plugins/plugin-devtools/src/DevtoolsPlugin.tsx:44:15
 - 50877ea571-3517 - ignored - no-casts - packages/plugins/plugin-devtools/src/DevtoolsPlugin.tsx:47:36
@@ -3627,7 +3627,7 @@
 - 50877ea571-3623 - ignored - no-casts - packages/plugins/plugin-inbox/src/operations/mail/google/sync/mapper.test.ts:210:40
 - 50877ea571-3624 - ignored - no-casts - packages/plugins/plugin-inbox/src/operations/mail/google/sync/mapper.test.ts:219:32
 - 50877ea571-3625 - ignored - no-casts - packages/plugins/plugin-inbox/src/operations/mail/google/sync/mapper.test.ts:222:40
-- 50877ea571-3626 - unresolved - no-sleep-in-test - packages/plugins/plugin-inbox/src/operations/mail/google/sync/sync-e2e.test.ts:268
+- 50877ea571-3626 - ignored - no-sleep-in-test - packages/plugins/plugin-inbox/src/operations/mail/google/sync/sync-e2e.test.ts:268
 - 50877ea571-3627 - ignored - no-casts - packages/plugins/plugin-inbox/src/testing/email-processor.ts:89:15
 - 50877ea571-3628 - ignored - no-casts - packages/plugins/plugin-inbox/src/testing/gmail-fixtures.test.ts:60:62
 - 50877ea571-3629 - ignored - no-casts - packages/plugins/plugin-inbox/src/testing/gmail-fixtures.test.ts:61:42
@@ -3776,8 +3776,8 @@
 - 50877ea571-3772 - ignored - no-casts - packages/plugins/plugin-preview/src/stories/Card.stories.tsx:100
 - 50877ea571-3773 - ignored - no-casts - packages/plugins/plugin-preview/src/stories/fixtures.ts:16
 - 50877ea571-3774 - ignored - no-casts - packages/plugins/plugin-preview/src/stories/fixtures.ts:67
-- 50877ea571-3775 - unresolved - workspace-deps - packages/plugins/plugin-progress/package.json:86
-- 50877ea571-3776 - unresolved - no-compat-shims - packages/plugins/plugin-progress/src/plugin.ts:5
+- 50877ea571-3775 - resolved - workspace-deps - packages/plugins/plugin-progress/package.json:86
+- 50877ea571-3776 - resolved - no-compat-shims - packages/plugins/plugin-progress/src/plugin.ts:5
 - 50877ea571-3777 - ignored - no-casts - packages/plugins/plugin-projects/src/templates/inbox-research.test.ts:78
 - 50877ea571-3778 - ignored - no-casts - packages/plugins/plugin-projects/src/templates/inbox-research.test.ts:81
 - 50877ea571-3779 - ignored - no-casts - packages/plugins/plugin-projects/src/templates/inbox-research.test.ts:89
@@ -3961,7 +3961,7 @@
 - 50877ea571-3957 - ignored - no-casts - packages/plugins/plugin-spacetime/src/tools/actions/subtract-objects.ts:62
 - 50877ea571-3958 - ignored - no-casts - packages/plugins/plugin-spacetime/src/tools/actions/subtract-objects.ts:77
 - 50877ea571-3959 - ignored - no-casts - packages/plugins/plugin-status-bar/src/components/StatusBar/StatusBar.stories.tsx:33
-- 50877ea571-3960 - unresolved - workspace-deps - packages/plugins/plugin-studio/package.json:201
+- 50877ea571-3960 - resolved - workspace-deps - packages/plugins/plugin-studio/package.json:201
 - 50877ea571-3961 - ignored - no-casts - packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.stories.tsx:30
 - 50877ea571-3962 - ignored - no-casts - packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.stories.tsx:36
 - 50877ea571-3963 - ignored - no-casts - packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx:68
@@ -3996,7 +3996,7 @@
 - 50877ea571-3992 - ignored - no-casts - packages/plugins/plugin-tldraw/src/model/scene.test.ts:152
 - 50877ea571-3993 - ignored - no-casts - packages/plugins/plugin-tldraw/src/model/scene.test.ts:173
 - 50877ea571-3994 - ignored - no-casts - packages/plugins/plugin-tldraw/src/model/scene.test.ts:195
-- 50877ea571-3995 - unresolved - no-compat-shims - packages/plugins/plugin-transcription/src/normalization/normalization.ts:24
+- 50877ea571-3995 - resolved - no-compat-shims - packages/plugins/plugin-transcription/src/normalization/normalization.ts:24
 - 50877ea571-3996 - ignored - no-casts - packages/plugins/plugin-transcription/src/operations/summarize.ts:62
 - 50877ea571-3997 - ignored - no-casts - packages/plugins/plugin-transcription/src/stories/Pipeline.stories.tsx:131
 - 50877ea571-3998 - ignored - no-casts - packages/plugins/plugin-transcription/src/testing/decorators.ts:22
@@ -4075,7 +4075,7 @@
 - 50877ea571-4071 - ignored - no-casts - packages/reflect/introspect-tools/src/metadata.ts:66
 - 50877ea571-4072 - ignored - no-casts - packages/reflect/introspect-tools/src/metadata.ts:75
 - 50877ea571-4073 - ignored - no-casts - packages/reflect/introspect-tools/src/metadata.ts:209
-- 50877ea571-4074 - unresolved - private-new-packages - packages/reflect/introspect/src/__fixtures__/packages/pkg-b/package.json:4
+- 50877ea571-4074 - ignored - private-new-packages - packages/reflect/introspect/src/__fixtures__/packages/pkg-b/package.json:4
 - 50877ea571-4075 - ignored - no-casts - packages/reflect/introspect/src/__sanity__/plugins.test.ts:30
 - 50877ea571-4076 - ignored - no-casts - packages/reflect/introspect/src/__sanity__/plugins.test.ts:32
 - 50877ea571-4077 - ignored - no-casts - packages/reflect/introspect/src/__sanity__/plugins.test.ts:33
@@ -4451,7 +4451,7 @@
 - 50877ea571-4447 - ignored - no-casts - packages/sdk/client-e2e/src/indexing.test.ts:330
 - 50877ea571-4448 - ignored - no-casts - packages/sdk/client-e2e/src/indexing.test.ts:331
 - 50877ea571-4449 - ignored - no-casts - packages/sdk/client-e2e/src/invitations.test.ts:62
-- 50877ea571-4450 - unresolved - no-sleep-in-test - packages/sdk/client-e2e/src/invitations.test.ts:63
+- 50877ea571-4450 - ignored - no-sleep-in-test - packages/sdk/client-e2e/src/invitations.test.ts:63
 - 50877ea571-4451 - ignored - no-casts - packages/sdk/client-e2e/src/invitations.test.ts:65
 - 50877ea571-4452 - ignored - no-casts - packages/sdk/client-e2e/src/invitations.test.ts:67
 - 50877ea571-4453 - ignored - no-casts - packages/sdk/client-e2e/src/invitations.test.ts:68
@@ -4539,7 +4539,7 @@
 - 50877ea571-4535 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitation-state.ts:26
 - 50877ea571-4536 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitation-state.ts:64
 - 50877ea571-4537 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitation-state.ts:78
-- 50877ea571-4538 - unresolved - no-sleep-in-test - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:56
+- 50877ea571-4538 - ignored - no-sleep-in-test - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:56
 - 50877ea571-4539 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:146
 - 50877ea571-4540 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:238
 - 50877ea571-4541 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:317
@@ -4581,7 +4581,7 @@
 - 50877ea571-4577 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline-stress.test.ts:180
 - 50877ea571-4578 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline-stress.test.ts:223
 - 50877ea571-4579 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline.test.ts:49
-- 50877ea571-4580 - unresolved - no-sleep-in-test - packages/sdk/client-services/src/packlets/pipeline/pipeline.test.ts:131
+- 50877ea571-4580 - ignored - no-sleep-in-test - packages/sdk/client-services/src/packlets/pipeline/pipeline.test.ts:131
 - 50877ea571-4581 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline.ts:227
 - 50877ea571-4582 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline.ts:254
 - 50877ea571-4583 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline.ts:289
@@ -4777,7 +4777,7 @@
 - 50877ea571-4773 - ignored - no-casts - packages/sdk/client/src/testing/test-builder.ts:178
 - 50877ea571-4774 - ignored - no-casts - packages/sdk/client/src/testing/test-builder.ts:199
 - 50877ea571-4775 - ignored - no-casts - packages/sdk/client/test/e2e/edge-recovery.test.ts:70
-- 50877ea571-4776 - unresolved - no-sleep-in-test - packages/sdk/client/test/e2e/edge-recovery.test.ts:72
+- 50877ea571-4776 - ignored - no-sleep-in-test - packages/sdk/client/test/e2e/edge-recovery.test.ts:72
 - 50877ea571-4777 - ignored - no-casts - packages/sdk/client/test/e2e/edge-recovery.test.ts:75
 - 50877ea571-4778 - ignored - no-casts - packages/sdk/client/test/e2e/edge-recovery.test.ts:108
 - 50877ea571-4779 - ignored - no-casts - packages/sdk/client/test/e2e/edge-recovery.test.ts:126
@@ -5049,7 +5049,7 @@
 - 50877ea571-5045 - ignored - no-casts - packages/ui/react-ui-canvas/src/util/util.ts:42
 - 50877ea571-5046 - ignored - no-casts - packages/ui/react-ui-components/src/components/QueryEditor/query-extension.ts:237
 - 50877ea571-5047 - ignored - no-casts - packages/ui/react-ui-components/src/components/Timeline/timeline-printer.ts:23
-- 50877ea571-5048 - unresolved - workspace-deps - packages/ui/react-ui-dashboard/package.json:46
+- 50877ea571-5048 - resolved - workspace-deps - packages/ui/react-ui-dashboard/package.json:46
 - 50877ea571-5049 - ignored - no-casts - packages/ui/react-ui-dashboard/src/util.test.ts:21
 - 50877ea571-5050 - ignored - no-casts - packages/ui/react-ui-diagram/src/model/layout.test.ts:22
 - 50877ea571-5051 - ignored - no-casts - packages/ui/react-ui-editor/src/components/EditorMenuProvider/EditorMenuProvider.tsx:104
@@ -5195,7 +5195,7 @@
 - 50877ea571-5191 - ignored - no-casts - packages/ui/react-ui-mosaic/src/components/Mosaic/Stack.tsx:248
 - 50877ea571-5192 - ignored - no-casts - packages/ui/react-ui-mosaic/src/components/Mosaic/Stack.tsx:371
 - 50877ea571-5193 - ignored - no-casts - packages/ui/react-ui-mosaic/src/hooks/useVirtualizerPagination.test.tsx:34
-- 50877ea571-5194 - unresolved - workspace-deps - packages/ui/react-ui-rdf/package.json:44
+- 50877ea571-5194 - resolved - workspace-deps - packages/ui/react-ui-rdf/package.json:44
 - 50877ea571-5195 - ignored - no-casts - packages/ui/react-ui-search/src/components/SearchList/hooks/useSearchListResults.ts:62
 - 50877ea571-5196 - ignored - no-casts - packages/ui/react-ui-search/src/components/SearchList/SearchList.stories.tsx:500
 - 50877ea571-5197 - ignored - no-casts - packages/ui/react-ui-syntax-highlighter/src/JsonHighlighter/JsonHighlighter.tsx:12

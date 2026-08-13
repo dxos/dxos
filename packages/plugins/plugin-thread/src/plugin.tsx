@@ -6,7 +6,14 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 
-import { AppGraphBuilder, ChannelBackendFeed, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import {
+  AppGraphBuilder,
+  ChannelBackendFeed,
+  CreateObject,
+  OperationHandler,
+  ReactSurface,
+  Schema,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -19,7 +26,7 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations([...translations, ...threadTranslations])),
   // Default local-feed channel backend. Other plugins contribute additional

@@ -42,6 +42,7 @@ export const ProjectTemplates = Capability.lazyModule(
   () => import('./project-templates'),
 );
 
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

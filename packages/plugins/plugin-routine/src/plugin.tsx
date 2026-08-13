@@ -13,6 +13,7 @@ import {
   OperationHandler,
   ReactSurface,
   RegistrySync,
+  Schema,
   Templates,
   TriggerRuntimeController,
 } from '#capabilities';
@@ -36,7 +37,7 @@ export const RoutinePlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   // Dependency-mode: the specs resolve services (client, database, ...) lazily at

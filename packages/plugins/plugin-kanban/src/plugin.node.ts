@@ -3,9 +3,8 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { CreateObject, OperationHandler, SkillDefinition, UndoMappings } from '#capabilities';
+import { CreateObject, OperationHandler, Schema, SkillDefinition, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
@@ -13,7 +12,7 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(UndoMappings),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.make,
 );
 

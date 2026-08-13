@@ -12,7 +12,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings, Schema } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -33,7 +33,7 @@ export const SamplePlugin = Plugin.define(meta).pipe(
 
   // Registers ECHO schemas so the framework knows about this type.
   // Required for queries, serialization, and type resolution.
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
 
   // Registers the settings module.
   Plugin.addModule(SampleSettings),

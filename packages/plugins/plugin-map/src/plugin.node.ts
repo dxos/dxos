@@ -3,9 +3,8 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, CreateObject, OperationHandler, SkillDefinition } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, Schema, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 
 export const MapPlugin = Plugin.define(meta).pipe(
@@ -13,7 +12,7 @@ export const MapPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.make,
 );
 

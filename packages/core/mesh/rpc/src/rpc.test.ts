@@ -438,9 +438,8 @@ describe('RpcPeer', () => {
       const stream = bob.callStream('method', createPayload('request'));
       await stream.close();
 
-      await sleep(1);
-
-      expect(closeCalled).toEqual(true);
+      // Poll until the close notification round-trips to the remote peer.
+      await expect.poll(() => closeCalled).toEqual(true);
     });
 
     test('reports stream being ready', async () => {

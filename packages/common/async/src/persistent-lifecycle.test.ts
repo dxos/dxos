@@ -95,18 +95,21 @@ describe('ConnectionState', () => {
 
   test('finish `restart` before close', async () => {
     let restarted = false;
+    const restartStarted = new Trigger();
     const persistentLifecycle = new PersistentLifecycle({
       start: async () => await sleep(100),
       stop: async () => {},
       onRestart: async () => {
         restarted = true;
+        restartStarted.wake();
       },
     });
 
     await persistentLifecycle.open();
 
     void persistentLifecycle.scheduleRestart();
-    await sleep(10);
+    // Synchronize on the restart actually beginning rather than guessing a delay.
+    await restartStarted.wait();
     await persistentLifecycle.close();
     expect(restarted).to.be.true;
   });

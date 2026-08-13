@@ -46,3 +46,4 @@ export const MeetingState = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));
