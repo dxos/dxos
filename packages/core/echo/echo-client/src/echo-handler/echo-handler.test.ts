@@ -24,8 +24,8 @@ import { openAndClose } from '@dxos/test-utils';
 
 import { Doc } from '../automerge';
 import { EchoTestBuilder, createTmpPath } from '../testing';
-import { createObject, getObjectCore } from './echo-handler';
-import { isEchoObject } from './echo-object-utils';
+import { createObject } from './echo-handler';
+import { getObjectCore, isEchoObject } from './echo-object-utils';
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',

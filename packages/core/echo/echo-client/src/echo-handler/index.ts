@@ -4,7 +4,8 @@
 
 export * from './branching';
 export * from './clone';
-export { EchoReactiveHandler, createObject, getObjectCore, initEchoReactiveObjectRootProxy } from './echo-handler';
+export { EchoReactiveHandler, createObject, initEchoReactiveObjectRootProxy } from './echo-handler';
+export { getObjectCore } from './echo-object-utils';
 export { isEchoObject } from './echo-object-utils';
 export * from './edit-history';
 export { type ProxyTarget } from './echo-proxy-target';

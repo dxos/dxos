@@ -13,7 +13,7 @@ import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Arra
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
-import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
+import { defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
   type AnyEntity,
   ATTR_PARENT,
@@ -43,9 +43,6 @@ import {
   assertObjectModel,
 } from '../Entity';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref';
-
-// Re-export for backward compatibility.
-export { attachTypedJsonSerializer };
 
 type DeepReplaceRef<T> =
   T extends Ref<any>
