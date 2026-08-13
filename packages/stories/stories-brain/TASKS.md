@@ -106,6 +106,17 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       process-mailbox) deleted. Tests: `selection.test.ts` (real junk addresses, individuals incl.
       plus-addressing, header-only denial, prefix-vs-equality) and a new `contact-extractor.test.ts`
       at the actual bug site; 6 of them fail without the fix.
+- [ ] **Avatar hover: contact card, or create-the-contact** (requested 2026-08-12) — hovering an
+      actor's avatar should show that Person's card when a `Person` record exists, and otherwise an
+      `ph--user-circle-plus--regular` IconButton that runs the contact extractor to create one
+      (`InboxOperation.ExtractContact` / the `Contact` ObjectExtractor — note the extractor now refuses
+      machine senders, so the affordance should not offer creation for a `no-reply@`-style address).
+      Today `Row.Person` (`react-ui-card/src/components/Row/Row.tsx:188-244`) has only a click handler
+      (`onContactCreate`) on the anchor row and a hook-free static avatar in the `avatar` variant —
+      no hover state, no card. Demonstrate in a dedicated storybook next to
+      `plugin-inbox/src/components/Header/Header.stories.tsx` (currently one `Default` with a no-op
+      `onContactCreate`) with both states: an actor WITH a seeded Person → card on hover; an actor
+      WITHOUT → the plus IconButton, clicking it creates the Person and the card takes over.
 - [ ] **Conversation-view avatar is not centered on the actor's name** (reported 2026-08-12) — in
       `MailboxArticle` grouped/conversation mode (story `Default`) the avatar sits low, centered
       against the whole tile instead of the sender line; the flat view (`Flat`) is correct. Look at
