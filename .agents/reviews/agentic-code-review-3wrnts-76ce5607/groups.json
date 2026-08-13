@@ -1,7 +1,0 @@
-{
-  "01": {
-    "ruleId": "harness-script-hygiene",
-    "severity": "warn",
-    "title": "Harness scripts stay dependency-free and honest"
-  }
-}

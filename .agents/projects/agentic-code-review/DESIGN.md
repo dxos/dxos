@@ -68,8 +68,8 @@ Each review run gets a slug directory:
     ...
 ```
 
-`<slug>` is derived from branch + short commit (e.g. `agentic-code-review-b217ecc`)
-so runs are addressable and don't collide.
+`<slug>` is the short commit sha (e.g. `b217ecc`) so runs stay short and
+addressable; branch is omitted because the commit already identifies the tree.
 
 ### REVIEW.md frontmatter
 
@@ -115,6 +115,12 @@ Column is optional.
 - **Severity is rule-fixed and deterministic.** The subagent writes `WARN`/`ERROR`
   for readability, but finalize stamps every diagnostic in a group with the rule's
   severity from the run manifest (`groups.json`), so a subagent cannot change it.
+- **Finalize** rewrites each diagnostic as
+  `# SEVERITY <review_id>-<seq> <rule_id> \`file:line[:col]\`` and writes
+  `RESOLUTION.md` bullets
+  (`- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>`,
+  all seeded unresolved). `unresolved.mjs` re-prints open issues across all runs
+  (`--path` / `--rule`).
 
 ## Workflow (three steps)
 

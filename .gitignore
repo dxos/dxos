@@ -102,6 +102,9 @@ oclif.manifest.json
 dist
 out
 lib
+# Keep agent skill source trees named `lib/` (not TS emit).
+!.agents/**/lib/
+!.agents/**/lib/**
 build
 out
 tmp

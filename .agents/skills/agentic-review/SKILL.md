@@ -4,10 +4,10 @@ description: >-
   Run the rule-driven agentic code review — discover `rule` blocks in the repo's
   `.mdl` files, prepare per-rule review groups (full project by default; diff-only
   with `--pr-only`), spawn one focused Sonnet subagent per group, then finalize
-  the merged diagnostics into REVIEW.md. Use when asked to run the agentic
-  review, review a branch/PR against the repo's `.mdl` rules, or check a diff for
-  known anti-patterns. For the built-in bug/quality passes use `/code-review`
-  instead.
+  the merged diagnostics into REVIEW.md + RESOLUTION.md. Use when asked to run
+  the agentic review, list unresolved review issues, review a branch/PR against
+  the repo's `.mdl` rules, or check a diff for known anti-patterns. For the
+  built-in bug/quality passes use `/code-review` instead.
 ---
 
 # Agentic Review
@@ -27,10 +27,11 @@ The scripts are dependency-free Node ESM and can also be run by hand.
 
 ```text
 .agents/skills/agentic-review/
-  scripts/prepare.mjs    # discover rules, resolve base, group, write the store
-  scripts/finalize.mjs   # merge group fragments into REVIEW.md
-  lib/                   # mdl reader, frontmatter, git, discovery, diagnostics, store
-  rules/                 # seed rules (repo-wide non-negotiables)
+  scripts/prepare.mjs      # discover rules, resolve base, group, write the store
+  scripts/finalize.mjs     # merge fragments → REVIEW.md + RESOLUTION.md
+  scripts/unresolved.mjs   # re-print unresolved issues across all runs
+  lib/                     # mdl, frontmatter, git, discovery, diagnostics, resolution, store
+  rules/                   # seed rules (repo-wide non-negotiables)
 ```
 
 Rules are **`rule` blocks** inside `.mdl` documents (the repo's structured
@@ -40,8 +41,9 @@ more block type. The harness scans every `.mdl` file, extracts the `rule` blocks
 and ignores the rest, so descriptor documents (`SPEC.mdl`, `PLUGIN.mdl`) define no
 rules and are passed over. Put rules wherever they belong — colocated in a
 package's `.mdl`, or in a shared document like `rules/non-negotiables.mdl`. The
-run store is written to `.agents/reviews/<slug>/` and committed in full (REVIEW.md
-plus the STAGING.md / groups.json / per-group fragments) so runs stay auditable.
+run store is written to `.agents/reviews/<short-sha>/` (slug = `git rev-parse
+--short HEAD`) and committed in full (REVIEW.md, RESOLUTION.md, STAGING.md /
+groups.json / per-group fragments) so runs stay auditable.
 
 ## Workflow
 
@@ -96,16 +98,58 @@ After all subagents finish:
 
 ```sh
 node .agents/skills/agentic-review/scripts/finalize.mjs --slug=<slug>
+node .agents/skills/agentic-review/scripts/finalize.mjs --all --force   # re-stamp existing runs
 ```
 
-(With no `--slug`/`--dir`, it finalizes the most recently modified pending run.) It parses
-every `groups/NN.md`, merges the diagnostics into `REVIEW.md` (sorted by file then
-line, deduped), sets `isFinalized: true`, and prints counts by severity.
+(With no `--slug`/`--dir`/`--all`, it finalizes the most recently modified pending
+run.) It parses every `groups/NN.md`, merges diagnostics into `REVIEW.md`
+(sorted by file then line, deduped), stamps each issue with a stable id
+`<review_id>-<seq>`, writes `RESOLUTION.md` with every issue as `unresolved`,
+sets `isFinalized: true`, and prints counts by severity. `--force` re-finalizes
+an already-finalized run; `--all` walks every store under `.agents/reviews/`.
+
+Finalized diagnostic header form:
+
+```text
+# ERROR e8ad2af114-1 no-casts `packages/foo/bar.ts:42`
+
+Body…
+```
 
 ### 4. Report
 
 Summarize the finalized `REVIEW.md` to the user: error/warning counts and the
-notable findings. Link the `REVIEW.md` path.
+notable findings. Link the `REVIEW.md` and `RESOLUTION.md` paths.
+
+### 5. Address issues (RESOLUTION.md)
+
+Each run gets a `RESOLUTION.md` ledger — one bullet per issue:
+
+```text
+- e8ad2af114-1 - unresolved - no-casts - packages/foo/bar.ts:42:7
+- e8ad2af114-2 - resolved - harness-script-hygiene - .agents/skills/…/store.mjs:99
+- e8ad2af114-3 - ignored - no-sleep-in-test - packages/foo/x.test.ts:12
+```
+
+Fields: `<id> - <status> - <ruleId> - <file:line[:col]>`. Statuses:
+`unresolved` | `ignored` | `resolved`. Finalize seeds every issue as
+`unresolved`. Agents update the status field in place as they fix or dismiss
+findings (do not rewrite REVIEW.md to clear an issue — flip the status instead).
+
+### 6. List unresolved issues
+
+Re-print every unresolved issue across **all** finalized runs (not just the
+latest):
+
+```sh
+node .agents/skills/agentic-review/scripts/unresolved.mjs
+node .agents/skills/agentic-review/scripts/unresolved.mjs --path=packages/core/echo
+node .agents/skills/agentic-review/scripts/unresolved.mjs --rule=no-casts
+node .agents/skills/agentic-review/scripts/unresolved.mjs --path='**/foo.ts' --rule=no-sleep-in-test
+```
+
+`--path` is a substring match, or a glob when it contains `*`/`?`. `--rule` is an
+exact rule id. Legacy finalized runs without `RESOLUTION.md` are skipped.
 
 ## Authoring a rule
 
@@ -152,5 +196,7 @@ definition.
   rule (absent from prior runs' `rules:` / `groups.json`) still gets a one-time
   full-project pass. Pass `--pr-only` for the old diff-only behaviour (last
   review or merge-base with `origin/main`).
+- **Issue tracking** lives in `RESOLUTION.md` per run; `unresolved.mjs` aggregates
+  open items. Prefer flipping status over deleting diagnostics from REVIEW.md.
 - **PR-comment posting** from `finalize.mjs` is a later phase; today finalize
-  writes `REVIEW.md` only.
+  writes `REVIEW.md` + `RESOLUTION.md` only.

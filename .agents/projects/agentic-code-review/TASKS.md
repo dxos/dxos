@@ -42,6 +42,7 @@ Make Claude own the loop.
 
 - [x] **Incremental persistence** — finalized REVIEW.md is committed (transient STAGING/groups.json/groups ignored); base resolution reads the newest finalized ancestor across clones.
 - [x] **Self-review rule** — `rules/harness-scripts.mdl` reviews the harness's own `.mjs`; dogfooded (found + fixed two catch-swallow warns), REVIEW.md persisted.
+- [x] **Issue ids + RESOLUTION.md** — finalize stamps `<review_id>-<seq>` + rule id on each diagnostic; writes `RESOLUTION.md` (`unresolved|ignored|resolved`); `unresolved.mjs` re-prints open issues across runs (`--path` / `--rule`).
 - [ ] **PR comment posting** in `finalize.mjs` — anchor to `file:line` via the GitHub API; idempotent (hidden marker per rule id).
 - [ ] **CI wiring** — run on PRs (post comments) and/or nightly on main (summary/issue).
 

@@ -17,17 +17,35 @@ export const REVIEWS_DIR = '.agents/reviews';
 // wrote in its fragment header.
 export const GROUPS_MANIFEST = 'groups.json';
 
+/** Per-issue status ledger written by finalize; agents update statuses in place. */
+export { RESOLUTION_FILE } from './resolution.mjs';
+
 /** Sentinel `base` when a run reviews the whole project rather than a diff. */
 export const FULL_BASE = 'full';
 
 /**
- * Derive a review slug from a branch name and short commit: the branch with any
- * `claude/` prefix removed, slashes flattened, suffixed with the short sha.
+ * Short review id used as the `<review_id>` prefix in issue ids (`<id>-<seq>`).
+ * Store dirs are the short sha; accept a legacy `…-<sha>` dir name too.
  */
-export const reviewSlug = (branch, short) => {
-  const base = branch.replace(/^claude\//, '').replace(/[^A-Za-z0-9._-]+/g, '-');
-  return `${base}-${short}`;
+export const reviewIdFromStore = (storeDirName, commit) => {
+  if (/^[0-9a-f]{7,40}$/i.test(storeDirName)) {
+    return storeDirName;
+  }
+  const fromLegacy = storeDirName.match(/-([0-9a-f]{7,40})$/i)?.[1];
+  if (fromLegacy) {
+    return fromLegacy;
+  }
+  if (commit) {
+    return String(commit).slice(0, 11);
+  }
+  throw new Error(`cannot derive review id for store ${JSON.stringify(storeDirName)}`);
 };
+
+/**
+ * Review store directory name: just the short commit sha. Branch is omitted —
+ * the commit already identifies the reviewed tree, and keeps paths short.
+ */
+export const reviewSlug = (_branch, short) => short;
 
 /**
  * Reject a `--slug` that is not a single safe path component — no separators,
