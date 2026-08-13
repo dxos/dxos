@@ -3,9 +3,8 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { CommentConfig, CreateObject, OperationHandler, SkillDefinition, UndoMappings } from '#capabilities';
+import { CommentConfig, CreateObject, OperationHandler, Schema, SkillDefinition, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
@@ -14,7 +13,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(UndoMappings),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.make,
 );
 

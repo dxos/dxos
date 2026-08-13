@@ -904,14 +904,15 @@ export const TripTest: Story = {
     // The trip fixture lands as one batch of three messages.
     await waitFor((text) => /"messages":\s*3\b/.test(text));
 
-    // First pass: both same-PNR legs collapse into ONE Trip with TWO Segments. Every message ends
-    // linked (the travel pair to the Trip, the digest to the contact extracted on dispatch).
+    // First pass: both same-PNR legs collapse into ONE Trip with TWO Segments, and both end linked to
+    // it. The third message (a digest from `news@example.com`) does NOT link: the contact extractor
+    // refuses machine senders, so a newsletter address no longer becomes a Person.
     await selectAction(canvas, 'dispatch');
     await userEvent.click(canvas.getByTestId('execute'));
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(/"trips":\s*1\b/);
     void expect(afterFirst).toMatch(/"segments":\s*2\b/);
-    void expect(afterFirst).toMatch(/"linked":\s*3\b/);
+    void expect(afterFirst).toMatch(/"linked":\s*2\b/);
 
     // Second pass over the same messages must be idempotent — still ONE Trip, TWO Segments
     // (segments updated in place, not duplicated). This is the "extract twice" case.

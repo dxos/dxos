@@ -10,6 +10,7 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { ScriptCapabilities, ScriptEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const Compiler = Capability.lazyModule(

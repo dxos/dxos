@@ -24,3 +24,4 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const Schema = AppCapability.schema(() => import('./schema'));

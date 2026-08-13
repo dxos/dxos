@@ -15,6 +15,7 @@ import { MapCapabilities } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [MapCapabilities.MarkerProvider],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

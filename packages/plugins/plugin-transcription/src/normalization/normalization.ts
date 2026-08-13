@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
@@ -15,16 +14,9 @@ import { trim } from '@dxos/util';
 import { TranscriptOperation } from '#types';
 
 type MessageWithRangeIdType = TranscriptOperation.MessageWithRangeIdType;
-type SentenceNormalizationInputType = TranscriptOperation.SentenceNormalizationInputType;
-const { SentenceNormalization, SentenceNormalizationOutput } = TranscriptOperation;
+const { SentenceNormalization } = TranscriptOperation;
 
 export type MessageWithRangeId = MessageWithRangeIdType;
-
-/** @deprecated Use SentenceNormalizationInputType */
-export type NormalizationInput = SentenceNormalizationInputType;
-
-/** @deprecated Use SentenceNormalizationOutput */
-export type NormalizationOutput = Schema.Schema.Type<typeof SentenceNormalizationOutput>;
 
 /**
  * Sentence normalization for transcription.

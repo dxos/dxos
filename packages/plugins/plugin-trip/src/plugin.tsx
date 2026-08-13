@@ -15,6 +15,7 @@ import {
   MarkerProvider,
   OperationHandler,
   ReactSurface,
+  Schema,
   Settings,
   SkillDefinition,
 } from '#capabilities';
@@ -30,7 +31,7 @@ export const TripPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Settings),
   Plugin.addModule(AppCapability.translations(translations)),

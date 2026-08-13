@@ -23,3 +23,4 @@ export const Connector = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const Schema = AppCapability.schema(() => import('./schema'));

@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 
 import * as Doc from '../automerge/Doc';
 import { EchoTestBuilder } from '../testing';
-import { getObjectCore } from './echo-handler';
+import { getObjectCore } from './echo-object-utils';
 import { checkoutVersion, getEditHistory, getEditHistoryWithDiffs } from './edit-history';
 
 describe('edit-history', () => {

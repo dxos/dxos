@@ -3,14 +3,13 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ChannelBackendFeed, OperationHandler } from '#capabilities';
+import { ChannelBackendFeed, OperationHandler, Schema } from '#capabilities';
 import { meta } from '#meta';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ChannelBackendFeed),
   Plugin.make,
 );

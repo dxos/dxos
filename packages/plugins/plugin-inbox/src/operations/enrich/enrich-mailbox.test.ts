@@ -133,8 +133,8 @@ describe('EnrichMailbox cascade', () => {
 
         // `tiers` is a SET: a caller naming the cheap LLM tier before the deterministic one must not
         // get a classification pass whose contact allow-list has not been built yet. Classification
-        // fails here (no AiService), which is what pins the order — the deterministic stages ran
-        // first and the failure lands on the third stage, not the first.
+        // fails here (the client has no usable key in this environment), which is what pins the order —
+        // the deterministic stages ran first and the failure lands on the third stage, not the first.
         const result = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
@@ -150,13 +150,48 @@ describe('EnrichMailbox cascade', () => {
   );
 
   it.effect(
-    'stops the cascade when a stage fails, reporting the untried stages',
+    'skips the AI tiers instead of failing when no resolver serves the model',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        // No AiService is provided by this layer, so the classify tier fails — the analyze tier
-        // behind it must not run against the stale gate.
+        // The app's real condition: `AiService` is in the stack but no resolver claims the model —
+        // plugin-assistant contributes the Anthropic one on its own Start event, so a run before the
+        // assistant is up asks for a model nobody serves. That is a precondition, not a fault: the
+        // deterministic work stands, the cascade reports no failure, and each AI tier says why it did
+        // not run (rather than the first one being blamed for the rest).
+        const result = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
+          mailbox: Ref.make(mailbox),
+          me: ME,
+          // `analyze` is left out: it needs a FactStore this layer does not provide, so it would fail
+          // for a reason that has nothing to do with the model.
+          tiers: ['deterministic', 'classify', 'summarize'],
+          model: 'com.example.model.does-not-exist.default',
+        });
+
+        expect(result.failed).toBe(0);
+        expect(result.completed).toBe(2);
+        expect(result.stages.map((stage) => stage.status)).toEqual(['completed', 'completed', 'skipped', 'skipped']);
+        for (const stage of result.stages.slice(2)) {
+          expect(stage.error).toBe('ai unavailable (assistant not ready)');
+        }
+
+        // The deterministic tier's writes are intact.
+        expect((yield* Database.query(Filter.type(Person.Person)).run).length).toBe(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'stops the cascade when a stage genuinely fails, reporting the untried stages',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { mailbox } = yield* seedMailbox();
+
+        // A real failure rather than an absent resolver (here: the client rejects the request), so
+        // everything behind it must not run against the stale gate.
         const result = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
@@ -164,8 +199,7 @@ describe('EnrichMailbox cascade', () => {
         });
 
         expect(result.failed).toBe(1);
-        const statuses = result.stages.map((stage) => stage.status);
-        expect(statuses).toEqual(['completed', 'completed', 'failed', 'skipped']);
+        expect(result.stages.map((stage) => stage.status)).toEqual(['completed', 'completed', 'failed', 'skipped']);
         expect(result.stages.at(-1)).toMatchObject({
           tier: 'analyze',
           status: 'skipped',

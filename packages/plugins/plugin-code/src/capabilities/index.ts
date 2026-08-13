@@ -13,6 +13,7 @@ import { CodeCapabilities, CodeEvents } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AppCapabilities.PluginAsset],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const BuildRunState = Capability.lazyModule(
   'BuildRunState',

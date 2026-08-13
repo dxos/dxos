@@ -10,6 +10,7 @@ import {
   CreateObject,
   OperationHandler,
   ReactSurface,
+  Schema,
   SkillDefinition,
   Templates,
 } from '#capabilities';
@@ -17,7 +18,7 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const ProjectsPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(CreateObject),
   Plugin.addModule(Templates),
   Plugin.addModule(AppGraphBuilder),

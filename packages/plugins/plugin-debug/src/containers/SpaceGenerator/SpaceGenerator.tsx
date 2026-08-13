@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useProgressMonitor } from '@dxos/app-toolkit/ui';
+import { ProgressMeter, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -28,7 +28,7 @@ import { meta } from '#meta';
 
 // TODO(burdon): Make extensible.
 const staticTypes = [Markdown.Document, Drawing.Drawing, Sheet.Sheet, ComputeGraph];
-const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
+const recordTypes = [Organization.Organization, Person.Person, Task.Task];
 
 const TOAST_DURATION = 5_000;
 
@@ -38,7 +38,7 @@ export type SpaceGeneratorProps = {
 };
 
 export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
-  ({ space, onCreateObjects, children, ...props }, forwardedRef) => {
+  ({ children, space, onCreateObjects, ...props }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const { t } = useTranslation(meta.profile.key);
     const client = useClient();
@@ -251,7 +251,9 @@ const TEST_PROGRESS_NAME = `${meta.profile.key}.test-progress`;
 
 type ProgressGeneratorProps = ThemedClassName;
 
-// Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised.
+// Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised —
+// and renders the meter here too, since the rail's only lives inside a popover the user must open,
+// which made a working monitor look like a broken one.
 const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
   const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
   const monitor = useProgressMonitor(TEST_PROGRESS_NAME);
@@ -304,16 +306,21 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
   );
 
   return (
-    <div className={mx('flex items-center gap-2 py-1', classNames)}>
-      <span className='grow'>Progress Monitor</span>
-      {running ? (
-        <IconButton
-          icon='ph--x--regular'
-          label='Cancel test progress'
-          onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
-        />
-      ) : (
-        <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
+    <div className={mx('flex flex-col gap-1 py-1', classNames)}>
+      <div className='flex items-center gap-2'>
+        <span className='grow'>Progress Monitor</span>
+        {running ? (
+          <IconButton
+            icon='ph--x--regular'
+            label='Cancel test progress'
+            onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
+          />
+        ) : (
+          <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
+        )}
+      </div>
+      {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
+        <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}
     </div>
   );

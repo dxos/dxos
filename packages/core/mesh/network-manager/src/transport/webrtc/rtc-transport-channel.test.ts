@@ -44,8 +44,8 @@ describe('RtcTransportChannel', () => {
       } else {
         setTimeout(() => controller.channel.onopen());
       }
-      await sleep(10);
-      expect(controller.channel.wasClosed()).to.be.true;
+      // Poll until the channel observes the transport closing, regardless of open/close ordering.
+      await expect.poll(() => controller.channel.wasClosed()).toBe(true);
     }
   });
 

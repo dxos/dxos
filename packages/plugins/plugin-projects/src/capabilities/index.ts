@@ -18,6 +18,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const Templates = Capability.lazyModule(
   'Templates',
   { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },

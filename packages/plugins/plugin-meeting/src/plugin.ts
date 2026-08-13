@@ -12,6 +12,7 @@ import {
   MeetingState,
   OperationHandler,
   ReactSurface,
+  Schema,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -22,7 +23,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(MeetingSettings),
