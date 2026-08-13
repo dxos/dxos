@@ -30,6 +30,7 @@ import {
   primaryParts,
   qualifyId,
   validateSegmentId,
+  withLabel,
 } from './util';
 
 //
@@ -301,7 +302,7 @@ class GraphBuilderImpl implements GraphBuilder {
   /** Registered builder extensions keyed by extension ID. */
   readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
     Atom.keepAlive,
-    Atom.withLabel('graph-builder:extensions'),
+    withLabel('graph-builder:extensions'),
   );
   /**
    * Node id -> id of the extension whose connector produced it. Non-reactive: updated directly
@@ -466,7 +467,7 @@ class GraphBuilderImpl implements GraphBuilder {
         }
 
         return entries;
-      }).pipe(Atom.withLabel(`graph-builder:connectors:${key}`));
+      }).pipe(withLabel(`graph-builder:connectors:${key}`));
     },
   );
 
@@ -476,7 +477,7 @@ class GraphBuilderImpl implements GraphBuilder {
 
     // TODO(wittjosiah): Remove. This is for backwards compatibility.
     if (relation.kind === 'child' && relation.direction === 'outbound') {
-      Graph.expand(this._graph, id, 'action');
+      Graph.expandSync(this._graph, id, 'action');
     }
   }
 
@@ -825,24 +826,24 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
   const getId = (key: string) => `${id}/${key}`;
 
   const resolver =
-    _resolver && Atom.family((id: string) => _resolver(id).pipe(Atom.withLabel(`graph-builder:_resolver:${id}`)));
+    _resolver && Atom.family((id: string) => _resolver(id).pipe(withLabel(`graph-builder:_resolver:${id}`)));
 
   const connector =
     _connector &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _connector(node).pipe(Atom.withLabel(`graph-builder:_connector:${id}`)),
+      _connector(node).pipe(withLabel(`graph-builder:_connector:${id}`)),
     );
 
   const actionGroups =
     _actionGroups &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actionGroups(node).pipe(Atom.withLabel(`graph-builder:_actionGroups:${id}`)),
+      _actionGroups(node).pipe(withLabel(`graph-builder:_actionGroups:${id}`)),
     );
 
   const actions =
     _actions &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)),
+      _actions(node).pipe(withLabel(`graph-builder:_actions:${id}`)),
     );
 
   const extensions = [
@@ -861,7 +862,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                 log.warn('Error in connector', { id: getId('connector'), node, error });
                 return [];
               }
-            }).pipe(Atom.withLabel(`graph-builder:connector:${id}`)),
+            }).pipe(withLabel(`graph-builder:connector:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -882,7 +883,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                 log.warn('Error in actionGroups', { id: getId('actionGroups'), node, error });
                 return [];
               }
-            }).pipe(Atom.withLabel(`graph-builder:connector:actionGroups:${id}`)),
+            }).pipe(withLabel(`graph-builder:connector:actionGroups:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -899,7 +900,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                 log.warn('Error in actions', { id: getId('actions'), node, error });
                 return [];
               }
-            }).pipe(Atom.withLabel(`graph-builder:connector:actions:${id}`)),
+            }).pipe(withLabel(`graph-builder:connector:actions:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
