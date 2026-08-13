@@ -3,10 +3,13 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { Schema } from '#capabilities';
 import { meta } from '#meta';
 
-export const SequencerPlugin = Plugin.define(meta).pipe(Plugin.addModule(Schema), Plugin.make);
+export const SequencerPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppCapability.schema(() => import('./capabilities/schema'))),
+  Plugin.make,
+);
 
 export default SequencerPlugin;
