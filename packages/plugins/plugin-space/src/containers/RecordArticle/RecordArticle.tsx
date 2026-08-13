@@ -80,7 +80,6 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </div>
 
-            {/* TODO(burdon): Fix indentation: left align with top card. */}
             {related.length > 0 && (
               <div
                 className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
@@ -88,8 +87,10 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 <Input.Root>
                   <Input.Label>{t('related-objects.label')}</Input.Label>
                 </Input.Root>
+                {/* The masonry's own gutter would inset these cards relative to the record card above,
+                    which shares this column — the scroll padding is the article's to own, not theirs. */}
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
-                  <Masonry.Content>
+                  <Masonry.Content padding={false} centered={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
                 </Masonry.Root>

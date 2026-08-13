@@ -696,7 +696,13 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
         {recipients.length > 0 && (
           <Card.Row>
             <Card.Block>
-              <Icon icon='ph--user--regular' />
+              {/* One recipient reads as a person, so it gets the same avatar treatment as every other
+                  person row; several are a group, which an avatar would misrepresent. */}
+              {recipients.length === 1 ? (
+                <Avatar actor={{ email: recipients[0] }} size={5} />
+              ) : (
+                <Icon icon='ph--users--regular' />
+              )}
             </Card.Block>
             <Card.Text classNames='text-sm text-description'>{recipients.join(', ')}</Card.Text>
           </Card.Row>

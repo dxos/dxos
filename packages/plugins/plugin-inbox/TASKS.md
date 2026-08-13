@@ -91,18 +91,18 @@ Committed, unpushed. This is the PR to open first.
 
 ### Tasks
 
-- [ ] **Person rows should use the `Row.Person` avatar, not a `ph--user--regular` icon** (requested
+- [x] **Person rows should use the `Row.Person` avatar, not a `ph--user--regular` icon** (requested
       2026-08-13) — everywhere a card row represents a person, the generic user glyph should be the
       standard avatar treatment. Includes the recipients row added this session, the "Related Contacts"
       rows on the Organization card, and any other person row using the icon. `Row.Person` /
       `ContactAvatar` already carry the hover-card + create-contact affordance, so this also makes those
       rows interactive for free.
-- [ ] **RecordArticle related-objects masonry: drop the x-padding** (requested 2026-08-13) — the cards
+- [x] **RecordArticle related-objects masonry: drop the x-padding** (requested 2026-08-13) — the cards
       are inset relative to the top card and should line up with it. There is already a
       `TODO(burdon): Fix indentation: left align with top card.` at that spot. May need a `className` or
       an explicit option on `Masonry` if the padding is baked into the component rather than the
       container.
-- [ ] **Person card related messages: one row per conversation** (requested 2026-08-13) — the section
+- [x] **Person card related messages: one row per conversation** (requested 2026-08-13) — the section
       currently lists every message, so a single thread fills it with five near-identical "Re: …" rows
       (see the Nicole Gudmand card). Show only the LATEST message per conversation, keyed on the same
       thread id the mailbox conversation view groups by.
