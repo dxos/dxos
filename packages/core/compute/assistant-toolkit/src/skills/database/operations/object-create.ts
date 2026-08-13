@@ -8,20 +8,19 @@ import * as Effect from 'effect/Effect';
 // bundle guard (env-tests) forbids for assistant-toolkit.
 import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Database, Entity, Obj, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
 import { ObjectCreate } from './definitions';
+import { schemasByTypename } from './type-filter';
 
 export default ObjectCreate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ typename, properties, attach }) {
       const { db } = yield* Database.Service;
-      const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
-        .run;
-      const foundSchema = types.find((t) => Type.getTypename(t) === typename);
+      const [foundSchema] = yield* schemasByTypename(typename);
       invariant(foundSchema, `Schema not found: ${typename}`);
       invariant(Type.isObject(foundSchema), 'Schema is not an object schema');
       const schema = foundSchema;

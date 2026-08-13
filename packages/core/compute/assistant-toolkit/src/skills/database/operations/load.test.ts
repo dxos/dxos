@@ -35,4 +35,32 @@ describe('Load', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'load: expandDepth inlines the referenced object, and stops at one level',
+    Effect.fnUntraced(
+      function* (_) {
+        const organization = yield* Database.add(Obj.make(Organization.Organization, { name: 'Cyberdyne Systems' }));
+        const person = yield* Database.add(
+          Obj.make(Person.Person, { fullName: 'Miles Dyson', organization: Ref.make(organization) }),
+        );
+        yield* Database.flush();
+
+        const unexpanded = yield* Operation.invoke(Load, { refs: [Ref.make(person)] });
+        const [envelope] = yield* Schema.decodeUnknownEffect(
+          Schema.Array(Schema.Struct({ organization: Schema.Unknown })),
+        )(unexpanded);
+        expect(envelope.organization).toEqual({ '/': `echo:///${organization.id}` });
+
+        // Depth is clamped, so a larger request still expands exactly one level.
+        const expanded = yield* Operation.invoke(Load, { refs: [Ref.make(person)], expandDepth: 5 });
+        const [inlined] = yield* Schema.decodeUnknownEffect(
+          Schema.Array(Schema.Struct({ organization: Schema.Struct({ id: Schema.String, name: Schema.String }) })),
+        )(expanded);
+        expect(inlined.organization).toMatchObject({ id: organization.id, name: 'Cyberdyne Systems' });
+      },
+      Effect.provide(OperationTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

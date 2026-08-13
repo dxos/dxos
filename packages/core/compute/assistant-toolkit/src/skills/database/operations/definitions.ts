@@ -10,6 +10,22 @@ import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
+import { MAX_EXPAND_DEPTH } from './expand-refs';
+
+/**
+ * Shared by `Query` and `Load`: how deep to inline referenced objects instead of returning their
+ * `{ "/": "echo:..." }` envelope. Capped at {@link MAX_EXPAND_DEPTH}; a larger value is clamped.
+ */
+const ExpandDepth = Schema.optional(
+  Schema.Number.annotate({
+    description:
+      'Inline referenced objects instead of returning their { "/": "echo:..." } envelope, this many ' +
+      `levels deep. 0 (default) returns envelopes; ${MAX_EXPAND_DEPTH} is the maximum. Use it to read ` +
+      'a document with its content, or a task with its assignee, in a single call.',
+    default: 0,
+  }),
+);
+
 export const Query = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.database.query'),
@@ -100,6 +116,7 @@ export const Query = Operation.make({
         default: false,
       }),
     ),
+    expandDepth: ExpandDepth,
   }),
   output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
@@ -121,6 +138,7 @@ export const Load = Operation.make({
   },
   input: Schema.Struct({
     refs: Schema.Array(Ref.Ref(Obj.Unknown)),
+    expandDepth: ExpandDepth,
   }),
   output: Schema.Unknown,
   services: [Database.Service],
