@@ -118,17 +118,17 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       click; (3) progress/failure surfacing, since research is slow and `AiModelNotAvailable` must read
       as "assistant not ready" (see the enrich-cascade gate). Builds on the hover affordance below and
       shares its storybook.
-- [ ] **Avatar hover: contact card, or create-the-contact** (requested 2026-08-12) — hovering an
-      actor's avatar should show that Person's card when a `Person` record exists, and otherwise an
-      `ph--user-circle-plus--regular` IconButton that runs the contact extractor to create one
-      (`InboxOperation.ExtractContact` / the `Contact` ObjectExtractor — note the extractor now refuses
-      machine senders, so the affordance should not offer creation for a `no-reply@`-style address).
-      Today `Row.Person` (`react-ui-card/src/components/Row/Row.tsx:188-244`) has only a click handler
-      (`onContactCreate`) on the anchor row and a hook-free static avatar in the `avatar` variant —
-      no hover state, no card. Demonstrate in a dedicated storybook next to
-      `plugin-inbox/src/components/Header/Header.stories.tsx` (currently one `Default` with a no-op
-      `onContactCreate`) with both states: an actor WITH a seeded Person → card on hover; an actor
-      WITHOUT → the plus IconButton, clicking it creates the Person and the card takes over.
+- [x] **Avatar hover: contact card, or create-the-contact** — `Row.Person`'s `avatar` variant now has
+      an interactive form, chosen by whether the caller passes `db` (the hook-free one stays for
+      virtualized list tiles, where a contact query per row would be too costly). Hovering resolves to
+      one of two states: a Person exists → after 400ms the avatar opens that contact's card (the same
+      `DxAnchorActivate` path a `dx-anchor` link takes; PreviewPlugin listens on `window` with
+      `capture`, since the event does not bubble); no Person → the avatar gives way to a
+      `ph--user-circle-plus--regular` button, and CREATION is a click, never the hover. The anchor
+      variant opens its card on hover too. Demonstrated in `Header.stories.tsx` (`Default` +
+      `Contact`), whose `onContactCreate` runs the extractor's own `buildContactFromActor`; play tests
+      cover both states, including that no create button exists until hover. `Default` is also live
+      now (star owns its state, avatar resolves its contact).
 - [ ] **Conversation-view avatar is not centered on the actor's name** (reported 2026-08-12) — in
       `MailboxArticle` grouped/conversation mode (story `Default`) the avatar sits low, centered
       against the whole tile instead of the sender line; the flat view (`Flat`) is correct. Look at

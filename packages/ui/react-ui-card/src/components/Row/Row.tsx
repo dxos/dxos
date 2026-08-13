@@ -3,7 +3,7 @@
 //
 
 import { format, intervalToDuration } from 'date-fns';
-import React, { type MouseEvent, useCallback, useRef } from 'react';
+import React, { type MouseEvent, useCallback, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
@@ -32,6 +32,62 @@ import { Avatar, avatarName } from '../Avatar';
  */
 
 //
+// Card activation — internal helpers, not exported on Row.
+//
+
+/**
+ * Opens an ECHO object's preview card, anchored on `trigger`. The card surface listens for
+ * `DxAnchorActivate` (see `EditorMenuProvider`), so this is the same path a `dx-anchor` link takes.
+ */
+const activateCard = ({
+  trigger,
+  dxn,
+  label,
+  title,
+}: {
+  trigger: HTMLElement | null;
+  dxn: URI.URI;
+  label: string;
+  title?: string;
+}) => {
+  trigger?.dispatchEvent(new DxAnchorActivate({ trigger, dxn: dxn.toString(), label, kind: 'card', title }));
+};
+
+/**
+ * Delay before a hover opens a card. Long enough that crossing the avatar on the way somewhere else
+ * does not fire it, short enough to feel like a hover rather than a wait.
+ */
+const HOVER_CARD_DELAY = 400;
+
+/**
+ * Hover intent for a card-opening trigger: `start` opens after {@link HOVER_CARD_DELAY}, `cancel`
+ * aborts a pending open. Returned as bare callbacks rather than DOM props so a caller can compose
+ * them with its own pointer handlers.
+ */
+const useCardHover = (open: () => void, enabled: boolean) => {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const cancel = useCallback(() => {
+    if (timeoutRef.current !== undefined) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = undefined;
+    }
+  }, []);
+
+  const start = useCallback(() => {
+    if (!enabled) {
+      return;
+    }
+    cancel();
+    timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = undefined;
+      open();
+    }, HOVER_CARD_DELAY);
+  }, [enabled, cancel, open]);
+
+  return { start, cancel };
+};
+
+//
 // AnchorIconButton — internal helper, not exported on Row.
 //
 
@@ -44,6 +100,8 @@ type AnchorIconButtonProps = {
   title?: string;
   value?: URI.URI;
   size?: 4 | 5 | 6;
+  /** Also open the card on hover (never the `onClick` fallback — hovering must not create anything). */
+  hover?: boolean;
   onClick?: () => void;
 };
 
@@ -60,28 +118,30 @@ const AnchorIconButton = ({
   title,
   value,
   size = 4,
+  hover,
   onClick,
 }: AnchorIconButtonProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  const openCard = useCallback(() => {
+    if (value) {
+      activateCard({ trigger: buttonRef.current, dxn: value, label, title });
+    }
+  }, [value, label, title]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!hover && !!value);
+
   const handleClick = useCallback(() => {
     if (value) {
-      buttonRef.current?.dispatchEvent(
-        new DxAnchorActivate({
-          trigger: buttonRef.current,
-          dxn: value.toString(),
-          label,
-          kind: 'card',
-          title,
-        }),
-      );
+      openCard();
     } else {
       onClick?.();
     }
-  }, [value, label, title, onClick]);
+  }, [value, openCard, onClick]);
 
   return (
     <IconButton
+      onPointerEnter={startHover}
+      onPointerLeave={cancelHover}
       classNames={compact ? 'min-h-0' : 'aspect-square'}
       variant='ghost'
       disabled={!value && !onClick}
@@ -195,6 +255,77 @@ const PersonAvatarRow = ({ actor, onClick }: Pick<RowPersonProps, 'actor' | 'onC
 );
 
 /**
+ * Avatar variant that resolves the actor's contact: hovering the avatar opens that Person's card,
+ * and when the space has no Person for the address the avatar gives way to a create-contact button
+ * (a click, never the hover — hovering must not write to the space).
+ *
+ * Separate from {@link PersonAvatarRow} because resolving a contact costs a query hook per row: a
+ * virtualized list keeps the static variant, while single-row surfaces (an article header, a preview
+ * card) opt in by passing `db`.
+ */
+const PersonAvatarHoverRow = ({
+  actor,
+  db,
+  onContactCreate,
+  onClick,
+}: Pick<RowPersonProps, 'actor' | 'db' | 'onContactCreate' | 'onClick'>) => {
+  const { t } = useTranslation(translationKey);
+  const contactDXN = useActorContact(db, actor);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
+
+  const openCard = useCallback(() => {
+    if (contactDXN) {
+      activateCard({
+        trigger: anchorRef.current,
+        dxn: contactDXN,
+        label: t('show-contact.label'),
+        title: actor.name ?? actor.email,
+      });
+    }
+  }, [contactDXN, t, actor.name, actor.email]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!contactDXN);
+
+  const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
+
+  // The button replaces the avatar in place, so the row's gutter width does not change on hover.
+  const showCreate = !contactDXN && hovered && !!onContactCreate;
+
+  return (
+    <Card.Row>
+      <Card.Block>
+        <div
+          ref={anchorRef}
+          data-testid='row.contact-avatar'
+          onPointerEnter={() => {
+            setHovered(true);
+            startHover();
+          }}
+          onPointerLeave={() => {
+            setHovered(false);
+            cancelHover();
+          }}
+        >
+          {showCreate ? (
+            <IconButton
+              variant='ghost'
+              iconOnly
+              icon='ph--user-circle-plus--regular'
+              size={6}
+              label={t('create-contact.label')}
+              onClick={handleContactCreate}
+            />
+          ) : (
+            <Avatar actor={actor} onClick={onClick} />
+          )}
+        </div>
+      </Card.Block>
+      <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
+    </Card.Row>
+  );
+};
+
+/**
  * Interactive variant — resolves the contact to a card-preview anchor, with a create-contact fallback.
  */
 const PersonAnchorRow = ({
@@ -220,6 +351,7 @@ const PersonAnchorRow = ({
           fallbackLabel={t('create-contact.label')}
           title={role ? `${role}: ${actor.name}` : actor.name}
           value={contactDXN}
+          hover
           onClick={onContactCreate ? handleContactCreate : undefined}
         />
       </Card.Block>
@@ -240,8 +372,17 @@ const PersonAnchorRow = ({
 };
 
 /** A Card.Row rendering a person (sender, recipient, attendee). */
-const RowPerson = ({ avatar, onClick, ...props }: RowPersonProps) =>
-  avatar ? <PersonAvatarRow actor={props.actor} onClick={onClick} /> : <PersonAnchorRow {...props} />;
+const RowPerson = ({ avatar, onClick, ...props }: RowPersonProps) => {
+  if (!avatar) {
+    return <PersonAnchorRow {...props} />;
+  }
+  // `db` is what distinguishes the interactive avatar from the hook-free one (see the two variants).
+  return props.db ? (
+    <PersonAvatarHoverRow {...props} onClick={onClick} />
+  ) : (
+    <PersonAvatarRow actor={props.actor} onClick={onClick} />
+  );
+};
 
 RowPerson.displayName = 'Row.Person';
 
