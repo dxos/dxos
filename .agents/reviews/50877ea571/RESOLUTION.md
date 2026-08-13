@@ -52,7 +52,7 @@
 - 50877ea571-48 - ignored - no-casts - packages/apps/todomvc/src/components/TodoItem.tsx:60
 - 50877ea571-49 - ignored - no-casts - packages/apps/todomvc/src/components/Todos.tsx:54
 - 50877ea571-50 - ignored - no-casts - packages/common/async/src/chain.ts:5
-- 50877ea571-51 - unresolved - no-sleep-in-test - packages/common/async/src/debounce.test.ts:24
+- 50877ea571-51 - resolved - no-sleep-in-test - packages/common/async/src/debounce.test.ts:24
 - 50877ea571-52 - ignored - no-casts - packages/common/async/src/debounce.test.ts:32
 - 50877ea571-53 - ignored - no-casts - packages/common/async/src/debounce.test.ts:33
 - 50877ea571-54 - ignored - no-casts - packages/common/async/src/debounce.test.ts:86
@@ -68,7 +68,7 @@
 - 50877ea571-64 - ignored - no-casts - packages/common/async/src/event-emitter.ts:13
 - 50877ea571-65 - ignored - no-casts - packages/common/async/src/event-emitter.ts:34
 - 50877ea571-66 - ignored - no-casts - packages/common/async/src/event-emitter.ts:37
-- 50877ea571-67 - unresolved - no-sleep-in-test - packages/common/async/src/events.test.ts:37
+- 50877ea571-67 - resolved - no-sleep-in-test - packages/common/async/src/events.test.ts:37
 - 50877ea571-68 - ignored - no-casts - packages/common/async/src/events.ts:21
 - 50877ea571-69 - ignored - no-casts - packages/common/async/src/events.ts:22
 - 50877ea571-70 - ignored - no-casts - packages/common/async/src/events.ts:73
@@ -88,7 +88,7 @@
 - 50877ea571-84 - ignored - no-casts - packages/common/async/src/mutex.ts:120
 - 50877ea571-85 - ignored - no-casts - packages/common/async/src/mutex.ts:121
 - 50877ea571-86 - ignored - no-casts - packages/common/async/src/observable.test.ts:148
-- 50877ea571-87 - unresolved - no-sleep-in-test - packages/common/async/src/persistent-lifecycle.test.ts:109
+- 50877ea571-87 - resolved - no-sleep-in-test - packages/common/async/src/persistent-lifecycle.test.ts:109
 - 50877ea571-88 - ignored - no-casts - packages/common/async/src/persistent-lifecycle.ts:123
 - 50877ea571-89 - ignored - no-casts - packages/common/async/src/persistent-lifecycle.ts:154
 - 50877ea571-90 - ignored - no-casts - packages/common/async/src/push-iterable.ts:23
