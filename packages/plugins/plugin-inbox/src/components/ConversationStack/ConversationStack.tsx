@@ -126,6 +126,8 @@ type ConversationStackContextValue = {
   sendOperations?: readonly InboxCapabilities.MailSendOperation[];
   /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
   getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
+  /** Builds the sender-scoped menu items for a message (container-resolved from `SenderAction`). */
+  getSenderActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
   /** Derived summaries keyed by message id (container-resolved from the mailbox's annotation feed). */
   summaries?: ReadonlyMap<string, string>;
   /** Summary of the conversation as a whole, rendered as the last tile in the stack. */
@@ -160,6 +162,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'runtime'
     | 'sendOperations'
     | 'getExtractActions'
+    | 'getSenderActions'
     | 'summaries'
     | 'conversationSummary'
     | 'onExpandedChange'
@@ -191,6 +194,7 @@ const ConversationStackRoot = ({
   runtime,
   sendOperations,
   getExtractActions,
+  getSenderActions,
   summaries,
   conversationSummary,
   onExpandedChange,
@@ -221,6 +225,7 @@ const ConversationStackRoot = ({
     companion={companion}
     graph={graph}
     getExtractActions={getExtractActions}
+    getSenderActions={getSenderActions}
     summaries={summaries}
     conversationSummary={conversationSummary}
     runtime={runtime}
@@ -467,6 +472,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     companion,
     graph,
     getExtractActions,
+    getSenderActions,
     summaries,
     onAiReply,
     onDelete,
@@ -488,6 +494,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     () => (target ? (getExtractActions?.(target) ?? []) : []),
     [getExtractActions, target],
   );
+  const senderActions = useMemo(() => (target ? (getSenderActions?.(target) ?? []) : []), [getSenderActions, target]);
   const db = mailbox && Obj.getDatabase(mailbox);
 
   // Archiving is the `inbox` tag coming off (Gmail's model — INBOX is a label), so one toggle serves
@@ -513,6 +520,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     inInbox,
     onArchive: handleArchive,
     onCreateProject: onCreateProject && target ? handleCreateProject : undefined,
+    senderActions,
     ...handlers,
   });
 

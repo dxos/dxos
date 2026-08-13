@@ -69,10 +69,19 @@ Committed, unpushed. This is the PR to open first.
 
 ### Tasks
 
-- [ ] **Conversation menu actions** — (a) create a Project from the message
+- [x] **Conversation menu actions** — (a) create a Project from the message
       (`ProjectOperation.CreateTrackingProject`; absorbs the never-built create-project-from-message
       form), (b) ONE composite sender enrichment: `CrmOperation.ResearchPerson`/`ResearchOrganization`
       plus `EnrichImages`. Menu, not hover — the hover variant was dropped in triage.
+      SHIPPED: create-Project is plugin-inbox's own (`CreateProjectFromMessage`, which existed with no
+      UI). Sender enrichment could NOT be: plugin-crm already depends on plugin-inbox, so the import
+      would invert. It arrives through a new `InboxCapabilities.SenderAction` capability mirroring
+      `MailboxAction`; plugin-crm contributes research-then-image, run sequentially because the image
+      pass reads what the profile step wrote. `createInvocations` returns a LIST so a contributor can
+      express a composite without inventing a fused operation, and an empty list omits the menu entry
+      (a sender with no linked contact). OPEN: `EnrichImages` is set-scoped (`limit`), not
+      subject-scoped, so it enriches whatever is missing an image rather than this sender — a
+      subject-scoped variant would be the cleaner call.
 - [ ] **Gate the Enrich button on configured connections** — gate the CONTRIBUTION in
       `app-graph-builder.ts`, not a disabled button; a disabled primary still reads as the main call to
       action. `'no-connections.label'` already exists; check whether one predicate can drive both.

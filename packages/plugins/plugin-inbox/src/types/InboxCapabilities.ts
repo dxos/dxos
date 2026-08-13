@@ -54,6 +54,38 @@ export type MailboxAction = {
 export const MailboxAction = Capability.make<MailboxAction>()(`${meta.profile.key}.capability.mailboxAction`);
 
 /**
+ * A sender-scoped action injected into the per-message conversation menu. Mirrors {@link MailboxAction}
+ * but targets the person who sent the message rather than the mailbox — plugin-crm contributes
+ * enrichment this way, which is what keeps plugin-inbox from importing it (the dependency runs the
+ * other way).
+ */
+export type SenderAction = {
+  /** Stable id (menu item key). */
+  id: string;
+  /** Menu item label (literal string, shown verbatim). */
+  label: string;
+  /** Optional phosphor icon name. */
+  icon?: string;
+  /**
+   * Builds the invocations to run for a sender, in order. Returns a LIST because the useful actions are
+   * composites — research then image, say — and a contributor should not have to model that as one
+   * operation. Returning an empty list means the action does not apply to this sender (e.g. no email),
+   * and the menu item is omitted.
+   *
+   * A closure rather than value properties, for the same reason as {@link MailboxAction}: holding an
+   * `Operation.Definition` on the capability value makes the capability atom read recurse.
+   */
+  createInvocations: (actor: import('@dxos/types').Actor.Actor) => {
+    operation: import('@dxos/compute').Operation.Definition.Any;
+    input: unknown;
+  }[];
+};
+
+// Multi: one menu item per contributed action; more than one plugin may contribute.
+/** Plugins contribute sender-scoped conversation-menu actions via this capability. */
+export const SenderAction = Capability.make<SenderAction>()(`${meta.profile.key}.capability.senderAction`);
+
+/**
  * The send operation a mail provider handles outbound drafts with. Each provider plugin contributes one
  * entry keyed by its `Connector.id`, so the composer routes a draft by its mailbox binding's
  * `Connection.connectorId` without naming any provider.

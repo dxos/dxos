@@ -30,6 +30,8 @@ export type UseMessageToolbarActionsProps = {
   onArchive?: () => void;
   /** Creates a tracking Project from this message. */
   onCreateProject?: () => void;
+  /** Contributed sender-scoped actions (enrichment), already bound to this message's sender. */
+  senderActions?: readonly { id: string; label: string; icon?: string; onSelect: () => void }[];
 };
 
 /**
@@ -50,6 +52,7 @@ export const useMessageActions = ({
   inInbox,
   onArchive,
   onCreateProject,
+  senderActions = [],
 }: UseMessageToolbarActionsProps) => {
   return useMenuBuilder(
     (get) =>
@@ -137,7 +140,7 @@ export const useMessageActions = ({
 
             // Derive-something-from-this-message actions. Grouped with the contributed extractors
             // because they are the same gesture: turn this message into another object.
-            if (onCreateProject || extractActions.length > 0) {
+            if (onCreateProject || extractActions.length > 0 || senderActions.length > 0) {
               builder.separator('line');
             }
             if (onCreateProject) {
@@ -149,6 +152,19 @@ export const useMessageActions = ({
                   testId: 'inbox.message.createProject',
                 },
                 onCreateProject,
+              );
+            }
+
+            // Sender-scoped actions contributed by other plugins (plugin-crm's enrichment).
+            for (const item of senderActions) {
+              builder.action(
+                `sender-${item.id}`,
+                {
+                  label: item.label,
+                  icon: item.icon ?? 'ph--sparkle--regular',
+                  testId: `inbox.message.sender.${item.id}`,
+                },
+                item.onSelect,
               );
             }
 
@@ -188,6 +204,7 @@ export const useMessageActions = ({
       inInbox,
       onArchive,
       onCreateProject,
+      senderActions,
       onDelete,
     ],
   );

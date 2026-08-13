@@ -161,6 +161,44 @@ export const MessageArticle = ({
     [extractors, invoker],
   );
 
+  // Sender-scoped actions contributed by other plugins (plugin-crm's enrichment). Resolved here and
+  // bound per message so the component never touches a capability or an invoker.
+  const senderActionDefs = useCapabilities(InboxCapabilities.SenderAction);
+  const getSenderActions = useCallback(
+    (message: Mailbox.MessageLike) => {
+      const actor = message.sender;
+      if (!actor || !db) {
+        return [];
+      }
+      return senderActionDefs.flatMap((action) => {
+        const invocations = action.createInvocations(actor);
+        // An empty list means the action does not apply to this sender, so it earns no menu item.
+        if (invocations.length === 0) {
+          return [];
+        }
+        return [
+          {
+            id: action.id,
+            label: action.label,
+            icon: action.icon,
+            onSelect: () => {
+              // Sequential: a composite's later steps (the image pass) depend on what the earlier ones
+              // wrote, so they must not race.
+              void invocations
+                .reduce(
+                  (previous, { operation, input }) =>
+                    previous.then(() => invoker.invokePromise(operation, input, { spaceId: db.spaceId })),
+                  Promise.resolve() as Promise<unknown>,
+                )
+                .catch((err) => log.warn('sender action failed', { id: action.id, err }));
+            },
+          },
+        ];
+      });
+    },
+    [senderActionDefs, invoker, db],
+  );
+
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
       if (db && actor) {
@@ -263,6 +301,7 @@ export const MessageArticle = ({
       runtime={runtime}
       sendOperations={sendOperations}
       getExtractActions={getExtractActions}
+      getSenderActions={getSenderActions}
       onExpandedChange={onExpandedChange}
       onCollapseAll={onCollapseAll}
       onExpandAll={onExpandAll}

@@ -28,6 +28,14 @@ export const MailboxAction = Capability.lazyModule(
   () => import('./mailbox-action'),
 );
 
+export const SenderAction = Capability.lazyModule(
+  'SenderAction',
+  // Rides the inbox feature it contributes to, like its MailboxAction sibling — the entry is
+  // unreachable until a conversation renders.
+  { provides: [InboxCapabilities.SenderAction], activatesOn: InboxEvents.Start },
+  () => import('./sender-action'),
+);
+
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',
   { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
