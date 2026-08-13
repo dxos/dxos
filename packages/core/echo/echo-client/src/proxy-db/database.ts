@@ -809,6 +809,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         }
       } catch (error) {
         // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
+        // Reset the delay too: a failed read can't tell us the backlog is quiet, so retry promptly
+        // rather than waiting out whatever delay a prior run of no-change ticks had grown to.
+        pollDelay = FEED_SYNC_POLL_INTERVAL;
         if (!cancelled) {
           log.warn('failed to poll feed sync state', { error });
         }

@@ -76,17 +76,19 @@ fixed the same way.
       defaults to 1 s (~line 300), `_startNaturalTimeProcessing` repeats
       `invokeScheduledTriggers` on `Schedule.fixed` (~line 921), and each tick
       also runs an ECHO `Filter.type(Trigger)` query. Started by plugin-routine,
-      a core plugin, so every tab pays it. **Fixed (R1, reactive query):**
+      a core plugin, so every tab pays it. **Partially fixed, toward R1:**
       `start()` now subscribes once to a live `Filter.type(Trigger)` query
-      (`_subscribeToTriggers`); `refreshTriggers`/`_fetchTriggers` read the
+      (`#subscribeToTriggers`); `refreshTriggers`/`_fetchTriggers` read the
       subscription's cached `results` instead of re-querying the database, so
-      the 1 Hz tick no longer issues SQL when the trigger set hasn't changed.
-      The tick itself still runs every second (cron due-time checks and
-      feed/subscription trigger kinds are unchanged) — a full "sleep until
-      next due time, no timer while idle" scheduler (closing S1 completely per
-      R1's description) is a larger, riskier change to feed/subscription
-      trigger semantics and is left as a follow-up if further gains are
-      wanted.
+      the trigger-list lookup no longer issues SQL when the trigger set hasn't
+      changed. This is only the "subscription" half of R1 — the tick itself
+      still fires every second (`TriggerDispatcher.invokeScheduledTriggers`
+      still queries feed and subscription trigger data on each tick, and cron
+      due-time checks still run on the fixed schedule). The full R1 — no timer
+      while the working set is empty, sleep to the next due time otherwise —
+      would additionally need to skip firing altogether when idle, a larger,
+      riskier change to feed/subscription trigger semantics, left as a
+      follow-up if further gains are wanted.
 - [x] **S2. Every subscribed feed polls at 1 Hz.**
       `echo-client/src/feed/feed-handle.ts` (`POLLING_INTERVAL`,
       `beginPolling`): one timer and one refresh RPC per feed handle, so cost
@@ -135,15 +137,21 @@ fixed the same way.
 
 Independent of each other; some sites may want none, one, or several.
 
-- [ ] **R1. Event-driven scheduling.** Replace a fixed tick with "wake when
-      there is something to do": no timer while the working set is empty, and
-      sleep to the next due time otherwise. Fits S1 directly. Needs a
-      subscription so work arriving while idle still starts, and care around
-      clock changes.
-- [ ] **R2. No-change backoff.** Widen the interval while a poll keeps
+- [~] **R1. Event-driven scheduling.** Replace a fixed tick with "wake when
+  there is something to do": no timer while the working set is empty, and
+  sleep to the next due time otherwise. Fits S1 directly. Needs a
+  subscription so work arriving while idle still starts, and care around
+  clock changes. Partially done for S1: the trigger-list subscription
+  landed (no more per-tick DB query), but the tick itself still fires at a
+  fixed 1 Hz — "no timer while idle" is not yet implemented.
+- [x] **R2. No-change backoff.** Widen the interval while a poll keeps
       returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
       write. Fits S2 and S3. Costs staleness after a quiet period, so pair it
-      with an explicit refresh on user action.
+      with an explicit refresh on user action. Done for both: `FeedHandle`
+      polling (capped 30 s) and space sync-state polling (capped 15 s), each
+      resetting to the fast interval the moment a poll observes a real
+      change — and also on a failed read, since a failure can't tell us the
+      feed/backlog is actually quiet and shouldn't compound the backoff.
 - [ ] **R3. Coordinated scheduling.** One scheduler batching all due work into
       a single round-trip instead of N independent timers. Fits S2 and S3
       together; the win is fewer wakeups and fewer payloads, not a longer

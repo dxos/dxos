@@ -56,6 +56,7 @@ export class FeedHandle {
   private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
     const thisRefreshId = ++this._refreshId;
     let changed = false;
+    let succeeded = false;
     try {
       TRACE_FEED_LOAD &&
         log.info('feed refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
@@ -105,6 +106,7 @@ export class FeedHandle {
 
       TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
       this._objects = decodedObjects;
+      succeeded = true;
     } catch (err) {
       // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
       //                   We should find the root cause and fix it instead of muting the error.
@@ -114,7 +116,10 @@ export class FeedHandle {
       this._error = err as Error;
     } finally {
       this._isLoading = false;
-      this._lastRefreshChanged = changed;
+      // Only a successful, quiet poll should widen the backoff — a failed (or superseded/disposed)
+      // attempt tells us nothing about whether the feed actually changed, so treat it like a change
+      // for backoff purposes and retry promptly rather than compounding an existing delay.
+      this.#lastPollWasQuiet = succeeded && !changed;
       if (changed) {
         this.updated.emit();
       }
@@ -152,10 +157,21 @@ export class FeedHandle {
   private _refreshId = 0;
   private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
 
-  /** Whether the most recent poll found a different object set — drives the backoff in {@link beginPolling}. */
-  private _lastRefreshChanged = true;
-  /** Current delay between polls; grows on no-change ticks, resets to {@link POLLING_INTERVAL} on change. */
-  private _currentPollingDelay = POLLING_INTERVAL;
+  /**
+   * Whether the most recent poll succeeded and found no object-set change — the only case that
+   * should widen the backoff in {@link beginPolling}. A failed, superseded, or disposed attempt
+   * resets it to `false` (fast retry) since it can't tell us the feed is actually quiet.
+   */
+  #lastPollWasQuiet = false;
+  /** Current delay between polls; grows on quiet ticks, resets to {@link POLLING_INTERVAL} otherwise. */
+  #currentPollingDelay = POLLING_INTERVAL;
+  /**
+   * Bumped each time the last polling handler unsubscribes, invalidating any `poll()` iteration
+   * still awaiting `_refreshTask.runBlocking()` from that generation — otherwise a fresh
+   * `beginPolling()` call racing that in-flight await can end up with two self-rescheduling poll
+   * loops running concurrently, each issuing its own `FeedService.queryFeed` RPC.
+   */
+  #pollingGeneration = 0;
 
   constructor(
     private readonly _service: FeedService.Client,
@@ -564,16 +580,21 @@ export class FeedHandle {
 
   beginPolling(): () => void {
     if (this._pollingHandlers++ === 0) {
-      this._currentPollingDelay = POLLING_INTERVAL;
+      const generation = ++this.#pollingGeneration;
+      this.#currentPollingDelay = POLLING_INTERVAL;
       const poll = async () => {
         await this._refreshTask.runBlocking();
-        if (this._pollingHandlers > 0 && !this._ctx.disposed) {
+        // The generation check rejects a stale iteration: if the last handler unsubscribed and a
+        // new `beginPolling()` call started its own generation while this `await` was pending, this
+        // iteration must not reschedule alongside it.
+        if (generation === this.#pollingGeneration && this._pollingHandlers > 0 && !this._ctx.disposed) {
           // No-change backoff: an idle feed widens its own poll interval instead of holding at 1 Hz
-          // forever, and snaps back to POLLING_INTERVAL the moment a poll observes real change.
-          this._currentPollingDelay = this._lastRefreshChanged
-            ? POLLING_INTERVAL
-            : Math.min(this._currentPollingDelay * 2, MAX_POLLING_INTERVAL);
-          this._pollingInterval = setTimeout(poll, this._currentPollingDelay);
+          // forever, and snaps back to POLLING_INTERVAL the moment a poll observes real change (or
+          // fails to observe anything conclusive at all).
+          this.#currentPollingDelay = this.#lastPollWasQuiet
+            ? Math.min(this.#currentPollingDelay * 2, MAX_POLLING_INTERVAL)
+            : POLLING_INTERVAL;
+          this._pollingInterval = setTimeout(poll, this.#currentPollingDelay);
         }
       };
       queueMicrotask(poll);
@@ -581,6 +602,7 @@ export class FeedHandle {
 
     return () => {
       if (--this._pollingHandlers === 0) {
+        this.#pollingGeneration++;
         clearTimeout(this._pollingInterval!);
         this._pollingInterval = null;
       }
