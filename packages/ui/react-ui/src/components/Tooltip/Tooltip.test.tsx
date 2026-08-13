@@ -28,10 +28,8 @@ describe('Tooltip', () => {
     </Tooltip.Provider>
   );
 
-  // `asChild` mirrors how `IconButton` uses the trigger, and is what makes this measurable: when
-  // `Tooltip.Trigger` re-renders, `Slot` clones its child with freshly-composed handlers, so the wrapped
-  // button re-renders with it. Counting the child therefore counts trigger re-renders — counting the
-  // *parent* would not, since a context change re-renders the consumer, not whoever rendered it.
+  // The counter belongs on the child, not here: a context change re-renders the consumer rather than
+  // whoever rendered it, and `Slot` clones the child on each trigger render, as `IconButton` does.
   const CountingTrigger = ({ label, onRender }: { label: string; onRender?: (label: string) => void }) => (
     <Tooltip.Trigger asChild content={`${label} tip`}>
       <CountingButton label={label} onRender={onRender} />
@@ -58,9 +56,7 @@ describe('Tooltip', () => {
 
     fireEvent.pointerMove(first, { pointerType: 'mouse' });
 
-    // The regression guard: these came from shared context, so opening one tooltip stamped every
-    // trigger in the app as open and pointed them all at the one content id. Asserting "not closed"
-    // rather than a specific state keeps this off the delayed-vs-instant open path.
+    // Asserting "not closed" rather than a specific state keeps this off the delayed-vs-instant path.
     await waitFor(() => expect(first.getAttribute('aria-describedby')).toBeTruthy());
     expect(first.getAttribute('data-state')).not.toEqual('closed');
     expect(second.getAttribute('data-state')).toEqual('closed');
@@ -94,8 +90,7 @@ describe('Tooltip', () => {
     renders.length = 0;
     fireEvent.pointerMove(first, { pointerType: 'mouse' });
 
-    // Every trigger used to re-render here (once for the trigger/content/side change, again for
-    // `open`), dragging whatever each wraps via `asChild` along with it.
+    // A trigger re-render drags whatever it wraps via `asChild` with it, so this must stay at zero.
     expect(renders).toEqual([]);
   });
 });

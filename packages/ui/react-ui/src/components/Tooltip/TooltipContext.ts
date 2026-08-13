@@ -26,11 +26,8 @@ export const TOOLTIP_NAME = 'Tooltip';
 export type TooltipStateAttribute = 'closed' | 'delayed-open' | 'instant-open';
 
 /**
- * The half of the tooltip context that never changes identity.
- *
- * Split from {@link TooltipVolatileContextValue} because a single provider serves every trigger in the
- * app: pointing at a new trigger rewrites the volatile half on each pointer-enter, and a trigger that
- * consumed it would re-render — along with whatever it wraps via `asChild` — on every hover anywhere.
+ * The half of the tooltip context that never changes identity, so that the triggers consuming it — every
+ * one in the app, since a single provider serves them all — do not re-render on each pointer-enter.
  */
 export type TooltipContextValue = {
   contentId: string;
@@ -46,12 +43,7 @@ export type TooltipContextValue = {
   disableHoverableContent: boolean;
 };
 
-/**
- * The half that changes as the pointer moves between triggers.
- *
- * Consumed only by the single content the provider renders. Triggers get the corresponding DOM
- * attributes applied imperatively to the active element instead, so only that one element carries them.
- */
+/** The half that changes as the pointer moves, consumed only by the single content the provider renders. */
 export type TooltipVolatileContextValue = {
   open: boolean;
   stateAttribute: TooltipStateAttribute;

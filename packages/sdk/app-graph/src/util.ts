@@ -9,10 +9,9 @@ import { invariant } from '@dxos/invariant';
 import * as Node from './node';
 
 /**
- * `Atom.withLabel` captures and formats a stack trace (`new Error().stack`) on every call, and the graph
- * labels an atom per node, per connection key, and per extension — so expanding one node costs hundreds of
- * captures on the main thread, on the pointer-event path that prefetches hovered navtree rows. Nothing in
- * the repo reads the labels, so they are opt-in via `VITE_ATOM_LABELS` and only ever on under the dev server.
+ * `Atom.withLabel` captures and formats a stack trace on every call, and the graph labels an atom per node,
+ * per connection key, and per extension, so one expansion costs hundreds of captures on the main thread —
+ * hence opt-in, and only under the dev server.
  */
 const ATOM_LABELS = Boolean(import.meta.env?.DEV) && Boolean(import.meta.env?.VITE_ATOM_LABELS);
 

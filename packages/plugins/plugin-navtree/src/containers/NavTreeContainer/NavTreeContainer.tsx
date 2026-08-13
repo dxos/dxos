@@ -248,9 +248,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       }
     }, [workspaceChildren, tab, setItem, graph]);
 
-    // Prefetching a hovered row is speculative, so it waits out the cursor rather than racing it: each hover
-    // interrupts the previous fiber, cancelling both the settle delay and any expansion `Graph.expand` has
-    // yet to run, so a sweep only pays for the row the cursor stops on.
+    // Prefetching a hovered row is speculative, so it waits out the cursor rather than racing it: a sweep
+    // should only pay for the row the cursor stops on.
     const hoverExpandRef = useRef<Fiber.Fiber<void> | undefined>(undefined);
     const interruptHoverExpand = useCallback(() => {
       if (hoverExpandRef.current) {

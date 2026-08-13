@@ -167,9 +167,8 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
   const isOpenRef = useRef(open);
   isOpenRef.current = open;
 
-  // Applied to the element rather than rendered by `Tooltip.Trigger`: the trigger reads only the stable
-  // context, and these describe the one tooltip that is open, so only the active trigger may carry them.
-  // Cleanup restores the previous trigger as the pointer moves on.
+  // Applied to the element rather than rendered by `Tooltip.Trigger`, which reads only the stable context:
+  // these describe the one open tooltip, so only the active trigger may carry them.
   useEffect(() => {
     if (!trigger) {
       return;
@@ -295,11 +294,9 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
       <Primitive.button
         // We purposefully avoid adding `type=button` here because tooltip triggers are also
         // commonly anchors and the anchor `type` attribute signifies MIME type.
-        // NOTE: `data-state` and `aria-describedby` are set by the provider on whichever trigger is
-        //   active, so they are not rendered from state here — doing so would describe every trigger in
-        //   the app with the one open tooltip, and would re-render all of them on each hover.
-        //   The literal below is safe against the provider's value: React diffs props against its own
-        //   previous props, so a constant never registers as changed and never overwrites the DOM.
+        // NOTE: The provider sets `data-state` and `aria-describedby` on whichever trigger is active, since
+        //   rendering them from state here would describe every trigger with the one open tooltip. The
+        //   constant below never registers as changed, so React cannot overwrite what the provider set.
         data-state='closed'
         {...triggerProps}
         ref={composedRefs}
