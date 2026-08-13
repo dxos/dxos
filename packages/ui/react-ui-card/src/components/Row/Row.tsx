@@ -3,7 +3,7 @@
 //
 
 import { format, intervalToDuration } from 'date-fns';
-import React, { type MouseEvent, useCallback, useEffect, useRef } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
@@ -521,15 +521,25 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
             key={attachment.ref.uri}
             hue='neutral'
             classNames={mx('inline-flex items-center gap-1', onAttachmentClick && 'cursor-pointer')}
-            onClick={
-              onAttachmentClick &&
-              ((event) => {
+            // `Tag` renders a span, so a bare `onClick` would be mouse-only. `role`/`tabIndex` plus the
+            // key handler give it the button semantics it needs to be reachable from the keyboard.
+            {...(onAttachmentClick && {
+              role: 'button',
+              tabIndex: 0,
+              onClick: (event: MouseEvent) => {
                 // The row sits inside a tile that also handles clicks; opening an attachment must not
                 // also select the message behind it.
                 event.stopPropagation();
                 onAttachmentClick(index);
-              })
-            }
+              },
+              onKeyDown: (event: KeyboardEvent) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onAttachmentClick(index);
+                }
+              },
+            })}
           >
             <Icon icon='ph--file--regular' size={3} />
             {attachment.name ?? attachment.ref.uri}

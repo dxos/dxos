@@ -523,7 +523,8 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     extractActions,
     nodeId: attendableId,
     inInbox,
-    onArchive: handleArchive,
+    // Without a db the toggle is a no-op, so offering an enabled action would be a dead affordance.
+    onArchive: db && target ? handleArchive : undefined,
     onCreateProject: onCreateProject && target ? handleCreateProject : undefined,
     senderActions,
     ...handlers,

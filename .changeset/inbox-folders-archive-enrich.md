@@ -1,7 +1,5 @@
 ---
 '@dxos/plugin-inbox': minor
-'@dxos/plugin-crm': minor
-'@dxos/plugin-space': minor
 '@dxos/react-ui': minor
 '@dxos/react-ui-card': patch
 ---

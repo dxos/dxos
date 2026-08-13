@@ -228,7 +228,7 @@ Every plugin-manager story on my storybook instance (:9013) dies with
 `Startup timed out after 30000ms` — including `SpaceHomeArticle`, which nothing on this branch touches,
 so it is NOT a regression from this work. Console shows the cause: the ECHO client is slow to come up
 (`slow AM open {duration: 5007ms}` and `Action 'Finding properties for a space' is taking more then
-5,000ms`), and plugin startup on top of that overruns the budget. Reducing a story's seed count from 100
+5,000ms` — the log's own wording), and plugin startup then overruns the budget. Reducing a story's seed count from 100
 to 8 objects did NOT help, so seeding is not the bottleneck.
 
 Consequence: **the manual test plan below cannot be executed from my storybook instance.** Everything on
@@ -287,8 +287,9 @@ Setup: storybook against the `@dxos/fixtures` mailbox corpus (391 real messages)
 
 ### D. Recipients row
 
-- [ ] **D1** — Expand a message with a To header. Expect a row with a `ph--user--regular` icon in the
-      first column, aligned with the tags/attachments rows.
+- [ ] **D1** — Expand a message with a To header. Expect a row whose first column carries the standard
+      person AVATAR for a single recipient (the generic glyph was replaced), or a `ph--users--regular`
+      group icon when there are several, aligned with the tags/attachments rows.
 - [ ] **D2** — The row shows ONLY the address — `rich@braneframe.com`, never `"RICHARD S. BURDON"
 <rich@braneframe.com>`.
 - [ ] **D3** — A multi-recipient header renders each address comma-separated.

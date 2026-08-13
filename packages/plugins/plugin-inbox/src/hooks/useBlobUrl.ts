@@ -25,7 +25,7 @@ export type BlobResource = {
  * Unlike that resolver this owns the url's lifetime: a url minted here is revoked on unmount or when
  * the ref changes, since nothing downstream caches it.
  */
-export const useBlobUrl = (ref: Ref.Ref<any> | undefined, db: Database.Database | undefined): BlobResource => {
+export const useBlobUrl = (ref: Ref.Ref<Obj.Unknown> | undefined, db: Database.Database | undefined): BlobResource => {
   const [resource, setResource] = useState<BlobResource>({ pending: true });
   const uri = ref?.uri;
 

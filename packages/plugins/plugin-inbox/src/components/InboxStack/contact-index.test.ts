@@ -56,9 +56,10 @@ describe('buildContactIndex', () => {
     const db = await seed();
     const people = await db.query(Filter.type(Person.Person)).run();
     const ada = people.find((person) => person.fullName === 'Ada Lovelace');
+    expect(ada, 'seeded Person not found').toBeDefined();
 
     const index = buildContactIndex(people);
-    expect(index.get('ada@example.com')).toBe(EID.tryParse(Obj.getURI(ada!).toString()));
+    expect(index.get('ada@example.com')).toBe(EID.tryParse(Obj.getURI(ada as Person.Person).toString()));
   });
 
   test('skips a Person with no addresses rather than throwing', async ({ expect }) => {

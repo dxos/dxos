@@ -172,7 +172,13 @@ const meta = {
           // contact whose card opens on hover, and an unknown one offering to create it. Seeding all or
           // none leaves one of the two states untestable. Derived from the FEED-scoped messages above —
           // a bare space query does not see feed messages, and would silently seed nobody.
-          const senders = [...new Set(messages.map((message) => message.sender?.email).filter(Boolean))] as string[];
+          const senders = [
+            ...new Set(
+              messages
+                .map((message) => message.sender?.email)
+                .filter((email): email is string => typeof email === 'string' && email.length > 0),
+            ),
+          ];
           senders.forEach((email, index) => {
             if (index % 2 === 0) {
               space.db.add(Person.make({ fullName: email.split('@')[0], emails: [{ value: email }] }));
