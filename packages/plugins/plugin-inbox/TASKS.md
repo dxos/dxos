@@ -157,6 +157,21 @@ Committed, unpushed. This is the PR to open first.
       unknown in the `Spec` story despite seeded Persons. Suspects: the URI→`EID.tryParse` of a freshly
       added object, or the story's `useQuery` not seeing the seeds. Restore the story's real assertion
       (it currently asserts only that the list renders).
+      INVESTIGATION 2026-08-13 — BOTH named suspects are REFUTED, with tests now in the repo:
+      (1) `EID.tryParse(Obj.getURI(person).toString())` round-trips for a fresh Person, a flushed one,
+      and one read back from a query (`contact-lookup.test.ts`, 3 tests).
+      (2) The index itself is correct against a real database — indexes every seeded Person, matches
+      case-insensitively, resolves to the right object, skips an address-less Person
+      (`contact-index.test.ts`, 4 tests). `buildContactIndex` was extracted to its own module to
+      make this testable; a node test cannot import the `.tsx`.
+      (3) The `Spec` story DOES pass `knownSenders: 0.5`, so the seeding guard is not short-circuiting.
+      What remains is React-level: the story seeds Persons in a `useEffect` after first render, so the
+      question is whether `useContactLookup`'s `useQuery` observes them. Confirming that needs the story
+      RUNNING, which the storybook startup blocker prevents — so this is parked at the boundary of what
+      can be established without it, not abandoned.
+      NOTE a related trap found while fixing the ConversationStack story: a bare
+      `space.db.query(Filter.type(Message.Message))` does NOT see feed messages, so any seeding derived
+      that way silently produces nothing. Worth checking the same in this story's `items`.
 - [ ] **Avatar not aligned with the actor's name** — both surfaces (conversation view AND the mailbox
       message card). Note `Card.theme.ts`'s `subgrid` carries `items-center`, which is the alignment
       rule to look at before the row gap.

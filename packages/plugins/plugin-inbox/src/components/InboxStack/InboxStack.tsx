@@ -19,6 +19,7 @@ import { type Actor, type Message, Person } from '@dxos/types';
 import { useVisibleTags } from '#hooks';
 
 import { getMessageBodyText, getMessageProps } from '../../util';
+import { buildContactIndex } from './contact-index';
 import { isMessageGroup } from './is-message-group';
 
 export type InboxStackAction =
@@ -82,16 +83,7 @@ const useContactLookup = (db?: Database.Database) => {
     if (!db) {
       return undefined;
     }
-    const byEmail = new Map<string, EID.EID>();
-    for (const person of people) {
-      const eid = EID.tryParse(Obj.getURI(person).toString());
-      if (!eid) {
-        continue;
-      }
-      for (const email of person.emails ?? []) {
-        byEmail.set(email.value.toLowerCase(), eid);
-      }
-    }
+    const byEmail = buildContactIndex(people);
     return (actor: Actor.Actor) => (actor.email ? byEmail.get(actor.email.toLowerCase()) : undefined);
   }, [db, people]);
 };
