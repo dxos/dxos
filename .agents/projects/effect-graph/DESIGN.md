@@ -39,11 +39,31 @@ migration did not gate this; it was a fit question, answered by the spikes below
 └─ algorithms        id-translated topo/dfs/dijkstra/scc/neighborhood/toMermaid pass-throughs
 ```
 
-### Core
+### Core (REVISED: long-lived mutable working graph)
 
-- Source of truth: `Atom.Writable<G.DirectedGraph<Node, Edge>>` with **`Atom.keepAlive`** (see
-  Footguns). id↔index bimaps for nodes and edges maintained by the model; all mutation goes
-  through `model.mutate(fn)` — one COW scope per user action, never per element.
+The ECHO-analogous split — a live mutable working copy with `Obj.update`-style batches, immutable
+snapshots on demand — measured strictly better than the COW-per-scope design and is the adopted
+core. Key enablers, verified against `effect/Graph` source: `mutate()` clones the ENTIRE graph
+**twice** (`beginMutation` and `endMutation` each full-clone both Maps + both adjacency sets), and
+every read/algorithm API accepts `Graph | MutableGraph` — so the hot path never needs an
+immutable value at all.
+
+- The model owns **one long-lived `MutableGraph`** (via `beginMutation`, never ended in the hot
+  path) + id↔index bimaps. Writes are direct O(1) graph ops.
+- `model.batch(fn)` = mutations + **one version-atom bump** (the `Obj.update` analog). Derived
+  atoms depend on the version atom and read the mutable graph directly.
+- **Granular reactivity does not need root immutability** — equality cutoffs operate on derived
+  *outputs* (arrays of node-data refs), which stay correct as long as `updateNode` replaces the
+  data object (model-enforced discipline). Verified: touched-collection subscribers fire,
+  untouched stay silent.
+- Algorithms (`dijkstra`, `dfs`, `topo`, SCC, …) run directly on the `MutableGraph`.
+- `model.snapshot()` produces an immutable `Graph` **only on request** (codec, persistence,
+  history), cached per version. Today that costs `endMutation` + re-`beginMutation` (two clones,
+  ~11ms @7k — `endMutation` kills the handle); worth an upstream ask for a single-clone
+  `Graph.snapshot` API. Serialization can also bypass it: the codec iterates the mutable directly.
+- Discipline the model owns: version bump exactly once per batch; the mutable graph never escapes
+  the model; graph-level `Equal` unused (by-reference on mutables); node-data replaced, never
+  field-mutated, when reactive.
 - Codec: id-keyed `encode()`/`decode()` between the Effect graph and the schema `{nodes, edges}`
   shape. Round-trip proven in spike. Persisted data is byte-identical to today — **no migration**.
 - Algorithms exposed id-translated (`model.topo(): string[]`, etc.). `topo` throws `GraphError` on
@@ -100,7 +120,9 @@ Real graph sizes: canvas boards 10s–100s, activation rounds ~100–300, explor
 
 ### Perf invariants (architectural rules, wrapper-enforced)
 
-1. One `mutate` scope per user action — never per element (the 1900× cliff).
+1. One `batch()` (version bump) per user action — never per element. (Under the superseded
+   COW-per-scope design this was the 1900× cliff; with the long-lived mutable it still bounds
+   index rebuilds and notification churn.)
 2. Hot-path data (positions) in per-node writable atoms, not graph node data.
 3. Indices never persisted — codec and bimaps are id-keyed; indices stay internal.
 
@@ -196,19 +218,22 @@ Read-path structure matters: a naive `connections()` scanning all edges per atom
 atom** (single O(E) pass per flush: `source|relation` → sorted edge list), `connections()` reads
 it at O(deg):
 
-Measured A/B vs a faithful replica of today's sharded `GraphImpl` (same tree, same 100 flush
+Measured A/B/C vs a faithful replica of today's sharded `GraphImpl` (same tree, same 100 flush
 bursts, 200 mounted connections atoms, graph growing 1.9k→6.9k nodes):
 
-| | today's sharded | canonical + index |
-|---|---:|---:|
-| write: per 50-node batched flush | 3.76ms | 8.66ms (**2.3× slower**) |
-| read: path search @ ~6.9k nodes | 20.2ms (DFS through atoms; `waitForPath` re-runs it every 500ms) | 9.0ms (**2.2× faster**, reactive) |
+| | today's sharded | canonical COW `mutate` | **long-lived mutable (adopted)** |
+|---|---:|---:|---:|
+| write: per 50-node batched flush | 3.76ms | 8.66ms | **1.83ms (2× faster than today)** |
+| read: path search @ ~6.9k nodes | 20.2ms (DFS through atoms; `waitForPath` re-runs it every 500ms) | 9.0ms | **9.0ms (reactive, no polling)** |
+| explicit immutable snapshot | n/a | free (is the value) | 5.4ms, on demand only |
 
-(Naive O(E)-per-atom connections reads cost 21ms/flush — the adjacency-index layer is mandatory.)
-Note today's writes are not O(1) either: `addEdgeImpl` spreads the whole edges record per add —
-O(deg) on hot collections, quadratic within a burst. Net: writes ~2× slower, reads ~2× faster,
-polling eliminated; both single-digit ms per batched flush well past realistic navtree scale.
-It buys: algorithms run
+COW's write cost decomposes as ~65% the double full-graph clone (`beginMutation` + `endMutation`),
+~25% the O(E) adjacency-index rebuild, ~1% the actual writes — which is why dropping the clone
+wins. (Naive O(E)-per-atom connections reads cost 21ms/flush — the adjacency-index layer is
+mandatory in every variant; making it incremental is a further ~1.5ms lever.) Note today's writes
+are not O(1) either: `addEdgeImpl` spreads the whole edges record per add — O(deg) on hot
+collections, quadratic within a burst. Net for the adopted design: **writes 2× faster than today,
+reads 2× faster, polling eliminated.** It buys: algorithms run
 directly on the live canonical value (no projection rebuild — the interim Option B paid ~17ms per
 flush *while mounted*), `getPath`→`dijkstra` (shortest path; replaces DFS scan), reactive
 `pathAtom` (kills `waitForPath`'s 500ms poll), free inverse edges, a serializable/cacheable

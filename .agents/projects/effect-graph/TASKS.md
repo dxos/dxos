@@ -8,8 +8,10 @@ envelope, two Atom footguns). No repo code yet; Phase 1 is next. Branch:
 
 New model on `effect/Graph`; schema layer untouched.
 
-- [ ] **Core model** — `keepAlive` root atom holding `G.DirectedGraph<Node, Edge>`; id↔index
-      bimaps for nodes and edges; all mutation via `mutate(fn)` (one COW scope per action).
+- [ ] **Core model** — long-lived `MutableGraph` working copy (never `endMutation`'d in the hot
+      path) + `keepAlive` version atom bumped once per `batch(fn)`; id↔index bimaps for nodes and
+      edges; derived atoms/algorithms read the mutable directly; `snapshot()` on demand (cached
+      per version). See DESIGN §Core for the discipline list.
 - [ ] **Codec** — id-keyed `encode()`/`decode()` ↔ schema `{nodes, edges}` shape; round-trip tests
       against today's persisted fixtures (byte-identical, no migration).
 - [ ] **Granular atoms** — `nodeAtom`/`edgeAtom`/`subgraphAtom` via `Atom.family` + equality
@@ -82,7 +84,10 @@ Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-gr
       lands separately — app-graph is load-bearing for all plugin UI.
 - [ ] **Algorithm upgrades in app-graph** — `getPath` → `dijkstra`; `waitForPath` poll →
       reactive `pathAtom` + equality cutoff; `traverse`/`toJSON` → `dfs` walkers.
-- [ ] **Watch flush scaling** — O(V+E) per flush; profile against startup-latency budgets at
-      10k+ expanded nodes; fallback: per-workspace graph partitioning.
+- [ ] **Watch flush scaling** — with the long-lived-mutable core, per-flush cost is the O(E)
+      adjacency-index rebuild (~1.5ms @7k; writes now beat today's sharded design). Lever if it
+      pinches: incremental index maintenance; fallback: per-workspace partitioning.
+- [ ] **Upstream ask** — propose a single-clone `Graph.snapshot(mutable)` (today: `endMutation`
+      kills the handle, so snapshot+continue costs two clones).
 - [ ] **Adopt shared view helpers (C)** — swap app-graph's local family/equality patterns onto
       the Phase-1 primitives.
