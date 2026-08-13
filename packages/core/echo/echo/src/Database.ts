@@ -205,6 +205,10 @@ export interface Database extends Queryable {
   /**
    * Wait for all pending changes to be saved to disk.
    * Optionaly waits for changes to be propagated to indexes and event handlers.
+   *
+   * Local only — this does not wait for replication. A write can still be in flight (or not yet
+   * sent) to EDGE when this resolves, so a remote read issued straight after may legitimately miss
+   * it. To gate on the remote having the write, use `space.internal.syncToEdge()`.
    */
   flush(opts?: FlushOptions): Promise<void>;
 
