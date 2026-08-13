@@ -212,18 +212,20 @@ Object.defineProperties(TypedObjectPrototype, {
   // Effect `Hash`/`Equal` traits, keyed by entity id: an entity has exactly one live proxy, and the
   // bare `id` spells that invariant without the throw a derived URI risks on a malformed id.
   // Effect's structural default would instead deep-read the record and go stale on the next mutation.
-  // Nested records share this prototype but carry no `id`, so they fall back to reference identity.
+  // Selected by the `[KindId]` brand, not by the presence of an `id`, since a nested record sharing
+  // this prototype may carry an application-level one; those keep reference identity.
   [Hash.symbol]: {
     get(this: ProxyTarget) {
       const target = getRawTarget(this);
-      return () => (target.id !== undefined ? Hash.hash(target.id) : Hash.random(target));
+      return () => (isEntity(target) ? Hash.hash(target.id) : Hash.random(target));
     },
   },
   [Equal.symbol]: {
     get(this: ProxyTarget) {
       const target = getRawTarget(this);
-      return (that: unknown) =>
-        target.id !== undefined ? isEntity(that) && that.id === target.id : getRawTarget(that) === target;
+      return isEntity(target)
+        ? (that: unknown) => isEntity(that) && that.id === target.id
+        : (that: unknown) => getRawTarget(that) === target;
     },
   },
   [StaticTypeSchemaSlot]: {
