@@ -23,8 +23,9 @@ const make = () =>
     key: SKILL_KEY,
     name: 'Projects',
     description:
-      'Track multi-step work as projects, tasks and design docs in the space. Use when work spans 3+ steps or ' +
-      'phases, will outlive one session, or the user asks for a plan, progress, or a /project verb.',
+      'Track multi-step work as projects, tasks and design docs in a DXOS space. Use when work spans 3+ steps ' +
+      'or phases, will outlive one session, when the user asks for a plan or progress, on any /project verb, ' +
+      "or when asked to set up, bind or configure this repo's project space (/project setup).",
     agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make({ content: instructions })),
