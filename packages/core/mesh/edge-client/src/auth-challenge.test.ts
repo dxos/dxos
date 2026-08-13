@@ -9,6 +9,7 @@ import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   authenticateViaChallengeEndpoint,
   fetchAuthChallenge,
+  fetchAuthChallengeInfo,
   parseChallengeHeader,
   readAuthChallenge,
 } from './auth-challenge';
@@ -166,6 +167,44 @@ describe('fetchAuthChallenge', () => {
   });
 });
 
+describe('fetchAuthChallengeInfo', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('surfaces the advertised TTL beside the challenge', async ({ expect }) => {
+    vi.stubGlobal('fetch', async () =>
+      jsonResponse({ success: true, data: { challenge: CHALLENGE, expiresInMs: 300_000 } }),
+    );
+    expect(await fetchAuthChallengeInfo('https://edge.example.com')).toEqual({
+      challenge: CHALLENGE,
+      expiresInMs: 300_000,
+    });
+  });
+
+  test('tolerates servers that advertise no TTL, or a nonsensical one', async ({ expect }) => {
+    vi.stubGlobal('fetch', async () => jsonResponse({ success: true, data: { challenge: CHALLENGE } }));
+    expect((await fetchAuthChallengeInfo('https://edge.example.com'))?.expiresInMs).toBeUndefined();
+
+    vi.stubGlobal('fetch', async () =>
+      jsonResponse({ success: true, data: { challenge: CHALLENGE, expiresInMs: -5 } }),
+    );
+    expect((await fetchAuthChallengeInfo('https://edge.example.com'))?.expiresInMs).toBeUndefined();
+  });
+
+  test('a 401-shaped challenge carries no TTL', async ({ expect }) => {
+    vi.stubGlobal(
+      'fetch',
+      async () =>
+        new Response('Unauthorized', {
+          status: 401,
+          headers: { 'WWW-Authenticate': `VerifiablePresentation challenge="${CHALLENGE}"` },
+        }),
+    );
+    expect(await fetchAuthChallengeInfo('https://edge.example.com')).toEqual({ challenge: CHALLENGE });
+  });
+});
+
 describe('authenticateViaChallengeEndpoint', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -175,14 +214,14 @@ describe('authenticateViaChallengeEndpoint', () => {
     vi.stubGlobal('fetch', async () => jsonResponse({ success: true, data: { challenge: CHALLENGE } }));
 
     let signed: Uint8Array | undefined;
-    const presentation = await authenticateViaChallengeEndpoint(
+    const authentication = await authenticateViaChallengeEndpoint(
       'https://edge.example.com',
       identity((challenge) => {
         signed = challenge;
       }),
     );
 
-    expect(presentation).toBeDefined();
+    expect(authentication?.presentation).toBeDefined();
     // Normalised to a plain Uint8Array on both sides: the decoder hands back a Buffer, which
     // `toEqual` treats as a distinct type despite identical bytes.
     expect(new Uint8Array(signed!)).toEqual(new Uint8Array(Buffer.from(CHALLENGE, 'base64')));
