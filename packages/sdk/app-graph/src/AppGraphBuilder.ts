@@ -314,6 +314,8 @@ class GraphBuilderImpl implements GraphBuilder {
   readonly _initialized: Record<string, Trigger> = {};
   /** The URL grammar (see {@link UrlGrammar}); the keys are absent when URLs are not in play. */
   readonly urlGrammar: UrlGrammar;
+  /** Applied to every connector-produced node; see {@link GraphBuilderProps.decorateNode}. */
+  readonly _decorateNode: (node: Node.NodeArg<any>, extension?: BuilderExtension) => Node.NodeArg<any>;
   /** Shared atom registry for reactive subscriptions. */
   readonly _registry: Registry.AtomRegistry;
   /** Backing graph with internal accessors for node atoms and construction. */
@@ -329,6 +331,8 @@ class GraphBuilderImpl implements GraphBuilder {
       ...urlGrammar,
     };
     this._registry = registry ?? Registry.make();
+    this._decorateNode =
+      params.decorateNode ?? ((node, extension) => stampUrlSegment(node, extension?.url, this.urlGrammar));
     const graph = Graph.make({
       ...params,
       registry: this._registry,
@@ -489,12 +493,10 @@ class GraphBuilderImpl implements GraphBuilder {
       connectors,
       (entries) => {
         const extensions = this.getExtensions();
-        const grammar = this.urlGrammar;
-        // Stamp `properties.urlSegment` on each produced node (and its inline descendants) so the computed
-        // segment is readable off the node (see `BuilderNode`): `/<key>[/<id>]` from the producing
-        // extension's binding, or `/<linkedKey>/<variant>` for a `~<variant>` linked node.
+        // Produced nodes (and their inline descendants) pass through the decorator, which is where a
+        // caller attaches whatever its extensions' metadata implies — URL segments, for instance.
         const nodes = qualifyNodeArgs(id)(entries.map((entry) => entry.node)).map((node, index) =>
-          stampUrlSegment(node, extensions[entries[index].extensionId]?.url, grammar),
+          this._decorateNode(node, extensions[entries[index].extensionId]),
         );
         // Record provenance for each qualified node — top-level and inline descendants alike — so
         // reverse (node → URL) mapping can find the producing extension's `url` binding. Inline children
@@ -573,6 +575,11 @@ class GraphBuilderImpl implements GraphBuilder {
 /** Construction params: the backing graph's props plus the URL grammar's fixed keys. */
 export type GraphBuilderProps = Pick<Graph.GraphProps, 'registry' | 'nodes' | 'edges'> & {
   urlGrammar?: UrlGrammarProps;
+  /**
+   * Applied to each connector-produced node before it enters the graph. Defaults to stamping the
+   * URL segment implied by the producing extension's binding.
+   */
+  decorateNode?: (node: Node.NodeArg<any>, extension?: BuilderExtension) => Node.NodeArg<any>;
 };
 
 /**
