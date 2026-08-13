@@ -296,8 +296,10 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
         // We purposefully avoid adding `type=button` here because tooltip triggers are also
         // commonly anchors and the anchor `type` attribute signifies MIME type.
         // NOTE: `data-state` and `aria-describedby` are set by the provider on whichever trigger is
-        //   active, so they are absent here — rendering them would describe every trigger in the app
-        //   with the one open tooltip, and would re-render all of them on each hover.
+        //   active, so they are not rendered from state here — doing so would describe every trigger in
+        //   the app with the one open tooltip, and would re-render all of them on each hover.
+        //   The literal below is safe against the provider's value: React diffs props against its own
+        //   previous props, so a constant never registers as changed and never overwrites the DOM.
         data-state='closed'
         {...triggerProps}
         ref={composedRefs}
