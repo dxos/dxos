@@ -156,7 +156,7 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
 const expandAncestors = async (builder: GraphBuilder.GraphBuilder, qualifiedId: string): Promise<void> => {
   const segments = qualifiedId.split('/');
   for (let index = 1; index <= segments.length; index++) {
-    Graph.expand(builder.graph, segments.slice(0, index).join('/'), 'child');
+    Graph.expandSync(builder.graph, segments.slice(0, index).join('/'), 'child');
   }
   await GraphBuilder.flush(builder);
 };
@@ -253,7 +253,7 @@ const resolveLinked = async (
   precedingNodeId: string,
   variant: string,
 ): Promise<string | null> => {
-  Graph.expand(builder.graph, precedingNodeId, 'child');
+  Graph.expandSync(builder.graph, precedingNodeId, 'child');
   await GraphBuilder.flush(builder);
 
   const linkedSegment = `${builder.urlGrammar.linkedPrefix}${variant}`;
