@@ -11,8 +11,7 @@
 // Column is optional. Body is everything until the next header or EOF.
 
 // Finalized: `# WARN <issue-id> <rule-id> \`file:line[:col]\``
-const HEADER_ID_RE =
-  /^#\s+(WARN|ERROR)\s+([A-Za-z0-9._]+-\d+)\s+(\S+)\s+`([^`:]+):(\d+)(?::(\d+))?`\s*$/;
+const HEADER_ID_RE = /^#\s+(WARN|ERROR)\s+([A-Za-z0-9._]+-\d+)\s+(\S+)\s+`([^`:]+):(\d+)(?::(\d+))?`\s*$/;
 // Subagent / legacy: `# WARN \`file:line[:col]\``
 const HEADER_RE = /^#\s+(WARN|ERROR)\s+`([^`:]+):(\d+)(?::(\d+))?`\s*$/;
 // A line that is clearly attempting to be a diagnostic header — it starts with

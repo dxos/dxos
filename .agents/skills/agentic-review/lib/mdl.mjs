@@ -89,7 +89,13 @@ const parseRuleBody = (bodyLines) => {
     }
   }
 
-  return { files, grep: fields.grep ?? null, severity: fields.severity, scope: fields.scope, instructions: prose.join('\n').trim() };
+  return {
+    files,
+    grep: fields.grep ?? null,
+    severity: fields.severity,
+    scope: fields.scope,
+    instructions: prose.join('\n').trim(),
+  };
 };
 
 /**

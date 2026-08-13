@@ -10,8 +10,8 @@
 //   node unresolved.mjs [--path=<substr|glob>] [--rule=<rule-id>]
 //
 // `--path` matches if the issue file contains the substring (case-sensitive), or
-// — when the value includes `*`/`?`/`[` — if it matches as a glob against the
-// file path. `--rule` is an exact rule id match.
+// — when the value includes `*`/`?` — if it matches as a glob against the file
+// path. `--rule` is an exact rule id match.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -70,9 +70,7 @@ const pathMatches = (file, filter) => {
 };
 
 const issues = [];
-for (const entry of readdirSync(reviewsPath, { withFileTypes: true }).sort((a, b) =>
-  a.name.localeCompare(b.name),
-)) {
+for (const entry of readdirSync(reviewsPath, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
   if (!entry.isDirectory()) {
     continue;
   }
