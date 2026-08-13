@@ -210,6 +210,39 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
       `plugin-kanban` uses. Deliberately NOT done at the end of a long session: adding a test
       environment unverified is how the last CI break happened.
 
+## Phase 3b: Known-sender labelling (requested 2026-08-13)
+
+- [x] **Important virtual folder** (`cb32ac6f3b`) — the `important` system tag already existed and both
+      providers already mapped it, so this is a node plus a filter like Starred.
+- [x] **Mark mail from a known sender `important` during sync** (`63b1dfa097`) — both providers already
+      resolve the sender's Person while mapping (to link `message.sender.contact`), so the condition
+      costs no extra lookup; when it resolves, the canonical tag joins that message's tag uris.
+      FINDING that changed the design: **sync creates no Persons at all.** A diagnostic proved the db
+      holds zero after a full run, contradicting the reading of
+      `expect(people.length).toBe(senderEmails.size)` in the existing sync test. So this only fires for
+      senders known from elsewhere (the avatar action, `ExtractCorrespondents`) — which is exactly the
+      stated requirement, but it means first contact and first mail in the same run are never both
+      covered. The test seeds the Person explicitly and asserts the NEGATIVE half too: an unknown sender
+      must not be marked, or the folder degenerates into everything.
+- [x] **Create a Person when the sender's domain matches an Organization** — ALREADY IMPLEMENTED, no
+      code needed. `extractor-lib/src/selection.ts:63` is literally this rule:
+      `signals.outbound === true || index.lookup(Organization.Organization, { email }) !== undefined`.
+      A sender whose domain resolves to a known Organization already passes the extraction gate.
+      NOTE: `Organization` has NO email field — only `website` — so "matches" is necessarily domain
+      matching, which `identity.ts:84` already does by normalised website domain. The gate runs in
+      `ExtractCorrespondents`, NOT during sync, so the behaviour exists but is pipeline-time.
+- [x] **Label a sender's existing messages when their contact is created** (`6012926d09`) — the avatar
+      path (`ExtractContact`) now also marks everything already received from that address.
+      `SystemTags.applyTagToAll` is a SET, not a flip: toggling a batch would untag whichever members
+      already carried it, so a re-run would undo the previous one. 4 tests.
+
+### Open, from this work
+
+- [ ] **Same-run contact + mail is never labelled** — sync resolves the sender before any contact for
+      them could exist, so the first mail from a new correspondent stays unmarked until either the user
+      creates the contact (which now back-labels) or a later sync arrives. Closing it means running
+      contact extraction before the mapping stage, or a post-sync labelling pass.
+
 ## Phase 4: Summarization
 
 ### Tasks
