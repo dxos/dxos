@@ -351,4 +351,47 @@ describe('Graph', () => {
     graph.removeEdge('y-x');
     expect(graph.findCycle()).to.have.length(0);
   });
+
+  test('mirrors structural mutations into the backing source', ({ expect }) => {
+    const source: Graph.Any = { nodes: [], edges: [] };
+    let transactions = 0;
+    const graph = new GraphModel.GraphModel({
+      graph: source,
+      change: (fn) => {
+        transactions++;
+        fn();
+      },
+    });
+
+    graph.addNode({ id: 'node-1' });
+    graph.addNode({ id: 'node-2' });
+    graph.addEdge({ id: 'edge-1', source: 'node-1', target: 'node-2' });
+    expect(source.nodes.map((node) => node.id)).to.deep.eq(['node-1', 'node-2']);
+    expect(source.edges.map((edge) => edge.id)).to.deep.eq(['edge-1']);
+    expect(transactions).to.eq(3);
+
+    graph.removeNode('node-1');
+    expect(source.nodes.map((node) => node.id)).to.deep.eq(['node-2']);
+    expect(source.edges).to.have.length(0);
+  });
+
+  test('sync reloads only when the source diverges', ({ expect }) => {
+    const source: Graph.Any = { nodes: [{ id: 'node-1' }], edges: [] };
+    const graph = new GraphModel.GraphModel({ graph: source, change: (fn) => fn() });
+    expect(graph.nodes).to.have.length(1);
+
+    // A field edit reaches the model through the node object it already holds.
+    expect(graph.sync()).to.be.false;
+
+    source.nodes.push({ id: 'node-2' });
+    source.edges.push({ id: 'edge-1', source: 'node-1', target: 'node-2' });
+    expect(graph.sync()).to.be.true;
+    expect(graph.nodes.map((node) => node.id)).to.deep.eq(['node-1', 'node-2']);
+    expect(graph.edges).to.have.length(1);
+    expect(graph.sync()).to.be.false;
+
+    source.nodes.splice(0, 1);
+    expect(graph.sync()).to.be.true;
+    expect(graph.nodes.map((node) => node.id)).to.deep.eq(['node-2']);
+  });
 });

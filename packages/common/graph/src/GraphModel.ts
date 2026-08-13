@@ -369,6 +369,32 @@ export abstract class AbstractGraphModel<
     });
   }
 
+  /**
+   * Reloads only when the backing source no longer matches the working graph, so a caller can
+   * drive this from every source notification. Field edits mutate the node objects the working
+   * graph already holds, so only structural divergence needs a rebuild.
+   */
+  sync(): boolean {
+    const mirror = this.#mirror;
+    if (!mirror) {
+      return false;
+    }
+
+    const nodes = mirror.nodes ?? [];
+    const edges = mirror.edges ?? [];
+    const converged =
+      nodes.length === this.nodes.length &&
+      edges.length === this.edges.length &&
+      nodes.every((node) => this.findNode(node.id) !== undefined) &&
+      edges.every((edge) => this.#edgeIndex.has(edge.id));
+    if (converged) {
+      return false;
+    }
+
+    this.reload();
+    return true;
+  }
+
   addGraph(graph: AbstractGraphModel<Node, Edge, any, any>): this {
     return this.batch(() => {
       this.addNodes(graph.nodes);

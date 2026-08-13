@@ -49,7 +49,7 @@ New model on `effect/Graph`; schema layer untouched.
       the entry point for changes that did not originate locally.
 - [ ] **Wire remote changes** — `Obj.subscribe` on the ECHO root in `ComputeGraphModel` /
       `CanvasGraphModel` → `reload()`, with a guard so local writes do not re-enter; note node
-      *field* edits need no reload (the working graph stores the live ECHO proxies).
+      _field_ edits need no reload (the working graph stores the live ECHO proxies).
 - [ ] **Remote changes** — ECHO subscription → debounced rebuild; tests for peer edits.
 - [ ] **ComputeGraphModel** (conductor) — port incl. `createNode`/`createEdge`/subgraph refs.
 - [ ] **CanvasGraphModel** (canvas-editor) — port; decide hot-data (position) atom placement (O2).
