@@ -14,9 +14,9 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
+import { Ibkr, IbkrOperation } from '#types';
+
 import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
-import * as Ibkr from '../types/Ibkr';
-import * as IbkrOperation from '../types/IbkrOperation';
 import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
 import GetPortfolioHandler from './get-portfolio';
 import GetTradesHandler from './get-trades';

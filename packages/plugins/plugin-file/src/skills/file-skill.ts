@@ -6,7 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as FileOperation from '../types/FileOperation';
+import { FileOperation } from '#types';
 
 export const SKILL_KEY = 'org.dxos.skill.file';
 

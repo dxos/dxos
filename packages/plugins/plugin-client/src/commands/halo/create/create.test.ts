@@ -12,14 +12,14 @@ import { fromPlugins } from '@dxos/app-framework/testing';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
-import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
+import * as ObservabilityPlugin from '@dxos/plugin-observability/ObservabilityPlugin';
 
 import { ClientPlugin } from '#plugin';
 
 import { handler } from './create';
 
 // TODO(wittjosiah): Align browser and node variant option types for ObservabilityPlugin.
-const layer = Layer.merge(TestLayer, fromPlugins([ClientPlugin({}), ObservabilityPlugin({} as any)]));
+const layer = Layer.merge(TestLayer, fromPlugins([ClientPlugin({}), ObservabilityPlugin.make({} as any)]));
 
 // TODO(wittjosiah): Fix these tests.
 describe.skip('halo create', () => {

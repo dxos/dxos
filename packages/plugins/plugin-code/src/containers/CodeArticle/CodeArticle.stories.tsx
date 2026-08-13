@@ -16,12 +16,10 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { CodePlugin } from '#plugin';
 import { translations } from '#translations';
+import { CodeProject, SourceFile, Spec } from '#types';
 
-import { CodePlugin } from '../../CodePlugin';
-import * as CodeProject from '../../types/CodeProject';
-import * as SourceFile from '../../types/SourceFile';
-import * as Spec from '../../types/Spec';
 import { CodeArticle } from './CodeArticle';
 
 const HELLO_WORLD = {
@@ -114,7 +112,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { seed, name } }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

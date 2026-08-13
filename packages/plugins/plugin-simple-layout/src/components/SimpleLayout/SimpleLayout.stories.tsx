@@ -17,16 +17,16 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { ReactRoot, ReactSurface, State } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { type SimpleLayoutPluginOptions } from '#plugin';
 import { translations } from '#translations';
 
-import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { SimpleLayout } from './SimpleLayout';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
   return withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [Collection.Collection],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -34,7 +34,7 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
           }),
       }),
 
-      SearchPlugin(),
+      SearchPlugin.make(),
       SpacePlugin({}),
 
       // TODO(burdon): This should be factored ouf from SimpleLayoutPlugin.

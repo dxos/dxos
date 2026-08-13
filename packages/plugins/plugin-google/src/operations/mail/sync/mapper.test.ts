@@ -11,7 +11,8 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
-import { GoogleMail } from '../../../apis';
+import { GoogleMail } from '#apis';
+
 import { decodeBody, mapMessage } from '../mapper';
 
 const makeGmailMessage = (overrides?: Partial<GoogleMail.Message>): GoogleMail.Message => ({

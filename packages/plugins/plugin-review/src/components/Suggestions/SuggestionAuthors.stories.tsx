@@ -7,7 +7,8 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { SuggestionAuthors, type SuggestionAuthorsProps } from './SuggestionAuthors';
 
 const AUTHORS: SuggestionAuthorsProps['authors'] = [

@@ -28,9 +28,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import type * as Sheet from '../types/Sheet';
-import * as SheetCapabilities from '../types/SheetCapabilities';
-import * as SheetUtil from '../types/SheetUtil';
+import { Sheet, SheetCapabilities, SheetUtil } from '#types';
 
 // TODO(burdon): Move to compute.
 // Map sheet types to system types.

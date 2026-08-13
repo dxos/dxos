@@ -12,7 +12,8 @@ import { SelectionModel } from '@dxos/graph';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { DxAnchorActivate } from '@dxos/react-ui';
@@ -23,8 +24,8 @@ import { type ValueGenerator, createObjectFactory, createRelationFactory } from 
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '#hooks';
+import { Graph } from '#types';
 
-import * as Graph from '../../types/Graph';
 import { ForceGraph } from './ForceGraph';
 
 const generator = random as any as ValueGenerator;
@@ -81,8 +82,8 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [
             Graph.Graph,
             View.View,
@@ -117,7 +118,7 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

@@ -8,8 +8,8 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'SamplePlugin': 'src/SamplePlugin.ts',
-    'SamplePlugin.node': 'src/SamplePlugin.node.ts',
-    'SamplePlugin.workerd': 'src/SamplePlugin.workerd.ts',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',
@@ -23,6 +23,7 @@ export default defineConfig({
     'SampleItem': 'src/types/SampleItem.ts',
     'SampleOperation': 'src/types/SampleOperation.ts',
     'Settings': 'src/types/Settings.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

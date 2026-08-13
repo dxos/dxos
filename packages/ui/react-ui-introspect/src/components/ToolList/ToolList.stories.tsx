@@ -8,7 +8,8 @@ import React, { useState } from 'react';
 import { TOOL_METADATA } from '@dxos/introspect-tools';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { ToolList } from './ToolList';
 
 const DefaultStory = () => {

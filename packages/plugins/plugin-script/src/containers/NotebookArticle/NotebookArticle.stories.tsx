@@ -27,8 +27,8 @@ import { DataTypes } from '@dxos/schema';
 
 import { createNotebook } from '#testing';
 import { translations } from '#translations';
+import { Notebook } from '#types';
 
-import * as Notebook from '../../types/Notebook';
 import { NotebookArticle } from './NotebookArticle';
 
 const meta: Meta<typeof NotebookArticle> = {
@@ -45,7 +45,7 @@ const meta: Meta<typeof NotebookArticle> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
           config: new Config({
             runtime: {
@@ -64,8 +64,8 @@ const meta: Meta<typeof NotebookArticle> = {
         }),
         AssistantPlugin(),
         RoutinePlugin(),
-        ExplorerPlugin(),
-        MarkdownPlugin(),
+        ExplorerPlugin.make(),
+        MarkdownPlugin.make(),
       ],
     }),
   ],

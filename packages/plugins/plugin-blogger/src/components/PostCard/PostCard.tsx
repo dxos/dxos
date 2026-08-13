@@ -9,8 +9,7 @@ import { useObject } from '@dxos/echo-react';
 import { Card, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import * as Blog from '../../types/Blog';
+import { Blog } from '#types';
 
 export type PostCardProps = {
   post: Blog.Post;

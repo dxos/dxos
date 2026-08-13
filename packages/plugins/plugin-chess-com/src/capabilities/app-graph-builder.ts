@@ -5,15 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-
-import * as ChessComAccount from '../types/ChessComAccount';
-import * as ChessComOperation from '../types/ChessComOperation';
+import { ChessComAccount, ChessComOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

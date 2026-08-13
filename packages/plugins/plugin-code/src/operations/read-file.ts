@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import * as CodeOperation from '../types/CodeOperation';
+import { CodeOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CodeOperation.ReadFile> = CodeOperation.ReadFile.pipe(
   Operation.withHandler(

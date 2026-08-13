@@ -17,10 +17,9 @@ import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
+import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
+
 import { isAiServiceUnavailable } from '../operations/extractor';
-import * as InboxCapabilities from '../types/InboxCapabilities';
-import * as InboxOperation from '../types/InboxOperation';
-import type * as Mailbox from '../types/Mailbox';
 
 /**
  * Runs configured auto-on-arrival extractors for a batch of just-synced messages. Selects the

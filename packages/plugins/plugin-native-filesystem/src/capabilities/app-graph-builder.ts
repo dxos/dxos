@@ -7,22 +7,24 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { CreateAtom } from '@dxos/app-graph';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Type } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Expando, Text } from '@dxos/schema';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '#types';
 
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
-import * as NativeFilesystemOperation from '../types/NativeFilesystemOperation';
 import { findDirectoryById } from '../util';
 import type { FilesystemManager } from './state';
 

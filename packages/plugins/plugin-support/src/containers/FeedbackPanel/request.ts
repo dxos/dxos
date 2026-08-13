@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SupportOperation from '../../types/SupportOperation';
+import { SupportOperation } from '#types';
 
 /**
  * Collapse a {@link SupportOperation.SupportRequest} into the legacy `{ message, includeLogs }`

@@ -16,14 +16,15 @@ import { useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SpaceHomeDashboard, SpaceHomeRecent } from '#containers';
 import { translations } from '#translations';
+import { SpaceSurface } from '#types';
 
-import * as SpaceSurface from '../../types/SpaceSurface';
 import { SpaceHomeArticle } from './SpaceHomeArticle';
 
 class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.test.task', '0.1.0'))(
@@ -84,8 +85,8 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [Task, Note],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

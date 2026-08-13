@@ -18,8 +18,8 @@ import { DraftMessage, Message, Person } from '@dxos/types';
 import { type MessageOptions } from '#components';
 import { initializeMailbox } from '#testing';
 import { translations } from '#translations';
+import { Mailbox } from '#types';
 
-import * as Mailbox from '../../types/Mailbox';
 import { createDraftMessage } from '../../util';
 import { ConversationStack } from './ConversationStack';
 

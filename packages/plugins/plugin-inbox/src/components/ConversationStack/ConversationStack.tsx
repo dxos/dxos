@@ -9,7 +9,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import { type Graph } from '@dxos/app-graph';
+import type * as Graph from '@dxos/app-graph/Graph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
@@ -24,10 +24,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
-import type * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as Mailbox from '../../types/Mailbox';
-import * as SystemTags from '../../types/SystemTags';
 import { createDraftMessage, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
 import { MarkdownViewer } from '../MarkdownViewer';

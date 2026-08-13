@@ -14,7 +14,8 @@ import { useEditorContext } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { type SuggestionSource, changeBarGutter, type suggestionsOverlay } from '@dxos/ui-editor';
 
-import { SuggestionSourcesProvider, VersionToolbar } from '../components';
+import { SuggestionSourcesProvider, VersionToolbar } from '#components';
+
 import { applyViewModeSelection } from './review-lifecycle';
 import { useReviewExtensions } from './useReviewExtensions';
 import { useVersionedEditor } from './useVersionedEditor';

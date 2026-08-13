@@ -93,7 +93,7 @@ const withCompanion = () =>
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {

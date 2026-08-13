@@ -17,7 +17,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { Focus, IconButton, Input, Main, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -25,10 +26,9 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
+import { NavTreePlugin } from '#plugin';
 import { storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
-
-import { NavTreePlugin } from '../../NavTreePlugin';
 
 random.seed(1234);
 
@@ -144,7 +144,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({
+        StorybookPlugin.make({
           initialState: { sidebarState: 'expanded' },
         }),
 

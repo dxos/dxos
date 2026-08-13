@@ -7,8 +7,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';

@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { log } from '@dxos/log';
 
-import * as SpotlightCapabilities from '../types/SpotlightCapabilities';
+import { SpotlightCapabilities } from '#types';
 
 const DISMISS_DEBOUNCE_MS = 100;
 

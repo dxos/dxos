@@ -11,8 +11,9 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { credentialsLayerConfig } from '@dxos/compute-runtime';
 import * as InboxResolver from '@dxos/extractor-lib';
 
-import { GoogleCalendar } from '../../../apis';
-import { GoogleCredentials } from '../../../services';
+import { GoogleCalendar } from '#apis';
+import { GoogleCredentials } from '#services';
+
 import { mapEvent } from '../mapper';
 
 const TestLayer = Layer.mergeAll(

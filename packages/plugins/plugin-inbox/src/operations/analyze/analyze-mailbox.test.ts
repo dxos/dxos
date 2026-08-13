@@ -13,7 +13,7 @@ import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeli
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
-import * as Mailbox from '../../types/Mailbox';
+import { Mailbox } from '#types';
 
 const makeMessage = (suffix: string, created: string) =>
   Obj.make(Message.Message, {

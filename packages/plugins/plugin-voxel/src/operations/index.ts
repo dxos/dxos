@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as VoxelOperation from '../types/VoxelOperation';
+import { VoxelOperation } from '#types';
 
 export const VoxelOperationHandlerSet = OperationHandlerSet.lazy([
   VoxelOperation.AddVoxels.pipe(Operation.lazyHandler(() => import('./add-voxels'))),

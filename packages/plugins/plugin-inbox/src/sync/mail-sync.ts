@@ -21,9 +21,9 @@ import { EmailStage } from '@dxos/pipeline-email';
 import { type TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
+import { Mailbox, SyncStreamConfig } from '#types';
+
 import { MailSyncError } from '../errors';
-import * as Mailbox from '../types/Mailbox';
-import type * as SyncStreamConfig from '../types/SyncStreamConfig';
 import { readBindingOptions } from './binding';
 
 /**

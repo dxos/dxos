@@ -10,8 +10,7 @@ import { Input } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps, FormRow } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import * as Markdown from '../../types/Markdown';
+import { Markdown } from '#types';
 
 export type MarkdownSettingsProps = AppSurface.SettingsData;
 

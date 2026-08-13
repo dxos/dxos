@@ -12,7 +12,8 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { parseFromHeader } from '@dxos/plugin-inbox/sync';
 import { ContentBlock, Message, Person } from '@dxos/types';
 
-import { type GoogleMail } from '../../apis';
+import { type GoogleMail } from '#apis';
+
 import { GMAIL_SOURCE } from '../../constants';
 
 /**

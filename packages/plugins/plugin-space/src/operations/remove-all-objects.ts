@@ -8,7 +8,7 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, Filter, Obj } from '@dxos/echo';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RemoveAllObjects> = SpaceOperation.RemoveAllObjects.pipe(
   Operation.withHandler(

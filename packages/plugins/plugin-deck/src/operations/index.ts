@@ -6,7 +6,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as DeckOperation from '../types/DeckOperation';
+import { DeckOperation } from '#types';
 
 export const DeckOperationHandlerSet = OperationHandlerSet.lazy([
   LayoutOperation.AddToast.pipe(Operation.lazyHandler(() => import('./add-toast'))),

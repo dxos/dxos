@@ -8,10 +8,9 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
+import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
+
 import { SpaceOperationConfig } from '../operations/helpers';
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
-import * as SpaceCapability from '../types/SpaceCapability';
-import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
 export const Commands = AppCapability.commands(() => import('./commands'));

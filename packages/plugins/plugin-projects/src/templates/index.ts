@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as ProjectCapabilities from '../types/ProjectCapabilities';
+import { ProjectCapabilities } from '#types';
+
 import { blank } from './blank';
 import { inboxResearch } from './inbox-research';
 

@@ -12,7 +12,8 @@ import { Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -20,9 +21,9 @@ import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
+import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
-import * as Mailbox from '../../types/Mailbox';
+import { InboxPlugin } from '../../plugin';
 import { MessageArticle } from './MessageArticle';
 
 const ATTENDABLE_ID = 'story';
@@ -116,7 +117,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { length = 8 } }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -127,9 +128,9 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

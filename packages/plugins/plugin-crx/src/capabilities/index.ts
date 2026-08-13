@@ -7,8 +7,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import * as CrxCapabilities from '../types/CrxCapabilities';
-import * as CrxEvents from '../types/CrxEvents';
+import { CrxCapabilities, CrxEvents } from '#types';
 
 export const CrxSettings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,

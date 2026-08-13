@@ -12,7 +12,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 
-import * as AssistantOptions from '../types/AssistantOptions';
+import { AssistantOptions } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (options: AssistantOptions.AssistantPluginOptions | void) {

@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Obj } from '@dxos/echo';
 
-import * as Subscription from '../types/Subscription';
+import { Subscription } from '#types';
 
 /** This Post's fetched body (newest {@link Subscription.PostContent} entry), or undefined. */
 export const postContentAtom = Atom.family((post: Subscription.Post) =>

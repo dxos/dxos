@@ -25,9 +25,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/FreeqPlugin.ts",
-      "types": "./dist/types/src/FreeqPlugin.d.ts",
-      "default": "./dist/lib/FreeqPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -42,15 +42,15 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./FreeqPlugin": {
+      "source": "./src/FreeqPlugin.ts",
+      "types": "./dist/types/src/FreeqPlugin.d.ts",
+      "import": "./dist/lib/FreeqPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

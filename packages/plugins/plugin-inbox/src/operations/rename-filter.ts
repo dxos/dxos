@@ -7,7 +7,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { RENAME_POPOVER } from '@dxos/plugin-space/constants';
 
-import * as InboxOperation from '../types/InboxOperation';
+import { InboxOperation } from '#types';
 
 export default InboxOperation.RenameFilter.pipe(
   Operation.withHandler(

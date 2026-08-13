@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import * as CommentOperation from '../types/CommentOperation';
+import { CommentOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CommentOperation.ToggleResolved> = CommentOperation.ToggleResolved.pipe(
   Operation.withHandler(

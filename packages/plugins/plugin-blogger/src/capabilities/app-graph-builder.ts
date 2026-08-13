@@ -6,6 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -13,15 +16,14 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
+import { Blog } from '#types';
 
 import { getPublicationsSectionId } from '../paths';
-import * as Blog from '../types/Blog';
 
 /** Node type of the "Publications" section under a space's content group. */
 const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;

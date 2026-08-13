@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 /**

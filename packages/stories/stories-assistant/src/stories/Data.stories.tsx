@@ -68,13 +68,13 @@ const DXOS_DOCUMENT = trim`
 export const WithResearch: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ MarkdownPlugin }, { TablePlugin }, { ThreadPlugin }] = await Promise.all([
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-table/plugin'),
-        import('@dxos/plugin-thread/plugin'),
+      const [MarkdownPlugin, TablePlugin, ThreadPlugin] = await Promise.all([
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-table/TablePlugin'),
+        import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
+        plugins: [MarkdownPlugin.make(), TablePlugin.make(), ThreadPlugin.make()],
       };
     },
     types: [...researchStoryEchoTypes, Feed.Feed],
@@ -176,13 +176,13 @@ export const WithResearchQueue: Story = {
 export const WithProject: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { MarkdownPlugin }, { PipelinePlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-pipeline/plugin'),
+      const [InboxPlugin, MarkdownPlugin, PipelinePlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-pipeline/PipelinePlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
+        plugins: [InboxPlugin.make(), MarkdownPlugin.make(), PipelinePlugin.make()],
       };
     },
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
@@ -358,14 +358,14 @@ export const WithCRM: Story = {
   decorators: createDecorators({
     importSnapshot: loadMockInbox,
     lazyPlugins: async () => {
-      const [{ CrmPlugin }, { InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
-        import('@dxos/plugin-crm/plugin'),
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-table/plugin'),
+      const [CrmPlugin, InboxPlugin, MarkdownPlugin, TablePlugin] = await Promise.all([
+        import('@dxos/plugin-crm/CrmPlugin'),
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-table/TablePlugin'),
       ]);
       return {
-        plugins: [CrmPlugin(), InboxPlugin(), MarkdownPlugin(), TablePlugin()],
+        plugins: [CrmPlugin.make(), InboxPlugin.make(), MarkdownPlugin.make(), TablePlugin.make()],
       };
     },
     types: [

@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
-import { Graph } from '@dxos/plugin-graph';
+import * as Graph from '@dxos/app-graph/Graph';
 
 /**
  * React hook to get a path from the graph.

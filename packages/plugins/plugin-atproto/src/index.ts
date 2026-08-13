@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as AtprotoCapabilities from './types/AtprotoCapabilities';
-export * as AtprotoEvents from './types/AtprotoEvents';
-export * as AtprotoPublication from './types/AtprotoPublication';
+export * as AtprotoPlugin from './AtprotoPlugin';
 export * from './errors';
-export * from './meta';
+export * from '#meta';
+export * from '#types';

@@ -15,9 +15,7 @@ import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { type MagazineView } from '#atoms';
 import { meta } from '#meta';
-
-import * as FeedOperation from '../../types/FeedOperation';
-import type * as Magazine from '../../types/Magazine';
+import { FeedOperation, Magazine } from '#types';
 
 export type UseToolbarProps = {
   magazine: Magazine.Magazine;

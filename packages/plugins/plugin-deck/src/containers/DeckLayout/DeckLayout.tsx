@@ -8,8 +8,8 @@ import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 
 import { useDeckState } from '#hooks';
+import { DeckCapabilities } from '#types';
 
-import * as DeckCapabilities from '../../types/DeckCapabilities';
 import { Deck } from '../Deck';
 import { ActiveNode } from './ActiveNode';
 import { Dialog } from './Dialog';

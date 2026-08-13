@@ -23,10 +23,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useComputeGraph } from '#components';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
 import { translations } from '#translations';
+import { Sheet, SheetCapabilities, SheetOperation } from '#types';
 
-import * as Sheet from '../../types/Sheet';
-import * as SheetCapabilities from '../../types/SheetCapabilities';
-import * as SheetOperation from '../../types/SheetOperation';
 import RangeList from '../RangeList';
 import { SheetArticle } from './SheetArticle';
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Graph } from '@dxos/app-graph';
+import type * as Graph from '@dxos/app-graph/Graph';
 import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';

@@ -22,11 +22,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type SegmentCardAction, SegmentStack } from '#components';
 import { meta } from '#meta';
-
-import * as Routing from '../../types/Routing';
-import * as RoutingOperation from '../../types/RoutingOperation';
-import * as Segment from '../../types/Segment';
-import * as Trip from '../../types/Trip';
+import { Routing, RoutingOperation, Segment, Trip } from '#types';
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
   /** Start with the inline map surface visible (otherwise toggled via the toolbar). */

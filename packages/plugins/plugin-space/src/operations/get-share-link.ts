@@ -5,7 +5,8 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
+
 import { SpaceOperationConfig } from './helpers';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.GetShareLink> = SpaceOperation.GetShareLink.pipe(

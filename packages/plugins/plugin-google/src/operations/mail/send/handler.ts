@@ -10,7 +10,8 @@ import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 
-import { GoogleMail } from '../../../apis';
+import { GoogleMail } from '#apis';
+
 import { GmailSendMessageInvalidError } from '../../../errors';
 import { GoogleCredentials } from '../../../services/google-credentials';
 

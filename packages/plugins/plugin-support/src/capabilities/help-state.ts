@@ -8,8 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-
-import * as HelpCapabilities from '../types/HelpCapabilities';
+import { HelpCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

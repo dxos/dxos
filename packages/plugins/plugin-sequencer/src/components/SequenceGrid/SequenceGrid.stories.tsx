@@ -9,9 +9,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import type * as Note from '../../types/Note';
-import type * as Sequence from '../../types/Sequence';
-import type * as Track from '../../types/Track';
+import { Note, Sequence, Track } from '#types';
+
 import { SequenceGrid } from './SequenceGrid';
 
 const SEQUENCE_LENGTH = 16; // beats

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import type * as Graph from '@dxos/app-graph/Graph';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import {
@@ -32,12 +33,11 @@ import {
   SwarmPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { type Graph } from '@dxos/plugin-graph';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
 import { CliPanel, DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
+import { Devtools } from '#types';
 
-import * as Devtools from '../types/Devtools';
 import {
   ActiveSpacePanel,
   EdgeTestingSurface,

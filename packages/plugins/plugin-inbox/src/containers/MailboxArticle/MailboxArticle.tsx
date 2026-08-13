@@ -49,12 +49,9 @@ import {
 import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
 import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
+import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
-import * as SystemTags from '../../types/SystemTags';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
 import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';

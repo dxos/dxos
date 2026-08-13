@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import * as StorybookCapabilities from '../types/StorybookCapabilities';
+import { StorybookCapabilities } from '#types';
 
 const defaultState: StorybookCapabilities.LayoutStateProps = {
   sidebarState: 'closed',

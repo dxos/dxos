@@ -10,8 +10,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Routine from '@dxos/compute/Routine';
@@ -19,7 +19,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import * as RoutineOperation from '../types/RoutineOperation';
+import { RoutineOperation } from '#types';
+
 import { makeRoutine } from '../util';
 import RunRoutineHandler from './run-routine';
 

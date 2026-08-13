@@ -11,9 +11,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
+import { MarkdownProperties } from '#components';
 import { ObjectHistory } from '#containers';
-
-import { MarkdownProperties } from '../components';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

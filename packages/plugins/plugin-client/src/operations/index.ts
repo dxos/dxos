@@ -21,7 +21,6 @@ import { CreateIdentity } from './definitions';
 import { CreateAgent } from './definitions';
 
 export * as ClientOperation from './definitions';
-export * from './errors';
 
 export const ClientOperationHandlerSet = OperationHandlerSet.lazy([
   CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent'))),

@@ -7,17 +7,16 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Channel } from '@dxos/types';
 
 // Lazily loaded (via the #containers barrel) so the react-ui-form dependency
 // graph isn't pulled into this capability module's evaluation.
 import { ChannelCreatePanel } from '#containers';
+import { ChannelBackend, ThreadCapabilities } from '#types';
 
 import { getChannelsPath } from '../paths';
-import * as ChannelBackend from '../types/ChannelBackend';
-import * as ThreadCapabilities from '../types/ThreadCapabilities';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 

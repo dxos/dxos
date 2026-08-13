@@ -49,9 +49,8 @@ import {
   useSelectedCompanionVariant,
 } from '#hooks';
 import { meta } from '#meta';
+import { DeckOperation, DeckRole } from '#types';
 
-import * as DeckOperation from '../../types/DeckOperation';
-import * as DeckRole from '../../types/DeckRole';
 import { findAttendedPlank, getRenderedPlanks, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,

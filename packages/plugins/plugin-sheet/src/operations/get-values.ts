@@ -8,8 +8,7 @@ import { addressFromA1Notation, addressToA1Notation, isFormula } from '@dxos/com
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import * as SheetOperation from '../types/SheetOperation';
-import * as SheetUtil from '../types/SheetUtil';
+import { SheetOperation, SheetUtil } from '#types';
 
 const handler: Operation.WithHandler<typeof SheetOperation.GetValues> = SheetOperation.GetValues.pipe(
   Operation.withHandler(

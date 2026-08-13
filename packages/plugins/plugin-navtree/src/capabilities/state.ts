@@ -7,12 +7,14 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
-import * as NavTreeCapabilities from '../types/NavTreeCapabilities';
+import { NavTreeCapabilities } from '#types';
+
 import { navTreeOpenAspect } from './nav-tree-view-state';
 
 /** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */

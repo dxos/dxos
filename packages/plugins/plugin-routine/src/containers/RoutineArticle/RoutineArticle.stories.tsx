@@ -78,7 +78,7 @@ const withAutomation = (seed: (space: Space) => void) =>
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {

@@ -8,7 +8,7 @@ import { useCallback, useContext } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 
-import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
+import { SimpleLayoutCapabilities } from '#types';
 
 export type UseSimpleLayoutState = {
   state: SimpleLayoutCapabilities.SimpleLayoutState;

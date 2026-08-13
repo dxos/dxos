@@ -4,7 +4,7 @@
 
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Node } from '@dxos/app-graph';
+import * as Node from '@dxos/app-graph/Node';
 import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
 import { type MenuActionProperties } from '@dxos/ui-types';
 

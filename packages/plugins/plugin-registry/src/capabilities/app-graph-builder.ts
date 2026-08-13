@@ -7,18 +7,20 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
+import { LOAD_PLUGIN_DIALOG } from '#containers';
 import { REGISTRY_ID, meta } from '#meta';
 
 import { getCategoryPredicate, getRemotePluginIds } from '../categories';
-import { LOAD_PLUGIN_DIALOG } from '../containers';
 
 /**
  * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it

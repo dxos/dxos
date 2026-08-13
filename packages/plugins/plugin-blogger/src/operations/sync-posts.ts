@@ -12,10 +12,8 @@ import { Connection } from '@dxos/link';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
+import { Blog, BloggerCapabilities, Publisher } from '#types';
 
-import * as Blog from '../types/Blog';
-import * as BloggerCapabilities from '../types/BloggerCapabilities';
-import * as Publisher from '../types/Publisher';
 import { SyncPosts } from './definitions';
 import { linkedId, postText, resolvePublisherService, tryPublisher } from './sync-support';
 

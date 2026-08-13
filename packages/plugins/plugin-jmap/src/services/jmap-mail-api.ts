@@ -8,7 +8,8 @@ import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
-import { Jmap, JmapMail } from '../apis';
+import { Jmap, JmapMail } from '#apis';
+
 import { JmapApiError } from '../errors';
 import { type JmapCredentials } from './jmap-credentials';
 

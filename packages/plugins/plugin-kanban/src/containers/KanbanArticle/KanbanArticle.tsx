@@ -16,9 +16,7 @@ import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { KanbanBoard } from '#components';
 import { useEchoChangeCallback, useItemsProjection, useProjectionModel } from '#hooks';
-
-import * as Kanban from '../../types/Kanban';
-import * as KanbanOperation from '../../types/KanbanOperation';
+import { Kanban, KanbanOperation } from '#types';
 
 export type KanbanArticleProps = AppSurface.ObjectArticleProps<Kanban.Kanban>;
 

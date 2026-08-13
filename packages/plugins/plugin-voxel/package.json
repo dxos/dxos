@@ -13,11 +13,6 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
@@ -44,14 +39,24 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/VoxelPlugin.tsx",
-      "types": "./dist/types/src/VoxelPlugin.d.ts",
-      "default": "./dist/lib/VoxelPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -61,16 +66,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Voxel": {
       "source": "./src/types/Voxel.ts",
       "types": "./dist/types/src/types/Voxel.d.ts",
@@ -86,7 +87,11 @@
       "types": "./dist/types/src/types/VoxelOperation.d.ts",
       "import": "./dist/lib/VoxelOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./VoxelPlugin": {
+      "source": "./src/VoxelPlugin.ts",
+      "types": "./dist/types/src/VoxelPlugin.d.ts",
+      "import": "./dist/lib/VoxelPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

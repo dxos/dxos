@@ -8,7 +8,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const RegistrySettingsSchema = Schema.Struct({
   experimental: Schema.optional(Schema.Boolean),

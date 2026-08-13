@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Place from '../types/Place';
-import * as Routing from '../types/Routing';
+import { Place, Routing } from '#types';
 
 /** Coordinates ([lon, lat]) for cities used across routing stories and tests. */
 export const CITY_COORDS: Record<string, [number, number]> = {

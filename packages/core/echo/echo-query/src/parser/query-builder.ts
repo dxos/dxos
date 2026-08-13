@@ -548,7 +548,7 @@ export class QueryBuilder {
 
 const KEYWORDS = new Set(['AND', 'OR', 'NOT']);
 const VALUE_LITERALS = new Set(['true', 'false', 'null']);
-const SPECIAL_CHARS = /[\s(){}\[\],"']/;
+const SPECIAL_CHARS = /[\s(){}[\],"']/;
 const PROPERTY_KEY = /^[a-zA-Z_][a-zA-Z0-9_.]*$/;
 const NUMBER_LITERAL = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
 

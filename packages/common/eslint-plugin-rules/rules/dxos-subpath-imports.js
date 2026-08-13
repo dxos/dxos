@@ -14,6 +14,7 @@ import { createRequire } from 'node:module';
 //  namespace first, which for the remainder means the export-namespace -> module-file refactor.
 const DXOS_SUBPATH_PACKAGES = new Set([
   '@dxos/app-framework',
+  '@dxos/app-graph',
   '@dxos/app-toolkit',
   '@dxos/assistant-toolkit',
   '@dxos/compute',

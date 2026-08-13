@@ -10,9 +10,7 @@ import { Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import * as ObservabilityOperation from '../../types/ObservabilityOperation';
-import * as Settings from '../../types/Settings';
+import { ObservabilityOperation, Settings } from '#types';
 
 export type ObservabilitySettingsProps = AppSurface.SettingsData;
 

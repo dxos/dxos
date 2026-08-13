@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type PathResolution } from '@dxos/app-graph';
+import type * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { log } from '@dxos/log';
 

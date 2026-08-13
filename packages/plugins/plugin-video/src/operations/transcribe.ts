@@ -10,8 +10,8 @@ import { proxyFetchLegacy } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
-import { TranscriptionService } from '../operations';
-import * as VideoOperation from '../types/VideoOperation';
+import { TranscriptionService } from '#operations';
+import { VideoOperation } from '#types';
 
 const DEFAULT_LANG = 'en';
 

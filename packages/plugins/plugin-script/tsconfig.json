@@ -89,6 +89,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -159,9 +162,6 @@
     },
     {
       "path": "../plugin-game"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-markdown"

@@ -8,8 +8,8 @@ import { getSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
-import * as FeedOperation from '../types/FeedOperation';
-import * as Subscription from '../types/Subscription';
+import { FeedOperation, Subscription } from '#types';
+
 import { makeSnippet, stripHtml } from '../util/text';
 import { browserCorsProxy, fetchArticle } from './sources';
 

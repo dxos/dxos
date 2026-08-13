@@ -6,13 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
 
+import { NavTreePlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { NavTreePlugin } from '../../NavTreePlugin';
 import { CommandsDialogContent } from './CommandsDialogContent';
 
 const DefaultStory = () => (
@@ -30,7 +31,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...corePlugins(), StorybookPlugin({}), NavTreePlugin()],
+      plugins: [...corePlugins(), StorybookPlugin.make({}), NavTreePlugin()],
     }),
   ],
   parameters: {

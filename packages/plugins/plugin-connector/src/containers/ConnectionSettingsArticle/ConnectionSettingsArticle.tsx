@@ -12,7 +12,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';

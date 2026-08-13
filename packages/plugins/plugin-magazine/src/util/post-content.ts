@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Subscription from '../types/Subscription';
+import { Subscription } from '#types';
+
 import { extractImageUrls, makeSnippet, stripHtml } from './text';
 
 /**

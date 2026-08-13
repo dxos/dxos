@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from '#plugin';
+export * as ClientPlugin from '../ClientPlugin.testing';
 export { initializeIdentity } from './initializeIdentity';

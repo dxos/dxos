@@ -10,7 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Selection } from '@dxos/react-ui-attention';
 
-import * as AttentionCapabilities from '../types/AttentionCapabilities';
+import { AttentionCapabilities } from '#types';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Select> = LayoutOperation.Select.pipe(
   Operation.withHandler(

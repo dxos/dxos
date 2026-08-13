@@ -14,7 +14,8 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
+
 import { crm } from './crm';
 
 const dbLayer = TestDatabaseLayer({

@@ -12,7 +12,8 @@ import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
 
 import * as Credential from '@dxos/compute/Credential';
 
-import { GoogleMail } from '../apis';
+import { GoogleMail } from '#apis';
+
 import { GoogleApiError } from '../errors';
 import { GoogleCredentials } from './google-credentials';
 

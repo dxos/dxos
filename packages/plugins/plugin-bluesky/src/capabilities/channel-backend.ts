@@ -11,9 +11,10 @@ import { Obj } from '@dxos/echo';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { Message } from '@dxos/types';
 
+import { BlueskyChannel, makeBlueskyChannel } from '#types';
+
 import { ATPROTO_BACKEND_KIND, ATPROTO_POLL_INTERVAL } from '../constants';
 import { BlueskyApi } from '../services';
-import { BlueskyChannel, makeBlueskyChannel } from '../types';
 
 /** Maps an ATProto feed-view post to a transient (non-persisted) chat message. */
 const toMessage = (item: BlueskyApi.FeedViewPost): Message.Message =>

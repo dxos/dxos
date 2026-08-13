@@ -17,7 +17,8 @@ import { Text } from '@dxos/schema';
 import { automerge } from '@dxos/ui-editor';
 import { Branch, Version } from '@dxos/versioning';
 
-import { useMarkdownEditorBinding } from '../hooks';
+import { useMarkdownEditorBinding } from '#hooks';
+
 import { suggestionGroups } from '../hooks/suggestion-sources';
 import { type ReviewScenario, type ScenarioStep } from './scenarios';
 

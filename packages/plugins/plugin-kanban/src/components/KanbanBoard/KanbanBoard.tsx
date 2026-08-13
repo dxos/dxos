@@ -14,9 +14,8 @@ import type { ProjectionModel } from '@dxos/schema';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
 import { meta } from '#meta';
+import { Kanban, KanbanConstants } from '#types';
 
-import type * as Kanban from '../../types/Kanban';
-import * as KanbanConstants from '../../types/KanbanConstants';
 import {
   KanbanBoardContext,
   type KanbanBoardContextValue,

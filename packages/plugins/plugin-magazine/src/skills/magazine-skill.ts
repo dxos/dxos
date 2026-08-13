@@ -6,8 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as FeedOperation from '../types/FeedOperation';
-import * as Magazine from '../types/Magazine';
+import { FeedOperation, Magazine } from '#types';
 
 const operations = [FeedOperation.FetchArticleContent];
 

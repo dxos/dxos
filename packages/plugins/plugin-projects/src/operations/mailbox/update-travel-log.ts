@@ -9,7 +9,8 @@ import { Database, Feed, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import * as ProjectOperation from '../../types/ProjectOperation';
+import { ProjectOperation } from '#types';
+
 import { findOrCreateDocumentArtifact, messagesAscending, setDocumentContent } from './helpers';
 
 /** The artifact the pipeline owns; regenerated wholesale each run. */

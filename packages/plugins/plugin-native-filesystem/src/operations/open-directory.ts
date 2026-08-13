@@ -9,8 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
-import * as NativeFilesystemOperation from '../types/NativeFilesystemOperation';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '#types';
+
 import { loadWorkspace, openDirectoryPicker } from '../util';
 
 export default NativeFilesystemOperation.OpenDirectory.pipe(

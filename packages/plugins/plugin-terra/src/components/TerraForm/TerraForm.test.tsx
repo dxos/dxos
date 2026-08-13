@@ -8,7 +8,8 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { ThemeProvider } from '@dxos/react-ui';
 
-import * as Terra from '../../types/Terra';
+import { Terra } from '#types';
+
 import { TerraForm } from './TerraForm';
 
 // `Form.Row`'s label/status chrome and the `Slider` primitive read theme tokens via `useThemeContext`.
