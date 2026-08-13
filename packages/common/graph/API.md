@@ -6,6 +6,7 @@ A reactive graph model over Effect's `Graph`, with Effect Schemas for the persis
 
 ```ts
 import * as Graph from 'effect/Graph'; // Effect's algorithms, if you need them directly
+import * as GraphBuilder from '@dxos/graph/GraphBuilder'; // Lazy expansion from registered extensions
 import * as GraphEdge from '@dxos/graph/GraphEdge'; // Edge schema & id helpers
 import * as GraphModel from '@dxos/graph/GraphModel'; // The reactive model & serialized shape
 import * as GraphNode from '@dxos/graph/GraphNode'; // Node schema & root identity
@@ -217,6 +218,59 @@ model.findCycle((edge) => edge.type === 'hard');
 
 For anything beyond these, build an Effect graph and use its library directly — `dijkstra`,
 `stronglyConnectedComponents`, `toMermaid`, and the rest.
+
+---
+
+## Building lazily
+
+`GraphModel` holds a graph you have. `GraphBuilder` grows one you do not: independently registered
+extensions contribute nodes when a relation is first read, and keep contributing as their inputs
+change. `@dxos/app-graph` is one specialization of it; the engine itself knows nothing about what the
+nodes mean.
+
+An extension is a connector plus where its nodes attach:
+
+```ts
+const children: GraphBuilder.Extension<Node, Arg> = {
+  id: 'children',
+  position: 10, // relative to other extensions on the same relation
+  connector: (node) => Atom.make((get) => (Option.isSome(get(node)) ? [{ id: 'a' }, { id: 'b' }] : [])),
+};
+
+GraphBuilder.addExtension(builder, children);
+```
+
+Connector ids are *segments*: the builder qualifies each against the node it was produced from, so the
+example above yields `root/a` and `root/b`. Reading a node's relation is what triggers expansion —
+nothing is materialized until something asks. Updates are coalesced, so wait for them explicitly:
+
+```ts
+await GraphBuilder.flush(builder);
+```
+
+Construction is over a `Store` — the graph the builder drives, and the only thing it needs:
+
+```ts
+const builder = GraphBuilder.make({
+  relationKey: (relation) => relation ?? 'child', // how a relation encodes into a key
+  store: (hooks, registry) => makeStore(hooks, registry), // `hooks` drive expansion and removal
+  inline: { children: (node) => node.nodes ?? [], map: (node, fn) => ({ ...node, nodes: node.nodes?.map(fn) }) },
+  decorateNode: (node, extension) => stamp(node, extension?.meta), // per-layer metadata
+});
+```
+
+`meta` is opaque to the builder and reaches `decorateNode` unchanged — the seam a layer uses to attach
+its own vocabulary (app-graph stamps URL segments through it). `getNodeExtensionId(nodeId)` maps back
+the other way, from a materialized node to the extension that produced it.
+
+`explore` walks the graph eagerly, materializing what it reaches — useful for search indexes and
+tests, not for the render path:
+
+```ts
+await GraphBuilder.explore(builder, { relation: 'child', visitor: (node) => void visited.push(node.id) });
+```
+
+Release the expansion subscriptions when done: `GraphBuilder.destroy(builder)`.
 
 ---
 

@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./GraphBuilder": {
+      "source": "./src/GraphBuilder.ts",
+      "types": "./dist/types/src/GraphBuilder.d.ts",
+      "import": "./dist/lib/GraphBuilder.mjs"
+    },
     "./GraphEdge": {
       "source": "./src/GraphEdge.ts",
       "types": "./dist/types/src/GraphEdge.d.ts",
@@ -49,6 +54,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

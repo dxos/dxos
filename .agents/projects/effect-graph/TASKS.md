@@ -3,9 +3,12 @@
 _Resume: Phases 1-6 IMPLEMENTED and green — `GraphModel` rebuilt on a long-lived Effect
 `MutableGraph` + version atom, consumers migrated, `topoLevels`/`findCycle` landed and consumed by
 activation-graph. graph 17/17, app-framework 231/231, schema 48/50 (2 skipped), conductor 31/31,
-react-ui-graph 19/19, app-graph 151/151 on the consolidated core. Remaining: app-graph algorithm
-upgrades (dijkstra/pathAtom), the `explore` isolation decision, ECHO undo/concurrency tests, and
-the upstream proposals._
+react-ui-graph 19/19, app-graph 120/120 on the consolidated core. Phase 7 (GraphBuilder split) is
+mid-flight: the coupling is severed (injected `decorateNode`), the machinery move is not started.
+**Phase 8 is the current gate** — repo-wide dependent test sweep + composer e2e + before/after
+benchmarks kept as skipped tests — before Phase 9 (node atom release/eviction). Also remaining:
+app-graph algorithm upgrades (dijkstra/pathAtom), the `explore` isolation decision, ECHO
+undo/concurrency tests, and the upstream proposals._
 
 ## Phase 1: Core (`packages/common/graph`)
 
@@ -92,17 +95,76 @@ node vocabulary and 8 ECHO — the rest is generic expansion machinery.
       and `urlGrammar` exists only to feed it. The contract coupling was a single call site.
 - [x] **Sever it** — the flush now applies an injected `decorateNode(node, extension)` whose
       default stamps the URL segment. The generic path no longer reads URL data.
-- [ ] **Move the machinery down** to `@dxos/graph/GraphBuilder`: `ConnectorExtension`,
-      `ResolverExtension`, `BuilderExtension` (with `url` generalized to an opaque `meta`),
-      `GraphBuilder`/`GraphBuilderProps`, `make`/`from`/`addExtension`/`removeExtension`/
-      `explore`/`destroy`/`flush`, `createExtensionRaw`, `createConnector`, `flattenExtensions`,
-      and the impl class (connectors, expansion state, dirty-flush).
-- [ ] **Keep in `AppGraphBuilder`**: `UrlBinding`/`UrlGrammar`/`PathResolver`/`urlRepresentation`/
-      `nodeUrlSegment`/`stampUrlSegment`, `BuilderNode`, `ActionsExtension`/`ActionGroupsExtension`,
-      `createExtension` (actions), `createTypeExtension` (ECHO) — all layered on the generic one,
-      supplying the URL decorator.
-- [ ] **Split the tests** — most of `graph-builder.test.ts` (1676 lines) exercises generic
-      expansion and moves down; app-graph keeps the URL/action/ECHO cases.
+- [x] **Moved the machinery down** to `@dxos/graph/GraphBuilder` (503 lines): the `GraphBuilder`
+      class (extension registry, connector atom family, expansion subscriptions, provenance, id
+      qualification, ordering, dirty-flush) plus `Extension`/`Extensions`/`Connector`/`Props`/
+      `TraverseOptions`, `make`/`addExtension`/`removeExtension`/`explore`/`destroy`/`flush`,
+      `createConnector`, `flattenExtensions`. `url` generalized to an opaque `meta`.
+- [x] **Defined the seams the app layer plugs into**: a `Store` port (node views + node/edge
+      writes + `setNode`/`constructNode`, constructed from a factory so it can call back into the
+      builder), `relationKey` for relation encoding, an `Inline` accessor for inline descendants
+      (`owned` narrows which of them inherit provenance — actions do not), `decorateNode`, and
+      `unchanged` for flush short-circuiting. `_schedule`/`_yield`/`_onExpand` are overridable.
+- [x] **Kept in `AppGraphBuilder`** (655 lines, down from 1094): `UrlBinding`/`UrlGrammar`/
+      `PathResolver`/`urlRepresentation`/`nodeUrlSegment`/`stampUrlSegment`, `BuilderNode`,
+      `ActionsExtension`/`ActionGroupsExtension`, `createExtensionRaw`, `createExtension`,
+      `createTypeExtension` — a `GraphBuilder` subclass supplying the app store and URL decorator.
+- [x] **Node-id path vocabulary** moved to `GraphNode` (`PathSeparator`, `qualifyId`,
+      `validateSegmentId`, `parentId`, `segmentId`); app-graph's duplicates deleted and call sites
+      updated. `GraphNodeMatcher`'s basic matchers made node-type-preserving (they erased app nodes
+      to `GraphNode.Any`, which broke composition with app-level matchers).
+- [x] **Generic tests at the low level** — `GraphBuilder.test.ts` (19 cases) against a minimal
+      in-test store: expansion, qualification, extension order, sibling position, relation
+      filtering, updates, late registration, removal, inline staleness, provenance (incl. `owned`),
+      decoration, `unchanged` short-circuit, `destroy`, `explore`, `createConnector`. Surfaced a
+      real footgun now documented on `Store`: a node view without an equality cutoff spins the
+      flush loop forever.
+- [ ] **Thin app-graph's suite** — `graph-builder.test.ts` (1392 lines) still covers generic
+      expansion alongside the URL/action/ECHO cases; prune what the low-level suite now owns.
+
+## Phase 8: verification sweep + before/after benchmarks
+
+Gate before Phase 9. Requested 2026-08-13.
+
+- [ ] **Repo-wide dependent test sweep** — every package in the `@dxos/graph` / `@dxos/app-graph`
+      dependent closure (41 direct dependents, plus the transitive app/plugin set) must be green,
+      not just the packages touched by the refactor.
+- [ ] **Composer e2e** — run the Composer e2e suite; the builder/expansion path is only exercised
+      end-to-end there (navtree expansion, URL resolution, deck routing).
+- [ ] **Benchmarks as skipped tests** — app-graph operation timings kept in-repo as
+      `describe.skip`/`it.skip` cases (not deleted after the measurement), so the numbers can be
+      re-run on demand. Cover: connector flush at N nodes, node/connections atom reads under mount,
+      expansion of a wide subtree, `getPath`/traversal.
+- [ ] **Before/after numbers** — measure the same suite against the pre-refactor commit (the merge
+      base of this branch) and the current head; record the table in DESIGN.md.
+
+## Phase 9: node atom release / eviction
+
+The atom set grows monotonically: `Atom.family` memoizes a node atom per id and `keepAlive` roots
+never drop. Nothing releases a subgraph once it has been materialized, so a long session accumulates
+every node ever visited. Investigate a release model that is **generic at the `GraphModel` level**
+but motivated by, and validated against, the app-graph usage.
+
+- [ ] **Characterize the growth** — measure atom/node/edge counts and retained bytes over a session
+      that visits N workspaces; confirm `Atom.family`'s `WeakRef`/`FinalizationRegistry` memoization
+      is (or is not) already reclaiming unmounted atoms, and what pins them (keepAlive roots, the
+      builder's `_subscriptions`, `_connectorPrevious*` maps, `_nodeExtensions`).
+- [ ] **Decide the unit of release** — whole subgraph (a workspace's descendants) vs individual
+      nodes. Subgraph release is what the workspace-switch case wants; per-node is what an LRU
+      wants. They likely compose: LRU over subgraph roots.
+- [ ] **Evaluate the policies**: - _Explicit unload_ — the app tells the graph "workspace X is no longer active"; deterministic,
+      but every caller must remember to do it and a switch-back pays full re-expansion. - _LRU over subgraph roots_ — keep the K most recently active workspaces materialized so
+      switching back and forth stays instant, evict beyond that. Needs a size/cost metric. - _Reference/mount-driven_ — release what has had no mounted subscriber for T; closest to how
+      Atom already thinks, but expansion state (`_expanded`, connector subscriptions) is not
+      mount-scoped today.
+- [ ] **Design the core API** — something like `model.release(ids)` / `model.evict(policy)` plus a
+      retention hook, with the invariants spelled out: what happens to dangling edges, whether a
+      released node's atom identity survives (so a re-materialized node does not invalidate holders),
+      and how the builder's expansion bookkeeping is unwound in step.
+- [ ] **Wire the app-graph layer** — released subgraph ⇒ drop connector subscriptions, expansion
+      marks, provenance entries; re-expand lazily on next read.
+- [ ] **Tests** — release-then-reread rehydrates identically; no subscriber of a retained node is
+      notified by an eviction elsewhere; memory reclaimed (count-based assertions, not bytes).
 
 ## Phase 6: app-graph reconciliation
 

@@ -7,7 +7,6 @@ export * as AppGraphNode from './AppGraphNode';
 export * as CreateAtom from './atoms';
 export * as Graph from './graph';
 export * as PathResolution from './path-resolution';
-export { getParentId, getSegmentId, qualifyId } from './util';
 
 // TODO(wittjosiah): Direct re-export needed for portable type references.
 export type { BuilderExtensions } from './AppGraphBuilder';

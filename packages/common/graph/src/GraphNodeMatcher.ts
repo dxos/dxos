@@ -44,7 +44,7 @@ export type NodeMatcher<TData = GraphNode.Any, TNode extends GraphNode.Any = Gra
  * });
  * ```
  */
-export const whenRoot = (node: GraphNode.Any): Option.Option<GraphNode.Any> =>
+export const whenRoot = <TNode extends GraphNode.Any>(node: TNode): Option.Option<TNode> =>
   node.id === GraphNode.RootId ? Option.some(node) : Option.none();
 
 /**
@@ -64,7 +64,7 @@ export const whenRoot = (node: GraphNode.Any): Option.Option<GraphNode.Any> =>
  */
 export const whenId =
   (id: string) =>
-  (node: GraphNode.Any): Option.Option<GraphNode.Any> =>
+  <TNode extends GraphNode.Any>(node: TNode): Option.Option<TNode> =>
     node.id === id ? Option.some(node) : Option.none();
 
 /**
@@ -84,7 +84,7 @@ export const whenId =
  */
 export const whenNodeType =
   (type: string) =>
-  (node: GraphNode.Any): Option.Option<GraphNode.Any> =>
+  <TNode extends GraphNode.Any>(node: TNode): Option.Option<TNode> =>
     node.type === type ? Option.some(node) : Option.none();
 
 //

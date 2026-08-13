@@ -325,3 +325,38 @@ above, all deliberate:
 
 Known follow-ups are tracked in TASKS.md; the notable one is `explore`, whose throwaway-registry
 isolation no longer holds under a single store (no production callers).
+
+## GraphBuilder split (Phase 7, landed 2026-08-13)
+
+The expansion protocol — extensions contribute nodes when a relation is first read — turned out to be
+entirely independent of what the nodes mean. It now lives in `@dxos/graph/GraphBuilder` (589 lines)
+and `AppGraphBuilder` (663, from 1094) is a subclass that supplies the app vocabulary.
+
+The engine keeps: the extension registry atom, the per-`(node, relation)` connector atom family, the
+expansion subscriptions, id qualification, provenance, sibling ordering by `properties.position`, and
+the coalesced dirty-flush. It carries relations as opaque encoded keys and never interprets them.
+
+Five seams carry everything that is layer-specific:
+
+| Seam | What plugs in | App layer supplies |
+|---|---|---|
+| `store(hooks, registry)` | the graph itself, plus `onExpand`/`onRemoveNode` | an adapter over app-graph's `Graph` |
+| `relationKey(rel)` | relation encoding and the default relation | `Graph.relationKey(rel ?? 'child')` |
+| `inline` | how inline descendants are read/rewritten; `owned` narrows provenance | `nodes` + `actions`; only `nodes` are `owned` |
+| `decorateNode(node, ext)` | per-layer metadata, from the extension's opaque `meta` | stamps the URL segment from the `UrlBinding` |
+| `unchanged(prev, next)` | flush short-circuit | `nodeArgsUnchanged` |
+
+`_schedule`/`_yield`/`_onExpand` are overridable: app-graph routes flushes through its yielding
+scheduler and expands the `action` relation alongside `child` (a backwards-compat behavior).
+
+Two things fell out of the split rather than being planned:
+
+- **`Store.node` must cut off at the node's own value.** A store whose node view notifies on writes to
+  unrelated nodes makes each flush invalidate every connector, which re-flushes: an infinite loop. Hit
+  it immediately with a naive version-atom test store; documented on the port.
+- **`GraphNodeMatcher`'s basic matchers erased their input type** (`whenRoot: (node: GraphNode.Any) =>
+  Option<GraphNode.Any>`), so composing them with app-level matchers widened the match result and
+  broke `createExtension`'s inference. They are node-type-preserving now.
+
+Node-id composition moved to `GraphNode` (`PathSeparator`, `qualifyId`, `validateSegmentId`,
+`parentId`, `segmentId`) — it sits with `RootId`, and both layers were otherwise duplicating `'/'`.

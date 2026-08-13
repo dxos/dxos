@@ -35,7 +35,7 @@ const build = (sectionUrlKey?: string) =>
 const bindingsByKey = (sectionUrlKey?: string) =>
   Object.fromEntries(
     build(sectionUrlKey)
-      .map((extension) => extension.url)
+      .map((extension) => extension.meta)
       .filter((url): url is NonNullable<typeof url> => url !== undefined)
       .map((url) => [url.key, url]),
   );

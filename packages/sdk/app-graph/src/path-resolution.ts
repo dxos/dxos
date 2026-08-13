@@ -64,10 +64,10 @@ const isReservedUrlKey = (key: string): boolean =>
  * resolution matches a node produced by any of them. Shared with {@link buildUrlKeyTable} so the
  * reservation rule is expressed exactly once.
  */
-type UrlKeyedExtension = GraphBuilder.BuilderExtension & { url: GraphBuilder.UrlBinding };
+type UrlKeyedExtension = GraphBuilder.BuilderExtension & { meta: GraphBuilder.UrlBinding };
 
 /** Narrows to an extension that declared a URL binding, so callers need no non-null assertion. */
-const isUrlKeyed = (extension: GraphBuilder.BuilderExtension): extension is UrlKeyedExtension => !!extension.url?.key;
+const isUrlKeyed = (extension: GraphBuilder.BuilderExtension): extension is UrlKeyedExtension => !!extension.meta?.key;
 
 const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtension[] => {
   const extensions = Function.pipe(Record.values(builder.getExtensions()), Array.sortBy(Position.compare));
@@ -77,8 +77,8 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtensi
     if (!isUrlKeyed(extension)) {
       continue;
     }
-    if (isReservedUrlKey(extension.url.key)) {
-      log.warn('reserved URL prefix key', { key: extension.url.key, extension: extension.id });
+    if (isReservedUrlKey(extension.meta.key)) {
+      log.warn('reserved URL prefix key', { key: extension.meta.key, extension: extension.id });
       continue;
     }
     keyed.push(extension);
@@ -96,7 +96,7 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtensi
 const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string[]> => {
   const table = new Map<string, string[]>();
   for (const extension of getKeyedExtensions(builder)) {
-    const key = extension.url.key;
+    const key = extension.meta.key;
     const existing = table.get(key);
     if (existing) {
       existing.push(extension.id);
@@ -132,9 +132,9 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
     table.set(linkedKey, { key: linkedKey, hasId: true, anchor: false });
   }
   for (const extension of getKeyedExtensions(builder)) {
-    const key = extension.url.key;
+    const key = extension.meta.key;
     // The tokenizer's flat lookup is derived from `kind`: a singleton has no id.
-    const hasId = extension.url.kind !== 'singleton';
+    const hasId = extension.meta.kind !== 'singleton';
     const anchor = false;
     const existing = table.get(key);
     if (existing && existing.hasId !== hasId) {
@@ -297,7 +297,7 @@ const resolveUrlAsync = async (
     const workspaceBaseId = `${GraphNode.RootId}/${pair.workspace}`;
     const extensions: KeyedExtension[] = [];
     for (const extensionId of extensionIdList) {
-      const url = allExtensions[extensionId]?.url;
+      const url = allExtensions[extensionId]?.meta;
       if (url) {
         extensions.push({ id: extensionId, path: url.path });
       }
@@ -391,7 +391,7 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
   if (!extensionId) {
     return Option.none();
   }
-  const url = builder.getExtensions()[extensionId]?.url;
+  const url = builder.getExtensions()[extensionId]?.meta;
   if (!url) {
     return Option.none();
   }

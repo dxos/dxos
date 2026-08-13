@@ -14,12 +14,12 @@ import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import * as GraphNode from '@dxos/graph/GraphNode';
+import { qualifyId } from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import * as GraphBuilder from './AppGraphBuilder';
 import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import { qualifyId } from './util';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);

@@ -112,6 +112,16 @@ export interface BaseGraph extends Pipeable.Pipeable {
    * Get the atom key for the edges of the node with the given id.
    */
   edges(id: string): Atom.Atom<Edges>;
+  /**
+   * Upsert a node directly, bypassing expansion.
+   * @internal
+   */
+  _setNode(id: string, node: Option.Option<Node.Node>): void;
+  /**
+   * Materialize a node argument into a node without adding it to the graph.
+   * @internal
+   */
+  _constructNode(node: Node.NodeArg<any>): Option.Option<Node.Node>;
 }
 
 export type ReadableGraph = BaseGraph & { readonly [GraphKind]: 'readable' | 'expandable' | 'writable' };

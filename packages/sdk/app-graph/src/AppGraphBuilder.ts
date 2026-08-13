@@ -2,27 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as Pipeable from 'effect/Pipeable';
-import * as Record from 'effect/Record';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { type CleanupFn } from '@dxos/async';
 import { Entity, type Type } from '@dxos/echo';
+import * as Builder from '@dxos/graph/GraphBuilder';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { log } from '@dxos/log';
-import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
+import { Position, isNonNullable } from '@dxos/util';
 
 import { scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import { nodeArgsUnchanged, normalizeRelation, primaryKey, primaryParts, qualifyId, validateSegmentId } from './util';
+import { nodeArgsUnchanged, normalizeRelation } from './util';
 
 //
 // Extension Types
@@ -33,7 +30,7 @@ import { nodeArgsUnchanged, normalizeRelation, primaryKey, primaryParts, qualify
  *
  * @param params.node The existing node the returned nodes will be connected to.
  */
-export type ConnectorExtension = (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
+export type ConnectorExtension = Builder.Connector<Node.Node, Node.NodeArg<any>>;
 
 /**
  * Constrained case of the connector extension for more easily adding actions to the graph.
@@ -49,18 +46,13 @@ export type ActionGroupsExtension = (
   node: Atom.Atom<Option.Option<Node.Node>>,
 ) => Atom.Atom<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[]>;
 
-export type BuilderExtension = Readonly<{
-  id: string;
-  position?: Position.Position;
-  relation?: Node.RelationInput;
-  /**
-   * URL binding for the nodes this extension's connector produces: the registered prefix key plus how
-   * it resolves. Omitted when the extension's nodes are not URL-addressable. See {@link UrlBinding} and
-   * `path-resolution.ts` for how the key table is derived and used.
-   */
-  url?: UrlBinding;
-  connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
-}>;
+/**
+ * A generic builder extension specialized to the app vocabulary: app nodes, app relations, and a
+ * {@link UrlBinding} as the extension metadata the app layer's node decorator reads.
+ */
+export type BuilderExtension = Builder.Extension<Node.Node, Node.NodeArg<any>, Node.RelationInput, UrlBinding>;
+
+export type BuilderExtensions = Builder.Extensions<BuilderExtension>;
 
 /**
  * How an extension's nodes map to (and from) the URL pair chain — one binding per extension, holding
@@ -134,8 +126,6 @@ export type PathResolveParams = {
  */
 export type PathResolver = (params: PathResolveParams) => Effect.Effect<string | null>;
 
-export type BuilderExtensions = BuilderExtension | BuilderExtension[] | BuilderExtensions[];
-
 /**
  * The `(key, id?)` URL representation of a node under a given {@link UrlBinding} — the reverse of forward
  * resolution, minus the workspace (always the node id's second segment). A singleton has no id; a
@@ -151,7 +141,7 @@ export const urlRepresentation = (
   if (url.kind === 'singleton') {
     return { key: url.key };
   }
-  const segments = nodeId.split('/');
+  const segments = nodeId.split(GraphNode.PathSeparator);
   const id =
     typeof url.path === 'function'
       ? segments[segments.length - 1]
@@ -194,7 +184,7 @@ const stampUrlSegment = (
   url: UrlBinding | undefined,
   grammar: UrlGrammar,
 ): Node.NodeArg<any> => {
-  const lastSegment = node.id.slice(node.id.lastIndexOf('/') + 1);
+  const lastSegment = node.id.slice(node.id.lastIndexOf(GraphNode.PathSeparator) + 1);
   const segment = lastSegment.startsWith(grammar.linkedPrefix)
     ? grammar.linkedKey && `/${grammar.linkedKey}/${lastSegment.slice(grammar.linkedPrefix.length)}`
     : url && nodeUrlSegment(node.id, url, grammar.tailSeparator);
@@ -210,296 +200,10 @@ const stampUrlSegment = (
 };
 
 //
-// GraphBuilder Core
+// Builder
 //
 
-export type GraphBuilderTraverseOptions = {
-  visitor: (node: Node.Node, path: string[]) => MaybePromise<boolean | void>;
-  registry?: Registry.AtomRegistry;
-  source?: string;
-  relation: Node.RelationInput | Node.RelationInput[];
-};
-
-/**
- * Identifier denoting a GraphBuilder.
- */
-export const GraphBuilderTypeId: unique symbol = Symbol.for('@dxos/app-graph/GraphBuilder');
-export type GraphBuilderTypeId = typeof GraphBuilderTypeId;
-
-/**
- * GraphBuilder interface.
- */
-export interface GraphBuilder extends Pipeable.Pipeable {
-  readonly [GraphBuilderTypeId]: GraphBuilderTypeId;
-  readonly graph: Graph.ExpandableGraph;
-  readonly extensions: Atom.Atom<Record<string, BuilderExtension>>;
-  /** The URL grammar this builder resolves and stamps against (separators always resolved). */
-  readonly urlGrammar: UrlGrammar;
-  /** Read the currently registered extensions synchronously (used for URL key-table derivation). */
-  getExtensions(): Record<string, BuilderExtension>;
-  /**
-   * The id of the extension whose connector produced the given node, if known. Populated as
-   * connectors materialize nodes and cleared on removal; used by `path-resolution.ts` for
-   * reverse (node → URL) mapping.
-   */
-  getNodeExtensionId(nodeId: string): string | undefined;
-}
-
-/**
- * The builder provides an extensible way to compose the construction of the graph.
- * @internal
- */
-// TODO(wittjosiah): Add api for setting subscription set and/or radius.
-//   Should unsubscribe from nodes that are not in the set/radius.
-//   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
-class GraphBuilderImpl implements GraphBuilder {
-  readonly [GraphBuilderTypeId]: GraphBuilderTypeId = GraphBuilderTypeId;
-
-  pipe() {
-    // eslint-disable-next-line prefer-rest-params
-    return Pipeable.pipeArguments(this, arguments);
-  }
-
-  // TODO(wittjosiah): Use Context.
-  /** Active subscriptions keyed by composite ID, cleaned up on node removal. */
-  readonly _subscriptions = new Map<string, CleanupFn>();
-  /** Connector updates pending flush, keyed by connector key. */
-  readonly _dirtyConnectors = new Map<
-    string,
-    {
-      nodes: Node.NodeArg<any>[];
-      previous: string[];
-    }
-  >();
-  /** Last-flushed node IDs per connector key, used for edge removal on update. */
-  readonly _connectorPrevious = new Map<string, string[]>();
-  /** All inline-descendant IDs per connector key, used to remove stale inline nodes on update. */
-  readonly _connectorPreviousInlineIds = new Map<string, string[]>();
-  /** Last-flushed node args per connector key, used for change detection. */
-  readonly _connectorPreviousArgs = new Map<string, Node.NodeArg<any>[]>();
-  /** Whether a dirty-flush task is already scheduled. */
-  _flushScheduled = false;
-  /** Resolves when the current flush completes. */
-  _flushPromise: Promise<void> = Promise.resolve();
-  /** Registered builder extensions keyed by extension ID. */
-  readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
-    Atom.keepAlive,
-    Atom.withLabel('graph-builder:extensions'),
-  );
-  /**
-   * Node id -> id of the extension whose connector produced it. Non-reactive: updated directly
-   * as connectors materialize/remove nodes, so reverse (node → URL) mapping in
-   * `path-resolution.ts` can look up the producing extension without a reactive read.
-   */
-  readonly _nodeExtensions = new Map<string, string>();
-  /** The URL grammar (see {@link UrlGrammar}); the keys are absent when URLs are not in play. */
-  readonly urlGrammar: UrlGrammar;
-  /** Applied to every connector-produced node; see {@link GraphBuilderProps.decorateNode}. */
-  readonly _decorateNode: (node: Node.NodeArg<any>, extension?: BuilderExtension) => Node.NodeArg<any>;
-  /** Shared atom registry for reactive subscriptions. */
-  readonly _registry: Registry.AtomRegistry;
-  /** Backing graph with internal accessors for node atoms and construction. */
-  readonly _graph: Graph.Graph & {
-    _setNode: (id: string, node: Option.Option<Node.Node>) => void;
-    _constructNode: (node: Node.NodeArg<any>) => Option.Option<Node.Node>;
-  };
-
-  constructor({ registry, urlGrammar, ...params }: GraphBuilderProps = {}) {
-    this.urlGrammar = {
-      linkedPrefix: DEFAULT_LINKED_PREFIX,
-      tailSeparator: DEFAULT_TAIL_SEPARATOR,
-      ...urlGrammar,
-    };
-    this._registry = registry ?? Registry.make();
-    this._decorateNode =
-      params.decorateNode ?? ((node, extension) => stampUrlSegment(node, extension?.url, this.urlGrammar));
-    const graph = Graph.make({
-      ...params,
-      registry: this._registry,
-      onExpand: (id, relation) => this._onExpand(id, relation),
-      onRemoveNode: (id) => this._onRemoveNode(id),
-    });
-    // Access internal methods via type assertion since GraphBuilder needs them
-    this._graph = graph as Graph.Graph & {
-      _setNode: (id: string, node: Option.Option<Node.Node>) => void;
-      _constructNode: (node: Node.NodeArg<any>) => Option.Option<Node.Node>;
-    };
-  }
-
-  get graph(): Graph.ExpandableGraph {
-    return this._graph;
-  }
-
-  get extensions() {
-    return this._extensions;
-  }
-
-  getExtensions(): Record<string, BuilderExtension> {
-    return this._registry.get(this._extensions);
-  }
-
-  getNodeExtensionId(nodeId: string): string | undefined {
-    return this._nodeExtensions.get(nodeId);
-  }
-
-  /** Record `extensionId` as the producer of a qualified node and all of its inline `nodes` descendants. */
-  private _recordProvenance(node: Node.NodeArg<any>, extensionId: string): void {
-    this._nodeExtensions.set(node.id, extensionId);
-    for (const child of node.nodes ?? []) {
-      this._recordProvenance(child, extensionId);
-    }
-  }
-
-  /** Apply a set of node changes for a single connector key. */
-  private _applyConnectorUpdate(key: string, nodes: Node.NodeArg<any>[], previous: string[]): void {
-    const { id, relation } = relationFromConnectorKey(key);
-    const ids = nodes.map((node) => node.id);
-    const removed = previous.filter((pid) => !ids.includes(pid));
-    this._connectorPrevious.set(key, ids);
-    this._connectorPreviousArgs.set(key, nodes);
-
-    const currentInlineIds = collectAllInlineIds(nodes);
-    const previousInlineIds = this._connectorPreviousInlineIds.get(key) ?? [];
-    const staleInlineIds = previousInlineIds.filter((pid) => !currentInlineIds.includes(pid));
-    this._connectorPreviousInlineIds.set(key, currentInlineIds);
-
-    Graph.removeNodes(this._graph, staleInlineIds, true);
-    Graph.removeEdges(
-      this._graph,
-      removed.map((target) => ({ source: id, target, relation })),
-      true,
-    );
-    Graph.addNodes(this._graph, nodes);
-    Graph.addEdges(
-      this._graph,
-      nodes.map((node) => ({ source: id, target: node.id, relation })),
-    );
-    if (ids.length > 0) {
-      const sortedIds = [...nodes]
-        .sort((a, b) => Position.compare({ position: a.properties?.position }, { position: b.properties?.position }))
-        .map((n) => n.id);
-      Graph.sortEdges(this._graph, id, relation, sortedIds);
-    }
-  }
-
-  private _scheduleDirtyFlush(): void {
-    if (!this._flushScheduled) {
-      this._flushScheduled = true;
-      this._flushPromise = scheduleTask(
-        () => {
-          this._flushScheduled = false;
-          while (this._dirtyConnectors.size > 0) {
-            const entries = [...this._dirtyConnectors.entries()];
-            this._dirtyConnectors.clear();
-
-            Atom.batch(() => {
-              for (const [key, { nodes, previous }] of entries) {
-                this._applyConnectorUpdate(key, nodes, previous);
-              }
-            });
-          }
-        },
-        { strategy: 'smooth' },
-      );
-    }
-  }
-
-  /** A connector-produced node, tagged with the id of the extension that produced it (provenance). */
-  private readonly _connectors = Atom.family<string, Atom.Atom<{ extensionId: string; node: Node.NodeArg<any> }[]>>(
-    (key) => {
-      return Atom.make((get) => {
-        const { id, relation } = relationFromConnectorKey(key);
-        const node = this._graph.node(id);
-
-        const sourceNode = Option.getOrElse(get(node), () => undefined);
-        if (!sourceNode) {
-          return [];
-        }
-
-        const extensions = Function.pipe(
-          get(this._extensions),
-          Record.values,
-          Array.sortBy(Position.compare),
-          Array.filter(
-            (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
-              Graph.relationKey(ext.relation ?? 'child') === Graph.relationKey(relation) && ext.connector != null,
-          ),
-        );
-
-        const entries: { extensionId: string; node: Node.NodeArg<any> }[] = [];
-        for (const ext of extensions) {
-          const result = get(ext.connector(node));
-          for (const nodeArg of result) {
-            entries.push({ extensionId: ext.id, node: nodeArg });
-          }
-        }
-
-        return entries;
-      }).pipe(Atom.withLabel(`graph-builder:connectors:${key}`));
-    },
-  );
-
-  private _onExpand(id: string, relation: Node.Relation): void {
-    log('onExpand', { id, relation, registry: getDebugName(this._registry) });
-    this._expandRelation(id, relation);
-
-    // TODO(wittjosiah): Remove. This is for backwards compatibility.
-    if (relation.kind === 'child' && relation.direction === 'outbound') {
-      Graph.expand(this._graph, id, 'action');
-    }
-  }
-
-  private _expandRelation(id: string, relation: Node.RelationInput): void {
-    const key = connectorKey(id, relation);
-    const connectors = this._connectors(key);
-
-    const cancel = this._registry.subscribe(
-      connectors,
-      (entries) => {
-        const extensions = this.getExtensions();
-        // Produced nodes (and their inline descendants) pass through the decorator, which is where a
-        // caller attaches whatever its extensions' metadata implies — URL segments, for instance.
-        const nodes = qualifyNodeArgs(id)(entries.map((entry) => entry.node)).map((node, index) =>
-          this._decorateNode(node, extensions[entries[index].extensionId]),
-        );
-        // Record provenance for each qualified node — top-level and inline descendants alike — so
-        // reverse (node → URL) mapping can find the producing extension's `url` binding. Inline children
-        // (e.g. a TypeSection's objects, returned in the section node's `nodes` array) are produced by the
-        // same extension, so they carry the same provenance; without this they would have no URL representation.
-        entries.forEach((entry, index) => {
-          this._recordProvenance(nodes[index], entry.extensionId);
-        });
-
-        const previous = this._connectorPrevious.get(key) ?? [];
-        const ids = nodes.map((n) => n.id);
-
-        if (ids.length === previous.length && ids.every((nodeId, idx) => nodeId === previous[idx])) {
-          const prevArgs = this._connectorPreviousArgs.get(key);
-          if (prevArgs && nodeArgsUnchanged(prevArgs, nodes)) {
-            return;
-          }
-        }
-
-        log('update', { id, relation, ids });
-        this._dirtyConnectors.set(key, { nodes, previous });
-        this._scheduleDirtyFlush();
-      },
-      { immediate: true },
-    );
-
-    this._subscriptions.set(subscriptionKey(id, 'expand', key), cancel);
-  }
-
-  private _onRemoveNode(id: string): void {
-    this._nodeExtensions.delete(id);
-    for (const [key, cleanup] of this._subscriptions) {
-      if (primaryParts(key)[0] === id) {
-        cleanup();
-        this._subscriptions.delete(key);
-      }
-    }
-  }
-}
+export type GraphBuilderTraverseOptions = Builder.TraverseOptions<Node.Node, Node.RelationInput>;
 
 /** Construction params: the backing graph's props plus the URL grammar's fixed keys. */
 export type GraphBuilderProps = Pick<Graph.GraphProps, 'registry' | 'nodes' | 'edges'> & {
@@ -512,11 +216,105 @@ export type GraphBuilderProps = Pick<Graph.GraphProps, 'registry' | 'nodes' | 'e
 };
 
 /**
+ * The generic expansion engine specialized to the app vocabulary: app nodes and relations over an
+ * {@link Graph.ExpandableGraph}, extensions carrying a {@link UrlBinding}, and connector-produced nodes
+ * stamped with their URL segment as they enter the graph.
+ */
+export class GraphBuilder extends Builder.GraphBuilder<
+  Node.Node,
+  Node.NodeArg<any>,
+  Node.RelationInput,
+  UrlBinding,
+  Graph.ExpandableGraph
+> {
+  /** The URL grammar (see {@link UrlGrammar}); the keys are absent when URLs are not in play. */
+  readonly urlGrammar: UrlGrammar;
+
+  constructor({ registry, urlGrammar, decorateNode, ...graphProps }: GraphBuilderProps = {}) {
+    const grammar: UrlGrammar = {
+      linkedPrefix: DEFAULT_LINKED_PREFIX,
+      tailSeparator: DEFAULT_TAIL_SEPARATOR,
+      ...urlGrammar,
+    };
+    super({
+      registry,
+      relationKey: (relation) => Graph.relationKey(relation ?? 'child'),
+      inline,
+      unchanged: nodeArgsUnchanged,
+      decorateNode: decorateNode ?? ((node, extension) => stampUrlSegment(node, extension?.meta, grammar)),
+      store: (hooks, resolvedRegistry) => makeStore(graphProps, hooks, resolvedRegistry),
+    });
+    this.urlGrammar = grammar;
+  }
+
+  /** Hand flushes to the scheduler so a large expansion yields to the main thread. */
+  override _schedule(callback: () => void): Promise<void> {
+    return scheduleTask(callback, { strategy: 'smooth' });
+  }
+
+  override _yield(): Promise<void> {
+    return yieldOrContinue('idle');
+  }
+
+  override _onExpand(id: string, relation: string): void {
+    super._onExpand(id, relation);
+
+    // TODO(wittjosiah): Remove. This is for backwards compatibility.
+    const decoded = Graph.relationFromKey(relation);
+    if (decoded.kind === 'child' && decoded.direction === 'outbound') {
+      Graph.expand(this.graph, id, 'action');
+    }
+  }
+}
+
+/**
+ * How an app node argument's inline descendants are traversed. Actions are qualified and tracked like
+ * any other inline node but do not inherit provenance: they are not addressable in their own right, so
+ * attributing them to the producing extension would give them a URL representation they cannot have.
+ */
+const inline: Builder.Inline<Node.NodeArg<any>> = {
+  children: (node) => [...(node.nodes ?? []), ...(node.actions ?? [])],
+  map: (node, fn) => ({ ...node, nodes: node.nodes?.map(fn), actions: node.actions?.map(fn) }),
+  owned: (node) => node.nodes ?? [],
+};
+
+/** Adapt the app graph to the engine's store port, translating between relation keys and relations. */
+const makeStore = (
+  props: Pick<Graph.GraphProps, 'nodes' | 'edges'>,
+  hooks: Builder.StoreHooks,
+  registry: Registry.AtomRegistry,
+): Builder.Store<Node.Node, Node.NodeArg<any>, Graph.ExpandableGraph> => {
+  const decode = ({ source, target, relation }: Builder.Edge): Graph.Edge => ({
+    source,
+    target,
+    relation: Graph.relationFromKey(relation),
+  });
+
+  const graph = Graph.make({
+    ...props,
+    registry,
+    onExpand: (id, relation) => hooks.onExpand(id, Graph.relationKey(relation)),
+    onRemoveNode: hooks.onRemoveNode,
+  });
+
+  return {
+    graph,
+    node: (id) => graph.node(id),
+    nodeOrThrow: (id) => graph.nodeOrThrow(id),
+    addNodes: (nodes) => void Graph.addNodes(graph, [...nodes]),
+    removeNodes: (ids, edges) => void Graph.removeNodes(graph, [...ids], edges),
+    addEdges: (edges) => void Graph.addEdges(graph, edges.map(decode)),
+    removeEdges: (edges, removeOrphans) => void Graph.removeEdges(graph, edges.map(decode), removeOrphans),
+    sortEdges: (id, relation, order) => void Graph.sortEdges(graph, id, Graph.relationFromKey(relation), [...order]),
+    setNode: (id, node) => graph._setNode(id, node),
+    constructNode: (node) => graph._constructNode(node),
+  };
+};
+
+/**
  * Creates a new GraphBuilder instance.
  */
-export const make = (params?: GraphBuilderProps): GraphBuilder => {
-  return new GraphBuilderImpl(params);
-};
+export const make = (params?: GraphBuilderProps): GraphBuilder => new GraphBuilder(params);
 
 /**
  * Creates a GraphBuilder from a serialized pickle string.
@@ -530,173 +328,15 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
   return make({ nodes, edges, registry, urlGrammar });
 };
 
-/**
- * Implementation helper for addExtension.
- */
-const addExtensionImpl = (builder: GraphBuilder, extensions: BuilderExtensions): GraphBuilder => {
-  const internal = builder as GraphBuilderImpl;
-  flattenExtensions(extensions).forEach((extension) => {
-    const extensions = internal._registry.get(internal._extensions);
-    internal._registry.set(internal._extensions, Record.set(extensions, extension.id, extension));
-  });
-  return builder;
-};
+// The expansion lifecycle is the generic engine's; the app layer only specializes the vocabulary.
+export { addExtension, destroy, explore, flush, removeExtension } from '@dxos/graph/GraphBuilder';
 
 /**
- * Add extensions to the graph builder.
+ * Flatten arbitrarily nested extension groups into a single list. Pinned to the app extension type,
+ * which the generic signature cannot infer from a recursively nested argument.
  */
-export function addExtension(builder: GraphBuilder, extensions: BuilderExtensions): GraphBuilder;
-export function addExtension(extensions: BuilderExtensions): (builder: GraphBuilder) => GraphBuilder;
-export function addExtension(
-  builderOrExtensions: GraphBuilder | BuilderExtensions,
-  extensions?: BuilderExtensions,
-): GraphBuilder | ((builder: GraphBuilder) => GraphBuilder) {
-  if (extensions === undefined) {
-    // Curried: addExtension(extensions)
-    const extensions = builderOrExtensions as BuilderExtensions;
-    return (builder: GraphBuilder) => addExtensionImpl(builder, extensions);
-  } else {
-    // Direct: addExtension(builder, extensions)
-    const builder = builderOrExtensions as GraphBuilder;
-    return addExtensionImpl(builder, extensions);
-  }
-}
-
-/**
- * Implementation helper for removeExtension.
- */
-const removeExtensionImpl = (builder: GraphBuilder, id: string): GraphBuilder => {
-  const internal = builder as GraphBuilderImpl;
-  const extensions = internal._registry.get(internal._extensions);
-  internal._registry.set(internal._extensions, Record.remove(extensions, id));
-  return builder;
-};
-
-/**
- * Remove an extension from the graph builder.
- */
-export function removeExtension(builder: GraphBuilder, id: string): GraphBuilder;
-export function removeExtension(id: string): (builder: GraphBuilder) => GraphBuilder;
-export function removeExtension(
-  builderOrId: GraphBuilder | string,
-  id?: string,
-): GraphBuilder | ((builder: GraphBuilder) => GraphBuilder) {
-  if (typeof builderOrId === 'string') {
-    // Curried: removeExtension(id)
-    const id = builderOrId;
-    return (builder: GraphBuilder) => removeExtensionImpl(builder, id);
-  } else {
-    // Direct: removeExtension(builder, id)
-    const builder = builderOrId;
-    return removeExtensionImpl(builder, id!);
-  }
-}
-
-/**
- * Implementation helper for explore.
- */
-const exploreImpl = async (
-  builder: GraphBuilder,
-  options: GraphBuilderTraverseOptions,
-  path: string[] = [],
-): Promise<void> => {
-  const internal = builder as GraphBuilderImpl;
-  const { registry = Registry.make(), source = GraphNode.RootId, relation, visitor } = options;
-  // Break cycles.
-  if (path.includes(source)) {
-    return;
-  }
-
-  await yieldOrContinue('idle');
-
-  const node = registry.get(internal._graph.nodeOrThrow(source));
-  const shouldContinue = await visitor(node, [...path, node.id]);
-  if (shouldContinue === false) {
-    return;
-  }
-
-  const nodes = Function.pipe(
-    internal._registry.get(internal._extensions),
-    Record.values,
-    Array.map((extension) => extension.connector),
-    Array.filter(isNonNullable),
-    Array.flatMap((connector) => registry.get(connector(internal._graph.node(source)))),
-    qualifyNodeArgs(source),
-  );
-
-  await Promise.all(
-    nodes.map((nodeArg) => {
-      internal._graph._setNode(nodeArg.id, internal._graph._constructNode(nodeArg));
-      return exploreImpl(builder, { registry, source: nodeArg.id, relation, visitor }, [...path, node.id]);
-    }),
-  );
-
-  if (registry !== internal._registry) {
-    registry.reset();
-    registry.dispose();
-  }
-};
-
-/**
- * Explore the graph by traversing it with the given options.
- *
- * Nodes reached along the way are materialized into the graph. The `registry` option now only
- * scopes the connector reads, not the nodes themselves, which the single-store model always owns.
- */
-export function explore(builder: GraphBuilder, options: GraphBuilderTraverseOptions, path?: string[]): Promise<void>;
-export function explore(
-  options: GraphBuilderTraverseOptions,
-  path?: string[],
-): (builder: GraphBuilder) => Promise<void>;
-export function explore(
-  builderOrOptions: GraphBuilder | GraphBuilderTraverseOptions,
-  optionsOrPath?: GraphBuilderTraverseOptions | string[],
-  path?: string[],
-): Promise<void> | ((builder: GraphBuilder) => Promise<void>) {
-  if (typeof builderOrOptions === 'object' && 'visitor' in builderOrOptions) {
-    // Curried: explore(options, path?)
-    const options = builderOrOptions as GraphBuilderTraverseOptions;
-    const path = Array.isArray(optionsOrPath) ? optionsOrPath : undefined;
-    return (builder: GraphBuilder) => exploreImpl(builder, options, path);
-  } else {
-    // Direct: explore(builder, options, path?)
-    const builder = builderOrOptions as GraphBuilder;
-    const options = optionsOrPath as GraphBuilderTraverseOptions;
-    const pathArg = path ?? (Array.isArray(optionsOrPath) ? optionsOrPath : undefined);
-    return exploreImpl(builder, options, pathArg);
-  }
-}
-
-/**
- * Implementation helper for destroy.
- */
-const destroyImpl = (builder: GraphBuilder): void => {
-  const internal = builder as GraphBuilderImpl;
-  internal._subscriptions.forEach((unsubscribe) => unsubscribe());
-  internal._subscriptions.clear();
-};
-
-/**
- * Destroy the graph builder and clean up resources.
- */
-export function destroy(builder: GraphBuilder): void;
-export function destroy(): (builder: GraphBuilder) => void;
-export function destroy(builder?: GraphBuilder): void | ((builder: GraphBuilder) => void) {
-  if (builder === undefined) {
-    // Curried: destroy()
-    return (builder: GraphBuilder) => destroyImpl(builder);
-  } else {
-    // Direct: destroy(builder)
-    return destroyImpl(builder);
-  }
-}
-
-/**
- * Wait for all pending connector updates to be flushed.
- */
-export const flush = (builder: GraphBuilder): Promise<void> => {
-  return (builder as GraphBuilderImpl)._flushPromise;
-};
+export const flattenExtensions = (extensions: BuilderExtensions, acc: BuilderExtension[] = []): BuilderExtension[] =>
+  Builder.flattenExtensions<BuilderExtension>(extensions, acc);
 
 //
 // Extension Creation
@@ -786,7 +426,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
           id: getId('connector'),
           position,
           relation: normalizedRelation,
-          url,
+          meta: url,
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
@@ -843,7 +483,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
   // which registers a key for the parser/serializer but produces no nodes of its own). Emit it so the
   // key table sees the binding; it has no connector so it never runs.
   if (extensions.length === 0 && url) {
-    return [{ id, position, relation: normalizedRelation, url } satisfies BuilderExtension];
+    return [{ id, position, relation: normalizedRelation, meta: url } satisfies BuilderExtension];
   }
 
   return extensions;
@@ -964,17 +604,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
 export const createConnector = <TData>(
   matcher: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TData>,
   factory: (data: TData, get: Atom.AtomContext) => Node.NodeArg<any>[],
-): ConnectorExtension => {
-  return (node: Atom.Atom<Option.Option<Node.Node>>) =>
-    Atom.make((get) =>
-      Function.pipe(
-        get(node),
-        Option.flatMap((matchedNode) => matcher(matchedNode, get)),
-        Option.map((data) => factory(data, get)),
-        Option.getOrElse(() => []),
-      ),
-    );
-};
+): ConnectorExtension => Builder.createConnector(matcher, factory);
 
 /**
  * Create a connector extension from a matcher and factory function with Effect support.
@@ -986,17 +616,10 @@ const createConnectorWithRuntime = <TData, R>(
   matcher: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TData>,
   factory: (data: TData, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any>[], never, R>,
   context: Context.Context<R>,
-): ConnectorExtension => {
-  return (node: Atom.Atom<Option.Option<Node.Node>>) =>
-    Atom.make((get) =>
-      Function.pipe(
-        get(node),
-        Option.flatMap((matchedNode) => matcher(matchedNode, get)),
-        Option.map((data) => runEffectSyncWithFallback(factory(data, get), context, extensionId, [])),
-        Option.getOrElse(() => []),
-      ),
-    );
-};
+): ConnectorExtension =>
+  Builder.createConnector(matcher, (data, get) =>
+    runEffectSyncWithFallback(factory(data, get), context, extensionId, []),
+  );
 
 /**
  * Options for creating a type-based extension.
@@ -1037,58 +660,4 @@ export const createTypeExtension = <T extends Type.AnyEntity, R = never>(
     relation,
     position,
   });
-};
-
-//
-// Extension Utilities
-//
-
-/**
- * Qualify node IDs by prefixing with the parent path.
- * Validates that segment IDs do not contain the path separator.
- * Recursively qualifies inline child nodes.
- */
-const qualifyNodeArgs =
-  (parentId: string) =>
-  (nodes: Node.NodeArg<any>[]): Node.NodeArg<any>[] =>
-    nodes.map((node) => {
-      validateSegmentId(node.id);
-      const qualified = qualifyId(parentId, node.id);
-      return {
-        ...node,
-        id: qualified,
-        nodes: node.nodes ? qualifyNodeArgs(qualified)(node.nodes) : undefined,
-        actions: node.actions ? qualifyNodeArgs(qualified)(node.actions) : undefined,
-      };
-    });
-
-/**
- * Recursively collect all inline-descendant IDs (the `nodes` arrays at every level)
- * from a list of top-level NodeArgs. Top-level IDs are excluded because they are
- * already tracked via `_connectorPrevious`.
- */
-const collectAllInlineIds = (nodes: Node.NodeArg<any>[]): string[] =>
-  nodes.flatMap((node) => {
-    const childNodes = node.nodes ?? [];
-    const actionNodes = node.actions ?? [];
-    const allInline = [...childNodes, ...actionNodes];
-    return allInline.length > 0 ? [...allInline.map((child) => child.id), ...collectAllInlineIds(allInline)] : [];
-  });
-
-const connectorKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, Graph.relationKey(relation));
-
-const relationFromConnectorKey = (key: string): { id: string; relation: Node.Relation } => {
-  const [id, encodedRelation] = primaryParts(key);
-  return { id, relation: Graph.relationFromKey(encodedRelation) };
-};
-
-const subscriptionKey = (id: string, kind: string, detail?: string): string =>
-  detail != null ? primaryKey(id, kind, detail) : primaryKey(id, kind);
-
-export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExtension[] = []): BuilderExtension[] => {
-  if (Array.isArray(extension)) {
-    return [...acc, ...extension.flatMap((ext) => flattenExtensions(ext, acc))];
-  } else {
-    return [...acc, extension];
-  }
 };

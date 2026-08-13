@@ -11,6 +11,9 @@ Low-level graph API: Effect Schemas for the persisted shape, and a reactive mode
   apply directly and bump a version atom; snapshots in the schema shape are encoded on demand.
 - **Algorithms** — `traverse` (depth-first), `topoLevels` (layered topological sort) and
   `findCycle`, all id-translated.
+- **Builder** (`GraphBuilder`) — lazy expansion: registered extensions contribute nodes when a
+  relation is first read, over any store implementing its `Store` port. `@dxos/app-graph` is the
+  app-level specialization.
 - **Selection** (`SelectionModel`) — a reactive selection set, independent of the graph itself.
 
 ## Usage
