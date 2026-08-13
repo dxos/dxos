@@ -11,7 +11,8 @@ import { EffectEx } from '@dxos/effect';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { createSyncProgressKey } from '../sync';
+import { createSyncProgressKey } from '#sync';
+
 import * as InboxOperation from './InboxOperation';
 import * as Mailbox from './Mailbox';
 

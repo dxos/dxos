@@ -24,18 +24,20 @@ import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SAMPLE_MESSAGES, corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
+
 import { initializeMailbox, seedSummaries } from '#testing';
 import { InboxCapabilities, Mailbox } from '#types';
+
 import { InboxPlugin } from '../../plugin';
 import * as InboxOperation from '../../types/InboxOperation';
-import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handler for the one layout operation the article invokes that belongs to DeckPlugin, which
@@ -279,7 +281,7 @@ const meta = {
         }),
 
         StorybookPlugin.make({}),
-        ProgressPlugin(),
+        ProgressPlugin.make(),
         InboxPlugin(),
         PreviewPlugin.make(),
         MockDeckOperationsPlugin(),

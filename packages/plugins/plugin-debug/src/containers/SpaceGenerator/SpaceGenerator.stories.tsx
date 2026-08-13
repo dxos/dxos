@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -72,7 +72,7 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin.make({}),
         // Hosts the ProgressRegistry the Progress Monitor row registers into (and its meter reads).
-        ProgressPlugin(),
+        ProgressPlugin.make(),
         ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
