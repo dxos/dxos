@@ -61,7 +61,6 @@ export type GraphProps = {
   nodes?: MakeOptional<Node.Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
   onExpand?: (id: string, relation: Node.Relation) => void;
-  onInitialize?: (id: string) => Promise<void>;
   onRemoveNode?: (id: string) => void;
 };
 
@@ -143,7 +142,6 @@ class GraphImpl implements WritableGraph {
   }>();
 
   readonly _onExpand?: GraphProps['onExpand'];
-  readonly _onInitialize?: GraphProps['onInitialize'];
   readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
   readonly _registry: Registry.AtomRegistry;
@@ -151,7 +149,6 @@ class GraphImpl implements WritableGraph {
   /** Relation keys a node has held, so an emptied relation still reports an empty list. */
   readonly _relations = new Map<string, Set<string>>();
   readonly _pendingExpands = new Set<string>();
-  readonly _initialized = new Set<string>();
 
   /**
    * Canonical store. Nodes an edge references before they are contributed sit in it as
@@ -239,9 +236,8 @@ class GraphImpl implements WritableGraph {
     }).pipe(Atom.withLabel(`graph:json:${id}`));
   });
 
-  constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphProps = {}) {
+  constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphProps = {}) {
     this._registry = registry ?? Registry.make();
-    this._onInitialize = onInitialize;
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
     this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });
@@ -725,45 +721,6 @@ export function waitForPath(
     const graph = graphOrParams as BaseGraph;
     const params = paramsOrOptions as { source?: string; target: string };
     return waitForPathImpl(graph, params, options);
-  }
-}
-
-/**
- * Implementation helper for initialize.
- */
-const initializeImpl = async <T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T> => {
-  const internal = getInternal(graph);
-  const initialized = internal._initialized.has(id);
-  log('initialize', { id, initialized });
-  if (!initialized) {
-    internal._initialized.add(id);
-    await internal._onInitialize?.(id);
-  }
-  return graph;
-};
-
-/**
- * Initialize a node in the graph.
- *
- * Fires the `onInitialize` callback to provide initial data for a node.
- *
- * TODO(wittjosiah): Remove? No graph-builder extension declares a `resolver`, so `onInitialize` has
- * nothing to run; callers expand the nodes they need explicitly.
- */
-export function initialize<T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T>;
-export function initialize(id: string): <T extends ExpandableGraph | WritableGraph>(graph: T) => Promise<T>;
-export function initialize<T extends ExpandableGraph | WritableGraph>(
-  graphOrId: T | string,
-  id?: string,
-): Promise<T> | (<T extends ExpandableGraph | WritableGraph>(graph: T) => Promise<T>) {
-  if (typeof graphOrId === 'string') {
-    // Curried: initialize(id)
-    const id = graphOrId;
-    return <T extends ExpandableGraph | WritableGraph>(graph: T) => initializeImpl(graph, id);
-  } else {
-    // Direct: initialize(graph, id)
-    const graph = graphOrId;
-    return initializeImpl(graph, id!);
   }
 }
 

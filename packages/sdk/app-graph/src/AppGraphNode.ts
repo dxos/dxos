@@ -5,7 +5,6 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
-import * as GraphNode from '@dxos/graph/GraphNode';
 import { type MakeOptional } from '@dxos/util';
 
 /**

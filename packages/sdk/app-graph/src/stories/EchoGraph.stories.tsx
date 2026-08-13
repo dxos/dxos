@@ -24,7 +24,6 @@ import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
 import * as GraphBuilder from '../AppGraphBuilder';
-import * as Node from '../AppGraphNode';
 import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
 import { JsonTree } from './Tree';

@@ -12,10 +12,9 @@ import * as Record from 'effect/Record';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { type CleanupFn, type Trigger } from '@dxos/async';
+import { type CleanupFn } from '@dxos/async';
 import { Entity, type Type } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -23,15 +22,7 @@ import { scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import {
-  getParentId,
-  nodeArgsUnchanged,
-  normalizeRelation,
-  primaryKey,
-  primaryParts,
-  qualifyId,
-  validateSegmentId,
-} from './util';
+import { nodeArgsUnchanged, normalizeRelation, primaryKey, primaryParts, qualifyId, validateSegmentId } from './util';
 
 //
 // Extension Types
@@ -58,14 +49,6 @@ export type ActionGroupsExtension = (
   node: Atom.Atom<Option.Option<Node.Node>>,
 ) => Atom.Atom<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[]>;
 
-/**
- * Graph builder extension for adding nodes to the graph based on a node id.
- *
- * TODO(wittjosiah): Remove? Superseded by the declared `url` binding — URL resolution no longer
- * materializes a node from a bare id. Retained alongside `Graph.initialize`, which fires it.
- */
-export type ResolverExtension = (id: string) => Atom.Atom<Node.NodeArg<any> | null>;
-
 export type BuilderExtension = Readonly<{
   id: string;
   position?: Position.Position;
@@ -76,7 +59,6 @@ export type BuilderExtension = Readonly<{
    * `path-resolution.ts` for how the key table is derived and used.
    */
   url?: UrlBinding;
-  resolver?: ResolverExtension;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
 }>;
 
@@ -310,8 +292,6 @@ class GraphBuilderImpl implements GraphBuilder {
    * `path-resolution.ts` can look up the producing extension without a reactive read.
    */
   readonly _nodeExtensions = new Map<string, string>();
-  /** Triggers signalling that a node's resolver has fired at least once. */
-  readonly _initialized: Record<string, Trigger> = {};
   /** The URL grammar (see {@link UrlGrammar}); the keys are absent when URLs are not in play. */
   readonly urlGrammar: UrlGrammar;
   /** Applied to every connector-produced node; see {@link GraphBuilderProps.decorateNode}. */
@@ -337,7 +317,6 @@ class GraphBuilderImpl implements GraphBuilder {
       ...params,
       registry: this._registry,
       onExpand: (id, relation) => this._onExpand(id, relation),
-      onInitialize: (id) => this._onInitialize(id),
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
     // Access internal methods via type assertion since GraphBuilder needs them
@@ -426,21 +405,6 @@ class GraphBuilderImpl implements GraphBuilder {
   }
 
   /** A connector-produced node, tagged with the id of the extension that produced it (provenance). */
-  private readonly _resolvers = Atom.family<string, Atom.Atom<Option.Option<Node.NodeArg<any>>>>((id) => {
-    return Atom.make((get) => {
-      return Function.pipe(
-        get(this._extensions),
-        Record.values,
-        Array.sortBy(Position.compare),
-        Array.map(({ resolver }) => resolver),
-        Array.filter(isNonNullable),
-        Array.map((resolver) => get(resolver(id))),
-        Array.filter(isNonNullable),
-        Array.head,
-      );
-    });
-  });
-
   private readonly _connectors = Atom.family<string, Atom.Atom<{ extensionId: string; node: Node.NodeArg<any> }[]>>(
     (key) => {
       return Atom.make((get) => {
@@ -524,41 +488,6 @@ class GraphBuilderImpl implements GraphBuilder {
     );
 
     this._subscriptions.set(subscriptionKey(id, 'expand', key), cancel);
-  }
-
-  private async _onInitialize(id: string) {
-    log('onInitialize', { id });
-    const resolver = this._resolvers(id);
-
-    const cancel = this._registry.subscribe(
-      resolver,
-      (node) => {
-        const trigger = this._initialized[id];
-        const connectorOwned = [...this._connectorPrevious.values()].some((ids) => ids.includes(id));
-        Option.match(node, {
-          onSome: (node) => {
-            if (!connectorOwned) {
-              Graph.addNodes(this._graph, [node]);
-              // Connect resolved node to its parent via a child edge.
-              const parentId = getParentId(id);
-              if (parentId) {
-                Graph.addEdges(this._graph, [{ source: parentId, target: id, relation: 'child' }]);
-              }
-            }
-            trigger?.wake();
-          },
-          onNone: () => {
-            trigger?.wake();
-            if (!connectorOwned) {
-              Graph.removeNodes(this._graph, [id]);
-            }
-          },
-        });
-      },
-      { immediate: true },
-    );
-
-    this._subscriptions.set(subscriptionKey(id, 'init'), cancel);
   }
 
   private _onRemoveNode(id: string): void {
@@ -789,7 +718,6 @@ export type CreateExtensionRawOptions = {
   relation?: Node.RelationInput;
   position?: Position.Position;
   url?: UrlBinding;
-  resolver?: ResolverExtension;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
   actionGroups?: ActionGroupsExtension;
@@ -818,7 +746,6 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     position,
     relation = 'child',
     url,
-    resolver: _resolver,
     connector: _connector,
     actions: _actions,
     actionGroups: _actionGroups,
@@ -834,9 +761,6 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
   }
   const normalizedRelation = normalizeRelation(relation);
   const getId = (key: string) => `${id}/${key}`;
-
-  const resolver =
-    _resolver && Atom.family((id: string) => _resolver(id).pipe(Atom.withLabel(`graph-builder:_resolver:${id}`)));
 
   const connector =
     _connector &&
@@ -857,7 +781,6 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     );
 
   const extensions = [
-    resolver ? ({ id: getId('resolver'), position, resolver } satisfies BuilderExtension) : undefined,
     connector
       ? ({
           id: getId('connector'),
@@ -945,7 +868,6 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
     matched: TMatched,
     get: Atom.AtomContext,
   ) => Effect.Effect<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data'>[], never, R>;
-  resolver?: (id: string, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
   connector?: (matched: TMatched, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
@@ -983,7 +905,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
   options: CreateExtensionOptions<TMatched, R>,
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
-    const { id, match, actions, actionGroups, connector, resolver, relation, position, url } = options;
+    const { id, match, actions, actionGroups, connector, relation, position, url } = options;
 
     const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
 
@@ -1024,17 +946,11 @@ export const createExtension = <TMatched = Node.Node, R = never>(
           )
       : undefined;
 
-    const resolverExtension = resolver
-      ? (nodeId: string) =>
-          Atom.make((get) => runEffectSyncWithFallback(resolver(nodeId, get), context, id, null) ?? null)
-      : undefined;
-
     return createExtensionRaw({
       id,
       relation,
       position,
       url,
-      resolver: resolverExtension,
       connector: connectorExtension,
       actions: actionsExtension,
       actionGroups: actionGroupsExtension,

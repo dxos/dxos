@@ -804,26 +804,6 @@ describe('Graph', () => {
     Graph.addNode(graph, { id: childId, type: EXAMPLE_TYPE });
     expect(expandCalls).to.deep.equal([[childId, Node.childRelation()]]);
   });
-
-  test('initialize curried', async () => {
-    const registry = Registry.make();
-    const builder = GraphBuilder.make({ registry });
-    const graph = builder.graph;
-    let initializeCalled = false;
-    GraphBuilder.addExtension(
-      builder,
-      GraphBuilder.createExtensionRaw({
-        id: 'test',
-        resolver: () => {
-          initializeCalled = true;
-          return Atom.make({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });
-        },
-      }),
-    );
-    await graph.pipe(Graph.initialize(EXAMPLE_ID));
-    expect(initializeCalled).to.be.true;
-  });
-
   test('waitForPath curried', async () => {
     const graph = Graph.make();
     Graph.addNode(graph, {

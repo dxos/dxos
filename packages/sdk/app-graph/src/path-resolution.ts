@@ -16,7 +16,6 @@ import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
 import * as GraphBuilder from './AppGraphBuilder';
-import * as Node from './AppGraphNode';
 import * as Graph from './graph';
 
 /**
