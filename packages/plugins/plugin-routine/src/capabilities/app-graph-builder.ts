@@ -9,7 +9,6 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
