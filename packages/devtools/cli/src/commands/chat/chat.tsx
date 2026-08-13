@@ -16,12 +16,12 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AiSession } from '@dxos/assistant';
+import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import * as Assistant from '@dxos/plugin-assistant/Assistant';
 
 import { App, render } from '../../components';
 import { theme } from '../../theme';
@@ -120,7 +120,7 @@ export const chat = Command.make(
       }
 
       const handleChatLoad = async () => {
-        const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
+        const chats = await space.db.query(Filter.type(ChatSchema.Chat)).run();
         log.info('chats', { chats: chats.length });
         // if (chats.length > 0) {
         //   await handleChatSelect(chats[0]);
@@ -130,7 +130,7 @@ export const chat = Command.make(
       };
 
       // TODO(burdon): Update message history, skills, etc.
-      const handleChatSelect = async (chat: Assistant.Chat) => {
+      const handleChatSelect = async (chat: ChatSchema.Chat) => {
         const current = conversation();
         await current?.close();
 

@@ -18,14 +18,24 @@ import { CrmOperation } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(InboxCapabilities.MailboxAction, {
-      id: 'process-crm',
-      label: 'Process CRM',
-      icon: 'ph--address-book--regular',
-      createInvocation: (mailbox) => ({
-        operation: CrmOperation.ProcessMailbox,
-        input: { mailbox: Ref.make(mailbox), research: true },
-      }),
-    });
+    return Capability.contributeAll(InboxCapabilities.MailboxAction, [
+      {
+        id: 'process-crm',
+        label: 'Process CRM',
+        icon: 'ph--address-book--regular',
+        createInvocation: (mailbox) => ({
+          operation: CrmOperation.ProcessMailbox,
+          input: { mailbox: Ref.make(mailbox), research: true },
+        }),
+      },
+      {
+        // Space-wide rather than mailbox-scoped (the operation walks every Person/Organization
+        // missing an image), but the mailbox menu is where a user is when contacts appear.
+        id: 'enrich-images',
+        label: 'Enrich images',
+        icon: 'ph--user-circle--regular',
+        createInvocation: () => ({ operation: CrmOperation.EnrichImages, input: {} }),
+      },
+    ]);
   }),
 );

@@ -14,6 +14,7 @@ import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 import { TableEvents, TableOperation } from '#types';
 
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
   activatesOn: TableEvents.Start,

@@ -37,7 +37,11 @@ import { readBindingOptions } from './binding';
  * Progress-registry key for a mailbox's mail-sync monitor — the mailbox URI plus `#sync` so distinct
  * monitor types (e.g. `#topics`) can coexist. `MailboxArticle` subscribes to show the sync meter.
  */
-export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
+// Absolute form, matching the other pipeline keys: the producer (this module, running in an
+// operation) and the consumer (`MailboxArticle`) derive the key independently, so a hydration-
+// dependent URI form would silently hide the meter. See `InboxOperation.createProgressKey`.
+export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) =>
+  Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + '#sync';
 
 /** Options the harness passes to a provider's {@link MailSyncSource.buildSource} for one run. */
 export type MailSyncSourceOptions = {

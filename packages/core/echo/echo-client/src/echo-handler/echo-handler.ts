@@ -743,9 +743,6 @@ export const throwIfCustomClass = (prop: Doc.KeyPath[number], value: any) => {
   }
 };
 
-// Re-export from echo-object-utils for backward compatibility.
-export { getObjectCore };
-
 /**
  * @returns Automerge document (or a part of it) that backs the object.
  * Mostly used for debugging.
@@ -754,9 +751,6 @@ export const getObjectDocument = (obj: Obj.Any): A.Doc<EntityStructure> => {
   const core = getObjectCore(obj);
   return getDeep(core.getDoc(), core.mountPath)!;
 };
-
-// Re-export from echo-object-utils for backward compatibility.
-export { isRootDataObject };
 
 /**
  * @returns True if `value` is part of another EchoObjectSchema but not the root data object.

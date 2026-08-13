@@ -30,11 +30,11 @@ describe('Event', () => {
     const mainPromise = event.waitForCount(3);
     const debouncePromise = debounced.waitForCount(1);
 
+    // Listeners fire synchronously on emit, so the pure count is exact immediately and the
+    // debounced listener (200ms) has not fired yet — no wall-clock wait needed.
     event.emit(true);
     event.emit(true);
     event.emit(true);
-
-    await sleep(5);
 
     expect(pureCount).to.equal(3);
     expect(debounceCount).to.equal(0);
@@ -60,11 +60,10 @@ describe('Event', () => {
 
     event.emit(1);
     event.emit(2);
-    void ctx.dispose();
+    // Await disposal so the listener is removed before the post-dispose emits, rather than racing it.
+    await ctx.dispose();
     event.emit(3);
     event.emit(4);
-
-    await sleep(2);
 
     expect(received).to.deep.equal([1, 2]);
   });
@@ -82,9 +81,8 @@ describe('Event', () => {
       throw new Error('test');
     });
 
+    // A throwing listener routes to `ctx.raise` synchronously during emit, so the error is set at once.
     event.emit(1);
-
-    await sleep(2);
 
     expect(error.message).to.equal('test');
   });

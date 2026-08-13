@@ -11,8 +11,8 @@ import { assertArgument } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
 import { ObjectCore } from '../core-db';
-import { getObjectCore, initEchoReactiveObjectRootProxy } from './echo-handler';
-import { isEchoObject } from './echo-object-utils';
+import { initEchoReactiveObjectRootProxy } from './echo-handler';
+import { getObjectCore, isEchoObject } from './echo-object-utils';
 
 /**
  * Returns the edit history of an ECHO object.

@@ -25,6 +25,7 @@ import {
   Agent,
   AgentHandlers,
   AgentSkill,
+  Chat,
   DelegationHandlers,
   DelegationSkill,
   PlanningHandlers,
@@ -47,7 +48,6 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
@@ -169,7 +169,7 @@ const buildPluginManagerOptions = ({
       ClientPlugin.make({
         types: [
           AccessToken.AccessToken,
-          Assistant.Chat,
+          Chat.Chat,
           Collection.Collection,
           Outline.Outline,
           Task.Task,
@@ -322,7 +322,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   // Reactive: the chat is created asynchronously (module.setup on SpacesReady), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
-  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
+  const chats = useQuery(space?.db, Filter.type(Chat.Chat));
 
   useAsyncEffect(async () => {
     if (!space) {
@@ -436,7 +436,7 @@ type CreateAgentOptions = {
 };
 
 type StoryPluginOptions = {
-  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContext.Binder }) => Promise<void>;
+  onChatCreated?: (props: { space: Space; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
 
   /**
    * If set, the story creates an Agent (with its own Chat) instead of a standalone Chat.

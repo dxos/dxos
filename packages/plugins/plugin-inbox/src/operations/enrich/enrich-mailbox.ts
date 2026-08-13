@@ -14,6 +14,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import * as InboxOperation from '../../types/InboxOperation';
+import { isAiUnavailableCause } from '../extractor/ai-gate';
 
 /** One spawned pipeline: the tier it belongs to, and the invocation, held unevaluated until its turn. */
 type Stage = {
@@ -165,6 +166,17 @@ const handler = InboxOperation.EnrichMailbox.pipe(
           // Cancellation is not a stage failure — stop without marking the pipeline broken.
           results.push({ tier: stage.tier, operation: stage.operation, status: 'cancelled' });
           break;
+        } else if (isAiUnavailableCause(exit.cause)) {
+          // The assistant is not up (no AiService in the stack, or no resolver for the model), which
+          // is a precondition rather than a fault: report the tier as skipped and keep going. Every
+          // later AI tier skips itself the same way, and the deterministic tiers that already ran
+          // stay valid — treating it as a failure instead used to abort the cascade and leave the
+          // meter red for a mailbox nothing was wrong with.
+          const error = 'ai unavailable (assistant not ready)';
+          log.info('enrich: stage skipped', { operation: stage.operation, error });
+          results.push({ tier: stage.tier, operation: stage.operation, status: 'skipped', error });
+          reportStatus({ current: index, message: stage.operation });
+          continue;
         } else {
           const error = Cause.pretty(exit.cause).slice(0, 500);
           log.warn('enrich: stage failed', { operation: stage.operation, error });

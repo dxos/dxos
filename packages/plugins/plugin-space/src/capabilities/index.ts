@@ -61,6 +61,7 @@ export const Repair = Capability.lazyModule(
   },
   () => import('./repair'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });

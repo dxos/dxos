@@ -451,6 +451,9 @@ export default Capability.makeModule(
                 },
               },
               {
+                // The cursored walking-skeleton pipeline. Kept out of the toolbar (`enrich` is the
+                // single pipeline trigger) but reachable from the context menu, since its durable
+                // cursor plus `resetProcessCursor` are what the cursor machinery is verified through.
                 id: 'process',
                 data: () =>
                   isRunning
@@ -467,8 +470,7 @@ export default Capability.makeModule(
                     ? ['stop-process-mailbox.label', { ns: meta.profile.key }]
                     : ['process-mailbox.label', { ns: meta.profile.key }],
                   icon: isRunning ? 'ph--stop--regular' : 'ph--play--regular',
-                  disposition: ['toolbar', 'list-item'],
-                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  disposition: ['list-item'],
                   testId: 'inbox.mailbox.process',
                 },
               },

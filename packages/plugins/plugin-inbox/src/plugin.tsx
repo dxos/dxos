@@ -15,6 +15,7 @@ import {
   NavigationTargetResolver,
   OperationHandler,
   ReactSurface,
+  Schema,
   SkillDefinition,
   SummarizeExtractor,
 } from '#capabilities';
@@ -27,7 +28,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(IdentitySpecs),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
