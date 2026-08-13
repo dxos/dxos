@@ -1,9 +1,14 @@
 # Mailbox pipelines — current state and target design
 
-Status: **partly built** — D1-D4 landed (the `MailboxProcessor` capability, `operations/topology.ts`,
-and `ScanMailbox` resolving its run from contributions); D5 and D6 are still design. Records the analysis behind turning the closed `ScanMailbox` cascade
-into an open, contributable processor topology. Sibling docs: [`PLAN.md`](PLAN.md) (product plan),
-[`TASKS.md`](TASKS.md) (ledger), [`AUDIT.md`](AUDIT.md) (component/test index).
+Records the analysis behind turning the closed `ScanMailbox` cascade into an open, contributable
+processor topology, and the decisions taken along the way.
+
+Status: **D1-D3 built, D4-D6 outstanding.** The `MailboxProcessor` capability, `operations/topology.ts`
+and `ScanMailbox` resolving its run from contributions have all landed; D4 is now buildable but not
+built, D5 and D6 are still design. See [Sequencing](#sequencing).
+
+Sibling docs: [`PLAN.md`](PLAN.md) (product plan), [`TASKS.md`](TASKS.md) (ledger),
+[`AUDIT.md`](AUDIT.md) (component/test index).
 
 ## The target, in two halves
 
@@ -11,7 +16,9 @@ into an open, contributable processor topology. Sibling docs: [`PLAN.md`](PLAN.m
 2. **Post-sync pipelines** — multiple cursors over the Mailbox Feed, where plugins (plugin-brain,
    plugin-crm, …) contribute additional processors.
 
-Half 1 **already exists and is the template for half 2.** Half 2 is the gap.
+Half 1 already existed and was the template for half 2, which is now open too — though the passes it
+runs are still all mailbox-shaped and still all live in plugin-inbox. The
+[inventory](#inventory--every-pipeline-over-a-mailbox) below lists both halves in one table.
 
 ## Half 1 is done: `sync/mail-sync.ts`
 
@@ -24,49 +31,66 @@ a layer; neither owns any of the machinery above.
 Why a **service + layer** is right here: exactly **one** provider is active per operation. That is
 the shape a `Context.Tag` models well, and it is why the same shape is _wrong_ for half 2.
 
-## Half 2 today: a closed cascade
+## Half 2: how it opened
 
-`operations/scan/scan-mailbox.ts` holds `plan: Record<MailboxTier, () => Stage[]>` — all five stages
-enumerated inline, each operation imported directly. Nothing outside plugin-inbox can add one.
+`operations/scan/scan-mailbox.ts` used to hold `plan: Record<MailboxTier, () => Stage[]>` — all five
+passes enumerated inline, each operation imported directly, nothing outside plugin-inbox able to add
+one. The consequence was visible in the code: plugin-brain injected `Analyze` as a **toolbar menu
+item** (`InboxCapabilities.MailboxAction`) because no processor seam existed, a menu capability doing
+a pipeline capability's job; plugin-crm did the same with `Process CRM`.
 
-The consequence is visible in the code: plugin-brain injects `Analyze` as a **toolbar menu item**
-(`InboxCapabilities.MailboxAction`) because no processor seam exists. A menu capability is doing a
-pipeline capability's job. plugin-crm does the same with `Process CRM`.
+The cascade now reads `InboxCapabilities.MailboxProcessor` contributions and orders them by the
+`after` edges each declares. plugin-inbox contributes its own five through the same seam
+(`capabilities/mailbox-processors.ts`), so there is no privileged built-in path to drift from the
+contributed one. **The menu items have not been retired yet** — that is D5.
 
-### Inventory — 10 feed consumers, excluding sync
+### Inventory — every pipeline over a mailbox
 
-The Scan cascade (5 processors across 4 cost tiers):
+One table, both halves. **Processor** is the contributed id (the topology key and the cursor tag);
+`—` means the pipeline is not a contributed processor and is invoked some other way. Note the two
+granularities D2 separates: the sync half's `Stage`s are `Stream → Stream` transforms _inside_ one
+run, while a processor is a whole separately-spawned operation.
 
-| Operation               | Tier          | Cost           | Progress / idempotency                    |
-| ----------------------- | ------------- | -------------- | ----------------------------------------- |
-| `ExtractCorrespondents` | deterministic | none           | **no cursor** — identity index            |
-| `ExtractSubscriptions`  | deterministic | none           | **no cursor** — wholesale replace         |
-| `ClassifyMailbox`       | classify      | cheap LLM      | cursor, **tagged** `classifyMailbox`      |
-| `SummarizeMailbox`      | summarize     | 1 LLM call/msg | **no cursor** — skips by newest thread id |
-| `AnalyzeMailbox`        | analyze       | 1 LLM call/msg | cursor, **untagged**                      |
+| Pipeline (operation)          | Processor       | Owner           | Tier          | Cost               | Cursor                   | Invoked by                        |
+| ----------------------------- | --------------- | --------------- | ------------- | ------------------ | ------------------------ | --------------------------------- |
+| `GoogleMailSync`              | —               | plugin-google   | sync          | none               | `Cursor.ExternalCursor`  | Sync toolbar action, routine      |
+| `JmapSync`                    | —               | plugin-jmap     | sync          | none               | `Cursor.ExternalCursor`  | Sync toolbar action, routine      |
+| `ExtractCorrespondents`       | `contacts`      | plugin-inbox    | deterministic | none               | none — identity index    | Scan cascade                      |
+| `ExtractSubscriptions`        | `subscriptions` | plugin-inbox    | deterministic | none               | none — replaces state    | Scan cascade                      |
+| `ClassifyMailbox`             | `classify`      | plugin-inbox    | classify      | cheap LLM, ≤100    | tagged `classifyMailbox` | Scan cascade, after `contacts`    |
+| `SummarizeMailbox`            | `summarize`     | plugin-inbox    | summarize     | 1 call/msg, ≤50    | none — newest thread id  | Scan, after `contacts`+`classify` |
+| `AnalyzeMailbox`              | `analyze`       | plugin-inbox\*  | analyze       | 1 call/msg, no cap | tagged `analyzeMailbox`  | Scan (opt-in), brain `Analyze`    |
+| `CrmOperation.ProcessMailbox` | —               | plugin-crm      | —             | LLM (optional)     | tagged                   | `Process CRM` menu item\*\*       |
+| `UpdateProjectTasks`          | —               | plugin-projects | —             | none               | none — whole feed        | Project routine                   |
+| `UpdateTravelLog`             | —               | plugin-projects | —             | none               | none — whole feed        | Project routine                   |
+| `UpdateInvestorLog`           | —               | plugin-projects | —             | LLM                | none — whole feed        | Project routine                   |
+| `ExtractMailbox`              | —               | plugin-inbox    | —             | LLM                | none                     | nothing — `@deprecated`           |
 
-Outside the cascade:
+\* Moves to plugin-brain under D5, which also retires the two menu items in the last column.
+\*\* Overlaps `contacts` in purpose and competes with it from a separate toolbar entry.
 
-- `ExtractMailbox` — `@deprecated`, superseded by the `ExtractMessage` dispatchers.
-- `CrmOperation.ProcessMailbox` — cursored (tagged); scaffolds a Profile per new contact. Overlaps
-  `ExtractCorrespondents` in purpose and competes with it from a separate toolbar entry.
-- plugin-projects `UpdateProjectTasks`, `UpdateTravelLog`, `UpdateInvestorLog` — whole-feed
-  filter-and-regenerate, no cursor.
+The sync half's internal stages, for contrast — these are `@dxos/pipeline` `Stage`s, not processors:
+`decode` → dedup → cap → `reconcile` → `collect-stats` → commit, all inside a single `GoogleMailSync`
+or `JmapSync` run.
 
 Per-message one-shots (`ExtractMessage`, `CreateProjectFromMessage`, `UnsubscribeSender`,
 `GenerateReply`, …) and the `ResetFeedCursor` utility are not pipelines and are excluded.
 
-### Three cursor strategies where there should be one
+### Two cursor strategies where there should be one
 
-Tagged cursor (2), untagged cursor (1), no cursor (7). The mechanism to do this uniformly already
-exists — `findOrCreateFeedCursor(mailbox, id)` in `operations/cursor.ts` — with exactly one adopter.
+Tagged cursor (3: `classify`, `analyze`, CRM's `ProcessMailbox`), no cursor (7). The untagged case is
+gone; the shared mechanism is `findOrCreateFeedCursor(mailbox, id)` in `operations/cursor.ts`.
 
-`AnalyzeMailbox` used to be the fragile case: it found its cursor by looking for the one with **zero
-meta keys**, because a foreign-key tag marks another consumer's cursor. "Untagged" is not an identity,
-it is the absence of one — so any future consumer that forgot to tag its cursor got silently adopted,
-and analysis resumed from that consumer's watermark, skipping everything below it. FIXED: it now
-carries `ANALYZE_CURSOR_KEY_ID`, and a legacy untagged cursor is adopted in place so existing
-mailboxes keep their position. Six consumers still keep no cursor at all.
+`AnalyzeMailbox` was the fragile one: it found its cursor by looking for the one with **zero meta
+keys**, because a foreign-key tag marks another consumer's cursor. "Untagged" is not an identity, it is
+the absence of one — so any future consumer that forgot to tag its cursor got silently adopted, and
+analysis resumed from that consumer's watermark, skipping everything below it. FIXED: it carries
+`ANALYZE_CURSOR_KEY_ID`, and a legacy untagged cursor is adopted **in place** so existing mailboxes
+keep their position rather than re-analyzing the whole feed at one model call per message.
+
+Seven consumers still keep no cursor at all. Since a processor id is now also its cursor tag, giving
+those a cursor is mechanical rather than a design question — but each needs its own judgement about
+whether feed position or derived-state replacement is the right idempotency story.
 
 ## Decisions
 
@@ -94,22 +118,42 @@ Kafka Streams already has exactly this vocabulary, and the DAG decision (D3) mak
 
 ### D3 — Ordering is a DAG, declared per processor
 
-Each processor declares `after: [processorId]`. The harness topologically sorts, so ordering is data
-rather than the hardcoded `MAILBOX_TIER_ORDER` literal. This is the general form, and it is the one
-that can be **surfaced to the user for reordering via tooling** — the reason it was chosen over cost
-tiers or numeric priority.
+BUILT. Each processor declares `after: [processorId]`; the harness topologically sorts, so ordering is
+data rather than the `MAILBOX_TIER_ORDER` literal that used to encode it (now deleted). This is the
+general form, and the one that can be **surfaced to the user for reordering via tooling** — the reason
+it was chosen over cost tiers or numeric priority.
 
-The existing cost tiers do not disappear; they become the default edges. The cascade's real contract
-is "each tier's output gates the next" (classification consults the Person objects the contact pass
-creates, so a known sender is never billed to the model), and that contract is expressible as
-dependency edges without loss.
+The cost tiers did not disappear, but they came out differently than sketched: a tier is a **filter**
+(`tiers` selects which processors run) and a report label, while the edges are declared explicitly per
+processor. The cascade's real contract — classification consults the Person objects the contacts pass
+creates, so a known sender is never billed to the model — is carried by `after: ['contacts']` rather
+than by tier order.
+
+`operations/topology.ts` is pure and ECHO-free, with three rules all chosen so one bad contributor
+cannot break everyone else's run — the same principle as treating an unprovided service as a skip:
+
+- **Unknown `after` ids are ignored** — naming a processor whose plugin is not installed is the normal
+  case for an optional dependency, not an error.
+- **Duplicate ids keep the first contribution**, excluding later ones: ids are cursor tags, so two
+  processors sharing one would share a watermark and silently skip each other's work.
+- **A cycle excludes only the nodes it blocks**, and every member names the whole cycle, since a cycle
+  has no single culprit.
+
+Ties resolve to contribution order — a topology that reshuffled between runs would make cursor
+behaviour irreproducible.
+
+**Implementation note worth keeping.** `ScanMailbox` declares `Capability.Service`, which the operation
+runtime does provide (`process-manager-capability.ts` wires it explicitly for operations that declare
+it, including the routine and trigger paths). But it is resolved through the `ServiceResolver`, NOT the
+caller's Effect context — so a test cannot supply it with `Effect.provideService` and must go through
+`AssistantTestLayer`'s `extraServices`.
 
 ### D4 — Failure policy follows from the DAG
 
-A failed processor fails its **descendants** in the DAG; independent branches continue. This replaces
-today's all-or-nothing `continueOnError`, which aborts everything downstream in list order regardless
-of whether it actually consumed the failed processor's output. Deferred until the DAG lands — the
-edges are what make it computable.
+NOT BUILT — the DAG has landed, so this is now buildable, but `continueOnError` still aborts in list
+order. Intended: a failed processor fails its **descendants**; independent branches continue. Today a
+failing `classify` also strands `subscriptions` if it happens to sit behind it in the run, even though
+nothing connects them.
 
 ### D5 — `AnalyzeMailbox` moves to plugin-brain
 
@@ -133,30 +177,32 @@ Nothing in it is mail-specific. The second instance already exists (plugin-proje
 pipelines) and transcription is a third, so the generic shape is designed now and mailbox is the first
 adopter rather than a retrofit.
 
-## Open defect this design absorbs
+## Defect this design absorbed (FIXED)
 
-**A missing `FactStore` fails the cascade instead of skipping the processor.** `AnalyzeMailbox`
+**A missing `FactStore` failed the cascade instead of skipping the processor.** `AnalyzeMailbox`
 declares `services: [AiService, Database.Service, FactStore, Trace.TraceService]`, resolved eagerly by
-the process invoker at spawn time. plugin-brain is the only plugin contributing a `FactStore` layer,
-so with brain disabled the tier dies with a `ServiceNotAvailableError` naming the tag — structurally
-the same unmet precondition that `ai-gate.ts` absorbs for `AiService`. But `isAiUnavailableCause`
-matches only `AiService.AiService.key` and `AiModelNotAvailableError`, so the stage is classified
-`failed`, and with `continueOnError` defaulting to false one absent layer aborts the whole run.
+the process invoker at spawn time. plugin-brain is the only plugin contributing a `FactStore` layer, so
+with brain disabled the tier died with a `ServiceNotAvailableError` naming the tag — structurally the
+same unmet precondition `ai-gate.ts` absorbs for `AiService`. But `isAiUnavailableCause` matched only
+`AiService.AiService.key` and `AiModelNotAvailableError`, so the stage was classified `failed`, and
+with `continueOnError` off one absent layer aborted the whole run.
 
-The suite documents this by dodging it — `scan-mailbox.test.ts:166` excludes `analyze` with "it needs
+The suite had documented this by dodging it — `scan-mailbox.test.ts` excluded `analyze` with "it needs
 a FactStore this layer does not provide, so it would fail".
 
-`FactStore` is the **only** service any mailbox pipeline requires beyond `AiService` / `Database` /
-`Trace`, so a per-processor "which tags are soft preconditions" mechanism would be machinery for a
-single case. Make it uniform instead: any `ServiceNotAvailableError` → `skipped` with the tag named.
-The soft set is not processor-specific; it is "whatever the host app did not contribute", and every
-tier already treats `AiService` that way.
+REPRODUCED before fixing, and the inference held exactly:
+`ServiceNotAvailable: Service not available: @dxos/pipeline-rdf/FactStore` → `completed: 2, failed: 1`.
 
-D5 removes the common case; the uniform gate remains as the safety net for a contributed processor
-whose own plugin fails to provide something it declared.
+`unmetPrecondition` in `operations/precondition.ts` is now uniform over the tag rather than per-stage:
+the soft set is not a property of a processor, it is whatever the deployment did not contribute, and
+`Database`/`Trace` cannot be missing since the cascade could not have spawned. The two AI flavours keep
+their own wording, because users experience "the assistant is not up" as one condition rather than a
+missing tag. Matched structurally with a message fallback, not by class — the error is flattened
+crossing the invocation boundary. The dodge is gone, and that test now exercises both precondition
+flavours in one run.
 
-**Not yet reproduced** — inferred from the service declaration, the classification branch, and that
-test comment. Write the failing test first.
+D5 will remove the common case entirely; the uniform gate stays as the safety net for a contributed
+processor whose own plugin fails to provide something it declared.
 
 ## Sequencing
 
@@ -165,6 +211,9 @@ test comment. Write the failing test first.
 2. ~~Tag `AnalyzeMailbox`'s cursor with an explicit id (plus a one-time migration for existing
    untagged cursors), removing the "untagged means mine" inference.~~ DONE.
 3. ~~`MailboxProcessor` capability + topology resolution in the harness; port the five built-ins.~~ DONE.
-4. Move `AnalyzeMailbox` to plugin-brain and `ProcessMailbox` to a contributed processor; drop
-   `@dxos/pipeline-rdf` from plugin-inbox.
-5. Generalize off `Mailbox` to a feed-generic processor host.
+4. **D4** — failure policy from the DAG edges, replacing list-order `continueOnError`.
+5. **D5** — move `AnalyzeMailbox` to plugin-brain and `ProcessMailbox` to a contributed processor;
+   retire brain's `Analyze` and crm's `Process CRM` menu items; drop `@dxos/pipeline-rdf` from
+   plugin-inbox.
+6. **D6** — generalize off `Mailbox` to a feed-generic processor host.
+7. Give the seven cursorless consumers a cursor, now that a processor id is also its cursor tag.
