@@ -5,11 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -68,6 +70,8 @@ const meta = {
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),
+        // Hosts the ProgressRegistry the Progress Monitor row registers into (and its meter reads).
+        ProgressPlugin(),
         ClientPlugin({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -91,3 +95,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+// The Progress Monitor row registers a synthetic monitor and renders its own meter — the R0 rail's
+// only appears inside a popover, so without this a working monitor looks like a broken one.
+export const Progress: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const start = await canvas.findByRole('button', { name: 'Start test progress' }, { timeout: 12_000 });
+    await userEvent.click(start);
+    await waitFor(() => expect(canvasElement.querySelector('[role="progressbar"]')).toBeTruthy(), { timeout: 5_000 });
+    // Cancel leaves the row back in its startable state, with no meter.
+    await userEvent.click(await canvas.findByRole('button', { name: 'Cancel test progress' }));
+    await waitFor(() => expect(canvasElement.querySelector('[role="progressbar"]')).toBeNull(), { timeout: 5_000 });
+  },
+};

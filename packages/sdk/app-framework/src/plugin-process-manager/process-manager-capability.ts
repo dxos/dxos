@@ -50,6 +50,37 @@ import { layerIdb } from './idb-key-value-store';
 //    (the plugin system manages its lifecycle).
 //
 
+/**
+ * Trace sink over the LIVE contribution list, resolved per write rather than snapshotted when the
+ * runtime is built. A LayerSpec must be snapshotted (it bakes into the runtime, and rebuilding would
+ * tear down live services), but a sink is a stateless observer that can join at any time — and
+ * plugin-progress contributes its progress adapter from an on-demand module with no activation event,
+ * so it lands after this one. Snapshotting dropped it silently: operations' `status.update` events
+ * reached the durable sink while every progress meter stayed empty, with no error anywhere.
+ *
+ * Instances are cached per factory, since a sink may hold state across writes (the progress adapter
+ * keeps a monitor map and cancel tombstones) and must not be rebuilt underneath itself.
+ */
+export const makeDynamicTraceSink = (
+  getFactories: () => readonly Capabilities.TraceSinkFactory[],
+  resolver: ServiceResolver.ServiceResolver,
+): Trace.Sink => {
+  const instances = new Map<Capabilities.TraceSinkFactory, Trace.Sink>();
+  const resolve = (): Trace.Sink[] =>
+    getFactories().map((factory) => {
+      const existing = instances.get(factory);
+      if (existing) {
+        return existing;
+      }
+      const sink = factory({ resolver });
+      instances.set(factory, sink);
+      return sink;
+    });
+
+  // `mergeSinks` per write, for its guarantee that one throwing sink cannot break the chain.
+  return { write: (message) => Trace.mergeSinks(resolve()).write(message) };
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
@@ -136,25 +167,7 @@ export default Capability.makeModule(
     // reactive view over contributions is complete at boot — no demand pull on a miss.
     const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
 
-    // Resolved per write, NOT snapshotted like the layer stack: a sink is stateless and joins the
-    // chain harmlessly at any time, whereas a LayerSpec bakes into the runtime. plugin-progress
-    // contributes its sink from an on-demand module with no activation event, so it lands after this
-    // module — a boot snapshot dropped it, and every operation's `status.update` reached the durable
-    // sink while the progress meters stayed empty (no monitor was ever registered).
-    // Instances are cached per factory so a sink holding state across writes (the progress adapter's
-    // monitor map, its cancel tombstones) is not rebuilt underneath itself.
-    const sinkInstances = new Map<Capabilities.TraceSinkFactory, Trace.Sink>();
-    const resolveTraceSinks = (): Trace.Sink[] =>
-      traceSinkContributions.get().map((factory) => {
-        const existing = sinkInstances.get(factory);
-        if (existing) {
-          return existing;
-        }
-        const sink = factory({ resolver: serviceResolver });
-        sinkInstances.set(factory, sink);
-        return sink;
-      });
-    const mergedTraceSink: Trace.Sink = { write: (message) => Trace.mergeSinks(resolveTraceSinks()).write(message) };
+    const mergedTraceSink = makeDynamicTraceSink(() => traceSinkContributions.get(), serviceResolver);
 
     // Base services required by ProcessManager and the operation invoker.
     // Sensible defaults are provided here; plugins that want alternative

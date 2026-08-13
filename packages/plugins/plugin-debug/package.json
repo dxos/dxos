@@ -166,6 +166,7 @@
   },
   "devDependencies": {
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-progress": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

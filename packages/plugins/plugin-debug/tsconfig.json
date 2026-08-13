@@ -136,6 +136,9 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-progress"
+    },
+    {
       "path": "../plugin-sheet"
     },
     {

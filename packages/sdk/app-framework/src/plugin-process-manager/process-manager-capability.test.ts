@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -15,6 +16,7 @@ import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { ActivationEvent, Capability, Plugin, PluginManager } from '../core';
+import { makeDynamicTraceSink } from './process-manager-capability';
 import { ProcessManagerPlugin } from './ProcessManagerPlugin';
 
 const LateEvent = ActivationEvent.make('org.dxos.test.lateLayerSpec');
@@ -87,72 +89,56 @@ describe('process manager LayerSpec snapshot', () => {
       removeProcessor();
     }),
   );
+});
 
-  /**
-   * Unlike a LayerSpec, a trace sink must NOT be snapshotted: sinks are stateless observers, and
-   * plugin-progress contributes its one from an on-demand module that lands after this one. When the
-   * merged sink was a boot snapshot, every operation's `status.update` reached the durable sink while
-   * the progress meters stayed permanently empty — a silent failure with no error to follow.
-   */
-  it.effect('delivers to a TraceSink contributed after the runtime was built', () =>
-    Effect.gen(function* () {
-      const written: string[] = [];
-      const Late = Plugin.make(
-        Plugin.define(lateSinkMeta).pipe(
-          Plugin.addModule({
-            id: 'late-trace-sink',
-            activatesOn: LateSinkEvent,
-            provides: [Capabilities.TraceSink],
-            activate: () =>
-              Effect.succeed([
-                Capability.contribute(Capabilities.TraceSink, () => ({
-                  write: (message) => written.push(...message.events.map((event) => event.type)),
-                })),
-              ]),
-          }),
-        ),
-      );
+describe('dynamic trace sink', () => {
+  const message = Obj.make(Trace.Message, {
+    meta: { runtimeName: Trace.CommonRuntimeName.local },
+    isEphemeral: true,
+    events: [{ type: 'status.update', timestamp: 0, data: { progress: { key: 'test#dynamic' } } }],
+  });
 
-      const manager = PluginManager.make({
-        pluginLoader: () => Effect.die(new Error('not implemented')),
-        plugins: [ProcessManagerPlugin(), Late()],
-        enabled: [lateSinkMeta.profile.key],
-      });
-      manager.capabilities.contribute({
-        interface: Capabilities.PluginManager,
-        implementation: manager,
-        module: 'org.dxos.app-framework.plugin-manager',
-      });
-      manager.capabilities.contribute({
-        interface: Capabilities.AtomRegistry,
-        implementation: manager.registry,
-        module: 'org.dxos.app-framework.atom-registry',
-      });
+  it('delivers to a sink contributed after the first write', ({ expect }) => {
+    const early: string[] = [];
+    const late: string[] = [];
+    const factories: Capabilities.TraceSinkFactory[] = [() => ({ write: () => early.push('early') })];
+    const sink = makeDynamicTraceSink(() => factories, ServiceResolver.empty);
 
-      yield* manager.activate(ActivationEvents.Startup);
-      const runtime = manager.capabilities.get(Capabilities.ProcessManagerRuntime);
-      expect(runtime).toBeDefined();
+    sink.write(message);
+    expect([early.length, late.length]).toEqual([1, 0]);
 
-      // The sink joins only now — after the runtime (and its merged sink) was built.
-      yield* manager.activate(LateSinkEvent);
+    // plugin-progress's sink lands here — after the runtime was built. A snapshot would drop it, and
+    // every operation's progress would silently never reach the UI.
+    factories.push(() => ({ write: () => late.push('late') }));
+    sink.write(message);
+    expect([early.length, late.length]).toEqual([2, 1]);
+  });
 
-      // Write through the runtime's merged sink, which is what every process's trace service holds.
-      yield* Effect.promise(() =>
-        runtime.runPromise(
-          Effect.gen(function* () {
-            const merged = yield* Trace.TraceSink;
-            merged.write(
-              Obj.make(Trace.Message, {
-                meta: { runtimeName: Trace.CommonRuntimeName.local },
-                isEphemeral: true,
-                events: [{ type: 'status.update', timestamp: 0, data: { progress: { key: 'test#late' } } }],
-              }),
-            );
-          }),
-        ),
-      );
+  it('builds each sink once, so per-sink state survives across writes', ({ expect }) => {
+    let built = 0;
+    const factories: Capabilities.TraceSinkFactory[] = [
+      () => {
+        built += 1;
+        return { write: () => {} };
+      },
+    ];
+    const sink = makeDynamicTraceSink(() => factories, ServiceResolver.empty);
+    sink.write(message);
+    sink.write(message);
+    expect(built).toBe(1);
+  });
 
-      expect(written).toEqual(['status.update']);
-    }),
-  );
+  it('one throwing sink does not stop the next', ({ expect }) => {
+    const reached: string[] = [];
+    const factories: Capabilities.TraceSinkFactory[] = [
+      () => ({
+        write: () => {
+          throw new Error('sink failed');
+        },
+      }),
+      () => ({ write: () => reached.push('second') }),
+    ];
+    makeDynamicTraceSink(() => factories, ServiceResolver.empty).write(message);
+    expect(reached).toEqual(['second']);
+  });
 });

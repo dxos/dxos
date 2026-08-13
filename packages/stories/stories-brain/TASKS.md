@@ -62,7 +62,9 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       in `process-manager-capability.test.ts` fails without it. Verified live: the same run then wrote
       386 messages into the sink and registered `echo://…#subscriptions`. NOTE the sibling gotcha
       found en route: plugin-debug's "Start test progress" registers DIRECTLY on the registry, so it
-      always worked but is only visible in the R0 popover — never as a statusbar meter.
+      always worked but was only visible in the R0 popover — never as a meter in the panel itself.
+      `ProgressGenerator` now renders its own `ProgressMeter` while running, with a `Progress` play
+      test in `SpaceGenerator.stories.tsx` (start → meter appears, cancel → meter goes).
 - [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
 - [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
