@@ -34,6 +34,7 @@ import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmai
 import { meta } from '#meta';
 import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
+import { parseAddressList } from '../../operations/correspondents/correspondence';
 import { createDraftMessage, formatAge, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
 import { MarkdownViewer } from '../MarkdownViewer';
@@ -488,7 +489,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     return null;
   }
 
-  const { from, to, date, snippet, subject } = getMessageProps(target);
+  const { from, date, snippet, subject } = getMessageProps(target);
   const sender = from ?? target.sender?.email ?? '';
   // Derived by the summarization pipeline; absent for most messages, which is the normal case —
   // collapsed tiles fall back to the provider's snippet rather than showing an empty affordance.
@@ -526,10 +527,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
             {sender}
           </h2>
           {isExpanded ? (
-            <>
-              {subject && <div className='font-medium line-clamp-2'>{subject}</div>}
-              {to && <div className='text-sm text-description'>{to}</div>}
-            </>
+            <>{subject && <div className='font-medium line-clamp-2'>{subject}</div>}</>
           ) : (
             <div className='text-sm text-description line-clamp-1' data-testid={summary && 'message.summary'}>
               {summary ?? snippet}
@@ -655,13 +653,27 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   // Extracted objects — trips, people, etc.
   const objects = useMessageExtractedObjects(db, mailbox, message);
 
+  const recipients = useMemo(
+    () => parseAddressList(message.properties?.to).map(({ email }) => email),
+    [message.properties?.to],
+  );
+
   // `subgrid` so the card adopts the tile's columns: row icons land in the avatar column and row
   // content aligns with the sender/subject/body, rather than the card defining its own gutters.
   return (
     <Card.Root subgrid classNames='bg-transparent' border={false} data-testid='message-header'>
       <Card.Body>
-        {/* TODO(burdon): List other To/CC/BCC (Message schema only models `sender` today). */}
-        {/* <Row.Person actor={message.sender} role='from' db={db} onContactCreate={onContactCreate} /> */}
+        {/* TODO(burdon): List CC/BCC too (Message schema only models `sender` today). */}
+        {/* Recipients, reduced to bare addresses — the display name in the raw header duplicates the
+            tile's own heading, so `"NAME" <addr>` would just repeat it. */}
+        {recipients.length > 0 && (
+          <Card.Row>
+            <Card.Block>
+              <Icon icon='ph--user--regular' />
+            </Card.Block>
+            <Card.Text classNames='text-sm text-description'>{recipients.join(', ')}</Card.Text>
+          </Card.Row>
+        )}
 
         {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
         {objects.map((object) => (
