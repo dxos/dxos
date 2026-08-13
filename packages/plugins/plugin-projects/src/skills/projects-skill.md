@@ -81,14 +81,12 @@ The URI forms, exactly:
 | `echo://<spaceId>/<objectId>` | the same object, qualified |
 | `echo://<spaceId>`            | a **space**, not an object |
 
-The three-slash local form is canonical for objects. Two slashes with a single segment
-(`echo://<objectId>`) is not an object reference at all — it parses as a _space id_, so a tool
-given it fails to decode its parameters rather than telling you the id was in the wrong shape.
+The three-slash local form is canonical for objects; write that one. What is never accepted is a
+bare id with no `echo:` scheme, which is the single most common way these calls fail.
 
 **Prefer echoing back what you were given.** Tool results carry refs already in envelope form —
 pass that value straight through instead of rebuilding it. Only construct an envelope when all
-you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + id}`. A raw
-`{"/": "<id>"}` is the single most common way these calls fail.
+you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + id}`.
 
 ## The shape of a project
 
