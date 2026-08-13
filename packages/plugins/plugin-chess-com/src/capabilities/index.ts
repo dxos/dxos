@@ -14,3 +14,4 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.section'],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));

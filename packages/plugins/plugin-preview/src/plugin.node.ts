@@ -3,13 +3,10 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { Schema } from '#capabilities';
 import { meta } from '#meta';
 
-export const PreviewPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
-  Plugin.make,
-);
+export const PreviewPlugin = Plugin.define(meta).pipe(Plugin.addModule(Schema), Plugin.make);
 
 export default PreviewPlugin;

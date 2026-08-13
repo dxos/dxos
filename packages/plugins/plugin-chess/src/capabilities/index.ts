@@ -8,6 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 import * as GameEvents from '@dxos/plugin-game/GameEvents';
 
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const GameVariant = Capability.lazyModule(
   'GameVariant',

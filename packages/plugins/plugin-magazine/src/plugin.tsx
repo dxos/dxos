@@ -11,6 +11,7 @@ import {
   OperationHandler,
   ReactSurface,
   RoutineTemplates,
+  Schema,
   SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -31,7 +32,7 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

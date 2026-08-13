@@ -13,6 +13,7 @@ import {
   Markdown,
   OperationHandler,
   ReactSurface,
+  Schema,
   Settings,
   SkillDefinition,
 } from '#capabilities';
@@ -26,7 +27,7 @@ export const FilePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(Settings),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

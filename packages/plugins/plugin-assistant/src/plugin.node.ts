@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AgentHydrator,
@@ -15,6 +14,7 @@ import {
   EdgeModelResolver,
   LocalModelResolver,
   OperationHandler,
+  Schema,
   SkillDefinition,
   Toolkit,
 } from '#capabilities';
@@ -27,7 +27,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     Plugin.addModule(SkillDefinition),
     Plugin.addModule(CreateObject),
     Plugin.addModule(OperationHandler),
-    Plugin.addModule(AppCapability.schema(() => import('./schema-defs'))),
+    Plugin.addModule(Schema),
     Plugin.addModule(EdgeModelResolver),
     Plugin.addModule(LocalModelResolver),
     Plugin.addModule(AiService),
