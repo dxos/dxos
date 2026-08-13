@@ -72,14 +72,16 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       drop the `process` toolbar entry from `app-graph-builder.ts` (keep or delete the operation +
       `ResetProcessCursor` + routine template as a follow-on decision), and make sure the statusbar
       still reads `#enrich`.
-- [ ] **`AiModelNotAvailableError` breaks the classify tier when the assistant is not up** — the
-      resolver for `com.anthropic.model.claude-haiku-4-5.default` comes from plugin-assistant's
-      `edge-model-resolver` (activates on `AssistantEvents.Start`, needs an Anthropic client), so a
-      cascade run before that lands fails the tier outright and skips summarize. plugin-inbox already
-      has `operations/extractor/ai-gate.ts#isAiServiceUnavailable` for this case in the extractor
-      path — the cascade should use it: report the tier as SKIPPED with an "assistant not ready"
-      status rather than FAILED, and ideally disable the AI tiers in the toolbar until a resolver
-      exists.
+- [x] **AI-unavailability is a skip, not a cascade failure** — `EnrichMailbox` now recognises both
+      flavours ("no `AiService` in the stack" and "no resolver serves this model", the app's actual
+      case) via `ai-gate.ts#isAiUnavailableCause` and reports that tier as SKIPPED with
+      `ai unavailable (assistant not ready)`, continuing rather than blaming every later tier on it.
+      `SummarizeMailbox` no longer swallows an unavailable model either: per-message generation
+      failures are still skipped, but an unavailable model propagates, since it fails identically for
+      every message and used to report a successful run that summarized nothing. Corrected a WRONG
+      comment in the old tests while doing it: `AssistantTestLayer` DOES provide an `AiService` — the
+      classify tier fails there on a 401, not on a missing service, which is why the genuine-failure
+      test still holds. `analyze` cannot be exercised in that layer at all (no `FactStore`).
 - [ ] **Mailbox article often shows only one page of messages** (regression, ~2026-08-05) — the
       list stops after the first page instead of paging on scroll; `usePagination` in
       `MailboxArticle.tsx` is the suspect. Bisect against the week's commits to that file and the

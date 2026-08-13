@@ -20,6 +20,7 @@ import { trim } from '@dxos/util';
 
 import * as InboxOperation from '../../types/InboxOperation';
 import * as Mailbox from '../../types/Mailbox';
+import { isAiUnavailableCause } from '../extractor/ai-gate';
 import { withMailboxLock } from '../mailbox-lock';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
@@ -128,15 +129,19 @@ const summarize = Effect.fnUntraced(function* (
       Effect.map((response) => response.text.trim()),
       Effect.provide(modelLayer),
       // A summary is advisory: one failed generation skips its message rather than failing the
-      // run and stranding the summaries already appended.
+      // run and stranding the summaries already appended. An UNAVAILABLE model is different — it
+      // fails identically for every message, so swallowing it would report a successful run that
+      // summarized nothing. Let it through for the caller (the cascade) to report as a skip.
       Effect.catchAllCause((cause) =>
-        Effect.sync(() => {
-          log.warn('summarize: generation failed', {
-            message: message.id,
-            cause: Cause.pretty(cause).slice(0, 200),
-          });
-          return '';
-        }),
+        isAiUnavailableCause(cause)
+          ? Effect.failCause(cause)
+          : Effect.sync(() => {
+              log.warn('summarize: generation failed', {
+                message: message.id,
+                cause: Cause.pretty(cause).slice(0, 200),
+              });
+              return '';
+            }),
       ),
     );
     if (text.length > 0) {

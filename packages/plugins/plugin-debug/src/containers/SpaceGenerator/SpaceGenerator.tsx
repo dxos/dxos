@@ -28,7 +28,7 @@ import { meta } from '#meta';
 
 // TODO(burdon): Make extensible.
 const staticTypes = [Markdown.Document, Drawing.Drawing, Sheet.Sheet, ComputeGraph];
-const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
+const recordTypes = [Organization.Organization, Person.Person, Task.Task];
 
 const TOAST_DURATION = 5_000;
 
@@ -38,7 +38,7 @@ export type SpaceGeneratorProps = {
 };
 
 export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
-  ({ space, onCreateObjects, children, ...props }, forwardedRef) => {
+  ({ children, space, onCreateObjects, ...props }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const { t } = useTranslation(meta.profile.key);
     const client = useClient();
