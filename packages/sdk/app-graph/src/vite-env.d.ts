@@ -3,8 +3,8 @@
 //
 
 /**
- * Vite replaces `import.meta.env` at build time. Declared locally, rather than via `vite/client`, because
- * this package also runs outside a bundler (Node, workers) — hence the optional `env`.
+ * Declared locally rather than via `vite/client`, and with `env` optional, because this package also runs
+ * outside a bundler (Node, workers) where Vite never substitutes it.
  * @see https://vitejs.dev/guide/env-and-mode.html
  */
 interface ImportMetaEnv {

@@ -20,33 +20,6 @@ describe('Tooltip', () => {
     cleanup();
   });
 
-  // `delayDuration={0}` opens on pointer-move without waiting, so no timer control is needed.
-  const Harness = ({ onRender }: { onRender?: (label: string) => void }) => (
-    <Tooltip.Provider delayDuration={0} disableHoverableContent>
-      <CountingTrigger label='first' onRender={onRender} />
-      <CountingTrigger label='second' onRender={onRender} />
-    </Tooltip.Provider>
-  );
-
-  // The counter belongs on the child, not here: a context change re-renders the consumer rather than
-  // whoever rendered it, and `Slot` clones the child on each trigger render, as `IconButton` does.
-  const CountingTrigger = ({ label, onRender }: { label: string; onRender?: (label: string) => void }) => (
-    <Tooltip.Trigger asChild content={`${label} tip`}>
-      <CountingButton label={label} onRender={onRender} />
-    </Tooltip.Trigger>
-  );
-
-  const CountingButton = forwardRef<HTMLButtonElement, { label: string; onRender?: (label: string) => void }>(
-    ({ label, onRender, ...props }, forwardedRef) => {
-      onRender?.(label);
-      return (
-        <button {...props} ref={forwardedRef}>
-          {label}
-        </button>
-      );
-    },
-  );
-
   test('only the hovered trigger carries the open tooltip attributes', async ({ expect }) => {
     render(<Harness />, { wrapper: Wrapper });
     const [first, second] = screen.getAllByRole('button');
@@ -78,7 +51,25 @@ describe('Tooltip', () => {
     expect(first.getAttribute('aria-describedby')).toBeNull();
   });
 
-  test('hovering one trigger does not re-render the others', ({ expect }) => {
+  test('keeps a description the trigger already carries', async ({ expect }) => {
+    render(<Harness describedBy='own-description' />, { wrapper: Wrapper });
+    const [first] = screen.getAllByRole('button');
+    expect(first.getAttribute('aria-describedby')).toEqual('own-description');
+
+    fireEvent.pointerMove(first, { pointerType: 'mouse' });
+    await waitFor(() => expect(first.getAttribute('aria-describedby')).not.toEqual('own-description'));
+
+    const described = first.getAttribute('aria-describedby')!.split(/\s+/);
+    expect(described).toContain('own-description');
+    expect(described.length).toEqual(2);
+
+    // Closing restores what the trigger brought rather than clearing it.
+    fireEvent.pointerLeave(first);
+    fireEvent.pointerDown(first);
+    await waitFor(() => expect(first.getAttribute('aria-describedby')).toEqual('own-description'));
+  });
+
+  test('hovering one trigger does not re-render the others', async ({ expect }) => {
     const renders: string[] = [];
     render(<Harness onRender={(label) => renders.push(label)} />, { wrapper: Wrapper });
     const [first] = screen.getAllByRole('button');
@@ -90,9 +81,40 @@ describe('Tooltip', () => {
     renders.length = 0;
     fireEvent.pointerMove(first, { pointerType: 'mouse' });
 
+    // Waiting for the open state covers the second volatile update, not just the trigger change.
+    await waitFor(() => expect(first.getAttribute('data-state')).not.toEqual('closed'));
     // A trigger re-render drags whatever it wraps via `asChild` with it, so this must stay at zero.
     expect(renders).toEqual([]);
   });
 });
+
+type HarnessProps = { onRender?: (label: string) => void; describedBy?: string };
+
+// `delayDuration={0}` opens on pointer-move without waiting, so no timer control is needed.
+const Harness = ({ onRender, describedBy }: HarnessProps) => (
+  <Tooltip.Provider delayDuration={0} disableHoverableContent>
+    <CountingTrigger label='first' onRender={onRender} describedBy={describedBy} />
+    <CountingTrigger label='second' onRender={onRender} />
+  </Tooltip.Provider>
+);
+
+// The counter belongs on the child, not here: a context change re-renders the consumer rather than
+// whoever rendered it, and `Slot` clones the child on each trigger render, as `IconButton` does.
+const CountingTrigger = ({ label, onRender, describedBy }: { label: string } & HarnessProps) => (
+  <Tooltip.Trigger asChild content={`${label} tip`}>
+    <CountingButton label={label} onRender={onRender} describedBy={describedBy} />
+  </Tooltip.Trigger>
+);
+
+const CountingButton = forwardRef<HTMLButtonElement, { label: string } & HarnessProps>(
+  ({ label, onRender, describedBy, ...props }, forwardedRef) => {
+    onRender?.(label);
+    return (
+      <button {...props} {...(describedBy && { 'aria-describedby': describedBy })} ref={forwardedRef}>
+        {label}
+      </button>
+    );
+  },
+);
 
 const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider tx={defaultTx}>{children}</ThemeProvider>;

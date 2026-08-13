@@ -13,7 +13,7 @@ import * as Node from './node';
  * per connection key, and per extension, so one expansion costs hundreds of captures on the main thread —
  * hence opt-in, and only under the dev server.
  */
-const ATOM_LABELS = Boolean(import.meta.env?.DEV) && Boolean(import.meta.env?.VITE_ATOM_LABELS);
+const ATOM_LABELS = Boolean(import.meta.env?.DEV) && import.meta.env?.VITE_ATOM_LABELS === 'true';
 
 /** {@link Atom.withLabel}, reduced to a pass-through wherever labels are not collected. */
 export const withLabel: (name: string) => <A extends Atom.Atom<any>>(self: A) => A = ATOM_LABELS

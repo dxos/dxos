@@ -803,12 +803,12 @@ export function expandSync<T extends ExpandableGraph | WritableGraph>(
   relation?: Node.RelationInput,
 ): T | (<T extends ExpandableGraph | WritableGraph>(graph: T) => T) {
   if (typeof graphOrId === 'string') {
-    // Curried: expandSync(id, relation)
+    // Curried: expandSync(id, relation).
     const id = graphOrId;
     const rel = idOrRelation as Node.RelationInput;
     return <T extends ExpandableGraph | WritableGraph>(graph: T) => expandSyncImpl(graph, id, rel);
   } else {
-    // Direct: expandSync(graph, id, relation)
+    // Direct: expandSync(graph, id, relation).
     const graph = graphOrId;
     const id = idOrRelation as string;
     invariant(relation !== undefined, 'Relation is required.');

@@ -174,16 +174,22 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
       return;
     }
 
+    // A trigger may already be described by something of its own, so merge rather than replace.
+    const describedBy = trigger.getAttribute('aria-describedby');
     trigger.setAttribute('data-state', stateAttribute);
     if (open) {
-      trigger.setAttribute('aria-describedby', contentId);
-    } else {
-      trigger.removeAttribute('aria-describedby');
+      const ids = new Set(describedBy?.split(/\s+/).filter(Boolean));
+      ids.add(contentId);
+      trigger.setAttribute('aria-describedby', [...ids].join(' '));
     }
 
     return () => {
       trigger.setAttribute('data-state', 'closed');
-      trigger.removeAttribute('aria-describedby');
+      if (describedBy === null) {
+        trigger.removeAttribute('aria-describedby');
+      } else {
+        trigger.setAttribute('aria-describedby', describedBy);
+      }
     };
   }, [trigger, open, stateAttribute, contentId]);
 
