@@ -23,8 +23,10 @@ New model on `effect/Graph`; schema layer untouched.
       `toMermaid` id-translated pass-throughs; add as consumers need them.
 - [x] **Tests** — port `GraphModel.test.ts`; add granularity tests (untouched-node silence,
       subgraph equality cut, keepAlive persistence, mount-on-subscribe).
-- [ ] **Docs** — perf invariants (batch scopes; hot data outside the graph; indices never persist)
-      and the ECHO field-edit reactivity split, in package README.
+- [x] **Docs** — package README covers the layers, the batching/hot-data/index rules and the
+      backing-store contract (`change` mirror + `sync`).
+- [x] **Adjacency index** — endpoint-keyed edge index rebuilt once per version, behind
+      `outgoing`/`incoming`; `filterEdges` uses it when anchored on an endpoint.
 
 ## Phase 2: Pure consumers
 
@@ -53,13 +55,15 @@ New model on `effect/Graph`; schema layer untouched.
 - [ ] **Remote changes** — ECHO subscription → debounced rebuild; tests for peer edits.
 - [ ] **ComputeGraphModel** (conductor) — port incl. `createNode`/`createEdge`/subgraph refs.
 - [ ] **CanvasGraphModel** (canvas-editor) — port; decide hot-data (position) atom placement (O2).
-- [ ] **Semantics tests** — undo, concurrent edits, history-bloat check (no whole-array rewrites).
 
 ## Phase 4: Cleanup
 
-- [ ] **Retire** `AbstractGraphModel`/`AbstractBuilder`/array-scan model; no compat shims.
-- [ ] **SelectionModel decision** (O3) — keep, move, or split.
-- [ ] **Changeset** + final `pnpm format`, knip, full build/test sweep.
+- [x] **Retire legacy classes** — `ReadonlyGraphModel` and `ReactiveGraphModel` are gone, along
+      with the array-scan internals. `AbstractGraphModel`/`AbstractBuilder` stay as the real base
+      classes (subclassed by Compute/Canvas/SpaceGraphModel), not as shims.
+- [x] **SelectionModel decision** (O3) — keep in `@dxos/graph`. It is an independent reactive
+      selection set with no graph coupling; moving it is churn without a consumer asking for it.
+- [x] **Changeset** + `pnpm format`, knip (clean), build/lint/test sweep across every dependent.
 
 ## Phase 5: Generalize evaluation algorithms
 

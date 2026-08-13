@@ -74,6 +74,7 @@ export abstract class AbstractGraphModel<
 
   #graph: EffectGraph.MutableDirectedGraph<Slot<Node>, Edge>;
   #snapshot?: { version: number; graph: Graph.Graph<Node, Edge> };
+  #adjacencyCache?: { version: number; outgoing: Map<string, Edge[]>; incoming: Map<string, Edge[]> };
   #depth = 0;
   #dirty = false;
 
@@ -293,10 +294,28 @@ export abstract class AbstractGraphModel<
   }
 
   filterEdges({ type, source, target }: Partial<Graph.Edge.Any> = {}): Edge[] {
-    return this.edges.filter(
+    // Anchoring on an endpoint reads the adjacency index instead of scanning every edge.
+    const candidates = source ? this.outgoing(source) : target ? this.incoming(target) : this.edges;
+    return candidates.filter(
       (edge) =>
         (!type || type === edge.type) && (!source || source === edge.source) && (!target || target === edge.target),
     );
+  }
+
+  /**
+   * Edges leaving the node, in insertion order.
+   */
+  outgoing(id: string, type?: string): Edge[] {
+    const edges = this.#adjacency().outgoing.get(id) ?? [];
+    return type ? edges.filter((edge) => edge.type === type) : edges;
+  }
+
+  /**
+   * Edges entering the node, in insertion order.
+   */
+  incoming(id: string, type?: string): Edge[] {
+    const edges = this.#adjacency().incoming.get(id) ?? [];
+    return type ? edges.filter((edge) => edge.type === type) : edges;
   }
 
   addEdge(edge: MakeOptional<Edge, 'id'>): Edge {
@@ -544,6 +563,30 @@ export abstract class AbstractGraphModel<
   //
   // Internal
   //
+
+  /**
+   * Endpoint-keyed edge index, rebuilt once per version — per-edge scans of the whole graph
+   * dominate otherwise, once many views are mounted.
+   */
+  #adjacency(): { outgoing: Map<string, Edge[]>; incoming: Map<string, Edge[]> } {
+    const version = this.#registry.get(this.#version);
+    if (this.#adjacencyCache?.version !== version) {
+      const outgoing = new Map<string, Edge[]>();
+      const incoming = new Map<string, Edge[]>();
+      for (const edge of this.edges) {
+        const from = outgoing.get(edge.source) ?? [];
+        from.push(edge);
+        outgoing.set(edge.source, from);
+        const to = incoming.get(edge.target) ?? [];
+        to.push(edge);
+        incoming.set(edge.target, to);
+      }
+
+      this.#adjacencyCache = { version, outgoing, incoming };
+    }
+
+    return this.#adjacencyCache;
+  }
 
   #encode(): Graph.Graph<Node, Edge> {
     const nodes: Node[] = [];
