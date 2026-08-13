@@ -39,9 +39,9 @@ spaceId: <id>
 This is a hard gate, not a suggestion: no partial writes, no fallback space. A project system
 split across spaces is worse than an agent that refuses and asks the user to fix the binding.
 
-### `/project setup` — binding this repo to a space
+### `/codeProject setup` — binding this repo to a space
 
-An unbound repo is a setup prompt, not a dead end. Run this on `/project setup`, and offer it
+An unbound repo is a setup prompt, not a dead end. Run this on `/codeProject setup`, and offer it
 whenever the binding is missing and the user wants project work. The space is the user's choice,
 so it is always a question — never an inference.
 
@@ -57,7 +57,7 @@ so it is always a question — never an inference.
      3. Scratch
    ```
 
-   `/project setup <name-or-id>` skips the question when the argument unambiguously names one
+   `/codeProject setup <name-or-id>` skips the question when the argument unambiguously names one
    space; anything ambiguous falls back to the list.
 
 3. Bind only on an explicit pick. Never infer from a name resembling the repo, and **"only one
@@ -124,7 +124,7 @@ taskSet: {"/": "echo:///<task-set-id>"} } }`. If the bootstrap fails, say so —
 - Work spans **3+ distinct steps**, multiple files, or phases.
 - The work will likely outlive one session (you'll resume it later).
 - The user asks for a plan, roadmap, or to track progress.
-- The user uses **`/project track <text>`** — always record it as a task.
+- The user uses **`/codeProject track <text>`** — always record it as a task.
 - You are resuming work — call `projectGet` + `taskList` first to reload state.
 
 **When NOT to use:**
@@ -135,21 +135,21 @@ taskSet: {"/": "echo:///<task-set-id>"} } }`. If the bootstrap fails, say so —
 
 ## Verbs
 
-- **`/project setup [space]`** — bind this repo to a space; see "`/project setup`" above. The one
+- **`/codeProject setup [space]`** — bind this repo to a space; see "`/codeProject setup`" above. The one
   verb that works without a binding — every other verb requires one.
-- **`/project` (bare)** — `projectList` (spaceId from the binding). Summarize: name, status,
+- **`/codeProject` (bare)** — `projectList` (spaceId from the binding). Summarize: name, status,
   open/total task counts. If more than one project is `active`, list them numbered and ask
   which, rather than guessing.
-- **`/project new <name>`** — `projectCreate { name, spaceId }`, then
+- **`/codeProject new <name>`** — `projectCreate { name, spaceId }`, then
   `projectUpdate { project: {"/": "echo:///<id>"}, status: 'active', description: '<one-line summary>',
 spaceId }`. Report the new project id.
-- **`/project tasks`** — `taskList { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }` for
+- **`/codeProject tasks`** — `taskList { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }` for
   the active project; render phases (parent tasks) with their sub-tasks and statuses.
-- **`/project track <text>`** — `taskCreate` on the active project's task set (`taskSet` ref
+- **`/codeProject track <text>`** — `taskCreate` on the active project's task set (`taskSet` ref
   from `projectGet`; bootstrap one first if missing — see "The shape of a project"). If the text
   names a phase, create it under that phase's parent task; otherwise ask which phase if the
   project has several — never guess silently.
-- **`/project hydrate`** — checkpoint before stopping or handing off:
+- **`/codeProject hydrate`** — checkpoint before stopping or handing off:
   1. Reconcile task statuses: `taskUpdate`/`taskComplete` every task whose real state has
      moved; leave a short `description` note on anything left `in-progress` (what's blocked,
      what's next).
@@ -159,10 +159,10 @@ spaceId }`. Report the new project id.
   4. Push durable _why_ (decisions, findings) into the design document, not the outline — the
      outline is scratch, the document is the record.
   5. Confirm the checkpoint in one short block (done / in-progress / next).
-- **`/project end`** — close out a work-stream: run the hydrate checkpoint first, then
+- **`/codeProject end`** — close out a work-stream: run the hydrate checkpoint first, then
   `projectUpdate { project: {"/": "echo:///<id>"}, status: 'ended', spaceId }`. Ended projects stay
   queryable; nothing is deleted.
-- **`/project resume`** — reload at the start of a session:
+- **`/codeProject resume`** — reload at the start of a session:
   1. `projectList { spaceId }` to discover projects. If one was named, match it; otherwise pick
      the single `active` project, or ask which when several are `active` — never guess.
   2. `projectGet { project: {"/": "echo:///<id>"}, spaceId }`, then

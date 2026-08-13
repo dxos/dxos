@@ -2,29 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { OperationHandler, Schema } from '#capabilities';
 import { meta } from '#meta';
 
-// TODO(burdon): Proper fix is a `workerd` condition on `#capabilities` (a `capabilities/workerd.ts`
-// barrel, as plugin-assistant and plugin-magazine already have) rather than reaching past the
-// barrel into individual capability modules from here. That keeps the barrel the single place
-// capabilities are declared; this file should go back to importing from `#capabilities`.
-// Headless variant registered by workers (e.g. the edge operation-service): operations and schema
-// only. The capability modules are imported directly rather than through `#capabilities` — that
-// barrel declares `ReactSurface` and re-exports the connector coordinator, and a bundler follows
-// the dynamic import behind a lazy capability, so touching the barrel drags the React surface (and
-// `.pcss` assets a worker bundle cannot load) into the graph.
-const OperationHandler = AppCapability.operationHandler(() => import('./capabilities/operation-handler'), {
-  activatesOn: ActivationEvents.Idle,
-});
-const Schema = AppCapability.schema(() => import('./capabilities/schema'));
-
+// Headless variant registered by workers (e.g. the edge operation-service). The capabilities come
+// from `#capabilities`, which resolves a server-safe barrel under the `workerd` condition — the
+// browser barrel declares React surfaces, and a bundler follows the dynamic import behind a lazy
+// capability, so resolving it here would drag React into a bundle that cannot load it.
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(Schema),
+
   Plugin.make,
 );
 
