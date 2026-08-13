@@ -32,6 +32,7 @@ import {
   getAllMailId,
   getCalendarsPath,
   getDraftsId,
+  getImportantId,
   getInboxId,
   getMailboxDraftsPath,
   getMailboxesPath,
@@ -163,6 +164,18 @@ export default Capability.makeModule(
                       iconHue: 'rose',
                       filter: '#starred',
                       systemTag: 'starred' satisfies SystemTags.SystemTagId,
+                    },
+                  }),
+                  Node.make({
+                    id: getImportantId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['important.label', { ns: meta.profile.key }],
+                      icon: 'ph--bookmark-simple--regular',
+                      iconHue: 'rose',
+                      filter: '#important',
+                      systemTag: 'important' satisfies SystemTags.SystemTagId,
                     },
                   }),
                   Node.make({

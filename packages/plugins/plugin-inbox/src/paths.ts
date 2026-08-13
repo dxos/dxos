@@ -16,6 +16,7 @@ const Segments = {
   mailboxes: 'mailboxes',
   inbox: 'inbox',
   starred: 'starred',
+  important: 'important',
   allMail: 'all-mail',
   sent: 'sent',
   drafts: 'drafts',
@@ -38,6 +39,9 @@ export const getInboxId = (): string => Segments.inbox;
 
 /** Canonical segment ID for the "Starred" child node. */
 export const getStarredId = (): string => Segments.starred;
+
+/** Canonical segment ID for the "Important" child node. */
+export const getImportantId = (): string => Segments.important;
 
 /** Canonical segment ID for the "All Mail" (unfiltered) child node. */
 export const getAllMailId = (): string => Segments.allMail;
