@@ -186,7 +186,7 @@ Committed, unpushed. This is the PR to open first.
       rule to look at before the row gap.
 - [ ] **Messages without `threadId` never render** in the mailbox conversation view — invisible
       messages are effectively data loss in that view.
-- [x] **Open an attachment in its own plank** — `Row.Attachments` is presentational today; needs a click
+- [ ] **Open an attachment in its own plank** — PARTIAL, NOT reachable in the app (reported 2026-08-13) — `Row.Attachments` is presentational today; needs a click
       handler, the attachment ref resolved to its Blob/object DXN, and a surface for that type.
 - [ ] **Mailbox card: rows showing the inbox message count** — read `inbox`-tag membership from the tag
       index (a reactive atom), never a feed scan. Settle which counts earn a row.
