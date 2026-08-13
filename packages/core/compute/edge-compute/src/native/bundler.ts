@@ -161,7 +161,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
       Array.filter((_) => !!filesInOutput.find(([name]) => name === _.path)),
       Array.map((_) => _.original!),
       Array.dedupe,
-      Array.sort(Order.string),
+      Array.sort(Order.String),
     );
     console.log(`Modules in output:\n${moduleInOutput.map((_) => ` - ${_}`).join('\n')}`);
   }

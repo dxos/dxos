@@ -40,7 +40,7 @@ export default Capability.makeModule(
     type Tracker = {
       unsubscribe: () => void;
       lastDisabled?: boolean;
-      inFlight?: Fiber.RuntimeFiber<unknown, unknown>;
+      inFlight?: Fiber.Fiber<unknown, unknown>;
     };
     const trackers = new Map<SpaceId, Tracker>();
 
@@ -57,7 +57,7 @@ export default Capability.makeModule(
           yield* disabled ? dispatcher.stop() : dispatcher.start();
         }).pipe(
           Effect.provide(ServiceResolver.provide({ space: spaceId }, TriggerDispatcher)),
-          Effect.tapErrorCause((cause) =>
+          Effect.tapCause((cause) =>
             Effect.sync(() => log.warn('trigger dispatcher transition failed', { spaceId, disabled, cause })),
           ),
         ),

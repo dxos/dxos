@@ -12,8 +12,8 @@ import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { Book } from '#types';
 
-import * as Book from '../../types/Book';
 import { EpubReader, type EpubReaderHandle, type ReaderLocation } from './EpubReader';
 
 const ACCEPT = '.pdf,.epub,application/pdf,application/epub+zip';
@@ -110,7 +110,7 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
       return { url: URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type })), type, revoke: true };
     }).pipe(
       Effect.provide(Database.layer(db)),
-      Effect.catchAll(() => Effect.succeed(undefined)),
+      Effect.catch(() => Effect.succeed(undefined)),
     );
     void EffectEx.runPromise(program).then((next) => {
       if (cancelled) {

@@ -4,7 +4,8 @@
 
 import { Compartment } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { type Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';

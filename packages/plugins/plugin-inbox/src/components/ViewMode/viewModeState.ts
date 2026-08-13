@@ -16,6 +16,6 @@ import { VIEW_MODES, type ViewMode } from './viewMode';
 export const messageViewModeAspect: ViewState.Aspect<ViewMode> = ViewState.define<ViewMode>({
   key: 'inbox-message-view-mode',
   backend: 'local',
-  schema: Schema.Literal(...VIEW_MODES),
+  schema: Schema.Literals(VIEW_MODES),
   defaultValue: () => 'html',
 });

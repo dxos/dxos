@@ -19,8 +19,10 @@ import { isBun } from '@dxos/util';
 export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFoundError, ClientService> =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    return yield* Option.fromNullable(client.spaces.get(spaceId));
-  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(spaceId))));
+    // v4 no longer yields an `Option` as an `Effect`, so the miss fails directly.
+    const space = client.spaces.get(spaceId);
+    return space ?? (yield* Effect.fail(new SpaceNotFoundError(spaceId)));
+  });
 
 export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
@@ -51,13 +53,13 @@ export const spaceLayer = (
     // is a "Space not found" throw deep inside CredentialsService.
     const resolveSpace = () => {
       if (!fallbackToPersonalSpace) {
-        return spaceId$.pipe(Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))));
+        return spaceId$.pipe(Option.flatMap((id) => Option.fromNullishOr(client.spaces.get(id))));
       }
       return spaceId$.pipe(
-        Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-        Option.orElse(() => Option.fromNullable(AppSpace.getDefaultSpace(client))),
+        Option.flatMap((id) => Option.fromNullishOr(client.spaces.get(id))),
+        Option.orElse(() => Option.fromNullishOr(AppSpace.getDefaultSpace(client))),
         // Not the raw first space: the settings space is created first and holds app config only.
-        Option.orElse(() => Option.fromNullable(client.spaces.get().find(AppSpace.isVisibleSpace))),
+        Option.orElse(() => Option.fromNullishOr(client.spaces.get().find(AppSpace.isVisibleSpace))),
       );
     };
 
@@ -79,7 +81,7 @@ export const spaceLayer = (
       throw new Error('Space not found');
     },
   };
-  const db = Layer.scoped(
+  const db = Layer.effect(
     Database.Service,
     Effect.acquireRelease(
       Effect.gen(function* () {

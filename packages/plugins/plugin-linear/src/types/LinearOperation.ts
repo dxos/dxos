@@ -8,11 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 // Referenced only from a JSDoc {@link}, which the rule cannot see; the suppression rode the
 // pre-subpath barrel import too.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import type * as Connection from '@dxos/plugin-connector/Connection';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
@@ -59,7 +58,7 @@ export const MaterializeLinearTarget = Operation.make({
  * `Issue.updatedAt`. Default — when unset — is "sync everything in the team."
  */
 export const SyncOptions = Schema.Struct({
-  maxDaysBack: Schema.Number.annotations({
+  maxDaysBack: Schema.Number.annotate({
     title: 'Sync history (days)',
     description: 'Pull issues updated within this many days. Leave empty to sync everything.',
   }).pipe(Schema.optional),

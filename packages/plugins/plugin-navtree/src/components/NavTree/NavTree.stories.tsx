@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useEffect, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
@@ -16,7 +17,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { Focus, IconButton, Input, Main, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -24,10 +26,9 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
+import { NavTreePlugin } from '#plugin';
 import { storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
-
-import { NavTreePlugin } from '../../NavTreePlugin';
 
 random.seed(1234);
 
@@ -143,7 +144,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({
+        StorybookPlugin.make({
           initialState: { sidebarState: 'expanded' },
         }),
 
@@ -159,7 +160,7 @@ const meta = {
             OperationHandlerSet.make(
               Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
                 Effect.gen(function* () {
-                  const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
+                  const registry: Registry.AtomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
                   registry.set(storyStateAtom, { tab: subject });
                 }),
               ),

@@ -26,8 +26,8 @@ import {
   SpaceHomePrompt,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
+import { ChatSurface } from '#types';
 
-import * as ChatSurface from '../types/ChatSurface';
 import {
   AssistantSettingsSurface,
   InvocationsSurface,

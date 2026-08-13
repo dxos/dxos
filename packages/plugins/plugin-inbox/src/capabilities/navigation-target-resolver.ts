@@ -11,9 +11,9 @@ import { DXN, EID } from '@dxos/keys';
 import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 
 import { meta } from '#meta';
+import { Mailbox } from '#types';
 
 import { getMailboxPath } from '../paths';
-import * as Mailbox from '../types/Mailbox';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -36,7 +36,7 @@ export default Capability.makeModule(
 
         const { db } = yield* Database.Service;
         const ref = db.makeRef(targetUri);
-        const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
+        const object = yield* Database.load(ref).pipe(Effect.catch(() => Effect.succeed(null)));
         if (!object || !Mailbox.instanceOf(object)) {
           return [];
         }

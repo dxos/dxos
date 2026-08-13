@@ -55,6 +55,9 @@
       "path": "../../core/compute/link"
     },
     {
+      "path": "../../core/compute/pipeline"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -65,6 +68,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -86,9 +92,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-inbox"

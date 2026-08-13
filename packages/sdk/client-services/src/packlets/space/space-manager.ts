@@ -61,10 +61,9 @@ export type RequestSpaceAdmissionCredentialProps = {
 /**
  * Effect service tag for {@link SpaceManager}.
  */
-export class SpaceManagerService extends EffectContext.Tag('@dxos/client-services/SpaceManager')<
-  SpaceManagerService,
-  SpaceManager
->() {}
+export class SpaceManagerService extends EffectContext.Service<SpaceManagerService, SpaceManager>()(
+  '@dxos/client-services/SpaceManager',
+) {}
 
 /**
  * Manages a collection of ECHO (Data) Spaces.

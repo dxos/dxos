@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -15,11 +16,11 @@ import * as Operation from '@dxos/compute/Operation';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Graph } from '@dxos/plugin-graph';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
+import { DeckCapabilities } from '#types';
+
 import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
-import * as DeckCapabilities from '../types/DeckCapabilities';
 import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
@@ -34,7 +35,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // to the NavigationTargetLoader capability (contributed by plugin-client) so this layout plugin
       // has no direct client dependency; loading the object also materializes its graph node.
       const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader).pipe(
-        Effect.catchAll(() => Effect.succeed([])),
+        Effect.catch(() => Effect.succeed([])),
       );
       const checkExistence: NotFound.ExistenceChecker | undefined =
         loaders.length > 0

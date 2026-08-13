@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
@@ -12,8 +12,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Cursor } from '@dxos/link';
-import { SpaceOperation } from '@dxos/plugin-space';
+import { Connection, Cursor } from '@dxos/link';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -21,7 +21,6 @@ import { useConnector } from '#hooks';
 import { meta } from '#meta';
 
 import { connectionDeckSubject } from '../../constants';
-import * as Connection from '../../types/Connection';
 
 const EMPTY_SCHEMA = Schema.Struct({});
 const EMPTY_VALUES = {};

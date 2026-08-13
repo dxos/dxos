@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Filter } from '@dxos/echo';
 
-import * as ProjectMcpOperation from '../types/ProjectMcpOperation';
+import { ProjectMcpOperation } from '#types';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;

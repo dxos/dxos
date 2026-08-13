@@ -54,7 +54,7 @@ export type ProxyTarget = {
   /**
    * Used for objects created by `createObject`.
    */
-  [SchemaId]?: Schema.Schema.AnyNoContext;
+  [SchemaId]?: Schema.Codec<any, any>;
 
   /**
    * For modifications. Fires on real changes.

@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
+
 import { computeActiveUpdates } from './set-active';
 
 const makeDeck = (overrides: Partial<DeckSchema.DeckState> = {}): DeckSchema.DeckState => ({

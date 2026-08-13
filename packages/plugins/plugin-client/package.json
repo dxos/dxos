@@ -49,14 +49,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/ClientPlugin.workerd.ts",
-        "node": "./src/ClientPlugin.node.ts",
-        "default": "./src/ClientPlugin.ts"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
       },
-      "types": "./dist/types/src/ClientPlugin.d.ts",
-      "workerd": "./dist/lib/ClientPlugin.workerd.mjs",
-      "node": "./dist/lib/ClientPlugin.node.mjs",
-      "default": "./dist/lib/ClientPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",
@@ -67,6 +67,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -74,6 +79,16 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     },
     "./Account": {
       "source": "./src/types/Account.ts",
@@ -105,20 +120,15 @@
       "types": "./dist/types/src/types/ClientOptions.d.ts",
       "import": "./dist/lib/ClientOptions.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./ClientPlugin": {
+      "source": "./src/ClientPlugin.ts",
+      "types": "./dist/types/src/ClientPlugin.d.ts",
+      "import": "./dist/lib/ClientPlugin.mjs"
     },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./PasskeyError": {
+      "source": "./src/types/PasskeyError.ts",
+      "types": "./dist/types/src/types/PasskeyError.d.ts",
+      "import": "./dist/lib/PasskeyError.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -151,6 +161,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/cli-util": "workspace:*",
@@ -171,8 +182,8 @@
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -181,9 +192,6 @@
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/cli": "catalog:",
-    "@effect/platform": "catalog:",
     "effect": "catalog:",
     "react-qr-rounded": "catalog:",
     "yaml": "catalog:"
@@ -192,9 +200,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/printer": "catalog:",
-    "@effect/printer-ansi": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -205,8 +211,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

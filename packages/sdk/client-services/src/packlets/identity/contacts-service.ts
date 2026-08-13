@@ -8,6 +8,7 @@ import * as EffectStream from 'effect/Stream';
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type MemberInfo } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { type Contact, type ContactBook } from '@dxos/protocols/proto/dxos/client/services';
 import { type ContactsService } from '@dxos/protocols/rpc';
@@ -30,7 +31,7 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
 
   ['ContactsService.queryContacts'](): EffectStream.Stream<ContactBook, Error> {
     const subscribedSpaceKeySet = new ComplexSet(PublicKey.hash);
-    return EffectStream.async<ContactBook, Error>((emit) => {
+    return EffectEx.streamFromEmitter<ContactBook, Error>((emit) => {
       const ctx = Context.default();
       const pushUpdateTask = new UpdateScheduler(
         ctx,

@@ -8,7 +8,7 @@ import { type Type } from '@dxos/echo';
 import { Card, Panel, ScrollArea } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 
-import type * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import { SpaceCapabilities } from '#types';
 
 export type MergePreviewProps = {
   type: Type.AnyEntity;

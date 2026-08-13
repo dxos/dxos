@@ -31,7 +31,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

@@ -3,13 +3,13 @@
 //
 
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as GlobalValue from 'effect/GlobalValue';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
 import type * as Tracer from 'effect/Tracer';
+
+import * as GlobalValue from './GlobalValue';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');
 const spanToTrace = GlobalValue.globalValue('effect/Tracer/spanToTrace', () => new WeakMap());
@@ -109,7 +109,6 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
 
   out.push(...appendStacks);
 
-  error = Cause.originalError(error);
   if (error.cause) {
     error.cause = prettyErrorStack(error.cause);
   }
@@ -135,12 +134,15 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
  * @throws AggregateError if there are multiple errors.
  */
 export const causeToError = (cause: Cause.Cause<any>): Error => {
-  if (Cause.isEmpty(cause)) {
+  if (cause.reasons.length === 0) {
     return new Error('Fiber failed without a cause');
-  } else if (Cause.isInterruptedOnly(cause)) {
+  } else if (Cause.hasInterruptsOnly(cause)) {
     return new Error('Fiber was interrupted');
   } else {
-    const errors = [...Chunk.toArray(Cause.failures(cause)), ...Chunk.toArray(Cause.defects(cause))];
+    const errors = [
+      ...cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error),
+      ...cause.reasons.filter(Cause.isDieReason).map((reason) => reason.defect),
+    ];
 
     const getStackFrames = (): string[] => {
       // Bun requies the target object for `captureStackTrace` to be an Error.
@@ -210,7 +212,7 @@ export const runPromise = runAndForwardErrors;
  */
 export const runDetached = <A, E>(effect: Effect.Effect<A, E, never>): void => {
   void Effect.runPromiseExit(effect).then((exit) => {
-    if (Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause)) {
+    if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
       unwrapExit(exit);
     }
   });
@@ -221,31 +223,31 @@ export const runDetached = <A, E>(effect: Effect.Effect<A, E, never>): void => {
  */
 export const runInRuntime: {
   <R>(
-    runtime: Runtime.Runtime<R>,
+    runtime: ManagedRuntime.ManagedRuntime<R, never>,
   ): <A, E>(effect: Effect.Effect<A, E, R>, options?: { signal?: AbortSignal } | undefined) => Promise<A>;
   <R, A, E>(
-    runtime: Runtime.Runtime<R>,
+    runtime: ManagedRuntime.ManagedRuntime<R, never>,
     effect: Effect.Effect<A, E, R>,
     options?: { signal?: AbortSignal } | undefined,
   ): Promise<A>;
 } = (...args: any[]): any => {
   if (args.length === 1) {
-    const [runtime] = args as [Runtime.Runtime<any>];
+    const [runtime] = args as [ManagedRuntime.ManagedRuntime<any, never>];
     return async (
       effect: Effect.Effect<any, any, any>,
       options?: { signal?: AbortSignal } | undefined,
     ): Promise<any> => {
-      const exit = await Runtime.runPromiseExit(runtime, effect, options);
+      const exit = await runtime.runPromiseExit(effect, options);
       return unwrapExit(exit);
     };
   } else {
     const [runtime, effect, options] = args as [
-      Runtime.Runtime<any>,
+      ManagedRuntime.ManagedRuntime<any, never>,
       Effect.Effect<any, any, any>,
       { signal?: AbortSignal } | undefined,
     ];
     return (async () => {
-      const exit = await Runtime.runPromiseExit(runtime, effect, options);
+      const exit = await runtime.runPromiseExit(effect, options);
       return unwrapExit(exit);
     })();
   }

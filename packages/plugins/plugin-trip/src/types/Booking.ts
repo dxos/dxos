@@ -31,7 +31,7 @@ export class Booking extends Type.makeObject<Booking>(DXN.make('org.dxos.type.tr
     currency: Schema.optional(Schema.String),
     totalPrice: Schema.optional(Schema.Number),
     purchasedAt: Schema.optional(Schema.String),
-    source: Schema.Literal('manual', 'email', 'agent', 'import').pipe(Schema.optional),
+    source: Schema.Literals(['manual', 'email', 'agent', 'import']).pipe(Schema.optional),
     rawPayload: Schema.optional(Schema.String),
   }).pipe(
     LabelAnnotation.set(['confirmationCode']),

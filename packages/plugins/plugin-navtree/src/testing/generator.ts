@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { DXN, Obj, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';

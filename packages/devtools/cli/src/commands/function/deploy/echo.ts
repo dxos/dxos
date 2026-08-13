@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import path from 'node:path';
 

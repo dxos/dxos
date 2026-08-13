@@ -14,7 +14,9 @@ import * as Trace from '@dxos/compute/Trace';
  * {@link withMeta} scopes read it so every emitted message gets a strictly increasing
  * timestamp regardless of how many writes happened in the same wall-clock millisecond.
  */
-class TestClock extends Context.Tag('@dxos/plugin-assistant/CollectTraceEvents/TestClock')<TestClock, () => number>() {}
+class TestClock extends Context.Service<TestClock, () => number>()(
+  '@dxos/plugin-assistant/CollectTraceEvents/TestClock',
+) {}
 
 /**
  * Runs the given Effect with a mock {@link Trace.TraceService} and {@link Trace.TraceSink}

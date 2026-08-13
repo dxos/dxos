@@ -8,7 +8,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import * as Account from '../types/Account';
+import { Account } from '#types';
+
 import { OpenUsage } from './definitions';
 
 const handler: Operation.WithHandler<typeof OpenUsage> = OpenUsage.pipe(

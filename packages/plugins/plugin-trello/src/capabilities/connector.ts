@@ -12,9 +12,10 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { TrelloOperation } from '#types';
+
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';
-import * as TrelloOperation from '../types/TrelloOperation';
 
 /**
  * Service-specific token-created hook for Trello.

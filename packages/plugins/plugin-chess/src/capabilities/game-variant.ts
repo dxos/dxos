@@ -10,18 +10,17 @@ import { Type } from '@dxos/echo';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 
 import { ChessArticle, ChessCard } from '#containers';
-
-import * as Chess from '../types/Chess';
+import { Chess } from '#types';
 
 const CreateChessInput = Schema.Struct({
   name: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Name',
       description: 'Optional name for the game.',
     }),
   ),
   pgn: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'PGN',
       description: 'Optional Portable Game Notation to start from.',
     }),

@@ -28,7 +28,13 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/ai"
     },
     {
       "path": "../../core/compute/assistant"
@@ -38,6 +44,9 @@
     },
     {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/extractor-lib"
     },
     {
       "path": "../../core/echo/echo"
@@ -88,10 +97,10 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../plugin-inbox"
     },
     {
-      "path": "../plugin-inbox"
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-routine"

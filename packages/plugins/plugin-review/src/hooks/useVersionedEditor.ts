@@ -12,7 +12,8 @@ import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Branch } from '@dxos/versioning';
 
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
+import { ReviewCapabilities } from '#types';
+
 import { deriveBinding } from './review-lifecycle';
 import { type useVersioning } from './useVersioning';
 

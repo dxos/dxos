@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Graph, Node } from '@dxos/plugin-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 
 /**
  * A node's graph children that can be opened as planks, in graph order.

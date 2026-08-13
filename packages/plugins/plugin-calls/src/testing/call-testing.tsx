@@ -11,9 +11,10 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 
+import { CallsCapabilities } from '#types';
+
 import { type CallManager, type GlobalState, type MediaState, type UserState } from '../calls';
 import { CallsPlugin } from '../plugin';
-import * as CallsCapabilities from '../types/CallsCapabilities';
 
 // CallManager reads the edge service config on construction and throws without it; the URL is never
 // dialed because stories seed state directly rather than joining a swarm.
@@ -34,7 +35,7 @@ export const withCallManager = () =>
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         config: storyConfig,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {

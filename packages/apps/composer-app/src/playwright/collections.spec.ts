@@ -22,7 +22,7 @@ test.describe('Collection tests', () => {
     await host.createSpace();
     await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
-    await expect(host.getObject()).toContainText('New collection');
+    await expect(host.getObjectByName('New collection')).toHaveCount(1);
   });
 
   test('re-order collections', async ({ browserName }) => {

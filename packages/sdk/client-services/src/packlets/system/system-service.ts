@@ -7,6 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { type Event } from '@dxos/async';
 import { type Config } from '@dxos/config';
+import { EffectEx } from '@dxos/effect';
 import {
   GetDiagnosticsRequest,
   type GetDiagnosticsResponse,
@@ -108,7 +109,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
     QueryStatusResponse,
     Error
   > {
-    return EffectStream.async<QueryStatusResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QueryStatusResponse, Error>((emit) => {
       const update = () => {
         void emit.single({ status: this._getCurrentStatus() });
       };

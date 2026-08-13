@@ -2,28 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Graph, type Node } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import type * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { COMPANION_VIEW_STATE_CONTEXT, companionAspect } from '@dxos/plugin-deck';
+import * as CompanionViewState from '@dxos/plugin-deck/CompanionViewState';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
-
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats
@@ -33,7 +33,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
-    const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
+    const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
 
     // Optional: provisioning is keyed off deck planks, so a host without a deck has nothing to
     // provision for.
@@ -49,7 +49,9 @@ export default Capability.makeModule(
     // observe it directly so a tab switch (which no longer touches deck state) still re-provisions.
     // Project just the variant so a companion resize (same aspect) does not re-fire provisioning.
     const viewState = yield* AttentionCapabilities.ViewState;
-    const variantAtom = Atom.make((get) => get(viewState.atom(companionAspect, COMPANION_VIEW_STATE_CONTEXT)).variant);
+    const variantAtom = Atom.make(
+      (get) => get(viewState.atom(CompanionViewState.aspect, CompanionViewState.CONTEXT)).variant,
+    );
 
     const plankSubs = new Map<string, () => void>();
 

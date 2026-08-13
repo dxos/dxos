@@ -2,24 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import * as Artifact from '../types/Artifact';
-import type * as GenerationService from '../types/GenerationService';
-import * as StudioCapabilities from '../types/StudioCapabilities';
-import * as Variant from '../types/Variant';
+import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
+
 import generateHandler from './generate';
 
 const IDEOGRAM_SOURCE = 'ideogram.ai';

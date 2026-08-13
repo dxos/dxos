@@ -7,6 +7,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
+    'account/Account': 'src/account/Account.ts',
     'app-framework/AppCapabilities': 'src/app-framework/AppCapabilities.ts',
     'app-framework/AppCapability': 'src/app-framework/AppCapability.ts',
     'app-graph/AppNode': 'src/app-graph/AppNode.ts',
@@ -32,6 +33,7 @@ export default defineConfig({
     'types': 'src/types/index.ts',
     'testing': 'src/testing/index.ts',
     'ui': 'src/ui/index.ts',
+    'app-graph/DeckSpec': 'src/app-graph/DeckSpec.ts',
   },
   jsx: 'react',
   test: { node: true },

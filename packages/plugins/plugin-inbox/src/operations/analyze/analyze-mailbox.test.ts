@@ -13,7 +13,7 @@ import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeli
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
-import * as Mailbox from '../../types/Mailbox';
+import { Mailbox } from '#types';
 
 const makeMessage = (suffix: string, created: string) =>
   Obj.make(Message.Message, {
@@ -92,5 +92,72 @@ describe('runFactPipeline', () => {
 
     // Re-run against the same store + cursor skips every message (cursor + source dedup).
     expect(result.second.processed).toBe(0);
+  });
+
+  test('processes every message of a newest-first feed (archive import order)', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Message.Message, Mailbox.Mailbox, Feed.Feed, Cursor.Cursor],
+    });
+
+    const mailbox = Mailbox.make({ name: 'Inbox' });
+    db.add(mailbox);
+    const feed = mailbox.feed.target!;
+    // Appended newest-first: without the ascending sort, the first commit advances the cursor past
+    // the two older messages and the run ends at processed 1.
+    await db.appendToFeed(feed, [
+      makeMessage('3', '2026-06-03T00:00:00.000Z'),
+      makeMessage('2', '2026-06-02T00:00:00.000Z'),
+      makeMessage('1', '2026-06-01T00:00:00.000Z'),
+    ]);
+    await db.flush();
+
+    const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
+    const progress: { processed: number; facts: number; total: number }[] = [];
+    const result = await runFactPipeline({
+      feed,
+      cursor,
+      extract: stubExtract,
+      pageSize: 1,
+      onProgress: (update) => progress.push(update),
+    }).pipe(
+      Effect.provide(Database.layer(db)),
+      Effect.provide(FactStoreLive.layerMemory),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect(result.processed).toBe(3);
+    expect(Cursor.parseKey(cursor.max)).toBe(Date.parse('2026-06-03T00:00:00.000Z'));
+
+    // Determinate progress: the exact pending count arrives with the first report (before any page),
+    // and the final report converges on it.
+    expect(progress[0]).toEqual({ processed: 0, facts: 0, total: 3 });
+    expect(progress.at(-1)).toEqual({ processed: 3, facts: 3, total: 3 });
+  });
+
+  test('drops a malformed created timestamp instead of poisoning the cursor', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Message.Message, Mailbox.Mailbox, Feed.Feed, Cursor.Cursor],
+    });
+
+    const mailbox = Mailbox.make({ name: 'Inbox' });
+    db.add(mailbox);
+    const feed = mailbox.feed.target!;
+    // Without the finite filter, the NaN key would flow into the page's Math.max and persist 'NaN'.
+    await db.appendToFeed(feed, [
+      makeMessage('1', '2026-06-01T00:00:00.000Z'),
+      makeMessage('bad', 'not-a-date'),
+      makeMessage('2', '2026-06-02T00:00:00.000Z'),
+    ]);
+    await db.flush();
+
+    const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
+    const result = await runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 1 }).pipe(
+      Effect.provide(Database.layer(db)),
+      Effect.provide(FactStoreLive.layerMemory),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect(result.processed).toBe(2);
+    expect(Cursor.parseKey(cursor.max)).toBe(Date.parse('2026-06-02T00:00:00.000Z'));
   });
 });

@@ -23,10 +23,10 @@ export const ArtifactAdd = Operation.make({
     `,
   },
   input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotations({
+    project: Ref.Ref(Project.Project).annotate({
       description: 'The project to file into (its reference is in the chat context).',
     }),
-    object: Ref.Ref(Obj.Unknown).annotations({
+    object: Ref.Ref(Obj.Unknown).annotate({
       description: 'The object to file as an artifact.',
     }),
   }),
@@ -53,7 +53,7 @@ export const ArtifactList = Operation.make({
     `,
   },
   input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotations({
+    project: Ref.Ref(Project.Project).annotate({
       description: 'The project whose artifacts to list (its reference is in the chat context).',
     }),
   }),

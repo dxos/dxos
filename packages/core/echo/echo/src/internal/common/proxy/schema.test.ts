@@ -3,9 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
+import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
@@ -16,17 +16,22 @@ import { EchoObjectSchema } from '../../Entity';
 
 // Test-local: introspect a Type.Type entity's properties via its rebuilt Effect
 // Schema, filter the implicit `id` field, and unwrap `T | undefined` optionality.
-const getProperties = (type: Type.Type): SchemaAST.PropertySignature[] => {
+// Effect 4 carries optionality on the type's context as well as in a `| undefined` union member,
+// so a decoded property node is never structurally equal to a freshly built one. The assertions
+// below compare the underlying type by tag, which is what "unwraps optionality" is checking.
+const propertyTags = (type: Type.Type): [PropertyKey, string][] => {
   const ast = Type.getSchema(type).ast;
-  invariant(SchemaAST.isTypeLiteral(ast));
+  invariant(SchemaAST.isObjects(ast));
   return [...ast.propertySignatures]
-    .filter((p) => p.name !== 'id')
-    .map((p) => {
-      if (!SchemaAST.isUnion(p.type)) {
-        return p;
+    .filter((property) => property.name !== 'id')
+    .map((property) => {
+      // Repeated because a field can pick up optionality more than once -- once where it is
+      // declared and again on a JSON schema round trip.
+      let unwrapped = property.type;
+      while (SchemaAST.isUnion(unwrapped) && unwrapped.types.some(SchemaAST.isUndefinedKeyword)) {
+        unwrapped = unwrapped.types.find((member) => !SchemaAST.isUndefinedKeyword(member))!;
       }
-      const nonUndefined = p.type.types.find((t) => !SchemaAST.isUndefinedKeyword(t))!;
-      return { ...p, type: nonUndefined } as SchemaAST.PropertySignature;
+      return [property.name, unwrapped._tag];
     });
 };
 
@@ -42,9 +47,9 @@ describe('dynamic schema', () => {
     }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
 
     const registered = createEchoSchema(Type.getSchema(TestSchema));
-    expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', SchemaAST.stringKeyword],
-      ['field2', SchemaAST.booleanKeyword],
+    expect(propertyTags(registered)).to.deep.eq([
+      ['field1', 'String'],
+      ['field2', 'Boolean'],
     ]);
   });
 
@@ -55,9 +60,9 @@ describe('dynamic schema', () => {
 
     const registered = createEchoSchema(Type.getSchema(TestSchema));
     Type.addFields(registered, { field2: Schema.Boolean });
-    expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', SchemaAST.stringKeyword],
-      ['field2', SchemaAST.booleanKeyword],
+    expect(propertyTags(registered)).to.deep.eq([
+      ['field1', 'String'],
+      ['field2', 'Boolean'],
     ]);
   });
 
@@ -67,11 +72,11 @@ describe('dynamic schema', () => {
     Type.addFields(registered, { field2: Schema.Boolean });
     Type.addFields(registered, { field3: Schema.Number });
     Type.updateFields(registered, { field4: Schema.Boolean, field2: Schema.String });
-    expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', SchemaAST.stringKeyword],
-      ['field2', SchemaAST.stringKeyword],
-      ['field3', SchemaAST.numberKeyword],
-      ['field4', SchemaAST.booleanKeyword],
+    expect(propertyTags(registered)).to.deep.eq([
+      ['field1', 'String'],
+      ['field2', 'String'],
+      ['field3', 'Number'],
+      ['field4', 'Boolean'],
     ]);
   });
 
@@ -81,9 +86,9 @@ describe('dynamic schema', () => {
     Type.addFields(registered, { field2: Schema.Boolean });
     Type.addFields(registered, { field3: Schema.Number });
     Type.removeFields(registered, ['field2']);
-    expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
-      ['field1', SchemaAST.stringKeyword],
-      ['field3', SchemaAST.numberKeyword],
+    expect(propertyTags(registered)).to.deep.eq([
+      ['field1', 'String'],
+      ['field3', 'Number'],
     ]);
   });
 
@@ -102,6 +107,9 @@ describe('dynamic schema', () => {
       typename: 'com.example.type.empty',
       version: '0.1.0',
     });
-    expect(getPropertyMetaAnnotation(getProperties(registered)[0], metaNamespace)).to.deep.eq(metaInfo);
+    const [property] = SchemaAST.getPropertySignatures(Type.getSchema(registered).ast).filter(
+      (signature) => signature.name !== 'id',
+    );
+    expect(getPropertyMetaAnnotation(property, metaNamespace)).to.deep.eq(metaInfo);
   });
 });

@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { FactStore, type SemanticIndexError, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
-import * as BrainOperation from '../types/BrainOperation';
+import { BrainOperation } from '#types';
+
 import { factLine, toCompactFact } from './facts';
 
 export default BrainOperation.SummarizeSubject.pipe(

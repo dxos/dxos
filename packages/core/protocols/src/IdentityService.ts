@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
+import { IdentityRecovery } from './proto/gen/dxos/halo/credentials.ts';
 import { protoMessage, serviceError } from './service-rpc.ts';
 import { publicKey } from './service-schemas.ts';
 
@@ -41,8 +42,24 @@ export const RecoveryCredentialData = Schema.Struct({
    * Algorithm used to generate the recovery key.
    */
   algorithm: Schema.String,
+  /**
+   * User-visible name, so one credential can be told from another when revoking.
+   */
+  label: Schema.optional(Schema.String),
+  /**
+   * How the recovery key is held.
+   */
+  kind: Schema.optional(Schema.Enum(IdentityRecovery.Kind)),
 });
 export interface RecoveryCredentialData extends Schema.Schema.Type<typeof RecoveryCredentialData> {}
+
+export const RevokeRecoveryCredentialRequest = Schema.Struct({
+  /**
+   * Lookup key of the credential to revoke.
+   */
+  lookupKey: publicKey,
+});
+export interface RevokeRecoveryCredentialRequest extends Schema.Schema.Type<typeof RevokeRecoveryCredentialRequest> {}
 
 export const CreateRecoveryCredentialRequest = Schema.Struct({
   /**
@@ -93,6 +110,11 @@ export class Rpcs extends RpcGroup.make(
     success: CreateRecoveryCredentialResponse,
     error: serviceError,
   }),
+  Rpc.make('revokeRecoveryCredential', {
+    payload: RevokeRecoveryCredentialRequest,
+    success: Schema.Void,
+    error: serviceError,
+  }),
   Rpc.make('queryIdentity', {
     success: QueryIdentityResponse,
     error: serviceError,
@@ -121,4 +143,4 @@ export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpc
 /**
  * Effect service tag for the `IdentityService` RPC handlers.
  */
-export class Tag extends Context.Tag('@dxos/protocols/rpc/IdentityService')<Tag, Handlers>() {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/IdentityService') {}

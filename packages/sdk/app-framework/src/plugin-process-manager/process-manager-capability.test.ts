@@ -2,24 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it, test } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
+import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { ActivationEvent, Capability, Plugin, PluginManager } from '../core';
+import { makeDynamicTraceSink } from './process-manager-capability';
 import { ProcessManagerPlugin } from './ProcessManagerPlugin';
 
 const LateEvent = ActivationEvent.make('org.dxos.test.lateLayerSpec');
 
-class TestService extends Context.Tag('org.dxos.test.lateService')<TestService, { value: string }>() {}
+class TestService extends Context.Service<TestService, { value: string }>()('org.dxos.test.lateService') {}
 
 const lateMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.lateLayerSpec'), name: 'Late LayerSpec' });
+
+const LateSinkEvent = ActivationEvent.make('org.dxos.test.lateTraceSink');
+const lateSinkMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.lateTraceSink'), name: 'Late TraceSink' });
 
 describe('process manager LayerSpec snapshot', () => {
   it.effect('reports a LayerSpec contributed after the runtime was built', () =>
@@ -82,4 +89,56 @@ describe('process manager LayerSpec snapshot', () => {
       removeProcessor();
     }),
   );
+});
+
+describe('dynamic trace sink', () => {
+  const message = Obj.make(Trace.Message, {
+    meta: { runtimeName: Trace.CommonRuntimeName.local },
+    isEphemeral: true,
+    events: [{ type: 'status.update', timestamp: 0, data: { progress: { key: 'test#dynamic' } } }],
+  });
+
+  test('delivers to a sink contributed after the first write', ({ expect }) => {
+    const early: string[] = [];
+    const late: string[] = [];
+    const factories: Capabilities.TraceSinkFactory[] = [() => ({ write: () => early.push('early') })];
+    const sink = makeDynamicTraceSink(() => factories, ServiceResolver.empty);
+
+    sink.write(message);
+    expect([early.length, late.length]).toEqual([1, 0]);
+
+    // plugin-progress's sink lands here — after the runtime was built. A snapshot would drop it, and
+    // every operation's progress would silently never reach the UI.
+    factories.push(() => ({ write: () => late.push('late') }));
+    sink.write(message);
+    expect([early.length, late.length]).toEqual([2, 1]);
+  });
+
+  test('builds each sink once, so per-sink state survives across writes', ({ expect }) => {
+    let built = 0;
+    const factories: Capabilities.TraceSinkFactory[] = [
+      () => {
+        built += 1;
+        return { write: () => {} };
+      },
+    ];
+    const sink = makeDynamicTraceSink(() => factories, ServiceResolver.empty);
+    sink.write(message);
+    sink.write(message);
+    expect(built).toBe(1);
+  });
+
+  test('one throwing sink does not stop the next', ({ expect }) => {
+    const reached: string[] = [];
+    const factories: Capabilities.TraceSinkFactory[] = [
+      () => ({
+        write: () => {
+          throw new Error('sink failed');
+        },
+      }),
+      () => ({ write: () => reached.push('second') }),
+    ];
+    makeDynamicTraceSink(() => factories, ServiceResolver.empty).write(message);
+    expect(reached).toEqual(['second']);
+  });
 });

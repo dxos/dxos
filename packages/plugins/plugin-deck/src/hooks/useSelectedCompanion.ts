@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type Node } from '@dxos/plugin-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { Attention } from '@dxos/react-ui-attention';
 
 /**

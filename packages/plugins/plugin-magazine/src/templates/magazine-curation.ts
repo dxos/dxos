@@ -10,8 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import * as FeedOperation from '../types/FeedOperation';
-import * as Magazine from '../types/Magazine';
+import { FeedOperation, Magazine } from '#types';
 
 /** Default cron for a magazine curation routine: daily at 9 AM. The user edits the schedule from the trigger. */
 const DEFAULT_CRON = '0 9 * * *';

@@ -13,9 +13,9 @@ import * as Script from '@dxos/compute/Script';
 
 import { DeploymentDialog, ScriptProperties, TestContainer } from '#containers';
 import { meta } from '#meta';
+import { Notebook } from '#types';
 
 import { DEPLOYMENT_DIALOG } from '../constants';
-import * as Notebook from '../types/Notebook';
 import {
   NotebookArticleSurface,
   ScriptArticleSurface,

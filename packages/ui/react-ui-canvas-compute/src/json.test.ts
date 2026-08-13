@@ -3,24 +3,23 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
 import { Graph } from '@dxos/graph';
 
 import { createGptCircuit } from './testing';
 
-export const Shape = Schema.extend(
-  Graph.Node,
-  Schema.Struct({
+export const Shape = Graph.Node.mapFields(
+  Struct.assign({
     text: Schema.optional(Schema.String),
     guide: Schema.optional(Schema.Boolean),
     classNames: Schema.optional(Schema.String),
   }),
 );
 
-export const Connection = Schema.extend(
-  Graph.Edge,
-  Schema.Struct({
+export const Connection = Graph.Edge.mapFields(
+  Struct.assign({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),
   }),

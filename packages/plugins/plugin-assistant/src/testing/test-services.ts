@@ -4,7 +4,7 @@
 
 import { Obj, type Type } from '@dxos/echo';
 
-import * as AssistantService from '../types/AssistantService';
+import { AssistantService } from '#types';
 
 const ServiceTypeSchema = AssistantService.ServiceType as unknown as Type.Obj<AssistantService.ServiceType>;
 

@@ -26,6 +26,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
+import { qualifyId } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -48,7 +53,6 @@ import {
 } from '@dxos/pipeline-transcription';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
@@ -64,11 +68,11 @@ import { seedTestData } from '@dxos/types/testing';
 import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { isNonNullable, trim } from '@dxos/util';
 
+import { enableQueryIndexes } from '#testing';
 import { translations } from '#translations';
+import { TranscriptionCapabilities } from '#types';
 
-import { enableQueryIndexes } from '../testing';
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
+import { TranscriptionPlugin } from '../plugin';
 
 const SAMPLE_CONTENT = trim`
   # Test
@@ -314,7 +318,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -327,7 +331,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         StoryGraphPlugin(),
         TranscriptionPlugin(),
       ],

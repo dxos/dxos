@@ -8,8 +8,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
+import { TaskOperation } from '#types';
+
 import { InvalidOperationInput } from '../errors';
-import * as TaskOperation from '../types/TaskOperation';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;

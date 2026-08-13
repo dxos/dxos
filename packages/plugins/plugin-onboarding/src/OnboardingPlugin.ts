@@ -2,32 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import {
-  AppGraphBuilder,
-  DefaultContent,
-  OAuthRecoveryRedirect,
-  Onboarding,
-  type OnboardingOptions,
-  OperationHandler,
-  ReactSurface,
-  Settings,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
+import { meta as pluginMeta } from './meta';
 
-export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
-  Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Settings),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(OAuthRecoveryRedirect),
-  Plugin.addModule(DefaultContent),
-  Plugin.addModule(Onboarding),
-  Plugin.make,
-);
+/** Plugin metadata, available without loading the plugin body. */
+export const meta = pluginMeta;
 
-export default OnboardingPlugin;
+/** Constructs the plugin; the body loads on first enable. */
+export const make = Plugin.lazy(meta, () => import('#plugin'));

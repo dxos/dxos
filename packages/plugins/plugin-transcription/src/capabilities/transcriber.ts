@@ -9,8 +9,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
+import { TranscriptionCapabilities } from '#types';
+
 import { TranscriptionManagerImpl } from '../transcription-manager';
-import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 /**
  * Provides the higher-level transcription manager to the app-framework so other plugins can obtain it

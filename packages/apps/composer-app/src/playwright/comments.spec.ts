@@ -39,6 +39,8 @@ test.describe('Comments tests', () => {
   });
 
   test('edit message', async () => {
+    test.slow();
+
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -61,8 +63,10 @@ test.describe('Comments tests', () => {
 
     const editedText = 'Edited';
 
-    // NOTE(Zan): The input is autofocused, so we need to clear the text content and
-    // type the new text instead of using `fill`.
+    // Edit mode autofocuses the message editor; wait for that rather than clicking, since a click
+    // inside the thread is the "reveal in the document" gesture and moves focus elsewhere. Keys stay
+    // page-level because clearing the text stops `message`'s hasText filter from matching.
+    await expect(messageTextbox).toBeFocused();
     await host.page.keyboard.press('ControlOrMeta+A');
     await host.page.keyboard.press('Backspace');
     await host.page.keyboard.type(editedText);
@@ -74,12 +78,7 @@ test.describe('Comments tests', () => {
     await expect(editedMessage).toContainText(editedText);
   });
 
-  test('delete message', async ({ browserName }) => {
-    // TODO(wittjosiah): Flaky in CI.
-    if (browserName !== 'chromium') {
-      test.skip();
-    }
-
+  test('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -159,19 +158,23 @@ test.describe('Comments tests', () => {
   });
 
   test('selecting comment highlights thread and vice versa', async () => {
+    test.slow();
+
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    const editorText = random.lorem.paragraphs(3);
-    // Split into paragraphs so each slice stays within a single line;
-    // cm-comment decorations are per-line and cannot match text spanning newlines.
-    const [firstParagraph, secondParagraph, thirdParagraph] = editorText.split('\n');
-    const firstMessage = firstParagraph.slice(0, 10);
-    const secondMessage = secondParagraph.slice(0, 15);
-    const thirdMessage = thirdParagraph.slice(-20);
+    // Unique tokens rather than lorem slices: faker repeats words across paragraphs, so a slice can
+    // match two cm-comment decorations and fail the strict-mode locators below. One anchor per line,
+    // since cm-comment decorations cannot match text spanning newlines.
+    const firstMessage = 'anchor-alpha';
+    const secondMessage = 'anchor-bravo';
+    const thirdMessage = 'anchor-charlie';
+    const editorText = [firstMessage, secondMessage, thirdMessage]
+      .map((anchor) => `${anchor} ${random.lorem.sentence()}`)
+      .join('\n');
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, firstMessage);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
@@ -179,18 +182,15 @@ test.describe('Comments tests', () => {
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
     await Markdown.select(editorTextbox, thirdMessage);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
-    await expect(Thread.getComment(host.page, thirdMessage)).toHaveAttribute('data-current', '1');
-    await expect(Thread.getThread(host.page, thirdMessage)).toHaveAttribute('aria-current', 'location');
+    await Thread.expectCurrent(host.page, thirdMessage);
 
     // Selecting a comment should highlight the thread.
     await Thread.getComment(host.page, firstMessage).click();
-    await expect(Thread.getComment(host.page, firstMessage)).toHaveAttribute('data-current', '1');
-    await expect(Thread.getThread(host.page, firstMessage)).toHaveAttribute('aria-current', 'location');
+    await Thread.expectCurrent(host.page, firstMessage);
 
     // Selecting a thread should highlight the comment.
     await Thread.getThread(host.page, secondMessage).click();
-    await expect(Thread.getComment(host.page, secondMessage)).toHaveAttribute('data-current', '1');
-    await expect(Thread.getThread(host.page, secondMessage)).toHaveAttribute('aria-current', 'location');
+    await Thread.expectCurrent(host.page, secondMessage);
   });
 
   // TODO(wittjosiah): Paste doesn't work in headless mode.

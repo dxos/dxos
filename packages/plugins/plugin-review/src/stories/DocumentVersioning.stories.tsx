@@ -34,16 +34,19 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { translations as markdownTranslations } from '@dxos/plugin-markdown/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
+
+import { translations } from '#translations';
 
 import { ReviewPlugin } from '../plugin';
 import {
@@ -61,7 +64,6 @@ import {
   tableSuggestScenario,
 } from '../testing';
 import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
-import { translations } from '../translations';
 
 const concat = (...lines: string[]) => lines.join('\n');
 
@@ -277,11 +279,11 @@ const meta = {
     withPluginManager<StoryArgs>((context) => ({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         MarkdownExtensionsPlugin(),
         // Ambient-review fixtures only for the AmbientReview story (keeps other stories untouched).
         ...(context.parameters?.ambientReview ? [AmbientReviewPlugin()] : []),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -305,7 +307,7 @@ const meta = {
         }),
         SpacePlugin({}),
         ReviewPlugin(),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     })),
   ],

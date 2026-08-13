@@ -45,7 +45,7 @@ describe('AiSession', () => {
         }),
       ]);
 
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
       yield* Effect.promise(() => session.open());
 

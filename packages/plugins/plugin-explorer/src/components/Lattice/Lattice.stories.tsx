@@ -2,16 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Type, View } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -20,8 +22,8 @@ import { type ValueGenerator, createObjectFactory, createRelationFactory } from 
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '#hooks';
+import { Graph } from '#types';
 
-import * as Graph from '../../types/Graph';
 import { Lattice } from './Lattice';
 
 const generator = random as any as ValueGenerator;
@@ -52,8 +54,8 @@ const meta: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [
             Graph.Graph,
             View.View,
@@ -88,7 +90,7 @@ const meta: Meta<typeof DefaultStory> = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

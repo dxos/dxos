@@ -20,8 +20,8 @@ export type FunctionBodyProps = {
   shape: CanvasBoard.Shape;
   name?: string;
   content?: JSX.Element;
-  inputSchema?: Schema.Schema.Any;
-  outputSchema?: Schema.Schema.Any;
+  inputSchema?: Schema.Top;
+  outputSchema?: Schema.Top;
 } & Pick<BoxProps, 'status'>;
 
 // TODO(wittjosiah): Rename, not used for functions.

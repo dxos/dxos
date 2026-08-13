@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -11,9 +11,8 @@ import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
+import { DeckCapabilities, DeckSchema } from '#types';
 
-import * as DeckCapabilities from '../types/DeckCapabilities';
-import * as DeckSchema from '../types/DeckSchema';
 import { migratePersistedState } from '../util';
 
 const STATE_KEY = `${meta.profile.key}.state`;

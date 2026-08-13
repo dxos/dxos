@@ -9,11 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as EffectFunction from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Database, Filter, Query, type QueryAST, Scope, Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { EffectEx, SchemaEx } from '@dxos/effect';
+import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -43,7 +42,7 @@ export const resolveSchemaWithRegistry = (db: Database.Database, query: QueryAST
       db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
     );
     const schema = types.find((t) => Type.getTypename(t) === typename);
-    return Option.fromNullable(schema);
+    return Option.fromNullishOr(schema);
   });
 
   return resolveType(query, resolve).pipe(
@@ -79,9 +78,13 @@ const resolveType = (
           base.pipe(
             Option.map((type) => SchemaAST.getPropertySignatures(Type.getSchema(type).ast)),
             Option.flatMap((properties) => Array.findFirst(properties, (p) => p.name === property)),
+            // v4 annotations are a plain record, so the getter returns the value or `undefined`.
             Option.flatMap((property) =>
-              SchemaAST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(
-                SchemaEx.unwrapOptional(property),
+              Option.fromNullishOr(
+                SchemaAST.getAnnotation<ReferenceAnnotationValue>(
+                  SchemaEx.unwrapOptional(property.type),
+                  ReferenceAnnotationId,
+                ),
               ),
             ),
             Option.map((annotation) => annotation.typename),
@@ -107,7 +110,7 @@ const resolveType = (
           base.pipe(
             Option.map((type) => getTypeAnnotation(Type.getSchema(type))),
             Option.flatMap((annotation) =>
-              Option.fromNullable(direction === 'source' ? annotation?.sourceSchema : annotation?.targetSchema),
+              Option.fromNullishOr(direction === 'source' ? annotation?.sourceSchema : annotation?.targetSchema),
             ),
           ),
         ),
@@ -130,7 +133,7 @@ const resolveType = (
 const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
   Match.value(filter).pipe(
     Match.withReturnType<Option.Option<string>>(),
-    Match.when({ type: 'object' }, ({ typename }) => Option.fromNullable(typename)),
+    Match.when({ type: 'object' }, ({ typename }) => Option.fromNullishOr(typename)),
     Match.when({ type: 'and' }, ({ filters }) =>
       EffectFunction.pipe(filters, Array.map(typenameFromFilter), Array.findFirst(Option.isSome), Option.flatten),
     ),

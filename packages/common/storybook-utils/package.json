@@ -25,7 +25,7 @@
     "src"
   ],
   "dependencies": {
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "storybook": "catalog:"
   },

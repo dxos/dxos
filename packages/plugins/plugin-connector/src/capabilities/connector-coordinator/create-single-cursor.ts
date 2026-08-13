@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import type * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import * as Connection from '../../types/Connection';
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { ensureSyncTrigger } from '../../util';
 
 /**
@@ -51,6 +51,11 @@ export const createSingleCursor = (
       Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
     );
     invariant(Cursor.isExternal(cursor));
+    log.info('bound single-target connector', {
+      connectorId: connection.connectorId,
+      target: target.id,
+      bound: existingTarget ? 'existing' : 'materialized',
+    });
     // Sets up recurring background sync for the binding, if the connector declares a trigger spec.
     // Its own failure is not special-cased — a defect here is caught by this function's own outer
     // `catchAllDefect` below, same as any other step in this flow.
@@ -60,6 +65,6 @@ export const createSingleCursor = (
     yield* Database.flush({ indexes: true });
   }).pipe(
     Effect.provide(Database.layer(db)),
-    Effect.catchAll((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
-    Effect.catchAllDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
+    Effect.catch((error) => Effect.sync(() => log.warn('create single binding failed', { error }))),
+    Effect.catchDefect((defect) => Effect.sync(() => log.warn('create single binding defect', { defect }))),
   );

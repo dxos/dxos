@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { keySymbols } from '@dxos/keyboard';
 import { type TFunction, toLocalizedString } from '@dxos/react-ui';
 import { type MenuActionProperties, type MenuItemChrome } from '@dxos/ui-types';

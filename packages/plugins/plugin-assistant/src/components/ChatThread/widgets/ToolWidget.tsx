@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
+import type * as Tool from 'effect/unstable/ai/Tool';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Icon, IconBlock, useTranslation } from '@dxos/react-ui';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { feed } from './feed';
 import { subscription } from './subscription';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -19,10 +19,8 @@ import { Menu } from '@dxos/react-ui-menu';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
+import { FeedOperation, Magazine, Subscription } from '#types';
 
-import * as FeedOperation from '../../types/FeedOperation';
-import * as Magazine from '../../types/Magazine';
-import * as Subscription from '../../types/Subscription';
 import { MagazineTile } from './MagazineTile';
 import { useToolbar } from './useToolbar';
 

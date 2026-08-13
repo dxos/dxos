@@ -40,14 +40,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/PipelinePlugin.workerd.ts",
-        "node": "./src/PipelinePlugin.node.ts",
-        "default": "./src/PipelinePlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/PipelinePlugin.d.ts",
-      "workerd": "./dist/lib/PipelinePlugin.workerd.mjs",
-      "node": "./dist/lib/PipelinePlugin.node.mjs",
-      "default": "./dist/lib/PipelinePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -62,15 +62,15 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./PipelinePlugin": {
+      "source": "./src/PipelinePlugin.ts",
+      "types": "./dist/types/src/PipelinePlugin.d.ts",
+      "import": "./dist/lib/PipelinePlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -98,7 +98,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-slot": "catalog:",
@@ -112,7 +111,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -123,7 +122,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

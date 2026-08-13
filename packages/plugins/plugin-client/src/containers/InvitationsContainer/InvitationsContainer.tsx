@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtom, useAtomSet } from '@effect-atom/atom-react';
+import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { useCallback, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
@@ -12,10 +12,9 @@ import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
+import { AccountCache, ClientCapabilities } from '#types';
 
 import { useHubHttpClient } from '../../hooks';
-import * as AccountCache from '../../types/AccountCache';
-import * as ClientCapabilities from '../../types/ClientCapabilities';
 
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.profile.key);

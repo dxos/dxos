@@ -181,6 +181,9 @@
       "path": "../../plugins/plugin-github"
     },
     {
+      "path": "../../plugins/plugin-google"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
@@ -200,6 +203,9 @@
     },
     {
       "path": "../../plugins/plugin-iroh-beacon"
+    },
+    {
+      "path": "../../plugins/plugin-jmap"
     },
     {
       "path": "../../plugins/plugin-kanban"

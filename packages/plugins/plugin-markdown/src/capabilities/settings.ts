@@ -9,9 +9,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-
-import * as Markdown from '../types/Markdown';
-import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
+import { Markdown, MarkdownCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

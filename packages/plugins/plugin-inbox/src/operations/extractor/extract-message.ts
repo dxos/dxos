@@ -10,10 +10,7 @@ import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 
-import * as ExtractedFrom from '../../types/ExtractedFrom';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
+import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '#types';
 
 /**
  * Inbox bridge over the generic `@dxos/extractor` dispatcher. Builds the extractor registry from

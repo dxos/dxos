@@ -13,8 +13,7 @@ import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { buyPremium, createStripeCheckout } from '#services';
-
-import * as Settings from '../../types/Settings';
+import { Settings } from '#types';
 
 type Status = {
   kind: 'idle' | 'pending' | 'result' | 'error';

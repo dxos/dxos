@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { useContext, useMemo, useState } from 'react';
@@ -22,8 +22,9 @@ import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
+import { Assistant } from '#types';
+
 import { AiChatProcessor, type AiServicePreset } from '../processor';
-import type * as Assistant from '../types/Assistant';
 
 export type UseChatProcessorProps = {
   space?: Space;
@@ -58,7 +59,7 @@ export const useChatProcessor = ({
     }
 
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+      Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const session = new AiSession.Session({
       feed,

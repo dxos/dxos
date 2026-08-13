@@ -18,9 +18,7 @@ import { Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets, useSelectionContext } from '#hooks';
-
-import type * as Assistant from '../../types/Assistant';
-import * as AssistantCapabilities from '../../types/AssistantCapabilities';
+import { Assistant, AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
   companionTo?: Obj.Unknown;

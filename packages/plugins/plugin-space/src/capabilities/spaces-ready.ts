@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -23,17 +24,15 @@ import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // alias instead of a relative `node_modules` path (TS2883).
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
-import { SpaceOperation } from '#operations';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space';
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
-import { ensureSettingsSpace } from '../util/settings-space';
+import { resolveSettingsSpace } from '../util/settings-space';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -67,7 +66,7 @@ const resolveDefaultSpace = Effect.fnUntraced(function* (client: Client, setting
  * changed, so the replay is skipped.
  */
 const awaitChange = (client: Client, settingsSpace: Space): Effect.Effect<void> =>
-  Effect.async<void>((resume) => {
+  Effect.callback<void>((resume) => {
     let replayed = false;
     const spacesSub = client.spaces.subscribe(() => {
       if (replayed) {
@@ -102,10 +101,10 @@ export default Capability.makeModule(
     //
 
     // Interrupted in cleanup so it cannot touch the db after client.destroy() closes the repo.
-    let initFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
+    let initFiber: Fiber.Fiber<void, unknown> | undefined;
 
     const initSettingsSpace = Effect.gen(function* () {
-      const settingsSpace = yield* ensureSettingsSpace(client);
+      const settingsSpace = yield* resolveSettingsSpace(client);
       const defaultSpace = yield* resolveDefaultSpace(client, settingsSpace);
 
       // Only relevant on a cold boot with no workspace in the deck state.
@@ -358,7 +357,7 @@ export default Capability.makeModule(
           });
         }),
       ),
-      Effect.catchAll((err) => Effect.sync(() => log.catch(err))),
+      Effect.catch((err) => Effect.sync(() => log.catch(err))),
     );
     registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
 

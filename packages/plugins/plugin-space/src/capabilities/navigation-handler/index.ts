@@ -6,7 +6,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as SpaceSchema from '../../types/SpaceSchema';
+import { SpaceSchema } from '#types';
 
 export type { NavigationHandlerOptions } from './navigation-handler';
 

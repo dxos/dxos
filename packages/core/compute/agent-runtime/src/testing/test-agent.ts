@@ -27,7 +27,7 @@ export interface EphemeralCollector {
 /**
  * Forks a collector over {@link AgentService.Session.subscribeEphemeral} so a test can assert the
  * streaming path (partial → complete blocks) without a UI. The fork is scoped: use with
- * `it.scoped` (or an explicit scope) so the subscription is interrupted on test close.
+ * `it.effect` (or an explicit scope) so the subscription is interrupted on test close.
  */
 export const collectEphemeral = (
   session: AgentService.Session,
@@ -77,7 +77,7 @@ export interface WaitForMessageOptions {
  * Polls the conversation feed until a message matches. Covers the gap left by
  * `Session.waitForCompletion`, which settles when the *turn* completes — background sub-agents
  * report back later, out of band. Polls on the real clock (not the Effect `TestClock`), so it works
- * under `it.effect` and `it.scoped` alike.
+ * under `it.effect` and `it.effect` alike.
  */
 export const waitForMessage = (
   feed: Feed.Feed,

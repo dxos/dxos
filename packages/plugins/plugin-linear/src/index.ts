@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
-export * as LinearEvents from './types/LinearEvents';
-export * as LinearOperation from './types/LinearOperation';
+export * as LinearPlugin from './LinearPlugin';
+export * from '#meta';
+export * from '#types';

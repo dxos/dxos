@@ -8,8 +8,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TaskSet } from '@dxos/types';
 
+import { GitHubOperation } from '#types';
+
 import { GITHUB_SOURCE } from '../constants';
-import * as GitHubOperation from '../types/GitHubOperation';
 
 const fkFor = (id: string) => ({ source: GITHUB_SOURCE, id });
 
@@ -25,7 +26,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.MaterializeGitHubTar
     Operation.withHandler(
       Effect.fnUntraced(function* ({ connection, remoteTarget }) {
         if (!remoteTarget) {
-          return yield* Effect.dieMessage('GitHub materializeTarget requires a remoteTarget (repo descriptor).');
+          return yield* Effect.die(new Error('GitHub materializeTarget requires a remoteTarget (repo descriptor).'));
         }
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
         //   have it provided by the OperationInvoker — composer's invoker is wired
@@ -33,7 +34,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.MaterializeGitHubTar
         //   target and provide `Database.layer(db)` ourselves.
         const db = connection.target ? Obj.getDatabase(connection.target) : undefined;
         if (!db) {
-          return yield* Effect.dieMessage('No database for connection ref.');
+          return yield* Effect.die(new Error('No database for connection ref.'));
         }
 
         return yield* Effect.gen(function* () {

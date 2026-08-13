@@ -12,9 +12,10 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { GitHubOperation } from '#types';
+
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
 import { GitHubApi } from '../services';
-import * as GitHubOperation from '../types/GitHubOperation';
 
 /**
  * Service-specific token-created hook for GitHub.

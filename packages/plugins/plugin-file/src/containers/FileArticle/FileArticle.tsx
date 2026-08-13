@@ -45,7 +45,7 @@ export const FileArticle = ({ role, subject: file }: FileArticleProps) => {
       return { url, type };
     }).pipe(
       Effect.provide(Database.layer(db)),
-      Effect.catchAll(() => Effect.succeed(undefined)),
+      Effect.catch(() => Effect.succeed(undefined)),
     );
 
     void EffectEx.runPromise(program).then((result) => {

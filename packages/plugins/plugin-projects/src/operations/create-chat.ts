@@ -16,8 +16,9 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 
+import { ProjectOperation } from '#types';
+
 import { ARTIFACT_SKILL_KEYS } from '../skills/keys';
-import * as ProjectOperation from '../types/ProjectOperation';
 
 const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = ProjectOperation.CreateChat.pipe(
   Operation.withHandler(
@@ -48,7 +49,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = Proje
       const { skills, objects } = Project.contextBindings(project);
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const feed = yield* Database.load(chat.feed);
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime, registry });
       yield* Effect.promise(() =>
         binder.use((binder: AiContext.Binder) =>

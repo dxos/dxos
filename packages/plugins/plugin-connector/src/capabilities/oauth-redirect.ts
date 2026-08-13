@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 
+import { ConnectorCoordination } from '#types';
+
 import { OAUTH_REDIRECT_PATH } from '../constants';
-import * as ConnectorCoordination from '../types/ConnectorCoordination';
 
 /**
  * Startup module that finalizes redirect-flow OAuth callbacks.
@@ -53,10 +54,10 @@ export default Capability.makeModule(
     if (tokens) {
       log('oauth redirect: capturing tokens', { accessTokenId: tokens.accessTokenId });
       const coordinator = yield* ConnectorCoordination.ConnectorCoordinator;
-      yield* Effect.forkDaemon(
+      yield* Effect.forkDetach(
         coordinator
           .finalizeRedirectFlow(tokens)
-          .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error })))),
+          .pipe(Effect.catch((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error })))),
       );
     }
     return [];

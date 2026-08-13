@@ -5,8 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as OutlineOperation from '../types/OutlineOperation';
-import * as TaskOperation from '../types/TaskOperation';
+import { OutlineOperation, TaskOperation } from '#types';
 
 export const TasksOperationHandlerSet = OperationHandlerSet.lazy([
   TaskOperation.AssignTask.pipe(Operation.lazyHandler(() => import('./assign-task'))),

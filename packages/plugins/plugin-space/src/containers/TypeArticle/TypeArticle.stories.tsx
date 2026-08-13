@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -20,17 +20,18 @@ import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-li
 import { PublicKey } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CardAnnotation } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 import { ComplexMap } from '@dxos/util';
 
+import { SpaceOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
+import { SpaceCapabilities } from '#types';
 
-import { SpaceOperationHandlerSet } from '../../operations';
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import { MergePreview } from '../MergePreview/MergePreview';
 import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack';
 import { TypeArticle } from './TypeArticle';
@@ -177,9 +178,9 @@ const meta = {
       ],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [CardType, Collection.Collection, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

@@ -7,10 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
+import { Connection } from '@dxos/link';
+
+import { ConnectorSpec } from '#types';
 
 import { ConnectionSyncError } from '../errors';
-import * as Connection from '../types/Connection';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { findBindingForTarget } from './find-binding';
 import { syncBinding } from './sync-binding';
 

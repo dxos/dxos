@@ -16,10 +16,9 @@ import { type EntityId } from '@dxos/keys';
  * Can be optionally provided to the session run call.
  */
 // TODO(dmaretskyi): Convert to Context.Reference
-export class ArtifactDiffResolver extends Context.Tag('@dxos/assistant/ArtifactDiffResolver')<
-  ArtifactDiffResolver,
-  ArtifactDiffResolver.Service
->() {}
+export class ArtifactDiffResolver extends Context.Service<ArtifactDiffResolver, ArtifactDiffResolver.Service>()(
+  '@dxos/assistant/ArtifactDiffResolver',
+) {}
 
 export namespace ArtifactDiffResolver {
   export type Service = {

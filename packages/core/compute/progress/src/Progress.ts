@@ -8,7 +8,6 @@
 export type TaskStatus = 'pending' | 'running' | 'done' | 'error';
 
 /** Live progress for one task: `current`/`total` is the item (e.g. message) index. */
-// TODO(burdon): Implement pause/resume functionality.
 export type TaskProgress = {
   /** Stable key within a registry. */
   readonly name: string;
@@ -61,8 +60,8 @@ export interface TaskHandle {
  */
 export interface ProgressApi {
   /**
-   * Registers (or resumes) a task and marks it running; returns a handle to update it. Pass
-   * `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
+   * Registers (or resumes) a task and marks it running; returns a handle to update it.
+   * Pass `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
    * {@link ProgressApi.cancel}.
    */
   readonly task: (name: string, options?: { total?: number; label?: string; onCancel?: () => void }) => TaskHandle;

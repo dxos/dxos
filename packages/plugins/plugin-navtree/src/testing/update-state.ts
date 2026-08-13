@@ -4,7 +4,7 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { log } from '@dxos/log';
 import { type TreeData } from '@dxos/react-ui-list';
 

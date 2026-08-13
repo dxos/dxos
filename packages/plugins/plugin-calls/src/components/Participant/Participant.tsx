@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { memo, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 
+import { CallsCapabilities } from '#types';
+
 import { type EncodedTrackName, type UserState } from '../../calls';
-import * as CallsCapabilities from '../../types/CallsCapabilities';
 import { VideoObject } from '../Media';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
 

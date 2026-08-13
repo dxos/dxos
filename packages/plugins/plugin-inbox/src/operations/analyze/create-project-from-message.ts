@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { buildThreads, clusterThreads, deriveThreadId, resolveModel, summarizeTopics } from '@dxos/pipeline-email';
 import { AnchoredTo, Message } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
+import { InboxOperation } from '#types';
 
 /**
  * Creates a single `Project` seeded from one message's thread: gathers the sibling messages sharing the
@@ -47,7 +47,7 @@ const handler = InboxOperation.CreateProjectFromMessage.pipe(
             Effect.provideService(AiService.AiService, aiService),
             Effect.timeout('30 seconds'),
             Effect.map((response) => response.text),
-            Effect.orElse(() => Effect.succeed('')),
+            Effect.catch(() => Effect.succeed('')),
           ),
         );
 

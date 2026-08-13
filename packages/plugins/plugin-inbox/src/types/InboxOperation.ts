@@ -12,9 +12,8 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';
-import * as Connection from '@dxos/plugin-connector/Connection';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
@@ -24,6 +23,7 @@ import { Actor, Event, Message, type Person } from '@dxos/types';
 import { meta } from '#meta';
 
 import * as Mailbox from './Mailbox';
+import * as MailSend from './MailSend';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -46,7 +46,7 @@ export const AddMailbox = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
-    target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)),
+    target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]),
   }),
   output: Schema.Struct({
     id: Schema.String,
@@ -63,19 +63,19 @@ export const DraftEmail = Operation.make({
     icon: 'ph--pencil--regular',
   },
   input: Schema.Struct({
-    subject: Schema.String.annotations({
+    subject: Schema.String.annotate({
       description: 'The subject of the email.',
     }),
-    to: Schema.String.annotations({
+    to: Schema.String.annotate({
       description: 'The recipient email address.',
     }),
-    body: Schema.String.annotations({
+    body: Schema.String.annotate({
       description: 'The body of the email.',
     }),
-    replyTo: Schema.optional(Ref.Ref(Message.Message)).annotations({
+    replyTo: Schema.optional(Ref.Ref(Message.Message)).annotate({
       description: 'The message to reply to.',
     }),
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox to scope the draft to.',
     }),
   }),
@@ -95,7 +95,7 @@ export const DraftEmailAndOpen = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
-    mode: Schema.optional(Schema.Literal('compose', 'reply', 'reply-all', 'forward')),
+    mode: Schema.optional(Schema.Literals(['compose', 'reply', 'reply-all', 'forward'])),
     message: Schema.optional(Schema.Any),
     subject: Schema.optional(Schema.String),
     body: Schema.optional(Schema.String),
@@ -110,18 +110,6 @@ export const DraftEmailAndOpen = Operation.make({
   output: Schema.Void,
 });
 
-/**
- * The provider's "sent" tag, returned by the send ops so the caller can tag the local draft with the
- * same tag its canonical synced copy will carry — Gmail's `SENT` label (a well-known id) or the JMAP
- * account's Sent folder (a server-assigned id resolved by folder role). The `source`/`id` form the
- * tag's foreign key; `label` is a fallback used only when the tag doesn't exist yet (pre first sync).
- */
-const SentTagOutput = Schema.Struct({
-  source: Schema.String,
-  id: Schema.String,
-  label: Schema.String,
-});
-
 export const GmailSend = Operation.make({
   meta: {
     key: makeKey('googleMailSend'),
@@ -131,16 +119,9 @@ export const GmailSend = Operation.make({
   },
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
-    message: Type.getSchema(Message.Message),
-    connection: Ref.Ref(Connection.Connection).annotations({
-      description: 'Connection to source Gmail credentials from.',
-    }),
+    ...MailSend.Input.fields,
   }),
-  output: Schema.Struct({
-    id: Schema.String,
-    threadId: Schema.String,
-    sentTag: SentTagOutput,
-  }),
+  output: MailSend.Output,
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
 
@@ -152,12 +133,12 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotate({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
-      Schema.annotations({
+      Schema.annotate({
         description: 'Gmail label to sync emails from. Defaults to inbox.',
       }),
       Schema.optional,
@@ -193,7 +174,7 @@ export const JmapSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotate({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
   }),
@@ -229,17 +210,8 @@ export const JmapSend = Operation.make({
     description: 'Send an email via a JMAP server.',
     icon: 'ph--paper-plane-tilt--regular',
   },
-  input: Schema.Struct({
-    message: Type.getSchema(Message.Message),
-    connection: Ref.Ref(Connection.Connection).annotations({
-      description: 'Connection to source JMAP credentials from.',
-    }),
-  }),
-  output: Schema.Struct({
-    id: Schema.String,
-    threadId: Schema.String,
-    sentTag: SentTagOutput,
-  }),
+  input: MailSend.Input,
+  output: MailSend.Output,
 }).pipe(Operation.visible);
 
 export const GoogleCalendarSync = Operation.make({
@@ -251,7 +223,7 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotate({
       description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
     }),
     googleCalendarId: Schema.optional(Schema.String),
@@ -294,13 +266,13 @@ export const CreateGoogleCalendarEvent = Operation.make({
   },
   input: Schema.Struct({
     event: Type.getSchema(Event.Event),
-    googleCalendarId: Schema.String.annotations({ description: 'Remote Google calendar id.' }),
-    connection: Ref.Ref(Connection.Connection).annotations({
+    googleCalendarId: Schema.String.annotate({ description: 'Remote Google calendar id.' }),
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'Connection to source Google Calendar credentials from.',
     }),
   }),
   output: Schema.Struct({
-    id: Schema.String.annotations({ description: 'Remote Google event id.' }),
+    id: Schema.String.annotate({ description: 'Remote Google event id.' }),
   }),
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
@@ -338,7 +310,7 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotations({
+    binding: Ref.Ref(Cursor.Cursor).annotate({
       description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
     }),
     pageSize: Schema.optional(Schema.Number),
@@ -357,17 +329,17 @@ export const ReadEmail = Operation.make({
     icon: 'ph--envelope-open--regular',
   },
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Reference to the mailbox object.',
     }),
     skip: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         description: 'The number of messages to skip.',
       }),
       Schema.optional,
     ),
     limit: Schema.Number.pipe(
-      Schema.annotations({
+      Schema.annotate({
         description: 'The maximum number of messages to read. Do not provide a value unless directly asked.',
       }),
       Schema.optional,
@@ -387,21 +359,21 @@ export const ClassifyEmail = Operation.make({
     icon: 'ph--tag--regular',
   },
   input: Schema.Struct({
-    message: Schema.Any.annotations({
+    message: Schema.Any.annotate({
       description: 'The message object to classify.',
     }),
   }),
-  output: Schema.Union(
+  output: Schema.Union([
     Schema.Struct({
-      tagId: Schema.String.annotations({
+      tagId: Schema.String.annotate({
         description: 'The ID of the selected tag.',
       }),
-      tagLabel: Schema.String.annotations({
+      tagLabel: Schema.String.annotate({
         description: 'The label of the selected tag.',
       }),
     }),
     Schema.Void,
-  ),
+  ]),
   services: [AiService.AiService, Database.Service],
 });
 
@@ -501,14 +473,14 @@ export const ExtractMailbox = Operation.make({
   },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed messages are processed.',
     }),
-    extractorId: Schema.String.annotations({
+    extractorId: Schema.String.annotate({
       description: 'Registered ObjectExtractor id to run on each message.',
     }),
     concurrency: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum number of messages to extract in parallel.',
       }),
     ),
@@ -533,24 +505,24 @@ export const AnalyzeMailbox = Operation.make({
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore],
+  services: [AiService.AiService, Database.Service, FactStore, Trace.TraceService],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed messages are analyzed.',
     }),
     pageSize: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Number of messages processed per fact-store commit.',
       }),
     ),
     model: Schema.optional(
-      Schema.String.annotations({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
+      Schema.String.annotate({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
     ),
     provider: Schema.optional(
-      Schema.String.annotations({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
+      Schema.String.annotate({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
     ),
     strict: Schema.optional(
-      Schema.Boolean.annotations({ description: 'Strict structured output; set false for weak local models.' }),
+      Schema.Boolean.annotate({ description: 'Strict structured output; set false for weak local models.' }),
     ),
   }),
   output: Schema.Struct({
@@ -558,6 +530,309 @@ export const AnalyzeMailbox = Operation.make({
     facts: Schema.Number,
   }),
 });
+
+/**
+ * Progress key for a mailbox monitor: the mailbox URI plus a per-pipeline suffix, so the pipelines
+ * coexist on one mailbox.
+ *
+ * The URI is pinned to the ABSOLUTE form. The producer (an operation, which resolves the mailbox
+ * through `Database.load`) and the consumer (the article, holding the object from a space query)
+ * derive the key independently, and the default `Obj.getURI` form follows how the object was
+ * hydrated — a relative URI on one side and an absolute one on the other means the article looks up a
+ * monitor name the sink never registered, and no meter appears.
+ */
+const createProgressKey = (mailbox: Mailbox.Mailbox, suffix: string) =>
+  Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + suffix;
+
+/**
+ * Progress-registry key for a mailbox's process-pipeline monitor — the mailbox URI plus `#process`,
+ * so it coexists with the `#sync` monitor. `MailboxArticle` and the toolbar action subscribe to it.
+ */
+export const createProcessProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#process');
+
+/** Progress-registry key for a mailbox's fact-analysis monitor ({@link AnalyzeMailbox}). */
+export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
+
+/** Progress-registry key for a mailbox's correspondent-extraction monitor ({@link ExtractCorrespondents}). */
+export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
+  createProgressKey(mailbox, '#correspondents');
+
+/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link EnrichMailbox}). */
+export const createEnrichProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#enrich');
+
+/** Progress-registry key for a mailbox's summarization monitor ({@link SummarizeMailbox}). */
+export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#summarize');
+
+/** Hard per-run cap on messages summarized — one LLM call each, so the run must stay bounded. */
+export const MAX_SUMMARIZE_MAILBOX_BATCH_LIMIT = 50;
+
+/** Default number of messages summarized per run ({@link SummarizeMailbox}). */
+export const DEFAULT_SUMMARIZE_MAILBOX_BATCH_LIMIT = 25;
+
+export const SummarizeMailbox = Operation.make({
+  meta: {
+    key: makeKey('summarizeMailbox'),
+    name: 'Summarize Mailbox',
+    description:
+      "Summarizes mail from known contacts into the mailbox's annotation feed, one immutable summary per message.",
+    icon: 'ph--text-align-left--regular',
+  },
+  services: [AiService.AiService, Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed messages are summarized.',
+    }),
+    batchLimit: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Maximum messages summarized this run (hard-capped at 50).',
+      }),
+    ),
+    contactsOnly: Schema.optional(
+      Schema.Boolean.annotate({
+        description:
+          'Summarize only mail whose sender has a Person record (the default) — the funnel that makes this tier affordable.',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotate({ description: 'Summarization model name; defaults to Claude Haiku.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    /** Messages considered (after the contact gate and the already-summarized skip). */
+    pending: Schema.Number,
+    /** Summaries appended to the annotation feed this run. */
+    summarized: Schema.Number,
+    /** Messages still awaiting a summary beyond this run's batch limit. */
+    remaining: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
+
+/**
+ * The cost classes {@link EnrichMailbox} runs, in cascade order. Each tier's output gates the next,
+ * so the ordering is the contract — not a convenience:
+ *
+ * - `deterministic` — no LLM, no spend: contacts (the known-sender allow-list) and subscriptions.
+ * - `classify` — cheap hosted model over every ungated message: spam verdict + category tags. The
+ *   contacts from the previous tier are what keep known senders out of the model entirely.
+ * - `summarize` — one LLM call per message, over contact mail only. The narrowest funnel and the
+ *   highest value per call, which is why it sits behind the contact gate rather than beside it.
+ * - `analyze` — per-message LLM fact extraction. Opt-in: unlike the tiers above it has no per-run
+ *   batch cap, so it walks the whole feed.
+ */
+export const MailboxTier = Schema.Literals(['deterministic', 'classify', 'summarize', 'analyze']);
+export type MailboxTier = Schema.Schema.Type<typeof MailboxTier>;
+
+/**
+ * Cascade order. Each tier consumes what the ones before it wrote, so this order — not the order the
+ * caller happens to list — is the one {@link EnrichMailbox} runs in.
+ */
+export const MAILBOX_TIER_ORDER: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize', 'analyze'];
+
+/** Tiers run when the caller names none: the bounded ones (`analyze` walks the whole feed). */
+export const DEFAULT_ENRICH_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
+
+export const EnrichMailbox = Operation.make({
+  meta: {
+    key: makeKey('enrichMailbox'),
+    name: 'Enrich Mailbox',
+    description:
+      'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
+    icon: 'ph--stack-simple--regular',
+  },
+  // Only the orchestrator's own needs: each spawned operation resolves its own services (an AI tier
+  // brings its own AiService), so the cascade itself stays runnable where no AI layer exists.
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox every tier operates on.',
+    }),
+    me: Schema.optional(
+      Schema.Array(Schema.String).annotate({
+        description:
+          "The user's own email addresses; without them the correspondent stage is skipped (nothing to derive).",
+      }),
+    ),
+    tiers: Schema.optional(
+      Schema.Array(MailboxTier).annotate({
+        description:
+          'Tiers to run — a set, not a sequence: they always run in cascade order. Defaults to the bounded tiers.',
+      }),
+    ),
+    batchLimit: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Message cap for the classification tier (hard-capped at 100).',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotate({ description: 'Model name for the LLM tiers; defaults per operation.' }),
+    ),
+    provider: Schema.optional(
+      Schema.String.annotate({ description: 'AI provider id (e.g. ollama) for the analysis tier.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Attempt strict structured output in the LLM tiers; set false for local models.',
+      }),
+    ),
+    continueOnError: Schema.optional(
+      Schema.Boolean.annotate({
+        description:
+          'Keep going after a failed stage. Off by default: a later tier consumes the previous one, so a partial cascade yields results computed against a stale gate.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    completed: Schema.Number,
+    failed: Schema.Number,
+    skipped: Schema.Number,
+    /** Per-stage outcome in run order — the spawned operation's own output, or why it did not run. */
+    stages: Schema.Array(
+      Schema.Struct({
+        tier: MailboxTier,
+        operation: Schema.String,
+        status: Schema.Literals(['completed', 'failed', 'skipped', 'cancelled']),
+        output: Schema.optional(Schema.Any),
+        error: Schema.optional(Schema.String),
+      }),
+    ),
+  }),
+}).pipe(Operation.idempotent);
+
+export const ExtractCorrespondents = Operation.make({
+  meta: {
+    key: makeKey('extractCorrespondents'),
+    name: 'Extract Correspondents',
+    description: 'Creates Person objects for everyone the user has sent or replied to, derived from the mailbox feed.',
+    icon: 'ph--users--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed is scanned for correspondence.',
+    }),
+    me: Schema.Array(Schema.String).annotate({
+      description: "The user's own email addresses (outbound sender / inbound recipient identities).",
+    }),
+  }),
+  output: Schema.Struct({
+    /** Feed messages scanned. */
+    scanned: Schema.Number,
+    /** Distinct correspondents derived from the feed. */
+    correspondents: Schema.Number,
+    /** Person objects created (existing contacts are never duplicated). */
+    created: Schema.Number,
+    /** Organization objects created for correspondents' corporate domains (never duplicated). */
+    organizations: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
+
+/** Default page size for {@link ProcessMailbox} cursor commits. */
+export const DEFAULT_PROCESS_MAILBOX_PAGE_SIZE = 10;
+
+export const ProcessMailbox = Operation.make({
+  meta: {
+    key: makeKey('processMailbox'),
+    name: 'Process Mailbox',
+    description:
+      'Runs the cursored processing pipeline over the mailbox feed, resuming after the last processed message.',
+    icon: 'ph--play--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed messages are processed.',
+    }),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Number of messages processed per cursor advance.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    processed: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
+
+export const ResetProcessCursor = Operation.make({
+  meta: {
+    key: makeKey('resetProcessCursor'),
+    name: 'Reset Process Cursor',
+    description: 'Clears a pipeline cursor so the next run re-processes the whole mailbox feed.',
+    icon: 'ph--arrow-counter-clockwise--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose pipeline cursor is reset.',
+    }),
+    cursorId: Schema.optional(
+      Schema.String.annotate({
+        description: "Consumer cursor id to reset (e.g. 'classifyMailbox'); defaults to the process pipeline's.",
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    /** False when no cursor existed yet (nothing to reset). */
+    reset: Schema.Boolean,
+  }),
+}).pipe(Operation.idempotent);
+
+/** Progress-registry key for a mailbox's classification monitor ({@link ClassifyMailbox}). */
+export const createClassifyProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#classify');
+
+/** Hard per-run cap on messages classified — LLM batches must stay bounded. */
+export const MAX_CLASSIFY_MAILBOX_BATCH_LIMIT = 100;
+
+/** Default number of messages classified per run ({@link ClassifyMailbox}). */
+export const DEFAULT_CLASSIFY_MAILBOX_BATCH_LIMIT = 100;
+
+/** Default number of messages classified per LLM call. */
+export const DEFAULT_CLASSIFY_MAILBOX_PAGE_SIZE = 20;
+
+export const ClassifyMailbox = Operation.make({
+  meta: {
+    key: makeKey('classifyMailbox'),
+    name: 'Classify Mailbox',
+    description:
+      'LLM spam detection and category labeling over the mailbox feed; senders with a known Person are never spam.',
+    icon: 'ph--shield-check--regular',
+  },
+  services: [AiService.AiService, Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed messages are classified.',
+    }),
+    batchLimit: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Maximum messages classified this run (hard-capped at 100).',
+      }),
+    ),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Messages per LLM call (and per cursor advance).',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotate({ description: 'Classification model name; defaults to Claude Haiku.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotate({
+        description:
+          'Attempt strict structured output before the lenient JSON-salvage path; set false for providers that never honor it (saves one generation per page).',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    /** Messages classified this run (LLM + known-person shortcut). */
+    processed: Schema.Number,
+    /** Messages tagged spam. */
+    spam: Schema.Number,
+    /** Messages short-circuited by a known-Person sender (tagged personal, never spam). */
+    known: Schema.Number,
+    /** Messages still pending beyond this run's batch limit. */
+    remaining: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
 
 export const CreateProjectFromMessage = Operation.make({
   meta: {
@@ -568,10 +843,10 @@ export const CreateProjectFromMessage = Operation.make({
   },
   services: [AiService.AiService, Database.Service],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox the message belongs to; the created project is anchored to it.',
     }),
-    message: Type.getSchema(Message.Message).annotations({
+    message: Type.getSchema(Message.Message).annotate({
       description: 'Message whose thread seeds the project.',
     }),
   }),
@@ -579,6 +854,34 @@ export const CreateProjectFromMessage = Operation.make({
     projectId: Schema.String,
   }),
 });
+
+/** Progress-registry key for a mailbox's subscription-extraction monitor ({@link ExtractSubscriptions}). */
+export const createSubscriptionsProgressKey = (mailbox: Mailbox.Mailbox) =>
+  createProgressKey(mailbox, '#subscriptions');
+
+export const ExtractSubscriptions = Operation.make({
+  meta: {
+    key: makeKey('extractSubscriptions'),
+    name: 'Extract Subscriptions',
+    description:
+      'Extracts unsubscribe links (header and body) from the mailbox feed and records the per-sender subscriptions on the mailbox.',
+    icon: 'ph--link--regular',
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed is scanned and whose subscriptions record is replaced.',
+    }),
+  }),
+  output: Schema.Struct({
+    /** Feed messages scanned. */
+    scanned: Schema.Number,
+    /** Messages carrying an unsubscribe affordance (header or body). */
+    matched: Schema.Number,
+    /** Distinct subscriptions recorded on the mailbox. */
+    subscriptions: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);
 
 export const UnsubscribeSender = Operation.make({
   meta: {
@@ -589,9 +892,9 @@ export const UnsubscribeSender = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox to add the skip-sender filter to.' }),
-    email: Schema.String.annotations({ description: 'Sender email to unsubscribe from and filter.' }),
-    unsubscribe: Schema.String.annotations({ description: 'The raw List-Unsubscribe header value.' }),
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox to add the skip-sender filter to.' }),
+    email: Schema.String.annotate({ description: 'Sender email to unsubscribe from and filter.' }),
+    unsubscribe: Schema.String.annotate({ description: 'The raw List-Unsubscribe header value.' }),
   }),
   output: Schema.Struct({
     filtered: Schema.Boolean,
@@ -616,10 +919,10 @@ export const GenerateReply = Operation.make({
   },
   services: [AiService.AiService, Database.Service, FactStore],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed holds the thread.',
     }),
-    message: Schema.Any.annotations({
+    message: Schema.Any.annotate({
       description: 'The message to reply to.',
     }),
   }),

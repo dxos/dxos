@@ -31,7 +31,7 @@ export class FunctionsClient extends Resource {
   private readonly _serviceContainer;
   private readonly _echoClient;
   private readonly _executionContext: EdgeFunctionEnv.TraceContext = {};
-  private _serviceScope?: Scope.CloseableScope;
+  private _serviceScope?: Scope.Closeable;
 
   private readonly _spaces = new Map<SpaceId, SpaceProxy>();
 

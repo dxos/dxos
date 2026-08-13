@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Migrator from '@effect/sql/Migrator';
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Event } from '@dxos/async';
 import { assertArgument } from '@dxos/invariant';
@@ -51,7 +51,7 @@ export interface FeedStoreOptions {
 /**
  * Effect service tag for {@link FeedStore}.
  */
-export class FeedStoreService extends EffectContext.Tag('@dxos/feed/FeedStore')<FeedStoreService, FeedStore>() {}
+export class FeedStoreService extends EffectContext.Service<FeedStoreService, FeedStore>()('@dxos/feed/FeedStore') {}
 
 /**
  * Persistent storage for feed metadata, blocks, subscriptions, and sync state.
@@ -100,7 +100,7 @@ export class FeedStore {
       feedId: string,
       namespace?: string,
     ): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
         const rows = yield* sql<{ feedPrivateId: number }>`
@@ -122,7 +122,7 @@ export class FeedStore {
    */
   #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
     (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql<{ token: string }>`SELECT token FROM cursor_tokens WHERE spaceId = ${spaceId}`;
         if (rows.length > 0) {
@@ -149,7 +149,7 @@ export class FeedStore {
     return Effect.forEach(
       blocks,
       (block) =>
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           const feed = { spaceId, feedId: block.feedId!, feedNamespace };
           if (!cypher || !cypher.shouldEncrypt(feed)) {
             return { data: block.data, encryptionKeyId: null, iv: null };
@@ -170,7 +170,7 @@ export class FeedStore {
    * configured. Returns a plaintext block with the envelope columns cleared.
    */
   #openBlock = (row: Block, spaceId: string, feedNamespace: string): Effect.Effect<Block, CypherError> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const data = new Uint8Array(row.data);
       const blockId = blockNaturalKey(row.feedId!, row.actorId, row.sequence);
       // Both envelope fields move together; exactly one present is a corrupt row, never plaintext —
@@ -205,7 +205,7 @@ export class FeedStore {
    */
   query = Effect.fn('Feed.query')(
     (request: QueryRequest): Effect.Effect<QueryResponse, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
         let feedIds: string[] | undefined = [];
         let cursorInsertionId = -1;
@@ -350,7 +350,7 @@ export class FeedStore {
    */
   subscribe = Effect.fn('Feed.subscribe')(
     (request: SubscribeRequest): Effect.Effect<SubscribeResponse, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
         const ttl = 60 * 60 * 1000;
         const subscriptionId = crypto.randomUUID();
@@ -388,7 +388,7 @@ export class FeedStore {
     spaceId: SpaceId;
     feedNamespace: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ lastPulledPosition: number }>`
         SELECT lastPulledPosition FROM sync_state
@@ -405,7 +405,7 @@ export class FeedStore {
     feedNamespace: string;
     lastPulledPosition: number;
   }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       yield* sql`
         INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition)
@@ -421,7 +421,7 @@ export class FeedStore {
     spaceId: SpaceId;
     feedNamespace: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ count: number }>`
         SELECT COUNT(*) AS count
@@ -441,7 +441,7 @@ export class FeedStore {
     spaceId: SpaceId;
     feedNamespace: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ count: number }>`
         SELECT COUNT(*) AS count
@@ -463,7 +463,7 @@ export class FeedStore {
     feedNamespace: string;
     feedId: string;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql<{ count: number }>`
         SELECT COUNT(*) AS count
@@ -490,7 +490,7 @@ export class FeedStore {
     feedId: string;
     count: number;
   }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       if (opts.count <= 0) {
         return 0;
@@ -524,7 +524,7 @@ export class FeedStore {
     SqlError.SqlError | CypherError,
     SqlClient.SqlClient | SqlTransaction.SqlTransaction
   > =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (!request.spaceId) {
         return yield* Effect.die(new Error('spaceId required for append'));
       }
@@ -550,7 +550,7 @@ export class FeedStore {
       // Wrap in transaction to ensure atomicity when assigning positions.
       const sqlTransaction = yield* SqlTransaction.SqlTransaction;
       const positions = yield* sqlTransaction.withTransaction(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           const sql = yield* SqlClient.SqlClient;
 
           // 1. Collect unique feed IDs and batch #ensureFeed calls.
@@ -566,7 +566,7 @@ export class FeedStore {
           yield* Effect.forEach(
             [...feedKeys.entries()],
             ([key, { feedId }]) =>
-              Effect.gen(this, function* () {
+              Effect.gen({ self: this }, function* () {
                 const id = yield* this.#ensureFeed(request.spaceId!, feedId, request.feedNamespace);
                 feedPrivateIds.set(key, id);
               }),
@@ -674,7 +674,7 @@ export class FeedStore {
     (
       messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
     ): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
         // 1. Collect unique feeds and ensure they exist.
@@ -692,7 +692,7 @@ export class FeedStore {
         yield* Effect.forEach(
           [...feedKeys.entries()],
           ([key, { spaceId, feedId, feedNamespace }]) =>
-            Effect.gen(this, function* () {
+            Effect.gen({ self: this }, function* () {
               const id = yield* this.#ensureFeed(spaceId, feedId, feedNamespace);
               feedPrivateIds.set(key, id);
             }),
@@ -796,7 +796,7 @@ export class FeedStore {
     spaceId: string;
     blocks: (Pick<Block, 'feedId' | 'actorId' | 'sequence' | 'position'> & { feedNamespace: string })[];
   }): Effect.Effect<void, SqlError.SqlError | PositionConflictError, SqlClient.SqlClient> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
       for (const block of request.blocks) {
         // Fold the conflict check into the UPDATE itself: only write when the row is
@@ -854,7 +854,7 @@ export class FeedStore {
     SqlError.SqlError,
     SqlClient.SqlClient
   > =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
 
       const feeds = yield* sql<{ feedId: string; feedNamespace: string }>`

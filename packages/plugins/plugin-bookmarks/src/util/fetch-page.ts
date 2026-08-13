@@ -69,7 +69,7 @@ export const fetchPage = (url: string): Effect.Effect<string, FetchError> => {
     return fetchResource(url);
   }
   return renderViaCrx(url).pipe(
-    Effect.catchAll((error) => {
+    Effect.catch((error) => {
       log.info('render-proxy failed; falling back to edge proxy', { url, error: error.message });
       return fetchResource(url);
     }),
@@ -93,7 +93,7 @@ const fetchResource = (url: string): Effect.Effect<string, FetchError> =>
   });
 
 const renderViaCrx = (url: string): Effect.Effect<string, FetchError> =>
-  Effect.async<string, FetchError>((resume) => {
+  Effect.callback<string, FetchError>((resume) => {
     if (typeof window === 'undefined' || !isCrxRenderAvailable()) {
       resume(Effect.fail(new FetchError('Composer render-proxy extension is not available')));
       return;

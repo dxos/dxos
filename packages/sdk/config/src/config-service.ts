@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FileSystem from '@effect/platform/FileSystem';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import { dirname } from 'node:path';
@@ -57,7 +57,7 @@ export const defaultConfig = new Config({
   },
 });
 
-export class ConfigService extends Context.Tag('ConfigService')<ConfigService, Config>() {
+export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
 
   static fromConfig = (config: Config) => Layer.succeed(ConfigService, config);
@@ -74,17 +74,20 @@ export class ConfigService extends Context.Tag('ConfigService')<ConfigService, C
       const configValues = Yaml.parse(configContent);
       return ConfigService.of(new Config(configValues, profileBuiltinDefaults(args.profile).values));
     }).pipe(
-      // If the config file doesn't exist, create it.
-      Effect.catchTag('SystemError', () =>
-        Effect.gen(function* () {
-          const Yaml = yield* Effect.promise(() => import('yaml'));
-          const configValues = defaultConfig.values;
-          const fs = yield* FileSystem.FileSystem;
-          const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
-          yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
-          yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
-          return ConfigService.of(new Config(configValues));
-        }),
+      // If the config file doesn't exist, create it. v4 folds v3's `SystemError` and `BadArgument`
+      // into one `PlatformError` tag; only the former was ever recovered here.
+      Effect.catchTag('PlatformError', (error) =>
+        error.reason._tag === 'BadArgument'
+          ? Effect.fail(error)
+          : Effect.gen(function* () {
+              const Yaml = yield* Effect.promise(() => import('yaml'));
+              const configValues = defaultConfig.values;
+              const fs = yield* FileSystem.FileSystem;
+              const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
+              yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
+              yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
+              return ConfigService.of(new Config(configValues));
+            }),
       ),
     );
   };

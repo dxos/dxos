@@ -4,14 +4,13 @@
 
 // @import-as-namespace
 
-import type * as Response from '@effect/ai/Response';
-import type * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
+import type * as Response from 'effect/unstable/ai/Response';
+import type * as Tool from 'effect/unstable/ai/Tool';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -335,11 +334,12 @@ export const parseResponse =
                 reasoningText: '',
                 pending: true,
               } satisfies ContentBlock.Reasoning;
-              if (part.metadata.anthropic?.type === 'thinking') {
-                block.signature = part.metadata.anthropic.signature;
+              const info = part.metadata.anthropic?.info;
+              if (info?.type === 'thinking') {
+                block.signature = info.signature;
               }
-              if (part.metadata.anthropic?.type === 'redacted_thinking') {
-                block.redactedText = part.metadata.anthropic.redactedData;
+              if (info?.type === 'redacted_thinking') {
+                block.redactedText = info.redactedData;
               }
               yield* emitPartialContentBlock(block, out);
               break;
@@ -366,22 +366,22 @@ export const parseResponse =
 
             case 'response-metadata': {
               yield* flushText(out);
-              stats.model = Option.getOrUndefined(part.modelId);
+              stats.model = part.modelId;
               log('metadata', { metadata: part });
               break;
             }
 
             case 'finish': {
               yield* flushText(out);
-              const { inputTokens, outputTokens, totalTokens } = part.usage;
+              const { inputTokens, outputTokens } = part.usage;
               stats.duration = Date.now() - start;
               stats.message = 'OK'; // part.reason;
               stats.finishReason = part.reason;
               stats.toolCalls = toolCalls;
               stats.usage = {
-                inputTokens,
-                outputTokens,
-                totalTokens,
+                inputTokens: inputTokens.total ?? 0,
+                outputTokens: outputTokens.total ?? 0,
+                totalTokens: (inputTokens.total ?? 0) + (outputTokens.total ?? 0),
               };
               yield* emitFullBlock(
                 {
@@ -407,13 +407,14 @@ export const parseResponse =
         yield* onBegin();
 
         const main = input.pipe(
-          Stream.mapConcatEffect((part) =>
+          Stream.mapEffect((part) =>
             Effect.gen(function* () {
               const out: ContentBlock.Any[] = [];
               yield* handlePart(part, out);
               return out;
             }),
           ),
+          Stream.flattenIterable,
         );
 
         const epilogue = Stream.fromIterableEffect(

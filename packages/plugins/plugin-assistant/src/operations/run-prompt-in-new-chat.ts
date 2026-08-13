@@ -20,9 +20,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Text } from '@dxos/schema';
 
+import { AssistantCapabilities, AssistantOperation } from '#types';
+
 import { getChatPath } from '../paths';
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantOperation from '../types/AssistantOperation';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat> =
   RoutineOperation.RunPromptInNewChat.pipe(
@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
             const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found.');
-            const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+            const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
             const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry });
             yield* Effect.promise(() =>
               binder.use(async (b: AiContext.Binder) => {
@@ -83,7 +83,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
               },
               { spaceId: db.spaceId },
             ).pipe(
-              Effect.catchAll((error) => {
+              Effect.catch((error) => {
                 log.catch(error);
                 return Effect.void;
               }),

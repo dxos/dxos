@@ -20,10 +20,10 @@ import { ClientOperation } from '#operations';
 // TOOD(burdon): Factor out?
 // TODO(wittjosiah): Integrate annotations with translations.
 const UserProfile = Schema.Struct({
-  did: Schema.String.annotations({ title: 'DID' }),
-  displayName: Schema.String.annotations({ title: 'Display name' }),
-  emoji: Schema.String.annotations({ title: 'Avatar' }),
-  hue: Schema.String.annotations({ title: 'Color' }),
+  did: Schema.String.annotate({ title: 'DID' }),
+  displayName: Schema.String.annotate({ title: 'Display name' }),
+  emoji: Schema.String.annotate({ title: 'Avatar' }),
+  hue: Schema.String.annotate({ title: 'Color' }),
 });
 
 type UserProfile = Schema.Schema.Type<typeof UserProfile>;

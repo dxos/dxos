@@ -7,9 +7,9 @@ import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
+import { Terra, TerraObject } from '#types';
+
 import { type Vec3 } from '../engine';
-import * as Terra from '../types/Terra';
-import * as TerraObject from '../types/TerraObject';
 import { MAX_CATCHUP_LEGS, SimEngine } from './engine';
 import { angleBetween, toGeo, toUnit } from './geo';
 import { buildNavGrid, isPassable } from './nav-grid';

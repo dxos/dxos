@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Channel, Message } from '@dxos/types';
 
-import * as ThreadCapabilities from '../types/ThreadCapabilities';
+import { ThreadCapabilities } from '#types';
 
 /**
  * Default local ECHO-feed-backed channel provider. Stores messages in a `Feed`

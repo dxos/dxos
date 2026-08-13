@@ -4,12 +4,6 @@
 
 // @import-as-namespace
 
-import * as AiError from '@effect/ai/AiError';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
-import * as Response from '@effect/ai/Response';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { createPatch } from 'diff';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
@@ -19,6 +13,12 @@ import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as AiError from 'effect/unstable/ai/AiError';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
+import * as Response from 'effect/unstable/ai/Response';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import jsonStableStringify from 'json-stable-stringify';
 
 import { EffectEx } from '@dxos/effect';
@@ -27,7 +27,7 @@ import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 
 import * as AiService from '../../AiService';
-import { withoutToolCallParising } from '../../util';
+import { withoutToolCallParsing } from '../../util';
 
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
@@ -419,17 +419,21 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
           toolChoice: params.toolChoice as any,
           disableToolCallResolution: true,
         });
-        const response = yield* Schema.mutable(Schema.Array(Response.Part(toolkit)))
-          .pipe(Schema.encode)(upstreamResult.content)
-          .pipe(
-            Effect.catchTag('ParseError', (error) =>
-              AiError.MalformedOutput.fromParseError({
+        const response = yield* Schema.encodeEffect(Schema.mutable(Schema.Array(Response.Part(toolkit))))(
+          upstreamResult.content,
+        ).pipe(
+          Effect.catchTag('SchemaError', (error) =>
+            Effect.fail(
+              new AiError.AiError({
                 module: 'LanguageModel',
                 method: 'generateText',
-                error,
+                reason: new AiError.InvalidOutputError({
+                  description: `failed to encode response: ${error.message}`,
+                }),
               }),
             ),
-          );
+          ),
+        );
 
         const newConversation: FixtureConversation = {
           parameters: getFixtureConversationParameters(options.modelName, false, params),
@@ -473,25 +477,29 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
                 disableToolCallResolution: true,
               })
               .pipe(
-                withoutToolCallParising,
+                withoutToolCallParsing,
                 Stream.mapEffect((part) =>
-                  Schema.encode(PartCodec)(part).pipe(
-                    Effect.catchTag('ParseError', (error) =>
-                      AiError.MalformedOutput.fromParseError({
-                        module: 'LanguageModel',
-                        method: 'generateText',
-                        error,
-                      }),
+                  Schema.encodeEffect(PartCodec)(part).pipe(
+                    Effect.catchTag('SchemaError', (error) =>
+                      Effect.fail(
+                        new AiError.AiError({
+                          module: 'LanguageModel',
+                          method: 'generateText',
+                          reason: new AiError.InvalidOutputError({
+                            description: `failed to encode response: ${error.message}`,
+                          }),
+                        }),
+                      ),
                     ),
                   ),
                 ),
-                Stream.mapChunksEffect(
+                Stream.mapArrayEffect(
                   Effect.fnUntraced(function* (chunk) {
                     parts.push(...chunk);
                     return chunk;
                   }),
                 ),
-                Stream.onDone(() =>
+                Stream.onEnd(
                   Effect.gen(function* () {
                     const conversation: FixtureConversation = {
                       parameters: getFixtureConversationParameters(options.modelName, true, params),
@@ -577,12 +585,12 @@ const hashKey = async (key: string): Promise<string> => {
 };
 
 const decodeConversation = (data: string): FixtureConversation =>
-  Schema.decodeSync(Schema.parseJson(FixtureConversation))(data);
+  Schema.decodeSync(Schema.fromJsonString(FixtureConversation))(data);
 
 // Compact (single-line) JSON: the store is treated as opaque generated blobs via `.gitattributes`
 // (`-diff -merge linguist-generated`), so pretty-printing only inflates line counts in review.
 const encodeConversation = (conversation: FixtureConversation): string =>
-  Schema.encodeSync(Schema.parseJson(FixtureConversation))(conversation);
+  Schema.encodeSync(Schema.fromJsonString(FixtureConversation))(conversation);
 
 /**
  * Resolves the suite directory for a test file: `<repo-root>/.store/conversations/<suite>`, where
@@ -690,7 +698,7 @@ class FixtureStore {
       }));
       return Function.pipe(
         scored,
-        Array.sortBy(Order.mapInput(Order.number, (entry) => entry.distance)),
+        Array.sortBy(Order.mapInput(Order.Number, (entry) => entry.distance)),
         Array.map((entry) => entry.conversation),
         Option.fromIterable,
       );
@@ -756,7 +764,7 @@ class FixtureStore {
 export const __migrate = async (testFilePath: string, legacyCachePath: string): Promise<number> => {
   const { readFile } = await import('node:fs/promises');
   const legacy = Schema.decodeSync(
-    Schema.parseJson(Schema.Struct({ conversations: Schema.Array(FixtureConversation) })),
+    Schema.fromJsonString(Schema.Struct({ conversations: Schema.Array(FixtureConversation) })),
   )(await readFile(legacyCachePath, 'utf-8'));
   const store = new FixtureStore(testFilePath, undefined);
   for (const conversation of legacy.conversations) {
@@ -785,7 +793,7 @@ const FixtureConversation = Schema.Struct({
   // This is supposed to be Response.AllParts for arbitrary tools.
   // Tool call schema is generated based on the available tools so we can't use a static schema.
   response: Schema.Array(Schema.Unknown),
-}).annotations({ identifier: 'FixtureConversation' });
+}).annotate({ identifier: 'FixtureConversation' });
 type FixtureConversation = Schema.Schema.Type<typeof FixtureConversation>;
 
 /**
@@ -837,6 +845,22 @@ const throwErrorWithClosestMatch = (store: FixtureStore, conversation: FixtureCo
     if (!DISABLE_CLOSEST_MATCH_SEARCH) {
       const closestMatch = yield* store.getClosestMatch(conversation);
       if (Option.isSome(closestMatch)) {
+        const dumpDir = process.env.DX_DUMP_FIXTURE_TOOLS;
+        if (dumpDir) {
+          // A toolkit whose JSON Schema emission changed (an Effect upgrade) misses on every fixture
+          // at once. Dumping both tool lists lets `migrate-model-fixture-tools.mjs` rewrite the store
+          // from what the runtime actually emits rather than from a transcribed guess.
+          yield* Effect.promise(async () => {
+            const { mkdir, writeFile } = await import('node:fs/promises');
+            const { createHash } = await import('node:crypto');
+            const payload = JSON.stringify({
+              stored: closestMatch.value.parameters.tools,
+              prompted: conversation.parameters.tools,
+            });
+            await mkdir(dumpDir, { recursive: true });
+            await writeFile(`${dumpDir}/${createHash('sha256').update(payload).digest('hex')}.json`, payload);
+          });
+        }
         const patch = createPatch(
           'conversation',
           store.formatConversation(closestMatch.value),
@@ -844,11 +868,11 @@ const throwErrorWithClosestMatch = (store: FixtureStore, conversation: FixtureCo
           'saved',
           'new',
         );
-        return yield* Effect.dieMessage(error(patch));
+        return yield* Effect.die(new Error(error(patch)));
       }
     }
 
-    return yield* Effect.dieMessage(error());
+    return yield* Effect.die(new Error(error()));
   });
 
 const error = (patch?: string) =>

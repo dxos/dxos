@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -14,8 +15,8 @@ import { TestLayout } from '../../../../../testing';
 import { Form } from '../../../Form';
 
 const schema = Schema.Struct({
-  count: Schema.Number.annotations({ title: 'Count' }),
-}).pipe(Schema.mutable);
+  count: Schema.Number.annotate({ title: 'Count' }),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 type Values = Schema.Schema.Type<typeof schema>;
 

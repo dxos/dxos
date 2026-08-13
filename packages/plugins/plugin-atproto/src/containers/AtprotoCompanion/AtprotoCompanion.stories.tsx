@@ -14,20 +14,19 @@ import { type Client } from '@dxos/client';
 import { DXN, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as Connection from '@dxos/plugin-connector/Connection';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 
 import { translations } from '#translations';
+import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
 import { hashRecord } from '../../hash';
 import * as AtprotoRepo from '../../services/AtprotoRepo';
-import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
-import * as AtprotoPublication from '../../types/AtprotoPublication';
 import { AtprotoCompanion } from './AtprotoCompanion';
 
 const NOTE_COLLECTION = 'com.example.note';
@@ -103,8 +102,8 @@ const decorators = (options: SeedOptions) => [
     ],
     plugins: [
       ...corePlugins(),
-      StorybookPlugin({}),
-      ClientPlugin({
+      StorybookPlugin.make({}),
+      ClientPlugin.make({
         types: [Connection.Connection, AccessToken.AccessToken, AtprotoPublication.AtprotoPublication, DemoNote],
         onClientInitialized: makeSeed(options),
       }),

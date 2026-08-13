@@ -25,8 +25,7 @@
   ],
   "dependencies": {
     "@dxos/debug": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "bind-event-listener": "catalog:",
     "d3": "catalog:",
     "react-resize-detector": "catalog:",

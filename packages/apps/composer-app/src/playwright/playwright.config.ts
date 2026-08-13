@@ -15,11 +15,11 @@ export default defineConfig({
   testIgnore: ['**/startup.spec.ts', '**/dev-*.spec.ts', '**/welcome-focus.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  workers: 1,
+  // Two-peer specs boot two app instances per worker, so 4 overloads the cell.
+  workers: 3,
   webServer: {
     command: 'pnpm vite preview',
     port: 4173,
-    reuseExistingServer: false,
     timeout: 300_000,
   },
 });

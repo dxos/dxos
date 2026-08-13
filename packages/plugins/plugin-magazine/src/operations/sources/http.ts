@@ -2,22 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import type * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { applyCorsProxy } from './cors';
 import { FeedFetchError } from './feed-fetcher';
 
 // Short, bounded retry so a transient hiccup doesn't fail a fetch, without stalling the form.
-const retryPolicy = Schedule.exponential('500 millis').pipe(Schedule.compose(Schedule.recurs(2)));
+const retryPolicy = Schedule.exponential('500 millis').pipe(Schedule.upTo({ times: 2 }));
 
 /** GETs a URL (through the optional CORS proxy) and decodes the JSON body against `schema`. */
 export const getJson = <A, I>(
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
   url: string,
   proxy?: string,
 ): Effect.Effect<A, FeedFetchError, HttpClient.HttpClient> =>

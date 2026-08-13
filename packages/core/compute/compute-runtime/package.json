@@ -53,10 +53,7 @@
     "@dxos/operation": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect/ai-anthropic": "catalog:",
-    "@effect/platform": "catalog:",
-    "@effect/rpc": "catalog:",
     "effect": "catalog:",
     "jsonata": "catalog:"
   },

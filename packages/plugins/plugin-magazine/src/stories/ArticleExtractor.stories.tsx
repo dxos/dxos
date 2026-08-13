@@ -10,11 +10,11 @@ import { composable } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { PostContent } from '#components';
 import { translations } from '#translations';
+import { Subscription } from '#types';
 
-import { PostContent } from '../components';
 import { type ExtractedArticle, extractArticle } from '../operations/extraction';
-import * as Subscription from '../types/Subscription';
 
 type State =
   | { status: 'idle' }

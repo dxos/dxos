@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { clamp } from '@dxos/util';
 
@@ -30,21 +31,27 @@ const roundCoordinate = (value: number): number => {
 
 /** Longitude/latitude clamped to range and rounded to {@link GEO_PRECISION} decimal places. */
 const Coordinate = (min: number, max: number, title: string) =>
-  Schema.transform(Schema.Number.pipe(Schema.clamp(min, max)), Schema.Number, {
-    strict: true,
-    decode: roundCoordinate,
-    encode: roundCoordinate,
-  }).annotations({ title });
+  Schema.Number.pipe(
+    Schema.decodeTo(
+      Schema.Number,
+      // v4 removed `Schema.clamp`; the guide rebuilds it as an explicit reversible transformation,
+      // which folds into the rounding step already happening here.
+      SchemaTransformation.transform({
+        decode: (value: number) => roundCoordinate(Math.min(Math.max(value, min), max)),
+        encode: (value: number) => roundCoordinate(Math.min(Math.max(value, min), max)),
+      }),
+    ),
+  ).annotate({ title });
 
-export const GeoPoint = Schema.Tuple(
+export const GeoPoint = Schema.Tuple([
   Coordinate(-180, 180, 'Longitude'),
   Coordinate(-90, 90, 'Latitude'),
-  Schema.optionalElement(Schema.Number).annotations({
+  Schema.optionalKey(Schema.Number).annotate({
     title: 'Height ASL (m)',
   }),
-).pipe(
+]).pipe(
   FormatAnnotation.set(TypeFormat.GeoPoint),
-  Schema.annotations({
+  Schema.annotate({
     title: 'GeoPoint',
     description: 'GeoJSON Position',
   }),

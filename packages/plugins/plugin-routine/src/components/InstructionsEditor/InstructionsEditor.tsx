@@ -5,6 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
+import { useActivationSignal } from '@dxos/app-framework/ui';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Entity, Obj, Type } from '@dxos/echo';
@@ -39,6 +41,10 @@ export const InstructionsEditor = ({
   readonly,
   fields = DEFAULT_FIELDS,
 }: InstructionsEditorProps) => {
+  // Signalled here rather than by each embedding surface: a `skills` row renders blank until the
+  // modules gated on this event contribute their definitions.
+  useActivationSignal(AppActivationEvents.AssistantStart);
+
   // A draft routine is not yet attached to a database, so fall back to the explicit `db` for ref queries.
   const db = dbProp ?? Obj.getDatabase(instructions);
 

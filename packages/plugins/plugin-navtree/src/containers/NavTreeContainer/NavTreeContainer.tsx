@@ -4,13 +4,14 @@
 
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { Graph, Node } from '@dxos/plugin-graph';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
@@ -19,8 +20,8 @@ import { arrayMove } from '@dxos/util';
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
 import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
+import { NavTreeNode } from '#types';
 
-import * as NavTreeNode from '../../types/NavTreeNode';
 import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?

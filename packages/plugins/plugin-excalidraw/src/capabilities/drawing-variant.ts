@@ -9,8 +9,7 @@ import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCa
 
 import { ExcalidrawArticle } from '#containers';
 import { ExcalidrawBuilder } from '#model';
-
-import * as Excalidraw from '../types/Excalidraw';
+import { Excalidraw } from '#types';
 
 // No `canvasType`/`createCanvas`: excalidraw stores its elements in the base `Drawing.Canvas`,
 // discriminated by `schema`.

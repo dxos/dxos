@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Registry } from '@effect-atom/atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import type { CellGridAtoms } from '../state/atoms';
 import type { Headers } from '../state/types';
@@ -12,7 +12,7 @@ const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 8;
 
 export type WheelControllerOptions<T> = {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   atoms: CellGridAtoms<T>;
   headers: Headers;
 };

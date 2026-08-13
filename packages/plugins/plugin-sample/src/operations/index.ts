@@ -10,7 +10,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as SampleOperation from '../types/SampleOperation';
+import { SampleOperation } from '#types';
 
 export const SampleOperationHandlerSet = OperationHandlerSet.lazy([
   SampleOperation.CreateSampleItem.pipe(Operation.lazyHandler(() => import('./create-sample-item'))),

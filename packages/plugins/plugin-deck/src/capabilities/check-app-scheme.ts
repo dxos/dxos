@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import * as DeckCapabilities from '../types/DeckCapabilities';
+import { DeckCapabilities } from '#types';
 
 /** Identifier for the native redirect dialog surface (defined in welcome plugin). */
 const NATIVE_REDIRECT_DIALOG = 'org.dxos.plugin.welcome.component.native-redirect-dialog';
@@ -129,7 +129,7 @@ export default Capability.makeModule(
           .get()
           .map((handler) =>
             handler(url).pipe(
-              Effect.catchAllCause((cause) =>
+              Effect.catchCause((cause) =>
                 Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
               ),
             ),

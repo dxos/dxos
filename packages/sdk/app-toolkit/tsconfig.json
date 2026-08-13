@@ -9,6 +9,9 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -39,6 +42,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/compute/progress"
     },
     {
@@ -46,6 +52,12 @@
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"

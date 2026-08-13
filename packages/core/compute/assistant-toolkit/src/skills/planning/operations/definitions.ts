@@ -17,8 +17,8 @@ import INSTRUCTIONS from './update-tasks.md?raw';
  * `Outline.upsertChecklistItems`); `in-progress` renders unchecked, nuance lives in conversation.
  */
 const ChecklistTask = Schema.Struct({
-  title: Schema.String.annotations({ description: 'Task title; also the key for updates.' }),
-  status: Schema.Literal('todo', 'in-progress', 'done'),
+  title: Schema.String.annotate({ description: 'Task title; also the key for updates.' }),
+  status: Schema.Literals(['todo', 'in-progress', 'done']),
 });
 
 export const UpdateTasks = Operation.make({

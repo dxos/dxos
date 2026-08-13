@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
+
 import { personProfileContent, upsertProfile } from './research';
 
 const handler: Operation.WithHandler<typeof CrmOperation.ResearchPerson> = CrmOperation.ResearchPerson.pipe(

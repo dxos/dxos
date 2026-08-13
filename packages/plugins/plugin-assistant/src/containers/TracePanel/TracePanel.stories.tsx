@@ -313,7 +313,7 @@ export const Default: Story = {
       // `AssistantCapabilities.Settings`, which `TracePanel` reads via `useAtomCapability`.
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -342,7 +342,7 @@ export const WithSnapshot: Story = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
         }),
@@ -360,7 +360,7 @@ export const WithRemoteSnapshot: Story = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(
             () => import('../../testing/data/trace-timeline-remote.dx.json'),
@@ -380,7 +380,7 @@ export const WithRemoteMultipleSnapshot: Story = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(
             () => import('../../testing/data/trace-timeline-multiple.dx.json'),

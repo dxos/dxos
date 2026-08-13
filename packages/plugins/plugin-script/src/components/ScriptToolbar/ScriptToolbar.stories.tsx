@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useMemo } from 'react';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
@@ -53,7 +54,7 @@ const meta = {
     withTheme(),
     withLayout({ classNames: 'w-document-max-width' }),
     withPluginManager({
-      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin.make({})],
     }),
   ],
   parameters: {

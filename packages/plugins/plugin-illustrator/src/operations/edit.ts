@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import * as DrawingOperation from '../types/DrawingOperation';
+import { DrawingOperation } from '#types';
+
 import { resolveVariant } from '../util/load-drawing';
 
 const handler: Operation.WithHandler<typeof DrawingOperation.Edit> = DrawingOperation.Edit.pipe(

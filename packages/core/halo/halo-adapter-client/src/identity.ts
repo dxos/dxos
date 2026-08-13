@@ -11,13 +11,15 @@ import * as Stream from 'effect/Stream';
 import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
-import { IdentityDid } from '@dxos/keys';
+import { IdentityDid, PublicKey } from '@dxos/keys';
+import { type TypedMessage } from '@dxos/protocols/proto';
 import {
   type Device as ClientDevice,
   type Identity as ClientIdentity,
   DeviceKind,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { ComplexSet } from '@dxos/util';
 
 import { makeFlow, streamFromClientObservable, toShareOptions } from './util';
 
@@ -34,16 +36,51 @@ const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
   current: device.kind === DeviceKind.CURRENT,
 });
 
-const toCredential = (credential: Credential): HaloIdentity.Credential => ({
-  id: credential.id?.toHex(),
-  type: credential.subject.assertion['@type'],
-  issuanceDate: credential.issuanceDate,
-});
+const RECOVERY_KINDS: Record<IdentityRecovery.Kind, HaloIdentity.RecoveryKind> = {
+  [IdentityRecovery.Kind.UNKNOWN]: 'unknown',
+  [IdentityRecovery.Kind.PASSKEY]: 'passkey',
+  [IdentityRecovery.Kind.RECOVERY_CODE]: 'recovery-code',
+  [IdentityRecovery.Kind.OAUTH]: 'oauth',
+};
+
+const toCredential = (credential: Credential, revoked: ComplexSet<PublicKey>): HaloIdentity.Credential => {
+  // Annotated because the protobuf `Any` decodes untyped, which defeats narrowing on `@type`.
+  const assertion: TypedMessage = credential.subject.assertion;
+  return {
+    id: credential.id?.toHex(),
+    type: assertion['@type'],
+    issuanceDate: credential.issuanceDate,
+    recovery:
+      assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery'
+        ? {
+            lookupKey: assertion.lookupKey?.toHex(),
+            label: assertion.label,
+            kind: RECOVERY_KINDS[assertion.kind ?? IdentityRecovery.Kind.UNKNOWN],
+            revoked: !!assertion.lookupKey && revoked.has(assertion.lookupKey),
+          }
+        : undefined,
+  };
+};
+
+/**
+ * Lookup keys cancelled by an `IdentityRecoveryRevoked` assertion. Collected over the whole feed
+ * before mapping, since a revocation is always written after the credential it cancels.
+ */
+const collectRevoked = (credentials: readonly Credential[]): ComplexSet<PublicKey> => {
+  const revoked = new ComplexSet<PublicKey>(PublicKey.hash);
+  for (const credential of credentials) {
+    const assertion: TypedMessage = credential.subject.assertion;
+    if (assertion['@type'] === 'dxos.halo.credentials.IdentityRecoveryRevoked') {
+      revoked.add(assertion.lookupKey);
+    }
+  }
+  return revoked;
+};
 
 /**
  * Builds the {@link HaloIdentity.Service} implementation over a client's `halo` proxy.
  */
-export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIdentity.Service> => ({
+export const makeIdentityService = (client: Client): Context.Service.Shape<typeof HaloIdentity.Service> => ({
   identity: streamFromClientObservable(client, () => client.halo.identity).pipe(
     Stream.map((identity) => (identity ? Option.some(toInfo(identity)) : Option.none())),
   ),
@@ -112,7 +149,10 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
   getDevicesSnapshot: () => (client.initialized ? client.halo.devices.get().map(toDeviceInfo) : []),
 
   credentials: streamFromClientObservable(client, () => client.halo.credentials).pipe(
-    Stream.map((credentials) => credentials.map(toCredential)),
+    Stream.map((credentials) => {
+      const revoked = collectRevoked(credentials);
+      return credentials.map((credential) => toCredential(credential, revoked));
+    }),
   ),
 
   grantServiceAccess: (options) =>

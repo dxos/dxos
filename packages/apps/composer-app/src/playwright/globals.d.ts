@@ -6,9 +6,6 @@
 // casting at every `page.evaluate` site. Everything here is optional and framework-internal: these
 // hooks appear only once the app has mounted (and `composer.manager` only after React does), so the
 // call sites still guard — the declaration buys type-checking, not a presence guarantee.
-//
-// `var` rather than `interface Window`, because the specs reach them through both `window` and
-// `globalThis` depending on which context the evaluate body runs in.
 
 import type { ProfilerSnapshot } from '../util/profiler';
 
@@ -19,6 +16,13 @@ declare module '@dxos/app-framework' {
   interface ComposerDevtools {
     profiler?: { snapshot?: () => ProfilerSnapshot };
     changeStorageVersionInMetadata?: (version: number) => void;
+    /** The plugin manager; shape is framework-internal, so readers narrow what they use. */
+    manager?: { getModules?: () => unknown[] };
+    /** The focused markdown editor, exposed so specs can drive selection the way a user would. */
+    editorView?: {
+      state: { doc: { toString: () => string } };
+      dispatch: (spec: { selection: { anchor: number; head: number } }) => void;
+    };
   }
 }
 

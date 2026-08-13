@@ -197,7 +197,7 @@ const resolveKeyId = async (
   workspace: string,
   extensions: ReadonlyArray<KeyedExtension>,
   id: string,
-  wait?: Duration.DurationInput,
+  wait?: Duration.Input,
 ): Promise<string | null> => {
   // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
   const idSegments = id.split(builder.urlGrammar.tailSeparator);
@@ -211,7 +211,7 @@ const resolveKeyId = async (
   for (const extension of extensions) {
     if (typeof extension.path === 'function') {
       const candidateId = await EffectEx.runPromise(
-        extension.path({ id, workspace, workspaceBaseId }).pipe(Effect.catchAllDefect(() => Effect.succeed(null))),
+        extension.path({ id, workspace, workspaceBaseId }).pipe(Effect.catchDefect(() => Effect.succeed(null))),
       );
       if (candidateId) {
         candidateIds.push(candidateId);
@@ -238,7 +238,7 @@ const resolveKeyId = async (
   return EffectEx.runPromise(
     Effect.raceAll(
       candidateIds.map((candidateId) => Graph.waitFor(builder.graph, candidateId).pipe(Effect.as(candidateId))),
-    ).pipe(Effect.timeoutTo({ duration: wait, onTimeout: (): string | null => null, onSuccess: (id) => id })),
+    ).pipe(Effect.timeoutOrElse({ duration: wait, orElse: () => Effect.succeed<string | null>(null) })),
   );
 };
 
@@ -352,7 +352,7 @@ export type ResolveUrlOptions = {
    * the answer differs: a pair whose object is known to exist is merely late, while one nothing
    * vouches for is absent and must not hold up the restore. Return `undefined` to read immediately.
    */
-  readonly wait?: (pairIndex: number) => Duration.DurationInput | undefined;
+  readonly wait?: (pairIndex: number) => Duration.Input | undefined;
 };
 
 export const resolveUrl = (

@@ -31,27 +31,27 @@ export const query = Query.select(Filter.type(Feed.Feed, { kind: TRACE_FEED_KIND
  * The sink is provided as a field (rather than having the service *be* the
  * sink) so the higher-level routing sink can dispatch messages synchronously.
  */
-export class FeedTraceSink extends Context.Tag('@dxos/functions-runtime/FeedTraceSink')<
+export class FeedTraceSink extends Context.Service<
   FeedTraceSink,
   {
     readonly sink: Trace.Sink;
     readonly flush: () => Effect.Effect<void>;
   }
->() {}
+>()('@dxos/functions-runtime/FeedTraceSink') {}
 
 /**
  * Layer that resolves a space's trace feed, wires up a buffered flushing
  * writer, and exposes it as {@link FeedTraceSink}. Requires ambient
  * {@link Database.Service} (per-space).
  */
-export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = Layer.scopedContext(
+export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = Layer.effectContext(
   Effect.gen(function* () {
     const feed = yield* getOrCreateTraceFeed();
 
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const context = yield* Effect.context<Database.Service>();
     let buffer: Trace.Message[] = [];
     let flushMore = false;
-    let flushFiber: Fiber.RuntimeFiber<void> | undefined;
+    let flushFiber: Fiber.Fiber<void> | undefined;
 
     const scheduleFlush = () => {
       flushMore = true;
@@ -74,13 +74,13 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
       }).pipe(
         // Reset `flushFiber` even if `Feed.append` fails, otherwise
         // `scheduleFlush` would see a stale fiber handle and never re-arm.
-        Effect.tapErrorCause((cause) => Effect.sync(() => log.warn('feed trace flush failed', { cause }))),
+        Effect.tapCause((cause) => Effect.sync(() => log.warn('feed trace flush failed', { cause }))),
         Effect.ensuring(
           Effect.sync(() => {
             flushFiber = undefined;
           }),
         ),
-        Effect.provide(runtime),
+        Effect.provideContext(context),
         Effect.runFork,
       );
     };
@@ -96,7 +96,7 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
           log('trace feed append batch (flush now)', { count: messages.length, feedId: feed.id });
           yield* Feed.append(feed, messages);
         }
-      }).pipe(Effect.provide(runtime));
+      }).pipe(Effect.provideContext(context));
 
     yield* Effect.addFinalizer(() => flushNow());
 
@@ -149,7 +149,8 @@ export const getOrCreateTraceFeed = Effect.fn('getOrCreateTraceFeed')(function* 
 /**
  * Flush pending trace events to the trace feed.
  */
-export const flush = Effect.serviceFunctionEffect(FeedTraceSink, (_) => _.flush);
+export const flush = (...args: Parameters<Context.Service.Shape<typeof FeedTraceSink>['flush']>) =>
+  FeedTraceSink.use((service) => service.flush(...args));
 
 /**
  * Noop layer that satisfies the FeedTraceSink service without persisting anything.

@@ -10,9 +10,7 @@ import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { ComputeGraphContextProvider, Sheet as SheetComponent, useComputeGraph } from '#components';
-
-import type * as Sheet from '../../types/Sheet';
-import * as SheetCapabilities from '../../types/SheetCapabilities';
+import { Sheet, SheetCapabilities } from '#types';
 
 export type SheetArticleProps = AppSurface.ObjectArticleProps<
   Sheet.Sheet,

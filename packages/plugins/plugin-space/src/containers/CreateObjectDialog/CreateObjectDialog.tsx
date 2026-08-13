@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -25,9 +25,8 @@ import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { meta } from '#meta';
+import { SpaceCapabilities, SpaceEvents } from '#types';
 
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
-import * as SpaceEvents from '../../types/SpaceEvents';
 import { getSpaceDisplayName } from '../../util';
 
 export const CREATE_OBJECT_DIALOG = `${meta.profile.key}.CreateObjectDialog`;

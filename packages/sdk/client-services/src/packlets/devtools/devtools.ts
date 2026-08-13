@@ -9,6 +9,7 @@ import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import {
   type ClearSnapshotsRequest,
   type EnableDebugLoggingRequest,
@@ -75,7 +76,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   'constructor'(private readonly params: DevtoolsServiceProps) {}
 
   ['DevtoolsHost.events'](): EffectStream.Stream<Event, Error> {
-    return EffectStream.async<Event, Error>((emit) => {
+    return EffectEx.streamFromEmitter<Event, Error>((emit) => {
       const ctx = Context.default();
       this.params.events.ready.on(ctx, () => {
         void emit.single({ ready: {} });
@@ -247,7 +248,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
  * The underlying stream is closed (disposing its resources) when the Effect stream terminates.
  */
 const toEffectStream = <T>(stream: Stream<T>): EffectStream.Stream<T, Error> =>
-  EffectStream.async<T, Error>((emit) => {
+  EffectEx.streamFromEmitter<T, Error>((emit) => {
     stream.subscribe(
       (message) => void emit.single(message),
       (error) => (error ? void emit.fail(error) : void emit.end()),

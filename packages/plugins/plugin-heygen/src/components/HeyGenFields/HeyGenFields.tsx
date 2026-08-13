@@ -11,8 +11,9 @@ import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { type FormFieldMap, type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
+import { type GenerationOption, makeHeyGenProvider } from '#services';
+
 import { HEYGEN_SOURCE } from '../../constants';
-import { type GenerationOption, makeHeyGenProvider } from '../../services';
 
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 

@@ -25,14 +25,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/PreviewPlugin.workerd.ts",
-        "node": "./src/PreviewPlugin.node.ts",
-        "default": "./src/PreviewPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/PreviewPlugin.d.ts",
-      "workerd": "./dist/lib/PreviewPlugin.workerd.mjs",
-      "node": "./dist/lib/PreviewPlugin.node.mjs",
-      "default": "./dist/lib/PreviewPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -46,11 +46,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -60,6 +55,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./PreviewPlugin": {
+      "source": "./src/PreviewPlugin.ts",
+      "types": "./dist/types/src/PreviewPlugin.d.ts",
+      "import": "./dist/lib/PreviewPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

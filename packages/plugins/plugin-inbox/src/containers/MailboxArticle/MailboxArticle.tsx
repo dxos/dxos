@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -15,7 +16,7 @@ import {
 } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, ProgressMeter, useAppGraph, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, ProgressMeter, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -47,13 +48,10 @@ import {
 } from '#components';
 import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
 import { meta } from '#meta';
+import { createSyncProgressKey } from '#sync';
+import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { createSyncProgressKey } from '../../operations/mail/mail-sync';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
-import * as SystemTags from '../../types/SystemTags';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
 import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
@@ -92,8 +90,14 @@ export const MailboxArticle = ({
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Gmail sync registers a monitor keyed by the mailbox URI (`#sync`); show it in the statusbar.
-  const progress = useProgress(createSyncProgressKey(mailbox));
+  // Gmail sync (`#sync`), the process pipeline (`#process`) and the enrichment cascade (`#enrich`)
+  // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
+  // first — it is the one that changes what the list contains rather than what is known about it.
+  const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
+  const processProgress = useProgressMonitor(InboxOperation.createProcessProgressKey(mailbox));
+  const enrichProgress = useProgressMonitor(InboxOperation.createEnrichProgressKey(mailbox));
+  const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
+  const progress = [syncProgress, processProgress, enrichProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 

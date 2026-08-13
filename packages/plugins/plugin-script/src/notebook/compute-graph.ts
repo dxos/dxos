@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { log } from '@dxos/log';
 
-import type * as Notebook from '../types/Notebook';
+import { Notebook } from '#types';
+
 import { evalScript } from './eval';
 import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 
@@ -23,7 +25,7 @@ export class ComputeGraph {
 
   constructor(
     private readonly _notebook: Notebook.Notebook,
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
   ) {}
 
   /**

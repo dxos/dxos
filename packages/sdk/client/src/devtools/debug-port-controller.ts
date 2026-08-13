@@ -22,6 +22,54 @@ export type DebugPortStartOptions = {
   origin?: string;
   /** Additional sink for the loop's lines, for hosts with no log surface of their own (the recovery page). */
   onLog?: (line: string) => void;
+  /**
+   * Keep the session across reloads of this tab, until {@link SESSION_TTL} expires or the tab closes.
+   *
+   * Off by default. A flow that navigates the page mid-debug — an OAuth redirect above all — otherwise
+   * takes the port down with it and the agent has to ask for a fresh id at exactly the moment the
+   * interesting state appears. Scoped to `sessionStorage` (this tab, this run) rather than
+   * `localStorage`, so an arbitrary-eval port can never outlive the tab it was authorized in.
+   */
+  persist?: boolean;
+};
+
+/** How long a persisted session stays resumable. Bounded so a forgotten port lapses on its own. */
+export const SESSION_TTL = 30 * 60 * 1000;
+
+const STORAGE_KEY = 'dxos:debug-port-session';
+
+type PersistedSession = { session: string; origin?: string; expiresAt: number };
+
+const readPersisted = (): PersistedSession | undefined => {
+  try {
+    const raw = globalThis.sessionStorage?.getItem(STORAGE_KEY);
+    if (!raw) {
+      return undefined;
+    }
+    const parsed = JSON.parse(raw) as PersistedSession;
+    if (typeof parsed?.session !== 'string' || typeof parsed?.expiresAt !== 'number') {
+      return undefined;
+    }
+    return parsed.expiresAt > Date.now() ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const writePersisted = (value: PersistedSession): void => {
+  try {
+    globalThis.sessionStorage?.setItem(STORAGE_KEY, JSON.stringify(value));
+  } catch {
+    // Storage disabled (private mode, blocked cookies): the port still works, it just will not resume.
+  }
+};
+
+const clearPersisted = (): void => {
+  try {
+    globalThis.sessionStorage?.removeItem(STORAGE_KEY);
+  } catch {
+    // As above.
+  }
 };
 
 /**
@@ -36,6 +84,13 @@ export interface DebugPortController {
   subscribe(listener: () => void): () => void;
   /** Returns the new session id; a no-op returning the current session if already running. */
   start(options?: DebugPortStartOptions): string;
+  /**
+   * Restart a session persisted by `start({ persist: true })` in this tab, reusing its id so the
+   * agent's existing session id keeps working across the reload. Returns the id, or `undefined`
+   * when there is nothing live to resume. Never mints a new session: with no unexpired record this
+   * is a no-op, so calling it at startup cannot turn the port on by itself.
+   */
+  resume(options?: DebugPortStartOptions): string | undefined;
   stop(): void;
 }
 
@@ -55,12 +110,34 @@ class DebugPortControllerImpl implements DebugPortController {
     return () => this.#listeners.delete(listener);
   }
 
-  start({ scope = defaultScope, origin = resolveDebugPortOrigin(), onLog }: DebugPortStartOptions = {}): string {
+  start(options: DebugPortStartOptions = {}): string {
+    return this.#run(randomSession(), options);
+  }
+
+  resume(options: DebugPortStartOptions = {}): string | undefined {
+    if (this.#status.running && this.#status.session) {
+      return this.#status.session;
+    }
+    const persisted = readPersisted();
+    if (!persisted) {
+      // Also drops a record that has merely expired, so a stale one cannot linger unnoticed.
+      clearPersisted();
+      return undefined;
+    }
+    return this.#run(persisted.session, { ...options, origin: options.origin ?? persisted.origin, persist: true });
+  }
+
+  #run(
+    session: string,
+    { scope = defaultScope, origin = resolveDebugPortOrigin(), onLog, persist }: DebugPortStartOptions,
+  ): string {
     if (this.#status.running && this.#status.session) {
       return this.#status.session;
     }
 
-    const session = randomSession();
+    if (persist) {
+      writePersisted({ session, origin, expiresAt: Date.now() + SESSION_TTL });
+    }
     const abort = new AbortController();
     this.#abort = abort;
     this.#update({ running: true, session, origin });
@@ -97,6 +174,9 @@ class DebugPortControllerImpl implements DebugPortController {
   }
 
   stop(): void {
+    // Clear first: stopping is the user withdrawing consent, so the record must not survive even if
+    // the abort below throws.
+    clearPersisted();
     this.#abort?.abort();
     this.#abort = undefined;
     if (this.#status.running) {

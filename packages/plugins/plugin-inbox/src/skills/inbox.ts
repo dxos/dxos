@@ -6,8 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as InboxOperation from '../types/InboxOperation';
-import * as Mailbox from '../types/Mailbox';
+import { InboxOperation, Mailbox } from '#types';
 
 const make = () =>
   Skill.make({

@@ -10,15 +10,13 @@ import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
-
-import * as FeedOperation from '../../types/FeedOperation';
-import * as Subscription from '../../types/Subscription';
+import { FeedOperation, Subscription } from '#types';
 
 export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 

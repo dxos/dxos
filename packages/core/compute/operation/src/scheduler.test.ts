@@ -61,7 +61,7 @@ describe('Scheduler', () => {
 
         // Should be pending initially (daemon fiber not yet completed).
         // Give it a tick to execute.
-        yield* Effect.yieldNow();
+        yield* Effect.yieldNow;
 
         // After yielding, the sync effect should have completed.
         expect(executed).toContain('a');
@@ -88,7 +88,7 @@ describe('Scheduler', () => {
         yield* scheduler.schedule(CountOp, { id: 'c' });
 
         // Let them execute.
-        yield* Effect.yieldNow();
+        yield* Effect.yieldNow;
 
         yield* scheduler.awaitAll;
 
@@ -113,7 +113,7 @@ describe('Scheduler', () => {
           }),
         );
 
-        yield* Effect.yieldNow();
+        yield* Effect.yieldNow;
         yield* scheduler.awaitAll;
 
         expect(executed).toBe(true);
@@ -138,7 +138,7 @@ describe('Scheduler', () => {
         yield* scheduler.schedule(CountOp, { id: 'b' }); // This one will fail.
         yield* scheduler.schedule(CountOp, { id: 'c' });
 
-        yield* Effect.yieldNow();
+        yield* Effect.yieldNow;
         yield* scheduler.awaitAll;
 
         // All should have been attempted.
@@ -168,7 +168,7 @@ describe('Scheduler', () => {
         yield* scheduler.schedule(CountOp, { id: 'slow' });
 
         // Fast one should execute quickly.
-        yield* Effect.yieldNow();
+        yield* Effect.yieldNow;
         expect(executed).toContain('fast');
         expect(executed).not.toContain('slow');
 

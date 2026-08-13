@@ -6,15 +6,17 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
+import { Artifact } from '#types';
 
 import {
   ARTIFACTS_NODE_DATA,
@@ -24,7 +26,6 @@ import {
   STUDIO_SEGMENT,
   getKindIcon,
 } from '../constants';
-import * as Artifact from '../types/Artifact';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

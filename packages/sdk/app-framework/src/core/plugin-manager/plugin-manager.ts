@@ -38,14 +38,15 @@
 // status channel (the loader publishes module errors; the catalog owns disabling).
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
-import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
+import * as Semaphore from 'effect/Semaphore';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -53,7 +54,7 @@ import { log } from '@dxos/log';
 import type * as ActivationEvent from '../activation-event';
 import * as CapabilityManager from '../capability-manager';
 import * as Plugin from '../plugin';
-// Imported with a `PluginRegistry` alias because the unrelated `@effect-atom/atom-react`
+// Imported with a `PluginRegistry` alias because the unrelated `@effect/atom-react`
 // `Registry` is already imported above; from outside this file the namespace is
 // re-exported as `Registry` via `./index.ts`.
 import * as PluginRegistry from '../registry';
@@ -99,7 +100,7 @@ export type ManagerOptions = {
   pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
   enabled?: string[];
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
    * no-op `pluginRegistry` (empty list, no versions endpoint). Implementations
@@ -119,14 +120,14 @@ export type ManagerOptions = {
    * atom and auto-disabled so a stuck remote host can't stall app boot.
    * Defaults to 30 seconds; pass `Duration.infinity` to disable.
    */
-  loadTimeout?: Duration.DurationInput;
+  loadTimeout?: Duration.Input;
   /**
    * Maximum time allowed for a single module's `activate()` Effect to settle.
    * Modules that exceed this fail with {@link PluginTimeoutError}; the owning
    * plugin is recorded on `failed` and auto-disabled. Defaults to 30 seconds;
    * pass `Duration.infinity` to disable.
    */
-  activationTimeout?: Duration.DurationInput;
+  activationTimeout?: Duration.Input;
 };
 
 /**
@@ -136,7 +137,7 @@ export interface PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId;
   readonly activation: PubSub.PubSub<ActivationMessage>;
   readonly capabilities: CapabilityManager.CapabilityManager;
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
   /**
    * Cached registry catalog state plus pass-throughs for `listVersions` /
    * `getPlugin`. Always present — the host supplies a `pluginRegistryProvider`
@@ -281,16 +282,16 @@ export const isManager = (value: unknown): value is PluginManager => {
 class ManagerImpl implements PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId = ManagerTypeId;
   readonly capabilities: CapabilityManager.CapabilityManager;
-  readonly registry: Registry.Registry;
+  readonly registry: Registry.AtomRegistry;
   readonly pluginRegistry: PluginRegistry.Manager;
 
   private readonly _state: ManagerState;
   private readonly _loader: ModuleLoader;
   private readonly _scheduler: ActivationScheduler;
   private readonly _catalog: PluginCatalog;
-  private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  private readonly _shutdownSemaphore = Semaphore.makeUnsafe(1);
   /** The failure-supervision fiber; stopped by `shutdown`, restarted by `_withRuntime`. */
-  private _supervisor: Fiber.RuntimeFiber<never> | undefined;
+  private _supervisor: Fiber.Fiber<never> | undefined;
 
   constructor({
     pluginLoader,
@@ -346,7 +347,7 @@ class ManagerImpl implements PluginManager {
       .pipe(
         Effect.mapError((cause) => new PluginInitializationError({ cause })),
         Effect.tap(() => Deferred.succeed(this._state.initialized, undefined)),
-        Effect.tapErrorCause((cause) => Deferred.failCause(this._state.initialized, cause)),
+        Effect.tapCause((cause) => Deferred.failCause(this._state.initialized, cause)),
       )
       .pipe(EffectEx.runAndForwardErrors);
   }
@@ -366,7 +367,7 @@ class ManagerImpl implements PluginManager {
     }
     this._supervisor = PubSub.subscribe(this._state.activation).pipe(
       Effect.flatMap((subscription) =>
-        Queue.take(subscription).pipe(
+        PubSub.take(subscription).pipe(
           Effect.tap((message) => Effect.sync(() => this._autoDisableOnModuleError(message))),
           Effect.forever,
         ),
@@ -550,7 +551,7 @@ class ManagerImpl implements PluginManager {
 
   shutdown(): Effect.Effect<boolean, Error> {
     return this._shutdownSemaphore.withPermits(1)(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         yield* Ref.set(this._state.shuttingDown, true);
         log('shutdown');
 

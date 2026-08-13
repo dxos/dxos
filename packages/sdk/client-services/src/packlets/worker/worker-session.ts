@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import type * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { Trigger } from '@dxos/async';
 import { ClientRpcServer, PROXY_CONNECTION_TIMEOUT, makeBridgeServiceClientOverProtocol } from '@dxos/client-protocol';
@@ -22,11 +22,11 @@ export type WorkerSessionProps = {
    * Reverse-direction (worker→tab) protocol serving the tab's {@link BridgeService} (WebRTC transport)
    * over effect-rpc. The worker is the client; the tab is the runner.
    */
-  systemProtocol: RpcClient.Protocol['Type'];
+  systemProtocol: RpcClient.Protocol['Service'];
   /**
    * Forward-direction (tab→worker) protocol over which the worker serves the client services.
    */
-  appProtocol: RpcServer.Protocol['Type'];
+  appProtocol: RpcServer.Protocol['Service'];
   // TODO(wittjosiah): Remove shellPort.
   shellPort?: MessagePort;
   readySignal: Trigger<Error | undefined>;
@@ -43,7 +43,7 @@ export class WorkerSession {
   private readonly _shellClientRpc?: ClientRpcServer;
   private readonly _startTrigger = new Trigger();
   private readonly _serviceHost: ClientServicesHost;
-  private readonly _systemProtocol: RpcClient.Protocol['Type'];
+  private readonly _systemProtocol: RpcClient.Protocol['Service'];
   #closeBridge?: () => Promise<void>;
 
   public readonly onClose = new Callback<() => Promise<void>>();
@@ -68,13 +68,13 @@ export class WorkerSession {
       }),
     'WorkerService.stop': () =>
       // Close on the next tick (forked) so the RPC response is delivered before the transport tears down.
-      Effect.forkDaemon(
-        Effect.gen(this, function* () {
-          yield* Effect.async<void>((resume) => {
+      Effect.forkDetach(
+        Effect.gen({ self: this }, function* () {
+          yield* Effect.callback<void>((resume) => {
             setTimeout(() => resume(Effect.void));
           });
           yield* this.close();
-        }).pipe(Effect.tapErrorCause((cause) => Effect.sync(() => log.catch(cause)))),
+        }).pipe(Effect.tapCause((cause) => Effect.sync(() => log.catch(cause)))),
       ).pipe(Effect.asVoid),
   };
 
@@ -111,7 +111,7 @@ export class WorkerSession {
   }
 
   open(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('opening...');
       // The tab serves the WebRTC `BridgeService` on the reverse channel; build a client the worker's
       // network stack can proxy through.
@@ -137,7 +137,7 @@ export class WorkerSession {
   }
 
   close(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log.debug('closing...');
       yield* Effect.promise(async () => {
         try {

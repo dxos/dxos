@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 
-import { RegistryCapabilities } from '../types';
+import { RegistryCapabilities } from '#types';
 
 /**
  * Startup module that auto-loads a locally-served dev plugin when the user has

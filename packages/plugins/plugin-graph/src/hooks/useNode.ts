@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
-import { type Graph, type Node } from '@dxos/app-graph';
+import type * as Graph from '@dxos/app-graph/Graph';
+import type * as Node from '@dxos/app-graph/Node';
 
 /**
  * React hook to get a node from the graph.

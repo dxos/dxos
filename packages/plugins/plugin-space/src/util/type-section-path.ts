@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type CapabilityManager } from '@dxos/app-framework';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import type * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { type GraphBuilder } from '@dxos/plugin-graph';
 
 /**
  * The path under which the nav tree shows an object surfaced by a type section

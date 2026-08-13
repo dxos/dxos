@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React from 'react';
 
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -18,9 +19,8 @@ import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from
 // Data
 //
 
-export const ConstantShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const ConstantShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('constant'),
     value: Schema.optional(Schema.Any),
   }),

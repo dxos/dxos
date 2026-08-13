@@ -20,7 +20,7 @@ describe('AiContext.Binder', () => {
   test('reopened binder resolves all distinct bound objects', async ({ expect }) => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
 
       const a = yield* Database.add(Obj.make(TypeA, {}));
       const b = yield* Database.add(Obj.make(TypeB, {}));
@@ -47,7 +47,7 @@ describe('AiContext.Binder', () => {
   test('should handle bind with Ref', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
 
       const TestSchema = Type.makeObject(DXN.make('org.dxos.type.example', '0.1.0'))(Schema.Struct({}));
 

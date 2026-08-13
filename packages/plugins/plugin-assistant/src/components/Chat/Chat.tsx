@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
@@ -564,9 +564,9 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
           Atom.make(
             (get) =>
               outlineProp ??
-              Option.fromNullable(chat).pipe(
+              Option.fromNullishOr(chat).pipe(
                 Option.map((_) => get(Obj.atom(_))),
-                Option.flatMapNullable((_) => _?.outline?.atom),
+                Option.flatMapNullishOr((_) => _?.outline?.atom),
                 Option.map(get),
                 Option.getOrUndefined,
               ),
