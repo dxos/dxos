@@ -3,7 +3,7 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { Graph, GraphModel } from '@dxos/graph';
+import { Edge, GraphModel } from '@dxos/graph';
 import { EntityId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
@@ -16,7 +16,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
   ComputeGraphModel,
   ComputeGraphBuilder
 > {
-  static create(graph?: Partial<Graph.Graph<ComputeNode, ComputeEdge>>): ComputeGraphModel {
+  static create(graph?: Partial<GraphModel.Data<ComputeNode, ComputeEdge>>): ComputeGraphModel {
     return new ComputeGraphModel(
       Obj.make(ComputeGraph, {
         graph: {
@@ -31,7 +31,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
   private readonly _root: ComputeGraph;
 
   constructor(root: ComputeGraph) {
-    super({ graph: root.graph as Graph.Graph<ComputeNode, ComputeEdge>, change: (fn) => Obj.update(root, fn) });
+    super({ graph: root.graph as GraphModel.Data<ComputeNode, ComputeEdge>, change: (fn) => Obj.update(root, fn) });
     this._root = root;
   }
 
@@ -43,7 +43,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
     return new ComputeGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph.Graph<ComputeNode, ComputeEdge>>): ComputeGraphModel {
+  override copy(graph?: Partial<GraphModel.Data<ComputeNode, ComputeEdge>>): ComputeGraphModel {
     return ComputeGraphModel.create(graph);
   }
 
@@ -77,7 +77,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
     const input = target.property ?? DEFAULT_INPUT;
     const edge: ComputeEdge = {
       // Ports disambiguate the parallel edges a pair of nodes may carry.
-      id: Graph.createEdgeId({ source: sourceId, target: targetId, relation: `${output}-${input}` }),
+      id: Edge.createId({ source: sourceId, target: targetId, relation: `${output}-${input}` }),
       source: sourceId,
       target: targetId,
       output,

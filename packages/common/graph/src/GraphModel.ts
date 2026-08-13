@@ -6,14 +6,29 @@
 
 import * as EffectGraph from 'effect/Graph';
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { type MakeOptional } from '@dxos/util';
+import { type MakeOptional, type Specialize } from '@dxos/util';
 
-import * as Graph from './Graph';
+import { type Any as AnyEdge, Edge as EdgeSchema, createId as createEdgeId } from './Edge';
+import { type Any as AnyNode, Node as NodeSchema } from './Node';
+
+/**
+ * Serialized graph; the shape persisted by ECHO types and returned by the model's snapshot.
+ */
+export const Data = Schema.Struct({
+  id: Schema.optional(Schema.String),
+  nodes: Schema.mutable(Schema.Array(NodeSchema)),
+  edges: Schema.mutable(Schema.Array(EdgeSchema)),
+});
+
+export interface AnyData extends Schema.Schema.Type<typeof Data> {}
+
+export type Data<Node extends AnyNode, Edge extends AnyEdge> = Specialize<AnyData, { nodes: Node[]; edges: Edge[] }>;
 
 /**
  * Optional function to wrap mutations (e.g., for ECHO objects that require Obj.update).
@@ -26,9 +41,9 @@ export type GraphChangeFunction = (fn: () => void) => void;
  */
 type Slot<Node> = { id: string; value: Option.Option<Node> };
 
-export type Options<Node extends Graph.Node.Any, Edge extends Graph.Edge.Any> = {
+export type Options<Node extends AnyNode, Edge extends AnyEdge> = {
   registry?: Registry.AtomRegistry;
-  graph?: Partial<Graph.Graph<Node, Edge>>;
+  graph?: Partial<Data<Node, Edge>>;
   /**
    * When set, structural mutations are mirrored into `graph` through this function, which owns the
    * transaction (e.g. `Obj.update` for an ECHO-backed graph).
@@ -39,7 +54,7 @@ export type Options<Node extends Graph.Node.Any, Edge extends Graph.Edge.Any> = 
 /**
  * Predicate selecting which edges an algorithm traverses; the default includes every edge.
  */
-export type EdgeFilter<Edge extends Graph.Edge.Any> = (edge: Edge) => boolean;
+export type EdgeFilter<Edge extends AnyEdge> = (edge: Edge) => boolean;
 
 /**
  * Which way an adjacency view follows edges.
@@ -49,11 +64,11 @@ export type Direction = 'outgoing' | 'incoming';
 /**
  * One step of a cycle: a node and the outgoing edge continuing the loop.
  */
-export type CycleStep<Edge extends Graph.Edge.Any> = { node: string; edge: Edge };
+export type CycleStep<Edge extends AnyEdge> = { node: string; edge: Edge };
 
-export type Subscription<Node extends Graph.Node.Any = Graph.Node.Any, Edge extends Graph.Edge.Any = Graph.Edge.Any> = (
+export type Subscription<Node extends AnyNode = AnyNode, Edge extends AnyEdge = AnyEdge> = (
   model: AbstractGraphModel<Node, Edge>,
-  graph: Graph.Graph<Node, Edge>,
+  graph: Data<Node, Edge>,
 ) => void;
 
 /**
@@ -64,8 +79,8 @@ export type Subscription<Node extends Graph.Node.Any = Graph.Node.Any, Edge exte
  * rather than on every write.
  */
 export abstract class AbstractGraphModel<
-  Node extends Graph.Node.Any = Graph.Node.Any,
-  Edge extends Graph.Edge.Any = Graph.Edge.Any,
+  Node extends AnyNode = AnyNode,
+  Edge extends AnyEdge = AnyEdge,
   Model extends AbstractGraphModel<Node, Edge, Model, Builder> = any,
   Builder extends AbstractBuilder<Node, Edge, Model> = AbstractBuilder<Node, Edge, Model>,
 > {
@@ -74,16 +89,16 @@ export abstract class AbstractGraphModel<
   readonly #nodeIndex = new Map<string, EffectGraph.NodeIndex>();
   readonly #edgeIndex = new Map<string, EffectGraph.EdgeIndex>();
   readonly #change?: GraphChangeFunction;
-  readonly #mirror?: Partial<Graph.Graph<Node, Edge>>;
+  readonly #mirror?: Partial<Data<Node, Edge>>;
   readonly #id?: string;
 
   #graph: EffectGraph.MutableDirectedGraph<Slot<Node>, Edge>;
-  #snapshot?: { version: number; graph: Graph.Graph<Node, Edge> };
+  #snapshot?: { version: number; graph: Data<Node, Edge> };
   #adjacencyCache?: { version: number; outgoing: Map<string, Edge[]>; incoming: Map<string, Edge[]> };
   #depth = 0;
   #dirty = false;
 
-  readonly #graphAtom: Atom.Atom<Graph.Graph<Node, Edge>>;
+  readonly #graphAtom: Atom.Atom<Data<Node, Edge>>;
   readonly #nodeAtoms: (id: string) => Atom.Atom<Node | undefined>;
   readonly #edgeAtoms: (id: string) => Atom.Atom<Edge | undefined>;
   readonly #neighborAtoms: (key: string) => Atom.Atom<Node[]>;
@@ -135,7 +150,7 @@ export abstract class AbstractGraphModel<
   /**
    * New model of the same kind, optionally seeded with the given graph.
    */
-  abstract copy(graph?: Partial<Graph.Graph<Node, Edge>>): Model;
+  abstract copy(graph?: Partial<Data<Node, Edge>>): Model;
 
   [inspectCustom]() {
     return this.toJSON();
@@ -162,7 +177,7 @@ export abstract class AbstractGraphModel<
   /**
    * Immutable snapshot in the schema shape, recomputed only when the graph has changed.
    */
-  get graph(): Graph.Graph<Node, Edge> {
+  get graph(): Data<Node, Edge> {
     const version = this.#registry.get(this.#version);
     if (this.#snapshot?.version !== version) {
       this.#snapshot = { version, graph: this.#encode() };
@@ -171,7 +186,7 @@ export abstract class AbstractGraphModel<
     return this.#snapshot.graph;
   }
 
-  get graphAtom(): Atom.Atom<Graph.Graph<Node, Edge>> {
+  get graphAtom(): Atom.Atom<Data<Node, Edge>> {
     return this.#graphAtom;
   }
 
@@ -286,7 +301,7 @@ export abstract class AbstractGraphModel<
     return this.findNode(id) ?? failedInvariant(`node not found: ${id}`);
   }
 
-  filterNodes({ type }: Partial<Graph.Node.Any> = {}): Node[] {
+  filterNodes({ type }: Partial<AnyNode> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -381,7 +396,7 @@ export abstract class AbstractGraphModel<
     return this.findEdge(id) ?? failedInvariant(`edge not found: ${id}`);
   }
 
-  filterEdges({ type, source, target }: Partial<Graph.Edge.Any> = {}): Edge[] {
+  filterEdges({ type, source, target }: Partial<AnyEdge> = {}): Edge[] {
     // Anchoring on an endpoint reads the adjacency index instead of scanning every edge.
     const candidates = source ? this.outgoing(source) : target ? this.incoming(target) : this.edges;
     return candidates.filter(
@@ -410,7 +425,7 @@ export abstract class AbstractGraphModel<
     invariant(edge.source);
     invariant(edge.target);
     // Supplying the one optional key completes the type, which TypeScript cannot narrow itself.
-    const resolved = (edge.id ? edge : { id: Graph.createEdgeId(edge), ...edge }) as Edge;
+    const resolved = (edge.id ? edge : { id: createEdgeId(edge), ...edge }) as Edge;
     invariant(!this.findEdge(resolved.id), `edge already exists: ${resolved.id}`);
     this.batch(() => {
       const index = EffectGraph.addEdge(
@@ -468,7 +483,7 @@ export abstract class AbstractGraphModel<
    * Rebuilds the working graph from the backing source for changes that did not originate here
    * (a peer edit or an undo), so the mirror is not written back.
    */
-  reload(graph?: Partial<Graph.Graph<Node, Edge>>): this {
+  reload(graph?: Partial<Data<Node, Edge>>): this {
     return this.batch(() => {
       this.#resetWorking();
       this.#load(graph ?? this.#mirror, false);
@@ -520,7 +535,7 @@ export abstract class AbstractGraphModel<
   /**
    * Replaces the entire graph, emitting one notification.
    */
-  setGraph(graph: Partial<Graph.Graph<Node, Edge>>): this {
+  setGraph(graph: Partial<Data<Node, Edge>>): this {
     return this.batch(() => {
       this.clear();
       this.#load(graph, true);
@@ -676,7 +691,7 @@ export abstract class AbstractGraphModel<
     return this.#adjacencyCache;
   }
 
-  #encode(): Graph.Graph<Node, Edge> {
+  #encode(): Data<Node, Edge> {
     const nodes: Node[] = [];
     for (const [, slot] of EffectGraph.entries(EffectGraph.nodes(this.#graph))) {
       if (Option.isSome(slot.value)) {
@@ -692,7 +707,7 @@ export abstract class AbstractGraphModel<
     return { id: this.#id, nodes, edges };
   }
 
-  #load(graph: Partial<Graph.Graph<Node, Edge>> | undefined, mirror: boolean): void {
+  #load(graph: Partial<Data<Node, Edge>> | undefined, mirror: boolean): void {
     if (!graph) {
       return;
     }
@@ -773,7 +788,7 @@ export abstract class AbstractGraphModel<
     this.#dirty = true;
   }
 
-  #mirrorMutate(fn: (mirror: Partial<Graph.Graph<Node, Edge>>) => void): void {
+  #mirrorMutate(fn: (mirror: Partial<Data<Node, Edge>>) => void): void {
     const mirror = this.#mirror;
     if (!mirror || !this.#change) {
       return;
@@ -793,7 +808,7 @@ const parseNeighborKey = (key: string): { id: string; type?: string; direction: 
   return { id, type: type || undefined, direction: direction === 'incoming' ? 'incoming' : 'outgoing' };
 };
 
-const sameNodes = (a: readonly Graph.Node.Any[], b: readonly Graph.Node.Any[]): boolean =>
+const sameNodes = (a: readonly AnyNode[], b: readonly AnyNode[]): boolean =>
   a.length === b.length && a.every((node, index) => node === b[index]);
 
 const removeInPlace = <T>(list: T[] | undefined, predicate: (value: T) => boolean): void => {
@@ -812,8 +827,8 @@ const removeInPlace = <T>(list: T[] | undefined, predicate: (value: T) => boolea
  * Chainable builder wrapper.
  */
 export abstract class AbstractBuilder<
-  Node extends Graph.Node.Any,
-  Edge extends Graph.Edge.Any,
+  Node extends AnyNode,
+  Edge extends AnyEdge,
   Model extends AbstractGraphModel<Node, Edge, any, any>,
 > {
   constructor(protected readonly _model: Model) {}
@@ -855,15 +870,17 @@ export abstract class AbstractBuilder<
 /**
  * Basic model.
  */
-export class GraphModel<
-  Node extends Graph.Node.Any = Graph.Node.Any,
-  Edge extends Graph.Edge.Any = Graph.Edge.Any,
-> extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>, Builder<Node, Edge>> {
+export class GraphModel<Node extends AnyNode = AnyNode, Edge extends AnyEdge = AnyEdge> extends AbstractGraphModel<
+  Node,
+  Edge,
+  GraphModel<Node, Edge>,
+  Builder<Node, Edge>
+> {
   override get builder(): Builder<Node, Edge> {
     return new Builder<Node, Edge>(this);
   }
 
-  override copy(graph?: Partial<Graph.Graph<Node, Edge>>): GraphModel<Node, Edge> {
+  override copy(graph?: Partial<Data<Node, Edge>>): GraphModel<Node, Edge> {
     return new GraphModel<Node, Edge>({ registry: this.registry, graph });
   }
 }
@@ -871,11 +888,12 @@ export class GraphModel<
 /**
  * Basic builder.
  */
-export class Builder<
-  Node extends Graph.Node.Any = Graph.Node.Any,
-  Edge extends Graph.Edge.Any = Graph.Edge.Any,
-> extends AbstractBuilder<Node, Edge, GraphModel<Node, Edge>> {}
+export class Builder<Node extends AnyNode = AnyNode, Edge extends AnyEdge = AnyEdge> extends AbstractBuilder<
+  Node,
+  Edge,
+  GraphModel<Node, Edge>
+> {}
 
-export const make = <Node extends Graph.Node.Any = Graph.Node.Any, Edge extends Graph.Edge.Any = Graph.Edge.Any>(
+export const make = <Node extends AnyNode = AnyNode, Edge extends AnyEdge = AnyEdge>(
   options?: Options<Node, Edge>,
 ): GraphModel<Node, Edge> => new GraphModel<Node, Edge>(options);

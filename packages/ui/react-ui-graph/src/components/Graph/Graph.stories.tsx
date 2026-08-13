@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Graph, type GraphModel, type SelectionMode, SelectionModel } from '@dxos/graph';
+import { type GraphModel, type SelectionMode, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -53,7 +53,7 @@ type StoryArgs = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
-  graph: () => Graph.Any;
+  graph: () => GraphModel.AnyData;
   selectionMode?: SelectionMode;
   projectorType?: ProjectorType;
   projectorOptions?:

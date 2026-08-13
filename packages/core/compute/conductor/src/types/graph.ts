@@ -7,7 +7,7 @@ import * as Struct from 'effect/Struct';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
-import { Graph } from '@dxos/graph';
+import { Edge, Node } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literals(['string', 'number', 'boolean', 'object']);
 
@@ -17,7 +17,7 @@ export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
  * GraphNode.
  * NOTE: We have a mixin of properties for different node types for simplicity, rather than a discriminated union.
  */
-export const ComputeNode = Graph.Node.pipe(
+export const ComputeNode = Node.Node.pipe(
   Schema.fieldsAssign(
     Schema.Struct({
       /** For template nodes. */
@@ -68,7 +68,7 @@ export type ComputeNodeMeta = {
 /**
  * GraphEdge.
  */
-export const ComputeEdge = Graph.Edge.mapFields(
+export const ComputeEdge = Edge.Edge.mapFields(
   Struct.assign({
     // TODO(burdon): Rename sourceProp, targetProp?
 

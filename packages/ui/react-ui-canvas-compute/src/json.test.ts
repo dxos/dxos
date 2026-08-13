@@ -6,11 +6,11 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
-import { Graph } from '@dxos/graph';
+import { Edge, Node } from '@dxos/graph';
 
 import { createGptCircuit } from './testing';
 
-export const Shape = Graph.Node.mapFields(
+export const Shape = Node.Node.mapFields(
   Struct.assign({
     text: Schema.optional(Schema.String),
     guide: Schema.optional(Schema.Boolean),
@@ -18,7 +18,7 @@ export const Shape = Graph.Node.mapFields(
   }),
 );
 
-export const Connection = Graph.Edge.mapFields(
+export const Connection = Edge.Edge.mapFields(
   Struct.assign({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),

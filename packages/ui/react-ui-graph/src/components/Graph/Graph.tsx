@@ -5,7 +5,7 @@
 import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { GraphModel, type Graph as Graph$ } from '@dxos/graph';
+import { Edge, type Graph as Graph$, GraphModel, Node } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';

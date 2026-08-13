@@ -7,14 +7,14 @@ import * as Struct from 'effect/Struct';
 
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Graph } from '@dxos/graph';
+import { Edge, GraphModel, Node } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 
 /**
  * Base type for all shapes.
  */
-export const Shape = Graph.Node.mapFields((fields) => Struct.omit(fields, ['type'])).pipe(
+export const Shape = Node.Node.mapFields((fields) => Struct.omit(fields, ['type'])).pipe(
   // TODO(burdon): Breaks graph contract?
   Schema.fieldsAssign({
     type: Schema.String,
@@ -29,7 +29,7 @@ export type Shape = Schema.Schema.Type<typeof Shape>;
 /**
  * Connections between shapes.
  */
-export const Connection = Graph.Edge.mapFields(
+export const Connection = Edge.Edge.mapFields(
   Struct.assign({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),
@@ -55,7 +55,7 @@ export class CanvasBoard extends Type.makeObject<CanvasBoard>(DXN.make('org.dxos
     /**
      * Graph of shapes positioned on the canvas.
      */
-    layout: Graph.Graph,
+    layout: GraphModel.Data,
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--infinity--regular', hue: 'sky' })),
 ) {}
 

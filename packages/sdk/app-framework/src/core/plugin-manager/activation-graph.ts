@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Graph, GraphModel } from '@dxos/graph';
+import { Edge, GraphModel, Node } from '@dxos/graph';
 
 import type * as Capability from '../capability';
 import type * as Plugin from '../plugin';
@@ -28,8 +28,8 @@ import type * as Plugin from '../plugin';
 
 export type EdgeKind = 'hard' | 'soft';
 
-export type ActivationNode = Graph.Node.Node<Plugin.PluginModule>;
-export type ActivationEdge = Graph.Edge.Edge<{ capability: string }>;
+export type ActivationNode = Node.Of<Plugin.PluginModule>;
+export type ActivationEdge = Edge.Of<{ capability: string }>;
 export type ActivationGraphModel = GraphModel.GraphModel<ActivationNode, ActivationEdge>;
 
 export type CycleEntry = { module: string; capability: string };

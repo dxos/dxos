@@ -5,7 +5,7 @@
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { isProxy } from '@dxos/echo/internal';
-import { type Graph, GraphModel } from '@dxos/graph';
+import { GraphModel } from '@dxos/graph';
 import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from './schema';
@@ -17,11 +17,11 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
   CanvasGraphBuilder<S>
 > {
   static create<S extends Shape>(
-    graph?: Partial<Graph.Any>,
+    graph?: Partial<GraphModel.AnyData>,
     change?: GraphModel.GraphChangeFunction,
   ): CanvasGraphModel<S> {
     if (isProxy(graph) as any) {
-      return new CanvasGraphModel<S>({ graph: graph as Graph.Graph<S, Connection>, change });
+      return new CanvasGraphModel<S>({ graph: graph as GraphModel.Data<S, Connection>, change });
     }
 
     return new CanvasGraphModel<S>({
@@ -36,7 +36,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
     return new CanvasGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph.Graph<S, Connection>>): CanvasGraphModel<S> {
+  override copy(graph?: Partial<GraphModel.Data<S, Connection>>): CanvasGraphModel<S> {
     return CanvasGraphModel.create<S>(graph);
   }
 

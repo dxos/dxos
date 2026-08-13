@@ -10,13 +10,13 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import * as Graph from './Graph';
 import * as GraphModel from './GraphModel';
+import * as Node from './Node';
 
 // Create a registry for tests.
 const createRegistry = () => Registry.make();
 
-const TestNode = Graph.Node.mapFields(Struct.assign({ value: Schema.String }));
+const TestNode = Node.Node.mapFields(Struct.assign({ value: Schema.String }));
 
 type TestNode = Schema.Schema.Type<typeof TestNode>;
 
@@ -40,7 +40,7 @@ describe('Graph', () => {
     const registry = createRegistry();
     const graph = new GraphModel.GraphModel({ registry });
 
-    const done = new Trigger<Graph.Any>();
+    const done = new Trigger<GraphModel.AnyData>();
     const unsubscribe = graph.subscribe((model, g) => {
       if (g.edges.length === 2) {
         done.wake(g);
@@ -178,20 +178,20 @@ describe('Graph', () => {
 
   test('optional', ({ expect }) => {
     {
-      const graph = new GraphModel.GraphModel<Graph.Node.Node<string>>();
+      const graph = new GraphModel.GraphModel<Node.Of<string>>();
       const node = graph.addNode({ id: 'test', data: 'test' });
       expect(node.data.length).to.eq(4);
     }
 
     {
-      const graph = new GraphModel.GraphModel<Graph.Node.Any>();
+      const graph = new GraphModel.GraphModel<Node.Any>();
       const node = graph.addNode({ id: 'test' });
       expect(node.data?.length).to.be.undefined;
     }
   });
 
   test('add and remove subgraphs', ({ expect }) => {
-    const graph = new GraphModel.GraphModel<Graph.Node.Node<TestData>>();
+    const graph = new GraphModel.GraphModel<Node.Of<TestData>>();
     graph.builder
       .addNode({ id: 'node1', data: { value: 'test' } })
       .addNode({ id: 'node2', data: { value: 'test' } })
@@ -353,7 +353,7 @@ describe('Graph', () => {
   });
 
   test('mirrors structural mutations into the backing source', ({ expect }) => {
-    const source: Graph.Any = { nodes: [], edges: [] };
+    const source: GraphModel.AnyData = { nodes: [], edges: [] };
     let transactions = 0;
     const graph = new GraphModel.GraphModel({
       graph: source,
@@ -376,7 +376,7 @@ describe('Graph', () => {
   });
 
   test('sync reloads only when the source diverges', ({ expect }) => {
-    const source: Graph.Any = { nodes: [{ id: 'node-1' }], edges: [] };
+    const source: GraphModel.AnyData = { nodes: [{ id: 'node-1' }], edges: [] };
     const graph = new GraphModel.GraphModel({ graph: source, change: (fn) => fn() });
     expect(graph.nodes).to.have.length(1);
 
