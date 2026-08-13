@@ -11,8 +11,8 @@ import {
   MailboxAction,
   OperationHandler,
   ProjectTemplates,
-  SenderAction,
   Schema,
+  SenderAction,
   SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
