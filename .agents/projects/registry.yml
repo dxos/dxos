@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: client-startup-timeout
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-08-13
+    summary: 'Client fails to start on document-heavy profiles — the worker blocks its own thread ~18s on local subduction hydration (O(docs) synchronous SQLite reads), misses the flat 15s connect deadline, and the abandoned-but-uncancelled onConnect then deadlocks the retry path so every reload fails. Distinct from startup-latency (app-framework module activation); this is the worker/storage thread.'
+    tasks: .agents/projects/client-startup-timeout/TASKS.md
+    design: .agents/projects/client-startup-timeout/DESIGN.md
+    prs: []
+    resume: 'Diagnosis complete from a user NDJSON log (worker om1i9a / tab c6bhej, 2026-08-13T13:07-13:08); nothing implemented. Worker readies at +3.1s, posts session ports at +3.2s, then blocks until +21.4s — 2,702 queries / 7.35s SQL plus ~11s WASM, with ZERO peers connected (edge ws connects at +21.9s, itself starved by the same thread). Read-dominated: 2,650 GLOB reads vs 478 inserts in the stall; source is SubductionSource#addEntry firing listCommitIds+listFragmentIds per entry (1,703 docs x 2 key families = 3,406 distinct loadRange, seen 5,962x as compaction re-lists). Fatal rather than slow because waitWithLockOrRpcTimeout abandons but never cancels onConnect: it completes in the background, holds the tab liveness lock, so the worker session stays open, tabsProcessed keeps the clientId, and the client retries forever with the same readonly #clientId -> 39x "ignoring duplicate client". BLOCKED on Phase 0: user says an existing subduction patch mitigates unnecessary startup writes; searched both patches/ files (556-line automerge-repo patch is all sync-path; the 22-line subduction one is a browser export condition), git log --all, SqliteStorageAdapter.save, and upstream .47 — not found. Two leads: pinned at 2.6.0-subduction.40 vs channel .47 (held back by f6d40d6099), and the automerge-subduction 0.16.1 bump stranded on origin/claude/sweet-goldberg-twtikd. Note even a perfect write fix would not have saved this startup (reads dominate the stall). Workaround for a stuck tab: open a second tab (fresh clientId, warm worker).'
+
   - name: test-profiling-leaks
     status: active
     user: dmaretskyi
