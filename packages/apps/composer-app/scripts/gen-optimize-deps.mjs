@@ -157,6 +157,15 @@ try {
   if (dropped.length > 0) {
     console.log(`Dropped ${dropped.length} dep(s) with no root-resolvable owner: ${dropped.join(', ')}`);
   }
+
+  // A crawl can also come back near-empty without erroring — a missing prerequisite leaves most of
+  // the graph unreachable rather than unresolvable. The short list it yields still type-checks, so
+  // without a floor the loss only resurfaces as reload-per-plugin churn in someone else's `serve`.
+  // The boot path alone accounts for several hundred entries; anything this low is a broken run.
+  const MIN_ENTRIES = 100;
+  if (deps.length < MIN_ENTRIES) {
+    throw new Error(`scan resolved only ${deps.length} entries (expected at least ${MIN_ENTRIES}); not rewriting.`);
+  }
 } finally {
   await server.close();
   rmSync(cacheDir, { recursive: true, force: true });
