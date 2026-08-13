@@ -159,12 +159,17 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       and un-archiving is simply re-adding the tag. This is why "Inbox = non-archived" needs no
       negation — modelling an `archived` tag _and_ a complement would be a second, divergent model of
       the same fact. Surface: `translations.ts` already carries an orphan `'action-archive.menu':
-    'Archive'` referenced by nothing, so an archive affordance was started and abandoned — wire the
+'Archive'` referenced by nothing, so an archive affordance was started and abandoned — wire the
       menu item to it. Fold into the conversation-menu item below.
 - [ ] **ConversationStack avatar has no contact affordance** (reported 2026-08-13) — the message tile
       renders a bare `Avatar`, so the popover/create mechanism the `Row.Person` surfaces got is absent
       in `MessageArticle`. Swap it for the exported `ContactAvatar` and host `ContactPreview` in the
       story.
+- [x] **`Row` story star was not reactive** (reported 2026-08-13) — the Default story passed
+      `<Row.Star starred onToggle={() => {}} />`: hardcoded on, no-op handler, so the toggle rendered
+      but never moved. `Row.Star` itself is fine (controlled, and it does fire `onToggle`) — the story
+      now owns the state. Verified in the browser on :9013: `unstar.label` → `star.label` →
+      `unstar.label` across two clicks.
 - [ ] **`useCardHover` target-change regression test** — the cleanup now also runs when `open`/
       `enabled` change (a timer armed for the previous contact could fire a stale `open`), but the test
       CodeRabbit asked for is not written; it needs the hook exported from `Row.tsx` or a story-level
