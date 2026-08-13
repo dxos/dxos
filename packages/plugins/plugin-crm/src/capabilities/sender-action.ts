@@ -10,7 +10,7 @@ import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import { CrmOperation } from '#types';
 
 /**
- * Injects sender enrichment into plugin-inbox's per-message conversation menu: one entry that profiles
+ * Injects sender research into plugin-inbox's per-message conversation menu: one entry that profiles
  * the sender and then fetches their image.
  *
  * Two invocations rather than one composite operation, run in order — the image pass reads whatever the
@@ -18,14 +18,14 @@ import { CrmOperation } from '#types';
  * `limit`) rather than taking a subject, so there is nothing to fuse them into today.
  *
  * Only people are offered: `ResearchOrganization` needs an Organization, and a sender's employer is not
- * reliably known at this point — the record view's own Enrich action covers organizations.
+ * reliably known at this point — the record view's own Research action covers organizations.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributeAll(InboxCapabilities.SenderAction, [
       {
-        id: 'enrich-sender',
-        label: 'Enrich sender',
+        id: 'research-sender',
+        label: 'Research sender',
         icon: 'ph--user-focus--regular',
         createInvocations: (actor) => {
           // No address means no way to resolve the Person, so the entry is omitted rather than failing

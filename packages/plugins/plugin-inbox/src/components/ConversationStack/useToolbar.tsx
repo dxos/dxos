@@ -30,7 +30,7 @@ export type UseMessageToolbarActionsProps = {
   onArchive?: () => void;
   /** Creates a tracking Project from this message. */
   onCreateProject?: () => void;
-  /** Contributed sender-scoped actions (enrichment), already bound to this message's sender. */
+  /** Contributed sender-scoped actions (research), already bound to this message's sender. */
   senderActions?: readonly { id: string; label: string; icon?: string; onSelect: () => void }[];
 };
 
@@ -155,7 +155,7 @@ export const useMessageActions = ({
               );
             }
 
-            // Sender-scoped actions contributed by other plugins (plugin-crm's enrichment).
+            // Sender-scoped actions contributed by other plugins (plugin-crm's research).
             for (const item of senderActions) {
               builder.action(
                 `sender-${item.id}`,

@@ -59,7 +59,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
       threshold: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))),
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
     // Exclusion filters (see {@link Filter}) honored across the UI, sync, and analysis — messages
-    // matching any filter are hidden and never committed / enriched.
+    // matching any filter are hidden and never committed / scanned.
     messageFilters: Schema.optional(Schema.Array(Filter)),
     // Optional per-mailbox reply guidance (tone, standing facts, sign-off, skills). A shared
     // `Instructions` object can be referenced by several mailboxes, or a distinct one created per

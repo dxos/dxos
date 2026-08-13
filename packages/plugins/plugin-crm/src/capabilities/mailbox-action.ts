@@ -31,8 +31,8 @@ export default Capability.makeModule(
       {
         // Space-wide rather than mailbox-scoped (the operation walks every Person/Organization
         // missing an image), but the mailbox menu is where a user is when contacts appear.
-        id: 'enrich-images',
-        label: 'Enrich images',
+        id: 'find-images',
+        label: 'Find images',
         icon: 'ph--user-circle--regular',
         createInvocation: () => ({ operation: CrmOperation.EnrichImages, input: {} }),
       },

@@ -556,8 +556,8 @@ export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProg
 export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
   createProgressKey(mailbox, '#correspondents');
 
-/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link EnrichMailbox}). */
-export const createEnrichProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#enrich');
+/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link ScanMailbox}). */
+export const createScanProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#scan');
 
 /** Progress-registry key for a mailbox's summarization monitor ({@link SummarizeMailbox}). */
 export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#summarize');
@@ -607,7 +607,7 @@ export const SummarizeMailbox = Operation.make({
 }).pipe(Operation.idempotent);
 
 /**
- * The cost classes {@link EnrichMailbox} runs, in cascade order. Each tier's output gates the next,
+ * The cost classes {@link ScanMailbox} runs, in cascade order. Each tier's output gates the next,
  * so the ordering is the contract — not a convenience:
  *
  * - `deterministic` — no LLM, no spend: contacts (the known-sender allow-list) and subscriptions.
@@ -623,17 +623,17 @@ export type MailboxTier = Schema.Schema.Type<typeof MailboxTier>;
 
 /**
  * Cascade order. Each tier consumes what the ones before it wrote, so this order — not the order the
- * caller happens to list — is the one {@link EnrichMailbox} runs in.
+ * caller happens to list — is the one {@link ScanMailbox} runs in.
  */
 export const MAILBOX_TIER_ORDER: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize', 'analyze'];
 
 /** Tiers run when the caller names none: the bounded ones (`analyze` walks the whole feed). */
-export const DEFAULT_ENRICH_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
+export const DEFAULT_SCAN_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
 
-export const EnrichMailbox = Operation.make({
+export const ScanMailbox = Operation.make({
   meta: {
-    key: makeKey('enrichMailbox'),
-    name: 'Enrich Mailbox',
+    key: makeKey('scanMailbox'),
+    name: 'Scan Mailbox',
     description:
       'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
     icon: 'ph--stack-simple--regular',

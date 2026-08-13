@@ -164,7 +164,7 @@ export const MessageArticle = ({
     [extractors, invoker],
   );
 
-  // Sender-scoped actions contributed by other plugins (plugin-crm's enrichment). Resolved here and
+  // Sender-scoped actions contributed by other plugins (plugin-crm's research). Resolved here and
   // bound per message so the component never touches a capability or an invoker.
   const senderActionDefs = useCapabilities(InboxCapabilities.SenderAction);
   const getSenderActions = useCallback(

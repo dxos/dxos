@@ -176,7 +176,11 @@ export const reconcileToChanges = (
           return undefined;
         }
         return item._tag === 'delete'
-          ? ({ _tag: 'delete', foreignId: item.foreignId, entityId } satisfies EmailStage.Change)
+          ? ({
+              _tag: 'delete',
+              foreignId: item.foreignId,
+              entityId,
+            } satisfies EmailStage.Change)
           : ({
               _tag: 'retag',
               foreignId: item.foreignId,

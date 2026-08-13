@@ -12,14 +12,12 @@ export * from './extractor';
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy([
   InboxOperation.AddMailbox.pipe(Operation.lazyHandler(() => import('./add-mailbox'))),
   InboxOperation.AnalyzeMailbox.pipe(Operation.lazyHandler(() => import('./analyze/analyze-mailbox'))),
-  InboxOperation.CreateProjectFromMessage.pipe(
-    Operation.lazyHandler(() => import('./analyze/create-project-from-message')),
-  ),
+  InboxOperation.CreateProjectFromMessage.pipe(Operation.lazyHandler(() => import('./create-project-from-message'))),
   InboxOperation.ClassifyEmail.pipe(Operation.lazyHandler(() => import('./classify-email'))),
   InboxOperation.ResetFeedCursor.pipe(Operation.lazyHandler(() => import('./reset-feed-cursor'))),
   InboxOperation.ClassifyMailbox.pipe(Operation.lazyHandler(() => import('./classify/classify-mailbox'))),
   InboxOperation.DraftEmailAndOpen.pipe(Operation.lazyHandler(() => import('./draft-email-and-open'))),
-  InboxOperation.EnrichMailbox.pipe(Operation.lazyHandler(() => import('./enrich/enrich-mailbox'))),
+  InboxOperation.ScanMailbox.pipe(Operation.lazyHandler(() => import('./scan/scan-mailbox'))),
   InboxOperation.DraftEmail.pipe(Operation.lazyHandler(() => import('./draft-email'))),
   InboxOperation.ExtractContactFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/contact-extractor'))),
   InboxOperation.ExtractCorrespondents.pipe(

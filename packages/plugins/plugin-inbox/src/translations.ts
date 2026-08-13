@@ -64,8 +64,8 @@ export const translations = [
         'sync-mailbox.label': 'Sync',
         'empty-mailbox.message': 'Mailbox empty',
 
-        'enrich-mailbox.label': 'Enrich',
-        'stop-enrich-mailbox.label': 'Stop',
+        'scan-mailbox.label': 'Scan',
+        'stop-scan-mailbox.label': 'Stop',
         'sync-calendar.label': 'Sync calendar',
         'empty-calendar.message': 'Calendar empty',
 
@@ -86,7 +86,6 @@ export const translations = [
 
         'view-mode.menu': 'View mode',
         'view-mode-html.menu': 'HTML',
-        'view-mode-enriched.menu': 'Enriched',
         'view-mode-markdown.menu': 'Markdown',
         'view-mode-plain.menu': 'Plain text',
 

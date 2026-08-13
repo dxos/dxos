@@ -243,6 +243,36 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
       creates the contact (which now back-labels) or a later sync arrives. Closing it means running
       contact extraction before the mapping stage, or a post-sync labelling pass.
 
+## Phase 3c: Action naming (requested 2026-08-13)
+
+- [x] **`Enrich` was four unrelated things** — two of them primary buttons on adjacent toolbars. The
+      mailbox one was not enrichment at all: it runs the extract → classify → summarize cascade, which
+      creates objects rather than filling gaps. Renamed:
+      - `InboxOperation.EnrichMailbox` → `ScanMailbox` (op key `enrichMailbox` → `scanMailbox`,
+        `createEnrichProgressKey` → `createScanProgressKey`, `#enrich` → `#scan`,
+        `DEFAULT_ENRICH_MAILBOX_TIERS` → `DEFAULT_SCAN_MAILBOX_TIERS`, files under `operations/scan/`,
+        template `org.dxos.routine.scanMailbox`). **Not** `AnalyzeMailbox` — that name is taken by the
+        cascade's own third tier. Safe to rename the op key because its changeset is still pending, so
+        no released routine references the old DXN.
+      - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
+        operations they actually invoke, and signalling the outbound web/LLM run that `Enrich` hid.
+      - `Enrich images` → `Find images`. `CrmOperation.EnrichImages` keeps its id — that one really is
+        enrichment.
+      - Deleted the dead `view-mode-enriched.menu` key: labels derive from `VIEW_MODES`
+        (`html`/`markdown`/`plain`), so nothing could ever resolve it.
+- [x] **`create-project-from-message.ts` moved out of `operations/analyze/`** — every subfolder there
+      is a cascade tier or extraction family; this is a user-initiated one-off from the message toolbar,
+      so it belongs at the top level beside `draft-email.ts` and `unsubscribe-sender.ts`. It is not
+      cursored, not spawned by the cascade, and shares no code with `analyze-mailbox.ts`.
+
+### Open, from this work
+
+- [ ] **`AnalyzeMailbox` lives in plugin-inbox but is owned by plugin-brain** — brain holds the
+      FactStore it writes to, the settings atom that parameterizes it, and both production invocation
+      paths (the `Analyze` toolbar item and the "Mailbox Facts" routine template). It cannot move,
+      because inbox's own scan cascade imports it as the `analyze` tier. Worth revisiting whether the
+      tier should go through a capability seam instead, so the operation can follow its owner.
+
 ## Phase 4: Summarization
 
 ### Tasks

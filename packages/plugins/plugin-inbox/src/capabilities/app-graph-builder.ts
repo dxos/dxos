@@ -511,41 +511,41 @@ export default Capability.makeModule(
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
           // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
-          // view's main call to action on a mailbox that has nothing to enrich yet.
+          // view's main call to action on a mailbox that has nothing to scan yet.
           if (!db || !hasConnection(mailbox, get)) {
             return Effect.succeed([]);
           }
           return Effect.gen(function* () {
             const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
-            const enrichKey = InboxOperation.createEnrichProgressKey(mailbox);
-            const isEnriching = Option.match(progressRegistry, {
+            const scanKey = InboxOperation.createScanProgressKey(mailbox);
+            const isScanning = Option.match(progressRegistry, {
               onNone: () => false,
-              onSome: (registry) => get(registry.monitorAtom(enrichKey))?.status === 'running',
+              onSome: (registry) => get(registry.monitorAtom(scanKey))?.status === 'running',
             });
             return [
               {
                 // The pipeline cascade the user runs by hand after a first sync: deterministic
                 // extraction, then cheap LLM labelling. Each spawned tier keeps its own cursor, so
                 // a repeat run catches up rather than redoing the mailbox.
-                id: 'enrich',
+                id: 'scan',
                 data: () =>
-                  isEnriching
-                    ? Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(enrichKey))
+                  isScanning
+                    ? Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(scanKey))
                     : // Scheduled (not invoked): the cascade is a long run the meter/stop can cancel
                       // between tiers.
                       Operation.schedule(
-                        InboxOperation.EnrichMailbox,
+                        InboxOperation.ScanMailbox,
                         { mailbox: Ref.make(mailbox), me: Mailbox.identityAddresses(mailbox) },
                         { spaceId: db.spaceId },
                       ),
                 properties: {
-                  label: isEnriching
-                    ? ['stop-enrich-mailbox.label', { ns: meta.profile.key }]
-                    : ['enrich-mailbox.label', { ns: meta.profile.key }],
-                  icon: isEnriching ? 'ph--stop--regular' : 'ph--stack-simple--regular',
+                  label: isScanning
+                    ? ['stop-scan-mailbox.label', { ns: meta.profile.key }]
+                    : ['scan-mailbox.label', { ns: meta.profile.key }],
+                  icon: isScanning ? 'ph--stop--regular' : 'ph--stack-simple--regular',
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
-                  testId: 'inbox.mailbox.enrich',
+                  testId: 'inbox.mailbox.scan',
                 },
               },
             ];

@@ -56,7 +56,7 @@ export const MailboxAction = Capability.make<MailboxAction>()(`${meta.profile.ke
 /**
  * A sender-scoped action injected into the per-message conversation menu. Mirrors {@link MailboxAction}
  * but targets the person who sent the message rather than the mailbox — plugin-crm contributes
- * enrichment this way, which is what keeps plugin-inbox from importing it (the dependency runs the
+ * research this way, which is what keeps plugin-inbox from importing it (the dependency runs the
  * other way).
  */
 export type SenderAction = {

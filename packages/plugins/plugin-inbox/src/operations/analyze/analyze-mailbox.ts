@@ -38,6 +38,7 @@ const findOrCreateFeedCursor = (mailbox: Mailbox.Mailbox) =>
     if (existing) {
       return existing;
     }
+
     return yield* Database.add(Cursor.makeFeed({ source: feedRef, target: Ref.make(mailbox) }));
   });
 

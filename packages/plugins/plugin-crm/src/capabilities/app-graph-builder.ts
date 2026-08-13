@@ -21,8 +21,8 @@ import { Organization, Person } from '@dxos/types';
 import { meta } from '#meta';
 import { CrmOperation } from '#types';
 
-/** A node whose data is an enrichable CRM object, tagged so the action can pick the right operation. */
-type EnrichSubject =
+/** A node whose data is a researchable CRM object, tagged so the action can pick the right operation. */
+type ResearchSubject =
   | { kind: 'person'; subject: Person.Person }
   | { kind: 'organization'; subject: Organization.Organization };
 
@@ -75,11 +75,11 @@ export default Capability.makeModule(
         },
       }),
 
-      // Enrichment on the object's own node, so any surface showing a Person/Organization (the record
+      // Research on the object's own node, so any surface showing a Person/Organization (the record
       // article's toolbar, the nav-tree context menu) offers it without depending on plugin-crm.
       GraphBuilder.createExtension({
-        id: 'crmEnrich',
-        match: (node): Option.Option<EnrichSubject> => {
+        id: 'crmResearch',
+        match: (node): Option.Option<ResearchSubject> => {
           if (Obj.instanceOf(Person.Person, node.data)) {
             return Option.some({ kind: 'person', subject: node.data });
           }
@@ -95,7 +95,7 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             {
-              id: 'enrich',
+              id: 'research',
               // Scheduled, not invoked: research is a long run, and the pair is sequenced so the image
               // pass sees whatever the profile step just wrote.
               data: () =>
@@ -121,11 +121,11 @@ export default Capability.makeModule(
                   yield* Operation.schedule(CrmOperation.EnrichImages, { limit: 8 }, { spaceId: db.spaceId });
                 }),
               properties: {
-                label: ['enrich.label', { ns: meta.profile.key }],
+                label: ['research.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 disposition: ['toolbar', 'list-item'],
                 presentation: { toolbar: { variant: 'primary', iconOnly: false } },
-                testId: 'crm.record.enrich',
+                testId: 'crm.record.research',
               },
             },
           ]);

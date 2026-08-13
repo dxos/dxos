@@ -244,11 +244,11 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       {
         // Ollama drives the story's LLM tiers, so `strict: false` skips the structured-output pass
         // local models never honor.
-        id: 'enrich',
-        label: 'InboxOperation.EnrichMailbox',
+        id: 'scan',
+        label: 'InboxOperation.ScanMailbox',
         run: () =>
           invoker.invokePromise(
-            InboxOperation.EnrichMailbox,
+            InboxOperation.ScanMailbox,
             { mailbox: Ref.make(mailbox), me: USER_EMAILS, model: OLLAMA_MODEL, strict: false },
             { spaceId: space.id },
           ),
@@ -442,7 +442,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     ];
   }, [space, client, invoker, mailbox, messages, projects, factStores]);
 
-  const [actionId, setActionId] = useState('enrich');
+  const [actionId, setActionId] = useState('scan');
 
   // The single invoker seam: every pipeline runs through here, so result/error handling and the
   // run counter are uniform. A failure is rendered as a terminal error state (never swallowed to

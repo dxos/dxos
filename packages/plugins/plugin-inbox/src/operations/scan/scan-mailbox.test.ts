@@ -57,14 +57,14 @@ const seedMailbox = Effect.fnUntraced(function* () {
   return { db, mailbox };
 });
 
-describe('EnrichMailbox cascade', () => {
+describe('ScanMailbox cascade', () => {
   it.effect(
     'runs the deterministic tier in order and reports each spawned stage',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        const result = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic'],
@@ -96,7 +96,7 @@ describe('EnrichMailbox cascade', () => {
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        const first = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
+        const first = yield* Operation.invoke(InboxOperation.ScanMailbox, {
           mailbox: Ref.make(mailbox),
           tiers: ['deterministic'],
         });
@@ -105,13 +105,13 @@ describe('EnrichMailbox cascade', () => {
         expect((yield* Database.query(Filter.type(Person.Person)).run).length).toBe(0);
 
         // The cascade inherits each operation's idempotency: a rerun creates nothing new.
-        const rerun = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
+        const rerun = yield* Operation.invoke(InboxOperation.ScanMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic'],
         });
         expect(rerun.completed).toBe(2);
-        const again = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
+        const again = yield* Operation.invoke(InboxOperation.ScanMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic'],
@@ -135,7 +135,7 @@ describe('EnrichMailbox cascade', () => {
         // get a classification pass whose contact allow-list has not been built yet. Classification
         // fails here (the client has no usable key in this environment), which is what pins the order —
         // the deterministic stages ran first and the failure lands on the third stage, not the first.
-        const result = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['classify', 'deterministic'],
@@ -160,7 +160,7 @@ describe('EnrichMailbox cascade', () => {
         // assistant is up asks for a model nobody serves. That is a precondition, not a fault: the
         // deterministic work stands, the cascade reports no failure, and each AI tier says why it did
         // not run (rather than the first one being blamed for the rest).
-        const result = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           // `analyze` is left out: it needs a FactStore this layer does not provide, so it would fail
@@ -192,7 +192,7 @@ describe('EnrichMailbox cascade', () => {
 
         // A real failure rather than an absent resolver (here: the client rejects the request), so
         // everything behind it must not run against the stale gate.
-        const result = yield* Operation.invoke(InboxOperation.EnrichMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic', 'classify', 'analyze'],

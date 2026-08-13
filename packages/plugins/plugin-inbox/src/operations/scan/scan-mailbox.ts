@@ -46,12 +46,12 @@ type StageResult = {
  * Each spawned operation keeps its own cursor, batch cap, idempotency and services, so this handler
  * adds no pipeline logic — it decides what runs, in what order, and what to do when a stage fails.
  */
-const handler = InboxOperation.EnrichMailbox.pipe(
+const handler = InboxOperation.ScanMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({
       mailbox: mailboxRef,
       me = [],
-      tiers = InboxOperation.DEFAULT_ENRICH_MAILBOX_TIERS,
+      tiers = InboxOperation.DEFAULT_SCAN_MAILBOX_TIERS,
       batchLimit,
       model,
       provider,
@@ -62,7 +62,7 @@ const handler = InboxOperation.EnrichMailbox.pipe(
       const signal = yield* Cancellation.signal;
 
       const traceWriter = yield* Trace.TraceService;
-      const progressKey = InboxOperation.createEnrichProgressKey(mailbox);
+      const progressKey = InboxOperation.createScanProgressKey(mailbox);
       // Both counters are held across updates: a meter reads the LATEST status, so emitting an
       // undefined total on a current-only tick would blank the denominator mid-cascade.
       let current = 0;
@@ -137,7 +137,7 @@ const handler = InboxOperation.EnrichMailbox.pipe(
         plan[tier](),
       );
 
-      log.info('enrich: cascade start', { mailbox: Obj.getURI(mailbox), tiers, stages: stages.length });
+      log.info('scan: cascade start', { mailbox: Obj.getURI(mailbox), tiers, stages: stages.length });
       reportStatus({ current: 0, total: stages.length });
 
       const results: StageResult[] = [];
@@ -173,13 +173,13 @@ const handler = InboxOperation.EnrichMailbox.pipe(
           // stay valid — treating it as a failure instead used to abort the cascade and leave the
           // meter red for a mailbox nothing was wrong with.
           const error = 'ai unavailable (assistant not ready)';
-          log.info('enrich: stage skipped', { operation: stage.operation, error });
+          log.info('scan: stage skipped', { operation: stage.operation, error });
           results.push({ tier: stage.tier, operation: stage.operation, status: 'skipped', error });
           reportStatus({ current: index, message: stage.operation });
           continue;
         } else {
           const error = Cause.pretty(exit.cause).slice(0, 500);
-          log.warn('enrich: stage failed', { operation: stage.operation, error });
+          log.warn('scan: stage failed', { operation: stage.operation, error });
           results.push({ tier: stage.tier, operation: stage.operation, status: 'failed', error });
           if (!continueOnError) {
             // Everything downstream consumes this stage's output; running it anyway would produce
@@ -202,7 +202,7 @@ const handler = InboxOperation.EnrichMailbox.pipe(
       const failed = results.filter((result) => result.status === 'failed').length;
       const skipped = results.filter((result) => result.status !== 'completed' && result.status !== 'failed').length;
 
-      log.info('enrich: cascade done', { mailbox: Obj.getURI(mailbox), completed, failed, skipped });
+      log.info('scan: cascade done', { mailbox: Obj.getURI(mailbox), completed, failed, skipped });
       reportStatus({
         current: stages.length,
         message: signal.aborted

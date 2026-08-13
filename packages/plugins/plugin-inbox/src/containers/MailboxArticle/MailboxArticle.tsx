@@ -90,13 +90,13 @@ export const MailboxArticle = ({
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Gmail sync (`#sync`), the process pipeline (`#process`) and the enrichment cascade (`#enrich`)
+  // Gmail sync (`#sync`), the process pipeline (`#process`) and the scan cascade (`#scan`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
-  const enrichProgress = useProgressMonitor(InboxOperation.createEnrichProgressKey(mailbox));
+  const scanProgress = useProgressMonitor(InboxOperation.createScanProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
-  const progress = [syncProgress, enrichProgress].find(isActive);
+  const progress = [syncProgress, scanProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
