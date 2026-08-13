@@ -102,6 +102,9 @@ oclif.manifest.json
 dist
 out
 lib
+# Keep agent skill source trees named `lib/` (not TS emit).
+!.agents/**/lib/
+!.agents/**/lib/**
 build
 out
 tmp
@@ -234,3 +237,6 @@ node_modules
 
 # Remote-cache benchmark output (tools/moon-cache/bench).
 .moon-bench/
+
+# Agentic-review: finalize keeps only REVIEW.md + RESOLUTION.md per run
+# (STAGING.md / groups.json / groups/ are deleted on finalize).
