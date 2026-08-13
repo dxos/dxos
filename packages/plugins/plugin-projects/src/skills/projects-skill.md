@@ -28,16 +28,44 @@ The repo pins the space its projects live in in a committed config file,
 spaceId: <id>
 ```
 
-1. Read the file. If it is missing, or `spaceId` is null/empty, **stop and say so** — do not
-   guess a space, and do not fall back to the session's default space (omitting `spaceId`
-   targets whatever the session defaults to, which is not the same thing and must not be used
-   as a silent substitute).
+1. Read the file. If it is missing, or `spaceId` is null/empty, **stop and offer setup** (below)
+   — do not guess a space, and do not fall back to the session's default space (omitting
+   `spaceId` targets whatever the session defaults to, which is not the same thing and must not
+   be used as a silent substitute).
 2. Call `whoami {}` and confirm the pinned `spaceId` appears in the session's spaces. If it does
    not, **stop and say so** — this session isn't scoped to the repo's project space.
 3. Only then proceed, passing that `spaceId` on every call below.
 
 This is a hard gate, not a suggestion: no partial writes, no fallback space. A project system
 split across spaces is worse than an agent that refuses and asks the user to fix the binding.
+
+### Setting up the binding
+
+An unbound repo is a setup prompt, not a dead end — but the binding is the user's choice to
+make, so ask, never assume.
+
+1. Call `listSpaces {}`. It returns every space the identity owns, each with its `spaceId` and
+   `name` — that is where a space id comes from. (`whoami` is the narrower list: only the spaces
+   this session is scoped to. A space listed by `listSpaces` but absent from `whoami` is one the
+   session cannot write to, so if the user picks one of those, say so and stop.)
+2. Show the user the spaces **by name** and ask which one this repo's projects belong in. Bind
+   only on an explicit answer naming a space — never infer from "the obvious one", a name that
+   resembles the repo, or the fact that only one space exists.
+3. Write `.agents/projects/space.yml` in the repo, creating the `.agents/projects/` directory if
+   needed:
+
+   ```yaml
+   # The ECHO space this repo's projects live in.
+   spaceId: <the id from listSpaces>
+   ```
+
+4. Tell the user the file is a repo file: it wants committing, and it is what binds every future
+   session in this repo to that space.
+
+Two things setup does **not** do. It never creates a space — bind an existing one, and if the
+user wants a new one, they create it in Composer and re-run setup. And it never writes anything
+into the space itself; a fresh binding is just a pointer, so the first `projectCreate` is what
+puts anything there.
 
 ## Ref envelopes
 
@@ -132,6 +160,7 @@ spaceId }`. Report the new project id.
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.    |
 | Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute an unpinned space.                           |
+| Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                     |
 | Passing a bare id where a ref envelope is expected                 | Wrap every object reference as `{"/": "<id>"}`.                                            |
 | Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators. |
 | Flat task list with no phase grouping                              | Create one parent task per phase; individual tasks are sub-tasks with `parent` set.        |
