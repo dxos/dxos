@@ -113,9 +113,14 @@ describe('EdgeHttpClient auth refresh', () => {
     const gate = new Promise<void>((resolve) => {
       releaseAuth = resolve;
     });
+    let signalAuthStarted = () => {};
+    const authStarted = new Promise<void>((resolve) => {
+      signalAuthStarted = resolve;
+    });
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
       if (url.endsWith('/auth')) {
+        signalAuthStarted();
         await gate;
         return new Response(JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl' } }), {
           status: 200,
@@ -131,8 +136,8 @@ describe('EdgeHttpClient auth refresh', () => {
     const inFlight = client.putBlob(Context.default(), 'one', new Uint8Array([1]), {
       contentType: 'application/octet-stream',
     });
-    // Let the prefetch reach the gated /auth round trip, then swap identities under it.
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    // Swap identities only once the prefetch is provably parked inside the gated /auth round trip.
+    await authStarted;
     client.setIdentity({ ...identity, identityDid: 'did:halo:other' });
     releaseAuth();
     await inFlight;
