@@ -90,6 +90,36 @@ class TaskGraphModel extends GraphModel.AbstractGraphModel<TaskNode, TaskEdge, T
 }
 ```
 
+### Building
+
+`model.builder` returns a chainable wrapper for assembling a graph. Each call returns the builder,
+and `call` drops into a callback without breaking the chain.
+
+```ts
+model.builder
+  .addNode({ id: 'a' })
+  .addNode({ id: 'b' })
+  .addEdge({ source: 'a', target: 'b' })
+  .call((builder) => {
+    for (const id of ids) {
+      builder.addNode({ id });
+    }
+  });
+```
+
+The builder writes straight through to the model, so a chain of N calls emits N notifications and
+rebuilds the derived indexes N times. Wrap it when assembling more than a couple of elements:
+
+```ts
+model.batch(() => {
+  model.builder.addNodes(nodes).addEdges(edges);
+});
+```
+
+Subclass `AbstractBuilder` to add domain constructors, and return it from the model's `builder`
+getter — this is the seam the compute and canvas models use to expose `createNode`/`createEdge`
+helpers that mint ids.
+
 ### Batching
 
 Each mutation emits a notification and invalidates the derived indexes. Group them:
