@@ -127,6 +127,14 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       for all of them. Suspects: the URI→`EID.tryParse` of a freshly added object, or the story's
       `useQuery` not seeing the seeds. The story's play test therefore asserts only that the list
       renders. NEXT: log the lookup map inside `useContactLookup`.
+- [ ] **Toolbar Clear does not clear the filter** (reported 2026-08-13) — `MailboxArticle`'s
+      `handleClear` (around `MailboxArticle.tsx:232`) resets only React state (`setFilterText` /
+      `setFilter`), but the filter box is an UNCONTROLLED CodeMirror `QueryEditor`, so its text
+      survives and the box still reads as filtered. Fix: also drive the editor, which the container
+      already holds a ref to — `filterEditorRef.current?.setText(filterProp ?? '')` — the same pattern
+      `EventEditor` uses for its attendee editor (`actorListRef.current?.setText(...)`). Cover it in
+      the `MailboxArticle` `SearchFilter` play test: type a term, press Clear, assert both the editor
+      text and the tile count return to their pre-filter state.
 - [ ] **Open an attachment in a new plank** (requested 2026-08-13) — the attachments row in the
       message header (`ConversationStack.tsx`'s `Row.Attachments`, fed from `message.attachments`)
       lists them but does not open them. Clicking one should open it as its own plank via
