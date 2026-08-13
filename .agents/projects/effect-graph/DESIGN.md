@@ -196,14 +196,19 @@ Read-path structure matters: a naive `connections()` scanning all edges per atom
 atom** (single O(E) pass per flush: `source|relation` → sorted edge list), `connections()` reads
 it at O(deg):
 
-| per 50-write batched flush, 200 mounted connections atoms | |
-|---|---:|
-| naive O(E)-per-atom reads | 21ms |
-| layered adjacency index @ ~2k nodes | **3.1ms** |
-| layered adjacency index @ ~7k nodes | **11.2ms** |
-| today's sharded writes (reference) | ~0.3ms |
+Measured A/B vs a faithful replica of today's sharded `GraphImpl` (same tree, same 100 flush
+bursts, 200 mounted connections atoms, graph growing 1.9k→6.9k nodes):
 
-~10× today's write cost, but within frame budget at real scale, and it buys: algorithms run
+| | today's sharded | canonical + index |
+|---|---:|---:|
+| write: per 50-node batched flush | 3.76ms | 8.66ms (**2.3× slower**) |
+| read: path search @ ~6.9k nodes | 20.2ms (DFS through atoms; `waitForPath` re-runs it every 500ms) | 9.0ms (**2.2× faster**, reactive) |
+
+(Naive O(E)-per-atom connections reads cost 21ms/flush — the adjacency-index layer is mandatory.)
+Note today's writes are not O(1) either: `addEdgeImpl` spreads the whole edges record per add —
+O(deg) on hot collections, quadratic within a burst. Net: writes ~2× slower, reads ~2× faster,
+polling eliminated; both single-digit ms per batched flush well past realistic navtree scale.
+It buys: algorithms run
 directly on the live canonical value (no projection rebuild — the interim Option B paid ~17ms per
 flush *while mounted*), `getPath`→`dijkstra` (shortest path; replaces DFS scan), reactive
 `pathAtom` (kills `waitForPath`'s 500ms poll), free inverse edges, a serializable/cacheable
