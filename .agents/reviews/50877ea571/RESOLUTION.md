@@ -1654,7 +1654,7 @@
 - 50877ea571-1650 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:698:75
 - 50877ea571-1651 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:712:24
 - 50877ea571-1652 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:732:70
-- 50877ea571-1653 - unresolved - no-compat-shims - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:745
+- 50877ea571-1653 - resolved - no-compat-shims - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:745
 - 50877ea571-1654 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:754:48
 - 50877ea571-1655 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:763:35
 - 50877ea571-1656 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:774:39
@@ -2652,7 +2652,7 @@
 - 50877ea571-2648 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.test.ts:276
 - 50877ea571-2649 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.test.ts:288
 - 50877ea571-2650 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.test.ts:313
-- 50877ea571-2651 - unresolved - no-compat-shims - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:47
+- 50877ea571-2651 - resolved - no-compat-shims - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:47
 - 50877ea571-2652 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:51
 - 50877ea571-2653 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:102
 - 50877ea571-2654 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/json-serializer.ts:184
@@ -2668,7 +2668,7 @@
 - 50877ea571-2664 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/schema-validator.test.ts:53
 - 50877ea571-2665 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/schema-validator.test.ts:55
 - 50877ea571-2666 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/schema-validator.test.ts:178
-- 50877ea571-2667 - unresolved - no-compat-shims - packages/core/echo/echo/src/internal/Obj/schema-validator.ts:5
+- 50877ea571-2667 - resolved - no-compat-shims - packages/core/echo/echo/src/internal/Obj/schema-validator.ts:5
 - 50877ea571-2668 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/set-value.test.ts:115
 - 50877ea571-2669 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/set-value.ts:19
 - 50877ea571-2670 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/set-value.ts:115
@@ -3409,7 +3409,7 @@
 - 50877ea571-3405 - ignored - no-casts - packages/plugins/plugin-assistant/src/testing/test-generator.test.ts:45:5
 - 50877ea571-3406 - ignored - no-casts - packages/plugins/plugin-assistant/src/testing/test-generator.test.ts:66:34
 - 50877ea571-3407 - ignored - no-casts - packages/plugins/plugin-assistant/src/testing/test-services.ts:9:56
-- 50877ea571-3408 - unresolved - no-compat-shims - packages/plugins/plugin-assistant/src/types/Assistant.ts:7
+- 50877ea571-3408 - resolved - no-compat-shims - packages/plugins/plugin-assistant/src/types/Assistant.ts:7
 - 50877ea571-3409 - ignored - no-casts - packages/plugins/plugin-assistant/src/types/AssistantService.ts:72:3
 - 50877ea571-3410 - ignored - no-casts - packages/plugins/plugin-attention/src/capabilities/attention.ts:27:15
 - 50877ea571-3411 - ignored - no-casts - packages/plugins/plugin-attention/src/capabilities/attention.ts:29:15
