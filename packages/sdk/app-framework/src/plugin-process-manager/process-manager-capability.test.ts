@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it, test } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -98,7 +98,7 @@ describe('dynamic trace sink', () => {
     events: [{ type: 'status.update', timestamp: 0, data: { progress: { key: 'test#dynamic' } } }],
   });
 
-  it('delivers to a sink contributed after the first write', ({ expect }) => {
+  test('delivers to a sink contributed after the first write', ({ expect }) => {
     const early: string[] = [];
     const late: string[] = [];
     const factories: Capabilities.TraceSinkFactory[] = [() => ({ write: () => early.push('early') })];
@@ -114,7 +114,7 @@ describe('dynamic trace sink', () => {
     expect([early.length, late.length]).toEqual([2, 1]);
   });
 
-  it('builds each sink once, so per-sink state survives across writes', ({ expect }) => {
+  test('builds each sink once, so per-sink state survives across writes', ({ expect }) => {
     let built = 0;
     const factories: Capabilities.TraceSinkFactory[] = [
       () => {
@@ -128,7 +128,7 @@ describe('dynamic trace sink', () => {
     expect(built).toBe(1);
   });
 
-  it('one throwing sink does not stop the next', ({ expect }) => {
+  test('one throwing sink does not stop the next', ({ expect }) => {
     const reached: string[] = [];
     const factories: Capabilities.TraceSinkFactory[] = [
       () => ({

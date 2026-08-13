@@ -431,7 +431,6 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         }
       />
       <Card.Body>
-        xx
         <Row.Person
           actor={message.sender}
           role='from'

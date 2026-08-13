@@ -3,7 +3,7 @@
 //
 
 import { format, intervalToDuration } from 'date-fns';
-import React, { type MouseEvent, useCallback, useRef, useState } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
@@ -84,6 +84,10 @@ const useCardHover = (open: () => void, enabled: boolean) => {
       open();
     }, HOVER_CARD_DELAY);
   }, [enabled, cancel, open]);
+
+  // A recycled row (virtualized list) leaves no pointer-leave behind, so a pending open would fire
+  // from a detached trigger.
+  useEffect(() => cancel, [cancel]);
 
   return { start, cancel };
 };
@@ -335,6 +339,10 @@ export const ContactAvatar = ({
         setHovered(false);
         cancelHover();
       }}
+      // Focus reveals it too (both bubble in React), or the create button — mounted only while
+      // hovered — would be unreachable without a pointer.
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
     >
       {showCreate ? (
         <IconButton

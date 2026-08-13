@@ -51,31 +51,34 @@ import { layerIdb } from './idb-key-value-store';
 //
 
 /**
- * Trace sink over the LIVE contribution list, resolved per write rather than snapshotted when the
- * runtime is built. A LayerSpec must be snapshotted (it bakes into the runtime, and rebuilding would
- * tear down live services), but a sink is a stateless observer that can join at any time — and
- * plugin-progress contributes its progress adapter from an on-demand module with no activation event,
- * so it lands after this one. Snapshotting dropped it silently: operations' `status.update` events
- * reached the durable sink while every progress meter stayed empty, with no error anywhere.
- *
- * Instances are cached per factory, since a sink may hold state across writes (the progress adapter
- * keeps a monitor map and cancel tombstones) and must not be rebuilt underneath itself.
+ * Trace sink over the LIVE contribution list, so a sink contributed after the runtime was built (an
+ * on-demand module, like plugin-progress's adapter) still observes writes. Instances are cached per
+ * factory, since a sink may hold state across writes and must not be rebuilt underneath itself.
  */
 export const makeDynamicTraceSink = (
   getFactories: () => readonly Capabilities.TraceSinkFactory[],
   resolver: ServiceResolver.ServiceResolver,
 ): Trace.Sink => {
   const instances = new Map<Capabilities.TraceSinkFactory, Trace.Sink>();
-  const resolve = (): Trace.Sink[] =>
-    getFactories().map((factory) => {
+  const resolve = (): Trace.Sink[] => {
+    const sinks: Trace.Sink[] = [];
+    for (const factory of getFactories()) {
       const existing = instances.get(factory);
       if (existing) {
-        return existing;
+        sinks.push(existing);
+        continue;
       }
-      const sink = factory({ resolver });
-      instances.set(factory, sink);
-      return sink;
-    });
+      try {
+        const sink = factory({ resolver });
+        instances.set(factory, sink);
+        sinks.push(sink);
+      } catch (err) {
+        // One factory that cannot build must not cost the sinks behind it their messages.
+        log.warn('trace sink factory failed', { err });
+      }
+    }
+    return sinks;
+  };
 
   // `mergeSinks` per write, for its guarantee that one throwing sink cannot break the chain.
   return { write: (message) => Trace.mergeSinks(resolve()).write(message) };

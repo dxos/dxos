@@ -10,6 +10,19 @@ import { type GetId } from '@dxos/react-ui-dnd';
 /** Rows from either loaded edge at which the next/previous page is requested. */
 const DEFAULT_THRESHOLD = 12;
 
+/**
+ * The viewport's extent along the SCROLL axis: a horizontal stack measures width, so reading height
+ * unconditionally would judge a horizontal list against the wrong dimension.
+ */
+const viewportExtent = (virtualizer: Virtualizer<any, any>): number => {
+  const element = virtualizer.scrollElement;
+  if (!element) {
+    return 0;
+  }
+  // Optional: the hook's own tests fake only the fields it reads, and a vertical stack is the default.
+  return virtualizer.options?.horizontal ? element.clientWidth : element.clientHeight;
+};
+
 /** Index at/above which `getNext` fires; small windows clamp to the last row only. */
 const nextPageIndexThreshold = (itemCount: number, threshold: number): number =>
   itemCount > threshold ? itemCount - threshold : itemCount - 1;
@@ -22,14 +35,14 @@ const nextPageIndexThreshold = (itemCount: number, threshold: number): number =>
  * comes back short, so a list that simply has nothing more does not spin.
  */
 const isUnderfilled = (virtualizer: Virtualizer<any, any>): boolean => {
-  const viewportHeight = virtualizer.scrollElement?.clientHeight ?? 0;
-  return viewportHeight > 0 && virtualizer.getTotalSize() <= viewportHeight + 1;
+  const viewport = viewportExtent(virtualizer);
+  return viewport > 0 && virtualizer.getTotalSize() <= viewport + 1;
 };
 
 /** True when loaded content exceeds the scroll viewport (user can actually scroll). */
 const isScrollable = (virtualizer: Virtualizer<any, any>): boolean => {
-  const viewportHeight = virtualizer.scrollElement?.clientHeight ?? 0;
-  return viewportHeight > 0 && virtualizer.getTotalSize() > viewportHeight + 1;
+  const viewport = viewportExtent(virtualizer);
+  return viewport > 0 && virtualizer.getTotalSize() > viewport + 1;
 };
 
 export type VirtualizerPaginationController = {

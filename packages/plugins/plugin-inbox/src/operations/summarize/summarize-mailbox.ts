@@ -69,7 +69,12 @@ const transcriptFor = (thread: readonly Message.Message[]): string => {
   let budget = MAX_TRANSCRIPT_CHARS;
   for (const message of [...thread].reverse()) {
     const entry = `FROM: ${senderLabel(message)}\nDATE: ${message.created}\n\n${messageText(message)}`;
-    if (entry.length > budget && entries.length > 0) {
+    if (entry.length > budget) {
+      // The newest message alone can exceed the budget (a long body, a long sender list): keep its
+      // head rather than dropping it, so the transcript still honours the cap.
+      if (entries.length === 0) {
+        entries.unshift(entry.slice(0, budget));
+      }
       break;
     }
     entries.unshift(entry);

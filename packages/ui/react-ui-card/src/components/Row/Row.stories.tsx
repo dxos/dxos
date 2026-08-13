@@ -150,6 +150,13 @@ const DefaultStory = () => {
             size={6}
             onContactCreate={handleContactCreate}
           />
+          <Row.Person
+            actor={UNKNOWN_ACTOR}
+            role='to'
+            getContact={getContact}
+            size={9}
+            onContactCreate={handleContactCreate}
+          />
           <Row.Date start={new Date('2025-11-19T12:00:00')} end={new Date('2025-11-19T13:30:00')} />
           <Row.Ref object={object} />
           <Row.Attachments

@@ -433,9 +433,9 @@ export type ConversationSummary = {
 };
 
 /**
- * The summary shown for a whole conversation. Summarization runs per message today, so this is the
- * newest annotation naming any message in the thread; keeping the selection here means a future
- * thread-level annotation can replace it without touching the article.
+ * The summary shown for a whole conversation: the newest annotation naming any message in the thread.
+ * `SummarizeMailbox` files one summary per thread under its newest message, so this normally resolves
+ * to that annotation — and to the most recent one when a re-derivation has superseded it.
  *
  * Takes the annotations rather than a {@link summaryIndex} map because provenance (`model`, `created`)
  * lives on the annotation Message, which the map discards.

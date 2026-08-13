@@ -181,7 +181,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
   // The trailing control of each date row (all-day switch, duration select) takes the SAME fixed
   // width, so the two rows' leading date fields end at the same x and the controls line up as a
   // column — which the nested grid used to provide.
-  const trailingClasses = 'shrink-0 w-32';
+  const trailingClasses = 'shrink-0 min-w-32';
 
   return (
     <>
