@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -20,7 +20,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: `${meta.profile.key}.diagnosticsDeckCompanion`,
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({

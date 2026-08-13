@@ -11,7 +11,8 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
-import { GraphModel } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
@@ -246,7 +247,7 @@ class GraphImpl implements WritableGraph {
     this._model = new GraphModel.GraphModel<GraphNode, GraphEdge>({ registry: this._registry });
 
     this._model.batch(() => {
-      this._setNode(Node.RootId, this._constructNode({ id: Node.RootId, type: Node.RootType, data: null }));
+      this._setNode(GraphNode.RootId, this._constructNode({ id: GraphNode.RootId, type: Node.RootType, data: null }));
       nodes?.forEach((node) => this._setNode(node.id, this._constructNode(node)));
       Object.entries(edges ?? {}).forEach(([source, relations]) => {
         Object.entries(relations).forEach(([relation, targets]) => {
@@ -256,7 +257,7 @@ class GraphImpl implements WritableGraph {
     });
   }
 
-  json(id = Node.RootId): Atom.Atom<any> {
+  json(id = GraphNode.RootId): Atom.Atom<any> {
     return jsonImpl(this, id);
   }
 
@@ -365,7 +366,7 @@ const getInternal = (graph: BaseGraph): GraphImpl => {
 /**
  * Convert the graph to a JSON object.
  */
-export const toJSON = (graph: BaseGraph, id = Node.RootId): object => {
+export const toJSON = (graph: BaseGraph, id = GraphNode.RootId): object => {
   const internal = getInternal(graph);
   return internal._registry.get(internal._json(id));
 };
@@ -373,7 +374,7 @@ export const toJSON = (graph: BaseGraph, id = Node.RootId): object => {
 /**
  * Implementation helper for json.
  */
-const jsonImpl = (graph: BaseGraph, id = Node.RootId): Atom.Atom<any> => {
+const jsonImpl = (graph: BaseGraph, id = GraphNode.RootId): Atom.Atom<any> => {
   const internal = getInternal(graph);
   return internal._json(id);
 };
@@ -481,7 +482,7 @@ export function getNodeOrThrow(
  * This is an alias for `getNodeOrThrow(graph, ROOT_ID)`.
  */
 export function getRoot(graph: BaseGraph): Node.Node {
-  return getNodeOrThrowImpl(graph, Node.RootId);
+  return getNodeOrThrowImpl(graph, GraphNode.RootId);
 }
 
 /**
@@ -577,7 +578,7 @@ export function getEdges(graphOrId: BaseGraph | string, id?: string): Edges | ((
  * Implementation helper for traverse.
  */
 const traverseImpl = (graph: BaseGraph, options: GraphTraversalOptions, path: string[] = []): void => {
-  const { visitor, source = Node.RootId, relation } = options;
+  const { visitor, source = GraphNode.RootId, relation } = options;
   // Break cycles.
   if (path.includes(source)) {
     return;
@@ -1282,10 +1283,10 @@ const removeEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge, remove
     const sourceAfter = internal._registry.get(internal._edges(edgeArg.source));
     const targetAfter = internal._registry.get(internal._edges(edgeArg.target));
     const isEmpty = (edges: Edges) => Object.values(edges).every((ids) => ids.length === 0);
-    if (isEmpty(sourceAfter) && edgeArg.source !== Node.RootId) {
+    if (isEmpty(sourceAfter) && edgeArg.source !== GraphNode.RootId) {
       removeNodesImpl(graph, [edgeArg.source]);
     }
-    if (isEmpty(targetAfter) && edgeArg.target !== Node.RootId) {
+    if (isEmpty(targetAfter) && edgeArg.target !== GraphNode.RootId) {
       removeNodesImpl(graph, [edgeArg.target]);
     }
   }

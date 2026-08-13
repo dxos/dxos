@@ -8,6 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
@@ -30,7 +31,7 @@ export const Home = (_: HomeProps) => {
   const userAccountItem = useItemsByDisposition('user-account')[0];
   const pinnedItems = useItemsByDisposition('pin-end', true);
   const workspaceItems = useItemsByDisposition('workspace');
-  useExpandPath(AppGraphNode.RootId);
+  useExpandPath(GraphNode.RootId);
 
   const items = useMemo(
     () => [...(userAccountItem ? [userAccountItem] : []), ...pinnedItems, ...workspaceItems],
@@ -131,7 +132,7 @@ const filterItems = (node: AppGraphNode.Node, disposition: string) => {
 /** Returns root-level items filtered by disposition. */
 const useItemsByDisposition = (disposition: string, sort = false) => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, AppGraphNode.RootId, 'child');
+  const connections = useConnections(graph, GraphNode.RootId, 'child');
   return useMemo(() => {
     const filtered = connections.filter((node) => filterItems(node, disposition));
     return sort ? filtered.toSorted((a, b) => Position.compare(a.properties, b.properties)) : filtered;

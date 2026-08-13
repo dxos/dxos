@@ -9,6 +9,7 @@ import { useContext, useEffect } from 'react';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';
@@ -93,7 +94,7 @@ export const createNestedActionsResolver = (props?: {
     );
   });
   const items: MenuItemsAccessor = (group?: MenuItemGroup) =>
-    graph.connections(group?.id ?? AppGraphNode.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
+    graph.connections(group?.id ?? GraphNode.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
   return { items };
 };
 

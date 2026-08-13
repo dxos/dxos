@@ -12,6 +12,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
@@ -34,7 +35,7 @@ const NavTreeItemEnd = ({ node, open }: { node: AppGraphNode.Node; open: boolean
 };
 
 const getItems = (graph: Graph.ReadableGraph, node?: AppGraphNode.Node, disposition?: string) => {
-  return Graph.getConnections(graph, node?.id ?? AppGraphNode.RootId, 'child').filter((node) =>
+  return Graph.getConnections(graph, node?.id ?? GraphNode.RootId, 'child').filter((node) =>
     filterItems(node, disposition),
   );
 };
@@ -52,7 +53,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { graph } = useAppGraph();
     const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
-    const model = useNavTreeModel(AppGraphNode.RootId);
+    const model = useNavTreeModel(GraphNode.RootId);
     const { navigationSidebarState } = useSidebars(meta.profile.key);
     const latestRef = useRef({
       tab,
@@ -250,7 +251,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     useEffect(() => {
       for (const child of workspaceChildren) {
         if (AppGraphNode.hasDisposition(child, 'group')) {
-          setItem([AppGraphNode.RootId, tab, child.id], 'open', true);
+          setItem([GraphNode.RootId, tab, child.id], 'open', true);
           Graph.expand(graph, child.id, 'child');
         }
       }
@@ -292,7 +293,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
         <NavTree
-          id={AppGraphNode.RootId}
+          id={GraphNode.RootId}
           root={Graph.getRoot(graph)}
           tab={tab}
           open={layout.sidebarOpen}

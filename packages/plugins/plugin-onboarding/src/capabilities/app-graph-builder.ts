@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { ABOUT_DIALOG } from '../constants';
 import { meta } from '../meta';
@@ -19,7 +19,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extension = yield* AppGraphBuilder.createExtension({
       id: 'about',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
           AppGraphNode.makeAction({

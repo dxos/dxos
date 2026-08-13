@@ -12,6 +12,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -57,7 +58,7 @@ export default Capability.makeModule(
     );
 
     // await builder.initialize();
-    void Graph.expand(builder.graph, AppGraphNode.RootId, 'child');
+    void Graph.expand(builder.graph, GraphNode.RootId, 'child');
 
     setupDevtools(builder.graph);
 

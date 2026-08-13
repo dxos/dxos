@@ -8,10 +8,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ConnectionState } from '@dxos/client/mesh';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
@@ -25,7 +25,7 @@ export default Capability.makeModule(
     const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
           {

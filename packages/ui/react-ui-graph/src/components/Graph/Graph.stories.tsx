@@ -9,7 +9,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type GraphModel, type SelectionMode, SelectionModel } from '@dxos/graph';
+import { type SelectionMode, SelectionModel } from '@dxos/graph';
+import type * as GraphModel from '@dxos/graph/GraphModel';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';

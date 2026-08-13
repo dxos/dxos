@@ -4,7 +4,7 @@
 
 import { type Timer, easeCubic, timer } from 'd3';
 
-import { GraphModel } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
 import { type Point } from '../../util';

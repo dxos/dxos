@@ -7,11 +7,12 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
@@ -26,9 +27,9 @@ import { CommentOperation } from '#types';
 import { getAnchor } from '../util/message';
 
 /** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
-const whenCommentableObject = NodeMatcher.whenAll(
-  NodeMatcher.whenEchoObjectMatches,
-  NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
+const whenCommentableObject = GraphNodeMatcher.whenAll(
+  AppNodeMatcher.whenEchoObjectMatches,
+  GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(Channel.Channel)),
 );
 
 export default Capability.makeModule(

@@ -14,7 +14,6 @@ export default defineConfig({
     'graph': 'src/graph.ts',
     'AppGraphBuilder': 'src/AppGraphBuilder.ts',
     'AppGraphNode': 'src/AppGraphNode.ts',
-    'node-matcher': 'src/node-matcher.ts',
     'path-resolution': 'src/path-resolution.ts',
   },
   jsx: 'react',

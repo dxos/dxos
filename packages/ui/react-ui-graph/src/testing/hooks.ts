@@ -4,7 +4,7 @@
 
 import update from 'immutability-helper';
 
-import { GraphModel } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { random } from '@dxos/random';
 
 import { useStateRef } from '../hooks';

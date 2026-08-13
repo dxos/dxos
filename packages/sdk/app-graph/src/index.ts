@@ -6,7 +6,6 @@ export * as AppGraphBuilder from './AppGraphBuilder';
 export * as AppGraphNode from './AppGraphNode';
 export * as CreateAtom from './atoms';
 export * as Graph from './graph';
-export * as NodeMatcher from './node-matcher';
 export * as PathResolution from './path-resolution';
 export { getParentId, getSegmentId, qualifyId } from './util';
 

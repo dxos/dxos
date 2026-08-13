@@ -9,7 +9,6 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -18,6 +17,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Migrations } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -86,7 +87,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     AppGraphBuilder.createExtension({
       id: 'primaryActions',
       position: Position.first,
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
           AppGraphNode.makeAction({
@@ -190,7 +191,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
     AppGraphBuilder.createExtension({
       id: 'spaces',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       connector: (_node, get) => {
         // This reactive connector can recompute once during the teardown window (e.g. when stories
         // swap plugin managers) after the Client capability has been removed; the hoisted atom
@@ -351,7 +352,7 @@ const constructSpaceNode = ({
       onRearrange = (nextOrder: Space[]) => {
         Graph.sortEdges(
           graph,
-          AppGraphNode.RootId,
+          GraphNode.RootId,
           'outbound',
           nextOrder.map(({ id }) => id),
         );

@@ -8,13 +8,13 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Connection, Cursor } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
@@ -47,7 +47,7 @@ const queryConnectionBindings = (connection: Connection.Connection): Effect.Effe
  * created or removed. The first cursor is chosen when multiple target one object; the companion
  * receives it as its article subject.
  */
-const whenObjectHasCursor: NodeMatcher.NodeMatcher<Cursor.Cursor> = (node, get) => {
+const whenObjectHasCursor: GraphNodeMatcher.NodeMatcher<Cursor.Cursor> = (node, get) => {
   if (!Obj.isObject(node.data)) {
     return Option.none();
   }

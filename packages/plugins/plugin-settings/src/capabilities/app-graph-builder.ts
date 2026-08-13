@@ -9,11 +9,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as Plugin$ from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -29,7 +29,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'action',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
@@ -49,7 +49,7 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'core',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppGraphNode.make({
@@ -68,7 +68,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'plugins',
         url: { key: 'plugin', kind: 'item', path: [] },
-        match: NodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
+        match: GraphNodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
           const allSettings = get(settingsAtom);

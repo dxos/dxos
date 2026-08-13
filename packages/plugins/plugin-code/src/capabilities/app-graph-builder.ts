@@ -9,12 +9,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as PluginNS from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Type } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -50,7 +50,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'pluginSpec',
         url: { key: 'spec', kind: 'item', path: [] },
-        match: NodeMatcher.whenNodeType('org.dxos.plugin'),
+        match: GraphNodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;
           const { key: slug, name, spec } = plugin.meta.profile;

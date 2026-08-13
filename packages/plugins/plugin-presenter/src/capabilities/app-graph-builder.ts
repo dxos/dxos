@@ -9,9 +9,9 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Obj } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -21,8 +21,8 @@ import { PresenterCapabilities, PresenterOperation } from '#types';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: AppGraphNode.Node, get: Atom.AtomContext) =>
-  Option.orElse(NodeMatcher.whenEchoType(Collection.Collection)(node, get), () =>
-    NodeMatcher.whenEchoType(Markdown.Document)(node, get),
+  Option.orElse(AppNodeMatcher.whenEchoType(Collection.Collection)(node, get), () =>
+    AppNodeMatcher.whenEchoType(Markdown.Document)(node, get),
   );
 
 export default Capability.makeModule(

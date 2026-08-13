@@ -6,6 +6,7 @@ import React, { forwardRef, useMemo } from 'react';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
 import { type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -53,7 +54,7 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
  */
 const useTopLevelNavItems = (root?: AppGraphNode.Node) => {
   const { graph } = useAppGraph();
-  const rootId = root?.id ?? AppGraphNode.RootId;
+  const rootId = root?.id ?? GraphNode.RootId;
   const rootOutboundItems = useConnections(graph, rootId, 'child');
   const rootActions = useGraphActions(graph, rootId);
 

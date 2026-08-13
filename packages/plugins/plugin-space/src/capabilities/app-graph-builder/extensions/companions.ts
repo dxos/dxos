@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { Obj, Type } from '@dxos/echo';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
@@ -27,7 +27,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
       // Object settings plank companion.
       AppGraphBuilder.createExtension({
         id: 'settings',
-        match: NodeMatcher.whenEchoObjectMatches,
+        match: AppNodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -43,7 +43,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
       // Related objects plank companion.
       AppGraphBuilder.createExtension({
         id: 'related',
-        match: NodeMatcher.whenEchoObjectMatches,
+        match: AppNodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
           Effect.succeed([
             AppNode.makeCompanion({

@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Attention } from '@dxos/react-ui-attention';
 
@@ -28,7 +28,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'spaceSearch',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: (node, get) =>
           Effect.gen(function* () {
             const [client] = get(clientAtom);
@@ -52,7 +52,7 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'root',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {

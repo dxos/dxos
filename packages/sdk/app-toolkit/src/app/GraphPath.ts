@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
 import { Key, Obj, Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
 
@@ -25,7 +26,7 @@ export const pinnedWorkspaceId = (name: string): string => `${PINNED_WORKSPACE_P
 /**
  * Build a qualified path to a pinned workspace.
  */
-export const getPinnedWorkspacePath = (name: string): string => `${AppGraphNode.RootId}/${pinnedWorkspaceId(name)}`;
+export const getPinnedWorkspacePath = (name: string): string => `${GraphNode.RootId}/${pinnedWorkspaceId(name)}`;
 
 /**
  * Well-known local segment names for the canonical graph tree structure.
@@ -67,7 +68,7 @@ export const GroupTypes = {
  * Optional additional segments are appended (e.g. a section name for a well-known child node).
  */
 export const getSpacePath = (spaceId: string, ...segments: string[]): string => {
-  const base = `${AppGraphNode.RootId}/${spaceId}`;
+  const base = `${GraphNode.RootId}/${spaceId}`;
   return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
 };
 
@@ -228,17 +229,17 @@ export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId
  * Pinned workspaces have a `!`-prefixed segment immediately after `root/`.
  */
 export const isPinnedWorkspace = (qualifiedPath: string): boolean =>
-  qualifiedPath.startsWith(`${AppGraphNode.RootId}/${PINNED_WORKSPACE_PREFIX}`);
+  qualifiedPath.startsWith(`${GraphNode.RootId}/${PINNED_WORKSPACE_PREFIX}`);
 
 /**
  * Derive the workspace qualified path from any qualified graph ID.
  * The workspace is the first two segments: `root/<workspace>`.
- * Returns `AppGraphNode.RootId` if the path has no workspace segment.
+ * Returns `GraphNode.RootId` if the path has no workspace segment.
  */
 export const getWorkspaceFromPath = (qualifiedId: string): string => {
   const firstSep = qualifiedId.indexOf('/');
   if (firstSep === -1) {
-    return AppGraphNode.RootId;
+    return GraphNode.RootId;
   }
   const secondSep = qualifiedId.indexOf('/', firstSep + 1);
   if (secondSep === -1) {

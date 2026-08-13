@@ -14,21 +14,24 @@ import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type MakeOptional, type Specialize } from '@dxos/util';
 
-import { type Any as AnyEdge, GraphEdge as EdgeSchema, createId as createEdgeId } from './GraphEdge';
-import { type Any as AnyNode, GraphNode as NodeSchema } from './GraphNode';
+import * as GraphEdge from './GraphEdge';
+import * as GraphNode from './GraphNode';
 
 /**
  * Serialized graph; the shape persisted by ECHO types and returned by the model's snapshot.
  */
 export const Data = Schema.Struct({
   id: Schema.optional(Schema.String),
-  nodes: Schema.mutable(Schema.Array(NodeSchema)),
-  edges: Schema.mutable(Schema.Array(EdgeSchema)),
+  nodes: Schema.mutable(Schema.Array(GraphNode.GraphNode)),
+  edges: Schema.mutable(Schema.Array(GraphEdge.GraphEdge)),
 });
 
 export interface AnyData extends Schema.Schema.Type<typeof Data> {}
 
-export type Data<Node extends AnyNode, Edge extends AnyEdge> = Specialize<AnyData, { nodes: Node[]; edges: Edge[] }>;
+export type Data<Node extends GraphNode.Any, Edge extends GraphEdge.Any> = Specialize<
+  AnyData,
+  { nodes: Node[]; edges: Edge[] }
+>;
 
 /**
  * Optional function to wrap mutations (e.g., for ECHO objects that require Obj.update).
@@ -41,7 +44,7 @@ export type GraphChangeFunction = (fn: () => void) => void;
  */
 type Slot<Node> = { id: string; value: Option.Option<Node> };
 
-export type Options<Node extends AnyNode, Edge extends AnyEdge> = {
+export type Options<Node extends GraphNode.Any, Edge extends GraphEdge.Any> = {
   registry?: Registry.AtomRegistry;
   graph?: Partial<Data<Node, Edge>>;
   /**
@@ -54,7 +57,7 @@ export type Options<Node extends AnyNode, Edge extends AnyEdge> = {
 /**
  * Predicate selecting which edges an algorithm traverses; the default includes every edge.
  */
-export type EdgeFilter<Edge extends AnyEdge> = (edge: Edge) => boolean;
+export type EdgeFilter<Edge extends GraphEdge.Any> = (edge: Edge) => boolean;
 
 /**
  * Which way an adjacency view follows edges.
@@ -64,9 +67,9 @@ export type Direction = 'outgoing' | 'incoming';
 /**
  * One step of a cycle: a node and the outgoing edge continuing the loop.
  */
-export type CycleStep<Edge extends AnyEdge> = { node: string; edge: Edge };
+export type CycleStep<Edge extends GraphEdge.Any> = { node: string; edge: Edge };
 
-export type Subscription<Node extends AnyNode = AnyNode, Edge extends AnyEdge = AnyEdge> = (
+export type Subscription<Node extends GraphNode.Any = GraphNode.Any, Edge extends GraphEdge.Any = GraphEdge.Any> = (
   model: AbstractGraphModel<Node, Edge>,
   graph: Data<Node, Edge>,
 ) => void;
@@ -79,8 +82,8 @@ export type Subscription<Node extends AnyNode = AnyNode, Edge extends AnyEdge = 
  * rather than on every write.
  */
 export abstract class AbstractGraphModel<
-  Node extends AnyNode = AnyNode,
-  Edge extends AnyEdge = AnyEdge,
+  Node extends GraphNode.Any = GraphNode.Any,
+  Edge extends GraphEdge.Any = GraphEdge.Any,
   Model extends AbstractGraphModel<Node, Edge, Model, Builder> = any,
   Builder extends AbstractBuilder<Node, Edge, Model> = AbstractBuilder<Node, Edge, Model>,
 > {
@@ -301,7 +304,7 @@ export abstract class AbstractGraphModel<
     return this.findNode(id) ?? failedInvariant(`node not found: ${id}`);
   }
 
-  filterNodes({ type }: Partial<AnyNode> = {}): Node[] {
+  filterNodes({ type }: Partial<GraphNode.Any> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -396,7 +399,7 @@ export abstract class AbstractGraphModel<
     return this.findEdge(id) ?? failedInvariant(`edge not found: ${id}`);
   }
 
-  filterEdges({ type, source, target }: Partial<AnyEdge> = {}): Edge[] {
+  filterEdges({ type, source, target }: Partial<GraphEdge.Any> = {}): Edge[] {
     // Anchoring on an endpoint reads the adjacency index instead of scanning every edge.
     const candidates = source ? this.outgoing(source) : target ? this.incoming(target) : this.edges;
     return candidates.filter(
@@ -425,7 +428,7 @@ export abstract class AbstractGraphModel<
     invariant(edge.source);
     invariant(edge.target);
     // Supplying the one optional key completes the type, which TypeScript cannot narrow itself.
-    const resolved = (edge.id ? edge : { id: createEdgeId(edge), ...edge }) as Edge;
+    const resolved = (edge.id ? edge : { id: GraphEdge.createId(edge), ...edge }) as Edge;
     invariant(!this.findEdge(resolved.id), `edge already exists: ${resolved.id}`);
     this.batch(() => {
       const index = EffectGraph.addEdge(
@@ -808,7 +811,7 @@ const parseNeighborKey = (key: string): { id: string; type?: string; direction: 
   return { id, type: type || undefined, direction: direction === 'incoming' ? 'incoming' : 'outgoing' };
 };
 
-const sameNodes = (a: readonly AnyNode[], b: readonly AnyNode[]): boolean =>
+const sameNodes = (a: readonly GraphNode.Any[], b: readonly GraphNode.Any[]): boolean =>
   a.length === b.length && a.every((node, index) => node === b[index]);
 
 const removeInPlace = <T>(list: T[] | undefined, predicate: (value: T) => boolean): void => {
@@ -827,8 +830,8 @@ const removeInPlace = <T>(list: T[] | undefined, predicate: (value: T) => boolea
  * Chainable builder wrapper.
  */
 export abstract class AbstractBuilder<
-  Node extends AnyNode,
-  Edge extends AnyEdge,
+  Node extends GraphNode.Any,
+  Edge extends GraphEdge.Any,
   Model extends AbstractGraphModel<Node, Edge, any, any>,
 > {
   constructor(protected readonly _model: Model) {}
@@ -870,12 +873,10 @@ export abstract class AbstractBuilder<
 /**
  * Basic model.
  */
-export class GraphModel<Node extends AnyNode = AnyNode, Edge extends AnyEdge = AnyEdge> extends AbstractGraphModel<
-  Node,
-  Edge,
-  GraphModel<Node, Edge>,
-  Builder<Node, Edge>
-> {
+export class GraphModel<
+  Node extends GraphNode.Any = GraphNode.Any,
+  Edge extends GraphEdge.Any = GraphEdge.Any,
+> extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>, Builder<Node, Edge>> {
   override get builder(): Builder<Node, Edge> {
     return new Builder<Node, Edge>(this);
   }
@@ -888,12 +889,11 @@ export class GraphModel<Node extends AnyNode = AnyNode, Edge extends AnyEdge = A
 /**
  * Basic builder.
  */
-export class Builder<Node extends AnyNode = AnyNode, Edge extends AnyEdge = AnyEdge> extends AbstractBuilder<
-  Node,
-  Edge,
-  GraphModel<Node, Edge>
-> {}
+export class Builder<
+  Node extends GraphNode.Any = GraphNode.Any,
+  Edge extends GraphEdge.Any = GraphEdge.Any,
+> extends AbstractBuilder<Node, Edge, GraphModel<Node, Edge>> {}
 
-export const make = <Node extends AnyNode = AnyNode, Edge extends AnyEdge = AnyEdge>(
+export const make = <Node extends GraphNode.Any = GraphNode.Any, Edge extends GraphEdge.Any = GraphEdge.Any>(
   options?: Options<Node, Edge>,
 ): GraphModel<Node, Edge> => new GraphModel<Node, Edge>(options);

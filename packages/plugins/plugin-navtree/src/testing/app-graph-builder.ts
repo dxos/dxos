@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
@@ -29,7 +29,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       // Create app menu actions.
       AppGraphBuilder.createExtension({
         id: 'appMenu',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
@@ -48,7 +48,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       // Create user account node.
       AppGraphBuilder.createExtension({
         id: 'userAccount',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppGraphNode.make({
@@ -95,7 +95,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       // Create space (workspace) nodes directly under root.
       AppGraphBuilder.createExtension({
         id: 'spaces',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: (_, get) =>
           Effect.sync(() => {
             const count = Atom.make((get) => {
@@ -130,7 +130,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       // Create space actions.
       AppGraphBuilder.createExtension({
         id: 'spaceActions',
-        match: NodeMatcher.whenNodeType('space'),
+        match: GraphNodeMatcher.whenNodeType('space'),
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
@@ -148,7 +148,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       // Create object nodes.
       AppGraphBuilder.createExtension({
         id: 'objects',
-        match: NodeMatcher.whenNodeType('space'),
+        match: GraphNodeMatcher.whenNodeType('space'),
         connector: (_, get) =>
           Effect.sync(() => {
             const count = Atom.make((get) => {
@@ -183,7 +183,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       // Create object actions.
       AppGraphBuilder.createExtension({
         id: 'objectActions',
-        match: NodeMatcher.whenNodeType('object'),
+        match: GraphNodeMatcher.whenNodeType('object'),
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({

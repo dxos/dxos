@@ -10,6 +10,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { Keyboard } from '@dxos/keyboard';
 import { runAction } from '@dxos/plugin-graph';
 import { getHostPlatform } from '@dxos/util';
@@ -60,7 +61,7 @@ export default Capability.makeModule(
 
     // TODO(burdon): Create context and plugin.
     Keyboard.singleton.initialize();
-    Keyboard.singleton.setCurrentContext(AppGraphNode.RootId);
+    Keyboard.singleton.setCurrentContext(GraphNode.RootId);
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {

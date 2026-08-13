@@ -5,12 +5,8 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { type MakeOptional } from '@dxos/util';
-
-/**
- * Root node ID.
- */
-export const RootId = 'root';
 
 /**
  * Root node type.

@@ -13,13 +13,13 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -33,13 +33,13 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // --- Root-level action ---
-      // `NodeMatcher.whenRoot` matches the graph root, making this action appear
+      // `GraphNodeMatcher.whenRoot` matches the graph root, making this action appear
       // in the global action menu (e.g., the "+" button in the navigation tree).
       // `position: Position.first` places the action in the primary action area.
       AppGraphBuilder.createExtension({
         id: 'rootActions',
         position: Position.first,
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             // `AppGraphNode.makeAction` creates an action node in the graph.
@@ -161,7 +161,7 @@ export default Capability.makeModule(
       // `position: Position.last` places it after higher-priority companions.
       AppGraphBuilder.createExtension({
         id: 'deckCompanion',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({

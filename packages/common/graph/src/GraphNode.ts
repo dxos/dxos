@@ -8,6 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import { type Specialize } from '@dxos/util';
 
+/**
+ * Identity of the node a traversal or expansion starts from.
+ */
+export const RootId = 'root';
+
 export const GraphNode = Schema.Struct({
   id: Schema.String,
   type: Schema.optional(Schema.String),

@@ -10,7 +10,8 @@ import { select } from 'd3';
 import React, { type PropsWithChildren, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { GraphEdge, GraphModel } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';

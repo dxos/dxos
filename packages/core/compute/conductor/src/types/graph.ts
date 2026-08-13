@@ -7,7 +7,8 @@ import * as Struct from 'effect/Struct';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
-import { GraphEdge, GraphNode } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 export const ComputeValueType = Schema.Literals(['string', 'number', 'boolean', 'object']);
 

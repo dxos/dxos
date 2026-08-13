@@ -13,7 +13,9 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
-import { type Type } from '@dxos/echo';
+import { Entity, type Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -21,7 +23,6 @@ import { scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import * as NodeMatcher from './node-matcher';
 import {
   getParentId,
   nodeArgsUnchanged,
@@ -94,7 +95,7 @@ export type BuilderExtension = Readonly<{
  *
  * `path` is how the node is located, in one of two forms:
  * - `string[]` — fixed ancestor node-id segments between the workspace base and the node (the common,
- *   deterministic case): the node is `${Node.RootId}/<workspace>/<...segments>/<id>`. Fixed-depth
+ *   deterministic case): the node is `${GraphNode.RootId}/<workspace>/<...segments>/<id>`. Fixed-depth
  *   dynamic tails beyond the segments are `+`-encoded into the id.
  * - {@link PathResolver} — a dynamic resolver, for data-dependent shapes (e.g. nested collections at
  *   arbitrary depth) that cannot declare static segments.
@@ -138,7 +139,7 @@ export type PathResolveParams = {
   id: string;
   /** The workspace segment from the URL. */
   workspace: string;
-  /** Qualified id of the workspace base node (`${Node.RootId}/<workspace>`). */
+  /** Qualified id of the workspace base node (`${GraphNode.RootId}/<workspace>`). */
   workspaceBaseId: string;
 };
 
@@ -664,7 +665,7 @@ const exploreImpl = async (
   path: string[] = [],
 ): Promise<void> => {
   const internal = builder as GraphBuilderImpl;
-  const { registry = Registry.make(), source = Node.RootId, relation, visitor } = options;
+  const { registry = Registry.make(), source = GraphNode.RootId, relation, visitor } = options;
   // Break cycles.
   if (path.includes(source)) {
     return;
@@ -1106,7 +1107,7 @@ export const createTypeExtension = <T extends Type.AnyEntity, R = never>(
   const { id, type, actions, actionGroups, connector, relation, position } = options;
   return createExtension<Type.InstanceType<T>, R>({
     id,
-    match: NodeMatcher.whenEchoType(type),
+    match: (node) => (Entity.instanceOf(type, node.data) ? Option.some(node.data) : Option.none()),
     actions,
     actionGroups,
     connector,

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { GraphModel } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 
 import { SVGContext } from '../../hooks';
 import { type GraphLayoutEdge } from '../types';

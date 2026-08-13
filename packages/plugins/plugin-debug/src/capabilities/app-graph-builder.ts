@@ -7,11 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
@@ -54,7 +55,7 @@ export default Capability.makeModule(
       // Debug object companion.
       AppGraphBuilder.createExtension({
         id: 'debugObject',
-        match: NodeMatcher.whenEchoObject,
+        match: AppNodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -70,7 +71,7 @@ export default Capability.makeModule(
       // Object explorer deck companion.
       AppGraphBuilder.createExtension({
         id: 'spaceObjects',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
@@ -86,7 +87,7 @@ export default Capability.makeModule(
       // Log panel deck companion.
       AppGraphBuilder.createExtension({
         id: 'logs',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({

@@ -4,7 +4,9 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';

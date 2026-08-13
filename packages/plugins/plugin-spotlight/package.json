@@ -93,6 +93,7 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",

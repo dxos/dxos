@@ -13,7 +13,8 @@ import {
 } from 'd3';
 import { useEffect, useMemo, useState } from 'react';
 
-import { GraphModel, GraphNode } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { type Point } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 

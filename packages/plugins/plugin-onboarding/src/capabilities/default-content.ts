@@ -15,6 +15,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
@@ -75,12 +76,12 @@ export default Capability.makeModule(
       // Eagerly expand the graph so the exemplar space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
       const exemplarSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.EXEMPLAR_SPACE_TAG));
-      graph.pipe(Graph.expand(AppGraphNode.RootId, 'child'), Graph.expand(defaultSpace.id, 'child'));
+      graph.pipe(Graph.expand(GraphNode.RootId, 'child'), Graph.expand(defaultSpace.id, 'child'));
       if (exemplarSpace) {
         graph.pipe(Graph.expand(exemplarSpace.id, 'child'));
       }
     } else {
-      graph.pipe(Graph.expand(AppGraphNode.RootId, 'child'), Graph.expand(defaultSpace.id, 'child'));
+      graph.pipe(Graph.expand(GraphNode.RootId, 'child'), Graph.expand(defaultSpace.id, 'child'));
     }
 
     const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);

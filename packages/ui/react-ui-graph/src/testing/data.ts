@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { GraphEdge, GraphModel } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { random } from '@dxos/random';
 
 import { type TestNode } from './model';

@@ -7,7 +7,9 @@ import * as Struct from 'effect/Struct';
 
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 

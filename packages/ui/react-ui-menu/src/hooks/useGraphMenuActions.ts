@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as Graph from '@dxos/app-graph/Graph';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { applyPresentation } from '../presentation';
 import {
@@ -44,7 +45,7 @@ export const buildGraphMenu = (
   nodeId: string,
   options: GraphMenuOptions = {},
 ): ActionGraphProps => {
-  const { rootId = AppGraphNode.RootId, filter, surface } = options;
+  const { rootId = GraphNode.RootId, filter, surface } = options;
   const nodes: ActionGraphNodes = [];
   const edges: ActionGraphEdges = [];
   const seen = new Set<string>();

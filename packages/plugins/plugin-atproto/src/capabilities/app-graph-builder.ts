@@ -8,12 +8,12 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import type * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Filter, Obj } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Connection } from '@dxos/link';
 
 import { meta } from '#meta';
@@ -30,7 +30,7 @@ export const ATPROTO_COMPANION_VARIANT = 'atproto';
  * and (b) its space holds an atproto connection. Reactive via `get(...atom)`, so the companion
  * appears/disappears as connections are added or removed.
  */
-const whenPublishable: NodeMatcher.NodeMatcher<Obj.Unknown> = (node, get) => {
+const whenPublishable: GraphNodeMatcher.NodeMatcher<Obj.Unknown> = (node, get) => {
   if (!Obj.isObject(node.data)) {
     return Option.none();
   }

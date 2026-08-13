@@ -5,5 +5,12 @@
 import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
+  entry: {
+    index: 'src/index.ts',
+    GraphEdge: 'src/GraphEdge.ts',
+    GraphModel: 'src/GraphModel.ts',
+    GraphNode: 'src/GraphNode.ts',
+    GraphNodeMatcher: 'src/GraphNodeMatcher.ts',
+  },
   test: { node: true },
 });

@@ -48,11 +48,6 @@
       "types": "./dist/types/src/graph.d.ts",
       "import": "./dist/lib/graph.mjs"
     },
-    "./NodeMatcher": {
-      "source": "./src/node-matcher.ts",
-      "types": "./dist/types/src/node-matcher.d.ts",
-      "import": "./dist/lib/node-matcher.mjs"
-    },
     "./PathResolution": {
       "source": "./src/path-resolution.ts",
       "types": "./dist/types/src/path-resolution.d.ts",

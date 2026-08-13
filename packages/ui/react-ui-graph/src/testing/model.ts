@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { GraphModel, GraphNode } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 
 import { createEdge, createNode } from './data';

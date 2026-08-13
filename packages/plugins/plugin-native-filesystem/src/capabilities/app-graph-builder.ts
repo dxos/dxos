@@ -11,12 +11,13 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Expando, Text } from '@dxos/schema';
@@ -76,14 +77,14 @@ export const createFilesystemEntryExtensions = (
         return null;
       }
       const chain = findEntryAncestorChain(ws.children, id, []);
-      return chain ? [AppGraphNode.RootId, workspace, ...chain, id].join('/') : null;
+      return chain ? [GraphNode.RootId, workspace, ...chain, id].join('/') : null;
     });
 
   return Effect.all([
     AppGraphBuilder.createExtension({
       id: 'workspaceEntries',
       url: { key: 'file', kind: 'item', path: resolve },
-      match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
+      match: GraphNodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
         const [filesystemManager] = get(filesystemManagerCapabilitiesAtom);
@@ -107,7 +108,7 @@ export const createFilesystemEntryExtensions = (
     AppGraphBuilder.createExtension({
       id: 'directoryEntries',
       url: { key: 'file', kind: 'item', path: resolve },
-      match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
+      match: GraphNodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
         const [filesystemManager] = get(filesystemManagerCapabilitiesAtom);
@@ -150,7 +151,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'primaryActions',
         position: Position.first,
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
@@ -173,7 +174,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'workspaces',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: (_node, get) => {
           const [stateAtom] = get(stateCapabilitiesAtom);
           if (!stateAtom) {
@@ -214,7 +215,7 @@ export default Capability.makeModule(
                 onRearrange = (nextOrder) => {
                   Graph.sortEdges(
                     graph,
-                    AppGraphNode.RootId,
+                    GraphNode.RootId,
                     'outbound',
                     nextOrder.map((item) => {
                       if (NativeFilesystemCapabilities.isFilesystemWorkspace(item)) {
@@ -257,7 +258,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'workspaceSettings',
-        match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
+        match: GraphNodeMatcher.whenNodeType(FILESYSTEM_TYPE),
         connector: () =>
           Effect.succeed([
             AppGraphNode.make({

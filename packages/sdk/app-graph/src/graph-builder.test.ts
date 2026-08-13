@@ -13,11 +13,12 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import * as GraphBuilder from './AppGraphBuilder';
 import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import * as NodeMatcher from './node-matcher';
 import { qualifyId } from './util';
 
 const exampleId = (id: number) => `dx:test:${id}`;
@@ -149,7 +150,7 @@ describe('GraphBuilder', () => {
       }
 
       // Now expand root to create parent via connector.
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
@@ -189,7 +190,7 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
 
       // Connector produces root/shared.
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
@@ -237,7 +238,7 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
 
       // Connector produces root/shared.
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
@@ -284,12 +285,12 @@ describe('GraphBuilder', () => {
       );
 
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
-      Graph.expand(graph, Node.RootId, Node.childRelation('inbound'));
+      Graph.expand(graph, GraphNode.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, Node.childRelation('inbound'));
       await GraphBuilder.flush(builder);
 
-      const outbound = registry.get(graph.connections(Node.RootId, 'child'));
-      const inbound = registry.get(graph.connections(Node.RootId, Node.childRelation('inbound')));
+      const outbound = registry.get(graph.connections(GraphNode.RootId, 'child'));
+      const inbound = registry.get(graph.connections(GraphNode.RootId, Node.childRelation('inbound')));
 
       expect(outbound).has.length(1);
       expect(outbound[0].id).to.equal('root/child');
@@ -311,18 +312,18 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
-        const [node] = registry.get(graph.connections(Node.RootId, 'child'));
+        const [node] = registry.get(graph.connections(GraphNode.RootId, 'child'));
         expect(node.data).to.equal(0);
       }
 
       {
         registry.set(state, 1);
         await GraphBuilder.flush(builder);
-        const [node] = registry.get(graph.connections(Node.RootId, 'child'));
+        const [node] = registry.get(graph.connections(GraphNode.RootId, 'child'));
         expect(node.data).to.equal(1);
       }
     });
@@ -341,16 +342,16 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
 
       let count = 0;
-      const cancel = registry.subscribe(graph.connections(Node.RootId, 'child'), (_) => {
+      const cancel = registry.subscribe(graph.connections(GraphNode.RootId, 'child'), (_) => {
         count++;
       });
       onTestFinished(() => cancel());
 
       expect(count).to.equal(0);
-      expect(registry.get(graph.connections(Node.RootId, 'child'))).to.have.length(0);
+      expect(registry.get(graph.connections(GraphNode.RootId, 'child'))).to.have.length(0);
       expect(count).to.equal(1);
 
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
       expect(count).to.equal(2);
 
@@ -370,12 +371,12 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       let nodes: Node.Node[] = [];
       let count = 0;
-      const cancel = registry.subscribe(graph.connections(Node.RootId, 'child'), (_nodes) => {
+      const cancel = registry.subscribe(graph.connections(GraphNode.RootId, 'child'), (_nodes) => {
         count++;
         nodes = _nodes;
       });
@@ -383,7 +384,7 @@ describe('GraphBuilder', () => {
 
       expect(nodes).has.length(0);
       expect(count).to.equal(0);
-      registry.get(graph.connections(Node.RootId, 'child'));
+      registry.get(graph.connections(GraphNode.RootId, 'child'));
       expect(nodes).has.length(1);
       expect(count).to.equal(1);
 
@@ -414,11 +415,11 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
-        const nodes = registry.get(graph.connections(Node.RootId, 'child'));
+        const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
         expect(nodes).has.length(2);
         expect(nodes[0].id).to.equal(qualifyId('root', exampleId(1)));
         expect(nodes[1].id).to.equal(qualifyId('root', exampleId(2)));
@@ -428,7 +429,7 @@ describe('GraphBuilder', () => {
       await GraphBuilder.flush(builder);
 
       {
-        const nodes = registry.get(graph.connections(Node.RootId, 'child'));
+        const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
         expect(nodes).has.length(1);
         expect(nodes[0].id).to.equal(qualifyId('root', exampleId(3)));
       }
@@ -465,7 +466,7 @@ describe('GraphBuilder', () => {
       });
       onTestFinished(() => cancel());
 
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
       expect(count).to.equal(0);
       expect(exists).to.be.false;
@@ -513,7 +514,7 @@ describe('GraphBuilder', () => {
           }),
         );
         const graph = builder.graph;
-        Graph.expand(graph, Node.RootId, 'child');
+        Graph.expand(graph, GraphNode.RootId, 'child');
         return { registry, builder, graph, nodesAtom };
       };
 
@@ -745,11 +746,11 @@ describe('GraphBuilder', () => {
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       {
-        const nodes = registry.get(graph.connections(Node.RootId, 'child'));
+        const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
         expect(nodes).has.length(3);
         expect(nodes[0].id).to.equal(qualifyId('root', exampleId(1)));
         expect(nodes[1].id).to.equal(qualifyId('root', exampleId(2)));
@@ -764,7 +765,7 @@ describe('GraphBuilder', () => {
       await GraphBuilder.flush(builder);
 
       {
-        const nodes = registry.get(graph.connections(Node.RootId, 'child'));
+        const nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
         expect(nodes).has.length(3);
         expect(nodes[0].id).to.equal(qualifyId('root', exampleId(3)));
         expect(nodes[1].id).to.equal(qualifyId('root', exampleId(1)));
@@ -843,7 +844,7 @@ describe('GraphBuilder', () => {
       onTestFinished(() => dependentCancel());
 
       // Counts should not increment until the node is expanded.
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
       expect(parentCount).to.equal(1);
       expect(independentCount).to.equal(0);
@@ -926,7 +927,7 @@ describe('GraphBuilder', () => {
         }
       });
 
-      Graph.expand(builder.graph, Node.RootId, 'child');
+      Graph.expand(builder.graph, GraphNode.RootId, 'child');
       await trigger.wait();
       expect(count).to.equal(5);
     });
@@ -971,8 +972,8 @@ describe('GraphBuilder', () => {
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const matcher = (node: Node.Node) => NodeMatcher.whenId('root')(node);
-        const factory = (node: Node.Node) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.id }];
+        const matcher = (node: GraphNode.Any) => GraphNodeMatcher.whenId('root')(node);
+        const factory = (node: GraphNode.Any) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.id }];
 
         const connector = GraphBuilder.createConnector(matcher, factory);
 
@@ -984,10 +985,10 @@ describe('GraphBuilder', () => {
           }),
         );
 
-        Graph.expand(graph, Node.RootId, 'child');
+        Graph.expand(graph, GraphNode.RootId, 'child');
         await GraphBuilder.flush(builder);
 
-        const connections = registry.get(graph.connections(Node.RootId, 'child'));
+        const connections = registry.get(graph.connections(GraphNode.RootId, 'child'));
         expect(connections).has.length(1);
         expect(connections[0].id).to.equal('root/child');
       });
@@ -1002,7 +1003,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'testExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
           }),
         );
@@ -1028,7 +1029,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'testExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) =>
               Effect.succeed([
                 {
@@ -1064,7 +1065,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'testExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: 'c' }]),
             actions: (node, get) =>
               Effect.succeed([{ id: 'act1', data: () => Effect.void, properties: { label: 'A' } }]),
@@ -1104,7 +1105,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'lateExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) =>
               Effect.succeed([{ id: 'late-act', data: () => Effect.void, properties: { label: 'Late' } }]),
           }),
@@ -1135,7 +1136,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'lateConnector',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: () =>
               Effect.succeed([{ id: 'late-child', type: EXAMPLE_TYPE, data: 'late', properties: { label: 'Late' } }]),
           }),
@@ -1168,7 +1169,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'testExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) =>
               // Use TestService in the callback to include it in R.
               Effect.gen(function* () {
@@ -1223,7 +1224,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'testExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             resolver: (id, get) => Effect.succeed({ id, type: EXAMPLE_TYPE, properties: {}, data: 'resolved' }),
           }),
         );
@@ -1245,7 +1246,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'testExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
             actions: (node, get) =>
               Effect.succeed([
@@ -1287,7 +1288,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'testExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: get(state) }]),
           }),
         );
@@ -1325,7 +1326,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'failingExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.die('Connector failed intentionally'),
           }),
         );
@@ -1352,7 +1353,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'failingActionsExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) => Effect.die('Actions failed intentionally'),
           }),
         );
@@ -1379,7 +1380,7 @@ describe('GraphBuilder', () => {
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'failingResolverExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             resolver: (id, get) => Effect.die('Resolver failed intentionally'),
           }),
         );
@@ -1403,7 +1404,7 @@ describe('GraphBuilder', () => {
         const failingExtensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'failingExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.die('This one fails'),
           }),
         );
@@ -1412,7 +1413,7 @@ describe('GraphBuilder', () => {
         const workingExtensions = Effect.runSync(
           GraphBuilder.createExtension({
             id: 'workingExtension',
-            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) =>
               Effect.succeed([{ id: 'child-from-working', type: EXAMPLE_TYPE, data: 'success' }]),
           }),
@@ -1475,7 +1476,7 @@ describe('GraphBuilder', () => {
         }),
       );
 
-      expect(() => Graph.expand(builder.graph, Node.RootId, 'child')).toThrow(/must not contain/);
+      expect(() => Graph.expand(builder.graph, GraphNode.RootId, 'child')).toThrow(/must not contain/);
     });
 
     test('multi-level path qualification', async () => {
@@ -1510,10 +1511,10 @@ describe('GraphBuilder', () => {
 
       const graph = builder.graph;
 
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
-      const level1 = registry.get(graph.connections(Node.RootId, 'child'));
+      const level1 = registry.get(graph.connections(GraphNode.RootId, 'child'));
       expect(level1).has.length(1);
       expect(level1[0].id).to.equal('root/A');
 
@@ -1552,10 +1553,10 @@ describe('GraphBuilder', () => {
       );
 
       const graph = builder.graph;
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
-      const connections = registry.get(graph.connections(Node.RootId, 'child'));
+      const connections = registry.get(graph.connections(GraphNode.RootId, 'child'));
       expect(connections).has.length(1);
       expect(connections[0].id).to.equal('root/parent-node');
 
@@ -1596,7 +1597,7 @@ describe('GraphBuilder', () => {
 
       const graph = builder.graph;
 
-      Graph.expand(graph, Node.RootId, 'child');
+      Graph.expand(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
 
       Graph.expand(graph, 'root/A', 'child');

@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { GraphModel, GraphNode } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import {
   CanvasBoard,
   CanvasGraphModel,

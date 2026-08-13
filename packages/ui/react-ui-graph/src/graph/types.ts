@@ -7,7 +7,7 @@
 // Generic graph data type.
 //
 
-import { GraphModel } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { invariant } from '@dxos/invariant';
 
 import { type Point } from '../util';

@@ -7,3 +7,4 @@ export * from './selection';
 export * as GraphEdge from './GraphEdge';
 export * as GraphModel from './GraphModel';
 export * as GraphNode from './GraphNode';
+export * as GraphNodeMatcher from './GraphNodeMatcher';

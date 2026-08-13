@@ -8,12 +8,13 @@ import { describe, test } from 'vitest';
 import { qualifyId } from '@dxos/app-graph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { ProjectOperation } from '#types';
 
@@ -30,7 +31,7 @@ describe('project app graph builder', () => {
 
     // Action ids are qualified by the node they hang off.
     expect(actions.map((action) => action.id)).toEqual([
-      qualifyId(AppGraphNode.RootId, SUBJECT_ID, ProjectOperation.CreateChat.meta.key),
+      qualifyId(GraphNode.RootId, SUBJECT_ID, ProjectOperation.CreateChat.meta.key),
     ]);
     // Navtree only: the toolbar builds its own create-chat, so a `toolbar` disposition here would
     // render a second, identical button.
@@ -49,17 +50,17 @@ const getSubjectActions = async (subject: unknown) => {
   const rootExtensions = await EffectEx.runPromise(
     AppGraphBuilder.createExtension({
       id: 'testRoot',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       connector: () => Effect.succeed([{ id: SUBJECT_ID, type: 'test', data: subject }]),
     }),
   );
   const actionExtensions = await EffectEx.runPromise(createProjectActionExtension());
   const context = setupGraphBuilder({ extensions: [...rootExtensions, ...actionExtensions] });
 
-  await context.expand(AppGraphNode.RootId);
+  await context.expand(GraphNode.RootId);
   // Actions are their own relation, materialized lazily like connections.
-  await context.expand(qualifyId(AppGraphNode.RootId, SUBJECT_ID), 'action');
+  await context.expand(qualifyId(GraphNode.RootId, SUBJECT_ID), 'action');
 
   // `graph.actions` returns an atom; read it through the registry the builder was created with.
-  return context.registry.get(context.graph.actions(qualifyId(AppGraphNode.RootId, SUBJECT_ID)));
+  return context.registry.get(context.graph.actions(qualifyId(GraphNode.RootId, SUBJECT_ID)));
 };

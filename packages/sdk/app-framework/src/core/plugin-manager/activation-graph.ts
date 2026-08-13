@@ -4,7 +4,9 @@
 
 import * as Option from 'effect/Option';
 
-import { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import type * as Capability from '../capability';
 import type * as Plugin from '../plugin';

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { buildGraphMenu } from './useGraphMenuActions';
 
@@ -35,8 +36,8 @@ describe('buildGraphMenu', () => {
 
     expect(nodes.map((node) => node.id)).toEqual(['delete', 'save']);
     expect(edges).toEqual([
-      { source: AppGraphNode.RootId, target: 'delete', relation: 'child' },
-      { source: AppGraphNode.RootId, target: 'save', relation: 'child' },
+      { source: GraphNode.RootId, target: 'delete', relation: 'child' },
+      { source: GraphNode.RootId, target: 'save', relation: 'child' },
     ]);
   });
 
@@ -50,8 +51,8 @@ describe('buildGraphMenu', () => {
     // root → delete, root → more (group), more → archive, more → export.
     expect(nodes.map((node) => node.id)).toEqual(['delete', 'more', 'archive', 'export']);
     expect(edges).toEqual([
-      { source: AppGraphNode.RootId, target: 'delete', relation: 'child' },
-      { source: AppGraphNode.RootId, target: 'more', relation: 'child' },
+      { source: GraphNode.RootId, target: 'delete', relation: 'child' },
+      { source: GraphNode.RootId, target: 'more', relation: 'child' },
       { source: 'more', target: 'archive', relation: 'child' },
       { source: 'more', target: 'export', relation: 'child' },
     ]);
@@ -85,7 +86,7 @@ describe('buildGraphMenu', () => {
 
     expect(nodes.map((node) => node.id)).toEqual(['more', 'archive']);
     expect(edges).toEqual([
-      { source: AppGraphNode.RootId, target: 'more', relation: 'child' },
+      { source: GraphNode.RootId, target: 'more', relation: 'child' },
       { source: 'more', target: 'archive', relation: 'child' },
       { source: 'more', target: 'more', relation: 'child' },
     ]);

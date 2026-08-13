@@ -3,7 +3,8 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { GraphEdge, GraphModel } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { EntityId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 

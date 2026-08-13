@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { GraphModel, type SelectionModel } from '@dxos/graph';
+import { type SelectionModel } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 
 import { type SVGContext } from '../../hooks';
 import { type GraphLayout, type GraphLayoutNode, emptyGraph } from '../types';

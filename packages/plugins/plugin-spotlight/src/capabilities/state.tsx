@@ -8,6 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 
 import { SpotlightCapabilities } from '#types';
@@ -28,7 +29,7 @@ export default Capability.makeModule(() =>
         dialogOpen: state.dialogOpen,
         sidebarOpen: false,
         complementarySidebarOpen: false,
-        workspace: AppGraphNode.RootId,
+        workspace: GraphNode.RootId,
         active: [],
         inactive: [],
         scrollIntoView: undefined,

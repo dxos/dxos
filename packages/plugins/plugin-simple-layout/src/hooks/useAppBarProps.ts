@@ -12,6 +12,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
@@ -63,7 +64,7 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
   );
 
   // Back button logic.
-  const showBackButton = activeId !== undefined && activeId !== AppGraphNode.RootId;
+  const showBackButton = activeId !== undefined && activeId !== GraphNode.RootId;
 
   const onBack = useCallback(() => {
     if (state.active) {
@@ -74,13 +75,13 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
 
       // If history is empty and this is a workspace, go to home.
       if (state.history.length === 0 && isWorkspace) {
-        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: AppGraphNode.RootId });
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphNode.RootId });
       } else {
         // Otherwise, close (which will pop from history or clear active).
         void invokePromise(LayoutOperation.Close, { subject: [state.active] });
       }
     } else {
-      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: AppGraphNode.RootId });
+      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphNode.RootId });
     }
   }, [graph, invokePromise, state.active, state.history.length]);
 

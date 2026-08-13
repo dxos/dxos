@@ -4,7 +4,7 @@
 
 import { type Selection, easeLinear, interpolate, select } from 'd3';
 
-import type { GraphEdge } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
 import { isTruthy } from '@dxos/util';
 
 import { DATA_SHAPE_ID, getShapeElements } from '../components';

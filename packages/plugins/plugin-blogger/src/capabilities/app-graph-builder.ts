@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -16,6 +15,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Position, isNonNullable } from '@dxos/util';
 
@@ -133,7 +133,7 @@ export default Capability.makeModule(
       // "+ Post" action on each Publication node.
       AppGraphBuilder.createExtension({
         id: 'publicationActions',
-        match: NodeMatcher.whenNodeType(PUBLICATION_NODE_TYPE),
+        match: GraphNodeMatcher.whenNodeType(PUBLICATION_NODE_TYPE),
         actions: (node) => {
           if (!Obj.instanceOf(Blog.Publication, node.data)) {
             return Effect.succeed([]);

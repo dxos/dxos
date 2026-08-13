@@ -119,6 +119,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",

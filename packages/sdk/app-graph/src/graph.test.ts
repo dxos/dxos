@@ -9,6 +9,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import * as GraphBuilder from './AppGraphBuilder';
 import * as Node from './AppGraphNode';
@@ -26,9 +27,9 @@ describe('Graph', () => {
   test('getGraph', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
-    const root = registry.get(graph.node(Node.RootId));
+    const root = registry.get(graph.node(GraphNode.RootId));
     assert.ok(Option.isSome(root));
-    expect(root.value.id).toEqual(Node.RootId);
+    expect(root.value.id).toEqual(GraphNode.RootId);
     expect(root.value.type).toEqual(Node.RootType);
     expect(Graph.getGraph(root.value)).toEqual(graph);
   });
@@ -418,7 +419,7 @@ describe('Graph', () => {
     const graph = Graph.make();
 
     Graph.addNode(graph, {
-      id: Node.RootId,
+      id: GraphNode.RootId,
       type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test' },
@@ -429,7 +430,7 @@ describe('Graph', () => {
 
     const json = Graph.toJSON(graph);
     expect(json).to.deep.equal({
-      id: Node.RootId,
+      id: GraphNode.RootId,
       type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
@@ -443,7 +444,7 @@ describe('Graph', () => {
     const graph = Graph.make({ registry });
 
     Graph.addNode(graph, {
-      id: Node.RootId,
+      id: GraphNode.RootId,
       type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test' },
@@ -460,7 +461,7 @@ describe('Graph', () => {
 
     registry.get(graph.json());
     expect(json).to.deep.equal({
-      id: Node.RootId,
+      id: GraphNode.RootId,
       type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
@@ -471,7 +472,7 @@ describe('Graph', () => {
     Graph.addNode(graph, { id: 'test3', type: 'test' });
     Graph.addEdge(graph, { source: 'root', target: 'test3', relation: 'child' });
     expect(json).to.deep.equal({
-      id: Node.RootId,
+      id: GraphNode.RootId,
       type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
@@ -484,7 +485,7 @@ describe('Graph', () => {
   test('get path', () => {
     const graph = Graph.make();
     Graph.addNode(graph, {
-      id: Node.RootId,
+      id: GraphNode.RootId,
       type: Node.RootType,
       nodes: [
         { id: exampleId(1), type: EXAMPLE_TYPE },
@@ -508,7 +509,7 @@ describe('Graph', () => {
   test('get path curried', () => {
     const graph = Graph.make();
     Graph.addNode(graph, {
-      id: Node.RootId,
+      id: GraphNode.RootId,
       type: Node.RootType,
       nodes: [
         { id: exampleId(1), type: EXAMPLE_TYPE },
@@ -524,7 +525,7 @@ describe('Graph', () => {
     test('can be traversed', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Node.RootId,
+        id: GraphNode.RootId,
         type: Node.RootType,
         nodes: [
           { id: 'test1', type: 'test' },
@@ -545,7 +546,7 @@ describe('Graph', () => {
     test('traversal breaks cycles', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Node.RootId,
+        id: GraphNode.RootId,
         type: Node.RootType,
         nodes: [
           { id: 'test1', type: 'test' },
@@ -567,7 +568,7 @@ describe('Graph', () => {
     test('traversal can be started from any node', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Node.RootId,
+        id: GraphNode.RootId,
         type: Node.RootType,
         nodes: [
           {
@@ -592,7 +593,7 @@ describe('Graph', () => {
     test('traversal can follow inbound edges', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Node.RootId,
+        id: GraphNode.RootId,
         type: Node.RootType,
         nodes: [
           {
@@ -634,7 +635,7 @@ describe('Graph', () => {
     test('traversal can be terminated early', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Node.RootId,
+        id: GraphNode.RootId,
         type: Node.RootType,
         nodes: [
           { id: 'test1', type: 'test' },
@@ -659,12 +660,12 @@ describe('Graph', () => {
     test('traversal with multiple relations follows all edge types', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Node.RootId,
+        id: GraphNode.RootId,
         type: Node.RootType,
         nodes: [{ id: 'child1', type: 'test' }],
       });
       Graph.addNode(graph, { id: 'action1', type: Node.ActionType });
-      Graph.addEdge(graph, { source: Node.RootId, target: 'action1', relation: 'action' });
+      Graph.addEdge(graph, { source: GraphNode.RootId, target: 'action1', relation: 'action' });
 
       const nodes: string[] = [];
       Graph.traverse(graph, {
@@ -679,7 +680,7 @@ describe('Graph', () => {
     test('traverse curried', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Node.RootId,
+        id: GraphNode.RootId,
         type: Node.RootType,
         nodes: [{ id: 'test1', type: 'test' }],
       });
@@ -688,7 +689,7 @@ describe('Graph', () => {
       const nodes: string[] = [];
       graph.pipe(
         Graph.traverse({
-          source: Node.RootId,
+          source: GraphNode.RootId,
           relation: 'child',
           visitor: (node, _path) => {
             nodes.push(node.id);
@@ -783,7 +784,7 @@ describe('Graph', () => {
         },
       }),
     );
-    await graph.pipe(Graph.expand(Node.RootId, 'child'));
+    await graph.pipe(Graph.expand(GraphNode.RootId, 'child'));
     expect(expandCalled).to.be.true;
   });
 
@@ -826,7 +827,7 @@ describe('Graph', () => {
   test('waitForPath curried', async () => {
     const graph = Graph.make();
     Graph.addNode(graph, {
-      id: Node.RootId,
+      id: GraphNode.RootId,
       type: Node.RootType,
       nodes: [{ id: exampleId(1), type: EXAMPLE_TYPE }],
     });

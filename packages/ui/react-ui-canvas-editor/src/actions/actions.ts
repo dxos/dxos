@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { GraphEdge } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
 
 import { type LayoutKind } from '../layout';
 import { type CanvasBoard } from '../types';

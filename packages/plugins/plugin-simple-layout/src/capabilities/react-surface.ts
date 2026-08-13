@@ -10,6 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { Position } from '@dxos/util';
 
 import { Home, NavBranch } from '#components';
@@ -21,7 +22,7 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'home',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === AppGraphNode.RootId),
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === GraphNode.RootId),
         component: Home,
       }),
       Surface.create({

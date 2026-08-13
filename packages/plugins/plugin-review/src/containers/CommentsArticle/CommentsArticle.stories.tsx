@@ -15,7 +15,6 @@ import { qualifyId } from '@dxos/app-graph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -27,6 +26,8 @@ import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -129,7 +130,7 @@ const StoryAppGraphBuilder = Capability.inlineModule(
     const capabilities = yield* Capability.Service;
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'storyDocs',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       connector: (_, get) =>
         Effect.gen(function* () {
           const client = capabilities.get(ClientCapabilities.Client);
@@ -192,7 +193,7 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const attendableId = doc && qualifyId(AppGraphNode.RootId, doc.id);
+  const attendableId = doc && qualifyId(GraphNode.RootId, doc.id);
 
   // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
   useEffect(() => {

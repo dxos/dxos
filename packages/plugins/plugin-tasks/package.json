@@ -146,6 +146,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

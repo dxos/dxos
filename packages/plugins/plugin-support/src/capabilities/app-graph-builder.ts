@@ -10,14 +10,15 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Obj } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Attention } from '@dxos/react-ui-attention';
@@ -56,7 +57,7 @@ export default Capability.makeModule(
       // Root actions: open welcome tour + open shortcuts.
       AppGraphBuilder.createExtension({
         id: 'root',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             AppGraphNode.makeAction({
@@ -100,7 +101,7 @@ export default Capability.makeModule(
       // renders the owning plugin's `meta.description`.
       AppGraphBuilder.createExtension({
         id: 'helpCompanion',
-        match: NodeMatcher.whenEchoObject,
+        match: AppNodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -117,7 +118,7 @@ export default Capability.makeModule(
       // Renders the FeedbackPanel via the `deck-companion--help` surface.
       AppGraphBuilder.createExtension({
         id: 'help',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
@@ -136,7 +137,7 @@ export default Capability.makeModule(
       // Hidden by default; toggled via the showDiscordCompanion setting.
       AppGraphBuilder.createExtension({
         id: 'discord',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: (_root, get) => {
           const [settingsAtom] = get(settingsCapabilityAtom);
           if (!settingsAtom) {

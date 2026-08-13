@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { GraphModel } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutNode } from '../types';

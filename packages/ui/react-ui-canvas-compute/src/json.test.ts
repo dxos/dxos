@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
-import { GraphEdge, GraphNode } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { createGptCircuit } from './testing';
 

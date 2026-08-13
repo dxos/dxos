@@ -10,6 +10,7 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 
 import { EffectEx } from '@dxos/effect';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
@@ -294,7 +295,7 @@ const resolveUrlAsync = async (
       return null;
     }
 
-    const workspaceBaseId = `${Node.RootId}/${pair.workspace}`;
+    const workspaceBaseId = `${GraphNode.RootId}/${pair.workspace}`;
     const extensions: KeyedExtension[] = [];
     for (const extensionId of extensionIdList) {
       const url = allExtensions[extensionId]?.url;

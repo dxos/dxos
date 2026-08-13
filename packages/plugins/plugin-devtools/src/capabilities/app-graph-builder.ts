@@ -7,11 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
@@ -28,7 +29,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'root',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             AppGraphNode.makeAction({
@@ -47,7 +48,10 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createExtension({
         id: 'devtools',
-        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system)),
+        match: GraphNodeMatcher.whenAny(
+          GraphNodeMatcher.whenRoot,
+          AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
+        ),
         connector: (_nodeOrSpace: AppGraphNode.Node | Space, get) =>
           Effect.gen(function* () {
             const [graph] = get(appGraphAtom);
@@ -66,7 +70,7 @@ export default Capability.makeModule(
                   AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.AppGraph),
                     type: `${meta.profile.key}.app-graph`,
-                    data: { graph: graph?.graph, root: AppGraphNode.RootId },
+                    data: { graph: graph?.graph, root: GraphNode.RootId },
                     properties: {
                       label: ['debug-app-graph.label', { ns: meta.profile.key }],
                       icon: 'ph--graph--regular',
@@ -388,7 +392,7 @@ export default Capability.makeModule(
       // Devtools deck companion.
       AppGraphBuilder.createExtension({
         id: 'devtoolsOverview',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({

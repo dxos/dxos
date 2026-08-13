@@ -9,11 +9,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
@@ -54,7 +54,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'openRegistry',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
@@ -70,7 +70,7 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'registry',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         // REGISTRY_ID is a pinned workspace (the URL's workspace anchor), so it carries no key of its
         // own; its category and plugin children are the addressable planks (see `categories`/`plugins`).
         connector: () =>
@@ -91,7 +91,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'categories',
         url: { key: 'category', kind: 'item', path: [] },
-        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
+        match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);
           if (!manager) {
@@ -172,7 +172,7 @@ export default Capability.makeModule(
       }),
       AppGraphBuilder.createExtension({
         id: 'actions',
-        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
+        match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         actions: () =>
           Effect.succeed([
             {
@@ -194,7 +194,7 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'plugins',
         url: { key: 'registry', kind: 'item', path: [] },
-        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
+        match: GraphNodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const [manager] = get(pluginManagerAtom);
           if (!manager) {
