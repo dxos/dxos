@@ -33,6 +33,20 @@ const makeVirtualizer = (itemCount: number, lastVisibleIndex: number): Virtualiz
     scrollToOffset: vi.fn(),
   }) as unknown as Virtualizer<any, any>;
 
+/** A window shorter than the viewport, sitting unscrolled at the top (offset 0, all rows rendered). */
+const makeUnscrolledVirtualizer = (itemCount: number): Virtualizer<any, any> =>
+  ({
+    getVirtualItems: () => Array.from({ length: itemCount }, (_, index) => ({ index })),
+    measurementsCache: Array.from({ length: itemCount }, (_, index) => ({
+      start: index * ROW_HEIGHT,
+      end: index * ROW_HEIGHT + (ROW_HEIGHT - 4),
+    })),
+    scrollOffset: 0,
+    scrollElement: { clientHeight: VIEWPORT_HEIGHT },
+    getTotalSize: () => itemCount * ROW_HEIGHT,
+    scrollToOffset: vi.fn(),
+  }) as unknown as Virtualizer<any, any>;
+
 describe('useVirtualizerPagination', () => {
   test('chains getNext across a page landing with no further onChange', async () => {
     // Regression test: once the loaded window's tail is fully rendered and the scrollbar sits at
@@ -74,6 +88,32 @@ describe('useVirtualizerPagination', () => {
     // The chain must continue on its own: the window is still the same size, so the same geometry
     // is still "near the bottom" -- the layout effect's re-arm should have requested another page.
     expect(getNext).toHaveBeenCalledTimes(2);
+  });
+
+  test('extends an underfilled window that cannot be scrolled', async () => {
+    // The mailbox regression: a first page whose rows happen to fit the viewport exactly is not
+    // scrollable, so the user can never produce the scroll offset the edge triggers waited for and
+    // the list showed one page forever. An underfilled window must extend on its own.
+    let items = makeItems([0, 1, 2]);
+    const getNext = vi.fn(() => {
+      items = makeItems([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    });
+    const pagination: VirtualizerPaginationController = { getNext, atHead: true };
+
+    const { result } = renderHook(
+      (props: { items: Item[] }) => useVirtualizerPagination({ items: props.items, getId, pagination }),
+      { initialProps: { items } },
+    );
+
+    // Three rows at the top of an unscrolled viewport: nothing to scroll (3 * 60 < 340), offset 0.
+    act(() => {
+      result.current.onChange(makeUnscrolledVirtualizer(3));
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(getNext).toHaveBeenCalledTimes(1);
   });
 
   test('does not misclassify a mid-list item reordered to the head as an eviction', () => {

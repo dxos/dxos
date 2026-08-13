@@ -80,20 +80,17 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       comment in the old tests while doing it: `AssistantTestLayer` DOES provide an `AiService` — the
       classify tier fails there on a 401, not on a missing service, which is why the genuine-failure
       test still holds. `analyze` cannot be exercised in that layer at all (no `FactStore`).
-- [ ] **Mailbox article often shows only one page of messages** (regression, ~2026-08-05) — NOT
-      reproducible in storybook: new `Paging` + `PagingGrouped` play tests in
-      `MailboxArticle.stories.tsx` scroll the list and it extends correctly (flat 10→20, grouped
-      10→12), so the article → `InboxStack` → `Mosaic.VirtualStack` →
-      `useVirtualizerPagination` → `usePagination.getNext` chain is intact. Instrumented findings that
-      narrow the app case: the trigger needs `scrollOffset > 0` whenever the loaded window is no
-      larger than `paginationThreshold` (page size 10 vs default threshold 12 — ALWAYS true for the
-      first page), and the offset it reads comes from the virtualizer's own scroll element. So the
-      leading hypothesis is that in the app the element that actually scrolls is NOT the one the
-      virtualizer measures (the deck plank vs the article's `ScrollArea.Viewport`), leaving
-      `scrollOffset` at 0 forever and the trigger permanently disarmed. NEXT: confirm on a live
-      session (debug port) by reading `scrollTop` on the article's viewport while scrolling; the fix
-      is then either the deck's scroll ownership or lowering the mailbox's `paginationThreshold`
-      below its page size.
+- [x] **Mailbox article showed only one page of messages** (regression) — ROOT CAUSE: the next-page
+      triggers all required a scrollable window (and a non-zero scroll offset once the window was no
+      larger than `paginationThreshold`), so a first page whose rows happened to FIT the plank left
+      the list unscrollable — the user could never produce the offset the trigger waited on, and the
+      window never grew. Found by probing the live app: the article's list was not scrollable at all
+      (the one scrollable element in the document was the navtree), which is why the storybook
+      repro passed — there the first page overflowed. FIX: `useVirtualizerPagination` treats an
+      UNDERFILLED window (total size <= viewport) as its own trigger, bounded by `usePagination`'s
+      exhaustion check so an exhausted short list does not spin. Unit test
+      (`extends an underfilled window that cannot be scrolled`) fails without the fix; `Paging` +
+      `PagingGrouped` play tests cover the scrollable path. STILL TO DO: confirm in the app.
 - [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
 - [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
