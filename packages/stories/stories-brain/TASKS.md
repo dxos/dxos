@@ -127,6 +127,13 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       for all of them. Suspects: the URI→`EID.tryParse` of a freshly added object, or the story's
       `useQuery` not seeing the seeds. The story's play test therefore asserts only that the list
       renders. NEXT: log the lookup map inside `useContactLookup`.
+- [ ] **Open an attachment in a new plank** (requested 2026-08-13) — the attachments row in the
+      message header (`ConversationStack.tsx`'s `Row.Attachments`, fed from `message.attachments`)
+      lists them but does not open them. Clicking one should open it as its own plank via
+      `LayoutOperation.Open` with the attachment's object path (the same call the message tile's
+      `onOpen` uses for a message), so a PDF/image gets the deck's own surface rather than an inline
+      preview. Needs: a click handler on `Row.Attachments` (react-ui-card, currently presentational),
+      the attachment ref resolved to its Blob/object DXN, and a surface that renders that type.
 - [ ] **Starred virtual folder in the navtree** (requested 2026-08-13) — add a mailbox child node in
       the app graph (beside `All Mail` / `Sent` / `Drafts` / `Subscriptions`) that opens the mailbox
       with a starred filter. The pieces exist: those siblings are graph nodes carrying a
