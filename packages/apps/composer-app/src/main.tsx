@@ -184,7 +184,7 @@ const main = async () => {
 
   // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
   // local-disk the parser can interleave parses.
-  const [{ Config, defs, SaveConfig }, { createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
+  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
     await Promise.all([
       import('@dxos/config'),
       import('@dxos/react-client'),
@@ -413,6 +413,15 @@ const main = async () => {
   profiler?.mark('services:end');
   profiler?.measure('services', 'services:start', 'services:end');
 
+  // Started here rather than by plugin-client, whose module is lazily imported behind the entire
+  // plugin-loading pass: the worker handshake and storage open are seconds of work that depend on
+  // nothing but the services above, so they run alongside that pass instead of after it.
+  // `initialize()` is `@synchronized`, so the plugin's own call joins this one; that call is what
+  // reports a failure (via `onClientInitializationError`), hence the bare catch here.
+  performance.mark('milestone:client-initialize:start');
+  const client = new Client({ config, services });
+  void client.initialize().catch(() => {});
+
   profiler?.mark('plugins:start');
 
   const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
@@ -426,6 +435,7 @@ const main = async () => {
     appKey: APP_KEY,
     config,
     services,
+    client,
     observability,
     logStore,
     onFatalError: (error) => raiseFatalError(error),
