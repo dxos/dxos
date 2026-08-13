@@ -60,6 +60,7 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
     if (!(event instanceof DxAnchorActivate)) {
       return;
     }
+
     triggerRef.current = event.trigger;
     setLink({ dxn: event.dxn, label: event.label, title: event.title });
     setOpen(true);

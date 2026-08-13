@@ -52,7 +52,6 @@ export const translations = [
 
         'no-message.message': 'Select a message to view it',
 
-        'action-archive.menu': 'Archive',
         'action-delete.menu': 'Delete',
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
@@ -119,6 +118,8 @@ export const translations = [
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
         'message-toolbar-ai-reply.menu': 'AI reply',
+        'message-toolbar-archive.menu': 'Archive',
+        'message-toolbar-move-to-inbox.menu': 'Move to Inbox',
         'draft-toolbar.label': 'Draft toolbar',
         'draft-toolbar-generate.menu': 'Generate reply',
         'message-toolbar-delete.menu': 'Delete',

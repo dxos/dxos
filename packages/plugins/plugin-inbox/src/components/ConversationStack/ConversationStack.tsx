@@ -471,7 +471,17 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     () => (target ? (getExtractActions?.(target) ?? []) : []),
     [getExtractActions, target],
   );
-  const menuActions = useMessageActions({ graph, extractActions, nodeId: attendableId, ...handlers });
+  // Archiving is the `inbox` tag coming off (Gmail's model — INBOX is a label), so one toggle serves
+  // both directions and membership picks the menu label.
+  const [inInbox, handleArchive] = useSystemTag(target, mailbox, 'inbox');
+  const menuActions = useMessageActions({
+    graph,
+    extractActions,
+    nodeId: attendableId,
+    inInbox,
+    onArchive: handleArchive,
+    ...handlers,
+  });
 
   const isExpanded = expanded.has(id);
   if (!message || !target) {
@@ -565,8 +575,36 @@ MessageTile.displayName = MESSAGE_TILE_NAME;
 
 const MESSAGE_STAR_NAME = 'ConversationStack.MessageStar';
 
-// Stable fallback so `useAtomValue` always receives an atom when the message isn't starrable.
-const NOT_STARRED = Atom.make(false);
+// Stable fallback so `useAtomValue` always receives an atom when the message isn't taggable.
+const NOT_TAGGED = Atom.make(false);
+
+/**
+ * One message's membership of a canonical system tag, plus its toggle. Membership lives in the
+ * mailbox's `TagIndex` rather than the message (feed messages are immutable and have no `meta.tags`),
+ * so the atom scopes re-renders to this message's membership instead of the whole index.
+ */
+const useSystemTag = (
+  message: MessageType.Message | undefined,
+  mailbox: Mailbox.Mailbox | undefined,
+  tagId: SystemTags.SystemTagId,
+): [boolean, () => void] => {
+  const db = mailbox && Obj.getDatabase(mailbox);
+  const tag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey(tagId)]))[0];
+  const tagUri = tag && Obj.getURI(tag).toString();
+  const tagIndex = mailbox?.tags?.target;
+  const taggedAtom = useMemo(
+    () => (tagIndex && tagUri && message ? TagIndex.atom(tagIndex, message.id, tagUri) : NOT_TAGGED),
+    [tagIndex, message, tagUri],
+  );
+  const tagged = useAtomValue(taggedAtom);
+  const handleToggle = useCallback(() => {
+    if (db && message && mailbox) {
+      void Effect.runFork(SystemTags.toggleTag(mailbox, message, tagId).pipe(Effect.provide(Database.layer(db))));
+    }
+  }, [mailbox, message, tagId, db]);
+
+  return [tagged, handleToggle];
+};
 
 type MessageStarProps = {
   message: MessageType.Message;
@@ -575,20 +613,7 @@ type MessageStarProps = {
 
 /** Star toggle backed by the mailbox tag index (membership-scoped reactivity). */
 const MessageStar = ({ message, mailbox }: MessageStarProps) => {
-  const db = Obj.getDatabase(mailbox);
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
-  const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const tagIndex = mailbox.tags?.target;
-  const starredAtom = useMemo(
-    () => (tagIndex && starredUri ? TagIndex.atom(tagIndex, message.id, starredUri) : NOT_STARRED),
-    [tagIndex, message.id, starredUri],
-  );
-  const starred = useAtomValue(starredAtom);
-  const handleToggleStar = useCallback(() => {
-    if (db) {
-      void Effect.runFork(SystemTags.toggleTag(mailbox, message, 'starred').pipe(Effect.provide(Database.layer(db))));
-    }
-  }, [mailbox, message, db]);
+  const [starred, handleToggleStar] = useSystemTag(message, mailbox, 'starred');
 
   return <Row.Star starred={starred} onToggle={handleToggleStar} />;
 };

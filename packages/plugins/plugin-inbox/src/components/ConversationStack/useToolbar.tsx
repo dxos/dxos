@@ -24,6 +24,10 @@ export type UseMessageToolbarActionsProps = {
   onForward?: () => void;
   /** Generates an AI reply draft grounded on thread context and known facts. */
   onAiReply?: () => void;
+  /** Whether the message currently carries the `inbox` tag; picks the archive action's direction. */
+  inInbox?: boolean;
+  /** Toggles the message's `inbox` tag — archiving when it is in the inbox, restoring when it is not. */
+  onArchive?: () => void;
 };
 
 /**
@@ -41,6 +45,8 @@ export const useMessageActions = ({
   onReplyAll,
   onForward,
   onAiReply,
+  inInbox,
+  onArchive,
 }: UseMessageToolbarActionsProps) => {
   return useMenuBuilder(
     (get) =>
@@ -101,6 +107,25 @@ export const useMessageActions = ({
               );
             }
 
+            // Archive / Move to Inbox — one toggle of the `inbox` tag, its label and icon following the
+            // message's current membership. Its own section below the reply group.
+            if (onArchive) {
+              if (onReply || onForward || onAiReply) {
+                builder.separator('line');
+              }
+              builder.action(
+                'archive',
+                {
+                  label: inInbox
+                    ? ['message-toolbar-archive.menu', { ns: meta.profile.key }]
+                    : ['message-toolbar-move-to-inbox.menu', { ns: meta.profile.key }],
+                  icon: inInbox ? 'ph--archive--regular' : 'ph--tray--regular',
+                  testId: 'inbox.message.archive',
+                },
+                onArchive,
+              );
+            }
+
             // Extraction actions (trips, people, …) contributed for this message.
             if (extractActions.length > 0) {
               builder.separator('line');
@@ -132,6 +157,6 @@ export const useMessageActions = ({
           'inbox.message.more',
         )
         .build(),
-    [graph, nodeId, extractActions, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete],
+    [graph, nodeId, extractActions, onOpen, onReply, onReplyAll, onForward, onAiReply, inInbox, onArchive, onDelete],
   );
 };
