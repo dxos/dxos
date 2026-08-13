@@ -330,12 +330,9 @@ export const NavigationTargetResolver = Capability$.make<NavigationTargetResolve
 /**
  * What a {@link NavigationTargetLoader} was able to determine about a target.
  *
- * Three-valued rather than a boolean because the caller's two responses to a missing node are
- * opposites: a URL restore waits for a node that is merely late and fails fast on one that is
- * absent. Collapsing "a store answered no" together with "nothing could be asked" (an unreachable
- * edge, an id that does not parse, a space list that has not arrived) makes every uncertainty
- * behave like a deletion — which on a cold restore turns a transient miss into a permanent
- * not-found. `absent` is therefore reserved for a store that actually answered.
+ * Three-valued because the caller's responses to a missing node are opposites: it waits for one that
+ * is merely late and fails fast on one that is absent. `absent` is therefore reserved for a store
+ * that actually answered — an unreachable edge or an unparseable id is `unknown`.
  * @category Capability
  */
 export type NavigationTargetVerdict = 'exists' | 'absent' | 'unknown';

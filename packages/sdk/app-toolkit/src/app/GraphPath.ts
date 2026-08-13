@@ -183,15 +183,10 @@ export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Op
 /**
  * Every ECHO object a qualified path could be asking about, terminal segment first.
  *
- * Distinct from {@link tryGetEid}, which answers "which object IS this node" and so must stay
- * strictly terminal: it backs plank dedup, where two views of one object (`…/<mailboxId>` and
- * `…/<mailboxId>/sent`) are deliberately different planks. This answers the weaker "which objects
- * would have to exist for this path to be meaningful", for existence checks — a node addressed by a
- * view discriminator (`sent`, `drafts`) carries its object id in an interior segment, and demanding
- * it be terminal 404s the node on any path where its own node has not materialized yet.
- *
- * A `SpaceId` can never be mistaken for an `EntityId` (33-char multibase vs 26-char ULID), so the
- * scan cannot pick up the workspace segment.
+ * The weaker question than {@link tryGetEid}'s "which object IS this node", which must stay strictly
+ * terminal because it backs plank dedup — two views of one object are deliberately two planks. A node
+ * addressed by a view discriminator (`sent`, `drafts`) carries its object id in an interior segment,
+ * so an existence check that demands the terminal one 404s it.
  */
 export const tryGetEidCandidates = (graph: Graph.ExpandableGraph, qualifiedId: string): EID.EID[] => {
   const spaceId = getSpaceIdFromPath(qualifiedId);

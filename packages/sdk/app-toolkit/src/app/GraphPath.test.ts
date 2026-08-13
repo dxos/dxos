@@ -81,8 +81,7 @@ describe('GraphPath', () => {
       expect(Option.isNone(GraphPath.tryGetEid(graph, path))).toBe(true);
     });
 
-    // Two views of one object must stay distinguishable here: this backs plank dedup, where
-    // `…/<mailboxId>` and `…/<mailboxId>/sent` are deliberately different planks.
+    // Backs plank dedup, where two views of one object are deliberately different planks.
     test('does not look past a view discriminator', ({ expect }) => {
       const path = `root/${spaceId}/communications/mailboxes/${objectId}/sent`;
       expect(Option.isNone(GraphPath.tryGetEid(graph, path))).toBe(true);
@@ -100,7 +99,7 @@ describe('GraphPath', () => {
       expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([EID.make({ spaceId, entityId: objectId })]);
     });
 
-    // The mailbox-view shape: the object id is interior, so requiring it to be terminal 404s the node.
+    // The mailbox-view shape: the object id is interior.
     test('finds an object id behind a view discriminator', ({ expect }) => {
       const path = `root/${spaceId}/communications/mailboxes/${objectId}/sent`;
       expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([EID.make({ spaceId, entityId: objectId })]);

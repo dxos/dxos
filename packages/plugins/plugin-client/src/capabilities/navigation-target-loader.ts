@@ -27,8 +27,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
 
-    // Remote existence check (does not materialize a local node); reuses the shared edge probe. The
-    // fallible probe, not the checker: a failed query must stay distinguishable from an empty one.
+    // The fallible probe, not the checker: a failed query must stay distinguishable from an empty one.
     const checkRemote = NotFound.createEdgeExistenceProbe((spaceId, body) =>
       client.edge.http.execQuery(new Context(), spaceId, body),
     );
@@ -37,8 +36,7 @@ export default Capability.makeModule(
       id: meta.profile.key,
       load: ({ spaceId, entityId }) =>
         Effect.gen(function* () {
-          // Not parseable as an ECHO target, so this loader has nothing to say about it. `unknown`,
-          // not `absent`: a synthetic node id is not evidence that anything was deleted.
+          // A synthetic node id is not evidence that anything was deleted.
           if (!SpaceId.isValid(spaceId) || !EntityId.isValid(entityId)) {
             return 'unknown';
           }
@@ -49,12 +47,8 @@ export default Capability.makeModule(
           const eid = EID.make({ spaceId, entityId });
 
           // Local first: loading the object populates the collection/type-section refs that address
-          // it, so the next graph expansion materializes its node. Wait for the space to be ready so a
-          // cold restore (space not yet loaded when the URL is resolved) still finds it.
-          //
-          // A miss here is never `absent`. On a cold restore the object legitimately has not loaded
-          // yet, and `spaces.get` reads a space list that `waitUntilInitialized` does not guarantee
-          // has arrived — so local absence is the expected transient state, not a deletion.
+          // it, so the next graph expansion materializes its node. Never `absent` on a miss —
+          // `spaces.get` reads a list `waitUntilInitialized` does not guarantee has arrived.
           const space = client.spaces.get(spaceId);
           if (space) {
             const loaded = yield* Effect.promise(() => space.waitUntilReady()).pipe(
@@ -68,12 +62,7 @@ export default Capability.makeModule(
           }
 
           // Remote fallback: confirms the object exists somewhere, even if it has not replicated
-          // locally yet (in which case the node cannot render until it does). Bounded so an
-          // unreachable edge cannot hang navigation.
-          //
-          // The ONLY path to `absent`: a query that actually completed and returned nothing. A
-          // timeout or transport failure means the question went unanswered, which the caller must
-          // not read as a deletion.
+          // locally yet. The only path to `absent` — a timeout or transport failure went unanswered.
           return yield* checkRemote(eid).pipe(
             Effect.map((exists): AppCapabilities.NavigationTargetVerdict => (exists ? 'exists' : 'absent')),
             Effect.timeoutOrElse({

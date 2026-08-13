@@ -81,9 +81,8 @@ export const validateNavigationTarget = (params: {
   }
 
   return Effect.gen(function* () {
-    // Parse the path into the EIDs it could be asking about. A view node (`…/<mailboxId>/sent`)
-    // carries its object id in an interior segment, so this is the candidate list rather than the
-    // single terminal id. If none parses, there's nothing to open.
+    // A view node (`…/<mailboxId>/sent`) carries its object id in an interior segment, hence the
+    // candidate list rather than the single terminal id. If none parses, there's nothing to open.
     const candidates = GraphPath.tryGetEidCandidates(graph, subjectId);
     if (candidates.length === 0) {
       return NOT_FOUND_PATH;

@@ -23,8 +23,8 @@ import { useDeckPlank } from './useDeckPlank';
 
 const PLANK_LOADING = <PlankLoading />;
 
-// The same article the not-found sentinel renders, addressed by the sentinel's own path so the
-// contributing surface (`react-surface.ts`) matches without the deck knowing what renders it.
+// Addressed by the sentinel's own path so the contributing surface matches without the deck knowing
+// what renders it.
 const PLANK_NOT_FOUND = (
   <Surface.Surface
     type={AppSurface.Article}
@@ -128,9 +128,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   const articleData = useMemo(() => ({ path }), [path]);
 
   if (!node) {
-    // A plank whose restore gave up keeps its own id (so it renders for real if the node ever
-    // arrives) and shows not-found in place, rather than the indefinite blank loader an absent node
-    // would otherwise get.
+    // Absent is indefinite until the restore says it gave up, so the loader is the default.
     return unresolved ? PLANK_NOT_FOUND : PLANK_LOADING;
   }
 

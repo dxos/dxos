@@ -22,10 +22,8 @@ export type CompanionRepresentation = {
  * function (taking pre-computed representations rather than a live graph builder) so it is testable
  * without an Effect runtime.
  *
- * A plank with no representation is skipped with a `log.warn`. Callers must not write the result to
- * the URL when that happens: a shortened URL is indistinguishable from one the user chose, so the
- * next restore reads it as truth and the plank is lost for good. The deck's sync checks for an
- * unrepresentable plank first and leaves the URL alone — this skip only keeps the pure function total.
+ * A plank with no representation is skipped, which keeps this function total; callers must not write
+ * a skipped result to the URL, since the next restore reads a shortened URL as truth.
  */
 export const serializeDeckToUrl = (params: {
   workspace: string;

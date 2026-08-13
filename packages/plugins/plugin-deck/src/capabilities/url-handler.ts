@@ -40,11 +40,8 @@ import { shouldDeferNavigationHandlers } from './check-app-scheme';
  * waits on the candidate node and returns as soon as it lands, so this only bounds the wait for a
  * node that never arrives. Generous because it costs nothing when the chain lands early.
  */
-// TODO(wittjosiah): Reconsider the length now that missing the deadline is non-destructive — the
-//  plank keeps its own id, heals when the node lands, and never truncates the URL. The remaining cost
-//  is how long a genuinely-missing plank looks plausible before it flips, and `Set` applies once after
-//  every pair settles, so the slowest pair also holds back the ones that already resolved. Either
-//  shorten this, or apply the restore per-pair so the deadline only costs the missing plank.
+// TODO(wittjosiah): Shorten, or apply the restore per-pair. `Set` applies once after every pair
+//  settles, so the slowest pair holds back the ones that already resolved.
 const RESOLVE_TIMEOUT = '10 seconds';
 
 /** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
@@ -137,12 +134,7 @@ export default Capability.makeModule(
         }),
       );
 
-    /**
-     * Last known URL representation per plank, keyed by node id. The outbound sync derives the URL
-     * from live graph provenance, which a plank loses whenever its node is out of the graph — while
-     * its subtree is still loading, or for the whole time an unresolved plank waits. This is what the
-     * sync falls back to so those windows cannot truncate the URL.
-     */
+    /** Fallback for the outbound sync while a plank's node is out of the graph and unrepresentable. */
     const lastRepresentation = new Map<string, PathResolution.RepresentedNode>();
     const seedRepresentation = (nodeId: string, node: PathResolution.RepresentedNode) => {
       lastRepresentation.set(nodeId, node);
@@ -250,9 +242,8 @@ export default Capability.makeModule(
       // per-pair verdict records what the loader could determine, gating the resolve retry below so
       // a genuine 404 fails fast instead of waiting out the timeout.
       const loaders = navigationTargetLoaders.get();
-      // Every pair starts `unknown` — waiting is the default and fail-fast is the exception that has
-      // to be earned. Keyless pairs (singleton keys like the space home) carry no object id to
-      // confirm against and stay that way; their nodes materialize with the workspace's subtree.
+      // Waiting is the default; fail-fast has to be earned. Keyless pairs (singleton keys like the
+      // space home) have no object to confirm against and stay `unknown`.
       const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
       if (loaders.length > 0) {
         yield* Effect.forEach(
@@ -278,14 +269,8 @@ export default Capability.makeModule(
       }
 
       // Loading an object does not load its container chain (e.g. the collection it lives in), which
-      // resolution expands but cannot synchronously observe. Resolution waits for the candidate node
-      // itself — the id is known before the lookup — so the restore completes the moment the chain
-      // lands.
-      //
-      // Only a positively disconfirmed pair skips the wait. On a cold restore EVERY pair misses the
-      // immediate read (the graph is built level by level from async queries), so the wait is the
-      // normal path and revoking it on anything less than proof of absence turns a slow plank into a
-      // permanent not-found.
+      // resolution expands but cannot synchronously observe. On a cold restore every pair misses the
+      // immediate read, so the wait is the normal path and only proof of absence may skip it.
       const resolved = yield* PathResolution.resolveUrl(
         builder,
         { workspace, pairs },
@@ -311,21 +296,17 @@ export default Capability.makeModule(
           plankIds.push(nodeId);
           return;
         }
-        // Unresolved: keep addressing the plank by the id it WOULD have rather than collapsing it to
-        // the not-found sentinel. The sentinel is a different object — it discards which object was
-        // asked for, so the URL can no longer be written from the deck and the plank can never heal.
-        // Keyed on the real id, `useNode` renders it the moment the node lands, and the pair below
-        // keeps the URL writable in the meantime.
+        // Keyed on the id it would have, not the sentinel, which is a different object: `useNode`
+        // then renders it the moment the node lands.
         const candidateId = resolved[index]?.candidateId;
         if (!candidateId) {
-          // No candidate at all (an unknown key): nothing to address, so the sentinel is all that's left.
+          // An unknown key names nothing to address.
           plankIds.push(NotFound.NOT_FOUND_PATH);
           return;
         }
         plankIds.push(candidateId);
         unresolved.push(candidateId);
-        // Seed the outbound sync from the URL we are restoring FROM: an absent node has no graph
-        // provenance, so `representNode` cannot derive this pair and the URL would go out truncated.
+        // An absent node has no graph provenance, so only the URL itself can represent this pair.
         seedRepresentation(candidateId, { key: pair.key, id: pair.id, workspace: pair.workspace });
       });
 
@@ -437,11 +418,8 @@ export default Capability.makeModule(
       let lossy = false;
       for (const id of deck.active) {
         const represented = PathResolution.representNode(builder, id).pipe(
-          // `representNode` reads live graph provenance, which is deleted the moment a node leaves the
-          // graph — so a plank whose subtree is momentarily absent (a connector re-emitting, a query
-          // settling) is unrepresentable through no fault of the plank. The last representation it had
-          // is still the right answer, and it is what lets an unresolved restore round-trip the pair the
-          // URL came from.
+          // Provenance is deleted the moment a node leaves the graph, so a plank whose subtree is
+          // momentarily absent (a connector re-emitting, a query settling) is unrepresentable.
           Option.orElse(() => Option.fromUndefinedOr(lastRepresentation.get(id))),
         );
         if (Option.isSome(represented)) {
@@ -453,11 +431,8 @@ export default Capability.makeModule(
         }
       }
 
-      // Never write a URL that has silently lost a plank. Dropping the pair looks harmless — the deck
-      // still renders — but the URL is the only durable record of a plank whose node did not resolve,
-      // so a truncated write is what turned a transient miss into permanent data loss: the next reload
-      // restores the shortened URL and the plank is gone for good. A stale URL heals on the next
-      // successful sync; a truncated one cannot.
+      // A shortened URL is indistinguishable from one the user chose, so the next restore reads it as
+      // truth and the plank is lost. A stale URL heals on the next successful sync; a truncated one cannot.
       if (lossy) {
         return;
       }

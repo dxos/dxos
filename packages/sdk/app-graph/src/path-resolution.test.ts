@@ -269,8 +269,7 @@ describe('path-resolution', () => {
       expect(results).toEqual([null]);
     });
 
-    // The id a plank keeps when its node never arrives, so the caller can go on addressing the object
-    // the URL asked for instead of collapsing it to a sentinel that discards which object that was.
+    // The id a plank keeps when its node never arrives.
     test('a known key with no matching node reports the candidate it attempted', async ({ expect }) => {
       const builder = buildTestBuilder();
       const results = await EffectEx.runPromise(
@@ -282,8 +281,7 @@ describe('path-resolution', () => {
       expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/missingDoc` }]);
     });
 
-    // A resolved pair stays exactly `{ pairIndex, nodeId }`: the candidate is the unresolved branch's
-    // business, and leaking it would make every caller disambiguate a field it cannot use.
+    // Leaking it would make every caller disambiguate a field it cannot use.
     test('a resolved pair reports no candidate', async ({ expect }) => {
       const builder = buildTestBuilder();
       const [resolved] = await EffectEx.runPromise(

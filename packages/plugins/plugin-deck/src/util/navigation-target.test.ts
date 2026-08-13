@@ -18,14 +18,13 @@ describe('getCandidateEntityIds', () => {
     expect(getCandidateEntityIds(MAILBOX_ID, SEPARATOR)).toEqual([MAILBOX_ID]);
   });
 
-  // `…/mailboxes/<mailboxId>/sent` — the object id leads and a view discriminator trails. Taking
-  // the segment after the last separator yields `sent`, which is what fell the plank to not-found.
+  // The object id leads and a view discriminator trails; the tail is `sent`, not an id.
   test('object id first, view discriminator last', ({ expect }) => {
     expect(getCandidateEntityIds(`${MAILBOX_ID}${SEPARATOR}sent`, SEPARATOR)).toEqual([MAILBOX_ID]);
     expect(getCandidateEntityIds(`${MAILBOX_ID}${SEPARATOR}all-mail`, SEPARATOR)).toEqual([MAILBOX_ID]);
   });
 
-  // `…/database/<typeSlug>/<objectId>` — the mirror image, which the previous tail heuristic handled.
+  // The mirror image: `…/database/<typeSlug>/<objectId>`.
   test('type slug first, object id last', ({ expect }) => {
     expect(getCandidateEntityIds(`example.com-type-Contact${SEPARATOR}${MESSAGE_ID}`, SEPARATOR)).toEqual([MESSAGE_ID]);
   });
@@ -41,8 +40,6 @@ describe('getCandidateEntityIds', () => {
     expect(getCandidateEntityIds('settings+members', SEPARATOR)).toEqual([]);
   });
 
-  // A SpaceId is 33-char multibase, an EntityId a 26-char ULID, so a workspace segment can never be
-  // mistaken for an object id.
   test('does not mistake a space id for an object id', ({ expect }) => {
     expect(getCandidateEntityIds('BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE', SEPARATOR)).toEqual([]);
   });
@@ -59,8 +56,7 @@ describe('combineVerdicts', () => {
     expect(combineVerdicts(['absent', 'absent'])).toBe('absent');
   });
 
-  // The regression this whole change exists for: an unanswered question must not read as a deletion,
-  // because `absent` is the one verdict that revokes the caller's wait.
+  // `absent` is the one verdict that revokes the caller's wait.
   test('a single unknown blocks absent', ({ expect }) => {
     expect(combineVerdicts(['absent', 'unknown'])).toBe('unknown');
   });

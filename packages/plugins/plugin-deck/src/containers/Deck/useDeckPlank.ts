@@ -152,8 +152,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
 
   return {
     node,
-    // Only while the node is genuinely absent: once it lands the plank renders for real, so a stale
-    // entry from a restore that has since healed cannot keep showing not-found.
+    // Gated on the node so a stale entry from a restore that has since healed stops applying.
     unresolved: !node && !!state.unresolved?.includes(id),
     capabilities,
     sigilActions,

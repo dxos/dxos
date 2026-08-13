@@ -40,10 +40,9 @@ export type ResolvedPair = {
 };
 
 /**
- * One pair's outcome. Exactly one of `nodeId`/`candidateId` is set: `nodeId` when the pair resolved,
- * `candidateId` when it did not but a candidate was expanded for it — the id the node *would* have,
- * which callers use to keep addressing the pair by what it asked for instead of substituting a
- * sentinel that discards it. A pair with no candidate at all (an unknown key) is `null`.
+ * One pair's outcome. Exactly one of `nodeId`/`candidateId` is set — `candidateId` is the id the node
+ * *would* have, so callers can keep addressing an unresolved pair by what it asked for. A pair with
+ * no candidate at all (an unknown key) is `null`.
  */
 export type PairResolution = {
   pairIndex: number;
