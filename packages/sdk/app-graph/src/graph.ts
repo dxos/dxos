@@ -12,7 +12,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { GraphModel } from '@dxos/graph';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
@@ -180,10 +180,10 @@ class GraphImpl implements WritableGraph {
       for (const relation of this._relations.get(id) ?? []) {
         edges[relation] = [];
       }
-      for (const edge of sortByOrder(this._model.outgoing(id))) {
+      for (const edge of this._model.outgoing(id)) {
         (edges[edge.type] ??= []).push(edge.target);
       }
-      for (const edge of sortByOrder(this._model.incoming(id))) {
+      for (const edge of this._model.incoming(id)) {
         (edges[inverseKey(edge.type)] ??= []).push(edge.source);
       }
       return edges;
@@ -193,20 +193,21 @@ class GraphImpl implements WritableGraph {
   // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
   // TODO(wittjosiah): Atom feature request, support for something akin to `ComplexMap` to allow for complex arguments.
   readonly _connections = Atom.family<string, Atom.Atom<Node.Node[]>>((key) => {
-    return Atom.make((get) => {
-      const parts = key ? primaryParts(key) : [];
-      // Empty id (e.g. from `useConnections(graph, undefined, ...)`) yields a key like `\u0001child\u0002outbound`,
-      // which has 2 parts but an empty id — treat as no connections rather than throwing.
-      if (parts.length < 2 || !parts[0]) {
-        return [];
-      }
-      const { id, relation } = relationFromConnectionKey(key);
-      const edges = get(this._edges(id));
-      return (edges[relationKey(relation)] ?? [])
-        .map((id) => get(this._node(id)))
-        .filter(Option.isSome)
-        .map((o) => o.value);
-    }).pipe(Atom.withLabel(`graph:connections:${key}`));
+    const parts = key ? primaryParts(key) : [];
+    // An empty id (e.g. `useConnections(graph, undefined, ...)`) yields a key with two parts but no
+    // id — treat that as no connections rather than throwing.
+    if (parts.length < 2 || !parts[0]) {
+      return Atom.make((): Node.Node[] => []);
+    }
+
+    const { id, relation } = relationFromConnectionKey(key);
+    const stored = relationKey(Node.relation(relation.kind, 'outbound'));
+    const nodes = this._model.neighborsAtom(id, stored, relation.direction === 'outbound' ? 'outgoing' : 'incoming');
+    return Atom.make((get) =>
+      get(nodes)
+        .map((node) => node.data)
+        .filter(isNonNullable),
+    ).pipe(Atom.withLabel(`graph:connections:${key}`));
   });
 
   readonly _actions = Atom.family<string, Atom.Atom<(Node.Action | Node.ActionGroup)[]>>((id) => {
@@ -220,29 +221,20 @@ class GraphImpl implements WritableGraph {
 
   readonly _json = Atom.family<string, Atom.Atom<any>>((id) => {
     return Atom.make((get) => {
-      const toJSON = (node: Node.Node, seen: string[] = []): any => {
-        const nodes = get(this._connections(connectionKey(node.id, 'child')));
-        const obj: Record<string, any> = {
-          id: node.id,
-          type: node.type,
-        };
-        if (node.properties.label) {
-          obj.label = node.properties.label;
-        }
-        if (nodes.length) {
-          obj.nodes = nodes
-            .map((n: Node.Node) => {
-              // Break cycles.
-              const nextSeen = [...seen, node.id];
-              return nextSeen.includes(n.id) ? undefined : toJSON(n, nextSeen);
-            })
-            .filter(isNonNullable);
-        }
-        return obj;
-      };
-
-      const root = get(this._nodeOrThrow(id));
-      return toJSON(root);
+      get(this._model.version);
+      return this._model.toTree(
+        id,
+        (node, children: any[]) => {
+          const data = node.data ?? failedInvariant(`Node not available: ${node.id}`);
+          return {
+            id: data.id,
+            type: data.type,
+            ...(data.properties.label ? { label: data.properties.label } : {}),
+            ...(children.length ? { nodes: children } : {}),
+          };
+        },
+        relationKey('child'),
+      );
     }).pipe(Atom.withLabel(`graph:json:${id}`));
   });
 
@@ -258,7 +250,7 @@ class GraphImpl implements WritableGraph {
       nodes?.forEach((node) => this._setNode(node.id, this._constructNode(node)));
       Object.entries(edges ?? {}).forEach(([source, relations]) => {
         Object.entries(relations).forEach(([relation, targets]) => {
-          targets.forEach((target, order) => this._setEdge(source, target, relation, order));
+          targets.forEach((target) => this._setEdge(source, target, relation));
         });
       });
     });
@@ -307,15 +299,20 @@ class GraphImpl implements WritableGraph {
   }
 
   /** @internal */
-  _setEdge(source: string, target: string, relation: string, order: number): void {
-    const id = edgeKey(source, target, relation);
+  _setEdge(source: string, target: string, relation: string): void {
     this._trackRelation(source, relation);
     this._trackRelation(target, inverseKey(relation));
-    if (this._model.findEdge(id)) {
+    const stored = storedEdge(source, target, relation);
+    if (this._model.findEdge(stored.id)) {
       return;
     }
 
-    this._model.addEdge({ id, type: relation, source, target, data: { order } });
+    this._model.addEdge(stored);
+  }
+
+  /** @internal */
+  _removeEdge(source: string, target: string, relation: string): void {
+    this._model.removeEdge(storedEdge(source, target, relation).id);
   }
 
   /** @internal */
@@ -330,13 +327,18 @@ class GraphImpl implements WritableGraph {
 type GraphNode = { id: string; data?: Node.Node };
 
 /** Relation lives in `type`; `order` carries the caller's sort position. */
-type GraphEdge = { id: string; type: string; source: string; target: string; data: { order: number } };
+type GraphEdge = { id: string; type: string; source: string; target: string };
 
-const edgeKey = (source: string, target: string, relation: string): string =>
-  primaryKey(source, secondaryKey(relation, target));
-
-const sortByOrder = (edges: readonly GraphEdge[]): GraphEdge[] =>
-  [...edges].sort((a, b) => a.data.order - b.data.order);
+/**
+ * Every edge is held in its outbound form, so an inbound relation is the same edge read backwards.
+ * Without this a relation would have two storage encodings and reads would have to try both.
+ */
+const storedEdge = (source: string, target: string, relation: string): GraphEdge => {
+  const { kind, direction } = relationFromKey(relation);
+  const outbound = relationKey(Node.relation(kind, 'outbound'));
+  const [from, to] = direction === 'inbound' ? [target, source] : [source, target];
+  return { id: primaryKey(from, secondaryKey(outbound, to)), type: outbound, source: from, target: to };
+};
 
 const inverseKey = (relation: string): string => relationKey(inverseRelation(relationFromKey(relation)));
 
@@ -884,14 +886,10 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   if (newOrder.length === current.length && newOrder.every((id, i) => id === current[i])) {
     return graph;
   }
+  // Insertion order carries the sort, so reordering means re-adding the relation's edges.
   internal._model.batch(() => {
-    newOrder.forEach((target, index) => {
-      const edge = internal._model.findEdge(edgeKey(id, target, relationId));
-      if (edge) {
-        edge.data.order = index;
-      }
-    });
-    internal._model.touch();
+    current.forEach((target) => internal._removeEdge(id, target, relationId));
+    newOrder.forEach((target) => internal._setEdge(id, target, relationId));
   });
   return graph;
 };
@@ -1208,7 +1206,7 @@ const addEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge): T => {
   const sourceList = internal._registry.get(internal._edges(edgeArg.source))[relationId] ?? [];
   if (!sourceList.includes(edgeArg.target)) {
     log('add edge', { source: edgeArg.source, target: edgeArg.target, relation: relationId });
-    internal._setEdge(edgeArg.source, edgeArg.target, relationId, sourceList.length);
+    internal._setEdge(edgeArg.source, edgeArg.target, relationId);
   }
 
   return graph;
@@ -1278,7 +1276,7 @@ const removeEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge, remove
   const inverseId = relationKey(inverse);
   const internal = getInternal(graph);
 
-  internal._model.removeEdge(edgeKey(edgeArg.source, edgeArg.target, relationId));
+  internal._removeEdge(edgeArg.source, edgeArg.target, relationId);
 
   if (removeOrphans) {
     const sourceAfter = internal._registry.get(internal._edges(edgeArg.source));

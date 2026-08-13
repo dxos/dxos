@@ -396,14 +396,13 @@ describe('Graph', () => {
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(3), relation: 'child' });
     expect(count).toEqual(3);
 
-    // Adding an edge connected to nothing fires an update.
-    // TODO(wittjosiah): Is there a way to avoid this?
+    // Adding an edge to a node that does not exist yet resolves to nothing, so connections are unchanged.
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(4), relation: 'child' });
-    expect(count).toEqual(4);
+    expect(count).toEqual(3);
 
-    // Adding a node to an existing edge fires an update.
+    // Adding the node behind that edge fires an update.
     Graph.addNode(graph, { id: exampleId(4), type: EXAMPLE_TYPE });
-    expect(count).toEqual(5);
+    expect(count).toEqual(4);
 
     // Batching the edge and node updates fires a single update.
     Atom.batch(() => {
@@ -412,7 +411,7 @@ describe('Graph', () => {
         Graph.addNode({ id: exampleId(6), type: EXAMPLE_TYPE }),
       );
     });
-    expect(count).toEqual(6);
+    expect(count).toEqual(5);
   });
 
   test('toJSON', () => {

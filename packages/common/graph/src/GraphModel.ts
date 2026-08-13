@@ -42,6 +42,11 @@ export type Options<Node extends Graph.Node.Any, Edge extends Graph.Edge.Any> = 
 export type EdgeFilter<Edge extends Graph.Edge.Any> = (edge: Edge) => boolean;
 
 /**
+ * Which way an adjacency view follows edges.
+ */
+export type Direction = 'outgoing' | 'incoming';
+
+/**
  * One step of a cycle: a node and the outgoing edge continuing the loop.
  */
 export type CycleStep<Edge extends Graph.Edge.Any> = { node: string; edge: Edge };
@@ -81,6 +86,7 @@ export abstract class AbstractGraphModel<
   readonly #graphAtom: Atom.Atom<Graph.Graph<Node, Edge>>;
   readonly #nodeAtoms: (id: string) => Atom.Atom<Node | undefined>;
   readonly #edgeAtoms: (id: string) => Atom.Atom<Edge | undefined>;
+  readonly #neighborAtoms: (key: string) => Atom.Atom<Node[]>;
 
   constructor({ registry, graph, change }: Options<Node, Edge> = {}) {
     this.#registry = registry ?? Registry.make();
@@ -108,6 +114,13 @@ export abstract class AbstractGraphModel<
         get(this.#version);
         return this.findEdge(id);
       }),
+    );
+    this.#neighborAtoms = Atom.family((key: string) =>
+      Atom.make((get) => {
+        get(this.#version);
+        const { id, type, direction } = parseNeighborKey(key);
+        return this.neighbors(id, type, direction);
+      }).pipe(Atom.withEquality((a: Node[], b: Node[]) => sameNodes(a, b))),
     );
 
     // Seeds the working graph without mirroring; the source already holds this state.
@@ -207,6 +220,52 @@ export abstract class AbstractGraphModel<
 
   edgeAtom(id: string): Atom.Atom<Edge | undefined> {
     return this.#edgeAtoms(id);
+  }
+
+  /**
+   * Nodes reached from the node by edges of the given type, in edge order. Edges whose other
+   * endpoint is a placeholder are skipped, so a view never sees a half-materialized neighbour.
+   */
+  neighbors(id: string, type?: string, direction: Direction = 'outgoing'): Node[] {
+    const edges = direction === 'outgoing' ? this.outgoing(id, type) : this.incoming(id, type);
+    const nodes: Node[] = [];
+    for (const edge of edges) {
+      const node = this.findNode(direction === 'outgoing' ? edge.target : edge.source);
+      if (node) {
+        nodes.push(node);
+      }
+    }
+
+    return nodes;
+  }
+
+  /**
+   * Per-neighbourhood view, cut off on the resolved node list so an unrelated change is silent.
+   */
+  neighborsAtom(id: string, type?: string, direction: Direction = 'outgoing'): Atom.Atom<Node[]> {
+    return this.#neighborAtoms(neighborKey(id, type, direction));
+  }
+
+  /**
+   * Depth-first projection rooted at the node, following edges of the given type. Repeated nodes
+   * terminate a branch, so a cyclic graph still yields a finite tree.
+   */
+  toTree<T>(id: string, project: (node: Node, children: T[]) => T, type?: string): T | undefined {
+    const visit = (nodeId: string, seen: string[]): T | undefined => {
+      const node = this.findNode(nodeId);
+      if (!node) {
+        return undefined;
+      }
+
+      const children = seen.includes(nodeId)
+        ? []
+        : this.neighbors(nodeId, type)
+            .map((child) => visit(child.id, [...seen, nodeId]))
+            .filter((child): child is T => child !== undefined);
+      return project(node, children);
+    };
+
+    return visit(id, []);
   }
 
   //
@@ -723,6 +782,19 @@ export abstract class AbstractGraphModel<
     this.#change(() => fn(mirror));
   }
 }
+
+const NEIGHBOR_SEPARATOR = '\u0001';
+
+const neighborKey = (id: string, type: string | undefined, direction: Direction): string =>
+  [id, type ?? '', direction].join(NEIGHBOR_SEPARATOR);
+
+const parseNeighborKey = (key: string): { id: string; type?: string; direction: Direction } => {
+  const [id, type, direction] = key.split(NEIGHBOR_SEPARATOR);
+  return { id, type: type || undefined, direction: direction === 'incoming' ? 'incoming' : 'outgoing' };
+};
+
+const sameNodes = (a: readonly Graph.Node.Any[], b: readonly Graph.Node.Any[]): boolean =>
+  a.length === b.length && a.every((node, index) => node === b[index]);
 
 const removeInPlace = <T>(list: T[] | undefined, predicate: (value: T) => boolean): void => {
   if (!list) {
