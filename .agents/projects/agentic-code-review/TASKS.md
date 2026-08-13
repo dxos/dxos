@@ -52,3 +52,31 @@ Make Claude own the loop.
 - Existing script convention: `scripts/query-logs.mjs`.
 - Rule sources: `CLAUDE.md` Non-negotiables, `code-style` skill.
 - Skill: `.agents/skills/agentic-review/` (SKILL.md, lib/, scripts/, rules/).
+
+## Phase 4: Resolve baseline findings (PR #12554)
+
+Work the 42 curated `unresolved` findings from `.agents/reviews/50877ea571/RESOLUTION.md`
+(branch `claude/agentic-code-review-3wrnts`). Every change verified locally (build/test/lint).
+
+### Done
+
+- [x] **workspace-deps (11)** — `@dxos/*` peerDeps `workspace:*` → `workspace:^`.
+- [x] **private-new-packages (1)** → `ignored` (`@fixture/pkg-b` private:false is load-bearing).
+- [x] **no-compat-shims (6/6)** — transcription, progress (stale), echo json-serializer,
+      echo schema-validator, echo-client echo-handler, plugin-assistant Chat.
+- [x] **no-sleep-in-test (7/24)** — async (debounce fake-timers, events sync, persistent-lifecycle
+      Trigger); mesh (teleport balancer/framer, rpc, network-manager rtc → `expect.poll`).
+- [x] Changeset + `stories-assistant` direct dep on `@dxos/assistant-toolkit` (knip fix).
+
+### Remaining — no-sleep-in-test (17), left `unresolved` (forcing them risks flakiness)
+
+- [ ] **Auto-save / debounced persistence** — need to subscribe to the host "saved" event
+      (`automerge-host.ts:188`) instead of the no-flush sleep. Ids: 1420, 1803 (echo-client
+      repo-proxy/database), 1986, 2092, 2107, 2159 (echo-host automerge-repo/subduction/documents-synchronizer).
+- [ ] **Trivial-assertion + processing wait** — 2158 (documents-synchronizer; assertion is `>= 0`, always true).
+- [ ] **Microtask phase-sequencing** — 2136 (collection-synchronizer; setup phases have no exposed signal).
+- [ ] **Close-while-reading races** — 279, 281 (feed-store; needs FeedQueue close-event semantics).
+- [ ] **Ordering-dependent** — 3376 (blade-runner readable-muxer pushStream spacing).
+- [ ] **Negative assertions** (sleep defensible; `expect.poll` would be wrong) + heavy e2e —
+      4538 (invitations-handler), 4450 (client-e2e), 4580 (client-services pipeline), 4776 (client edge-recovery).
+- [ ] **CI-excluded sync-e2e** — 3626 (plugin-inbox; ECHO query subscription; `sync-e2e` tag excluded from CI).
