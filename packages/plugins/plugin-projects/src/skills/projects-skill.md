@@ -69,25 +69,41 @@ puts anything there.
 
 ## Ref envelopes
 
-Every object reference passed into a tool is a DXN envelope, not a bare string:
-`{"/": "<id>"}`. `projectGet`'s `project`, `taskCreate`'s `taskSet`, `taskUpdate`'s `task`, etc.
-all take this shape. Tools return objects with `id` fields; wrap them yourself when passing them
-onward — never pass a bare id where a ref is expected.
+Every object reference passed into a tool is an envelope wrapping an **`echo:` URI**, not a bare
+string and not a bare object id: `{"/": "echo:///<objectId>"}`. `projectGet`'s `project`,
+`taskCreate`'s `taskSet`, `taskUpdate`'s `task`, `taskCreate`'s `parent` etc. all take this shape.
+
+The URI forms, exactly:
+
+| Form                          | Means                      |
+| ----------------------------- | -------------------------- |
+| `echo:///<objectId>`          | an object (three slashes)  |
+| `echo://<spaceId>/<objectId>` | the same object, qualified |
+| `echo://<spaceId>`            | a **space**, not an object |
+
+The three-slash local form is canonical for objects. Two slashes with a single segment
+(`echo://<objectId>`) is not an object reference at all — it parses as a _space id_, so a tool
+given it fails to decode its parameters rather than telling you the id was in the wrong shape.
+
+**Prefer echoing back what you were given.** Tool results carry refs already in envelope form —
+pass that value straight through instead of rebuilding it. Only construct an envelope when all
+you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + id}`. A raw
+`{"/": "<id>"}` is the single most common way these calls fail.
 
 ## The shape of a project
 
 - **Project object** — `name`; `status` (`active`|`paused`|`blocked`|`ended`); `description`
   (the one-line summary); `goals` (what done means, each `open`|`met`|`dropped`).
 - **Task set** — the ledger. Phases are parent tasks (`taskCreate` with no `parent`); individual
-  work items are sub-tasks (`taskCreate` with `parent: {"/": "<phase-task-id>"}`). Task `status`
+  work items are sub-tasks (`taskCreate` with `parent: {"/": "echo:///<phase-task-id>"}`). Task `status`
   is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Projects made by `projectCreate` always
   own a task set; if `projectGet` shows none (a project created some other way), bootstrap one
   before recording tasks: `createObject { typename: 'org.dxos.type.taskSet', properties: { name:
 'Tasks' }, spaceId }`, then attach it with `updateObject { id: <project-id>, properties: {
-taskSet: {"/": "<task-set-id>"} } }`. If the bootstrap fails, say so — do **not** claim a task
+taskSet: {"/": "echo:///<task-set-id>"} } }`. If the bootstrap fails, say so — do **not** claim a task
   was recorded.
 - **Outline** — the free-text scratch surface (`outlineGet`/`outlineUpdate`). Keep a line
-  starting `Resume:` holding the single next action, and a `Design: {"/": "<doc-id>"}` line
+  starting `Resume:` holding the single next action, and a `Design: {"/": "echo:///<doc-id>"}` line
   pointing at the design document.
 - **Design document** — the durable _why_: decisions, findings, spec. Create the text object,
   then a document whose `content` references it (`createObject` typenames `org.dxos.type.text`
@@ -113,9 +129,9 @@ taskSet: {"/": "<task-set-id>"} } }`. If the bootstrap fails, say so — do **no
   open/total task counts. If more than one project is `active`, list them numbered and ask
   which, rather than guessing.
 - **`/project new <name>`** — `projectCreate { name, spaceId }`, then
-  `projectUpdate { project: {"/": "<id>"}, status: 'active', description: '<one-line summary>',
+  `projectUpdate { project: {"/": "echo:///<id>"}, status: 'active', description: '<one-line summary>',
 spaceId }`. Report the new project id.
-- **`/project tasks`** — `taskList { project: {"/": id}, includeSubtasks: true, spaceId }` for
+- **`/project tasks`** — `taskList { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }` for
   the active project; render phases (parent tasks) with their sub-tasks and statuses.
 - **`/project track <text>`** — `taskCreate` on the active project's task set (`taskSet` ref
   from `projectGet`; bootstrap one first if missing — see "The shape of a project"). If the text
@@ -132,13 +148,13 @@ spaceId }`. Report the new project id.
      outline is scratch, the document is the record.
   5. Confirm the checkpoint in one short block (done / in-progress / next).
 - **`/project end`** — close out a work-stream: run the hydrate checkpoint first, then
-  `projectUpdate { project: {"/": "<id>"}, status: 'ended', spaceId }`. Ended projects stay
+  `projectUpdate { project: {"/": "echo:///<id>"}, status: 'ended', spaceId }`. Ended projects stay
   queryable; nothing is deleted.
 - **`/project resume`** — reload at the start of a session:
   1. `projectList { spaceId }` to discover projects. If one was named, match it; otherwise pick
      the single `active` project, or ask which when several are `active` — never guess.
-  2. `projectGet { project: {"/": "<id>"}, spaceId }`, then
-     `taskList { project: {"/": "<id>"}, includeSubtasks: true, spaceId }`; read the outline's
+  2. `projectGet { project: {"/": "echo:///<id>"}, spaceId }`, then
+     `taskList { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }`; read the outline's
      `Resume:` line.
   3. Report a concise state: done / in-progress / **next action**. Continue with the next
      action, or wait for direction if the user gave any.
@@ -156,16 +172,16 @@ spaceId }`. Report the new project id.
 
 ## Common mistakes
 
-| Mistake                                                            | Fix                                                                                        |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.    |
-| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute an unpinned space.                           |
-| Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                     |
-| Passing a bare id where a ref envelope is expected                 | Wrap every object reference as `{"/": "<id>"}`.                                            |
-| Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators. |
-| Flat task list with no phase grouping                              | Create one parent task per phase; individual tasks are sub-tasks with `parent` set.        |
-| Leaving task status stale after work lands                         | `taskUpdate`/`taskComplete` in the same turn the work completes, not batched at the end.   |
-| Losing the resume pointer                                          | `outlineUpdate` the `Resume:` line at every checkpoint, not just at the very end.          |
-| Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.             |
-| Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.      |
-| Creating a new project when one for this work already exists       | `projectList` first; resume/extend the existing one instead of forking state.              |
+| Mistake                                                            | Fix                                                                                          |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.      |
+| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute an unpinned space.                             |
+| Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                       |
+| Passing a bare id, or `echo://<id>`, where a ref is expected       | Refs wrap an `echo:` URI: `{"/": "echo:///<id>"}`. Two slashes means a space, not an object. |
+| Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.   |
+| Flat task list with no phase grouping                              | Create one parent task per phase; individual tasks are sub-tasks with `parent` set.          |
+| Leaving task status stale after work lands                         | `taskUpdate`/`taskComplete` in the same turn the work completes, not batched at the end.     |
+| Losing the resume pointer                                          | `outlineUpdate` the `Resume:` line at every checkpoint, not just at the very end.            |
+| Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.               |
+| Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.        |
+| Creating a new project when one for this work already exists       | `projectList` first; resume/extend the existing one instead of forking state.                |
