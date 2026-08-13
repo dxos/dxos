@@ -59,6 +59,17 @@ export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string
  * ordinary hidden children of their mailbox/calendar, not linked companions). */
 export const getFeedObjectPath = (parentPath: string, childId: string): string => `${parentPath}/${childId}`;
 
+/**
+ * Canonical qualified path to one of a message's attachments. Keyed by INDEX because an attachment has
+ * no identity of its own — it is an entry in `message.attachments`, not an object.
+ */
+export const getMailboxAttachmentPath = (
+  spaceId: string,
+  mailboxId: string,
+  messageId: string,
+  index: number,
+): string => `${getMailboxMessagePath(spaceId, mailboxId, messageId)}/attachment-${index}`;
+
 /** Canonical qualified path to a message within a mailbox. */
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>
   getFeedObjectPath(getMailboxPath(spaceId, mailboxId), messageId);

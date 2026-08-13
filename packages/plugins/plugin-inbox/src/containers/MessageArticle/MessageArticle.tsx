@@ -27,7 +27,7 @@ import {
 } from '#components';
 import { InboxCapabilities, InboxOperation, Mailbox, Settings } from '#types';
 
-import { getMailboxMessagePath } from '../../paths';
+import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths';
 import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
@@ -279,6 +279,23 @@ export const MessageArticle = ({
 
   // This view exists to read one message; once archived it is no longer in the flow the user is
   // working through, so close the plank rather than leaving a stale reading pane behind.
+  // Defaults to opening the plank itself: requiring a prop meant the chips were clickable but inert
+  // everywhere except the story that passed one.
+  const handleOpenAttachment = useCallback(
+    (message: Mailbox.MessageLike, index: number) => {
+      if (onOpenAttachment) {
+        onOpenAttachment(message, index);
+        return;
+      }
+      if (mailbox && db) {
+        void invoker.invokePromise(LayoutOperation.Open, {
+          subject: [getMailboxAttachmentPath(db.spaceId, mailbox.id, message.id, index)],
+        });
+      }
+    },
+    [onOpenAttachment, invoker, mailbox, db],
+  );
+
   const handleArchived = useCallback(
     (message: MessageType.Message) => {
       if (mailbox && db) {
@@ -314,7 +331,7 @@ export const MessageArticle = ({
       onOpen={mailbox ? handleOpen : undefined}
       onArchived={mailbox ? handleArchived : undefined}
       onCreateProject={mailbox ? handleCreateProject : undefined}
-      onOpenAttachment={onOpenAttachment}
+      onOpenAttachment={mailbox ? handleOpenAttachment : onOpenAttachment}
     >
       <Panel.Root role={role} data-testid={testId}>
         <Panel.Toolbar asChild>

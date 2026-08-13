@@ -65,6 +65,20 @@ const hasConnection = (mailbox: Mailbox.Mailbox, get: Atom.AtomContext): boolean
   return get(db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom).length > 0;
 };
 
+export const ATTACHMENT_NODE_TYPE = `${Type.getTypename(Message.Message)}-attachment`;
+
+/**
+ * A single attachment, addressed as its owning message plus an index — an attachment is an entry in
+ * `message.attachments`, not an object, so it has no identity a surface could match on its own.
+ */
+export type AttachmentRef = { message: Message.Message; index: number };
+
+export const isAttachmentRef = (value: unknown): value is AttachmentRef =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as AttachmentRef).index === 'number' &&
+  Obj.instanceOf(Message.Message, (value as AttachmentRef).message);
+
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
 export default Capability.makeModule(
@@ -320,6 +334,31 @@ export default Capability.makeModule(
             ),
           );
         },
+      }),
+
+      // One hidden child per attachment, so the deck can address an attachment plank by path. The node
+      // carries the MESSAGE plus an index: an attachment is an entry on the message, not an object.
+      GraphBuilder.createExtension({
+        id: 'messageAttachments',
+        match: (node) =>
+          node.type === Type.getTypename(Message.Message) && Obj.instanceOf(Message.Message, node.data)
+            ? Option.some(node.data)
+            : Option.none(),
+        connector: (message) =>
+          Effect.succeed(
+            (message.attachments ?? []).map((attachment, index) =>
+              Node.make({
+                id: `attachment-${index}`,
+                type: ATTACHMENT_NODE_TYPE,
+                data: { message, index } satisfies AttachmentRef,
+                properties: {
+                  label: attachment.name ?? 'Attachment',
+                  icon: 'ph--paperclip--regular',
+                  disposition: 'hidden',
+                },
+              }),
+            ),
+          ),
       }),
 
       GraphBuilder.createExtension({
