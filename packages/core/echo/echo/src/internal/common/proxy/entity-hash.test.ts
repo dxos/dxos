@@ -14,15 +14,9 @@ import { TestSchema } from '../../../testing';
 const makePerson = (name: string) => Obj.make(TestSchema.Person, { name });
 
 /**
- * Fabricate the state ECHO forbids: a second live proxy over an entity that already has one, with
- * contents since diverged from the original.
- *
- * One entity has exactly one live proxy — `createProxy` caches by target, `EchoDatabase.getObjectById`
- * hands back `core.rootProxy`, and `initEchoReactiveObjectRootProxy` asserts `!core.rootProxy`. A
- * duplicate is a bug, not a supported way to hold two views; `clone(…, { retainId: true })` produces
- * one only because the copy is meant to be handed to a *different* database, not kept alongside the
- * original. The tests below pin what the traits do if that invariant is broken anyway — the pair
- * agrees on entity identity instead of silently keying off whichever copy's contents were read first.
+ * Fabricate the state ECHO forbids — a second live proxy over an entity that already has one
+ * (`createProxy` caches by target; the database asserts a single `core.rootProxy`) — so the cases
+ * below can pin what the traits do should that invariant ever be broken.
  */
 const duplicateProxy = (person: TestSchema.Person): TestSchema.Person => {
   const copy = Obj.clone(person, { retainId: true });
@@ -109,11 +103,9 @@ describe('entity Hash/Equal traits', () => {
     const person = makePerson('Alice');
     expect(Obj.atom(person)).to.eq(Obj.atom(person));
 
-    // Structurally identical but distinct entities must not collapse into one atom.
     expect(Obj.atom(makePerson('Alice'))).to.not.eq(Obj.atom(makePerson('Alice')));
 
-    // Mutation must not re-key an entity mid-flight: an atom is looked up many times over an
-    // object's life, and a contents-derived key would hand out a fresh atom after every update.
+    // An atom is looked up throughout an object's life, so mutation must not re-key it mid-flight.
     Obj.update(person, (person) => {
       person.name = 'Bob';
     });
@@ -126,8 +118,7 @@ describe('entity Hash/Equal traits', () => {
     expect(family(person)).to.eq(family(person));
     expect(family(person)).to.not.eq(family(makePerson('Alice')));
 
-    // A duplicate proxy is an invariant violation (see `duplicateProxy`); should one appear, both
-    // resolve to the same family entry rather than to two atoms racing over one entity.
+    // Two atoms racing over one entity is the failure a duplicate proxy would otherwise cause.
     expect(family(person)).to.eq(family(duplicateProxy(person)));
   });
 });

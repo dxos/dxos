@@ -209,19 +209,10 @@ Object.defineProperties(TypedObjectPrototype, {
       return (callback: (obj: any) => void) => executeChange(target, target, this, callback);
     },
   },
-  // Effect `Hash`/`Equal` traits, keyed by entity id. Without them Effect falls back to a
-  // structural hash that deep-reads the whole record and caches the result by reference, so a
-  // mutable ECHO object used as a hash-map key (e.g. `Atom.family`) keys expensively and goes
-  // stale on mutation. Keyed by the bare `id` — a plain data property that cannot throw — rather
-  // than by a derived URI, whose validation rejects malformed ids; ECHO ids are unique on their
-  // own, and `Equal` (not the hash) decides identity. Both traits ship together: a `Hash` that
-  // disagrees with `Equal` breaks every hash-map lookup. Nested records carry no `id` and fall
-  // back to reference identity.
-  //
-  // Id and reference identity coincide here: an entity has exactly one live proxy (`createProxy`
-  // caches by target, and the database asserts a single `core.rootProxy`), so keying by id is the
-  // cheap, throw-free way to spell that invariant. Two live proxies over one entity is a bug, and
-  // this pair keeps them one hash-map entry rather than letting them race.
+  // Effect `Hash`/`Equal` traits, keyed by entity id: an entity has exactly one live proxy, and the
+  // bare `id` spells that invariant without the throw a derived URI risks on a malformed id.
+  // Effect's structural default would instead deep-read the record and go stale on the next mutation.
+  // Nested records share this prototype but carry no `id`, so they fall back to reference identity.
   [Hash.symbol]: {
     get(this: ProxyTarget) {
       const target = getRawTarget(this);
