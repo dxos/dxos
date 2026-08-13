@@ -14,6 +14,8 @@ import { scaffoldProject } from '@dxos/plugin-projects/templates';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
+import { BrainOperation } from '#types';
+
 /** Chats get the brain (fact query/summarize) and inbox (read mail) skills. */
 const PROJECT_SKILL_KEYS = ['org.dxos.skill.brain', 'org.dxos.skill.inbox'] as const;
 

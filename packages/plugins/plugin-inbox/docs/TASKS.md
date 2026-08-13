@@ -438,14 +438,22 @@ generalize now with mailbox as instance #1.
       `Find images` stays, being space-wide rather than a feed pass. The scan tests declare their own
       analyze processor now — contributing it WITHOUT a FactStore is precisely the misconfiguration
       the gate absorbs, so the test exercises the mechanism instead of a real accident.
-- [ ] **Ownership move, part 2 (D5b) — NEEDS A DECISION.** Relocating the `AnalyzeMailbox` operation
-      DEFINITION (not just the contribution) to plugin-brain is what would let plugin-inbox drop
-      `@dxos/pipeline-rdf`, since the `FactStore` import is in the `services` array on the definition.
-      BLOCKER: unlike `ScanMailbox`, this DXN is RELEASED — it landed 2026-07-10 in #12153 and
-      plugin-inbox is published at 0.11.1 — so moving it orphans any persisted routine or trigger
-      bound to `org.dxos.plugin.inbox.operation.analyzeMailbox`. `run-routine.ts:52` does
-      `Database.load(spec.runnable)`, so a dangling ref FAILS rather than degrading. Options: accept
-      the break pre-1.0; keep a deprecated forwarding alias in inbox; or add a key-migration step.
+- [x] **Ownership move, part 2 (D5b)** — the `AnalyzeMailbox` DEFINITION moved to `BrainOperation`,
+      changing its DXN. That key was RELEASED (landed 2026-07-10 in #12153), so a routine bound to
+      `org.dxos.plugin.inbox.operation.analyzeMailbox` is orphaned — accepted deliberately, pre-1.0.
+      The handler, its test, and the page-size constant moved with it; brain gained `@dxos/pipeline-email`
+      and `@dxos/link`. `createAnalyzeProgressKey` STAYED in inbox: every monitor key on a mailbox must
+      be minted the same way or producer and article compute different names and no meter appears. The
+      feed-cursor helpers are now exported from `@dxos/plugin-inbox/operations`, since a contributed
+      processor keeps its cursor on a feed inbox owns.
+      MISTAKE WORTH REMEMBERING: `pnpm add --save-catalog` for the two new deps pinned brain to the
+      PUBLISHED `@dxos/pipeline-rdf@0.11.1`, not the workspace source, which surfaced as duplicate-type
+      errors. In-repo `@dxos` packages take `workspace:*` — the catalog is for external packages only.
+      DID NOT drop `@dxos/pipeline-rdf` from plugin-inbox: `GenerateReply` also declares `FactStore`
+      and is also handled by brain, so the dependency needs that operation to move too — see below.
+- [ ] **Move `GenerateReply` to plugin-brain** — the last thing holding `@dxos/pipeline-rdf` in
+      plugin-inbox. Same shape as `AnalyzeMailbox`: defined in inbox, handled by brain, needs the
+      FactStore. Its DXN is also released, so it carries the same orphaning question.
 - [ ] **Failure policy from the DAG edges** (D4) — buildable now that the topology has landed, but not
       built: `continueOnError` still aborts in LIST order, so a failing `classify` strands whatever
       happens to sit behind it even when nothing connects them. Intended: a failed processor fails its

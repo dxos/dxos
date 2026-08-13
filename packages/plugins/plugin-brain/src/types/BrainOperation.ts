@@ -62,7 +62,6 @@ export const AnalyzeMailbox = Operation.make({
   }),
 });
 
-
 /**
  * LLM-facing rendering of a fact: subject/predicate/object display strings plus the FactBank
  * factuality code, confidence, recording date, and source DXN.

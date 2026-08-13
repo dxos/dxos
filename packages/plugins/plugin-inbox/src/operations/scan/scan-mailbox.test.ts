@@ -3,8 +3,8 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import * as Effect from 'effect/Effect';
 import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -26,6 +26,35 @@ import { inboxMailboxProcessors } from '../../capabilities/mailbox-processors';
 import * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as InboxOperation from '../../types/InboxOperation';
 import * as Mailbox from '../../types/Mailbox';
+
+/** A service no layer in this test provides — the whole point of the stub below. */
+class MissingService extends Context.Service<MissingService, { readonly unused: true }>()(
+  '@dxos/plugin-inbox/testing/MissingService',
+) {}
+
+/**
+ * An operation declaring a service nothing contributes, standing in for the real misconfiguration:
+ * a processor whose own plugin failed to provide something it declared. Purpose-built rather than
+ * borrowed from a shipped operation, so the test exercises the gate itself and cannot be invalidated
+ * by that operation later gaining or losing a dependency — which is exactly what happened when
+ * `AnalyzeMailbox` moved to plugin-brain.
+ */
+const StubOperation = Operation.make({
+  meta: { key: DXN.make('org.dxos.plugin.inbox.testing.operation.stub'), name: 'Stub' },
+  services: [MissingService],
+  input: Schema.Struct({ mailbox: Ref.Ref(Mailbox.Mailbox) }),
+  output: Schema.Void,
+});
+
+const StubHandlerSet = OperationHandlerSet.make(StubOperation.pipe(Operation.withHandler(() => Effect.void)));
+
+/** Contributed into the `analyze` slot, so the cascade reaches it exactly where brain's pass would sit. */
+const analyzeProcessor: InboxCapabilities.MailboxProcessor = {
+  id: 'analyze',
+  tier: 'analyze',
+  after: ['summarize'],
+  createInvocation: (mailbox) => ({ operation: StubOperation, input: { mailbox: Ref.make(mailbox) } }),
+};
 
 /**
  * The processors plugin-inbox itself contributes, resolved through the real capability manager — the
@@ -70,35 +99,6 @@ const makeTestLayer = (processors: readonly InboxCapabilities.MailboxProcessor[]
 const TestLayer = makeTestLayer();
 
 const ME = ['me@example.com'];
-
-/** A service no layer in this test provides — the whole point of the stub below. */
-class MissingService extends Context.Service<MissingService, { readonly unused: true }>()(
-  '@dxos/plugin-inbox/testing/MissingService',
-) {}
-
-/**
- * An operation declaring a service nothing contributes, standing in for the real misconfiguration:
- * a processor whose own plugin failed to provide something it declared. Purpose-built rather than
- * borrowed from a shipped operation, so the test exercises the gate itself and cannot be invalidated
- * by that operation later gaining or losing a dependency — which is exactly what happened when
- * `AnalyzeMailbox` moved to plugin-brain.
- */
-const StubOperation = Operation.make({
-  meta: { key: DXN.make('org.dxos.plugin.inbox.testing.operation.stub'), name: 'Stub' },
-  services: [MissingService],
-  input: Schema.Struct({ mailbox: Ref.Ref(Mailbox.Mailbox) }),
-  output: Schema.Void,
-});
-
-const StubHandlerSet = OperationHandlerSet.make(StubOperation.pipe(Operation.withHandler(() => Effect.void)));
-
-/** Contributed into the `analyze` slot, so the cascade reaches it exactly where brain's pass would sit. */
-const analyzeProcessor: InboxCapabilities.MailboxProcessor = {
-  id: 'analyze',
-  tier: 'analyze',
-  after: ['summarize'],
-  createInvocation: (mailbox) => ({ operation: StubOperation, input: { mailbox: Ref.make(mailbox) } }),
-};
 
 const withAnalyze = [...inboxMailboxProcessors, analyzeProcessor];
 
