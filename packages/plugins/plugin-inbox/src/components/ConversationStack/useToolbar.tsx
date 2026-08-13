@@ -107,23 +107,29 @@ export const useMessageActions = ({
               );
             }
 
-            // Archive / Move to Inbox — one toggle of the `inbox` tag, its label and icon following the
-            // message's current membership. Its own section below the reply group.
-            if (onArchive) {
+            // Message-disposition section (Gmail's grouping): archive and delete both take the message
+            // out of the reading flow, so they share a section rather than sitting at opposite ends.
+            // Archive is one toggle of the `inbox` tag — label and icon follow current membership.
+            if (onArchive || onDelete) {
               if (onReply || onForward || onAiReply) {
                 builder.separator('line');
               }
-              builder.action(
-                'archive',
-                {
-                  label: inInbox
-                    ? ['message-toolbar-archive.menu', { ns: meta.profile.key }]
-                    : ['message-toolbar-move-to-inbox.menu', { ns: meta.profile.key }],
-                  icon: inInbox ? 'ph--archive--regular' : 'ph--tray--regular',
-                  testId: 'inbox.message.archive',
-                },
-                onArchive,
-              );
+              if (onArchive) {
+                builder.action(
+                  'archive',
+                  {
+                    label: inInbox
+                      ? ['message-toolbar-archive.menu', { ns: meta.profile.key }]
+                      : ['message-toolbar-move-to-inbox.menu', { ns: meta.profile.key }],
+                    icon: inInbox ? 'ph--archive--regular' : 'ph--tray--regular',
+                    testId: 'inbox.message.archive',
+                  },
+                  onArchive,
+                );
+              }
+              if (onDelete) {
+                deleteAction(builder, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
+              }
             }
 
             // Extraction actions (trips, people, …) contributed for this message.
@@ -147,12 +153,6 @@ export const useMessageActions = ({
               openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen })(builder);
             }
             builder.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, rootId: 'more' }));
-
-            // Destructive.
-            if (onDelete) {
-              builder.separator('line');
-              deleteAction(builder, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
-            }
           },
           'inbox.message.more',
         )

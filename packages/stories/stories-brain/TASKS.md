@@ -228,6 +228,26 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       (`disposition: ['list-item']`). NOTE: the "Mailbox pipeline routine (2026-08-10)" phase at the top
       of this file is a full ledger of BUILDING it — that phase has to be rewritten as removed, not left
       standing as completed work, or the ledger will claim shipped features that no longer exist.
+- [ ] **Split this work-stream out of `stories-brain`** (requested 2026-08-13) — this ledger is the
+      mailbox/inbox stream but lives in a research-harness package, and the registry summary still
+      describes only model routing. The code it tracks is overwhelmingly `plugin-inbox` +
+      `react-ui-card`. Decide the split: (a) move the ledger to `packages/plugins/plugin-inbox/TASKS.md`
+      and register a new project, leaving `stories-brain` with the model-ladder/FINDINGS research it was
+      created for; or (b) keep one project and just relocate the file. Either way the ~40 older Topics /
+      FINDINGS / model-routing items should not follow the inbox work into a new home. Broader question
+      the user raised: how projects should be structured in general — one per package, per work-stream,
+      or per branch — since the registry currently mixes all three.
+- [ ] **Mailbox card: rows showing the inbox message count** (requested 2026-08-13) — the mailbox card
+      should carry rows reporting how many messages are in the inbox. Counts come from the same
+      `inbox`-tag membership the new folder filters use (`SystemTags`/`TagIndex`), so this reads the
+      tag index rather than scanning the feed. Settle which counts earn a row — total vs unread vs
+      inbox-only — and keep it reactive (a tag-index atom, not a query per render).
+- [ ] **Record when each subscription was last unsubscribed** (requested 2026-08-13) — `ExtractSubscriptions`
+      re-detects subscriptions from old messages after the user has already unsubscribed, so the same
+      ones keep reappearing. The mailbox needs per-subscription state (the unsubscribe timestamp) that
+      extraction consults, skipping any subscription whose evidence predates its last unsubscribe.
+      Note the corpus is immutable: the old messages remain and will always match, so suppression has to
+      live in the mailbox's own state rather than in message filtering.
 - [ ] **ConversationStack story: popovers + unknown actors** (requested 2026-08-12) — the
       `ConversationStack` `Default` story should (a) host `ContactPreview` so DXN links in message
       content open popovers, (b) give the message avatar the same hover/create mechanism as

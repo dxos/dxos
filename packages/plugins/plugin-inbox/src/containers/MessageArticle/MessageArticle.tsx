@@ -218,6 +218,19 @@ export const MessageArticle = ({
     [invoker, mailbox, db],
   );
 
+  // This view exists to read one message; once archived it is no longer in the flow the user is
+  // working through, so close the plank rather than leaving a stale reading pane behind.
+  const handleArchived = useCallback(
+    (message: MessageType.Message) => {
+      if (mailbox && db) {
+        void invoker.invokePromise(LayoutOperation.Close, {
+          subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+        });
+      }
+    },
+    [invoker, mailbox, db],
+  );
+
   return (
     <ConversationStack.Root
       attendableId={toolbarAttendableId}
@@ -239,6 +252,7 @@ export const MessageArticle = ({
       onAiReply={mailbox ? handleAiReply : undefined}
       onDelete={mailbox ? handleDelete : undefined}
       onOpen={mailbox ? handleOpen : undefined}
+      onArchived={mailbox ? handleArchived : undefined}
     >
       <Panel.Root role={role} data-testid={testId}>
         <Panel.Toolbar asChild>

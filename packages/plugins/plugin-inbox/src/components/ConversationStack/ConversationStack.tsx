@@ -87,6 +87,12 @@ type ConversationMessageActions = {
   onAiReply?: (message: MessageType.Message) => void;
   onDelete?: (message: MessageType.Message) => void;
   onOpen?: (message: MessageType.Message) => void;
+  /**
+   * Fired after a message is archived (never on restore). The tag toggle itself is tile-local so
+   * archiving works in every consumer; this is the container's hook for the layout consequence —
+   * a dedicated message view has nothing left to show once its message leaves the inbox.
+   */
+  onArchived?: (message: MessageType.Message) => void;
 };
 
 //
@@ -161,6 +167,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'onAiReply'
     | 'onDelete'
     | 'onOpen'
+    | 'onArchived'
   >
 >;
 
@@ -190,6 +197,7 @@ const ConversationStackRoot = ({
   onAiReply,
   onDelete,
   onOpen,
+  onArchived,
 }: ConversationStackRootProps) => (
   <ConversationStackProvider
     attendableId={attendableId}
@@ -204,6 +212,7 @@ const ConversationStackRoot = ({
     onAiReply={onAiReply}
     onDelete={onDelete}
     onOpen={onOpen}
+    onArchived={onArchived}
     companion={companion}
     graph={graph}
     getExtractActions={getExtractActions}
@@ -457,6 +466,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     onAiReply,
     onDelete,
     onOpen,
+    onArchived,
     onExpandedChange,
     onContactCreate,
   } = useConversationStackContext(MESSAGE_TILE_NAME);
@@ -474,7 +484,14 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   );
   // Archiving is the `inbox` tag coming off (Gmail's model — INBOX is a label), so one toggle serves
   // both directions and membership picks the menu label.
-  const [inInbox, handleArchive] = useSystemTag(target, mailbox, 'inbox');
+  const [inInbox, toggleInbox] = useSystemTag(target, mailbox, 'inbox');
+  const handleArchive = useCallback(() => {
+    toggleInbox();
+    // Only archiving is a layout event; restoring leaves the message right where the user is looking.
+    if (inInbox && target) {
+      onArchived?.(target);
+    }
+  }, [toggleInbox, inInbox, target, onArchived]);
   const menuActions = useMessageActions({
     graph,
     extractActions,
