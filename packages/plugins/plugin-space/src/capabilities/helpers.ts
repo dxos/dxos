@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SpaceSchema from '../types/SpaceSchema';
+import { SpaceSchema } from '#types';
 
 /** Builds the invitation-link URL builder shared by the props mappings below. */
 export const makeCreateInvitationUrl =

@@ -22,11 +22,11 @@ import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
+import { meta } from '#meta';
+import { ConnectorCoordination, ConnectorSpec } from '#types';
+
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
-import { meta } from '../../meta';
-import * as ConnectorCoordination from '../../types/ConnectorCoordination';
-import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
 import {

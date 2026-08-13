@@ -6,8 +6,8 @@ import { subDays } from 'date-fns';
 
 import { random } from '@dxos/random';
 
-import { GoogleMail } from '../apis';
-import { type GmailDataset } from '../services';
+import { GoogleMail } from '#apis';
+import { type GmailDataset } from '#services';
 
 export interface GenerateGmailDatasetOptions {
   /** Number of messages to generate. */

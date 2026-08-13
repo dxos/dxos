@@ -11,7 +11,8 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { Organization, Person } from '@dxos/types';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
+
 import { attachImageToSubject } from './attach-image';
 import { organizationImageCandidates, personImageCandidates } from './image-candidates';
 

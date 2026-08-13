@@ -16,7 +16,8 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
+import { InboxOperation } from '#types';
+
 import { findOrCreateProcessCursor } from './cursor';
 
 /** The message's display title for the log line and the progress meter. */

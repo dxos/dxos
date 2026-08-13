@@ -7,7 +7,8 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type DependencyList, useCallback, useContext, useMemo } from 'react';
 
-import { Graph, Node } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 
 import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 

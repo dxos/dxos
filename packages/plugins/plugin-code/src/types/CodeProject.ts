@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
+
 import * as SourceFile from './SourceFile';
 import * as Spec from './Spec';
 

@@ -8,8 +8,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TaskSet } from '@dxos/types';
 
+import { LinearOperation } from '#types';
+
 import { LINEAR_SOURCE } from '../constants';
-import * as LinearOperation from '../types/LinearOperation';
 
 const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
 

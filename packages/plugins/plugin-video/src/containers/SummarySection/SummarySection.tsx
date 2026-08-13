@@ -11,9 +11,7 @@ import { useTranslation } from '@dxos/react-ui';
 
 import { Pending, Summary } from '#components';
 import { meta } from '#meta';
-
-import * as Video from '../../types/Video';
-import * as VideoOperation from '../../types/VideoOperation';
+import { Video, VideoOperation } from '#types';
 
 // TODO(burdon): Use AppSurface.Section.
 export type SummarySectionProps = {

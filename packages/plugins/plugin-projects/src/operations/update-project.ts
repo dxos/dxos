@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
 
-import * as ProjectMcpOperation from '../types/ProjectMcpOperation';
+import { ProjectMcpOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof ProjectMcpOperation.UpdateProject> = ProjectMcpOperation.UpdateProject.pipe(
   Operation.withHandler(

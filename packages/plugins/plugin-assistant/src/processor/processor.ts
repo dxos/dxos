@@ -39,7 +39,8 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantOperation } from '#types';
+
 import { findInCause } from '../util/error-cause';
 import { type ProcessorRequestContext, createPromptContent } from './prompt';
 

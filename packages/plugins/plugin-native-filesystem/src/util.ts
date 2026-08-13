@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import * as NativeFilesystemCapabilities from './types/NativeFilesystemCapabilities';
+import { NativeFilesystemCapabilities } from '#types';
 
 /** Persisted per-workspace metadata stored in `.composer/meta.json`. */
 export type ComposerConfig = { icon?: string; hue?: string; spaceId?: string };

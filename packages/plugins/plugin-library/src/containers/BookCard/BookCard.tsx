@@ -7,7 +7,7 @@ import React from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui';
 
-import * as Book from '../../types/Book';
+import { Book } from '#types';
 
 /**
  * Collection-tile body for a book, mirroring the Organization card: cover poster, authors, and a

@@ -9,8 +9,7 @@ import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import * as KanbanConstants from '../types/KanbanConstants';
-import * as KanbanLayout from '../types/KanbanLayout';
+import { KanbanConstants, KanbanLayout } from '#types';
 
 /**
  * Builds the column drag-and-drop handler for the kanban board (reorder columns).

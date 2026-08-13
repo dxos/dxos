@@ -12,9 +12,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-
-import { ClientOperation } from '../../operations';
-import * as ClientCapabilities from '../../types/ClientCapabilities';
+import { ClientOperation } from '#operations';
+import { ClientCapabilities } from '#types';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;

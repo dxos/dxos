@@ -11,8 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { autoBindSingleConnection } from '@dxos/plugin-connector';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
+import { InboxOperation } from '#types';
+
 import { getMailboxPath } from '../paths';
-import * as InboxOperation from '../types/InboxOperation';
 
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
   Operation.withHandler(

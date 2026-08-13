@@ -7,8 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as MapCapabilities from '../types/MapCapabilities';
-import * as MapEvents from '../types/MapEvents';
+import { MapCapabilities, MapEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [MapCapabilities.MarkerProvider],

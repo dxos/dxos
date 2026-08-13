@@ -7,12 +7,12 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'PreviewPlugin': 'src/PreviewPlugin.tsx',
-    'PreviewPlugin.node': 'src/PreviewPlugin.node.ts',
-    'PreviewPlugin.workerd': 'src/PreviewPlugin.workerd.ts',
+    'PreviewPlugin': 'src/PreviewPlugin.ts',
+    'plugin': 'src/plugin.tsx',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'meta': 'src/meta.ts',
-    'plugin': 'src/plugin.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
   },

@@ -35,19 +35,24 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/DebugPlugin.workerd.ts",
-        "node": "./src/DebugPlugin.node.ts",
-        "default": "./src/DebugPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/DebugPlugin.d.ts",
-      "workerd": "./dist/lib/DebugPlugin.workerd.mjs",
-      "node": "./dist/lib/DebugPlugin.node.mjs",
-      "default": "./dist/lib/DebugPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -55,6 +60,13 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     },
     "./Debug": {
       "source": "./src/types/Debug.ts",
@@ -71,6 +83,11 @@
       "types": "./dist/types/src/types/DebugNodes.d.ts",
       "import": "./dist/lib/DebugNodes.mjs"
     },
+    "./DebugPlugin": {
+      "source": "./src/DebugPlugin.ts",
+      "types": "./dist/types/src/DebugPlugin.d.ts",
+      "import": "./dist/lib/DebugPlugin.mjs"
+    },
     "./DebugSurface": {
       "source": "./src/types/DebugSurface.ts",
       "types": "./dist/types/src/types/DebugSurface.d.ts",
@@ -80,18 +97,6 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -122,6 +127,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -138,7 +144,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
     "@dxos/operation": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

@@ -29,9 +29,9 @@ import { defaultTx } from '@dxos/react-ui';
  * Import SpacePlugin directly in your stories if needed.
  */
 export const corePlugins = (): Plugin.Plugin[] => [
-  AttentionPlugin(),
-  GraphPlugin(),
+  AttentionPlugin.make(),
+  GraphPlugin.make(),
   ProcessManagerPlugin(),
-  SettingsPlugin(),
-  ThemePlugin({ tx: defaultTx }),
+  SettingsPlugin.make(),
+  ThemePlugin.make({ tx: defaultTx }),
 ];

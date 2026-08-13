@@ -14,9 +14,9 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { Settings } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../../annotations';
-import * as Settings from '../../types/Settings';
 
 export type SupportSettingsProps = AppSurface.SettingsData;
 

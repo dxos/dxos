@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { TablePlugin } from '@dxos/plugin-table/plugin';
+import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, createDecorators, storyParameters } from '../testing';
@@ -19,7 +19,7 @@ const meta: Meta<typeof ModuleContainer> = {
   decorators: createDecorators({
     mailboxName: MAILBOX_NAME,
     // Owns `org.dxos.skill.table`, which the template binds and the ledger routine writes through.
-    plugins: [TablePlugin()],
+    plugins: [TablePlugin.make()],
   }),
   args: {
     layout: [

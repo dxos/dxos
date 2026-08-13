@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Node } from '@dxos/plugin-graph';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 
-import * as SpotlightCapabilities from '../types/SpotlightCapabilities';
+import { SpotlightCapabilities } from '#types';
 
 const defaultState: SpotlightCapabilities.SpotlightState = {
   dialogOpen: true,

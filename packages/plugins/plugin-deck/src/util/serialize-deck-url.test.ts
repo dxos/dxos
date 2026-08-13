@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type PathResolution } from '@dxos/app-graph';
+import type * as PathResolution from '@dxos/app-graph/PathResolution';
 
 import { serializeDeckToUrl } from './serialize-deck-url';
 

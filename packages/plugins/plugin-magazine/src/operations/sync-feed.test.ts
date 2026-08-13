@@ -12,9 +12,8 @@ import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
-import * as FeedOperation from '../types/FeedOperation';
-import * as Subscription from '../types/Subscription';
-import { MagazineOperationHandlerSet } from './index';
+import { MagazineOperationHandlerSet } from '#operations';
+import { FeedOperation, Subscription } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 

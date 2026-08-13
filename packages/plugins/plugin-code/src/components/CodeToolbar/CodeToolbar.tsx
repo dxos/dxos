@@ -10,8 +10,7 @@ import { ElevationProvider } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuRootProps, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-
-import type * as CodeCapabilities from '../../types/CodeCapabilities';
+import { CodeCapabilities } from '#types';
 
 export type CodeToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
   state: CodeCapabilities.ProjectBuildState | undefined;

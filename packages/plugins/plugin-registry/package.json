@@ -28,14 +28,14 @@
     "#operations": "./src/operations/index.ts",
     "#plugin": {
       "source": {
-        "workerd": "./src/RegistryPlugin.workerd.ts",
-        "node": "./src/RegistryPlugin.node.ts",
-        "default": "./src/RegistryPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/RegistryPlugin.d.ts",
-      "workerd": "./dist/lib/RegistryPlugin.workerd.mjs",
-      "node": "./dist/lib/RegistryPlugin.node.mjs",
-      "default": "./dist/lib/RegistryPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": "./src/translations.ts",
     "#types": "./src/types.ts"
@@ -46,15 +46,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./RegistryPlugin": {
+      "source": "./src/RegistryPlugin.ts",
+      "types": "./dist/types/src/RegistryPlugin.d.ts",
+      "import": "./dist/lib/RegistryPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -65,6 +65,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",

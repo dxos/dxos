@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as GitHubOperation from '../types/GitHubOperation';
+import { GitHubOperation } from '#types';
 
 export const GitHubOperationHandlerSet = OperationHandlerSet.lazy([
   GitHubOperation.GetGitHubRepositories.pipe(Operation.lazyHandler(() => import('./get-repositories'))),

@@ -14,9 +14,9 @@ import { log } from '@dxos/log';
 import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { CallsCapabilities } from '#types';
 
 import { type EncodedTrackName, type GlobalState } from '../../calls';
-import * as CallsCapabilities from '../../types/CallsCapabilities';
 
 // Stand-in so `useAtomValue` is always called with a real atom when no manager is contributed.
 const noCallState = Atom.make<GlobalState | undefined>(undefined).pipe(Atom.keepAlive);

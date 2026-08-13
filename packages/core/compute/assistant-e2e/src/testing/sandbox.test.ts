@@ -4,8 +4,8 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
+import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import { trim } from '@dxos/util';
 
 import { DEFAULT_TEST_TIMEOUT, agentTest, agentTestTimeout } from '../harness';
@@ -26,7 +26,7 @@ describe('Sandbox', { tags: ['manual'] }, () => {
     agentTest({
       randomEntityIds: true,
       sandbox: 'local',
-      plugins: [SandboxPlugin()],
+      plugins: [SandboxPlugin.make()],
       clientTypes: [Sandbox.Sandbox],
       instructions: trim`
         The database starts empty. The sandbox service is available at http://localhost:8792.
@@ -52,7 +52,7 @@ describe('Sandbox', { tags: ['manual'] }, () => {
     agentTest({
       randomEntityIds: true,
       sandbox: 'local',
-      plugins: [SandboxPlugin()],
+      plugins: [SandboxPlugin.make()],
       clientTypes: [Sandbox.Sandbox],
       instructions: trim`
         Query contributors to the dxos/dxos repository using CLI in the sandbox.

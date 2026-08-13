@@ -1,0 +1,13 @@
+{
+  "name": "@fixture/subpath-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "source": "./src/index.ts" },
+    "./plugin": { "source": "./src/plugin.ts" },
+    "./Alpha": { "source": "./src/Alpha.ts" },
+    "./Beta": { "source": "./src/Beta.ts" },
+    "./Gamma": { "source": "./src/Gamma.ts" }
+  }
+}

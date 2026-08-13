@@ -4,7 +4,7 @@
 
 import { Attention } from '@dxos/react-ui-attention';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
 export type SetActiveOptions = {
   next: string[];

@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { Outline } from '@dxos/types';
 
-import * as OutlineOperation from '../types/OutlineOperation';
+import { OutlineOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof OutlineOperation.ConvertToTask> = OutlineOperation.ConvertToTask.pipe(
   Operation.withHandler(

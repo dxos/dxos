@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 
-import * as Subscription from '../../types/Subscription';
+import { Subscription } from '#types';
+
 import { makeSnippet } from '../../util/text';
 import { type FeedFetcher, FeedFetchError, type FetchOptions } from './feed-fetcher';
 import { getJson } from './http';

@@ -8,7 +8,8 @@ import { Obj, Ref } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { Text } from '@dxos/schema';
 
-import * as Book from '../types/Book';
+import { Book } from '#types';
+
 import { bookLens } from './book-lens';
 import { canPublishBook } from './hive';
 import bookLexicon from './lexicons/buzz.bookhive.book.json';

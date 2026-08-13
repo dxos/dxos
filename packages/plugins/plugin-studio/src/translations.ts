@@ -6,10 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import * as Artifact from './types/Artifact';
-import * as Lightbox from './types/Lightbox';
-import * as Variant from './types/Variant';
+import { Artifact, Lightbox, Variant } from '#types';
 
 export const translations = [
   {

@@ -14,10 +14,10 @@ import { InvocationTraceContainer, SpaceInfoPanel, SpaceListPanel, TestingPanel 
 import { Feed } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ScriptOperation from '@dxos/plugin-script/ScriptOperation';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Space } from '@dxos/react-client/echo';
 
-import * as Devtools from '../types/Devtools';
+import { Devtools } from '#types';
 
 export type ActiveSpacePanelProps = {
   /** Stable module-level panel component; the surface passes it through its `props` mapper. */

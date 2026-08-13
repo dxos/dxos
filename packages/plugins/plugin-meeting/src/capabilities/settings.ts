@@ -8,9 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-
-import * as MeetingCapabilities from '../types/MeetingCapabilities';
-import * as Settings from '../types/Settings';
+import { MeetingCapabilities, Settings } from '#types';
 
 // Meeting has no user-configurable settings, so it does NOT contribute
 // `AppCapabilities.Settings` (an empty schema renders a blank settings article).

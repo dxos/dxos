@@ -7,7 +7,8 @@ import React, { useRef, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import type * as Track from '../../types/Track';
+import { Track } from '#types';
+
 import { TrackList } from './TrackList';
 
 const initialTracks: Track.Track[] = [

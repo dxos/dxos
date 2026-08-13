@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { createKvsStore } from '@dxos/effect';
 
-import * as AccountCache from '../types/AccountCache';
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { AccountCache, ClientCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

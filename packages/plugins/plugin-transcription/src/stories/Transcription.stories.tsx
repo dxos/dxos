@@ -20,7 +20,8 @@ import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { Transcription, useAudioFile, useFeedModelAdapter, useRecordingPipeline } from '@dxos/react-ui-transcription';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { createStoryDecorators } from '../testing';
+import { createStoryDecorators } from '#testing';
+
 import { renderByline } from '../util';
 
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),

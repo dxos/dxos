@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import * as Provider from '../types/Provider';
+import { Provider } from '#types';
+
 import { bindRequest } from '../util';
 import { buildResults } from './run-provider-search';
 

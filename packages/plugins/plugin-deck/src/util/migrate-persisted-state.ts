@@ -8,7 +8,7 @@ import * as Struct from 'effect/Struct';
 
 import { log } from '@dxos/log';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
 /**
  * Superset of the current on-disk deck shape that additionally tolerates fields absent from the current

@@ -12,7 +12,7 @@ import { Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
-import * as CrmOperation from '../types/CrmOperation';
+import { CrmOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CrmOperation.ProcessMailbox> = CrmOperation.ProcessMailbox.pipe(
   Operation.withHandler(

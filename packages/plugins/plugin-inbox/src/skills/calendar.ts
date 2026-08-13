@@ -6,8 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as Calendar from '../types/Calendar';
-import * as InboxOperation from '../types/InboxOperation';
+import { Calendar, InboxOperation } from '#types';
 
 const make = () =>
   Skill.make({

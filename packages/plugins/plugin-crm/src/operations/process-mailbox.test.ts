@@ -15,10 +15,9 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { TagIndex, Text } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { EMAIL_FIXTURES, makeEmailMessage } from '../testing';
-import * as CrmOperation from '../types/CrmOperation';
-import * as ProfileOf from '../types/ProfileOf';
-import { CrmOperationHandlerSet } from './index';
+import { CrmOperationHandlerSet } from '#operations';
+import { EMAIL_FIXTURES, makeEmailMessage } from '#testing';
+import { CrmOperation, ProfileOf } from '#types';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: CrmOperationHandlerSet,

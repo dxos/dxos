@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { TagIndex } from '@dxos/schema';
 
-import * as Subscription from '../types/Subscription';
+import { Subscription } from '#types';
 
 /** Per-Post tag slice (star/archive membership). */
 export type TagSlice = { starred: boolean; archived: boolean };

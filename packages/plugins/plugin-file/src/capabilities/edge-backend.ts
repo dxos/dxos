@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Blob } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as FileCapabilities from '../types/FileCapabilities';
+import { FileCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

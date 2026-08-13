@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { UndoMapping } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 import { Entity } from '@dxos/echo';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
+import { SpaceOperation } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
 

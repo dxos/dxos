@@ -7,10 +7,10 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    IdeogramPlugin: 'src/IdeogramPlugin.tsx',
+    IdeogramPlugin: 'src/IdeogramPlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
     services: 'src/services/index.ts',
   },
   test: { node: true },

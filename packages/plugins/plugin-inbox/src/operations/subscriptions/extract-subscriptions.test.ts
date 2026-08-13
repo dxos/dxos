@@ -13,9 +13,8 @@ import { Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
-import { InboxOperationHandlerSet } from '../index';
+import { InboxOperationHandlerSet } from '#operations';
+import { InboxOperation, Mailbox } from '#types';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: InboxOperationHandlerSet,

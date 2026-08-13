@@ -10,9 +10,9 @@ import { Database, Obj, URI } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
 
+import { Markdown, MarkdownOperation } from '#types';
+
 import { type SelectionRange, getSelectionRanges } from '../model/selection';
-import * as Markdown from '../types/Markdown';
-import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.GetSelection> = MarkdownOperation.GetSelection.pipe(
   Operation.withHandler(

@@ -5,7 +5,8 @@
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { type Graph, Node } from '@dxos/app-graph';
+import type * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 
 import { applyPresentation } from '../presentation';
 import {

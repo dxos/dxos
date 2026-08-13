@@ -25,9 +25,9 @@ import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
+import { AssistantPreset } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
-import * as AssistantPreset from '../../types/AssistantPreset';
 import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 import { ChatMcpErrors } from './ChatMcpErrors';

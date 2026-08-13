@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as ChessOperation from '../types/ChessOperation';
+import { ChessOperation } from '#types';
 
 export const ChessOperationHandlerSet = OperationHandlerSet.lazy([
   ChessOperation.Move.pipe(Operation.lazyHandler(() => import('./move'))),

@@ -7,7 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Plugin$ from '@dxos/app-framework/Plugin';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
@@ -15,8 +17,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as SettingsPath from '../types/SettingsPath';
+import { SettingsPath } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

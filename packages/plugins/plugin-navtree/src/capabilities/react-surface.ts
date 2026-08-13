@@ -8,8 +8,8 @@ import { type ComponentProps } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
+import * as Node from '@dxos/app-graph/Node';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Node } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '#containers';

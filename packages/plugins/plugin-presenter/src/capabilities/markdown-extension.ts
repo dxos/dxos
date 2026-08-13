@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { keymap } from '@dxos/ui-editor';
 
-import * as PresenterOperation from '../types/PresenterOperation';
+import { PresenterOperation } from '#types';
 
 /**
  * Contributes the present shortcut (Shift+Cmd+P) to the markdown editor so presentation

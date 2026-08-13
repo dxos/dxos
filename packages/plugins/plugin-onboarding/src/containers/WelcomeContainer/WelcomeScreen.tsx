@@ -12,7 +12,8 @@ import { createDidFromIdentityKey } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation, classifyPasskeyFailure } from '@dxos/plugin-client';
+import { ClientOperation } from '@dxos/plugin-client';
+import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
@@ -97,7 +98,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     const { error: redeemError } = await invokePromise(ClientOperation.RedeemPasskey);
     if (redeemError) {
       log.catch(redeemError);
-      setError(passkeyError(classifyPasskeyFailure(redeemError)));
+      setError(passkeyError(PasskeyError.classify(redeemError)));
     }
   }, [invokePromise]);
 

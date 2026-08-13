@@ -15,8 +15,8 @@ import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
+import { ReviewCapabilities } from '#types';
 
-import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline';
 
 export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;

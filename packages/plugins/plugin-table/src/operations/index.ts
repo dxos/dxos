@@ -3,7 +3,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as TableOperation from '../types/TableOperation';
+import { TableOperation } from '#types';
 
 export const TableOperationHandlerSet = OperationHandlerSet.lazy([
   TableOperation.AddRow.pipe(Operation.lazyHandler(() => import('./add-row'))),

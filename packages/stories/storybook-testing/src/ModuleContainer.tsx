@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { type Role } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as Role from '@dxos/app-framework/Role';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';

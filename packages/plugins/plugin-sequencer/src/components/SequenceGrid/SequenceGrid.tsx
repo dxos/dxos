@@ -21,9 +21,8 @@ import {
 } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
-import type * as Note from '../../types/Note';
-import type * as Sequence from '../../types/Sequence';
-import type * as Track from '../../types/Track';
+import { Note, Sequence, Track } from '#types';
+
 import { hueFor, hueToHex } from '../../util/hue';
 import { LoopMarkers } from '../LoopMarkers';
 

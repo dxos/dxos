@@ -36,7 +36,8 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { formatLogEntry, packageName } from './format';
 import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer';
 import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext';

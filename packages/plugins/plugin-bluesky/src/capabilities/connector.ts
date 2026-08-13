@@ -11,10 +11,11 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { BlueskyOperation } from '#operations';
+import { BlueskyTargetOptions } from '#types';
+
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
-import { BlueskyOperation } from '../operations';
 import { BlueskyApi } from '../services';
-import { BlueskyTargetOptions } from '../types';
 
 /**
  * OAuth scopes for Bluesky.

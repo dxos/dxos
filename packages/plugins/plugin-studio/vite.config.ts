@@ -7,13 +7,13 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    StudioPlugin: 'src/StudioPlugin.tsx',
+    StudioPlugin: 'src/StudioPlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.ts',
     surfaces: 'src/surfaces.ts',
     translations: 'src/translations.ts',
     Artifact: 'src/types/Artifact.ts',
@@ -24,6 +24,7 @@ export default defineConfig({
     StudioEvents: 'src/types/StudioEvents.ts',
     StudioOperation: 'src/types/StudioOperation.ts',
     Variant: 'src/types/Variant.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

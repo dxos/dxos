@@ -7,7 +7,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
 import * as FileEvents from '@dxos/plugin-file/FileEvents';
 
-import * as WnfsCapabilities from '../types/WnfsCapabilities';
+import { WnfsCapabilities } from '#types';
 
 export const BlobBackend = Capability.lazyModule(
   'BlobBackend',

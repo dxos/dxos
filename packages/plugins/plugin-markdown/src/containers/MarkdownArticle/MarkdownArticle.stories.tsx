@@ -18,14 +18,15 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TldrawModel } from '@dxos/plugin-tldraw';
-import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
+import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
+import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -36,10 +37,9 @@ import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
+import { Markdown, MarkdownCapabilities } from '#types';
 
-import { MarkdownPlugin } from '../../MarkdownPlugin';
-import * as Markdown from '../../types/Markdown';
-import * as MarkdownCapabilities from '../../types/MarkdownCapabilities';
+import { MarkdownPlugin } from '../../plugin';
 
 random.seed(1);
 
@@ -100,11 +100,11 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { title = 'Testing', content = '', objects: showObjects = false } }) => ({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         MarkdownExtensionsPlugin(),
-        IllustratorPlugin(),
-        TldrawPlugin(),
-        ClientPlugin({
+        IllustratorPlugin.make(),
+        TldrawPlugin.make(),
+        ClientPlugin.make({
           types: [
             Markdown.Document,
             Text.Text,
@@ -169,7 +169,7 @@ const meta = {
         // Contributes the versioning-state atom consumed by useVersioning.
         SpacePlugin({}),
         MarkdownPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

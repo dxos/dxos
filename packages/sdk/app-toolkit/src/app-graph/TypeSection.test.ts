@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { GraphBuilder } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import { DXN, Type } from '@dxos/echo';
 
 import * as GraphPath from '../app/GraphPath';

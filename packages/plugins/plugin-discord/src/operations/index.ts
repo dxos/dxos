@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as DiscordOperation from '../types/DiscordOperation';
+import { DiscordOperation } from '#types';
 
 export const DiscordOperationHandlerSet = OperationHandlerSet.lazy([
   DiscordOperation.GetDiscordChannels.pipe(Operation.lazyHandler(() => import('./get-discord-channels'))),

@@ -16,7 +16,8 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
-import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
+import { NativeFilesystemCapabilities } from '#types';
+
 import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
 import {
   type FileMapEntry,

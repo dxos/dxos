@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as CommentOperation from '../types/CommentOperation';
+import { CommentOperation } from '#types';
 
 export const CommentOperationHandlerSet = OperationHandlerSet.lazy([
   CommentOperation.AddMessage.pipe(Operation.lazyHandler(() => import('./add-message'))),

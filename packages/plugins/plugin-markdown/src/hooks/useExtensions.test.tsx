@@ -14,7 +14,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
 import { EditorState, EditorView } from '@dxos/ui-editor';
 
-import * as Markdown from '../types/Markdown';
+import { Markdown } from '#types';
+
 import { useExtensions } from './useExtensions';
 
 describe('useExtensions content binding guard', () => {

@@ -20,9 +20,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Text } from '@dxos/schema';
 
+import { AssistantCapabilities, AssistantOperation } from '#types';
+
 import { getChatPath } from '../paths';
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantOperation from '../types/AssistantOperation';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat> =
   RoutineOperation.RunPromptInNewChat.pipe(

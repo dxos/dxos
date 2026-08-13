@@ -10,9 +10,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Blob, Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as FileOperation from '../types/FileOperation';
+import { FileOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

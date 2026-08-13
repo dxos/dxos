@@ -12,17 +12,16 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
+import { Artifact, Lightbox, Variant } from '#types';
 
-import { StudioPlugin } from '../../StudioPlugin';
-import * as Artifact from '../../types/Artifact';
-import * as Lightbox from '../../types/Lightbox';
-import * as Variant from '../../types/Variant';
 import { LightboxArticle } from './LightboxArticle';
 
 const DefaultStory = () => {
@@ -52,7 +51,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Lightbox.Lightbox, Artifact.Artifact, Variant.Variant, Instructions.Instructions, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -88,8 +87,8 @@ const meta = {
             }),
         }),
         StudioPlugin(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
       ],
     }),
   ],

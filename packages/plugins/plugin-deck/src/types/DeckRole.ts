@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 
 /** Slot for the main status-bar container. */
 export const StatusBar: Role.Role<Record<string, unknown>> = Role.make('org.dxos.plugin.statusBar.role.statusBar');

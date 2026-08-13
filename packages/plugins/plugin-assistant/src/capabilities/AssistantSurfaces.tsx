@@ -18,8 +18,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings, SpaceHomeSuggestions, TracePanel, TriggerStatus } from '#containers';
-
-import * as Assistant from '../types/Assistant';
+import { Assistant } from '#types';
 
 export type AssistantSettingsSurfaceProps = {
   subject: AppCapabilities.Settings;

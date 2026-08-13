@@ -11,9 +11,7 @@ import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 
 import { WelcomeTour } from '#components';
 import { meta } from '#meta';
-
-import * as HelpCapabilities from '../types/HelpCapabilities';
-import type * as Tour from '../types/Tour';
+import { HelpCapabilities, Tour } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (steps?: Tour.Step[]) {

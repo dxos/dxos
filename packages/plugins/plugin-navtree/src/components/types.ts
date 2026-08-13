@@ -4,11 +4,12 @@
 
 import type { FC } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import type { Density } from '@dxos/react-ui';
 import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
 
-import * as NavTreeNode from '../types/NavTreeNode';
+import { NavTreeNode } from '#types';
+
 import type { L1PanelProps } from './Sidebar';
 
 export type NavTreeContextValue = {

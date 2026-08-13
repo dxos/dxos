@@ -18,7 +18,8 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import * as BookmarkOperation from '../types/BookmarkOperation';
+import { BookmarkOperation } from '#types';
+
 import { extractReadableText, fetchPage } from '../util';
 
 const handler: Operation.WithHandler<typeof BookmarkOperation.Summarize> = BookmarkOperation.Summarize.pipe(
