@@ -413,14 +413,13 @@ const main = async () => {
   profiler?.mark('services:end');
   profiler?.measure('services', 'services:start', 'services:end');
 
-  // Started here rather than by plugin-client, whose module is lazily imported behind the entire
-  // plugin-loading pass: the worker handshake and storage open are seconds of work that depend on
-  // nothing but the services above, so they run alongside that pass instead of after it.
-  // `initialize()` is `@synchronized`, so the plugin's own call joins this one; that call is what
-  // reports a failure (via `onClientInitializationError`), hence the bare catch here.
+  // Started here so the handshake and storage open run alongside plugin loading rather than behind
+  // it: plugin-client's module is lazily imported, and this needs nothing but the services above.
+  // The plugin's own call is what surfaces a failure (via `onClientInitializationError`); this one
+  // only has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   const client = new Client({ config, services });
-  void client.initialize().catch(() => {});
+  void client.initialize().catch((err) => log.catch(err));
 
   profiler?.mark('plugins:start');
 

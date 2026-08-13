@@ -115,11 +115,11 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
 };
 
 /**
- * Nests each context provider around the next, walking the list at render time so that the element
- * type stays constant: a folded-at-render composition mints a new type per render, and React
- * remounts the whole app — every icon, scroll offset and editor state — on any capability change.
- * Sorting can only append a newly contributed context, so the chain extends inward and the
- * providers above it keep their positions.
+ * Nests each context provider around the next, walking the list at render time so the element type
+ * is a constant: composing the nesting into a component instead makes it a new type on every
+ * render, which remounts the whole app — every icon, scroll offset and editor state — on any
+ * capability change. Sorting can only append a newly contributed context, so the chain extends
+ * inward and the providers above it keep their positions.
  */
 const ContextChain = ({ contexts, children }: PropsWithChildren<{ contexts: Capabilities.ReactContext[] }>) => {
   if (contexts.length === 0) {

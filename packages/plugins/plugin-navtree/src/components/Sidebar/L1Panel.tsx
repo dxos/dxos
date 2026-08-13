@@ -9,6 +9,7 @@ import * as Graph from '@dxos/app-graph/Graph';
 import * as Node from '@dxos/app-graph/Node';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
 import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Empty, Tree } from '@dxos/react-ui-list';
@@ -44,11 +45,10 @@ export type L1PanelProps = {
   /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
   item?: Node.Node;
   /**
-   * Identity of the set of space workspaces in the graph; empty until the client has published its
-   * space list. Gates the unavailable message, which is a claim about that list: it stays hidden
-   * while the set is empty, and each change to it restarts {@link RENDER_DELAY} so the claim is
-   * made only once spaces have stopped arriving. Every identity ends up with at least a settings
-   * space, so an empty set means not-loaded-yet rather than nothing-to-show.
+   * Identity of the set of space workspaces in the graph, which the unavailable message is a claim
+   * about: it stays hidden while the set is empty, and every change restarts {@link RENDER_DELAY}
+   * so the claim waits for spaces to stop arriving. Empty means not-loaded-yet rather than
+   * nothing-to-show, since every identity ends up with at least a settings space.
    */
   spaces?: string;
   isCurrent: boolean;
@@ -65,6 +65,10 @@ const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1Pan
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
+  // The unavailable message is a claim about the space list, so it needs one to have been
+  // published; the sentinel deck means no workspace has been resolved yet, so none is being asked
+  // for and there is nothing to report as missing.
+  const reportUnavailable = !!spaces && id !== DeckSchema.DEFAULT_DECK_ID;
 
   return (
     <Tabs.Panel
@@ -90,10 +94,10 @@ const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1Pan
         (item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
-          !!spaces && (
+          reportUnavailable && (
             <Empty
-              // Remounting restarts the delay animation, which is how a set that is still filling
-              // in keeps deferring the message.
+              // Spaces publish one at a time as each opens; remounting restarts the delay, so a set
+              // that is still filling in keeps pushing the message back.
               key={spaces}
               label={t('workspace-unavailable.description')}
               // Second grid row, so the message clears the rail exactly as the tree does, and

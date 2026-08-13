@@ -3283,10 +3283,9 @@ describe('PluginManager', () => {
   describe('startup independence', () => {
     it.effect('ready does not wait for a wave a startup module fired from a forked fiber', () =>
       Effect.gen(function* () {
-        // The client's shape: its `activate` returns immediately and forks the initialization, then
-        // dispatches a follow-on event when that lands — mid-startup, because the rest of the
-        // startup wave is still loading. Nothing the follow-on pulls in gates first paint, so it
-        // must not hold `ready` open.
+        // The client's shape: `activate` returns immediately and forks the initialization, which
+        // dispatches a follow-on event when it lands — mid-startup, while the rest of the wave is
+        // still loading. Nothing that event pulls in gates first paint, so it must not hold `ready`.
         const slowGate = yield* Latch.make(false);
         const triggerGate = yield* Latch.make(false);
         const followerGate = yield* Latch.make(false);

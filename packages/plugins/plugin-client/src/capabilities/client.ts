@@ -39,9 +39,8 @@ export default Capability.makeModule(
     log(hostClient ? 'adopting host client' : 'creating client');
     const client = hostClient ?? new Client(options);
     if (!hostClient) {
-      // Boot-waterfall milestone opening the client-init span, which `:end` closes around SDK
-      // initialize plus the app-supplied callback. A host-supplied client has already marked it,
-      // at the point it began initializing.
+      // Only when the client is ours: a host that supplied one marked this where it began
+      // initializing, which is what the span is measuring.
       performance.mark('milestone:client-initialize:start');
     }
     log('initializing client (forked)...');
