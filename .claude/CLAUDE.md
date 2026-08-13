@@ -32,23 +32,23 @@
 
 ## Task planning
 
-- One command: `/project VERB [ARGS]`, leading the message; a `UserPromptSubmit`
+- One command: `/legacy-project VERB [ARGS]`, leading the message; a `UserPromptSubmit`
   hook (`.claude/hooks/track.sh`) reads the raw text before the command expands
   and injects the matching directive — follow the directive, not the expansion.
-  - `/project` (bare) — status of the CURRENT project: worktree + branch, the
+  - `/legacy-project` (bare) — status of the CURRENT project: worktree + branch, the
     registry entry's status/docs/PRs, uncommitted files (as clickable links),
     and the next action.
-  - `/project list [all]` — numbered table of the registry
+  - `/legacy-project list [all]` — numbered table of the registry
     (`.agents/projects/registry.yml`); reply with a row number to resume.
-  - `/project tasks [all|<phase>]` — the open `- [ ]` items from the current
+  - `/legacy-project tasks [all|<phase>]` — the open `- [ ]` items from the current
     project's `TASKS.md`, numbered and grouped by phase.
-  - `/project new <name> [summary]` / `/project end <name>` — manage entries;
+  - `/legacy-project new <name> [summary]` / `/legacy-project end <name>` — manage entries;
     each project has a `TASKS.md` + `DESIGN.md`.
-  - `/project track <text>` — record a follow-up in the active `TASKS.md`
+  - `/legacy-project track <text>` — record a follow-up in the active `TASKS.md`
     (never a background task chip).
-  - `/project hydrate` (alias `checkpoint`) — checkpoint before stopping or
+  - `/legacy-project hydrate` (alias `checkpoint`) — checkpoint before stopping or
     opening a PR.
-  - `/project resume [name]` — reload state at session start, always in the
+  - `/legacy-project resume [name]` — reload state at session start, always in the
     session's assigned worktree.
 - The `$project` sentinel and the legacy `$track`/`$hydrate`/`$checkpoint`/
   `$resume`/`$rehydrate` forms are **removed** — they matched anywhere in a
