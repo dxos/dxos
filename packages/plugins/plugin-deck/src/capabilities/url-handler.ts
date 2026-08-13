@@ -26,7 +26,13 @@ import { isTauri } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 
-import { getRenderedPlanks, resolveCompanionAnchor, serializeDeckToUrl } from '../util';
+import {
+  combineVerdicts,
+  getCandidateEntityIds,
+  getRenderedPlanks,
+  resolveCompanionAnchor,
+  serializeDeckToUrl,
+} from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /**
@@ -224,26 +230,31 @@ export default Capability.makeModule(
       // without this the walk races async loading and falls to not-found on reload/deep-link. The
       // NavigationTargetLoader (contributed by plugin-client) keeps this plugin free of a client
       // dependency; absent (e.g. headless), resolution simply falls back to its guided search. The
-      // per-pair boolean records which planks the loader confirmed exist, gating the resolve retry
-      // below so a genuine 404 fails fast instead of waiting out the timeout.
+      // per-pair verdict records what the loader could determine, gating the resolve retry below so
+      // a genuine 404 fails fast instead of waiting out the timeout.
       const loaders = navigationTargetLoaders.get();
-      // Keyless pairs (singleton keys like the space home) carry no object id to confirm against;
-      // their nodes materialize with the workspace's graph subtree, so they wait rather than
-      // fail fast. Fail-fast stays reserved for object pairs a loader positively disconfirmed.
-      const confirmed = pairs.map((pair) => pair.id === undefined);
+      // Every pair starts `unknown` — waiting is the default and fail-fast is the exception that has
+      // to be earned. Keyless pairs (singleton keys like the space home) carry no object id to
+      // confirm against and stay that way; their nodes materialize with the workspace's subtree.
+      const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
       if (loaders.length > 0) {
         yield* Effect.forEach(
           pairs,
           (pair, index) => {
-            if (pair.id === undefined) {
+            // Which tail segment holds the object id is extension-specific, so ask about all of them
+            // (see `getCandidateEntityIds`). A pair naming no object at all stays `unknown`.
+            const candidates =
+              pair.id === undefined ? [] : getCandidateEntityIds(pair.id, builder.urlGrammar.tailSeparator);
+            if (candidates.length === 0) {
               return Effect.void;
             }
-            // A static-path pair id is `<...pathSegments>+<objectId>`; the loader wants the bare object
-            // id (the final tail segment), else `EntityId.isValid` rejects the compound form.
-            const entityId = pair.id.slice(pair.id.lastIndexOf(builder.urlGrammar.tailSeparator) + 1);
-            return Effect.forEach(loaders, (loader) =>
-              loader.load({ spaceId: pair.workspace, entityId }).pipe(Effect.catch(() => Effect.succeed(false))),
-            ).pipe(Effect.tap((results) => Effect.sync(() => (confirmed[index] = results.some(Boolean)))));
+            return Effect.forEach(candidates, (entityId) =>
+              Effect.forEach(loaders, (loader) =>
+                loader
+                  .load({ spaceId: pair.workspace, entityId })
+                  .pipe(Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'))),
+              ),
+            ).pipe(Effect.tap((results) => Effect.sync(() => (verdicts[index] = combineVerdicts(results.flat())))));
           },
           { concurrency: 'unbounded' },
         );
@@ -252,12 +263,16 @@ export default Capability.makeModule(
       // Loading an object does not load its container chain (e.g. the collection it lives in), which
       // resolution expands but cannot synchronously observe. Resolution waits for the candidate node
       // itself — the id is known before the lookup — so the restore completes the moment the chain
-      // lands. Only confirmed pairs wait: a pair a loader disconfirmed is absent, not late, and must
-      // fail fast rather than hold the restore for the full deadline.
+      // lands.
+      //
+      // Only a positively disconfirmed pair skips the wait. On a cold restore EVERY pair misses the
+      // immediate read (the graph is built level by level from async queries), so the wait is the
+      // normal path and revoking it on anything less than proof of absence turns a slow plank into a
+      // permanent not-found.
       const resolved = yield* PathResolution.resolveUrl(
         builder,
         { workspace, pairs },
-        { wait: (index) => (confirmed[index] ? RESOLVE_TIMEOUT : undefined) },
+        { wait: (index) => (verdicts[index] === 'absent' ? undefined : RESOLVE_TIMEOUT) },
       );
 
       // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
