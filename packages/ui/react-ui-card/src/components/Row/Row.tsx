@@ -85,9 +85,10 @@ const useCardHover = (open: () => void, enabled: boolean) => {
     }, HOVER_CARD_DELAY);
   }, [enabled, cancel, open]);
 
-  // A recycled row (virtualized list) leaves no pointer-leave behind, so a pending open would fire
-  // from a detached trigger.
-  useEffect(() => cancel, [cancel]);
+  // Cancels on unmount AND whenever the target changes: `cancel` is stable, so depending on it alone
+  // let a timer armed for the previous contact fire the stale `open` after the row was recycled or
+  // re-pointed at another actor.
+  useEffect(() => cancel, [cancel, open, enabled]);
 
   return { start, cancel };
 };

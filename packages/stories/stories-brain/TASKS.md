@@ -127,6 +127,20 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       for all of them. Suspects: the URI→`EID.tryParse` of a freshly added object, or the story's
       `useQuery` not seeing the seeds. The story's play test therefore asserts only that the list
       renders. NEXT: log the lookup map inside `useContactLookup`.
+- [ ] **Starred virtual folder in the navtree** (requested 2026-08-13) — add a mailbox child node in
+      the app graph (beside `All Mail` / `Sent` / `Drafts` / `Subscriptions`) that opens the mailbox
+      with a starred filter. The pieces exist: those siblings are graph nodes carrying a
+      `properties.filter` / `systemTag` that `MailboxArticle` reads, and starred membership already
+      lives in the mailbox tag index (`SystemTags.systemTagKey('starred')`), so this is a node plus a
+      filter, not new query machinery.
+- [ ] **ConversationStack avatar has no contact affordance** (reported 2026-08-13) — the message tile
+      renders a bare `Avatar`, so the popover/create mechanism the `Row.Person` surfaces got is absent
+      in `MessageArticle`. Swap it for the exported `ContactAvatar` and host `ContactPreview` in the
+      story.
+- [ ] **`useCardHover` target-change regression test** — the cleanup now also runs when `open`/
+      `enabled` change (a timer armed for the previous contact could fire a stale `open`), but the test
+      CodeRabbit asked for is not written; it needs the hook exported from `Row.tsx` or a story-level
+      driver.
 - [ ] **MessageArticle conversation menu actions** (requested 2026-08-12) — add per-message menu items
       to (a) create a Project from the message, and (b) run enhanced extraction on the sender (image +
       Organization). (a) reuses `ProjectOperation.CreateTrackingProject` (the operation exists; PLAN.md
