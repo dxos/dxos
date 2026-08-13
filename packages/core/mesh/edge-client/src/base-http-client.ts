@@ -72,7 +72,7 @@ export abstract class BaseHttpClient {
   protected readonly _clientTag: string | undefined;
   protected readonly _apiKey: string | undefined;
   protected _edgeIdentity: EdgeIdentity | undefined;
-  /** Auth header cached until it goes stale (see `_authRefreshAt`) or a 401 replaces it. */
+  /** Auth header cached until it goes stale (see `_authHeaderIsStale`) or a 401 replaces it. */
   protected _authHeader: string | undefined;
   /** When the current `_authHeader` was signed; with the TTL below it decides proactive refresh. */
   private _authAcquiredAt: number | undefined;
