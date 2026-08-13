@@ -299,3 +299,29 @@ Session scratchpad (ephemeral, cloud sandbox): `proto/probe.mjs` (semantics), `b
 scaling), `spike.mjs` (activation-graph port), `wrapper-spike.mjs` (id-keyed wrapper + codec),
 `granular2.mjs` (granular atoms correctness+perf), `hybrid.mjs` (hot-path atoms), `mini/debug/
 bisect.mjs` (footgun isolation). Re-create from DESIGN if needed — all <100 lines each.
+
+## Implementation (landed 2026-08-13)
+
+Phases 1-6 are implemented on `claude/replace-dxos-graph-effect-axwnr2`. Deltas from the design
+above, all deliberate:
+
+- **One model, one registry.** `ReadonlyGraphModel`/`ReactiveGraphModel` collapsed into
+  `AbstractGraphModel`; every model is reactive and constructors take `{ registry, graph, change }`.
+- **Node slots carry `Option`** in `@dxos/graph` itself (not only in app-graph), so an edge may
+  precede its endpoints in every model. This made the app-graph consolidation a thin layer.
+- **Snapshot, not `endMutation`.** `graph`/`nodes`/`edges` encode the schema shape from the
+  working graph, memoized per version — the double-clone snapshot API was never needed.
+- **Adjacency index** (`outgoing`/`incoming`, rebuilt per version) lives in the core rather than
+  app-graph, and `filterEdges` uses it when anchored on an endpoint.
+- **Backing stores** use `change` + `sync()` rather than a bespoke adapter: mutations mirror into
+  the ECHO arrays with minimal ops, and `sync()` rebuilds only on structural divergence. The React
+  containers own the `Obj.subscribe` lifecycle, keeping `@dxos/graph` free of an ECHO dependency.
+- **app-graph** keeps its exact public API; `_node`/`_edges` became derived views over the model,
+  with relation in `type` and sort position in edge `data.order`, and a per-node set of relation
+  keys so an emptied relation still reports `[]` (the old writable-record behavior).
+- **Latent bug fixed**: the old `addEdge` duplicate check tested the _node_ index with an _edge_
+  id, so colliding parallel-edge ids went unnoticed. Conductor's generated edge ids now include
+  the port pair.
+
+Known follow-ups are tracked in TASKS.md; the notable one is `explore`, whose throwaway-registry
+isolation no longer holds under a single store (no production callers).
