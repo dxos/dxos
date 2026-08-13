@@ -106,6 +106,36 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       process-mailbox) deleted. Tests: `selection.test.ts` (real junk addresses, individuals incl.
       plus-addressing, header-only denial, prefix-vs-equality) and a new `contact-extractor.test.ts`
       at the actual bug site; 6 of them fail without the fix.
+- [x] **Whole-conversation summarization (thread-scoped input)** — `SummarizeMailbox` now summarizes a
+      THREAD per LLM call, not a message: `groupThreads` groups by `threadId` (a message without one is
+      its own conversation, NOT part of a `null` group), the prompt carries the exchange as a
+      transcript oldest-first (trimmed from the FRONT when over budget, since a summary states where
+      things now stand), and the annotation is filed under the thread's NEWEST message — which is what
+      makes a later reply invalidate it and trigger re-summarization. Contact gate now qualifies the
+      whole thread if any message's sender is known. Deterministic tests in `summarize-threads.test.ts`
+      (5); the model-fixture test is tagged `model-fixture` and SKIPPED here, so its recordings still
+      need regenerating for the new prompt (`regenerate-model-fixture` skill, needs a key).
+- [ ] **`dx-anchor` DXN links + task extraction in summaries** — the remaining two parts of the
+      summarization work (entity links to Person/Organization, and a markdown task list at the foot of
+      the summary). Not started.
+- [ ] **List-level contact lookup does not resolve** (open, found 2026-08-12) — `InboxStack` gained a
+      `db` prop → `useContactLookup` (ONE `Person` query for the whole list, passed to tiles as
+      `getContact`, so a list costs one query rather than a hook per row) and `ContactAvatar` was
+      factored out of `Row.Person` so list tiles share the hover/create treatment. In the
+      `InboxStack` `Spec` story the seeds ARE created (18 senders, every other one seeded, flushed with
+      `{ indexes: true }`) but every avatar still renders as unknown, so `getContact` returns undefined
+      for all of them. Suspects: the URI→`EID.tryParse` of a freshly added object, or the story's
+      `useQuery` not seeing the seeds. The story's play test therefore asserts only that the list
+      renders. NEXT: log the lookup map inside `useContactLookup`.
+- [ ] **MessageArticle conversation menu actions** (requested 2026-08-12) — add per-message menu items
+      to (a) create a Project from the message, and (b) run enhanced extraction on the sender (image +
+      Organization). (a) reuses `ProjectOperation.CreateTrackingProject` (the operation exists; PLAN.md
+      deliverable 3's form is still unbuilt); (b) is the same research + `EnrichImages` path as the
+      hover-enrichment item below. Menu is built in `ConversationStack`'s `useMessageActions`.
+- [ ] **ConversationStack story: popovers + unknown actors** (requested 2026-08-12) — the
+      `ConversationStack` `Default` story should (a) host `ContactPreview` so DXN links in message
+      content open popovers, (b) give the message avatar the same hover/create mechanism as
+      `Row.Person` (use the extracted `ContactAvatar`), and (c) seed only 50% of actors as Persons.
 - [ ] **Enhanced (LLM) enrichment from the hover affordance** (requested 2026-08-12) — hovering a
       Person/Organization icon should also offer the AGENTIC enrichment, not just the deterministic
       create: run the research operation to create/update the object's researched fields AND fetch its

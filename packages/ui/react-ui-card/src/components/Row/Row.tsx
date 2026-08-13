@@ -232,9 +232,15 @@ type RowPersonProps = {
   /**
    * Resolving the actor's contact costs a query hook, so passing `db` is what opts a row into the
    * interactive avatar (hover card / create contact). Omit it in virtualized list tiles, which get the
-   * hook-free static avatar instead.
+   * hook-free static avatar instead — or give them {@link RowPersonProps.getContact}.
    */
   db?: Database.Database;
+  /**
+   * Pre-resolved contact lookup, for a LIST that resolves every row's contact from one query of its
+   * own: passing this makes the row interactive without the per-row hook `db` implies. Returning
+   * `undefined` means "no contact" (the create affordance), not "unknown yet".
+   */
+  getContact?: (actor: Actor.Actor) => EID.EID | undefined;
   onContactCreate?: (actor: Actor.Actor) => void;
   /** Render a trailing remove button (e.g. attendee rows in the editable event header). */
   onRemove?: () => void;
@@ -263,9 +269,23 @@ const PersonAvatarRow = ({ actor, onClick }: Pick<RowPersonProps, 'actor' | 'onC
  * the same. Separate from {@link PersonAvatarRow} only because resolving a contact costs a query hook
  * per row: a virtualized list keeps the static variant.
  */
-const PersonContactRow = ({ actor, role, db, onContactCreate, onRemove, onClick }: RowPersonProps) => {
+export type ContactAvatarProps = Pick<RowPersonProps, 'actor' | 'role' | 'db' | 'getContact' | 'onContactCreate'> & {
+  onClick?: (event: MouseEvent) => void;
+};
+
+/**
+ * The actor's avatar, wired to their contact: hovering opens that Person's card, and when the space
+ * has no Person for the address the avatar gives way to a create-contact button (a click, never the
+ * hover, since hovering must not write to the space).
+ *
+ * Exported because the same treatment belongs to every surface showing a person — `Row.Person`'s
+ * gutter, but also list tiles that lay their rows out themselves.
+ */
+export const ContactAvatar = ({ actor, role, db, getContact, onContactCreate, onClick }: ContactAvatarProps) => {
   const { t } = useTranslation(translationKey);
-  const contactDXN = useActorContact(db, actor);
+  // Unconditional hook, but a `getContact` caller passes no `db`, so it runs no query.
+  const resolved = useActorContact(getContact ? undefined : db, actor);
+  const contactDXN = getContact ? getContact(actor) : resolved;
   const anchorRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -283,41 +303,57 @@ const PersonContactRow = ({ actor, role, db, onContactCreate, onRemove, onClick 
 
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 
-  // The button replaces the avatar in place, so the row's gutter width does not change on hover.
+  // The button replaces the avatar in place, so the gutter width does not change on hover.
   const showCreate = !contactDXN && hovered && !!onContactCreate;
+
+  return (
+    // `grid place-items-center`: a plain block wrapper takes its line box (30px for a 24px avatar),
+    // which knocked the avatar off the gutter's centre. Pointer only when hovering does something.
+    <div
+      ref={anchorRef}
+      className={mx('grid place-items-center', contactDXN && 'cursor-pointer')}
+      data-testid='row.contact-avatar'
+      onPointerEnter={() => {
+        setHovered(true);
+        startHover();
+      }}
+      onPointerLeave={() => {
+        setHovered(false);
+        cancelHover();
+      }}
+    >
+      {showCreate ? (
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--user-circle-plus--regular'
+          size={5}
+          label={t('create-contact.label')}
+          onClick={handleContactCreate}
+        />
+      ) : (
+        <Avatar actor={actor} onClick={onClick} />
+      )}
+    </div>
+  );
+};
+
+ContactAvatar.displayName = 'ContactAvatar';
+
+const PersonContactRow = ({ actor, role, db, getContact, onContactCreate, onRemove, onClick }: RowPersonProps) => {
+  const { t } = useTranslation(translationKey);
 
   return (
     <Card.Row>
       <Card.Block>
-        {/* `grid place-items-center`: a plain block wrapper takes its line box (30px for a 24px
-            avatar), which knocked the avatar off the gutter's centre. */}
-        <div
-          ref={anchorRef}
-          // Pointer only when hovering does something: a resolved contact opens its card.
-          className={mx('grid place-items-center', contactDXN && 'cursor-pointer')}
-          data-testid='row.contact-avatar'
-          onPointerEnter={() => {
-            setHovered(true);
-            startHover();
-          }}
-          onPointerLeave={() => {
-            setHovered(false);
-            cancelHover();
-          }}
-        >
-          {showCreate ? (
-            <IconButton
-              variant='ghost'
-              iconOnly
-              icon='ph--user-circle-plus--regular'
-              size={5}
-              label={t('create-contact.label')}
-              onClick={handleContactCreate}
-            />
-          ) : (
-            <Avatar actor={actor} onClick={onClick} />
-          )}
-        </div>
+        <ContactAvatar
+          actor={actor}
+          role={role}
+          db={db}
+          getContact={getContact}
+          onContactCreate={onContactCreate}
+          onClick={onClick}
+        />
       </Card.Block>
       <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
       {onRemove && (
@@ -337,7 +373,7 @@ const PersonContactRow = ({ actor, role, db, onContactCreate, onRemove, onClick 
 
 /** A Card.Row rendering a person (sender, recipient, attendee). */
 const RowPerson = ({ onClick, ...props }: RowPersonProps) =>
-  props.db ? (
+  props.db || props.getContact ? (
     <PersonContactRow {...props} onClick={onClick} />
   ) : (
     <PersonAvatarRow actor={props.actor} onClick={onClick} />
