@@ -65,6 +65,25 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       always worked but was only visible in the R0 popover — never as a meter in the panel itself.
       `ProgressGenerator` now renders its own `ProgressMeter` while running, with a `Progress` play
       test in `SpaceGenerator.stories.tsx` (start → meter appears, cancel → meter goes).
+- [ ] **One pipeline trigger, not two** (user decision 2026-08-12) — the mailbox toolbar shows both
+      `Enrich` and `Process`. `ProcessMailbox` is the earlier walking skeleton (a `log-title` stage
+      proving the cursor machinery, PR #12538); `EnrichMailbox` is the real cascade and each tier
+      keeps its own cursor, so the skeleton's paging is already covered. Collapse to `Enrich` alone:
+      drop the `process` toolbar entry from `app-graph-builder.ts` (keep or delete the operation +
+      `ResetProcessCursor` + routine template as a follow-on decision), and make sure the statusbar
+      still reads `#enrich`.
+- [ ] **`AiModelNotAvailableError` breaks the classify tier when the assistant is not up** — the
+      resolver for `com.anthropic.model.claude-haiku-4-5.default` comes from plugin-assistant's
+      `edge-model-resolver` (activates on `AssistantEvents.Start`, needs an Anthropic client), so a
+      cascade run before that lands fails the tier outright and skips summarize. plugin-inbox already
+      has `operations/extractor/ai-gate.ts#isAiServiceUnavailable` for this case in the extractor
+      path — the cascade should use it: report the tier as SKIPPED with an "assistant not ready"
+      status rather than FAILED, and ideally disable the AI tiers in the toolbar until a resolver
+      exists.
+- [ ] **Mailbox article often shows only one page of messages** (regression, ~2026-08-05) — the
+      list stops after the first page instead of paging on scroll; `usePagination` in
+      `MailboxArticle.tsx` is the suspect. Bisect against the week's commits to that file and the
+      `InboxStack` virtualization.
 - [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
 - [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
