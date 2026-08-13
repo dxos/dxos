@@ -50,18 +50,19 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       matches only untagged cursors; (2) `runFactPipeline` streamed in feed order, so a newest-first
       feed (archive import) advanced the cursor past everything after one message — messages are now
       sorted ascending. Regression tests for both.
-- [ ] **No progress meter in the app for `#sync` or `#enrich`** (reported 2026-08-12, OPEN) — the
-      MailboxArticle statusbar stays empty during both runs, though the console shows the cascade
-      running. RULED OUT so far: the article/hook/key-derivation half — the new `MailboxArticle`
-      `Progress` story registers a monitor under `createEnrichProgressKey` and the meter renders
-      (play test green); and the producer/consumer URI-form mismatch theory (in node the default
-      `Obj.getURI` form IS the absolute one), though every progress key is now pinned to
-      `{ prefer: 'absolute' }` with a regression test (`InboxOperation.test.ts`) since a
-      hydration-dependent key is a latent bug either way. REMAINING SUSPECTS, all producer-side:
-      the `Trace.StatusUpdate` events from a scheduled operation not reaching plugin-progress's
-      trace sink in the app runtime; ProgressPlugin present but its sink not merged for locally
-      scheduled processes; or sync emitting from the edge without the broadcast path. Next step is a
-      live probe (composer-debug port) or a temporary log in `createProgressTraceSink.write`.
+- [x] **No progress meter in the app for `#sync` or `#enrich`** — ROOT CAUSE, found by driving the
+      live app over the debug port: the process-manager runtime SNAPSHOTTED `Capabilities.TraceSink`
+      when it was built (`process-manager-capability.ts`), and plugin-progress contributes its
+      progress adapter from an on-demand module with no activation event, so that sink landed after
+      the snapshot and was silently dropped. Instrumentation proved both halves: the operation wrote
+      `status.update` (386 of them for one `ExtractSubscriptions` run) and the progress sink's `write`
+      was never called, so `ProgressRegistry.register` never ran and NO monitor existed for any UI to
+      read — nothing to do with plugin-inbox or the keys. FIX: sinks are resolved per write (instances
+      cached per factory, since the progress adapter holds monitor + tombstone state); regression test
+      in `process-manager-capability.test.ts` fails without it. Verified live: the same run then wrote
+      386 messages into the sink and registered `echo://…#subscriptions`. NOTE the sibling gotcha
+      found en route: plugin-debug's "Start test progress" registers DIRECTLY on the registry, so it
+      always worked but is only visible in the R0 popover — never as a statusbar meter.
 - [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
 - [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /

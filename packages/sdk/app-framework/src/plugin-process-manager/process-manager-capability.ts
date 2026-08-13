@@ -86,11 +86,10 @@ export default Capability.makeModule(
       },
     );
     yield* Effect.addFinalizer(() => Effect.sync(cancelLayerSpecWatch));
-    const traceSinkFactories = traceSinkContributions.get();
     // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
     const remoteTraceMonitors = remoteTraceMonitorContributions.get();
 
-    log.info('setup process manager', { traceSinkFactories });
+    log.info('setup process manager', { traceSinks: traceSinkContributions.get().length });
 
     // Forward reference to `ProcessManager.ProcessManagerService`. The runtime
     // that owns the manager depends transitively on `ServiceResolver` (which is
@@ -137,8 +136,25 @@ export default Capability.makeModule(
     // reactive view over contributions is complete at boot — no demand pull on a miss.
     const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
 
-    const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));
-    const mergedTraceSink = Trace.mergeSinks(traceSinks);
+    // Resolved per write, NOT snapshotted like the layer stack: a sink is stateless and joins the
+    // chain harmlessly at any time, whereas a LayerSpec bakes into the runtime. plugin-progress
+    // contributes its sink from an on-demand module with no activation event, so it lands after this
+    // module — a boot snapshot dropped it, and every operation's `status.update` reached the durable
+    // sink while the progress meters stayed empty (no monitor was ever registered).
+    // Instances are cached per factory so a sink holding state across writes (the progress adapter's
+    // monitor map, its cancel tombstones) is not rebuilt underneath itself.
+    const sinkInstances = new Map<Capabilities.TraceSinkFactory, Trace.Sink>();
+    const resolveTraceSinks = (): Trace.Sink[] =>
+      traceSinkContributions.get().map((factory) => {
+        const existing = sinkInstances.get(factory);
+        if (existing) {
+          return existing;
+        }
+        const sink = factory({ resolver: serviceResolver });
+        sinkInstances.set(factory, sink);
+        return sink;
+      });
+    const mergedTraceSink: Trace.Sink = { write: (message) => Trace.mergeSinks(resolveTraceSinks()).write(message) };
 
     // Base services required by ProcessManager and the operation invoker.
     // Sensible defaults are provided here; plugins that want alternative
