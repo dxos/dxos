@@ -429,9 +429,23 @@ generalize now with mailbox as instance #1.
       operation DXN. Free to rename because the cascade's changeset is still pending. - `MAILBOX_TIER_ORDER` deleted — a tier selects WHICH processors run, the edges decide order. - 2 tests cover the seam itself: a third-party processor contributed FIRST but declared
       `after: ['subscriptions']` runs last (so ordering is the topology, not contribution order), and
       a contributor shipping a cycle costs only itself while everything else still runs.
-- [ ] **Move `AnalyzeMailbox` to plugin-brain**; make `CrmOperation.ProcessMailbox` a contributed
-      processor rather than a rival toolbar button. plugin-inbox then drops `@dxos/pipeline-rdf`, and
-      the missing-`FactStore` case becomes structurally impossible rather than merely handled.
+- [x] **Ownership move, part 1 (D5a)** — plugin-brain now contributes the `analyze` PROCESSOR
+      (`capabilities/mailbox-processor.ts`) alongside the `FactStore` layer it needs, so a deployment
+      without brain has no analyze pass rather than one that dies resolving a service nobody provided:
+      the missing-`FactStore` case is now structurally impossible, with the uniform gate as backstop.
+      plugin-crm's cursored pipeline became the `crm` processor declared `after: ['contacts']`,
+      consuming inbox's contact extraction instead of competing with it. Both menu items are gone;
+      `Find images` stays, being space-wide rather than a feed pass. The scan tests declare their own
+      analyze processor now — contributing it WITHOUT a FactStore is precisely the misconfiguration
+      the gate absorbs, so the test exercises the mechanism instead of a real accident.
+- [ ] **Ownership move, part 2 (D5b) — NEEDS A DECISION.** Relocating the `AnalyzeMailbox` operation
+      DEFINITION (not just the contribution) to plugin-brain is what would let plugin-inbox drop
+      `@dxos/pipeline-rdf`, since the `FactStore` import is in the `services` array on the definition.
+      BLOCKER: unlike `ScanMailbox`, this DXN is RELEASED — it landed 2026-07-10 in #12153 and
+      plugin-inbox is published at 0.11.1 — so moving it orphans any persisted routine or trigger
+      bound to `org.dxos.plugin.inbox.operation.analyzeMailbox`. `run-routine.ts:52` does
+      `Database.load(spec.runnable)`, so a dangling ref FAILS rather than degrading. Options: accept
+      the break pre-1.0; keep a deprecated forwarding alias in inbox; or add a key-migration step.
 - [ ] **Failure policy from the DAG edges** (D4) — buildable now that the topology has landed, but not
       built: `continueOnError` still aborts in LIST order, so a failing `classify` strands whatever
       happens to sit behind it even when nothing connects them. Intended: a failed processor fails its

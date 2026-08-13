@@ -20,6 +20,10 @@ import { InboxCapabilities, InboxOperation } from '#types';
  * The `after` edges encode the cascade's real contract — classification consults the Person objects
  * the contacts pass creates, so a known sender is tagged personal and never billed to the model. The
  * cost tiers are a filter and a report label; the edges are what actually orders the run.
+ *
+ * The `analyze` pass is deliberately NOT here: it needs a `FactStore` only plugin-brain provides, so
+ * brain contributes the processor and the layer together and a deployment without brain simply has no
+ * analyze pass to run.
  */
 export const inboxMailboxProcessors: readonly InboxCapabilities.MailboxProcessor[] = [
   {
@@ -59,17 +63,6 @@ export const inboxMailboxProcessors: readonly InboxCapabilities.MailboxProcessor
     createInvocation: (mailbox, { model }) => ({
       operation: InboxOperation.SummarizeMailbox,
       input: { mailbox: Ref.make(mailbox), model },
-    }),
-  },
-  {
-    // Stays here until it moves to plugin-brain with the FactStore layer it needs; contributing
-    // it through the seam is what makes that move a relocation rather than a redesign.
-    id: 'analyze',
-    tier: 'analyze',
-    after: ['summarize'],
-    createInvocation: (mailbox, { model, provider, strict }) => ({
-      operation: InboxOperation.AnalyzeMailbox,
-      input: { mailbox: Ref.make(mailbox), model, provider, strict },
     }),
   },
 ];

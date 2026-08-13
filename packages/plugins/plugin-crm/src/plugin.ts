@@ -9,6 +9,7 @@ import {
   AppGraphBuilder,
   AutomationTemplates,
   MailboxAction,
+  MailboxProcessor,
   OperationHandler,
   ProjectTemplates,
   Schema,
@@ -30,6 +31,7 @@ export const CrmPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AutomationTemplates),
   // Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu.
   Plugin.addModule(MailboxAction),
+  Plugin.addModule(MailboxProcessor),
   Plugin.addModule(SenderAction),
   Plugin.addModule(ProjectTemplates),
   Plugin.addModule(

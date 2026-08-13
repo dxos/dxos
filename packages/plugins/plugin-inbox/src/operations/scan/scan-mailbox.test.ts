@@ -64,6 +64,24 @@ const TestLayer = makeTestLayer();
 const ME = ['me@example.com'];
 
 /**
+ * The analyze pass as plugin-brain contributes it. Declared HERE rather than imported, because
+ * plugin-inbox deliberately no longer ships it — brain owns it alongside the `FactStore` layer it
+ * needs. Contributing it without that layer is exactly the misconfiguration the precondition gate
+ * exists to absorb, which is what the tests below use it for.
+ */
+const analyzeProcessor: InboxCapabilities.MailboxProcessor = {
+  id: 'analyze',
+  tier: 'analyze',
+  after: ['summarize'],
+  createInvocation: (mailbox, { model, provider, strict }) => ({
+    operation: InboxOperation.AnalyzeMailbox,
+    input: { mailbox: Ref.make(mailbox), model, provider, strict },
+  }),
+};
+
+const withAnalyze = [...inboxMailboxProcessors, analyzeProcessor];
+
+/**
  * The processors plugin-inbox itself contributes, resolved through the real capability manager — the
  * cascade reads only contributions, so a test that stubbed a plan instead would exercise a path the
  * app never takes.
@@ -221,7 +239,7 @@ describe('ScanMailbox cascade', () => {
         // The deterministic tier's writes are intact.
         expect((yield* Database.query(Filter.type(Person.Person)).run).length).toBe(1);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(makeTestLayer(withAnalyze)),
       TestHelpers.provideTestContext,
     ),
   );
@@ -251,7 +269,7 @@ describe('ScanMailbox cascade', () => {
         // The deterministic tier's writes survive the skip.
         expect((yield* Database.query(Filter.type(Person.Person)).run).length).toBe(1);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(makeTestLayer(withAnalyze)),
       TestHelpers.provideTestContext,
     ),
   );
@@ -362,7 +380,7 @@ describe('ScanMailbox cascade', () => {
           error: 'upstream stage failed',
         });
       },
-      Effect.provide(TestLayer),
+      Effect.provide(makeTestLayer(withAnalyze)),
       TestHelpers.provideTestContext,
     ),
   );
