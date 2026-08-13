@@ -74,6 +74,8 @@ Work the 42 curated `unresolved` findings from `.agents/reviews/50877ea571/RESOL
       (`automerge-host.ts:188`) instead of the no-flush sleep. Ids: 1420, 1803 (echo-client
       repo-proxy/database), 1986, 2092, 2107, 2159 (echo-host automerge-repo/subduction/documents-synchronizer).
 - [ ] **Trivial-assertion + processing wait** — 2158 (documents-synchronizer; assertion is `>= 0`, always true).
+- [ ] **Loader-discovery wait** — 1512 (echo-client strong-deps-stall; `sleep(200)` recurs 6× to let a
+      link change round-trip before the loader probes; needs a loader-state signal / query subscription).
 - [ ] **Microtask phase-sequencing** — 2136 (collection-synchronizer; setup phases have no exposed signal).
 - [ ] **Close-while-reading races** — 279, 281 (feed-store; needs FeedQueue close-event semantics).
 - [ ] **Ordering-dependent** — 3376 (blade-runner readable-muxer pushStream spacing).
