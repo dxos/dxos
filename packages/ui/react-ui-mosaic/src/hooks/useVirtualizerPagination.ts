@@ -10,14 +10,39 @@ import { type GetId } from '@dxos/react-ui-dnd';
 /** Rows from either loaded edge at which the next/previous page is requested. */
 const DEFAULT_THRESHOLD = 12;
 
+/**
+ * The viewport's extent along the SCROLL axis: a horizontal stack measures width, so reading height
+ * unconditionally would judge a horizontal list against the wrong dimension.
+ */
+const viewportExtent = (virtualizer: Virtualizer<any, any>): number => {
+  const element = virtualizer.scrollElement;
+  if (!element) {
+    return 0;
+  }
+  // Optional: the hook's own tests fake only the fields it reads, and a vertical stack is the default.
+  return virtualizer.options?.horizontal ? element.clientWidth : element.clientHeight;
+};
+
 /** Index at/above which `getNext` fires; small windows clamp to the last row only. */
 const nextPageIndexThreshold = (itemCount: number, threshold: number): number =>
   itemCount > threshold ? itemCount - threshold : itemCount - 1;
 
+/**
+ * True when the loaded window is shorter than the viewport — nothing to scroll, so the user can
+ * never arm the scroll-based triggers. The window must be extended anyway or the list is stuck on
+ * whatever the first page happened to be (a mailbox whose 10 tall rows fit the plank exactly showed
+ * one page forever). Bounded by `usePagination`'s own exhaustion check: `getNext` no-ops once a page
+ * comes back short, so a list that simply has nothing more does not spin.
+ */
+const isUnderfilled = (virtualizer: Virtualizer<any, any>): boolean => {
+  const viewport = viewportExtent(virtualizer);
+  return viewport > 0 && virtualizer.getTotalSize() <= viewport + 1;
+};
+
 /** True when loaded content exceeds the scroll viewport (user can actually scroll). */
 const isScrollable = (virtualizer: Virtualizer<any, any>): boolean => {
-  const viewportHeight = virtualizer.scrollElement?.clientHeight ?? 0;
-  return viewportHeight > 0 && virtualizer.getTotalSize() > viewportHeight + 1;
+  const viewport = viewportExtent(virtualizer);
+  return viewport > 0 && virtualizer.getTotalSize() > viewport + 1;
 };
 
 export type VirtualizerPaginationController = {
@@ -153,6 +178,7 @@ type EvaluateTriggersOptions = {
 const evaluateTriggers = ({ virtualizer, items, pagination, itemCount, threshold, state }: EvaluateTriggersOptions) => {
   const geometry = readEdgeGeometry(virtualizer);
   const scrollable = isScrollable(virtualizer);
+  const underfilled = isUnderfilled(virtualizer);
   const smallWindow = itemCount <= threshold;
   const nearBottom = isNearBottomEdge(geometry, itemCount, threshold);
   const nearTop = isNearTopEdge(geometry, threshold);
@@ -167,9 +193,9 @@ const evaluateTriggers = ({ virtualizer, items, pagination, itemCount, threshold
   const triggerNext =
     !!pagination?.getNext &&
     !pagination.isLoading &&
-    scrollable &&
-    nearBottom &&
-    (!smallWindow || geometry.scrollOffset > 0) &&
+    // An underfilled window is the bootstrap case: it cannot be scrolled, so requiring a scroll (or
+    // a non-zero offset for a small window) would leave it stuck on the first page.
+    (underfilled || (scrollable && nearBottom && (!smallWindow || geometry.scrollOffset > 0))) &&
     canRequestNext(state, geometry);
   const triggerPrevious =
     !!pagination?.getPrevious &&

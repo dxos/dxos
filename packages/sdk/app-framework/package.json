@@ -159,6 +159,7 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/storybook-addon-logger": "workspace:*",

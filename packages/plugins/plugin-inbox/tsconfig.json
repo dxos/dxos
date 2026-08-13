@@ -173,6 +173,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../../ui/ui-types"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -189,6 +192,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-progress"
     },
     {
       "path": "../plugin-routine"
