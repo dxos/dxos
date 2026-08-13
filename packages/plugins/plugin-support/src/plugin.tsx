@@ -12,6 +12,7 @@ import {
   OperationHandler,
   ReactRoot,
   ReactSurface,
+  Schema,
   SkillDefinition,
   SupportSettings,
 } from '#capabilities';
@@ -29,7 +30,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(HelpState),

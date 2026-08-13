@@ -36,6 +36,7 @@ export const RegistrySync = Capability.lazyModule(
   },
   () => import('./registry-sync'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const Templates = Capability.lazyModule(
   'Templates',
   { provides: [RoutineCapabilities.Template] },

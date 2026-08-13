@@ -11,6 +11,7 @@ import {
   CreateObject,
   OperationHandler,
   ReactSurface,
+  Schema,
   SkillDefinition,
 } from '#capabilities';
 import { translations } from '#translations';
@@ -21,7 +22,7 @@ import { meta } from './meta';
 
 export const IbkrPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(CreateObject),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),

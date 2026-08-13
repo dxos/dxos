@@ -21,6 +21,7 @@ import {
   OperationHandler,
   ReactSurface,
   ReviewState,
+  Schema,
   SkillDefinition,
   UndoMappings,
 } from '#capabilities';
@@ -47,7 +48,7 @@ export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(UndoMappings),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(HistorySurface),
   Plugin.addModule(AppCapability.translations([...translations, ...threadTranslations])),

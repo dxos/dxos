@@ -11,6 +11,7 @@ import {
   Migrations,
   OperationHandler,
   ReactSurface,
+  Schema,
   SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -24,7 +25,7 @@ export const IllustratorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CommentConfig),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

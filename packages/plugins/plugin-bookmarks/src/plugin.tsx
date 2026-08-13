@@ -5,7 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { CommentConfig, OperationHandler, PageActionProvider, ReactSurface } from '#capabilities';
+import { CommentConfig, OperationHandler, PageActionProvider, ReactSurface, Schema } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -14,7 +14,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BookmarksPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CommentConfig),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PageActionProvider),
   Plugin.addModule(ReactSurface),

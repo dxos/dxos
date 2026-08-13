@@ -14,6 +14,7 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { FileCapabilities, FileEvents } from '#types';
 
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const EdgeBackend = Capability.lazyModule(

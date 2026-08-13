@@ -34,3 +34,4 @@ export const SampleSettings = AppCapability.settings(() => import('./settings'),
   activatesOn: ActivationEvents.Idle,
   provides: [SampleCapabilities.Settings],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
