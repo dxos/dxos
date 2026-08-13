@@ -1070,8 +1070,14 @@ const createConnectorWithRuntime = <TData, R>(
  * All callbacks must return Effects for dependency injection.
  * Effects may fail - errors are caught, logged, and the extension returns empty results.
  */
-export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity, R = never> = {
-  id: string;
+export type CreateTypeExtensionOptions<
+  T extends Type.AnyEntity = Type.AnyEntity,
+  R = never,
+  Id extends string = string,
+> = {
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    : Id;
   type: T;
   actions?: (
     object: Type.InstanceType<T>,
@@ -1091,11 +1097,13 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
  * The entity type is inferred from the schema type and works for both object and relation schemas.
  * Returns an Effect to allow callbacks to access services via dependency injection.
  */
-export const createTypeExtension = <T extends Type.AnyEntity, R = never>(
-  options: CreateTypeExtensionOptions<T, R>,
+export const createTypeExtension = <T extends Type.AnyEntity, R = never, const Id extends string = string>(
+  options: CreateTypeExtensionOptions<T, R, Id>,
 ): Effect.Effect<BuilderExtension[], never, R> => {
   const { id, type, actions, actionGroups, connector, relation, position } = options;
-  return createExtension<Type.InstanceType<T>, R>({
+  // `string` for the id: this forwards an already-validated value, so re-checking it here would
+  // reject the `Id` type parameter's error branch rather than the caller's literal.
+  return createExtension<Type.InstanceType<T>, R, string>({
     id,
     match: NodeMatcher.whenEchoType(type),
     actions,

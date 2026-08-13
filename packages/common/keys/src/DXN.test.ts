@@ -81,10 +81,23 @@ describe('DXN.Path', () => {
     // Must start with a letter — the id becomes a DXN path segment.
     expectTypeOf<DXN.Path<'1article'>>().toEqualTypeOf<never>();
     expectTypeOf<DXN.Path<''>>().toEqualTypeOf<never>();
+    // Any character the runtime regex excludes, not just the separators.
+    expectTypeOf<DXN.Path<'article/task'>>().toEqualTypeOf<never>();
+    expectTypeOf<DXN.Path<'article task'>>().toEqualTypeOf<never>();
+    expectTypeOf<DXN.Path<'article.task/set'>>().toEqualTypeOf<never>();
 
-    expect(['article.task-set', 'plugin-settings', 'plugin_settings', '1article', ''].some(DXN.isValidPath)).toBe(
-      false,
-    );
+    expect(
+      [
+        'article.task-set',
+        'plugin-settings',
+        'plugin_settings',
+        '1article',
+        '',
+        'article/task',
+        'article task',
+        'article.task/set',
+      ].some(DXN.isValidPath),
+    ).toBe(false);
   });
 
   test('passes a widened string through for the runtime to check', () => {

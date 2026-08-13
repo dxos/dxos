@@ -397,10 +397,9 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
 const VITEST_SUBCOMMAND = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
 const IS_VITEST_RUN = process.env.VITEST === 'true' && (VITEST_SUBCOMMAND === 'run' || process.argv.includes('--run'));
 
-// The Claude Code cloud sandbox ships an older Chromium than Playwright's pin (so the bundled path
-// is absent) and reaches the network only through a local proxy that resets Chromium's TLS 1.3
-// handshake. `e2ePreset` applies the same launch flags for e2e suites; these two browser-mode call
-// sites need them separately. Empty everywhere else, so real dev and CI runs are untouched.
+// The Claude Code cloud sandbox ships a Chromium older than Playwright's pin and proxies egress
+// through a gateway that resets Chromium's TLS 1.3 handshake, so browser mode cannot launch without
+// these; empty elsewhere, leaving dev and CI untouched.
 const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
   ? {
       launchOptions: {

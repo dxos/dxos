@@ -32,24 +32,28 @@ export type DXN = URI.URI & { readonly __DXN: unique symbol };
 
 type Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 
-/** The characters that break a camelCase segment in practice. */
-type Separator = '-' | '_';
+// prettier-ignore
+/** Every character the final group of {@link DXN_SPEC_REGEXP} excludes and a caller might plausibly type. */
+type Invalid =
+  | '-' | '_' | '/' | '\\' | ' ' | '\t' | '\n' | ':' | ';' | ',' | '.' | '#' | '?' | '@' | '!'
+  | '$' | '%' | '&' | '*' | '+' | '=' | '~' | '^' | '`' | "'" | '"' | '(' | ')' | '[' | ']'
+  | '{' | '}' | '<' | '>' | '|';
 
 /**
  * Compile-time validation of a single NSID segment in final position: alphanumeric with a leading
  * letter, per the final group of {@link DXN_SPEC_REGEXP}. Resolves to `T` when valid and `never`
  * otherwise.
  *
- * Deliberately a pattern check rather than a character-by-character walk, so an interpolated
- * segment (`` `item${number}` ``) is accepted rather than rejected for a placeholder the type
- * cannot evaluate. That makes it looser than the regex — a space or a slash passes — so the runtime
- * check stays the authority. A widened `string` passes through for the same reason.
+ * Matches on excluded characters rather than walking the string character by character, so an
+ * interpolated segment (`` `item${number}` ``) is accepted rather than rejected for a placeholder
+ * the type cannot evaluate — a walk cannot tell a placeholder from a bad character. A widened
+ * `string` passes through for the same reason, leaving both to the runtime check.
  */
 export type Segment<T extends string> = [string] extends [T]
   ? T
   : T extends ''
     ? never
-    : T extends `${string}${Separator}${string}`
+    : T extends `${string}${Invalid}${string}`
       ? never
       : T extends `${Digit}${string}`
         ? never
@@ -78,8 +82,8 @@ export type Path<T extends string> = [string] extends [T] ? T : [Segment<LastSeg
  * Whether a dotted name's final segment is a valid {@link Segment}. The runtime counterpart of
  * {@link Path}, and stricter: it requires every character of the final segment to be alphanumeric.
  *
- * @example Valid:   'about', 'integrationArticle', 'article.journal', 'org.dxos.type.task-set.article'
- * @example Invalid: 'integration-article', 'plugin-spec', 'article.task-set'
+ * @example Valid:   'about', 'integrationArticle', 'article.journal', 'org.dxos.type.task-set.article'.
+ * @example Invalid: 'integration-article', 'plugin-spec', 'article.task-set'.
  */
 export const isValidPath = (name: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(name.split('.').pop() ?? '');
 
