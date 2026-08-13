@@ -65,13 +65,11 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       always worked but was only visible in the R0 popover — never as a meter in the panel itself.
       `ProgressGenerator` now renders its own `ProgressMeter` while running, with a `Progress` play
       test in `SpaceGenerator.stories.tsx` (start → meter appears, cancel → meter goes).
-- [ ] **One pipeline trigger, not two** (user decision 2026-08-12) — the mailbox toolbar shows both
-      `Enrich` and `Process`. `ProcessMailbox` is the earlier walking skeleton (a `log-title` stage
-      proving the cursor machinery, PR #12538); `EnrichMailbox` is the real cascade and each tier
-      keeps its own cursor, so the skeleton's paging is already covered. Collapse to `Enrich` alone:
-      drop the `process` toolbar entry from `app-graph-builder.ts` (keep or delete the operation +
-      `ResetProcessCursor` + routine template as a follow-on decision), and make sure the statusbar
-      still reads `#enrich`.
+- [x] **One pipeline trigger** (user decision 2026-08-12) — `Enrich` is now the only pipeline button
+      on the mailbox toolbar. `ProcessMailbox` (the `log-title` walking skeleton from #12538) moved to
+      `disposition: ['list-item']` — context menu only, kept alongside `resetProcessCursor` because
+      that pair is how the cursor machinery is verified; delete both once the cascade has been
+      verified live end-to-end.
 - [x] **AI-unavailability is a skip, not a cascade failure** — `EnrichMailbox` now recognises both
       flavours ("no `AiService` in the stack" and "no resolver serves this model", the app's actual
       case) via `ai-gate.ts#isAiUnavailableCause` and reports that tier as SKIPPED with
