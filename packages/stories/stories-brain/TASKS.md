@@ -106,6 +106,18 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       process-mailbox) deleted. Tests: `selection.test.ts` (real junk addresses, individuals incl.
       plus-addressing, header-only denial, prefix-vs-equality) and a new `contact-extractor.test.ts`
       at the actual bug site; 6 of them fail without the fix.
+- [ ] **Enhanced (LLM) enrichment from the hover affordance** (requested 2026-08-12) — hovering a
+      Person/Organization icon should also offer the AGENTIC enrichment, not just the deterministic
+      create: run the research operation to create/update the object's researched fields AND fetch its
+      image. The pieces exist — `CrmOperation.ResearchPerson` / `ResearchOrganization`
+      (`plugin-crm/src/types/CrmOperation.ts:105,136`, which fill the object's own sections rather than
+      writing a separate document) and `CrmOperation.EnrichImages` / `AttachImage` (Gravatar/Clearbit +
+      favicon fallback through the SSRF/size/type-hardened path). Open questions to settle when
+      building: (1) one composite operation vs. invoking research + image separately from the UI;
+      (2) hover should not fire an LLM call on its own — the affordance appears on hover, the run is a
+      click; (3) progress/failure surfacing, since research is slow and `AiModelNotAvailable` must read
+      as "assistant not ready" (see the enrich-cascade gate). Builds on the hover affordance below and
+      shares its storybook.
 - [ ] **Avatar hover: contact card, or create-the-contact** (requested 2026-08-12) — hovering an
       actor's avatar should show that Person's card when a `Person` record exists, and otherwise an
       `ph--user-circle-plus--regular` IconButton that runs the contact extractor to create one
