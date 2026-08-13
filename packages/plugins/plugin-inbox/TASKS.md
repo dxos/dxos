@@ -174,7 +174,7 @@ Setup: storybook against the `@dxos/fixtures` mailbox corpus (391 real messages)
 - [ ] **D1** — Expand a message with a To header. Expect a row with a `ph--user--regular` icon in the
       first column, aligned with the tags/attachments rows.
 - [ ] **D2** — The row shows ONLY the address — `rich@braneframe.com`, never `"RICHARD S. BURDON"
-    <rich@braneframe.com>`.
+  <rich@braneframe.com>`.
 - [ ] **D3** — A multi-recipient header renders each address comma-separated.
 - [ ] **D4** — A message with no To header renders NO row (not an empty one).
 

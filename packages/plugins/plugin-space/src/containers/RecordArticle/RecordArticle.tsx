@@ -2,22 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
-import { Card, Icon, IconButton, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { Card, Icon, IconButton, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu } from '@dxos/react-ui-menu';
+import {
+  type ActionExecutor,
+  type ActionGraphProps,
+  Menu,
+  MenuBuilder,
+  graphActions,
+  isToolbarAction,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { useRelatedObjects } from '#hooks';
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
 
-export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
+export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { actions, onAction } = useMenuActions(attendableId);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
   // fall back to typename query which matches TypeSchema.typename.
   const db = Obj.getDatabase(subject);
@@ -40,8 +50,12 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root />
+      <Panel.Toolbar>
+        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
+        </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
@@ -122,6 +136,44 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
       </Card.Root>
     </Menu.Root>
   );
+};
+
+//
+// Hooks
+//
+
+/**
+ * Toolbar actions for the record, sourced from its own app-graph node (`disposition: 'toolbar'`).
+ *
+ * The record view is type-agnostic, so it must not know which actions a given type affords. Any plugin
+ * contributes them to the object's node instead — plugin-crm donates enrichment for `Person` /
+ * `Organization` — which keeps plugin-space free of a dependency on them and makes each action appear
+ * only for the types that declare it.
+ */
+const useMenuActions = (
+  attendableId?: string,
+): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
+  const { graph } = useAppGraph();
+  const runAction = useActionRunner();
+
+  const menuActions = useMenuBuilder(
+    (get): ActionGraphProps =>
+      attendableId
+        ? MenuBuilder.make()
+            .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+            .build()
+        : MenuBuilder.make().build(),
+    [graph, attendableId],
+  );
+
+  const onAction: ActionExecutor = useCallback(
+    (action) => {
+      void runAction(action, { caller: meta.profile.key });
+    },
+    [runAction],
+  );
+
+  return { actions: menuActions, onAction };
 };
 
 RecordArticle.displayName = 'RecordArticle';
