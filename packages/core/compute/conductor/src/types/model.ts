@@ -11,12 +11,7 @@ import { type MakeOptional } from '@dxos/util';
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './schema';
 
-export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
-  ComputeNode,
-  ComputeEdge,
-  ComputeGraphModel,
-  ComputeGraphBuilder
-> {
+export class ComputeGraphModel extends GraphModel.AbstractGraphModel<ComputeNode, ComputeEdge, ComputeGraphModel> {
   static create(graph?: Partial<GraphModel.Data<ComputeNode, ComputeEdge>>): ComputeGraphModel {
     return new ComputeGraphModel(
       Obj.make(ComputeGraph, {
@@ -38,10 +33,6 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
 
   get root() {
     return this._root;
-  }
-
-  override get builder() {
-    return new ComputeGraphBuilder(this);
   }
 
   override copy(graph?: Partial<GraphModel.Data<ComputeNode, ComputeEdge>>): ComputeGraphModel {
@@ -87,20 +78,5 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
 
     this.addEdge(edge);
     return edge;
-  }
-}
-
-class ComputeGraphBuilder extends GraphModel.AbstractBuilder<ComputeNode, ComputeEdge, ComputeGraphModel> {
-  createNode(props: Partial<ComputeNode>): this {
-    this.model.createNode(props);
-    return this;
-  }
-
-  createEdge(
-    source: { node: string | ComputeNode; property?: string },
-    target: { node: string | ComputeNode | ComputeGraph; property?: string },
-  ): this {
-    this.model.createEdge(source, target);
-    return this;
   }
 }

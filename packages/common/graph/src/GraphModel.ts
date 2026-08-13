@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Function from 'effect/Function';
 import * as EffectGraph from 'effect/Graph';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -84,8 +85,7 @@ export type Subscription<Node extends GraphNode.Any = GraphNode.Any, Edge extend
 export abstract class AbstractGraphModel<
   Node extends GraphNode.Any = GraphNode.Any,
   Edge extends GraphEdge.Any = GraphEdge.Any,
-  Model extends AbstractGraphModel<Node, Edge, Model, Builder> = any,
-  Builder extends AbstractBuilder<Node, Edge, Model> = AbstractBuilder<Node, Edge, Model>,
+  Model extends AbstractGraphModel<Node, Edge, Model> = any,
 > {
   readonly #registry: Registry.AtomRegistry;
   readonly #version: Atom.Writable<number>;
@@ -146,14 +146,183 @@ export abstract class AbstractGraphModel<
   }
 
   /**
-   * Allows chaining.
-   */
-  abstract get builder(): Builder;
-
-  /**
    * New model of the same kind, optionally seeded with the given graph.
    */
   abstract copy(graph?: Partial<Data<Node, Edge>>): Model;
+
+  /**
+   * Applies operations to the model, left to right.
+   */
+  pipe<A>(this: A): A;
+  pipe<A, B>(this: A, ab: (a: A) => B): B;
+  pipe<A, B, C>(this: A, ab: (a: A) => B, bc: (b: B) => C): C;
+  pipe<A, B, C, D>(this: A, ab: (a: A) => B, bc: (b: B) => C, cd: (c: C) => D): D;
+  pipe<A, B, C, D, E>(this: A, ab: (a: A) => B, bc: (b: B) => C, cd: (c: C) => D, de: (d: D) => E): E;
+  pipe<A, B, C, D, E, F>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+  ): F;
+  pipe<A, B, C, D, E, F, G>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+  ): G;
+  pipe<A, B, C, D, E, F, G, H>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+  ): H;
+  pipe<A, B, C, D, E, F, G, H, I>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+  ): I;
+  pipe<A, B, C, D, E, F, G, H, I, J>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+  ): J;
+  pipe<A, B, C, D, E, F, G, H, I, J, K>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+  ): K;
+  pipe<A, B, C, D, E, F, G, H, I, J, K, L>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+  ): L;
+  pipe<A, B, C, D, E, F, G, H, I, J, K, L, M>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+  ): M;
+  pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+  ): N;
+  pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+  ): O;
+  pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+  ): P;
+  pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q>(
+    this: A,
+    ab: (a: A) => B,
+    bc: (b: B) => C,
+    cd: (c: C) => D,
+    de: (d: D) => E,
+    ef: (e: E) => F,
+    fg: (f: F) => G,
+    gh: (g: G) => H,
+    hi: (h: H) => I,
+    ij: (i: I) => J,
+    jk: (j: J) => K,
+    kl: (k: K) => L,
+    lm: (l: L) => M,
+    mn: (m: M) => N,
+    no: (n: N) => O,
+    op: (o: O) => P,
+    pq: (p: P) => Q,
+  ): Q;
+  pipe(this: unknown, ...fns: readonly ((value: unknown) => unknown)[]): unknown {
+    return fns.reduce<unknown>((value, fn) => fn(value), this);
+  }
 
   [inspectCustom]() {
     return this.toJSON();
@@ -520,7 +689,7 @@ export abstract class AbstractGraphModel<
     return true;
   }
 
-  addGraph(graph: AbstractGraphModel<Node, Edge, any, any>): this {
+  addGraph(graph: AbstractGraphModel<Node, Edge, any>): this {
     return this.batch(() => {
       this.addNodes(graph.nodes);
       this.addEdges(graph.edges);
@@ -528,7 +697,7 @@ export abstract class AbstractGraphModel<
     });
   }
 
-  addGraphs(graphs: AbstractGraphModel<Node, Edge, any, any>[]): this {
+  addGraphs(graphs: AbstractGraphModel<Node, Edge, any>[]): this {
     return this.batch(() => {
       graphs.forEach((graph) => this.addGraph(graph));
       return this;
@@ -827,12 +996,31 @@ const removeInPlace = <T>(list: T[] | undefined, predicate: (value: T) => boolea
 };
 
 /**
+ * Basic model.
+ */
+export class GraphModel<
+  Node extends GraphNode.Any = GraphNode.Any,
+  Edge extends GraphEdge.Any = GraphEdge.Any,
+> extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>> {
+  override copy(graph?: Partial<Data<Node, Edge>>): GraphModel<Node, Edge> {
+    return new GraphModel<Node, Edge>({ registry: this.registry, graph });
+  }
+}
+
+export const make = <Node extends GraphNode.Any = GraphNode.Any, Edge extends GraphEdge.Any = GraphEdge.Any>(
+  options?: Options<Node, Edge>,
+): GraphModel<Node, Edge> => new GraphModel<Node, Edge>(options);
+
+/**
  * Chainable builder wrapper.
+ *
+ * Superseded by `model.pipe(...)` with the operations above; retained until the remaining
+ * chain-style call sites are converted.
  */
 export abstract class AbstractBuilder<
   Node extends GraphNode.Any,
   Edge extends GraphEdge.Any,
-  Model extends AbstractGraphModel<Node, Edge, any, any>,
+  Model extends AbstractGraphModel<Node, Edge, any>,
 > {
   constructor(protected readonly _model: Model) {}
 
@@ -871,22 +1059,6 @@ export abstract class AbstractBuilder<
 }
 
 /**
- * Basic model.
- */
-export class GraphModel<
-  Node extends GraphNode.Any = GraphNode.Any,
-  Edge extends GraphEdge.Any = GraphEdge.Any,
-> extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>, Builder<Node, Edge>> {
-  override get builder(): Builder<Node, Edge> {
-    return new Builder<Node, Edge>(this);
-  }
-
-  override copy(graph?: Partial<Data<Node, Edge>>): GraphModel<Node, Edge> {
-    return new GraphModel<Node, Edge>({ registry: this.registry, graph });
-  }
-}
-
-/**
  * Basic builder.
  */
 export class Builder<
@@ -894,6 +1066,69 @@ export class Builder<
   Edge extends GraphEdge.Any = GraphEdge.Any,
 > extends AbstractBuilder<Node, Edge, GraphModel<Node, Edge>> {}
 
-export const make = <Node extends GraphNode.Any = GraphNode.Any, Edge extends GraphEdge.Any = GraphEdge.Any>(
-  options?: Options<Node, Edge>,
-): GraphModel<Node, Edge> => new GraphModel<Node, Edge>(options);
+//
+// Operations
+//
+// Dual: called directly with the model, or curried for `model.pipe(...)`.
+//
+
+export const addNode: {
+  <Node extends GraphNode.Any, Edge extends GraphEdge.Any, Model extends AbstractGraphModel<Node, Edge, Model>>(
+    model: Model,
+    node: Node,
+  ): Model;
+  <Node extends GraphNode.Any>(node: Node): <Model extends AbstractGraphModel<Node, any, Model>>(model: Model) => Model;
+} = Function.dual(2, (model: any, node: any) => {
+  model.addNode(node);
+  return model;
+});
+
+export const addNodes: {
+  <Node extends GraphNode.Any, Edge extends GraphEdge.Any, Model extends AbstractGraphModel<Node, Edge, Model>>(
+    model: Model,
+    nodes: Node[],
+  ): Model;
+  <Node extends GraphNode.Any>(
+    nodes: Node[],
+  ): <Model extends AbstractGraphModel<Node, any, Model>>(model: Model) => Model;
+} = Function.dual(2, (model: any, nodes: any) => {
+  model.addNodes(nodes);
+  return model;
+});
+
+export const addEdge: {
+  <Node extends GraphNode.Any, Edge extends GraphEdge.Any, Model extends AbstractGraphModel<Node, Edge, Model>>(
+    model: Model,
+    edge: MakeOptional<Edge, 'id'>,
+  ): Model;
+  <Edge extends GraphEdge.Any>(
+    edge: MakeOptional<Edge, 'id'>,
+  ): <Model extends AbstractGraphModel<any, Edge, Model>>(model: Model) => Model;
+} = Function.dual(2, (model: any, edge: any) => {
+  model.addEdge(edge);
+  return model;
+});
+
+export const addEdges: {
+  <Node extends GraphNode.Any, Edge extends GraphEdge.Any, Model extends AbstractGraphModel<Node, Edge, Model>>(
+    model: Model,
+    edges: Edge[],
+  ): Model;
+  <Edge extends GraphEdge.Any>(
+    edges: Edge[],
+  ): <Model extends AbstractGraphModel<any, Edge, Model>>(model: Model) => Model;
+} = Function.dual(2, (model: any, edges: any) => {
+  model.addEdges(edges);
+  return model;
+});
+
+/**
+ * Applies a callback to the model without breaking a pipe.
+ */
+export const tap: {
+  <Model extends AbstractGraphModel<any, any, Model>>(model: Model, fn: (model: Model) => void): Model;
+  <Model extends AbstractGraphModel<any, any, Model>>(fn: (model: Model) => void): (model: Model) => Model;
+} = Function.dual(2, (model: any, fn: any) => {
+  fn(model);
+  return model;
+});

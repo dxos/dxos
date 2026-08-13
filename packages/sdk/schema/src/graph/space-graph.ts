@@ -27,8 +27,6 @@ export type SpaceGraphNode = GraphNode.Of<{
 // TODO(burdon): Differentiate between refs and relations.
 export type SpaceGraphEdge = GraphEdge.Any;
 
-class SpaceGraphBuilder extends GraphModel.AbstractBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
-
 const defaultFilter: Filter.Any = Filter.everything();
 
 const truncate = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
@@ -42,12 +40,7 @@ export type SpaceGraphModelOptions = {
 /**
  * Converts ECHO objects to a graph.
  */
-export class SpaceGraphModel extends GraphModel.AbstractGraphModel<
-  SpaceGraphNode,
-  SpaceGraphEdge,
-  SpaceGraphModel,
-  SpaceGraphBuilder
-> {
+export class SpaceGraphModel extends GraphModel.AbstractGraphModel<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
   private _db?: Database.Database;
@@ -57,10 +50,6 @@ export class SpaceGraphModel extends GraphModel.AbstractGraphModel<
   private _schemaSubscription?: CleanupFn;
   private _objectSubscription?: CleanupFn;
   private _timeout?: NodeJS.Timeout;
-
-  override get builder() {
-    return new SpaceGraphBuilder(this);
-  }
 
   override copy(graph?: Partial<GraphModel.Data<SpaceGraphNode, SpaceGraphEdge>>): SpaceGraphModel {
     return new SpaceGraphModel({ registry: this.registry, graph });

@@ -13,8 +13,7 @@ import { type Connection, type Shape } from './schema';
 export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.AbstractGraphModel<
   S,
   Connection,
-  CanvasGraphModel<S>,
-  CanvasGraphBuilder<S>
+  CanvasGraphModel<S>
 > {
   static create<S extends Shape>(
     graph?: Partial<GraphModel.AnyData>,
@@ -32,8 +31,8 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
     });
   }
 
-  override get builder() {
-    return new CanvasGraphBuilder(this);
+  get builder(): CanvasGraphBuilder<S> {
+    return new CanvasGraphBuilder<S>(this);
   }
 
   override copy(graph?: Partial<GraphModel.Data<S, Connection>>): CanvasGraphModel<S> {

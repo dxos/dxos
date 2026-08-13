@@ -192,12 +192,13 @@ describe('Graph', () => {
 
   test('add and remove subgraphs', ({ expect }) => {
     const graph = new GraphModel.GraphModel<GraphNode.Of<TestData>>();
-    graph.builder
-      .addNode({ id: 'node1', data: { value: 'test' } })
-      .addNode({ id: 'node2', data: { value: 'test' } })
-      .addNode({ id: 'node3', data: { value: 'test' } })
-      .addEdge({ source: 'node1', target: 'node2' })
-      .addEdge({ source: 'node2', target: 'node3' });
+    graph.pipe(
+      GraphModel.addNode({ id: 'node1', data: { value: 'test' } }),
+      GraphModel.addNode({ id: 'node2', data: { value: 'test' } }),
+      GraphModel.addNode({ id: 'node3', data: { value: 'test' } }),
+      GraphModel.addEdge({ source: 'node1', target: 'node2' }),
+      GraphModel.addEdge({ source: 'node2', target: 'node3' }),
+    );
     expect(graph.nodes).to.have.length(3);
     expect(graph.edges).to.have.length(2);
     const pre = graph.toJSON();
@@ -222,24 +223,23 @@ describe('Graph', () => {
 
   test('traverse', ({ expect }) => {
     const graph = new GraphModel.GraphModel();
-    graph.builder
-      .addNode({ id: 'a' })
-      .addNode({ id: 'b' })
-      .addNode({ id: 'c' })
-      .addNode({ id: 'd' })
-      .addNode({ id: 'e' })
-      .addNode({ id: 'f' })
-      .addNode({ id: 'g' })
-      .addNode({ id: 'h' })
-      // Sub-graph 1.
-      .addEdge({ source: 'a', target: 'b' })
-      .addEdge({ source: 'a', target: 'c' })
-      .addEdge({ source: 'c', target: 'd' })
-      .addEdge({ source: 'd', target: 'e' })
-      .addEdge({ source: 'd', target: 'a' })
-      // Sub-graph 2.
-      .addEdge({ source: 'f', target: 'g' })
-      .addEdge({ source: 'g', target: 'h' });
+    graph.pipe(
+      GraphModel.addNode({ id: 'a' }),
+      GraphModel.addNode({ id: 'b' }),
+      GraphModel.addNode({ id: 'c' }),
+      GraphModel.addNode({ id: 'd' }),
+      GraphModel.addNode({ id: 'e' }),
+      GraphModel.addNode({ id: 'f' }),
+      GraphModel.addNode({ id: 'g' }),
+      GraphModel.addNode({ id: 'h' }),
+      GraphModel.addEdge({ source: 'a', target: 'b' }),
+      GraphModel.addEdge({ source: 'a', target: 'c' }),
+      GraphModel.addEdge({ source: 'c', target: 'd' }),
+      GraphModel.addEdge({ source: 'd', target: 'e' }),
+      GraphModel.addEdge({ source: 'd', target: 'a' }),
+      GraphModel.addEdge({ source: 'f', target: 'g' }),
+      GraphModel.addEdge({ source: 'g', target: 'h' }),
+    );
 
     const count = graph.nodes.length;
 
@@ -307,14 +307,15 @@ describe('Graph', () => {
 
   test('topoLevels groups mutually unordered nodes', ({ expect }) => {
     const graph = new GraphModel.GraphModel();
-    graph.builder
-      .addNode({ id: 'a' })
-      .addNode({ id: 'b' })
-      .addNode({ id: 'c' })
-      .addNode({ id: 'd' })
-      .addEdge({ id: 'a-c', source: 'a', target: 'c' })
-      .addEdge({ id: 'b-c', source: 'b', target: 'c' })
-      .addEdge({ id: 'c-d', source: 'c', target: 'd' });
+    graph.pipe(
+      GraphModel.addNode({ id: 'a' }),
+      GraphModel.addNode({ id: 'b' }),
+      GraphModel.addNode({ id: 'c' }),
+      GraphModel.addNode({ id: 'd' }),
+      GraphModel.addEdge({ id: 'a-c', source: 'a', target: 'c' }),
+      GraphModel.addEdge({ id: 'b-c', source: 'b', target: 'c' }),
+      GraphModel.addEdge({ id: 'c-d', source: 'c', target: 'd' }),
+    );
 
     const levels = graph.topoLevels();
     expect(Option.isSome(levels)).to.be.true;
@@ -323,11 +324,12 @@ describe('Graph', () => {
 
   test('topoLevels honours the edge filter and reports cycles', ({ expect }) => {
     const graph = new GraphModel.GraphModel();
-    graph.builder
-      .addNode({ id: 'a' })
-      .addNode({ id: 'b' })
-      .addEdge({ id: 'hard', type: 'hard', source: 'a', target: 'b' })
-      .addEdge({ id: 'soft', type: 'soft', source: 'b', target: 'a' });
+    graph.pipe(
+      GraphModel.addNode({ id: 'a' }),
+      GraphModel.addNode({ id: 'b' }),
+      GraphModel.addEdge({ id: 'hard', type: 'hard', source: 'a', target: 'b' }),
+      GraphModel.addEdge({ id: 'soft', type: 'soft', source: 'b', target: 'a' }),
+    );
 
     const hardOnly = graph.topoLevels((edge) => edge.type === 'hard');
     expect(Option.getOrThrow(hardOnly)).to.deep.eq([['a'], ['b']]);
@@ -338,11 +340,12 @@ describe('Graph', () => {
 
   test('findCycle names the loop in order', ({ expect }) => {
     const graph = new GraphModel.GraphModel();
-    graph.builder
-      .addNode({ id: 'x' })
-      .addNode({ id: 'y' })
-      .addEdge({ id: 'x-y', source: 'x', target: 'y' })
-      .addEdge({ id: 'y-x', source: 'y', target: 'x' });
+    graph.pipe(
+      GraphModel.addNode({ id: 'x' }),
+      GraphModel.addNode({ id: 'y' }),
+      GraphModel.addEdge({ id: 'x-y', source: 'x', target: 'y' }),
+      GraphModel.addEdge({ id: 'y-x', source: 'y', target: 'x' }),
+    );
 
     const cycle = graph.findCycle();
     expect(cycle.map((step) => step.node)).to.deep.eq(['x', 'y']);
