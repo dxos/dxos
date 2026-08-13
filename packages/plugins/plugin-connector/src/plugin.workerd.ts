@@ -8,6 +8,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
 
+// TODO(burdon): Proper fix is a `workerd` condition on `#capabilities` (a `capabilities/workerd.ts`
+// barrel, as plugin-assistant and plugin-magazine already have) rather than reaching past the
+// barrel into individual capability modules from here. That keeps the barrel the single place
+// capabilities are declared; this file should go back to importing from `#capabilities`.
 // Headless variant registered by workers (e.g. the edge operation-service): operations and schema
 // only. The capability modules are imported directly rather than through `#capabilities` — that
 // barrel declares `ReactSurface` and re-exports the connector coordinator, and a bundler follows
