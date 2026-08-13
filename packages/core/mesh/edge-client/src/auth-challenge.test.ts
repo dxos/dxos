@@ -191,9 +191,15 @@ describe('fetchAuthChallengeInfo', () => {
     );
     expect((await fetchAuthChallengeInfo('https://edge.example.com'))?.expiresInMs).toBeUndefined();
 
-    // `1e400` parses to Infinity; accepting it would schedule the proactive refresh at never.
-    vi.stubGlobal('fetch', async () =>
-      jsonResponse({ success: true, data: { challenge: CHALLENGE, expiresInMs: 1e400 } }),
+    // `1e400` in the JSON text parses to Infinity; accepting it would schedule the refresh at never.
+    // Raw body rather than a JS literal: the number exists only on the wire.
+    vi.stubGlobal(
+      'fetch',
+      async () =>
+        new Response(`{ "success": true, "data": { "challenge": "${CHALLENGE}", "expiresInMs": 1e400 } }`, {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
     );
     expect((await fetchAuthChallengeInfo('https://edge.example.com'))?.expiresInMs).toBeUndefined();
   });
