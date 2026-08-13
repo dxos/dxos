@@ -4,14 +4,17 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { Database, DXN, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
@@ -24,6 +27,11 @@ import * as InboxCapabilities from '../../types/InboxCapabilities';
 import * as InboxOperation from '../../types/InboxOperation';
 import * as Mailbox from '../../types/Mailbox';
 
+/**
+ * The processors plugin-inbox itself contributes, resolved through the real capability manager — the
+ * cascade reads only contributions, so a test that stubbed a plan instead would exercise a path the
+ * app never takes.
+ */
 const capabilityService = (processors: readonly InboxCapabilities.MailboxProcessor[] = inboxMailboxProcessors) => {
   const manager = CapabilityManager.make({ registry: Registry.make() });
   for (const processor of processors) {
@@ -44,7 +52,7 @@ const capabilityService = (processors: readonly InboxCapabilities.MailboxProcess
  */
 const makeTestLayer = (processors: readonly InboxCapabilities.MailboxProcessor[] = inboxMailboxProcessors) =>
   AssistantTestLayer({
-    operationHandlers: InboxOperationHandlerSet,
+    operationHandlers: [InboxOperationHandlerSet, StubHandlerSet],
     types: [
       Cursor.Cursor,
       Feed.Feed,
@@ -63,29 +71,36 @@ const TestLayer = makeTestLayer();
 
 const ME = ['me@example.com'];
 
+/** A service no layer in this test provides — the whole point of the stub below. */
+class MissingService extends Context.Service<MissingService, { readonly unused: true }>()(
+  '@dxos/plugin-inbox/testing/MissingService',
+) {}
+
 /**
- * The analyze pass as plugin-brain contributes it. Declared HERE rather than imported, because
- * plugin-inbox deliberately no longer ships it — brain owns it alongside the `FactStore` layer it
- * needs. Contributing it without that layer is exactly the misconfiguration the precondition gate
- * exists to absorb, which is what the tests below use it for.
+ * An operation declaring a service nothing contributes, standing in for the real misconfiguration:
+ * a processor whose own plugin failed to provide something it declared. Purpose-built rather than
+ * borrowed from a shipped operation, so the test exercises the gate itself and cannot be invalidated
+ * by that operation later gaining or losing a dependency — which is exactly what happened when
+ * `AnalyzeMailbox` moved to plugin-brain.
  */
+const StubOperation = Operation.make({
+  meta: { key: DXN.make('org.dxos.plugin.inbox.testing.operation.stub'), name: 'Stub' },
+  services: [MissingService],
+  input: Schema.Struct({ mailbox: Ref.Ref(Mailbox.Mailbox) }),
+  output: Schema.Void,
+});
+
+const StubHandlerSet = OperationHandlerSet.make(StubOperation.pipe(Operation.withHandler(() => Effect.void)));
+
+/** Contributed into the `analyze` slot, so the cascade reaches it exactly where brain's pass would sit. */
 const analyzeProcessor: InboxCapabilities.MailboxProcessor = {
   id: 'analyze',
   tier: 'analyze',
   after: ['summarize'],
-  createInvocation: (mailbox, { model, provider, strict }) => ({
-    operation: InboxOperation.AnalyzeMailbox,
-    input: { mailbox: Ref.make(mailbox), model, provider, strict },
-  }),
+  createInvocation: (mailbox) => ({ operation: StubOperation, input: { mailbox: Ref.make(mailbox) } }),
 };
 
 const withAnalyze = [...inboxMailboxProcessors, analyzeProcessor];
-
-/**
- * The processors plugin-inbox itself contributes, resolved through the real capability manager — the
- * cascade reads only contributions, so a test that stubbed a plan instead would exercise a path the
- * app never takes.
- */
 
 const makeMessage = (email: string, subject: string, index: number, listUnsubscribe?: string) =>
   Message.make({
@@ -233,7 +248,7 @@ describe('ScanMailbox cascade', () => {
         }
         expect(result.stages.at(-1)).toMatchObject({
           tier: 'analyze',
-          error: '@dxos/pipeline-rdf/FactStore unavailable',
+          error: '@dxos/plugin-inbox/testing/MissingService unavailable',
         });
 
         // The deterministic tier's writes are intact.

@@ -8,7 +8,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+
+import { BrainOperation } from '#types';
 
 import { settingsAtom } from './settings';
 
@@ -35,7 +36,7 @@ export default Capability.makeModule(
       createInvocation: (mailbox, { model, provider, strict }) => {
         const settings = registry.get(settingsAtom);
         return {
-          operation: InboxOperation.AnalyzeMailbox,
+          operation: BrainOperation.AnalyzeMailbox,
           input: {
             mailbox: Ref.make(mailbox),
             model: settings.model ?? model,

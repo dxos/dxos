@@ -13,6 +13,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
+// Still needed by `GenerateReply`, whose handler also lives in plugin-brain. Moving that one too is
+// what would let plugin-inbox drop `@dxos/pipeline-rdf` entirely — see D5b in docs/TASKS.md.
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
@@ -500,42 +502,6 @@ export const ExtractMailbox = Operation.make({
   }),
 });
 
-/** Default page size for {@link AnalyzeMailbox} fact-store commits. */
-export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
-
-export const AnalyzeMailbox = Operation.make({
-  meta: {
-    key: makeKey('analyzeMailbox'),
-    name: 'Analyze Mailbox',
-    description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
-    icon: 'ph--brain--regular',
-  },
-  services: [AiService.AiService, Database.Service, FactStore, Trace.TraceService],
-  input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
-      description: 'Mailbox whose feed messages are analyzed.',
-    }),
-    pageSize: Schema.optional(
-      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
-        description: 'Number of messages processed per fact-store commit.',
-      }),
-    ),
-    model: Schema.optional(
-      Schema.String.annotate({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
-    ),
-    provider: Schema.optional(
-      Schema.String.annotate({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
-    ),
-    strict: Schema.optional(
-      Schema.Boolean.annotate({ description: 'Strict structured output; set false for weak local models.' }),
-    ),
-  }),
-  output: Schema.Struct({
-    processed: Schema.Number,
-    facts: Schema.Number,
-  }),
-});
-
 /**
  * Progress key for a mailbox monitor: the mailbox URI plus a per-pipeline suffix, so the pipelines
  * coexist on one mailbox.
@@ -549,7 +515,13 @@ export const AnalyzeMailbox = Operation.make({
 const createProgressKey = (mailbox: Mailbox.Mailbox, suffix: string) =>
   Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + suffix;
 
-/** Progress-registry key for a mailbox's fact-analysis monitor ({@link AnalyzeMailbox}). */
+/**
+ * Progress-registry key for a mailbox's fact-analysis monitor.
+ *
+ * The operation moved to plugin-brain, but the key stays here with its siblings: it is derived from
+ * the mailbox URI, and every monitor key on a mailbox must be minted the same way or the producer and
+ * the article compute different names and no meter appears.
+ */
 export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
 
 /** Progress-registry key for a mailbox's correspondent-extraction monitor ({@link ExtractCorrespondents}). */

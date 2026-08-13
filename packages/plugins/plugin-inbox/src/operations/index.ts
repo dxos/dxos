@@ -8,10 +8,12 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { InboxOperation } from '#types';
 
 export * from './extractor';
+// The feed-cursor helpers are public because a contributed processor keeps its cursor on a mailbox
+// feed that plugin-inbox owns — plugin-brain's analyze pass is the first such consumer.
+export * from './cursor';
 
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy([
   InboxOperation.AddMailbox.pipe(Operation.lazyHandler(() => import('./add-mailbox'))),
-  InboxOperation.AnalyzeMailbox.pipe(Operation.lazyHandler(() => import('./analyze/analyze-mailbox'))),
   InboxOperation.CreateProjectFromMessage.pipe(Operation.lazyHandler(() => import('./create-project-from-message'))),
   InboxOperation.ClassifyEmail.pipe(Operation.lazyHandler(() => import('./classify-email'))),
   InboxOperation.ResetFeedCursor.pipe(Operation.lazyHandler(() => import('./reset-feed-cursor'))),

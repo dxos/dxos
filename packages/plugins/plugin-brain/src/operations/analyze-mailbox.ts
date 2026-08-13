@@ -12,10 +12,10 @@ import { Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import { findOrCreateAnalyzeCursor } from '@dxos/plugin-inbox/operations';
 
-import { InboxOperation } from '#types';
-
-import { findOrCreateAnalyzeCursor } from '../cursor';
+import { BrainOperation } from '#types';
 
 /**
  * Thin mailbox wrapper over the feed-generic `runFactPipeline` (in `@dxos/pipeline-email`): resolves
@@ -24,11 +24,11 @@ import { findOrCreateAnalyzeCursor } from '../cursor';
  * mailbox-agnostic; only the input shape (`Ref<Mailbox>`) and the feed/cursor lookup are
  * mailbox-specific.
  */
-const handler = InboxOperation.AnalyzeMailbox.pipe(
+const handler = BrainOperation.AnalyzeMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({
       mailbox: mailboxRef,
-      pageSize = InboxOperation.DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE,
+      pageSize = BrainOperation.DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE,
       model,
       provider,
       strict,
@@ -74,8 +74,8 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       const result = yield* runFactPipeline({
         feed,
         cursor,
-        extract,
         pageSize,
+        extract,
         onProgress: ({ processed, total }) => reportStatus({ current: processed, total }),
       });
       reportStatus({ message: PROGRESS_STATUS_COMPLETE });

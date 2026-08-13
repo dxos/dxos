@@ -8,13 +8,60 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import { DXN } from '@dxos/echo';
+import * as Trace from '@dxos/compute/Trace';
+import { Database, DXN, Ref } from '@dxos/echo';
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import * as RDF from '@dxos/pipeline-rdf/types';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 
 import { meta } from '#meta';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+
+/** Default page size for {@link AnalyzeMailbox} fact-store commits. */
+export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
+
+/**
+ * Cursored fact extraction over a mailbox feed.
+ *
+ * Lives in plugin-brain rather than plugin-inbox because brain owns everything it needs — the
+ * `FactStore` it writes to, the settings that parameterize it, and the surfaces that read the result.
+ * inbox owns the Mailbox and the feed cursor helpers, which this reaches through the plugin's public
+ * API; nothing here inverts that.
+ */
+export const AnalyzeMailbox = Operation.make({
+  meta: {
+    key: makeKey('analyzeMailbox'),
+    name: 'Analyze Mailbox',
+    description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
+    icon: 'ph--brain--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed messages are analyzed.',
+    }),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Number of messages processed per fact-store commit.',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotate({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
+    ),
+    provider: Schema.optional(
+      Schema.String.annotate({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotate({ description: 'Strict structured output; set false for weak local models.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    processed: Schema.Number,
+    facts: Schema.Number,
+  }),
+});
+
 
 /**
  * LLM-facing rendering of a fact: subject/predicate/object display strings plus the FactBank
