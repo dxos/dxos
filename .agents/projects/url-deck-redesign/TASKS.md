@@ -417,20 +417,6 @@ Recorded 2026-07-27 from review of the landed deck.
 - [ ] **`Graph.initialize` + the builder `resolver` mechanism** — kept, TODO-marked. No extension
       declares a resolver and `initialize` was called zero times in a live session; remove once
       something either needs it or clearly never will.
-- [ ] **Revisit `RESOLVE_TIMEOUT` (10s) now that not-found is non-destructive** — the deadline was set
-      when losing the race was permanent (sentinel written to the deck, pair dropped from the URL), so
-      waiting long was strictly better than failing. PR #12569 removed both consequences: an unresolved
-      plank keeps its own id, heals when the node lands, and never truncates the URL. The cost of the
-      deadline is now purely how long a genuinely-missing plank looks plausible before flipping to
-      not-found, and the whole restore is gated on the slowest pair (`Set` applies once, after every
-      pair settles), so a shorter deadline also renders the resolved planks sooner.
-      **Decision needed:** (1) shorten it (2-3s) — faster, more honest flip, but a slow cold space
-      could now flip a plank that would have resolved at 6s (recoverable, since it heals in place —
-      unlike before); (2) keep 10s and instead apply `Set` per-pair as each settles, so a slow pair
-      stops holding back the fast ones and the deadline only costs the missing plank; (3) keep as is.
-      (2) is the better shape but needs `Set`'s wholesale-override semantics reworked. Wants a
-      measurement first: how long does a real cold mailbox restore actually take on a warm profile
-      vs. a fresh one?
 
 ### References
 
