@@ -91,6 +91,26 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       exhaustion check so an exhausted short list does not spin. Unit test
       (`extends an underfilled window that cannot be scrolled`) fails without the fix; `Paging` +
       `PagingGrouped` play tests cover the scrollable path. STILL TO DO: confirm in the app.
+- [x] **Contact extraction created a Person for every machine sender** (reported 2026-08-12: 101
+      Persons in a real mailbox, incl. `no-reply@grafana.com`,
+      `invoice+statements+acct_1ika5ja3kz32dpo1@stripe.com`) — TWO defects. (1) The shared
+      `extractContact` (the `Contact` ObjectExtractor, run over a whole mailbox from the toolbar menu)
+      called `buildContactGraph(sender, db)` with NO signals, and the gate in `buildContactFromActor`
+      only applies `if (signals)` — so the bulk path was completely ungated. (2) `selection.ts`'s role
+      pattern was an EXACT match (`^(billing|invoice|…)$`), so every qualified bulk address
+      (`invoice+statements+acct_…`, `payments-noreply@`, `no.reply@`) slipped past it. FIX: split the
+      deny half out as `isAutomatedSender` (address + header signals) and call it from
+      `extractContact` — a per-message extraction has no outbound evidence to satisfy the full
+      allow-list, but it must still refuse machines; role pattern is now a prefix+separator match;
+      `senderSignals` moved into extractor-lib and the two duplicate copies (EmailStage, CRM
+      process-mailbox) deleted. Tests: `selection.test.ts` (real junk addresses, individuals incl.
+      plus-addressing, header-only denial, prefix-vs-equality) and a new `contact-extractor.test.ts`
+      at the actual bug site; 6 of them fail without the fix.
+- [ ] **Conversation-view avatar is not centered on the actor's name** (reported 2026-08-12) — in
+      `MailboxArticle` grouped/conversation mode (story `Default`) the avatar sits low, centered
+      against the whole tile instead of the sender line; the flat view (`Flat`) is correct. Look at
+      the conversation tile's grid row alignment in `InboxStack` (the flat tile aligns its avatar to
+      the first row; the conversation tile appears to center across both rows).
 - [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
 - [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /

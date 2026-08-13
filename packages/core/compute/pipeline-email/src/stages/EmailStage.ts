@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 
 import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { type IdentityIndex, overlayIdentityIndex } from '@dxos/extractor';
-import { buildContactFromActor, getIdentityIndex, identitySpecs } from '@dxos/extractor-lib';
+import { buildContactFromActor, getIdentityIndex, identitySpecs, senderSignals } from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
@@ -138,20 +138,6 @@ export const extractContacts = (): Stage.Stage<Change, Change, never, Database.S
       return contact ? { ...change, contact } : change;
     }),
   );
-};
-
-/**
- * The sender signals the shared extraction gate reads, taken from the fields provider mappers
- * already record on `properties`. `Precedence`/`Auto-Submitted` are folded into `bulk` by the mapper
- * where available.
- */
-const senderSignals = (message: Message.Message) => {
-  const properties = message.properties ?? {};
-  return {
-    noReply: properties.noReply === true,
-    listUnsubscribe: typeof properties.listUnsubscribe === 'string' ? properties.listUnsubscribe : undefined,
-    bulk: properties.bulk === true,
-  };
 };
 
 /**

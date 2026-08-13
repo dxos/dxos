@@ -301,6 +301,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     count: 50,
+    conversations: true,
   },
 };
 
