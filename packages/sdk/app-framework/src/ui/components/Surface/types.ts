@@ -207,7 +207,7 @@ export type TypedReactDefinition<
   Id extends string = string,
 > = Readonly<{
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
     : Id;
   filter: Filter<T>;
   position?: Position.Position;
@@ -240,7 +240,7 @@ export type TypedReactDefinition<
  */
 export type TypedWebComponentDefinition<T extends Record<string, any> = any, Id extends string = string> = Readonly<{
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
     : Id;
   filter: Filter<T>;
   tagName: string;

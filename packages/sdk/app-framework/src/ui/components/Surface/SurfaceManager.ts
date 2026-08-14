@@ -116,9 +116,12 @@ export class SurfaceManager {
       }
       if (!this.#warnedInvalidIds.has(definition.id)) {
         this.#warnedInvalidIds.add(definition.id);
-        log.warn('dropping surface with invalid id; the final segment must be camelCase (no hyphens or underscores)', {
-          id: definition.id,
-        });
+        log.warn(
+          'dropping surface with invalid id; the final segment must be camelCase — letters and digits, starting with a letter',
+          {
+            id: definition.id,
+          },
+        );
       }
       return false;
     });

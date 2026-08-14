@@ -777,7 +777,7 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
  */
 export type CreateExtensionRawOptions<Id extends string = string> = {
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
     : Id;
   relation?: Node.RelationInput;
   position?: Position.Position;
@@ -806,7 +806,7 @@ export const createExtensionRaw = <const Id extends string = string>(
   } = extension;
   if (!DXN.isValidPath(id)) {
     log.warn(
-      'dropping graph extension with invalid id; the final segment must be camelCase (no hyphens or underscores)',
+      'dropping graph extension with invalid id; the final segment must be camelCase — letters and digits, starting with a letter',
       {
         id,
       },
@@ -915,7 +915,7 @@ export const createExtensionRaw = <const Id extends string = string>(
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never, Id extends string = string> = {
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
     : Id;
   match: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TMatched>;
   actions?: (
@@ -1076,7 +1076,7 @@ export type CreateTypeExtensionOptions<
   Id extends string = string,
 > = {
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase (no hyphens or underscores)`
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
     : Id;
   type: T;
   actions?: (
